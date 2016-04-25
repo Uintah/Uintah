@@ -86,7 +86,7 @@ bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
   const DifferenceBCData* p_rhs =
   dynamic_cast<const DifferenceBCData*>(&rhs);
   
-  if (p_rhs == NULL)
+  if (p_rhs == nullptr)
     return false;
   else
     return (this->left == p_rhs->left) && (this->right == p_rhs->right);

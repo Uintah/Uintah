@@ -77,7 +77,7 @@ namespace WasatchCore{
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
       
-      Expr::ExpressionBuilder* builder = NULL;
+      Expr::ExpressionBuilder* builder = nullptr;
       
       const std::string interpMethod = get_conv_interp_method( convMethod );
       if( dir=="X" ){
@@ -143,7 +143,7 @@ namespace WasatchCore{
         }
       }
       
-      if( builder == NULL ){
+      if( builder == nullptr ){
         std::ostringstream msg;
         msg << "ERROR: Could not build a convective flux expression for '"
         << solnVarTag.name() << "'" << std::endl;
@@ -235,7 +235,7 @@ namespace WasatchCore{
       msg << "You mus provide a coefficient for your diffusive flux expressions. Please revise your input file." << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-    return NULL;
+    return nullptr;
   }
   
   template< typename FieldT>
@@ -286,12 +286,12 @@ namespace WasatchCore{
         // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
         // is because we need the ScalarRHS at time step n+1 for our pressure projection method
         
-        Expr::ExpressionBuilder* builder = NULL;
+        Expr::ExpressionBuilder* builder = nullptr;
         if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
         else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
         else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
         
-        if( builder == NULL ){
+        if( builder == nullptr ){
           std::ostringstream msg;
           msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
@@ -343,7 +343,7 @@ namespace WasatchCore{
       const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
       return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
-    return NULL;
+    return nullptr;
   }
   
   template< typename FieldT>
@@ -392,12 +392,12 @@ namespace WasatchCore{
         std::string dir(1,*it);
         diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
         
-        Expr::ExpressionBuilder* builder = NULL;
+        Expr::ExpressionBuilder* builder = nullptr;
         if     ( dir=="X" )  builder = build_diff_vel_expr<XFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
         else if( dir=="Y" )  builder = build_diff_vel_expr<YFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
         else if( dir=="Z" )  builder = build_diff_vel_expr<ZFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
         
-        if( builder == NULL ){
+        if( builder == nullptr ){
           std::ostringstream msg;
           msg << "Could not build a diffusive velocity expression for '"
           << primVarName << "'" << std::endl;

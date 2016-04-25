@@ -480,10 +480,10 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
     allVarPointersInfo vp;
 
     vp.varDB_index = -1;
-    vp.device_ptr = NULL;
+    vp.device_ptr = nullptr;
     vp.atomicStatusInHostMemory = UNKNOWN;
     vp.atomicStatusInGpuMemory = UNALLOCATED;
-    vp.host_contiguousArrayPtr = NULL;
+    vp.host_contiguousArrayPtr = nullptr;
     vp.sizeOfDataType = 0;
 
     std::pair<std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator, bool> ret = varPointers->insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
@@ -522,8 +522,8 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
     if (staging_it == it->second.stagingVars.end()){
       stagingVarInfo svi;
       svi.varDB_index = -1;
-      svi.device_ptr = NULL;
-      svi.host_contiguousArrayPtr = NULL;
+      svi.device_ptr = nullptr;
+      svi.host_contiguousArrayPtr = nullptr;
       svi.atomicStatusInHostMemory = UNKNOWN;
       svi.atomicStatusInGpuMemory = UNALLOCATED;
 
@@ -563,7 +563,7 @@ GPUDataWarehouse::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
 
   gpuPoolLock->writeLock();
 
-  void * addr = NULL;
+  void * addr = nullptr;
   bool claimedAnItem = false;
 
   gpuMemoryPoolItem gpuItem(device_id, memSize);
@@ -749,7 +749,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
 
   //This prepares the var with the offset and size.  Any possible allocation will come later.
   //If it needs to go into the database, that will also come later
-  void* addr = NULL;
+  void* addr = nullptr;
   var.setArray3(offset, size, addr);
 
   //Now see if we allocate the variable or use a previous existing allocation.
@@ -912,7 +912,7 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
                                        int3 offset, int3 size) {
 
 
-  if (d_device_copy == NULL) {
+  if (d_device_copy == nullptr) {
     //sanity check
     printf("ERROR:\nGPUDataWarehouse::copyItemIntoTaskDW() - This method should only be called from a task data warehouse.\n");
     exit(-1);
@@ -1107,16 +1107,16 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
 
   int3 size=make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
   int3 offset=low;
-  void* device_ptr=NULL;
+  void* device_ptr=nullptr;
   var.setArray3(offset, size, device_ptr);
   allocateLock->readLock();
   contiguousArrayInfo *ca = &(contiguousArrays->operator[](indexID));
   allocateLock->readUnlock();
-  if ( (ca->allocatedDeviceMemory == NULL
+  if ( (ca->allocatedDeviceMemory == nullptr
        || ca->sizeOfAllocatedMemory - ca->assignedOffset < var.getMemSize())
       && stageOnHost) {
     printf("ERROR: No room left on device to be assigned address space\n");
-    if (ca->allocatedDeviceMemory != NULL) {
+    if (ca->allocatedDeviceMemory != nullptr) {
       printf("There was %lu bytes allocated, %lu has been assigned, and %lu more bytes were attempted to be assigned for %s patch %d matl %d level %d staging %s\n",
           ca->sizeOfAllocatedMemory,
           ca->assignedOffset,
@@ -1133,7 +1133,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
 
     //This prepares the var with the offset and size.  The actual address will come next.
 
-    void* host_contiguousArrayPtr = NULL;
+    void* host_contiguousArrayPtr = nullptr;
 
     int varMemSize = var.getMemSize();
 
@@ -1189,8 +1189,8 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   //This method allocates one big chunk of memory so that little allocations do not have to occur for each grid variable.
   //This is needed because devices often have substantial overhead for each device malloc and device copy.  By putting it into one
   //chunk of memory, only one malloc and one copy to device should be needed.
-  double *d_ptr = NULL;
-  double *h_ptr = NULL;
+  double *d_ptr = nullptr;
+  double *h_ptr = nullptr;
   OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
 
   printf("Allocated GPU buffer of size %lu \n", (unsigned long)size);
@@ -1383,7 +1383,7 @@ GPUDataWarehouse::getPointer(char const* label, int patchID, int matlIndx)
       assert(0);
     }
     //printf("\t ERROR: GPUDataWarehouse::getPointer( \"%s\", patchID: %i, matl: %i )  unknown variable\n", label, patchID, matlIndx);
-    return NULL;
+    return nullptr;
   }
 #else
   varLock->readLock();
@@ -1582,7 +1582,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
 
   varLock->readUnlock();
 
-  void* addr = NULL;
+  void* addr = nullptr;
 
   //Now see if we allocate the variable or use a previous existing allocation.
 
@@ -1694,7 +1694,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
 
   varLock->readUnlock();
 
-  void* addr = NULL;
+  void* addr = nullptr;
 
   //Now see if we allocate the variable or use a previous existing allocation.
 
@@ -1842,7 +1842,7 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   __syncthreads();
   if (index == -1) {
     printf("ERROR:\nGPUDataWarehouse::getItem() didn't find anything for %s patch %d matl %d with threadID %d and numthreads %d\n", label, patchID, matlIndx, threadID, numThreads);
-    return NULL;
+    return nullptr;
   }
   return &d_varDB[index];
 #else
@@ -1915,12 +1915,12 @@ GPUDataWarehouse::getAllocated(char const* label, int patchID, int matlIndx, int
       retVal = true;
       //There is need sometimes to see if the variable exists, but not as part of a contiguous array
       if (skipContiguous) {
-        if (varPointers->operator[](lpml).host_contiguousArrayPtr != NULL) {
+        if (varPointers->operator[](lpml).host_contiguousArrayPtr != nullptr) {
           //It exists as part of a contiguous array
           retVal = false;
         }
       } if (onlyContiguous) {
-        if (varPointers->operator[](lpml).host_contiguousArrayPtr == NULL) {
+        if (varPointers->operator[](lpml).host_contiguousArrayPtr == nullptr) {
           //It exists as part of a contiguous array
           retVal = false;
         }
@@ -1993,7 +1993,7 @@ GPUDataWarehouse::init(int id, std::string internalName)
   d_numMaterials = 0;
   d_debug = false;
   //d_numGhostCells = 0;
-  d_device_copy = NULL;
+  d_device_copy = nullptr;
   d_dirty = true;
   objectSizeInBytes = 0;
   //resetdVarDB();
@@ -2028,7 +2028,7 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int maxdVarDBIt
     this->objectSizeInBytes = objectSizeInBytes;
     this->maxdVarDBItems = maxdVarDBItems;
     OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
-    void* temp = NULL;
+    void* temp = nullptr;
     //CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
     temp = allocateCudaSpaceFromPool(d_device_id, objectSizeInBytes);
     if (gpu_stats.active()) {
@@ -2124,7 +2124,7 @@ GPUDataWarehouse::clear()
   varLock->writeLock();
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator varIter;
   for (varIter = varPointers->begin(); varIter != varPointers->end(); ++varIter) {
-    if (varIter->second.host_contiguousArrayPtr == NULL) {
+    if (varIter->second.host_contiguousArrayPtr == nullptr) {
       //clear out all the staging vars, if any
       std::map<stagingVar, stagingVarInfo>::iterator stagingIter;
       for (stagingIter = varIter->second.stagingVars.begin(); stagingIter != varIter->second.stagingVars.end(); ++stagingIter) {
@@ -2144,13 +2144,13 @@ GPUDataWarehouse::clear()
 
 
         //CUDA_RT_SAFE_CALL(cudaFree(stagingIter->second.device_ptr));
-        //stagingIter->second.device_ptr == NULL;
+        //stagingIter->second.device_ptr == nullptr;
         size_t memSize = stagingIter->first.device_size.x *
                           stagingIter->first.device_size.y *
                           stagingIter->first.device_size.z *
                           varIter->second.sizeOfDataType;
         if (freeCudaSpaceFromPool(d_device_id, memSize, stagingIter->second.device_ptr)) {
-          stagingIter->second.device_ptr == NULL;
+          stagingIter->second.device_ptr == nullptr;
         } else {
           //No open spot in the pool, go ahead and allocate it.
           printf("ERROR:\nGPUDataWarehouse::clear(), for a staging variable, couldn't find in the GPU memory pool the space starting at address %p\n", stagingIter->second.device_ptr);
@@ -2164,7 +2164,7 @@ GPUDataWarehouse::clear()
       //clear out the regular vars
 
       //See if it's a placeholder var for staging vars.  This happens if the non-staging var
-      //had a device_ptr of NULL, and it was only in the varPointers map to only hold staging vars
+      //had a device_ptr of nullptr, and it was only in the varPointers map to only hold staging vars
       if (varIter->second.device_ptr) {
         if (gpu_stats.active()) {
           cerrLock.lock();
@@ -2186,7 +2186,7 @@ GPUDataWarehouse::clear()
                     varIter->second.device_size.z;
         }
         if (freeCudaSpaceFromPool(d_device_id, memSize, varIter->second.device_ptr)) {
-          varIter->second.device_ptr == NULL;
+          varIter->second.device_ptr == nullptr;
         } else {
           printf("ERROR:\nGPUDataWarehouse::clear(), for a non-staging variable, couldn't find in the GPU memory pool the space starting at address %p\n", varIter->second.device_ptr);
           varLock->writeUnlock();
@@ -2261,7 +2261,7 @@ GPUDataWarehouse::resetdVarDB()
   //no meaning in device method
 #else
 
-  if (d_device_copy != NULL) {
+  if (d_device_copy != nullptr) {
     //TODO: When TaskDWs are removed, this section shouldn't be needed as there won't be concurrency problems
 
     //This is designed to help stop tricky race scenarios.  One such scenario I encountered was as follows:
@@ -2283,7 +2283,7 @@ GPUDataWarehouse::resetdVarDB()
       d_varDB[i].domainID = -1;
       d_varDB[i].matlIndx = -1;
       //d_varDB[i].staging = false;
-      d_varDB[i].var_ptr = NULL;
+      d_varDB[i].var_ptr = nullptr;
       d_varDB[i].ghostItem.dest_varDB_index = -1;
 
     }
@@ -2292,7 +2292,7 @@ GPUDataWarehouse::resetdVarDB()
       d_levelDB[i].domainID = -1;
       d_levelDB[i].matlIndx = -1;
       //d_varDB[i].staging = false;
-      d_levelDB[i].var_ptr = NULL;
+      d_levelDB[i].var_ptr = nullptr;
     }
     for (int i = 0; i < MAX_MATERIALSDB_ITEMS; i++) {
       d_materialDB[i].simulationType[0] = '\0';
@@ -3614,7 +3614,7 @@ GPUDataWarehouse::getPlacementNewBuffer()
 {
 #ifdef __CUDA_ARCH__
   printf("GPUDataWarehouse::getPlacementNewBuffer() not for device code\n");
-  return NULL;
+  return nullptr;
 #else
   return placementNewBuffer;
 #endif

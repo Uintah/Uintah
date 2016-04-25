@@ -42,7 +42,7 @@ PropertyModelFactory::register_property_model( const std::string name,
                                                PropertyModelBase::Builder* builder )
 {
 
-  ASSERT( builder != NULL );
+  ASSERT( builder != nullptr );
 
   BuildMap::iterator i = _builders.find( name );
   if( i == _builders.end() ){

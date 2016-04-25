@@ -118,7 +118,7 @@ AMRSimulationController::run()
     HeapProfilerStart(gheapprofname);
   }
 
-  HeapLeakChecker * heap_checker=NULL;
+  HeapLeakChecker * heap_checker=nullptr;
   if (gheapchecker.active()){
     if (!gheapprofile.active()){
       char gheapchkname[512];

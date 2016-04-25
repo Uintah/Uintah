@@ -82,7 +82,7 @@ void UnifiedSchedulerTest::scheduleInitialize(const LevelP& level,
 {
   Task* multiTask = scinew Task("UnifiedSchedulerTest::initialize", this, &UnifiedSchedulerTest::initialize);
 
-  multiTask->computesWithScratchGhost(phi_label, NULL, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
+  multiTask->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   //multiTask->computes(phi_label);
   multiTask->computes(residual_label);
   sched->addTask(multiTask, level->eachPatch(), sharedState_->allMaterials());
@@ -121,7 +121,7 @@ void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
 #endif
 
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computesWithScratchGhost(phi_label, NULL, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
+  task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -286,7 +286,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       //GPUDataWarehouse* new_gpudw = new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
       GPUGridVariable<double> device_var;
       new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
-        //void* device_ptr = NULL;
+        //void* device_ptr = nullptr;
         //device_var.getArray3(device_offset, device_size, device_ptr);
         //device_ptr = device_var.getPointer();
         //printf("Calling unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, Uintah::Thread::self()->myid());
@@ -351,7 +351,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
           new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
             int3 device_offset;
             int3 device_size;
-            //void* device_ptr = NULL;
+            //void* device_ptr = nullptr;
             //device_var.getArray3(device_offset, device_size, device_ptr);
             //device_ptr = device_var.getPointer();
 

@@ -142,7 +142,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
 #ifdef OLD_TABLE
   gzFile gzFp = gzopen(tableFileName.c_str(),"r");
-  if( gzFp == NULL ) {
+  if( gzFp == nullptr ) {
     // If errno is 0, then not enough memory to uncompress file.
     proc0cout << "Error with gz in opening file: " << tableFileName << ". Errno: " << errno << "\n";
     throw ProblemSetupException("Unable to open the given input file: " + tableFileName, __FILE__, __LINE__);

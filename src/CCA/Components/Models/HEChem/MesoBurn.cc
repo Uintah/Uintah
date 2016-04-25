@@ -197,9 +197,9 @@ void MesoBurn::problemSetup(GridP&,
   //  so that it has a melting temperature model
   if(afterMelting) {
     const MPMMaterial *solid = dynamic_cast<const MPMMaterial *>(matl0);
-    if(solid == NULL)
+    if(solid == nullptr)
       throw new ProblemSetupException(std::string("The 'afterMelting' parameter requires a MPM based reactant."), __FILE__, __LINE__);
-    if(dynamic_cast<ElasticPlasticHP *>(solid->getConstitutiveModel()) == NULL)
+    if(dynamic_cast<ElasticPlasticHP *>(solid->getConstitutiveModel()) == nullptr)
       throw new ProblemSetupException(std::string("The 'afterMelting' parameter requires an ElasticPlasticHP based reactant for its melting temperature."), __FILE__, __LINE__);
   }
 }

@@ -250,7 +250,7 @@ void FirstLawThermo::initialize(const ProcessorGroup*,
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
-      if ( check == NULL){
+      if ( check == nullptr){
         ostringstream warn;
         warn << "ERROR:FirstLawThermo  The main uda directory does not exist. ";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -672,7 +672,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       
       string udaDir = d_dataArchiver->getOutputLocation();
       string filename = udaDir + "/" + "1stLawThermo.dat";
-      FILE *fp=NULL;
+      FILE *fp=nullptr;
 
 
       if( myFiles.count(filename) == 0 ){

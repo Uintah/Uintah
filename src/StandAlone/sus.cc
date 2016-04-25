@@ -555,7 +555,7 @@ main( int argc, char *argv[], char *env[] )
 
     if (Uintah::Parallel::getMPIRank() == 0) {
       // helpful for cleaning out old stale udas
-      time_t t = time(NULL);
+      time_t t = time(nullptr);
       string time_string(ctime(&t));
       char name[256];
       gethostname(name, 256);
@@ -656,7 +656,7 @@ main( int argc, char *argv[], char *env[] )
 	  // Have the title so pass that into the libsim 
 	  char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
 	  
-	  if (new_argv != NULL)
+	  if (new_argv != nullptr)
 	  {
 	    memmove(new_argv, argv, sizeof(*new_argv) * argc);
 	    

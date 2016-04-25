@@ -297,7 +297,7 @@ DenseMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
 {
   size = ncols_;
   stride = 1;
-  cols = NULL;
+  cols = nullptr;
   vals = data[r];
 }
 
@@ -325,7 +325,7 @@ DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
   lhs=rhs;
 
   double **A;
-  DenseMatrix *cpy = NULL;
+  DenseMatrix *cpy = nullptr;
   if (!overwrite) {cpy=clone(); A=cpy->data;}
   else A=data;
 
@@ -436,7 +436,7 @@ DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
   lhs=rhs;
 
   double **A;
-  DenseMatrix *cpy = NULL;
+  DenseMatrix *cpy = nullptr;
   if (!overwrite) {cpy=clone(); A=cpy->data;}
   else A=data;
 

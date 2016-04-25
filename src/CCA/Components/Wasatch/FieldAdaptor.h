@@ -293,7 +293,7 @@ namespace WasatchCore{
     newDW( newdw ),
     materialIndex( matlIndex ),
     patch( p ),
-    pset (NULL),
+    pset (nullptr),
     procgroup( pg ),
     isGPUTask( isgpu )
     {}
@@ -326,7 +326,7 @@ namespace WasatchCore{
                                    const AllocInfo& ainfo,
                                    const SpatialOps::GhostData ghostData,
                                    short int deviceIndex=CPU_INDEX,
-                                   double* uintahDeviceVar = NULL )
+                                   double* uintahDeviceVar = nullptr )
   {
     /*
      * NOTE: before changing things here, look at the line:
@@ -366,10 +366,10 @@ namespace WasatchCore{
     newGData.set_minus(gMinus);
     newGData.set_plus(gPlus);
     
-    double* fieldValues_ = NULL;
+    double* fieldValues_ = nullptr;
     FieldT* field;
     if( ainfo.isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
-      assert( uintahDeviceVar != NULL );
+      assert( uintahDeviceVar != nullptr );
       fieldValues_ = uintahDeviceVar;
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
                           so::BoundaryCellInfo::build<FieldT>(bcPlus),
@@ -407,7 +407,7 @@ namespace WasatchCore{
   {
     namespace so = SpatialOps;
     typedef ParticleField::value_type ValT;
-    ValT* fieldValues = NULL;
+    ValT* fieldValues = nullptr;
     if( IS_GPU_INDEX(deviceIndex) ){
 #     ifdef HAVE_CUDA
       fieldValues = const_cast<ValT*>( uintahDeviceVar );
@@ -441,7 +441,7 @@ namespace WasatchCore{
   {
     namespace so = SpatialOps;
     typedef ParticleField::value_type ValT;
-    ValT* fieldValues = NULL;
+    ValT* fieldValues = nullptr;
     if( IS_GPU_INDEX(deviceIndex) ){
 #     ifdef HAVE_CUDA
       fieldValues = const_cast<ValT*>( uintahDeviceVar );

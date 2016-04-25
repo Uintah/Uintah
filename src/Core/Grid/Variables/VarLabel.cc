@@ -134,7 +134,7 @@ VarLabel::find( const string &  name )
    map<string, VarLabel*>::iterator found = allLabels.find( name );
 
    if( found == allLabels.end() ) {
-      return NULL;
+      return nullptr;
    }
    else {
       return found->second;

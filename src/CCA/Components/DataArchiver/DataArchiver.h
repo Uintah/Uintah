@@ -84,7 +84,7 @@ using Uintah::ConsecutiveRangeSet;
        //! Sets up when the DataArchiver will output and what data, according
        //! to params.  Also stores state to keep track of time and timesteps
        //! in the simulation.  (If you only need to use DataArchiver to copy 
-       //! data, then you can pass a NULL SimulationState
+       //! data, then you can pass a nullptr SimulationState
        virtual void problemSetup(const ProblemSpecP& params,
            SimulationState* state);
 

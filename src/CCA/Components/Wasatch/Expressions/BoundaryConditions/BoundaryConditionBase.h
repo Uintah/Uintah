@@ -336,17 +336,17 @@ public:
     bcTypeEnum_      = WasatchCore::UNSUPPORTED;
     faceTypeEnum_    = Uintah::Patch::xminus;
 
-    diriXOp_ = NULL;
-    diriYOp_ = NULL;
-    diriZOp_ = NULL;
-    neumXOp_ = NULL;
-    neumYOp_ = NULL;
-    neumZOp_ = NULL;
+    diriXOp_ = nullptr;
+    diriYOp_ = nullptr;
+    diriZOp_ = nullptr;
+    neumXOp_ = nullptr;
+    neumYOp_ = nullptr;
+    neumZOp_ = nullptr;
 
-    vecInteriorPts_     = NULL;
-    vecGhostPts_        = NULL;
-    interiorEdgePoints_ = NULL;
-    boundaryParticles_  = NULL;
+    vecInteriorPts_     = nullptr;
+    vecGhostPts_        = nullptr;
+    interiorEdgePoints_ = nullptr;
+    boundaryParticles_  = nullptr;
   }
   virtual ~BoundaryConditionBase(){}
 

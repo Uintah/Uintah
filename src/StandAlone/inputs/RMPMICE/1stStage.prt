@@ -97,11 +97,11 @@
 @flag 17 1
 1 17 0
 @name 18 10
-1 18 NULL
+1 18 nullptr
 @inst_hidden 19 1
 1 19 0
 @old_name 20 10
-1 20 NULL
+1 20 nullptr
 @user_symbols 21 0
 1 21 [2]
 2 21 ->

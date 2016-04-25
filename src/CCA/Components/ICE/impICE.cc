@@ -950,7 +950,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
   bool recursion  = true;
   bool modifies_X = true;
-  const VarLabel* whichInitialGuess = NULL;
+  const VarLabel* whichInitialGuess = nullptr;
   const PatchSet* patch_set = level->eachPatch();
   //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
 
@@ -1062,7 +1062,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     d_subsched->execute();
     
     counter ++;
-    whichInitialGuess = NULL;
+    whichInitialGuess = nullptr;
     
     //__________________________________
     // diagnostics

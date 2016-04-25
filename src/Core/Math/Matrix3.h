@@ -265,7 +265,7 @@ namespace Uintah {
     // column of a row is to the right (greater) of the first non-zero
     // column in the row above it and the first non-zero column of
     // any row has zeroes in every other row and a one in that row.
-    // If rhs == NULL, then the rhs is assumed to be
+    // If rhs == nullptr, then the rhs is assumed to be
     // the zero vector and thus will not need to change.
      static void triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
                                  double relative_scale);
@@ -662,7 +662,7 @@ namespace Uintah {
                        mat3[1][0], mat3[1][1] - eigen_value, mat3[1][2],
                        mat3[2][0], mat3[2][1], mat3[2][2] - eigen_value);
       int num_zero_rows;
-      triangularReduce(A_sub_eI, NULL, num_zero_rows, relative_scale);
+      triangularReduce(A_sub_eI, nullptr, num_zero_rows, relative_scale);
       return A_sub_eI.solveHomogenousReduced(num_zero_rows);
     }
 
@@ -680,7 +680,7 @@ namespace Uintah {
     {
       int num_zero_rows;
       Matrix3 A(*this);
-      triangularReduce(A, NULL, num_zero_rows, relative_scale);
+      triangularReduce(A, nullptr, num_zero_rows, relative_scale);
       return A.solveHomogenousReduced(num_zero_rows);
     }
 

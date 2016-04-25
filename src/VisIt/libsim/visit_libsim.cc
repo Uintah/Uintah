@@ -186,7 +186,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
     if( simExecName.find( "/" ) != 0 )
     {
-      char *path = NULL;
+      char *path = nullptr;
       
       Dl_info info;
       if (dladdr(__builtin_return_address(0), &info))
@@ -221,7 +221,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
     VisItInitializeSocketAndDumpSimFile(simFileName.c_str(),
                                         simComment.c_str(),
                                         exeCommand.c_str(),
-                                        NULL, "uintah.ui", NULL);
+                                        nullptr, "uintah.ui", nullptr);
   }
 }
 

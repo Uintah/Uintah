@@ -39,7 +39,7 @@ class GPUParticleVariable : public GPUParticleVariableBase {
 
   public:
 
-    HOST_DEVICE GPUParticleVariable() {d_data = NULL; d_size = 0;}
+    HOST_DEVICE GPUParticleVariable() {d_data = nullptr; d_size = 0;}
     HOST_DEVICE virtual ~GPUParticleVariable() {}
 
     HOST_DEVICE virtual size_t getMemSize() {

@@ -71,7 +71,7 @@ std::string
 PIDXOutputContext::PIDX_flags::getCompressTypeName( const int me )
 {
   std::map< std::string, int >::const_iterator it;
-  std::string key = "NULL";
+  std::string key = "nullptr";
   for (it = compressMap.begin(); it!= compressMap.end(); ++it){
     if( it->second == me){
       key = it->first;
@@ -227,7 +227,7 @@ PIDXOutputContext::initialize( string filename,
   int rc = PIDX_create_access(&(this->access));
   checkReturnCode( rc, desc+" - PIDX_create_access", __FILE__, __LINE__);
   
-  if(comm != NULL){
+  if(comm != nullptr){
     PIDX_set_mpi_access( this->access, this->comm );
     checkReturnCode( rc, desc+" - PIDX_set_mpi_access", __FILE__, __LINE__);
   }

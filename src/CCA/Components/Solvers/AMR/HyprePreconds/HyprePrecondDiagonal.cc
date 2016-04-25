@@ -70,9 +70,9 @@ HyprePrecondDiagonal::setup(void)
   if (interface == HypreStruct) {
 #ifdef HYPRE_USE_PTHREADS
     for (i = 0; i < hypre_NumThreads; i++)
-      precond[i] = NULL;
+      precond[i] = nullptr;
 #else
-    _precond = NULL;
+    _precond = nullptr;
 #endif
     _precond = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScale;
     _pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScaleSetup;

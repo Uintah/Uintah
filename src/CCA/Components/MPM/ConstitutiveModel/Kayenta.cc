@@ -896,8 +896,8 @@ Kayenta::initializeLocalMPMLabels()
   ISVNames.push_back(ISV[0]);
   proc0cout << "ISV[" << 0 << "] is called " << ISVNames[0] << endl;
   for(int i = 1; i < d_NINSV ; i++) {
-// If you specify NULL, by default it will start again from the previous stop.
-     ISV[i] = strtok (NULL, "|");
+// If you specify nullptr, by default it will start again from the previous stop.
+     ISV[i] = strtok (nullptr, "|");
      ISVNames.push_back(ISV[i]);
      proc0cout << "ISV[" << i << "] is called " << ISVNames[i] << endl;
   }

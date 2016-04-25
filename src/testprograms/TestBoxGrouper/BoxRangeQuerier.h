@@ -52,10 +52,10 @@ private:
   {
   public:
     BoxPoint()
-      : d_box(NULL) { }
+      : d_box(nullptr) { }
 
     BoxPoint(IntVector centerTimes2)
-      : d_box(NULL), d_centerTimes2(centerTimes2) { }
+      : d_box(nullptr), d_centerTimes2(centerTimes2) { }
 
     BoxPoint(const BoxPoint& copy)
       : d_box(copy.d_box), d_centerTimes2(copy.d_centerTimes2) {}

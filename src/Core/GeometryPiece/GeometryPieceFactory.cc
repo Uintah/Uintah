@@ -230,7 +230,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       // If it has a childBlock or data, then it is not just a reference.
       bool goHasInfo = childBlock || data != "";
 
-      if( referencedPiece.get_rep() != NULL && goHasInfo ) {
+      if( referencedPiece.get_rep() != nullptr && goHasInfo ) {
        cout << "Error: GeometryPiece (" << go_type << ")"
             << " labeled: '" << go_label 
             << "' has already been specified...  You can't change its values.\n"
@@ -245,7 +245,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
             <<  " (of type: " << go_type << ")\n";
       } else {
 
-        if( referencedPiece.get_rep() != NULL ) {
+        if( referencedPiece.get_rep() != nullptr ) {
           dbg << "Referencing GeometryPiece: " << go_label 
               << " (of type: " << go_type << ")\n";
           objs.push_back( referencedPiece );
@@ -272,7 +272,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       dbg << "Creating non-labeled GeometryPiece of type '" << go_type << "'\n";
     }
 
-    GeometryPiece * newGeomPiece = NULL;
+    GeometryPiece * newGeomPiece = nullptr;
 
     if ( go_type == BoxGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew BoxGeometryPiece(child);
@@ -336,7 +336,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       // Perhaps it is a shell piece... let's find out:
       newGeomPiece = ShellGeometryFactory::create(child);
 
-      if( newGeomPiece == NULL ) {
+      if( newGeomPiece == nullptr ) {
         if( Parallel::getMPIRank() == 0 ) {
           cerr << "WARNING: Unknown Geometry Piece Type " << "(" << go_type << ")\n" ;
         }

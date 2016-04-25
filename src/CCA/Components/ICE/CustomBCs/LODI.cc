@@ -104,7 +104,7 @@ VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face)
 {
   string labelName = "maxMach_" + Patch::getFaceName(face);
   VarLabel* V_Label = VarLabel::find(labelName); 
-  if (V_Label == NULL){
+  if (V_Label == nullptr){
     throw InternalError("Label " + labelName+ " doesn't exist", __FILE__, __LINE__);
   }
   return V_Label;

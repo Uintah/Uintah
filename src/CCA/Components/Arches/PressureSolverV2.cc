@@ -75,7 +75,7 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_source = 0;
   d_iteration = 0;
   d_indx = -9;
-  d_hypreSolver_parameters = NULL;
+  d_hypreSolver_parameters = nullptr;
   d_periodic_vector = IntVector(0,0,0);
 }
 
@@ -182,7 +182,7 @@ void PressureSolver::sched_solve(const LevelP& level,
   int archIndex = 0; // only one arches material
   d_indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
-  string pressLabel = "NULL";
+  string pressLabel = "nullptr";
 
   sched_buildLinearMatrix( sched, perproc_patches, matls,
                            timelabels, extraProjection);

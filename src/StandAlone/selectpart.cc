@@ -110,12 +110,12 @@ int main(int argc, char** argv)
     } else if (s == "-timesteplow" ||
                s == "-timeStepLow" ||
                s == "-timestep_low") {
-      time_step_lower = strtoul(argv[++i],(char**)NULL,10);
+      time_step_lower = strtoul(argv[++i],(char**)nullptr,10);
       tslow_set = true; 
     } else if (s == "-timestephigh" ||
                s == "-timeStepHigh" ||
                s == "-timestep_high") {
-      time_step_upper = strtoul(argv[++i],(char**)NULL,10);
+      time_step_upper = strtoul(argv[++i],(char**)nullptr,10);
       tsup_set = true;
     } else if (s == "-timestepinc" ||
                s == "-timestepInc" ||

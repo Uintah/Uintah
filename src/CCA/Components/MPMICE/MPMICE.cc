@@ -956,7 +956,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
-  Task* t = NULL;
+  Task* t = nullptr;
 
   printSchedule(patches, cout_doing,"MPMICE::scheduleComputeEquilibrationPressure");
 

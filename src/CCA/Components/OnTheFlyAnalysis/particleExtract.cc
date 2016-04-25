@@ -140,7 +140,7 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
     var_spec->getAttributes(attribute);
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
-    if(label == NULL){
+    if(label == nullptr){
       throw ProblemSetupException("particleExtract: analyze label not found: "
                            + name , __FILE__, __LINE__);
     }
@@ -233,7 +233,7 @@ void particleExtract::initialize(const ProcessorGroup*,
     
     for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      myFiles[idx] = NULL;
+      myFiles[idx] = nullptr;
     }
     
     
@@ -252,7 +252,7 @@ void particleExtract::initialize(const ProcessorGroup*,
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
-      if ( check == NULL){
+      if ( check == nullptr){
         ostringstream warn;
         warn << "ERROR:particleExtract  The main uda directory does not exist. ";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -324,7 +324,7 @@ void particleExtract::doAnalysis_preReloc(const ProcessorGroup* pg,
     
       for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        myFiles_preReloc[idx] = NULL;
+        myFiles_preReloc[idx] = nullptr;
       }
     }
   }
@@ -350,7 +350,7 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
   Ghost::GhostType gn = Ghost::None;
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
-    if(d_varLabels[i] == NULL){
+    if(d_varLabels[i] == nullptr){
       string name = d_varLabels[i]->getName();
       throw InternalError("particleExtract: scheduleDoAnalysis label not found: " 
                           + name , __FILE__, __LINE__);
@@ -445,7 +445,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
         
         // bulletproofing
-        if(d_varLabels[i] == NULL){
+        if(d_varLabels[i] == nullptr){
           string name = d_varLabels[i]->getName();
           throw InternalError("particleExtract: analyze label not found: " 
                           + name , __FILE__, __LINE__);
@@ -516,7 +516,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           string filename = fname.str();
           
           // open the file
-          FILE *fp = NULL;
+          FILE *fp = nullptr;
           createFile(filename,fp);
           
           //__________________________________
@@ -572,12 +572,12 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           fprintf(fp,    "\n");
           
           //__________________________________
-          //  HACK:  Close each file and set the fp to NULL
+          //  HACK:  Close each file and set the fp to nullptr
           //  Remove this hack once we figure out how to use
           //  particle relocation to move file pointers between
           //  patches.
           fclose(fp);
-          myFiles[idx] = NULL;
+          myFiles[idx] = nullptr;
         }
       }  // loop over particles
       lastWriteTime = now;     
@@ -654,7 +654,7 @@ void
 particleExtract::createDirectory(string& dirName, string& levelIndex)
 {
   DIR *check = opendir(dirName.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << Parallel::getMPIRank() << "particleExtract:Making directory " << dirName << endl;
     MKDIR( dirName.c_str(), 0777 );
   } else {
@@ -664,7 +664,7 @@ particleExtract::createDirectory(string& dirName, string& levelIndex)
   // level index
   string path = dirName + "/" + levelIndex;
   check = opendir(path.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << "particleExtract:Making directory " << path << endl;
     MKDIR( path.c_str(), 0777 );
   } else {

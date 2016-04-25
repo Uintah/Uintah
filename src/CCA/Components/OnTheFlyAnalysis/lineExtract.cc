@@ -194,7 +194,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
     
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
-    if(label == NULL){
+    if(label == nullptr){
       throw ProblemSetupException("lineExtract: analyze label not found: "
                            + name , __FILE__, __LINE__);
     }
@@ -375,7 +375,7 @@ void lineExtract::initialize(const ProcessorGroup*,
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
-      if ( check == NULL){
+      if ( check == nullptr){
         ostringstream warn;
         warn << "ERROR:lineExtract  The main uda directory does not exist. ";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -412,7 +412,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
   
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
-    if(d_varLabels[i] == NULL){
+    if(d_varLabels[i] == nullptr){
       string name = d_varLabels[i]->getName();
       throw InternalError("lineExtract: scheduleDoAnalysis label not found: " 
                           + name , __FILE__, __LINE__);
@@ -519,7 +519,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
         
         // bulletproofing
-        if(d_varLabels[i] == NULL){
+        if(d_varLabels[i] == nullptr){
           string name = d_varLabels[i]->getName();
           throw InternalError("lineExtract: analyze label not found: " 
                           + name , __FILE__, __LINE__);
@@ -799,7 +799,7 @@ void
 lineExtract::createDirectory(string& lineName, string& levelIndex)
 {
   DIR *check = opendir(lineName.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << Parallel::getMPIRank() << "lineExtract:Making directory " << lineName << endl;
     MKDIR( lineName.c_str(), 0777 );
   } else {
@@ -809,7 +809,7 @@ lineExtract::createDirectory(string& lineName, string& levelIndex)
   // level index
   string path = lineName + "/" + levelIndex;
   check = opendir(path.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << "lineExtract:Making directory " << path << endl;
     MKDIR( path.c_str(), 0777 );
   } else {

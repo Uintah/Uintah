@@ -420,7 +420,7 @@ createDirectory(string& levelIndex, string& path)
 {
   string dirName = "./Lnorm";
   DIR *check = opendir(dirName.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << "Making directory "<< dirName<<endl;
     MKDIR( dirName.c_str(), 0777 );
   } else {
@@ -430,7 +430,7 @@ createDirectory(string& levelIndex, string& path)
   // level index
   path = dirName + "/" + levelIndex;
   check = opendir(path.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << "Making directory " << path << endl;
     MKDIR( path.c_str(), 0777 );
   } else {

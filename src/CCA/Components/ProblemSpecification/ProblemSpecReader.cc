@@ -88,7 +88,7 @@ getErrorInfo( const xmlNode * node )
 {
   ostringstream error;
 
-  if( node->_private == NULL ) {
+  if( node->_private == nullptr ) {
     // All nodes of the ups_spec.xml will have _private set, but nodes coming from the 
     // .ups file being validated may not.  However, they will have a doc pointer that
     // has the file information.
@@ -391,7 +391,7 @@ public:
   // validValues is a _single_ string (it will be parsed as follows) that contains valid values
   // for the value of the tag.  The specification of valid values depends on the type of Tag:
   //
-  //  STRING: a comma separated lists of strings, or "*" (or NULL) which means anything
+  //  STRING: a comma separated lists of strings, or "*" (or nullptr) which means anything
   //  INTEGER/DOUBLE: "*" = any value, "positive" = a positive value, "num, num" = min, max values
   //  BOOLEAN: validValues is not allowed... because it defaults to true/false.
   //  VECTOR: FIXME... does nothing yet...
@@ -473,7 +473,7 @@ public:
 
     AttributeAndTagBase::print( recursively, depth, isTag );
 
-    dbg << "(parent: " << (parent_ ? parent_->name_ : "NULL") << " - " << parent_.get_rep() << ") " 
+    dbg << "(parent: " << (parent_ ? parent_->name_ : "nullptr") << " - " << parent_.get_rep() << ") " 
         << "(common: " << isCommonTag_ << ")\n";
 
     if( isCommonTag_ ) { return; }
@@ -521,7 +521,7 @@ AttributeAndTagBase::getCompleteName() const
   string      result = name_;
   const Tag * tag = parent_.get_rep();
     
-  while( tag != NULL ) {
+  while( tag != nullptr ) {
     result = tag->name_ + "->" + result;
     tag = tag->parent_.get_rep();
   }
@@ -536,7 +536,7 @@ Tag::findAttribute( const string & attrName )
       return attributes_[ pos ];
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 TagP
@@ -547,7 +547,7 @@ Tag::findChildTag( const string & tagName )
       return subTags_[ pos ];
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 // Chops up 'validValues' (based on ','s) and verifies that 'value' is in the list.
@@ -771,7 +771,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
   bool hasSpecString = true;
 
-  if( xmlTag == NULL ) {
+  if( xmlTag == nullptr ) {
     throw ProblemSetupException( "Error... passed in xmlTag is null...", __FILE__, __LINE__ );
   }
   else {
@@ -780,7 +780,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
       TagP tempTag = commonTags_g->findChildTag( name ); // If the tag is (accidentally) declared twice, then
                                                          // this var will hold the first declaration...
 
-      if( ( xmlTag->properties != NULL ) && tempTag ) {
+      if( ( xmlTag->properties != nullptr ) && tempTag ) {
 
         // This section checks for multiply declared versions of the same 'Common' tag...
 
@@ -809,7 +809,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         }
       }
 
-      if( xmlTag->properties == NULL ) {
+      if( xmlTag->properties == nullptr ) {
 
         TagP tag = commonTags_g->findChildTag( name );
         if( tag ) {
@@ -821,7 +821,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
                                        "              or couldn't find in CommonTags.\n" + getErrorInfo(xmlTag), __FILE__, __LINE__ );
         }
       }
-      else if( xmlTag->properties->children == NULL ) {
+      else if( xmlTag->properties->children == nullptr ) {
         throw ProblemSetupException( "Error (b)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").",
                                      __FILE__, __LINE__ );
       }
@@ -864,7 +864,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
   TagP newTag;
   bool updateForwardDecls = false;
-  TagP commonTag = NULL;
+  TagP commonTag = nullptr;
 
   if( forwardDecl ) {
     // Add tag to the list of forwardly declared tags that need to be resolved when the real definition is found.
@@ -909,7 +909,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   }
 
   // Handle attributes... (if applicable)
-  if( hasSpecString && xmlTag->properties->next != NULL ) {
+  if( hasSpecString && xmlTag->properties->next != nullptr ) {
     for( xmlAttr * child = xmlTag->properties->next; child != 0; child = child->next) {
       if( child->type == XML_ATTRIBUTE_NODE ) {
 
@@ -1185,8 +1185,8 @@ ProblemSpecReader::parseValidationFile()
   root->_private = (void*)valFileNamePtr;
   resolveIncludes( root->children, root );
 
-  uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", NULL, root );
-  commonTags_g = new Tag( "CommonTags", REQUIRED, NO_DATA, "", NULL, root );
+  uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", nullptr, root );
+  commonTags_g = new Tag( "CommonTags", REQUIRED, NO_DATA, "", nullptr, root );
 
   //  string tagName = to_char_ptr( root->name );
   string tagName = (const char *)( root->name );
@@ -1208,7 +1208,7 @@ ProblemSpecReader::parseValidationFile()
         commonTagsFound = true;
         // Find first (real) child of the <CommonTags> block...
         xmlNode * gc = child->children; // Grand Child
-        while( gc != NULL ) {
+        while( gc != nullptr ) {
           if( gc->type == XML_ELEMENT_NODE ) {
             commonTags_g->parseXmlTag( gc );
           }
@@ -1358,7 +1358,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
 
       char * token = strtok( tokens, "[,]" );
 
-      while( token != NULL ) {
+      while( token != nullptr ) {
         int result;
         int num = sscanf( token, "%d", &result );
 
@@ -1368,7 +1368,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
                                        getErrorInfo( node ),
                                        __FILE__, __LINE__ );
         } 
-        token = strtok( NULL, "[,]" );
+        token = strtok( nullptr, "[,]" );
       }
     }
     break;
@@ -1379,7 +1379,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
 
       char * token = strtok( tokens, "[,]" );
 
-      while( token != NULL ) {
+      while( token != nullptr ) {
         double result;
         int    num = sscanf( token, "%lf", &result );
 
@@ -1389,7 +1389,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
                                        getErrorInfo( node ),
                                        __FILE__, __LINE__ );
         } 
-        token = strtok( NULL, "[,]" );
+        token = strtok( nullptr, "[,]" );
       }
     }
     break;
@@ -1432,8 +1432,8 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
 void
 Tag::validateAttribute( xmlAttr * attr )
 {
-  if( attr == NULL ) {
-    throw ProblemSetupException( "Error... attr is NULL", __FILE__, __LINE__ );
+  if( attr == nullptr ) {
+    throw ProblemSetupException( "Error... attr is nullptr", __FILE__, __LINE__ );
   }
 
   const string attrName = (const char *)( attr->name );
@@ -1690,7 +1690,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
           }
           else {
             ProblemSpecP childPs = ps->findBlock( childName );
-            found[ childNamePos ] = (childPs.get_rep() != NULL);
+            found[ childNamePos ] = (childPs.get_rep() != nullptr);
           }
         }
         bool valuesMustAllBe = found[ 0 ];
@@ -1858,7 +1858,7 @@ validateFilename( const string & filename, const xmlNode * parent )
 
       char buffer[2000];
       char * str = getcwd( buffer, 2000 );
-      if( str == NULL ) {
+      if( str == nullptr ) {
         proc0cout << "WARNING: Directory not returned by getcwd()...\n";
       }
       else {
@@ -1909,7 +1909,7 @@ printDoc( xmlNode * node, int depth )
     cout << "PRINTING DOC\n";
   }
 
-  if( node == NULL ) {
+  if( node == nullptr ) {
     return;
   }
 
@@ -1957,7 +1957,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
     initialized = true;
   }
 
-  string full_filename = validateFilename( filename, NULL );
+  string full_filename = validateFilename( filename, nullptr );
 
   xmlDocPtr doc;
 
@@ -1991,7 +1991,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 
     while( !done ) {
       result = fgets( line1, LINE_LENGTH, the_xml_file );
-      if( result == NULL ) {
+      if( result == nullptr ) {
 	done = true;
       }
       else {
@@ -2047,7 +2047,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
     } // end while()
 
     fclose( the_xml_file );
-    doc = xmlReadMemory( &my_xml_data[0], my_xml_data.size(), NULL, NULL, XML_PARSE_PEDANTIC | XML_PARSE_NOBLANKS );
+    doc = xmlReadMemory( &my_xml_data[0], my_xml_data.size(), nullptr, nullptr, XML_PARSE_PEDANTIC | XML_PARSE_NOBLANKS );
   } // end else
 
   if (doc == 0) {
@@ -2081,7 +2081,7 @@ ProblemSpecReader::findFileNamePtr( const string & filename )
       return d_upsFilename[ pos ];
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 void
@@ -2089,7 +2089,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::resolveIncludes");
 
-  while( child != NULL ) {
+  while( child != nullptr ) {
     if( child->type == XML_ELEMENT_NODE ) {
       string name1 = (const char *)(child->name);
       if( name1 == "include" ) {
@@ -2128,7 +2128,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
             for( unsigned int pos = 0; pos < sections.size(); pos++ ) {
               bool done = false;
               while( !done ) {
-                if( incChild == NULL ) {
+                if( incChild == nullptr ) {
                   throw ProblemSetupException("Error parsing included file '" + filename + "' section '" + section + "'", __FILE__, __LINE__);
                 }
 
@@ -2152,7 +2152,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
             //ProblemSpecP newnode = tempParentPS.importNode( incChild, true );
 
             xmlNode * newnode = xmlDocCopyNode( incChild, parent->doc, true );
-            if( prevChild == NULL ) {
+            if( prevChild == nullptr ) {
               prevChild = newnode;
             }
 
@@ -2178,17 +2178,17 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
       else { // !"include"
         indent( dbg, depth );
         dbg << " * " << name1 << "\n";
-        if( child->_private == NULL ) {
+        if( child->_private == nullptr ) {
           child->_private = parent->_private;
         }
       }
 
-      if( child != NULL ) {
-        // Child can be NULL if an <include> is the last 'child'... as the <include> is
+      if( child != nullptr ) {
+        // Child can be nullptr if an <include> is the last 'child'... as the <include> is
         // removed from the tree above.
         xmlNode * grandchild = child->children;
 
-        if( grandchild != NULL ) {
+        if( grandchild != nullptr ) {
           resolveIncludes( grandchild, child, depth+1 );
         }
       }
@@ -2196,7 +2196,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
 
     child = child->next;
 
-  } // end while( child != NULL )
+  } // end while( child != nullptr )
 
 } // end resolveIncludes()
 

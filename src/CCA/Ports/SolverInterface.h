@@ -51,7 +51,7 @@ namespace Uintah {
                          restartableTimestep(false),
                          setupFrequency(1),
                          updateCoefFrequency(1),
-                         outputFileName("NULL") {}
+                         outputFileName("nullptr") {}
     
     void setSolveOnExtraCells(bool s) {
       solveOnExtraCells = s;

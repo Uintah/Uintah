@@ -208,7 +208,7 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
     
     if (!isConstDensity_) {
       dw->get( rhoStar_, Uintah::VarLabel::find(rhoStarTag_.name()), material, patch, gt, ng );
-      const AllocInfo ainfo( dw, dw, material, patch, NULL );
+      const AllocInfo ainfo( dw, dw, material, patch, nullptr );
       const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
       rhoStar = wrap_uintah_field_as_spatialops<SVolField>( rhoStar_, ainfo, gd );
     }
@@ -217,7 +217,7 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
       const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
       const int ng = get_n_ghost<SVolField>();
       dw->get( svolFrac, Uintah::VarLabel::find(volFracTag_.name()), material, patch, gt, ng );
-      const AllocInfo ainfo( dw, dw, material, patch, NULL );
+      const AllocInfo ainfo( dw, dw, material, patch, nullptr );
       const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
       volfrac = wrap_uintah_field_as_spatialops<SVolField>( svolFrac, ainfo, gd );
     }

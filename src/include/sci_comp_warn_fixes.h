@@ -52,7 +52,7 @@
 #else
 
 #  define RETURN_FALSE return false
-#  define RETURN_NULL return NULL
+#  define RETURN_NULL return nullptr
 #  define RETURN_0 return 0
 #  define RETURN   return
 

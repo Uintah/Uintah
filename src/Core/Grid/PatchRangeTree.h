@@ -87,10 +87,10 @@ private:
   {
   public:
     PatchPoint()
-      : d_patch(NULL) { }
+      : d_patch(nullptr) { }
 
     PatchPoint(IntVector centerTimes2)
-      : d_patch(NULL), d_centerTimes2(centerTimes2) { }
+      : d_patch(nullptr), d_centerTimes2(centerTimes2) { }
     
     void setPatch(const Patch* patch)
     {

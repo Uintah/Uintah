@@ -109,7 +109,7 @@ namespace WasatchCore{
       doRadiation_(false),
       doParticles_(false),
       timeIntegrator_(TimeIntegrator("FE")),
-      subsched_(NULL),
+      subsched_(nullptr),
       compileDualTimeSched_(true)
   {
     proc0cout << std::endl
@@ -124,9 +124,9 @@ namespace WasatchCore{
               << "-------------------------------------------------------------" << std::endl
               << std::endl;
 
-    materials_   = NULL;
-    timeStepper_ = NULL;
-    linSolver_   = NULL;
+    materials_   = nullptr;
+    timeStepper_ = nullptr;
+    linSolver_   = nullptr;
 
     isRestarting_ = false;
 
@@ -1507,7 +1507,7 @@ namespace WasatchCore{
         return patches;
       }
     }
-    return NULL;
+    return nullptr;
   }
 
  //------------------------------------------------------------------

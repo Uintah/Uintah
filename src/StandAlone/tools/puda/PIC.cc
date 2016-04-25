@@ -84,7 +84,7 @@ Uintah::PIC( DataArchive * da, CommandLineFlags & clf, int cx, int cy, int cz )
       // Find the patch on which the cell lives
       // don't include extra cells -> false
       const Patch * patch = level->getPatchFromIndex(cell, true);
-      if(patch != NULL)
+      if(patch != nullptr)
       {
         cout << "Cell found on patch: " << patch->getID() << " on level: " << level << endl;   
       } else {

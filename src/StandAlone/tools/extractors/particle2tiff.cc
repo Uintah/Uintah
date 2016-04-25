@@ -475,7 +475,7 @@ void write_tiff_volume(const tiffFlags* flags,
   //__________________________________
   //  Create the objects that create the slices
   //  and write the data
-  Bits* whichBit = NULL;
+  Bits* whichBit = nullptr;
   
   if(nBits == 8){
     depth = TIFFDataWidth(TIFF_BYTE); 
@@ -503,7 +503,7 @@ void write_tiff_volume(const tiffFlags* flags,
   
   // Open the TIFF file
   TIFF *out;
-  if((out = TIFFOpen(tname.str().c_str(), "w")) == NULL){
+  if((out = TIFFOpen(tname.str().c_str(), "w")) == nullptr){
     cout << "Could not open " << tname << " for writing\n";
     exit(1);
   }
@@ -566,7 +566,7 @@ void write_tiff_slices(const tiffFlags* flags,
   //__________________________________
   //  Create the objects that create the slices
   //  and write the data
-  Bits* whichBit = NULL;
+  Bits* whichBit = nullptr;
   
   if(nBits == 8){
     depth = TIFFDataWidth(TIFF_BYTE); 
@@ -593,7 +593,7 @@ void write_tiff_slices(const tiffFlags* flags,
 
     // Open the TIFF file
     TIFF *out;
-    if((out = TIFFOpen(sliceName.str().c_str(), "w")) == NULL){
+    if((out = TIFFOpen(sliceName.str().c_str(), "w")) == nullptr){
       cout << "Could not open " << sliceName << " for writing\n";
       exit(1);
     }
@@ -1070,11 +1070,11 @@ main( int argc, char** argv )
         --i;                                 // rewind
       }
     } else if ( s == "-tlow" || s == "--timesteplow") {
-      time_start = strtoul(argv[++i],NULL,10);
+      time_start = strtoul(argv[++i],nullptr,10);
     } else if ( s == "-thigh" || s == "--timestephigh") {
-      time_end = strtoul(argv[++i], NULL,10);
+      time_end = strtoul(argv[++i], nullptr,10);
     } else if ( s == "-timestep" || s == "--timestep") {
-      int me = strtoul(argv[++i], NULL,10);
+      int me = strtoul(argv[++i], nullptr,10);
       time_start = me;
       time_end   = me;
     } else if ( s == "-istart" || s == "--indexs") {

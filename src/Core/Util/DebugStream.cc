@@ -66,7 +66,7 @@ DebugBuf::~DebugBuf()
 
 int DebugBuf::overflow(int ch)
 {
-  if (owner==NULL){
+  if (owner==nullptr){
     cout << "DebugBuf: owner not initialized? Maybe static object init order error." << endl;
   }else if(owner->active()){
     return(*(owner->outstream) << (char)ch ? 0 : EOF);
