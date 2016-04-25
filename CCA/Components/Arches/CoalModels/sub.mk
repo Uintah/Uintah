@@ -13,8 +13,7 @@ SRCDIR := CCA/Components/Arches/CoalModels
 # Also, do not put the .cc on this list of files as the .cc or .cu
 # will be added automatically as needed.
 #
-CUDA_ENABLED_SRCS =              \
-        PartVel                  \
+CUDA_ENABLED_SRCS :=             \
         CharOxidation            \
         CharOxidationShaddix     \
         CharOxidationSmith       \
@@ -27,6 +26,7 @@ CUDA_ENABLED_SRCS =              \
         HeatTransfer             \
         KobayashiSarofimDevol    \
         MaximumTemperature       \
+        PartVel                  \
         ParticleConvection       \
         RichardsFletcherDevol    \
         SimpleBirth              \

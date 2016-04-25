@@ -205,6 +205,7 @@ sci_arg_enable_list=""
 # some error condition information to the user.
 HAVE_BOOST=no
 HAVE_TABPROPS=no
+HAVE_RADPROPS=no
 HAVE_SPATIALOPS=no
 HAVE_EXPRLIB=no
 
@@ -2093,14 +2094,12 @@ if test "$with_visit" -o "$wasatch_3p" = "yes"; then
    CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
    CMAKE_VERSION_PATCH=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $3}'`
 
-   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
-      AC_MSG_WARN(Have not tried using cmake v3.x... It might work...)
-   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
-      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
-   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
-      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
-   elif test "$CMAKE_VERSION_PATCH" -lt 7; then
-      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   if   test "$CMAKE_VERSION_MAJOR" -lt 3; then
+      AC_MSG_ERROR(CMake must be version 3.1.0 or better)
+   elif test "$CMAKE_VERSION_MINOR" -lt 1; then
+      AC_MSG_ERROR(CMake must be version 3.1.0 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   #elif test "$CMAKE_VERSION_PATCH" -lt 0; then
+   #   AC_MSG_ERROR(CMake must be version 3.1.0 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
    fi
 fi
 
@@ -4348,21 +4347,13 @@ AC_SUBST(RADPROPS_LIB_DIR_FLAG)
 
 ##  --  Make sure Wasatch 3P is found if WASATCH or ARCHES is requested -------
 
-if test "$BUILD_WASATCH" = "yes"; then
-  if test "$HAVE_BOOST" != "yes" ||
-     test "$HAVE_TABPROPS" != "yes" ||
-     test "$HAVE_SPATIALOPS" != "yes" ||
-     test "$HAVE_EXPRLIB" != "yes"; then
-    AC_MSG_ERROR(You enabled the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
-  fi
-fi
-
-if test "$BUILD_ARCHES" = "yes"; then
-  if test "$HAVE_BOOST" != "yes" ||
-     test "$HAVE_TABPROPS" != "yes" ||
-     test "$HAVE_SPATIALOPS" != "yes" ||
-     test "$HAVE_EXPRLIB" != "yes"; then
-    AC_MSG_ERROR(You enabled the Arches component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
+if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
+  if test "$HAVE_BOOST"      != "yes" -o \
+          "$HAVE_TABPROPS"   != "yes" -o \
+          "$HAVE_RADPROPS"   != "yes" -o \
+          "$HAVE_SPATIALOPS" != "yes" -o \
+          "$HAVE_EXPRLIB"    != "yes"; then
+    AC_MSG_ERROR(You enabled the Wasatch and/or Arches component but do not have all of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); RadProps ($HAVE_RADPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 fi
 
