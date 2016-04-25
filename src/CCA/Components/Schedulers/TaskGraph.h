@@ -25,7 +25,7 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H
 #define CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H
 
- 
+
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Grid.h>
@@ -33,6 +33,8 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <unordered_map>
+
 
 namespace Uintah {
 
@@ -45,7 +47,7 @@ namespace Uintah {
 
 CLASS
    TaskGraph
-   
+
    During the TaskGraph compilation, the task graph does its work in
    the createDetailedTasks function.  The first portion is to sort the tasks,
    by adding edges between computing tasks and requiring tasks,
@@ -83,7 +85,7 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    TaskGraph, CompTable
@@ -91,9 +93,9 @@ KEYWORDS
 
 DESCRIPTION
 
-  
+
 WARNING
-  
+
 ****************************************/
 
 class CompTable;
@@ -212,14 +214,7 @@ class TaskGraph {
 
   private:
 
-#ifdef __PGI
-     //PGI won't compile with hash_multimap, so it will use multimap
-    typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
-#elif HAVE_GNU_HASHMAP
-     typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
-#else
-    typedef hash_multimap<const VarLabel*, Task::Dependency*> CompMap;
-#endif
+    typedef std::unordered_multimap<const VarLabel*, Task::Dependency*> CompMap;
 
     typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
 
