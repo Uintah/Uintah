@@ -28,37 +28,49 @@
 #include <sci_defs/mpi_defs.h> // For mpi.h
 
 #include <vector>
+#include <Core/Util/RefCounted.h>
 
 namespace Uintah {
 
-class RefCounted;
 class ProcessorGroup;
 
 class AfterCommunicationHandler {
   public:
-    virtual ~AfterCommunicationHandler()
-    {
-    }
-
-    virtual void finishedCommunication(const ProcessorGroup*,
-                                       MPI_Status& status) = 0;
+    virtual ~AfterCommunicationHandler() {}
+    virtual void finishedCommunication(const ProcessorGroup*, MPI_Status& status) {}
 };
 
-class Sendlist : public AfterCommunicationHandler {
+class Sendlist
+  : public AfterCommunicationHandler
+{
 
   public:
     Sendlist( Sendlist* next, RefCounted* obj ) : next(next), obj(obj) {}
 
-    virtual ~Sendlist();
+    virtual ~Sendlist()
+    {
+      if (obj && obj->removeReference()) {
+        delete obj;
+        obj = nullptr;
+      }
+
+      Sendlist * curr = next;
+
+      Sendlist * n;
+      while (curr) {
+        n = curr->next;
+        if (curr->obj->removeReference()) {
+          delete curr->obj;
+        }
+        curr->obj = nullptr;
+        curr->next = nullptr;
+        delete curr;;
+        curr = n;
+      }
+    }
 
     Sendlist*   next;
     RefCounted* obj;
-
-    // Sendlist is to be an AfterCommuncationHandler object for the
-    // MPI_CommunicationRecord template in MPIScheduler.cc.  The only task
-    // it needs to do to handle finished send requests is simply get deleted.
-    virtual void finishedCommunication( const ProcessorGroup *, MPI_Status & status ) {}
-
 };
 
 class BufferInfo {
@@ -74,10 +86,11 @@ class BufferInfo {
                   int&,
                   MPI_Datatype&);
 
-    void add( void*          startbuf,
-              int            count,
-              MPI_Datatype   datatype,
-              bool           free_datatype );
+    void add( void*          startbuf
+            , int            count
+            , MPI_Datatype   datatype
+            , bool           free_datatype
+            );
 
     void addSendlist( RefCounted* );
 
