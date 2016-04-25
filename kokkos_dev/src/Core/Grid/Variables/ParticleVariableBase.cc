@@ -36,7 +36,7 @@ using namespace Uintah;
 
 
 ParticleVariableBase::~ParticleVariableBase()
-{       
+{
    if(d_pset && d_pset->removeReference())
       delete d_pset;
 }
@@ -53,7 +53,7 @@ ParticleVariableBase::ParticleVariableBase(const ParticleVariableBase& copy)
 {
    if(d_pset)
       d_pset->addReference();
-}   
+}
 
 ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase& copy)
 {
@@ -72,7 +72,7 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
 {
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
 
-  //  cerr << "ParticleVariableBase::getMPIBuffer for a " <<  td->getName() 
+  //  cerr << "ParticleVariableBase::getMPIBuffer for a " <<  td->getName()
   //       << endl;
   //  cerr << "   buffer: " << &buffer << ", sendset: " << sendset << "\n";
 
@@ -100,9 +100,9 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
     MPI::Type_indexed( count, &blocklens[0],
                         sendset->getPointer(), td->getMPIType(), &datatype );
     MPI::Type_commit(&datatype);
-    
+
     buffer.add(buf, 1, datatype, true);
-  } 
+  }
 }
 
 void ParticleVariableBase::setParticleSubset(ParticleSubset* subset)

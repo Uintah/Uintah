@@ -31,11 +31,17 @@ using namespace Uintah;
 
 static DebugStream dbg( "GeometryPiece", false );
 
-GeometryPiece::GeometryPiece() :
-  nameSet_( false ),
-  firstOutput_( true )
-{
-}
+GeometryPiece::GeometryPiece()
+  : RefCounted()
+  , nameSet_( false )
+  , firstOutput_( true )
+{}
+
+GeometryPiece::GeometryPiece( const GeometryPiece & gp )
+  : RefCounted()
+  , nameSet_( gp.nameSet_ )
+  , firstOutput_( gp.firstOutput_ )
+{}
 
 GeometryPiece::~GeometryPiece()
 {

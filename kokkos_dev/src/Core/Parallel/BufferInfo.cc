@@ -24,7 +24,6 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/BufferInfo.h>
-#include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
 
 using namespace Uintah;
@@ -73,7 +72,8 @@ void
 BufferInfo::add( void*          startbuf,
                  int            count,
                  MPI_Datatype   datatype,
-                 bool           free_datatype )
+                 bool           free_datatype
+                 )
 {
   ASSERT( !d_have_datatype );
   d_startbufs.push_back( startbuf );
@@ -112,29 +112,6 @@ BufferInfo::get_type( void*&        out_buf,
   out_buf      = buf;
   out_count    = cnt;
   out_datatype = datatype;
-}
-
-Sendlist::~Sendlist()
-{
-  if (obj && obj->removeReference()) {
-    delete obj;
-    obj = 0;
-  }
-
-  // A little more complicated than normal, so that this doesn't need to be recursive...
-
-  Sendlist* p = next;
-  while( p ){
-
-    if( p->obj->removeReference() ) {
-      delete p->obj;
-    }
-    Sendlist* n = p->next;
-    p->next = 0;  // So that DTOR won't recurse...
-    p->obj = 0;
-    delete p;
-    p = n;
-  }
 }
 
 void

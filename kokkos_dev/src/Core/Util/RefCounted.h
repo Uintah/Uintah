@@ -25,12 +25,15 @@
 #ifndef UINTAH_HOMEBREW_REFCOUNTED_H
 #define UINTAH_HOMEBREW_REFCOUNTED_H
 
+#include <atomic>
+#include <iostream>
+
 namespace Uintah {
 /**************************************
 
 CLASS
    RefCounted
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -42,42 +45,63 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Reference_Counted, RefCounted, Handle
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
-   class RefCounted {
-   public:
-      RefCounted();
-      virtual ~RefCounted();
-      
-      //////////
-      // Insert Documentation Here:
-      void addReference() const;
-      
-      //////////
-      // Insert Documentation Here:
-      bool removeReference() const;
+struct RefBase {
+  virtual ~RefBase() {}
+};
 
-      int getReferenceCount() const {
-	 return d_refCount;
-      }
 
-   private:
-      RefCounted& operator=(const RefCounted&);
-      //////////
-      // Insert Documentation Here:
-      mutable int d_refCount;
-      int         d_lockIndex;
-   };
+class RefCounted
+  : public RefBase
+{
+public:
+  RefCounted() = default;
+
+  RefCounted( const RefCounted& ) = delete;
+  RefCounted & operator=( const RefCounted& ) = delete;
+
+  RefCounted( RefCounted&& ) = default;
+  RefCounted & operator=( RefCounted&& ) = default;
+
+  virtual ~RefCounted()
+  {
+#ifndef NDEBUG
+    if (m_refcount.load(std::memory_order_relaxed)) {
+      std::cerr << "Deleted object with non-zero reference count!" << std::endl;
+    }
+#endif
+  }
+
+  void addReference() const
+  {
+    m_refcount.fetch_add(1, std::memory_order_relaxed);
+  }
+
+  bool removeReference() const
+  {
+    return 1 == m_refcount.fetch_add(-1, std::memory_order_relaxed);
+  }
+
+  int getReferenceCount() const
+  {
+    return m_refcount.load(std::memory_order_relaxed);
+  }
+
+private:
+  mutable std::atomic<int> m_refcount{0};
+};
+
 } // End namespace Uintah
 
 #endif
