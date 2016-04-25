@@ -22,13 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-
-
-#include <Core/Util/DebugStream.h>
-
 #include <mutex>
 
 std::mutex coutLock{};
 std::mutex cerrLock{};
 
-Uintah::DebugStream dbg_barrier("MPIBarriers",false);
