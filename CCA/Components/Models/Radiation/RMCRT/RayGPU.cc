@@ -71,7 +71,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     }
     
     const Level* level = getLevel(patches);
-    const int levelIndx = level->getIndex();
 
     //__________________________________
     //  increase the size of the printbuffer on the device
@@ -144,6 +143,19 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     double start = clock();
 
+    //__________________________________
+    //  Level Parameters - first batch of level data
+    levelParams levelP;     
+    levelP.hasFinerLevel = level->hasFinerLevel();
+
+    Uintah::Vector dx = level->dCell();
+    levelP.Dx     = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
+    levelP.index  = level->getIndex();
+    Point anchor  = level->getAnchor();
+    levelP.anchor = GPUPoint( make_double3(anchor.x(), anchor.y(), anchor.z()));
+    IntVector RR  = level->getRefinementRatio();
+    levelP.refinementRatio = GPUIntVector( make_int3(RR.x(), RR.y(), RR.z() ) );
+
     //______________________________________________________________________
     // patch loop
     int numPatches = patches->size();
@@ -201,7 +213,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       launchRayTraceKernel<T>(dimGrid,
                               dimBlock,
                               d_matl,
-                              levelIndx,
+                              levelP,
                               patchP,
                               (cudaStream_t*)stream,
                               RT_flags, labelNames, abskg_gdw,

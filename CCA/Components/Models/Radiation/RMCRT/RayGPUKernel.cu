@@ -40,6 +40,7 @@
 
 //__________________________________
 //  To Do
+//  - Add rayDirectionHyperCube_cellFace()
 //  - Need to implement transferFrom so use can use calc_frequency > 1
 //  - Temporal scheduling
 //  - restarts are not working.
@@ -69,7 +70,7 @@ template< class T>
 __global__ void rayTraceKernel( dim3 dimGrid,
                                 dim3 dimBlock,
                                 const int matl,
-                                const int levelIndx,
+                                levelParams level,
                                 patchParams patch,
                                 curandState* randNumStates,
                                 RMCRT_flags RT_flags,
@@ -98,13 +99,13 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
 //  sigmaT4_gdw->print();
 
-  sigmaT4_gdw->getLevel( sigmaT4OverPi, "sigmaT4",  matl, levelIndx);
-  cellType_gdw->getLevel( cellType,     "cellType", matl, levelIndx);
+  sigmaT4_gdw->getLevel( sigmaT4OverPi, "sigmaT4",  matl, level.index);
+  cellType_gdw->getLevel( cellType,     "cellType", matl, level.index);
 
   if(RT_flags.usingFloats){
-    abskg_gdw->getLevel( abskg, "abskgRMCRT",  matl, levelIndx);
+    abskg_gdw->getLevel( abskg, "abskgRMCRT",  matl, level.index);
   }else{
-    abskg_gdw->getLevel( abskg, "abskg",       matl, levelIndx);
+    abskg_gdw->getLevel( abskg, "abskg",       matl, level.index);
   }
 
   if( RT_flags.modifies_divQ ){
@@ -132,15 +133,12 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   //  Sanity checks
 #if 0
   if (isThread0()) {
-   printf("  GPUVariable Sanity check level: %i, patch: %i \n",levelIndx, patch.ID);
+   printf("  GPUVariable Sanity check level: %i, patch: %i \n",level.index, patch.ID);
   }
 #endif
   GPUVariableSanityCK(abskg,         patch.loEC, patch.hiEC);
   GPUVariableSanityCK(sigmaT4OverPi, patch.loEC, patch.hiEC);
 
-
-  double DyDx = patch.dx.y/patch.dx.x;
-  double DzDx = patch.dx.z/patch.dx.x;
 
   bool doLatinHyperCube = (RT_flags.rayDirSampleAlgo == LATIN_HYPER_CUBE);
 
@@ -156,8 +154,6 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
     __shared__ int3 dirIndexOrder[6];
     __shared__ int3 dirSignSwap[6];
-    __shared__ int3 locationIndexOrder[6];
-    __shared__ int3 locationShift[6];
 
     //_____________________________________________
     //   Ordering for Surface Method
@@ -179,20 +175,6 @@ __global__ void rayTraceKernel( dim3 dimGrid,
     dirSignSwap[TOP]      = make_int3( 1, 1, -1);
     dirSignSwap[BOT]      = make_int3( 1, 1,  1);
 
-    locationIndexOrder[EAST]  = make_int3(1,0,2);
-    locationIndexOrder[WEST]  = make_int3(1,0,2);
-    locationIndexOrder[NORTH] = make_int3(0,1,2);
-    locationIndexOrder[SOUTH] = make_int3(0,1,2);
-    locationIndexOrder[TOP]   = make_int3(0,2,1);
-    locationIndexOrder[BOT]   = make_int3(0,2,1);
-
-    locationShift[EAST]   = make_int3(1, 0, 0);
-    locationShift[WEST]   = make_int3(0, 0, 0);
-    locationShift[NORTH]  = make_int3(0, 1, 0);
-    locationShift[SOUTH]  = make_int3(0, 0, 0);
-    locationShift[TOP]    = make_int3(0, 0, 1);
-    locationShift[BOT]    = make_int3(0, 0, 0);
-
     //__________________________________
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
     if ( (tidX >= patch.lo.x) && (tidY >= patch.lo.y) && (tidX < patch.hi.x) && (tidY < patch.hi.y) ) { // patch boundary check
@@ -207,6 +189,8 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
          // which surrounding cells are boundaries
         boundFlux[origin].p = has_a_boundaryDevice(origin, cellType, boundaryFaces);
+        
+        GPUPoint CC_pos = level.getCellPosition(origin);
 
         //__________________________________
         // Loop over boundary faces of the cell and compute incident radiative flux
@@ -225,16 +209,18 @@ __global__ void rayTraceKernel( dim3 dimGrid,
           #pragma unroll
           for (int iRay=0; iRay < RT_flags.nFluxRays; iRay++){
 
-            GPUVector direction_vector, ray_location;
+            GPUVector direction_vector;
+            GPUVector rayOrigin;
             double cosTheta;
+
+//  Need to add rayDirectionHyperCube_cellFace Call  -Todd                     <<<<<<<<<<<<<<<<<<<<<<<<<,,,
 
             rayDirection_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
                                    direction_vector, cosTheta );
 
-            rayLocation_cellFaceDevice( randNumStates, origin, locationIndexOrder[RayFace], locationShift[RayFace],
-                                  DyDx, DzDx, ray_location);
+            rayLocation_cellFaceDevice( randNumStates, RayFace, patch.dx, CC_pos, rayOrigin);
 
-            updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx, sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
+            updateSumIDevice< T >( level, direction_vector, rayOrigin, origin, patch.dx, sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
 
@@ -277,6 +263,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
         GPUIntVector origin = make_int3(tidX, tidY, z);     // for each thread
         double sumI = 0;
+        GPUPoint CC_pos = level.getCellPosition(origin);
 
         if (doLatinHyperCube){
           randVectorDevice(rand_i, size,randNumStates);
@@ -294,10 +281,10 @@ __global__ void rayTraceKernel( dim3 dimGrid,
           }else{                                            // Naive Monte-Carlo sampling
             direction_vector = findRayDirectionDevice( randNumStates );
           }
+          
+          GPUVector rayOrigin = rayOriginDevice( randNumStates, CC_pos, patch.dx, RT_flags.CCRays );
 
-          GPUVector rayOrigin = rayOriginDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
-
-          updateSumIDevice< T >( direction_vector, rayOrigin, origin, patch.dx,  sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
+          updateSumIDevice< T >( level, direction_vector, rayOrigin, origin, patch.dx,  sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
         } //Ray loop
 
         //__________________________________
@@ -605,6 +592,8 @@ __device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
 
 //______________________________________________________________________
 //
+
+// Used in dataOnion.  This will be removed soon.
 __device__ GPUVector rayOriginDevice( curandState* randNumStates,
                                       const GPUIntVector origin,
                                       const double DyDx,
@@ -621,6 +610,25 @@ __device__ GPUVector rayOriginDevice( curandState* randNumStates,
     rayOrigin.x = origin.x + 0.5;
     rayOrigin.y = origin.y + 0.5 * DyDx;
     rayOrigin.z = origin.z + 0.5 * DzDx;
+  }
+  return rayOrigin;
+}
+
+__device__ 
+GPUVector rayOriginDevice( curandState* randNumStates,
+                           const GPUPoint  CC_pos,
+                           const GPUVector dx,
+                           const bool   useCCRays)
+{
+  GPUVector rayOrigin;
+  if( useCCRays == false ){
+    rayOrigin[0] =  CC_pos.x - 0.5*dx.x  + randDblDevice(randNumStates) * dx.x; 
+    rayOrigin[1] =  CC_pos.y - 0.5*dx.y  + randDblDevice(randNumStates) * dx.y; 
+    rayOrigin[2] =  CC_pos.z - 0.5*dx.z  + randDblDevice(randNumStates) * dx.z;
+  }else{
+    rayOrigin[0] = CC_pos.x;
+    rayOrigin[1] = CC_pos.y;
+    rayOrigin[2] = CC_pos.z;
   }
   return rayOrigin;
 }
@@ -649,7 +657,58 @@ __device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
   location[1] += (double)origin.y;
   location[2] += (double)origin.z;
 }
+//______________________________________________________________________
+//
+//  Compute the Ray location on a cell face
+__device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
+                                            const int face,
+                                            const GPUVector Dx,
+                                            const GPUPoint CC_pos,
+                                            GPUVector& rayOrigin)
+{
+  double cellOrigin[3];
+  // left, bottom, back corner of the cell
+  cellOrigin[X] = CC_pos.x - 0.5 * Dx[X];
+  cellOrigin[Y] = CC_pos.y - 0.5 * Dx[Y];
+  cellOrigin[Z] = CC_pos.z - 0.5 * Dx[Z];
 
+  switch(face)
+  {
+    case WEST:
+      rayOrigin[X] = cellOrigin[X];
+      rayOrigin[Y] = cellOrigin[Y] + randDblDevice(randNumStates) * Dx[Y];
+      rayOrigin[Z] = cellOrigin[Z] + randDblDevice(randNumStates) * Dx[Z];
+      break;
+    case EAST:
+      rayOrigin[X] = cellOrigin[X] +  Dx[X];
+      rayOrigin[Y] = cellOrigin[Y] + randDblDevice(randNumStates) * Dx[Y];
+      rayOrigin[Z] = cellOrigin[Z] + randDblDevice(randNumStates) * Dx[Z];
+      break;
+    case SOUTH:
+      rayOrigin[X] = cellOrigin[X] + randDblDevice(randNumStates) * Dx[X];
+      rayOrigin[Y] = cellOrigin[Y];
+      rayOrigin[Z] = cellOrigin[Z] + randDblDevice(randNumStates) * Dx[Z];
+      break;
+    case NORTH:
+      rayOrigin[X] = cellOrigin[X] + randDblDevice(randNumStates) * Dx[X];
+      rayOrigin[Y] = cellOrigin[Y] + Dx[Y];
+      rayOrigin[Z] = cellOrigin[Z] + randDblDevice(randNumStates) * Dx[Z];
+      break;
+    case BOT:
+      rayOrigin[X] = cellOrigin[X] + randDblDevice(randNumStates) * Dx[X];
+      rayOrigin[Y] = cellOrigin[Y] + randDblDevice(randNumStates) * Dx[Y];
+      rayOrigin[Z] = cellOrigin[Z];
+      break;
+    case TOP:
+      rayOrigin[X] = cellOrigin[X] + randDblDevice(randNumStates) * Dx[X];
+      rayOrigin[Y] = cellOrigin[Y] + randDblDevice(randNumStates) * Dx[Y];
+      rayOrigin[Z] = cellOrigin[Z] + Dx[Z];
+      break;
+    default:
+//      throw InternalError("Ray::rayLocation_cellFace,  Invalid FaceType Specified", __FILE__, __LINE__);
+      return;
+  }
+}
 //______________________________________________________________________
 //
 __device__ bool has_a_boundaryDevice(const GPUIntVector &c,
@@ -711,8 +770,7 @@ __device__ bool has_a_boundaryDevice(const GPUIntVector &c,
 //
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
-                                   const GPUVector&
-                                   inv_direction_vector)
+                                   const GPUVector& inv_direction_vector)
 {
   // get new step and sign
   for ( int d= 0; d<3; d++ ){
@@ -729,6 +787,24 @@ __device__ void findStepSizeDevice(int step[],
 
 //______________________________________________________________________
 //
+//______________________________________________________________________
+__device__ void raySignStepDevice(GPUVector& sign,
+                                  int cellStep[],
+                                  const GPUVector& inv_direction_vector)
+{
+  // get new step and sign
+  for ( int d=0; d<3; d++){
+    double me = copysign((double)1.0, inv_direction_vector[d]);  // +- 1
+    
+    sign[d] = max(0.0, me);    // 0, 1
+    
+    cellStep[d] = int(me);
+  }
+}
+
+
+//______________________________________________________________________
+//
 __device__ bool containsCellDevice( GPUIntVector low,
                                     GPUIntVector high,
                                     GPUIntVector cell,
@@ -739,7 +815,7 @@ __device__ bool containsCellDevice( GPUIntVector low,
 }
 
 //______________________________________________________________________
-//
+//          // used by dataOnion it will be replaced
 __device__ void reflect(double& fs,
                          GPUIntVector& cur,
                          GPUIntVector& prevCell,
@@ -761,10 +837,34 @@ __device__ void reflect(double& fs,
   ray_direction *= -1;
 }
 
+
+__device__ void reflect(double& fs,
+                         GPUIntVector& cur,
+                         GPUIntVector& prevCell,
+                         const double abskg,
+                         bool& in_domain,
+                         int& step,
+                         double& sign,
+                         double& ray_direction)
+{
+  fs = fs * (1 - abskg);
+
+  //put cur back inside the domain
+  cur = prevCell;
+  in_domain = true;
+
+  // apply reflection condition
+  step *= -1;                // begin stepping in opposite direction
+  sign *= -1;
+  ray_direction *= -1;
+}
+
+
 //______________________________________________________________________
 template< class T >
-__device__ void updateSumIDevice ( GPUVector& ray_direction,
-                                   GPUVector& ray_location,
+__device__ void updateSumIDevice ( levelParams level,
+                                   GPUVector& ray_direction,
+                                   GPUVector& ray_origin,
                                    const GPUIntVector& origin,
                                    const GPUVector& Dx,
                                    const GPUGridVariable< T >& sigmaT4OverPi,
@@ -780,30 +880,37 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
   GPUIntVector cur = origin;
   GPUIntVector prevCell = cur;
   // Step and sign for ray marching
-  int step[3];                                          // Gives +1 or -1 based on sign
-  bool sign[3];
+  int step[3];                              // Gives +1 or -1 based on sign
+  GPUVector sign;                           //   is 0 for negative ray direction
 
   GPUVector inv_ray_direction = 1.0/ray_direction;
 /*`==========TESTING==========*/
 #if DEBUG == 1
   if( isDbgCellDevice(origin) ) {
-    printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
-    printf("        inv_ray_dir [%g,%g,%g]\n", inv_ray_direction.x,inv_ray_direction.y,inv_ray_direction.z);
+    printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_origin.x, ray_origin.y, ray_origin.z);
   }
 #endif
 /*===========TESTING==========`*/
 
-  findStepSizeDevice(step, sign, inv_ray_direction);
-  GPUVector D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );
+  raySignStepDevice(sign, step, ray_direction);
 
-  GPUVector tMax;         // (mixing bools, ints and doubles)
-  tMax.x = (origin.x + sign[0]               - ray_location.x) * inv_ray_direction.x ;
-  tMax.y = (origin.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y ;
-  tMax.z = (origin.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z ;
+
+  GPUPoint CC_pos = level.getCellPosition(origin);
+  
+  // rayDx is the distance from bottom, left, back, corner of cell to ray
+  GPUVector rayDx;
+  rayDx[0] = ray_origin.x - ( CC_pos.x - 0.5*Dx.x );         // this can be consolidated using GPUVector
+  rayDx[1] = ray_origin.y - ( CC_pos.y - 0.5*Dx.y );
+  rayDx[2] = ray_origin.z - ( CC_pos.z - 0.5*Dx.z );
+  
+  GPUVector tMax;
+  tMax.x = (sign.x * Dx.x - rayDx.x) * inv_ray_direction.x;
+  tMax.y = (sign.y * Dx.y - rayDx.y) * inv_ray_direction.y;
+  tMax.z = (sign.z * Dx.z - rayDx.z) * inv_ray_direction.z;
 
   //Length of t to traverse one cell
   GPUVector tDelta;
-  tDelta   = Abs(inv_ray_direction) * D_DxRatio;
+  tDelta   = Abs(inv_ray_direction) * Dx;
 
   //Initializes the following values for each ray
   bool in_domain     = true;
@@ -813,6 +920,8 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
   int nReflect       = 0;                 // Number of reflections
   double optical_thickness      = 0;
   double expOpticalThick_prev   = 1.0;
+  double rayLength              = 0.0;
+  GPUVector ray_location        = ray_origin;
 
 
 #ifdef RAY_SCATTER
@@ -822,7 +931,6 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
   // Determine the length at which scattering will occur
   // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
   double scatLength = -log( randDblExcDevice( randNumStates ) ) / scatCoeff;
-  double curLength = 0;
 #endif
 
   //+++++++Begin ray tracing+++++++++++++++++++
@@ -838,6 +946,7 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
 
       //__________________________________
       //  Determine which cell the ray will enter next
+      dir = NONE;
       if ( tMax.x < tMax.y ){        // X < Y
         if ( tMax.x < tMax.z ){      // X < Z
           dir = X;
@@ -858,33 +967,35 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
       disMin    = (tMax[dir] - tMax_prev);
       tMax_prev = tMax[dir];
       tMax[dir] = tMax[dir] + tDelta[dir];
+      rayLength += disMin;
 
       ray_location.x = ray_location.x + (disMin  * ray_direction.x);
       ray_location.y = ray_location.y + (disMin  * ray_direction.y);
       ray_location.z = ray_location.z + (disMin  * ray_direction.z);
 
+      in_domain = (celltype[cur]==-1);  //cellType of -1 is flow         HARDWIRED WARNING
+
+      optical_thickness += abskg[prevCell]*disMin; 
+
+      RT_flags.nRaySteps ++;
+      
 /*`==========TESTING==========*/
-#if DEBUG == 1
+#if ( DEBUG >= 1 )
 if( isDbgCellDevice(origin) ){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
     printf( " dir %d ", dir );
     printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
     printf( "rayLoc [%g,%g,%g] ",ray_location.x,ray_location.y, ray_location.z);
-    printf( "inv_dir [%g,%g,%g] ",inv_ray_direction.x,inv_ray_direction.y, inv_ray_direction.z);
-    printf( "disMin %g \n",disMin );
+    printf( "disMin %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, Dx[dir]);
 
     printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
     printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur] );
+    printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
 }
 #endif
 
 /*===========TESTING==========`*/
-      in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
 
-      optical_thickness += Dx.x * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
-      // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.
-
-      RT_flags.nRaySteps ++;
 
       //Eqn 3-15(see below reference) while
       //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
@@ -896,8 +1007,7 @@ if( isDbgCellDevice(origin) ){
 
 
 #ifdef RAY_SCATTER
-      curLength += disMin * Dx.x;
-      if ( (curLength > scatLength) && in_domain){
+      if ( (rayLength > scatLength) && in_domain){
 
         // get new scatLength for each scattering event
         scatLength = -log( randDblExcDevice( randNumStates ) ) / scatCoeff;
@@ -908,27 +1018,38 @@ if( isDbgCellDevice(origin) ){
 
         // get new step and sign
         int stepOld = step[dir];
-        findStepSizeDevice( step, sign, inv_ray_direction);
+        raySignStepDevice( sign, step, ray_direction);
 
-        // if sign[face] changes sign, put ray back into prevCell (back scattering)
+        // if sign[dir] changes sign, put ray back into prevCell (back scattering)
         // a sign change only occurs when the product of old and new is negative
         if( step[dir] * stepOld < 0 ){
           cur = prevCell;
         }
+        
+        GPUPoint CC_pos = level.getCellPosition(cur);
+        
+         // rayDx is the distance from bottom, left, back, corner of cell to ray
+        rayDx[0] = ray_origin.x - ( CC_pos.x - 0.5*Dx.x );         // this can be consolidated using GPUVector
+        rayDx[1] = ray_origin.y - ( CC_pos.y - 0.5*Dx.y );
+        rayDx[2] = ray_origin.z - ( CC_pos.z - 0.5*Dx.z );
 
-        // get new tMax (mixing bools, ints and doubles)
-        tMax.x = ( ( cur.x + sign[0]               - ray_location.x) * inv_ray_direction.x );
-        tMax.y = ( ( cur.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y );
-        tMax.z = ( ( cur.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z );
+        tMax.x = (sign.x * Dx.x - rayDx.x) * inv_ray_direction.x;
+        tMax.y = (sign.y * Dx.y - rayDx.y) * inv_ray_direction.y;
+        tMax.z = (sign.z * Dx.z - rayDx.z) * inv_ray_direction.z;
 
         // Length of t to traverse one cell
-        tDelta    = Abs(inv_ray_direction) * D_DxRatio;
+        tDelta    = Abs(inv_ray_direction) * Dx;
         tMax_prev = 0;
-        curLength = 0;  // allow for multiple scattering events per ray
+        rayLength = 0;  // allow for multiple scattering events per ray
 
 /*`==========TESTING==========*/
-#if DEBUG == 3
-        printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x, cur.y, cur.z, tMax.x, tMax.y, tMax.z, tDelta.x, tDelta.y , tDelta.z );
+#if (DEBUG == 3)
+        if( isDbgCellDevice( origin)  ){
+          printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",cur.x, cur.y, cur.z,rayLength, tMax[0], tMax[1], tMax[2], tDelta.x, tDelta.y , tDelta.z, ray_direction.x, ray_direction.y , ray_direction.z);
+          printf( "                    dir: %i sign: [%g, %g, %g], step [%i, %i, %i] cur: [%i, %i, %i], prevCell: [%i, %i, %i]\n", dir, sign[0], sign[1], sign[2], step[0], step[1], step[2], cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
+          printf( "                    ray_location: [%g, %g, %g]\n", rayLocation[0], rayLocation[1], rayLocation[2] );
+//          printf("                     rayDx         [%g, %g, %g]  CC_pos[%g, %g, %g]\n", rayDx[0], rayDx[1], rayDx[2], CC_pos.x, CC_pos.y, CC_pos.z);
+        }
 #endif
 /*===========TESTING==========`*/
 
@@ -956,10 +1077,10 @@ if( isDbgCellDevice(origin) ){
 
 
 /*`==========TESTING==========*/
-#if DEBUG == 1
+#if DEBUG >0
 if( isDbgCellDevice(origin) ){
     printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i \n",
-            cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs,RT_flags.allowReflect );
+            cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs, RT_flags.allowReflect );
 
 }
 __syncthreads();
@@ -1278,9 +1399,10 @@ __global__ void setupRandNumKernel(curandState* randNumStates)
 //  is cell a debug cell
 __device__ bool isDbgCellDevice( GPUIntVector me )
 {
-  int size = 1;
-  GPUIntVector dbgCell[1];
-  dbgCell[0] = make_int3(10,10,10);
+  int size = 2;
+  GPUIntVector dbgCell[2];
+  dbgCell[0] = make_int3(0,0,0);
+  dbgCell[1] = make_int3(5,5,5);
 
 
 
@@ -1344,7 +1466,7 @@ template< class T>
 __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
                                    const int matlIndx,
-                                   const int levelIndx,
+                                   levelParams level,
                                    patchParams patch,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
@@ -1366,7 +1488,7 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
   rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                             dimBlock,
                                                             matlIndx,
-                                                            levelIndx,
+                                                            level,
                                                             patch,
                                                             randNumStates,
                                                             RT_flags,
@@ -1461,7 +1583,7 @@ template
 __host__ void launchRayTraceKernel<double>( dim3 dimGrid,
                                             dim3 dimBlock,
                                             const int matlIndx,
-                                            const int levelIndx,
+                                            levelParams level,
                                             patchParams patch,
                                             cudaStream_t* stream,
                                             RMCRT_flags RT_flags,
@@ -1478,7 +1600,7 @@ template
 __host__ void launchRayTraceKernel<float>( dim3 dimGrid,
                                            dim3 dimBlock,
                                            const int matlIndx,
-                                           const int levelIndx,
+                                           levelParams level,
                                            patchParams patch,
                                            cudaStream_t* stream,
                                            RMCRT_flags RT_flags,

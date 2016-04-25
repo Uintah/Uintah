@@ -565,14 +565,20 @@ __device__ void rayDirection_cellFaceDevice(curandState* randNumStates,
                                             double& cosTheta);
                             
 //______________________________________________________________________
-//
+//          // used by dataOnion it will be replaced
 __device__ GPUVector rayOriginDevice(curandState* randNumStates,
                                      const GPUIntVector origin,
                                      const double DyDx,
                                      const double DzDx,
                                      const bool useCCRays);
-                                      
 
+   
+__device__ GPUVector rayOriginDevice( curandState* randNumStates,
+                                      const GPUPoint  CC_pos,
+                                      const GPUVector dx,
+                                      const bool   useCCRays);
+                                      
+            // used by dataOnion it will be replaced
 __device__ void rayLocation_cellFaceDevice(curandState* randNumStates,
                                            const GPUIntVector& origin,
                                            const GPUIntVector& indexOrder,
@@ -580,6 +586,12 @@ __device__ void rayLocation_cellFaceDevice(curandState* randNumStates,
                                            const double& DyDx,
                                            const double& DzDx,
                                            GPUVector& location);
+                                           
+__device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
+                                            const int face,
+                                            const GPUVector Dx,
+                                            const GPUPoint CC_pos,
+                                            GPUVector& rayOrigin);
 
 //______________________________________________________________________
 //
@@ -592,6 +604,11 @@ __device__ bool has_a_boundaryDevice(const GPUIntVector& c,
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
                                    const GPUVector& inv_direction_vector);
+                                   
+                                   
+__device__ void raySignStepDevice(GPUVector& sign,
+                                  int cellStep[],
+                                  const GPUVector& inv_direction_vector);
  
 //______________________________________________________________________
 //
@@ -601,20 +618,30 @@ __device__ bool containsCellDevice( GPUIntVector fineLevel_ROI_Lo,
                                     const int dir); 
                                  
 //______________________________________________________________________
-//
-__device__ void reflect(double& fs,
-                        GPUIntVector& cur,
-                        GPUIntVector& prevCell,
-                        const double abskg,
-                        bool& in_domain,
-                        int& step,
-                        bool& sign,
-                        double& ray_direction);
+//          // used by dataOnion it will be replaced    
+__device__ void reflectDevice(double& fs,
+                              GPUIntVector& cur,
+                              GPUIntVector& prevCell,
+                              const double abskg,
+                              bool& in_domain,
+                              int& step,
+                              bool& sign,
+                              double& ray_direction);
+                              
+__device__ void reflectDevice(double& fs,
+                              GPUIntVector& cur,
+                              GPUIntVector& prevCell,
+                              const double abskg,
+                              bool& in_domain,
+                              int& step,
+                              double& sign,
+                              double& ray_direction);
 
 //______________________________________________________________________
 //
 template<class T>                                                          
-__device__ void updateSumIDevice ( GPUVector& ray_direction,
+__device__ void updateSumIDevice ( levelParams level,
+                                   GPUVector& ray_direction,
                                    GPUVector& ray_location,
                                    const GPUIntVector& origin,
                                    const GPUVector& Dx,
@@ -675,7 +702,7 @@ template< class T >
 __host__ void launchRayTraceKernel( dim3 dimGrid,
                                     dim3 dimBlock,
                                     const int matlIndex,
-                                    const int levelIndx,
+                                    levelParams level,
                                     patchParams patch,
                                     cudaStream_t* stream,
                                     RMCRT_flags RT_flags,
@@ -692,7 +719,7 @@ template< class T >
 __global__ void rayTraceKernel( dim3 dimGrid,
                                 dim3 dimBlock,
                                 const int matlIndex,
-                                const int levelIndx,
+                                levelParams level,
                                 patchParams patch,
                                 curandState* randNumStates,
                                 RMCRT_flags RT_flags,
