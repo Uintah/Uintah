@@ -2046,19 +2046,6 @@ AC_SUBST(SEMAPHORE_LIB_FLAG)
 
 AC_SUBST(CFLAGS)
 
-##  -- check for gcc atomic support
-
-SCI_TRY_LINK(GCCSYNC,gcc style atomic operations ,,,,,,[ int x;   __sync_add_and_fetch(&x,1);],optional)
-if test "$HAVE_GCCSYNC" = "yes"; then
-  REFCOUNT_IMPL=RefCounted_gcc.cc
-  ATOMIC_IMPL=AtomicCounter_gcc.cc
-else
-  REFCOUNT_IMPL=RefCounted.cc
-  ATOMIC_IMPL=AtomicCounter_default.cc
-fi
-AC_SUBST(REFCOUNT_IMPL)
-AC_SUBST(ATOMIC_IMPL)
-
 
 ##  --  Enable Ray Scatter -----------------------------
 

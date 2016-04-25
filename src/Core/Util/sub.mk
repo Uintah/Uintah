@@ -45,8 +45,6 @@ SRCS += \
         $(SRCDIR)/Util.cc
 
 
-SRCS += $(REFCOUNT_IMPL)
-
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPU.cu
   DLINK_FILES += Core/Util/GPU.o
