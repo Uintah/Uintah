@@ -19,10 +19,9 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Containers/StaticArray.h>
 
 #include <iostream>
@@ -58,7 +57,7 @@ CQMOM::~CQMOM()
 void CQMOM::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params;
-  
+
   int index_length = 0;
   db->get("NumberInternalCoordinates",M);   //get number of coordiantes
   db->get("QuadratureNodes",N_i);           //get vector of quad nodes per internal coordiante
@@ -72,7 +71,7 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("WeightRatio",weightRatio,1.0e-5);     //maximum ratio for min to max weight
   db->getWithDefault("AbscissaRatio",abscissaRatio,1.0e-5); //maximum ratio for min to max spacing of abscissas
   db->getWithDefault("OperatorSplitting",d_doOperatorSplitting,false); //boolean for operator splitting
-  
+
   //NOTE: redo this to only have one xml tag here?
   int m = 0;
   for ( ProblemSpecP db_name = db->findBlock("InternalCoordinate");
@@ -92,34 +91,34 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
       wVelIndex = m;
     }
     m++;
-    
+
     ClipInfo clip;
     clip.activated = false;
     ProblemSpecP db_clipping = db_name->findBlock("Clipping");
     if (db_clipping) {
       clip.activated = true;
-      
+
       if ( db_clipping->findBlock("low") )
         clip.do_low = true;
-      
+
       if ( db_clipping->findBlock("high") )
         clip.do_high = true;
-      
+
       db_clipping->getWithDefault("low", clip.low,  -1.e16);
       db_clipping->getWithDefault("high",clip.high, 1.e16);
       db_clipping->getWithDefault("tol", clip.tol, 1e-10);
       db_clipping->getWithDefault("clip_zero",clip.clip_to_zero,false);
       db_clipping->getWithDefault("min_weight",clip.weight_clip,1.0e-5);
-      
+
       if ( !clip.do_low && !clip.do_high )
         throw InvalidValue("Error: A low or high clipping must be specified if the <Clipping> section is activated.", __FILE__, __LINE__);
     }
     clipNodes.push_back(clip);
   }
-  
+
   proc0cout << "Internal Coordinates M: " << M << endl;
   proc0cout << "Operator Splitting is " << d_doOperatorSplitting << endl;
-  
+
   nNodes = 1;
   momentSize = 1;
   for (unsigned int i = 0; i<N_i.size(); i++) {
@@ -128,9 +127,9 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
     maxInd[i]++; //increase maxindex by one to account for 0th index
   }
   proc0cout << "Nodes: " << nNodes << " momentSize: " << momentSize << endl;
-  
+
   CQMOMEqnFactory & eqn_factory = CQMOMEqnFactory::self();
-  
+
   nMoments = 0;
   // obtain moment index vectors
   vector<int> temp_moment_index;
@@ -138,16 +137,16 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
        db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
     temp_moment_index.resize(0);
     db_moments->get("m", temp_moment_index);
-    
+
     // put moment index into vector of moment indices:
     momentIndexes.push_back(temp_moment_index);
-    
+
     index_length = temp_moment_index.size();
     if (index_length != M) {
       proc0cout << "Putting eqns in CQMOM.h, index:" << temp_moment_index << " does not have same number of indexes as internal coordiante #" << M << endl;
       throw InvalidValue("All specified moment must have same number of internal coordinates", __FILE__, __LINE__);
     }
-    
+
     //register eqns
     std::string moment_name = "m_";
     std::string mIndex;
@@ -163,7 +162,7 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
     momentEqns.push_back( &temp_momentEqnD );
     ++nMoments; // keep track of total number of moments
   }
-  
+
   //populate names for weights with just numberign them 0,1,2,3...
   for (int i = 0; i < nNodes; i++) {
     string weight_name = "w_";
@@ -173,13 +172,13 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
     node = out.str();
     weight_name += node;
     weightNames.push_back(weight_name);
-    
+
     //make varLabel
     const VarLabel* tempVarLabel = VarLabel::create(weight_name, CCVariable<double>::getTypeDescription());
     proc0cout << "Creating var label for " << weight_name << endl;
     d_fieldLabels->CQMOMWeights[i] = tempVarLabel;
   }
-  
+
   //repeat for the abscissas, but include coordinate names
   int ii = 0;
   for (int m = 0; m < M; m++) {
@@ -192,16 +191,16 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
       node = out.str();
       abscissa_name += node;
       abscissaNames.push_back(abscissa_name);
-      
+
       //make varLabel
       const VarLabel* tempVarLabel = VarLabel::create(abscissa_name, CCVariable<double>::getTypeDescription());
       proc0cout << "Creating var label for " << abscissa_name << endl;
       d_fieldLabels->CQMOMAbscissas[ii] = tempVarLabel;
       ii++;
-        
+
     }
   }
-  
+
   // Check to make sure number of total moments specified in input file is correct
   if (!d_doOperatorSplitting) {
     int reqMoments;
@@ -219,7 +218,7 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
       throw InvalidValue( "ERROR:CQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
     }
   }
-  
+
 }
 
 
@@ -273,13 +272,13 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
 {
   //time how long the CQMOM solve takes in total
   double start_SolveTime = Time::currentSeconds();
-  
+
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-   
-    
+
+
     // get moments from data warehouse and put into CCVariable
     StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
@@ -288,7 +287,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       new_dw->get( momentCCVars[i], equation_label, matlIndex, patch, Ghost::None, 0);
       i++;
     }
-    
+
     //get/allocate the weights
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -301,12 +300,12 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       }
       cqmomWeights.push_back(tempCCVar);
     }
-    
+
     //get/allocate the abscissas
     vector<CCVariable<double>* > cqmomAbscissas;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* abscissa_label = iA->second;
-      
+
       CCVariable<double>* tempCCVar = scinew CCVariable<double>;
       if( new_dw->exists(abscissa_label, matlIndex, patch) ) {
         new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
@@ -315,20 +314,20 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       }
       cqmomAbscissas.push_back(tempCCVar);
     }
-    
+
     for ( CellIterator iter = patch->getExtraCellIterator();
          !iter.done(); ++iter) {
       IntVector c = *iter;
       vector<double> temp_weights (nNodes, 0.0);
       vector<vector<double> > temp_abscissas (M, vector<double> (nNodes, 0.0));
       vector<double> temp_moments (momentSize, 0.0);
-      
+
       //loop over moments and put in vector
       //these are numbered into a flatindex based on moment index
       for ( int ii = 0; ii < nMoments; ii++ ) {
         double temp_value = momentCCVars[ii][c];
         vector<int> temp_index = momentIndexes[ii];
-        
+
         int flatIndex = temp_index[0];
         for (int i = 1; i < M; i++ ) {
           int product = temp_index[i];
@@ -337,10 +336,10 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
           }
           flatIndex += product;
         }
-        
+
         temp_moments[flatIndex] = temp_value;
       }
-      
+
       //actually do the cqmom inversion step
       if (temp_moments[0] < d_small) {
         //if m0 is very small, leave all weights/absciassa equal to 0 (as intialized)
@@ -355,7 +354,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
         CQMOMInversion( temp_moments, M, N_i, maxInd,
                         temp_weights, temp_abscissas, d_adaptive, d_useLapack, weightRatio, abscissaRatio);
       }
-      
+
       //Now actually assign the new weights and abscissas
       int jj = 0;
       for (int m = 0; m < M; m++) {
@@ -367,14 +366,14 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       for (int z = 0; z < nNodes; z++) {
         (*(cqmomWeights[z]))[c] = temp_weights[z];
       }
-      
+
     } //end cell loop
-    
+
     //delete pointers
     for(unsigned int i=0; i<cqmomAbscissas.size(); ++i ){
       delete cqmomAbscissas[i];
     }
-    
+
     for(unsigned int i=0; i<cqmomWeights.size(); ++i ){
       delete cqmomWeights[i];
     }
@@ -399,19 +398,19 @@ CQMOM::sched_momentCorrection( const LevelP& level, SchedulerP& sched, int timeS
     tempLabel = (*iEqn)->getTransportEqnLabel();
     tsk->modifies(tempLabel);
   }
-  
+
   //tsk requires on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
     tsk->modifies(tempLabel);
   }
-  
+
   //tsk modifies on abscissas
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
     tsk->modifies(tempLabel);
   }
-  
+
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
@@ -434,7 +433,7 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    
+
     // get moments from data warehouse and put into CCVariable
     vector<CCVariable<double>* > ccMoments;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
@@ -443,7 +442,7 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
       new_dw->getModifiable( *tempCCVar, equation_label, matlIndex, patch );
       ccMoments.push_back(tempCCVar);
     }
-    
+
     //get/allocate the weights
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -452,7 +451,7 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
       new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
       cqmomWeights.push_back(tempCCVar);
     }
-    
+
     //get/allocate the abscissas
     vector<CCVariable<double>* > cqmomAbscissas;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
@@ -461,11 +460,11 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
       new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
       cqmomAbscissas.push_back(tempCCVar);
     }
-    
+
     for ( CellIterator iter = patch->getExtraCellIterator();
          !iter.done(); ++iter) {
       IntVector c = *iter;
-      
+
       bool correctMoments = false;
       //check all abscissa
       for ( int m = 0; m < M; m++ ) {
@@ -491,7 +490,7 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
                 correctMoments = true;
               }
             }
-            
+
             if (clipNodes[m].do_low ) {
               if ( (*cqmomAbscissas[z + m*nNodes])[c] < clipNodes[m].low + clipNodes[m].tol ) {
                 if (!clipNodes[m].clip_to_zero ) {
@@ -515,18 +514,18 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
           }
         }
       }
-      
+
       //fix moments in this cell if needed
       if ( correctMoments ) {
         int i = 0;
         for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
           vector<int> tempIndex = momentIndexes[i];
-          
+
           double summation = 0.0;
           for ( int z = 0; z < nNodes; z++ ) {
             double product = 1.0;
             for (int m = 0; m < M; m++) {
-              
+
               product *= pow( (*cqmomAbscissas[z + m*nNodes])[c] , tempIndex[m] );
             }
             summation += product * (*cqmomWeights[z])[c];
@@ -535,18 +534,18 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
           i++;
         }
       }
-      
+
     } //cell loop
-    
+
     //delete pointers
     for(unsigned int i=0; i<cqmomAbscissas.size(); ++i ){
       delete cqmomAbscissas[i];
     }
-    
+
     for(unsigned int i=0; i<cqmomWeights.size(); ++i ){
       delete cqmomWeights[i];
     }
-    
+
     for(unsigned int i=0; i<ccMoments.size(); ++i ){
       delete ccMoments[i];
     }
@@ -561,14 +560,14 @@ CQMOM::sched_solveCQMOMInversion321( const LevelP& level, SchedulerP& sched, int
 {
   string taskname = "CQMOM:solveCQMOMInversion321";
   Task* tsk = scinew Task(taskname, this, &CQMOM::solveCQMOMInversion321);
-  
+
   //tsk requires on moment eqns
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
     tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
   }
-  
+
   //tsk computs on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
@@ -578,7 +577,7 @@ CQMOM::sched_solveCQMOMInversion321( const LevelP& level, SchedulerP& sched, int
       tsk->modifies(tempLabel);
     }
   }
-  
+
   //tsk computes on abscissas
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
@@ -588,7 +587,7 @@ CQMOM::sched_solveCQMOMInversion321( const LevelP& level, SchedulerP& sched, int
       tsk->modifies(tempLabel);
     }
   }
-  
+
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
@@ -603,12 +602,12 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
 {
   //time how long the CQMOM solve takes in total
   double start_SolveTime = Time::currentSeconds();
-  
+
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    
+
     // get moments from data warehouse and put into CCVariable
     StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
@@ -617,7 +616,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
       new_dw->get( momentCCVars[i], equation_label, matlIndex, patch, Ghost::None, 0);
       i++;
     }
-    
+
     //get/allocate the weights
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -630,12 +629,12 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
       }
       cqmomWeights.push_back(tempCCVar);
     }
-    
+
     //get/allocate the abscissas
     vector<CCVariable<double>* > cqmomAbscissas;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* abscissa_label = iA->second;
-      
+
       CCVariable<double>* tempCCVar = scinew CCVariable<double>;
       if( new_dw->exists(abscissa_label, matlIndex, patch) ) {
         new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
@@ -644,22 +643,22 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
       }
       cqmomAbscissas.push_back(tempCCVar);
     }
-    
+
     for ( CellIterator iter = patch->getExtraCellIterator();
          !iter.done(); ++iter) {
       IntVector c = *iter;
       vector<double> temp_weights (nNodes, 0.0);
       vector<vector<double> > temp_abscissas (M, vector<double> (nNodes, 0.0));
       vector<double> temp_moments (momentSize, 0.0);
-      
+
       //loop over moments and put in vector
       //these are numbered into a flatindex based on moment index
       for ( int ii = 0; ii < nMoments; ii++ ) {
         double temp_value = momentCCVars[ii][c];
         int flatIndex = 0;
-        
+
         vector<int> temp_index = momentIndexes[ii];
-        
+
         if (M == 2) {
           flatIndex = temp_index[0] + temp_index[1]*maxInd[0];
         } else if (M == 3) {
@@ -667,10 +666,10 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
         } else if ( M == 4 ) {
           flatIndex = temp_index[0] + temp_index[1]*maxInd[0] + temp_index[2]*maxInd[0]*maxInd[1] + temp_index[3]*maxInd[0]*maxInd[1]*maxInd[2];
         }
-        
+
         temp_moments[flatIndex] = temp_value;
       }
-      
+
       //actually do the cqmom inversion step
       if (temp_moments[0] < d_small) {
         //if m0 is very small, leave all weights/absciassa equal to 0 (as intialized)
@@ -685,7 +684,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
         CQMOMInversion( temp_moments, M, N_i, maxInd,
                        temp_weights, temp_abscissas, d_adaptive, d_useLapack, weightRatio, abscissaRatio);
       }
-      
+
       //Now actually assign the new weights and abscissas
       int jj = 0;
       for (int m = 0; m < M; m++) {
@@ -697,14 +696,14 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
       for (int z = 0; z < nNodes; z++) {
         (*(cqmomWeights[z]))[c] = temp_weights[z];
       }
-      
+
     } //end cell loop
-    
+
     //delete pointers
     for(unsigned int i=0; i<cqmomAbscissas.size(); ++i ){
       delete cqmomAbscissas[i];
     }
-    
+
     for(unsigned int i=0; i<cqmomWeights.size(); ++i ){
       delete cqmomWeights[i];
     }
@@ -722,26 +721,26 @@ CQMOM::sched_solveCQMOMInversion312( const LevelP& level, SchedulerP& sched, int
 {
   string taskname = "CQMOM:solveCQMOMInversion312";
   Task* tsk = scinew Task(taskname, this, &CQMOM::solveCQMOMInversion312);
-  
+
   //tsk requires on moment eqns
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
     tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0);
   }
-  
+
   //tsk computs on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
     tsk->modifies(tempLabel);
   }
-  
+
   //tsk computes on abscissas
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
     tsk->modifies(tempLabel);
   }
-  
+
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
@@ -756,18 +755,18 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
 {
   //time how long the CQMOM solve takes in total
   double start_SolveTime = Time::currentSeconds();
-  
+
   //change Ni and maxInd to match new varaible order
   vector<int> maxInd_tmp (3);
   vector<int> N_i_tmp (3);
   N_i_tmp[0] = N_i[1]; N_i_tmp[1] = N_i[0]; N_i_tmp[2] = N_i[2];
   maxInd_tmp[0] = maxInd[1]; maxInd_tmp[1] = maxInd[0]; maxInd_tmp[2] = maxInd[2];
-  
+
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    
+
     // get moments from data warehouse and put into CCVariable
     StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
@@ -776,7 +775,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
       new_dw->get( momentCCVars[i], equation_label, matlIndex, patch, Ghost::None, 0);
       i++;
     }
-    
+
     //get/allocate the weights
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -785,7 +784,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
       new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
       cqmomWeights.push_back(tempCCVar);
     }
-    
+
     //get/allocate the abscissas
     vector<CCVariable<double>* > cqmomAbscissas;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
@@ -794,22 +793,22 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
       new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
       cqmomAbscissas.push_back(tempCCVar);
     }
-    
+
     for ( CellIterator iter = patch->getExtraCellIterator();
          !iter.done(); ++iter) {
       IntVector c = *iter;
       vector<double> temp_weights (nNodes, 0.0);
       vector<vector<double> > temp_abscissas (M, vector<double> (nNodes, 0.0));
       vector<double> temp_moments (momentSize, 0.0);
-      
+
       //loop over moments and put in vector
       //these are numbered into a flatindex based on moment index
       for ( int ii = 0; ii < nMoments; ii++ ) {
         double temp_value = momentCCVars[ii][c];
         int flatIndex = 0;
-        
+
         vector<int> temp_index = momentIndexes[ii];
-        
+
         //change flatindex value here, now 2 = i, 1 = j, 3 = k
         if (M == 2) {
           flatIndex = temp_index[1] + temp_index[0]*maxInd[1];
@@ -818,10 +817,10 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
         } else if ( M == 4 ) {
           flatIndex = temp_index[1] + temp_index[0]*maxInd[1] + temp_index[2]*maxInd[1]*maxInd[0] + temp_index[3]*maxInd[0]*maxInd[1]*maxInd[2];
         }
-        
+
         temp_moments[flatIndex] = temp_value;
       }
-      
+
       //actually do the cqmom inversion step
       if (temp_moments[0] < d_small) {
         //if m0 is very small, leave all weights/absciassa equal to 0 (as intialized)
@@ -833,28 +832,28 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
         cout << "______________" << endl;
 #endif
 
-        
+
         //actually compute inversion
         CQMOMInversion( temp_moments, M, N_i_tmp, maxInd_tmp,
                        temp_weights, temp_abscissas, d_adaptive, d_useLapack, weightRatio, abscissaRatio);
       }
-      
+
       //Now actually assign the new weights and abscissas
       // need to fill these in correct varlabel order as 123, but absicssas are 213
       // make temp vectors to rearrange absciassas
       std::vector<double> aTemp1 (nNodes);
       std::vector<double> aTemp2 (nNodes);
-      
+
       for (int z = 0; z < nNodes; z++ ) {
         aTemp1[z] = temp_abscissas[1][z];
         aTemp2[z] = temp_abscissas[0][z];
       }
-      
+
       for (int z = 0; z < nNodes; z++ ) {
         temp_abscissas[0][z] = aTemp1[z];
         temp_abscissas[1][z] = aTemp2[z];
       }
-      
+
       int jj = 0;
       for (int m = 0; m < M; m++) {
         for (int z = 0; z < nNodes; z++) {
@@ -865,14 +864,14 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
       for (int z = 0; z < nNodes; z++) {
         (*(cqmomWeights[z]))[c] = temp_weights[z];
       }
-      
+
     } //end cell loop
-    
+
     //delete pointers
     for(unsigned int i=0; i<cqmomAbscissas.size(); ++i ){
       delete cqmomAbscissas[i];
     }
-    
+
     for(unsigned int i=0; i<cqmomWeights.size(); ++i ){
       delete cqmomWeights[i];
     }
@@ -889,26 +888,26 @@ CQMOM::sched_solveCQMOMInversion213( const LevelP& level, SchedulerP& sched, int
 {
   string taskname = "CQMOM:solveCQMOMInversion213";
   Task* tsk = scinew Task(taskname, this, &CQMOM::solveCQMOMInversion213);
-  
+
   //tsk requires on moment eqns
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
     tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0);
   }
-  
+
   //tsk computes on weights
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
     tsk->modifies(tempLabel);
   }
-  
+
   //tsk computes on abscissas
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
     tsk->modifies(tempLabel);
   }
-  
+
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
@@ -923,12 +922,12 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
 {
   //time how long the CQMOM solve takes in total
   double start_SolveTime = Time::currentSeconds();
-  
+
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    
+
     // get moments from data warehouse and put into CCVariable
     StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
     int i = 0;
@@ -937,7 +936,7 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
       new_dw->get( momentCCVars[i], equation_label, matlIndex, patch, Ghost::None, 0);
       i++;
     }
-    
+
     //get/allocate the weights
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -946,7 +945,7 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
       new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
       cqmomWeights.push_back(tempCCVar);
     }
-    
+
     //get/allocate the abscissas
     vector<CCVariable<double>* > cqmomAbscissas;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
@@ -955,22 +954,22 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
       new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
       cqmomAbscissas.push_back(tempCCVar);
     }
-    
+
     for ( CellIterator iter = patch->getExtraCellIterator();
          !iter.done(); ++iter) {
       IntVector c = *iter;
       vector<double> temp_weights (nNodes, 0.0);
       vector<vector<double> > temp_abscissas (M, vector<double> (nNodes, 0.0));
       vector<double> temp_moments (momentSize, 0.0);
-      
+
       //loop over moments and put in vector
       //these are numbered into a flatindex based on moment index
       for ( int ii = 0; ii < nMoments; ii++ ) {
         double temp_value = momentCCVars[ii][c];
         int flatIndex = 0;
-        
+
         vector<int> temp_index = momentIndexes[ii];
-        
+
         //change flatindex value here, now 2 = i, 1 = j, 3 = k
         if (M == 2) {
           flatIndex = temp_index[2] + temp_index[0]*maxInd[2];
@@ -979,10 +978,10 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
         } else if ( M == 4 ) {
           flatIndex = temp_index[2] + temp_index[0]*maxInd[2] + temp_index[1]*maxInd[2]*maxInd[0] + temp_index[3]*maxInd[0]*maxInd[1]*maxInd[2];
         }
-        
+
         temp_moments[flatIndex] = temp_value;
       }
-      
+
       //actually do the cqmom inversion step
       if (temp_moments[0] < d_small) {
         //if m0 is very small, leave all weights/absciassa equal to 0 (as intialized)
@@ -1002,26 +1001,26 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
         CQMOMInversion( temp_moments, M, N_i, maxInd,
                        temp_weights, temp_abscissas, d_adaptive, d_useLapack, weightRatio, abscissaRatio);
       }
-      
+
       //Now actually assign the new weights and abscissas
       // need to fill these in correct varlabel order as 123, but absicssas are 312
       // make temp vectors to rearrange abscissas
       std::vector<double> aTemp1 (nNodes);
       std::vector<double> aTemp2 (nNodes);
       std::vector<double> aTemp3 (nNodes);
-      
+
       for (int z = 0; z < nNodes; z++ ) {
         aTemp1[z] = temp_abscissas[1][z];
         aTemp2[z] = temp_abscissas[2][z];
         aTemp3[z] = temp_abscissas[0][z];
       }
-      
+
       for (int z = 0; z < nNodes; z++ ) {
         temp_abscissas[0][z] = aTemp1[z];
         temp_abscissas[1][z] = aTemp2[z];
         temp_abscissas[2][z] = aTemp3[z];
       }
-      
+
       //Now actually assign the new weights and abscissas
       int jj = 0;
       for (int m = 0; m < M; m++) {
@@ -1033,14 +1032,14 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
       for (int z = 0; z < nNodes; z++) {
         (*(cqmomWeights[z]))[c] = temp_weights[z];
       }
-      
+
     } //end cell loop
-    
+
     //delete pointers
     for(unsigned int i=0; i<cqmomAbscissas.size(); ++i ){
       delete cqmomAbscissas[i];
     }
-    
+
     for(unsigned int i=0; i<cqmomWeights.size(); ++i ){
       delete cqmomWeights[i];
     }
