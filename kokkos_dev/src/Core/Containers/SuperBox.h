@@ -32,11 +32,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 
-#include <sci_hash_map.h>
-
-#if !defined(HAVE_HASH_MAP)
-#  include <map>
-#endif
+#include <unordered_map>
 
 #ifdef SUPERBOX_DEBUGGING
 #  include <iostream>
@@ -115,24 +111,13 @@ public:
   typedef CompositeBox<BoxP, Point, Volume, Value, Evaluator> CB;
   typedef std::vector<SB*>                                    SuperBoxContainer;
 
-#ifdef HAVE_HASH_MAP
   struct BoxHash
   {
-    size_t operator()(BoxP box) const
+    size_t operator()(const BoxP & box) const
     { return (size_t)box; }
-#  if defined(__INTEL_COMPILER)
-    // intel compilersspecific hash map stuff
-    static const size_t bucket_size = 4;
-    static const size_t min_buckets = 8;
-    bool operator()(BoxP b1, BoxP b2) const
-    { return b1 < b2; }
-#  endif // __INTEL_COMPILER
   };
 
-  typedef hash_map<BoxP, BB*, BoxHash> BoxHashMap;
-#else
-  typedef std::map<BoxP, BB*>          BoxHashMap;
-#endif
+  typedef std::unordered_map<BoxP, BB*, BoxHash> BoxHashMap;
 
 public:
   SuperBoxSet()

@@ -44,36 +44,36 @@
 #include <sstream>
 #include <vector>
 
-#include <sci_hash_map.h>
+#include <unordered_map>
 #include <iostream>
 namespace Uintah {
 
    /**************************************
-     
+
      CLASS
        DWDatabase
-      
+
        Short Description...
-      
+
      GENERAL INFORMATION
-      
+
        DWDatabase.h
-      
+
        Steven G. Parker
        Department of Computer Science
        University of Utah
-      
+
        Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-             
+
+
      KEYWORDS
        DWDatabase
-      
+
      DESCRIPTION
        Long description...
-      
+
      WARNING
-      
+
      ****************************************/
 
 template<class DomainType>
@@ -100,7 +100,7 @@ class KeyDatabase {
 
   private:
 
-    typedef hashmap<VarLabelMatl<DomainType>, int> keyDBtype;
+    typedef std::unordered_map<VarLabelMatl<DomainType>, int> keyDBtype;
     keyDBtype keys;
     int keycount;
 };
@@ -290,7 +290,7 @@ int DWDatabase<DomainType>::
 decrementScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom)
 {
   // Dav's conjectures on how this works:
-  //   setScrubCount is called the first time with "count" set to some X.  
+  //   setScrubCount is called the first time with "count" set to some X.
   //   This X represents the number of tasks that will use the var.  Later,
   //   after a task has used the var, it will call decrementScrubCount
   //   If scrubCount then is equal to 0, the var is scrubbed.
@@ -372,7 +372,7 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
         vars[keyiter->second] = 0;
 
         // TODO do we need this - APH 03/20/15
-        //leave a hole in the map instead of erase, read only operation 
+        //leave a hole in the map instead of erase, read only operation
         //vars.erase(variter++);
       }
       else {
@@ -674,56 +674,5 @@ DWDatabase<DomainType>::getVarLabelMatlTriples(std::vector<VarLabelMatl<DomainTy
 }
 
 } // End namespace Uintah
-
-
-//
-// Hash function for VarLabelMatl
-//
-#ifdef HAVE_GNU_HASHMAP
-
-  namespace __gnu_cxx
-  {
-    using Uintah::DWDatabase;
-    using Uintah::VarLabelMatl;
-    template <class DomainType>
-    struct hash<VarLabelMatl<DomainType> > : public std::unary_function<VarLabelMatl<DomainType>, size_t>
-    {
-      size_t operator()(const VarLabelMatl<DomainType>& v) const
-      {
-        size_t h=0;
-        char *str =const_cast<char*> (v.label_->getName().data());
-        while (int c = *str++) h = h*7+c;
-        return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                 ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-      }
-    };
-  }
-
-#elif HAVE_TR1_HASHMAP || HAVE_C11_HASHMAP 
-
-  namespace std {
-#if HAVE_TR1_HASHMAP 
-    namespace tr1 {
-#endif 
-      using Uintah::DWDatabase;
-      using Uintah::VarLabelMatl;
-      template <class DomainType>
-      struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
-      {
-        size_t operator()(const VarLabelMatl<DomainType>& v) const
-        {
-          size_t h=0;
-          char *str =const_cast<char*> (v.label_->getName().data());
-          while (int c = *str++) h = h*7+c;
-          return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
-                   ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
-        }
-      };
-#if HAVE_TR1_HASHMAP 
-    } // end namespace tr1
-#endif 
-  } // end namespace std
-
-#endif // #ifdef HAVE_GNU_HASHMAP
 
 #endif // #ifndef CCA_COMPONENTS_SCHEDULERS_DWDATABASE_H

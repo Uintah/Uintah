@@ -30,39 +30,39 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 
-#include <sci_hash_map.h>
+#include <functional>
 
 namespace Uintah {
 
 
     /**************************************
-      
+
       struct
         VarLabelMatl
-      
+
         VarLabel, Material, and Domain
-        
-      
+
+
       GENERAL INFORMATION
-      
+
         VarLabelMatl.h
-      
+
         Wayne Witzel
         Department of Computer Science
         University of Utah
-      
+
         Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-      
+
+
       KEYWORDS
         VarLabel, Material, Patch
-      
+
       DESCRIPTION
         Specifies a VarLabel on a specific patch and for a specific material
         with an operator< defined so this can be used as a key in a map.
-      
+
       WARNING
-      
+
       ****************************************/
 
 template<class DomainType> struct VarLabelMatl {
@@ -76,7 +76,7 @@ template<class DomainType> struct VarLabelMatl {
     label_=copy.label_; matlIndex_=copy.matlIndex_; domain_=copy.domain_;
     return *this;
   }
-  
+
   bool operator<(const VarLabelMatl<DomainType>& other) const
   {
     if (label_->equals(other.label_)) {
@@ -90,29 +90,36 @@ template<class DomainType> struct VarLabelMatl {
       return comp(label_, other.label_);
     }
   }
-  
+
   bool operator==(const VarLabelMatl<DomainType>& other) const
   {
     return ((label_->equals(other.label_)) && (matlIndex_ == other.matlIndex_) && (domain_ == other.domain_));
   }
 
-#if USE_BOOST_HASHMAP
-  friend std::size_t hash_value( const VarLabelMatl<DomainType> & vl )
-  {
-    std::size_t seed = 0;
-    boost::hash_combine( seed, vl.label_ );
-    boost::hash_combine( seed, vl.domain_ );
-    boost::hash_combine( seed, vl.matlIndex_ );
-
-    return seed;
-  }
-#endif
- 
   const VarLabel* label_;
   int matlIndex_;
-  const DomainType* domain_;    
-};  
+  const DomainType* domain_;
+};
 
 } // End namespace Uintah
+
+namespace std {
+template <class DomainType>
+struct hash< Uintah::VarLabelMatl<DomainType> >
+{
+  using result_type = size_t;
+  using argument_type = Uintah::VarLabelMatl<DomainType>;
+
+  size_t operator()(const argument_type& v) const
+  {
+    size_t h=0;
+    char *str =const_cast<char*> (v.label_->getName().data());
+    while (int c = *str++) h = h*7+c;
+    return ( ( ((size_t)v.label_) << (sizeof(size_t)/2) ^ ((size_t)v.label_) >> (sizeof(size_t)/2) )
+             ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
+  }
+};
+
+} // end namespace std
 
 #endif
