@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 #
 # This script is used by configure to build the thirdparty libraries required
