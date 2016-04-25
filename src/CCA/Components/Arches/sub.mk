@@ -28,6 +28,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := CCA/Components/Arches
 
+########################################################################
 #
 # CUDA_ENABLED_SRCS are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
@@ -38,10 +39,10 @@ SRCDIR := CCA/Components/Arches
 # Also, do not put the .cc on this list of files as the .cc or .cu
 # will be added automatically as needed.
 #
-CUDA_ENABLED_SRCS =          \
+CUDA_ENABLED_SRCS :=         \
        Arches                \
-       BoundaryCondition     \
        BoundaryCond_new      \
+       BoundaryCondition     \
        CQMOM                 \
        Discretization        \
        DQMOM                 \
@@ -50,20 +51,17 @@ CUDA_ENABLED_SRCS =          \
        Properties            
 
 ifeq ($(HAVE_CUDA),yes)
-
    # CUDA enabled files, listed here (and with a rule at the end of
    # this sub.mk) are copied to the binary side and renamed with a .cu
    # extension (.cc replaced with .cu) so that they can be compiled
    # using the nvcc compiler.
-
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
    DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
-
 else
-
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).cc)
-
 endif
+
+########################################################################
 
 SRCS += $(SRCDIR)/ArchesConstVariables.cc      \
         $(SRCDIR)/ArchesLabel.cc               \
@@ -93,10 +91,9 @@ ifeq ($(HAVE_CUDA),yes)
   DLINK_FILES := $(DLINK_FILES) $(SRCDIR)/constructLinearSystemKernel.o
 endif
 
-PSELIBS := CCA/Components/Wasatch
-
 PSELIBS := \
-        $(PSELIBS)                      \
+        CCA/Components/Wasatch          \
+        \
         CCA/Components/Arches/fortran   \
         CCA/Components/Models           \
         CCA/Components/OnTheFlyAnalysis \
@@ -116,8 +113,8 @@ PSELIBS := \
         Core/Util
 
 ifeq ($(HAVE_PETSC),yes)
-   SRCS += $(SRCDIR)/PetscCommon.cc \
-           $(SRCDIR)/Filter.cc
+   SRCS += $(SRCDIR)/Filter.cc      \
+           $(SRCDIR)/PetscCommon.cc 
    LIBS := $(LIBS) $(PETSC_LIBRARY)
    INCLUDES += $(PETSC_INCLUDE)
 endif
@@ -165,12 +162,10 @@ $(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/uvelsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/vvelsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/wvelsrc_fort.h
 
-##############################################
+########################################################################
 # DigitalFilterGenerator
-
+#
 # See build specification in .../src/StandAlone/sub.mk
-
-##############################################
 
 ########################################################################
 #
@@ -179,8 +174,7 @@ $(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/wvelsrc_fort.h
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # If Copy the 'original' .cc files into the binary tree and rename as .cu
-
+  # Copy the 'original' .cc files into the binary tree and rename as .cu
   $(OBJTOP_ABS)/$(SRCDIR)/Arches.cu : $(SRCTOP_ABS)/$(SRCDIR)/Arches.cc
 	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/BoundaryCondition.cu : $(SRCTOP_ABS)/$(SRCDIR)/BoundaryCondition.cc
@@ -199,10 +193,10 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/Properties.cu : $(SRCTOP_ABS)/$(SRCDIR)/Properties.cc
 	cp $< $@
-
 endif
 
-#### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
+########################################################################
+# Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
 
 SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/CoalModels          \
