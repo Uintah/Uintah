@@ -38,8 +38,6 @@
 
 #include <sci_defs/cuda_defs.h>
 
-#include <stdexcept>
-
 using namespace std;
 using namespace Uintah;
 
@@ -245,17 +243,37 @@ void PoissonGPU1::timeAdvance1DP(const ProcessorGroup*,
 
     //__________________________________
     // 1D-Pointer Stencil
-    const int zhigh = h.z();
-    const int yhigh = h.y();
-    const int xhigh = h.x();
+    double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
+    double *newphi_data = (double*)newphi.getWindow()->getData()->getPointer();
+
+    int zhigh = h.z();
+    int yhigh = h.y();
+    int xhigh = h.x();
+    int numGhostCells = 1;
+    int ystride = yhigh + numGhostCells;
+    int xstride = xhigh + numGhostCells;
+
+    cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
+
     for (int k = l.z(); k < zhigh; k++) {
       for (int j = l.y(); j < yhigh; j++) {
         for (int i = l.x(); i < xhigh; i++) {
-          newphi(i,j,k) = (1.0/6.0) * ( phi(i-1,j,k) + phi(i+1,j,k)
-                                      + phi(i,j-1,k) + phi(i,j+1,k)
-                                      + phi(i,j,k-1) + phi(i,j,k+1) );
+          cout << "(x,y,z): " << k << "," << j << "," << i << endl;
+          // For an array of [ A ][ B ][ C ], we can index it thus:
+          // (a * B * C) + (b * C) + (c * 1)
+          int idx = i + (j * xstride) + (k * xstride * ystride);
 
-          double diff = newphi_data(i,j,k) - phi_data(i,j,k);
+          int xminus = (i - 1) + (j * xstride) + (k * xstride * ystride);
+          int xplus  = (i + 1) + (j * xstride) + (k * xstride * ystride);
+          int yminus = i + ((j - 1) * xstride) + (k * xstride * ystride);
+          int yplus  = i + ((j + 1) * xstride) + (k * xstride * ystride);
+          int zminus = i + (j * xstride) + ((k - 1) * xstride * ystride);
+          int zplus  = i + (j * xstride) + ((k + 1) * xstride * ystride);
+
+          newphi_data[idx] = (1. / 6) * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus]
+                                      + phi_data[yplus] + phi_data[zminus] + phi_data[zplus]);
+
+          double diff = newphi_data[idx] - phi_data[idx];
           residual += diff * diff;
         }
       }
@@ -334,10 +352,6 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw) {
 
-  throw std::runtime_error("Not implemented.  Need to convert to Kokkos::View");
-
-  // DJS 4/25/2016
-#if 0
   int matl = 0;
   int previousPatchSize = 0; // this is to see if we need to reallocate between computations
   int size = 0;
@@ -462,6 +476,6 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
   if (unifiedAddressing) {
     CUDA_RT_SAFE_CALL( cudaFreeHost(residual_host) );
   }
-  #endif
+
 }
 
