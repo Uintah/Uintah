@@ -37,7 +37,6 @@ PerPatchBase::PerPatchBase()
 {
 }
 
-
 const Uintah::TypeDescription* PerPatchBase::virtualGetTypeDescription() const
 {
   SCI_THROW(InternalError("virtualGetTypeDescription not implemented for PerPatch", __FILE__, __LINE__));

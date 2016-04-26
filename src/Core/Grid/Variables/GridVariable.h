@@ -48,7 +48,7 @@ namespace Uintah {
 
 CLASS
    GridVariable
-
+   
    Short description...
 
 GENERAL INFORMATION
@@ -60,38 +60,38 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-
+  
 
 KEYWORDS
    Variable__Cell_Centered
 
 DESCRIPTION
    Long description...
-
+  
 WARNING
-
+  
 ****************************************/
 
-  template<class T>
+  template<class T> 
   class GridVariable : public GridVariableBase, public Array3<T> {
 
   public:
     GridVariable() {}
     virtual ~GridVariable() {}
-
+      
     inline void copyPointer(GridVariable<T>& copy) { Array3<T>::copyPointer(copy); }
-
+    
     virtual void copyPointer(Variable&);
 
     virtual bool rewindow(const IntVector& low, const IntVector& high)
       { return Array3<T>::rewindow(low, high); }
 
-    virtual void offset(const IntVector& offset)  { Array3<T>::offset(offset); }
+    virtual void offset(const IntVector& offset)  { Array3<T>::offset(offset); } 
 
     // offset the indexing into the array (useful when getting virtual
     // patch data -- i.e. for periodic boundary conditions)
     virtual void offsetGrid(const IntVector& offset) { Array3<T>::offset(offset); }
-
+    
     static const GridVariable<T>& castFromBase(const GridVariableBase* srcptr);
 
     //////////
@@ -100,7 +100,7 @@ WARNING
     using GridVariableBase::allocate; // Quiets PGI compiler warning about hidden virtual function...
 #endif
     virtual void allocate(const IntVector& lowIndex, const IntVector& highIndex);
-
+      
     //////////
     // Insert Documentation Here:
     void copyPatch(const GridVariable<T>& src,
@@ -110,13 +110,13 @@ WARNING
                            const IntVector& lowIndex,
                            const IntVector& highIndex)
       { copyPatch(castFromBase(src), lowIndex, highIndex); }
-
+    
     void copyData(const GridVariable<T>& src)
       { copyPatch(src, src.getLowIndex(), src.getHighIndex()); }
 
     virtual void copyData(const GridVariableBase* src)
       { copyPatch(src, src->getLow(), src->getHigh()); }
-
+    
     virtual void* getBasePointer() const { return (void*)this->getPointer(); }
 
     virtual void getSizes(IntVector& low, IntVector& high,
@@ -190,7 +190,7 @@ WARNING
       else
         SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
     }
-
+      
     virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -213,11 +213,11 @@ WARNING
       }
     }
 
-    virtual RefBase* getRefBase() { return this->d_window; }
+    virtual RefCounted* getRefCounted() { return this->getWindow(); }
 
   protected:
     GridVariable(const GridVariable<T>& copy) : Array3<T>(copy) {}
-
+   
   private:
     GridVariable(Array3Window<T>* window)
       : Array3<T>(window) {}
@@ -247,7 +247,7 @@ template<class T>
   void GridVariable<T>::allocate( const IntVector& lowIndex,
                                   const IntVector& highIndex )
   {
-    if(this->d_window)
+    if(this->getWindow())
       SCI_THROW(InternalError("Allocating a Gridvariable that "
                           "is apparently already allocated!", __FILE__, __LINE__));
     this->resize(lowIndex, highIndex);
@@ -259,8 +259,8 @@ template<class T>
                            const IntVector& lowIndex,
                            const IntVector& highIndex)
   {
-    if (this->d_window->getData() == src.d_window->getData() &&
-        this->d_window->getOffset() == src.d_window->getOffset()) {
+    if (this->getWindow()->getData() == src.getWindow()->getData() &&
+        this->getWindow()->getOffset() == src.getWindow()->getOffset()) {
       // No copy needed
       return;
     }
@@ -274,10 +274,10 @@ template<class T>
     this->copy(src, lowIndex, highIndex);
   }
 
-
+  
   template<class T>
   void
-  GridVariable<T>::getSizes(IntVector& low, IntVector& high,
+  GridVariable<T>::getSizes(IntVector& low, IntVector& high, 
                           IntVector& siz) const
   {
     low = this->getLowIndex();
@@ -293,7 +293,7 @@ template<class T>
   {
     low=this->getLowIndex();
     high=this->getHighIndex();
-    dataLow = this->d_window->getOffset();
+    dataLow = this->getWindow()->getOffset();
     siz=this->size();
     strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
                         (int)(sizeof(T)*siz.y()*siz.x()));
