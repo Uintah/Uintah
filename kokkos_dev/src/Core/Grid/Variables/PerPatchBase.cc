@@ -38,12 +38,6 @@ PerPatchBase::PerPatchBase()
 }
 
 
-RefCounted*
-PerPatchBase::getRefCounted()
-{
-  SCI_THROW(InternalError("getRefCounted not implemented for PerPatch", __FILE__, __LINE__));
-}
-
 const Uintah::TypeDescription* PerPatchBase::virtualGetTypeDescription() const
 {
   SCI_THROW(InternalError("virtualGetTypeDescription not implemented for PerPatch", __FILE__, __LINE__));

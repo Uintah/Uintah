@@ -35,12 +35,6 @@ ReductionVariableBase::~ReductionVariableBase()
 
 ReductionVariableBase::ReductionVariableBase()
 {
-}   
-
-
-RefCounted*
-ReductionVariableBase::getRefCounted()
-{
-  SCI_THROW(InternalError("getRefCounted not implemented for ReductionVariable", __FILE__, __LINE__));
 }
-    
+
+

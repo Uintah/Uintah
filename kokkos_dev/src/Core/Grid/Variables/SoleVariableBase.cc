@@ -35,14 +35,8 @@ SoleVariableBase::~SoleVariableBase()
 
 SoleVariableBase::SoleVariableBase()
 {
-}   
-
-
-RefCounted*
-SoleVariableBase::getRefCounted()
-{
-  SCI_THROW(InternalError("getRefCounted not implemented for SoleVariable", __FILE__, __LINE__));
 }
+
 
 const Uintah::TypeDescription* SoleVariableBase::virtualGetTypeDescription() const
 {
@@ -67,4 +61,4 @@ void SoleVariableBase::allocate(const Patch*, const IntVector&)
   SCI_THROW(InternalError("Should not call allocate for SoleVariable", __FILE__, __LINE__));
 }
 
-    
+

@@ -39,7 +39,7 @@ namespace Uintah {
 
 CLASS
    constGridVariable
-   
+
    constVariable-based class for the grid (array3) variables:
    CC, NC, SFCX, etc.
 
@@ -52,19 +52,19 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Variable, const, grid
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
-  template<class VariableBase, class Variable, class T> 
+  template<class VariableBase, class Variable, class T>
   class constGridVariable
     : public constVariable<VariableBase, Variable, T, const IntVector&> {
   public:
@@ -86,10 +86,6 @@ WARNING
     IntVector getFortHighIndex() const
     { return this->rep_.getFortHighIndex(); }
 
-    inline const Array3Window<T>* getWindow() const {
-      return this->rep_.getWindow();
-    }
-    
     inline const T* getPointer() const {
       return this->rep_.getPointer();
     }
