@@ -39,7 +39,7 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
-#include <Core/Grid/Variables/BlockRange.h>
+#include <Core/Grid/Variables/BlockRange.hpp>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #include <Kokkos_Core.hpp>
