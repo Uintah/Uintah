@@ -37,7 +37,7 @@ namespace Uintah {
 
 CLASS
    ReductionVariableBase
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -49,23 +49,23 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    ReductionVariableBase
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
    class ReductionVariableBase : public Variable {
    public:
-      
+
       virtual ~ReductionVariableBase();
-      
+
       virtual void copyPointer(Variable&) = 0;
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
@@ -74,7 +74,6 @@ WARNING
       virtual void getMPIData(std::vector<char>& buf, int& index) = 0;
       virtual void putMPIData(std::vector<char>& buf, int& index) = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
-      virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                                void*& ptr) const = 0;
       virtual void* getBasePointer() const = 0;
@@ -85,7 +84,7 @@ WARNING
    protected:
       ReductionVariableBase(const ReductionVariableBase&);
       ReductionVariableBase();
-      
+
    private:
       ReductionVariableBase& operator=(const ReductionVariableBase&);
    };

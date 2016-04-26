@@ -279,16 +279,6 @@ public:
     }
   }
 
-  int get_low(int i) const
-  {
-    return d_window->getOffset()[i];
-  }
-
-  int get_high(int i) const
-  {
-    return d_window->getData()->size()[i] + get_low(i) - 1;
-  }
-
   BlockRange range() const
   {
     return BlockRange(getLowIndex(), getHighIndex());
@@ -298,7 +288,6 @@ public:
 protected:
   Array3& operator=(const Array3& copy);
 
-private:
   Array3Window<T>* d_window;
 };
 
