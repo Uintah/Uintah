@@ -32,7 +32,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
-
+#include <expression/dualtime/BDFDualTimeIntegrator.h>
 //-- Wasatch includes --//
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
@@ -88,6 +88,23 @@ namespace WasatchCore{
    */
   class TaskInterface
   {
+
+  private:
+    
+    typedef std::map<int, Expr::DualTime::BDFDualTimeIntegrator*> DTIntegratorMapT;
+    /**
+     *  \brief A vector of TreeTaskExecute pointers that hold each
+     *  Uintah::Task to be executed as part of this TaskInterface.
+     */
+    typedef std::vector< TreeTaskExecute* > ExecList;
+    
+    /**
+     *  The ordered list of trees to be executed as tasks.  This is
+     *  obtained by cleaving the original tree obtained by the root
+     *  expressions supplied to the TaskInterface.
+     */
+    ExecList execList_;
+    
   public:
 
     /**
@@ -123,6 +140,21 @@ namespace WasatchCore{
                    const std::set<std::string> & ioFieldSet,
                    const bool                    lockAllFields = false );
 
+    TaskInterface(  const IDSet                 & roots,
+                    const std::string             taskName,
+                    Expr::ExpressionFactory     & factory,
+                    const Uintah::LevelP        & level,
+                    Uintah::SchedulerP          & sched,
+                    const Uintah::PatchSet      * const patches,
+                    const Uintah::MaterialSet   * const materials,
+                    const PatchInfoMap          & info,
+                    DTIntegratorMapT            & dualTimeIntegrators,
+                    const std::vector<std::string> & varNames,
+                    const std::vector<Expr::Tag>   & rhsTags,
+                    Uintah::SimulationStateP      state,
+                    const std::set<std::string> & ioFieldSet,
+                    const bool                    lockAllFields = false );
+
     ~TaskInterface();
 
     /**
@@ -156,21 +188,6 @@ namespace WasatchCore{
      * associated with this TaskInterface.
      */
     Expr::TagList collect_tags_in_task() const;
-
-  private:
-
-    /**
-     *  \brief A vector of TreeTaskExecute pointers that hold each
-     *  Uintah::Task to be executed as part of this TaskInterface.
-     */
-    typedef std::vector< TreeTaskExecute* > ExecList;
-
-    /**
-     *  The ordered list of trees to be executed as tasks.  This is
-     *  obtained by cleaving the original tree obtained by the root
-     *  expressions supplied to the TaskInterface.
-     */
-    ExecList execList_;
   };
 
 } // namespace WasatchCore

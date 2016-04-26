@@ -120,8 +120,12 @@
 #include "TimeIntegratorTools.h"
 //-- ExprLib Includes --//
 #include <expression/ExpressionFactory.h>
+#include <expression/dualtime/FixedPointBDFDualTimeIntegrator.h>
+#include <expression/dualtime/VariableImplicitBDFDualTimeIntegrator.h>
 
-namespace Expr{ class ExpressionID; }
+namespace Expr{
+  class ExpressionID;
+}
 
 namespace Uintah {
   class Task;
@@ -177,7 +181,9 @@ namespace WasatchCore{
   public:
 
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-    typedef std::map< int, WasatchBCHelper* > BCHelperMapT;
+    typedef std::map< int, WasatchBCHelper* > BCHelperMapT; //<<< LevelID, BCHelper >>>
+    // we need a dual time integrator per patch since each of the RHS trees will need a dual time integrator for the patch it is working on
+    typedef std::map< int, Expr::DualTime::BDFDualTimeIntegrator* > DTIntegratorMapT; //<<< PatchID, DualTimeIntegrator >>>
     
     Wasatch( const Uintah::ProcessorGroup* myworld );
 
@@ -217,6 +223,20 @@ namespace WasatchCore{
      */
     void scheduleInitialize( const Uintah::LevelP& level,
                              Uintah::SchedulerP& sched );
+    
+    /**
+     *  \brief Set up initial condition task(s)
+     *
+     *  Performs the following:
+     *  <ul>
+     *  <li> Set up spatial operators associated with each patch and
+     *       store them for use by expressions later on.
+     *  <li> Set up the Uintah::Task(s) that will set the initial conditions.
+     *  </ul>
+     */
+    void scheduleComputeDualTimeResidual( const Uintah::LevelP& level,
+                                          Uintah::SchedulerP& sched );
+
     /**
      *  \brief Set up initial condition task(s) on a restart
      */
@@ -292,7 +312,10 @@ namespace WasatchCore{
 
     static void need_pressure_solve( const bool needPSolve ){ needPressureSolve_ = needPSolve; }
     static bool need_pressure_solve(){ return needPressureSolve_; }
-        
+
+    static void has_dual_time( const bool hasDualTime ){ hasDualTime_ = hasDualTime; }
+    static bool has_dual_time(){ return hasDualTime_; }
+
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
     bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
@@ -301,7 +324,12 @@ namespace WasatchCore{
     bool isPeriodic_;
     bool doRadiation_;
     bool doParticles_;
+    unsigned long totalDualTimeIterations_;
+    
     TimeIntegrator timeIntegrator_;
+    
+    DTIntegratorMapT dualTimeIntegrators_;
+    
     std::set<std::string> persistentFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
@@ -337,6 +365,7 @@ namespace WasatchCore{
 
     static FlowTreatment flowTreatment_;
     static bool needPressureSolve_;
+    static bool hasDualTime_;
     
     Uintah::SchedulerP subsched_; // needed for dualtime
     bool dualTime_;
@@ -351,6 +380,11 @@ namespace WasatchCore{
                                         const Uintah::LevelP& level,
                                         Uintah::SchedulerP& sched,
                                         const int RKStage );
+
+    void create_dual_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
+                                             const Uintah::MaterialSet* const materials,
+                                             const Uintah::LevelP& level,
+                                             Uintah::SchedulerP& sched );
 
     // jcs this should disappear soon?
     void computeDelT( const Uintah::ProcessorGroup*,
@@ -371,6 +405,13 @@ namespace WasatchCore{
                          Uintah::LevelP level, Uintah::Scheduler* sched,
                          Expr::ExpressionFactory* const factory);
     
+
+    void computeDualTimeResidual(const Uintah::ProcessorGroup* pg,
+                         const Uintah::PatchSubset* patches,
+                         const Uintah::MaterialSubset* matls,
+                         Uintah::DataWarehouse* old_dw,
+                         Uintah::DataWarehouse* new_dw,
+                         Uintah::LevelP level, Uintah::Scheduler* sched);
 
     void
     update_current_time( const Uintah::ProcessorGroup* const pg,

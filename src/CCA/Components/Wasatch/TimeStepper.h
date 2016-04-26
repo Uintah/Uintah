@@ -39,6 +39,7 @@
 #include "FieldAdaptor.h"
 #include "FieldTypes.h"
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
+#include <expression/dualtime/BDFDualTimeIntegrator.h>
 
 namespace WasatchCore{
 
@@ -85,6 +86,7 @@ namespace WasatchCore{
 
   private:
 
+    typedef std::map<int, Expr::DualTime::BDFDualTimeIntegrator*> DTIntegratorMapT;
     Uintah::SimulationStateP sharedState_;
 
     typedef std::set< FieldInfo<SpatialOps::SVolField              > > ScalarFields;
@@ -189,6 +191,26 @@ namespace WasatchCore{
                        Uintah::SchedulerP& sched,
                        const int rkStage,
                        const std::set<std::string>& ioFieldSet);
+    
+    /**
+     *  \brief schedule the tasks associated with this TimeStepper
+     *
+     *  \param infoMap information about each patch including operators, etc.
+     *  \param localPatches the patches that this task will be executed on
+     *  \param materials the materials that this task will be executed on
+     *  \param level the level of interest
+     *  \param sched the scheduler
+     *  \param rkStage the RK stage (1 for forward euler)
+     *  \param ioFieldSet the set of fields that should be locked to maintain persistence
+     */
+    void create_dualtime_tasks( const PatchInfoMap& infoMap,
+                                const Uintah::PatchSet* const localPatches,
+                                const Uintah::MaterialSet* const materials,
+                                const Uintah::LevelP& level,
+                                Uintah::SchedulerP& sched,
+                                DTIntegratorMapT& dualTimeIntegrators_,
+                                const std::set<std::string>& ioFieldSet);
+
 
     const std::list< TaskInterface* >&
     get_task_interfaces() const{ return taskInterfaceList_; }

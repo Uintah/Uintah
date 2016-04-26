@@ -96,6 +96,7 @@
 using std::endl;
 WasatchCore::FlowTreatment WasatchCore::Wasatch::flowTreatment_;
 bool WasatchCore::Wasatch::needPressureSolve_ = false;
+bool WasatchCore::Wasatch::hasDualTime_ = false;
 namespace WasatchCore{
 
   //--------------------------------------------------------------------
@@ -108,6 +109,7 @@ namespace WasatchCore{
       isPeriodic_ (true ),
       doRadiation_(false),
       doParticles_(false),
+      totalDualTimeIterations_(0),
       timeIntegrator_(TimeIntegrator("FE")),
       subsched_(NULL),
       compileDualTimeSched_(true)
@@ -175,6 +177,11 @@ namespace WasatchCore{
     for( BCHelperMapT::iterator it=bcHelperMap_.begin(); it != bcHelperMap_.end(); ++it ){
       delete it->second;
     }
+    
+    for( DTIntegratorMapT::iterator it=dualTimeIntegrators_.begin(); it != dualTimeIntegrators_.end(); ++it ){
+      delete it->second;
+    }
+
     if( doRadiation_ ){
       delete rmcrt_;
       delete cellType_;
@@ -529,7 +536,7 @@ namespace WasatchCore{
     
     if (wasatchSpec_->findBlock("DualTime")) {
       Uintah::ProblemSpecP dualTimeSpec = wasatchSpec_->findBlock("DualTime");
-      timeIntegrator_.set_has_dual_time(true);
+      timeIntegrator_.has_dual_time(true);
       if (dualTimeSpec->findAttribute("iterations"))
       {
         dualTimeSpec->getAttribute("iterations", timeIntegrator_.dualTimeIterations);
@@ -538,6 +545,11 @@ namespace WasatchCore{
       {
         dualTimeSpec->getAttribute("tolerance", timeIntegrator_.dualTimeTolerance);
       }
+      if (dualTimeSpec->findAttribute("ds"))
+      {
+        dualTimeSpec->getAttribute("ds", timeIntegrator_.dualTimeds);
+      }
+      has_dual_time(true);
     }
 
 
@@ -1034,7 +1046,41 @@ namespace WasatchCore{
   }
 
   //--------------------------------------------------------------------
+  
+  void Wasatch::scheduleComputeDualTimeResidual(const Uintah::LevelP& level,
+                                                Uintah::SchedulerP& subsched)
+  {
+    
+    Uintah::Task* t = scinew Uintah::Task("Wasatch::computeDualTimeResidual", this, &Wasatch::computeDualTimeResidual, level, subsched.get_rep());
+    
+    t->requires( Uintah::Task::NewDW, Uintah::VarLabel::find("convergence"), Uintah::Ghost::None, 0);
+    t->computes(Uintah::VarLabel::find("DualtimeResidual"));
+    subsched->addTask(t, level->eachPatch(), materials_);
+  }
 
+  //--------------------------------------------------------------------
+
+  void Wasatch::computeDualTimeResidual(const Uintah::ProcessorGroup* pg,
+                               const Uintah::PatchSubset* patches,
+                               const Uintah::MaterialSubset* matls,
+                               Uintah::DataWarehouse* subOldDW,
+                               Uintah::DataWarehouse* subNewDW,
+                               Uintah::LevelP level, Uintah::Scheduler* sched)
+  {
+    const Uintah::VarLabel* const convMeasureLabel = Uintah::VarLabel::find("DualtimeResidual"); // this is the value reduced by Uintah
+    const Uintah::VarLabel* const convLabel = Uintah::VarLabel::find("convergence"); // this is the value computed by the dual time integrator in ExprLib
+
+    //__________________
+    // set the error norm in the dw for each patch
+    for( int ip=0; ip<patches->size(); ++ip ){
+      // grab the convergence measure computed by the dual time integrator
+      Uintah::PerPatch<double*> val_;
+      subNewDW->get(val_, convLabel, 0, patches->get(ip));
+      const double val = *val_;
+      subNewDW->put(Uintah::max_vartype(val), convMeasureLabel);
+    }
+  }
+  //--------------------------------------------------------------------
   void
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
@@ -1048,7 +1094,7 @@ namespace WasatchCore{
 
     if ( timeIntegrator_.has_dual_time() ) {
       subsched_ = sched->createSubScheduler();
-      subsched_->initialize();
+      subsched_->initialize(3,1);
       
       // updates the current time. This should happen on the outer timestep since time will be
       // frozen in the dual time iteration
@@ -1064,15 +1110,24 @@ namespace WasatchCore{
       // we need the "outer" timestep for this temporary example
       dualTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
 
+      //============================================================================================
       // to get all the task dependencies in a jif, create a dummy subscheduler and
       // create the wasatch tasks on it. Once these tasks are created, one can easily obtain the
       // requires/computes from the dummy scheduler
       Uintah::SchedulerP dummySched = sched->createSubScheduler();
-      dummySched->initialize();
-      create_timestepper_on_patches( perproc_patches, materials_, level, dummySched, 1 );
+      dummySched->initialize(3,1);
+      dummySched->clearMappings();
+      
+      dummySched->mapDataWarehouse(Uintah::Task::ParentOldDW, 0);
+      dummySched->mapDataWarehouse(Uintah::Task::ParentNewDW, 1);
+      dummySched->mapDataWarehouse(Uintah::Task::OldDW, 2);
+      dummySched->mapDataWarehouse(Uintah::Task::NewDW, 3);
+
+      create_dual_timestepper_on_patches( perproc_patches, materials_, level, dummySched );
       Uintah::GridP grid = level->getGrid();
       dummySched->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
       dummySched->compile();
+      
       const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = dummySched->getInitialRequiredVars();
       for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
       {
@@ -1084,9 +1139,70 @@ namespace WasatchCore{
       {
         dualTimeTask->computes(*it);
       }
-      //
 
-      sched->addTask(dualTimeTask, perproc_patches, sharedState_->allMaterials());
+      // cleanup the rootids
+      graphCategories_[ ADVANCE_SOLUTION ]->rootIDs.clear();
+      // cleanup the dual time integrators
+      for( DTIntegratorMapT::iterator it=dualTimeIntegrators_.begin(); it != dualTimeIntegrators_.end(); ++it ){
+        delete it->second;
+      }
+      //============================================================================================
+      
+      // figure out the convergence reduction
+      Uintah::VarLabel* convLabel = Uintah::VarLabel::create( "DualtimeResidual", Uintah::max_vartype::getTypeDescription() );
+      dualTimeTask->requires( Uintah::Task::NewDW, convLabel );
+      
+      sched->addTask(dualTimeTask, perproc_patches, sharedState_->allMaterials());      
+
+      // -----------------------------------------------------------------------
+      // BOUNDARY CONDITIONS TREATMENT
+      // -----------------------------------------------------------------------
+      proc0cout << "------------------------------------------------" << std::endl
+      << "SETTING BOUNDARY CONDITIONS:" << std::endl;
+      proc0cout << "------------------------------------------------" << std::endl;
+      
+      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+      
+      for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+        EqnTimestepAdaptorBase* const adaptor = *ia;
+        EquationBase* transEq = adaptor->equation();
+        std::string eqnLabel = transEq->solution_variable_name();
+        //______________________________________________________
+        // set up boundary conditions on this transport equation
+        try{
+          // only verify boundary conditions on the first stage!
+          if( isRestarting_ ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+          proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+          transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
+        }
+        catch( std::runtime_error& e ){
+          std::ostringstream msg;
+          msg << e.what()
+          << std::endl
+          << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
+          << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      proc0cout << "------------------------------------------------" << std::endl;
+      
+      proc0cout << "compiling dual time subscheduler... \n";
+      // create and schedule the Wasatch RHS tasks as well as the DT integrators
+      subsched_->clearMappings();
+      
+      subsched_->mapDataWarehouse(Uintah::Task::ParentOldDW, 0);
+      subsched_->mapDataWarehouse(Uintah::Task::ParentNewDW, 1);
+      subsched_->mapDataWarehouse(Uintah::Task::OldDW, 2);
+      subsched_->mapDataWarehouse(Uintah::Task::NewDW, 3);
+
+      // create all the Wasatch RHS tasks for the transport equations
+      create_dual_timestepper_on_patches( level->eachPatch(), materials_, level, subsched_);
+      
+      // compute the residual using a reduction
+      scheduleComputeDualTimeResidual(level, subsched_);
+      
+      subsched_->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
+      subsched_->compile();
 
     } else {
       if( isRestarting_ ){
@@ -1229,9 +1345,7 @@ namespace WasatchCore{
                                 Expr::ExpressionFactory* const factory)
   {
     using namespace Uintah;
-    proc0cout << "executing dual time advance \n";
     GridP grid = level->getGrid();
-//    subsched_->setInitTimestep(true);
     
     //__________________________________
     //  turn off parentDW scrubbing
@@ -1240,72 +1354,72 @@ namespace WasatchCore{
     DataWarehouse::ScrubMode parentNewDWScrubMode =
                              parentNewDW->setScrubbing(DataWarehouse::ScrubNone);
     
-    // Create the Wasatch tasks and add them to the subscheduler
-    if (compileDualTimeSched_) {
-      proc0cout << "compiling subsched \n";
-      create_timestepper_on_patches( level->eachPatch(), materials_, level, subsched_, 1 );
-      subsched_->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
-      subsched_->compile();
-      compileDualTimeSched_ = false;
-    }
-    DataWarehouse* subOldDW = subsched_->get_dw(0);
-    DataWarehouse* subNewDW = subsched_->get_dw(1);
+    subsched_->setParentDWs(parentOldDW, parentNewDW);
+    subsched_->clearMappings();
+    subsched_->mapDataWarehouse(Uintah::Task::ParentOldDW, 0);
+    subsched_->mapDataWarehouse(Uintah::Task::ParentNewDW, 1);
+    subsched_->mapDataWarehouse(Uintah::Task::OldDW, 2);
+    subsched_->mapDataWarehouse(Uintah::Task::NewDW, 3);
+
+    DataWarehouse* subOldDW = subsched_->get_dw(2);
+    DataWarehouse* subNewDW = subsched_->get_dw(3);
 
     //__________________________________
     //  Move data from parentOldDW to subSchedNewDW.
-    delt_vartype dt;
-    parentOldDW->get(dt, sharedState_->get_delt_label(),level.get_rep());
-    subNewDW->put(dt, sharedState_->get_delt_label(),level.get_rep());
-
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = subsched_->getInitialRequiredVars();
     for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
     {
-      if (!(*it)->typeDescription()->isReductionVariable()) { // avoid reduction vars {
+      if (!(*it)->typeDescription()->isReductionVariable()) // avoid reduction vars
+      {
         subNewDW->transferFrom(parentOldDW, *it, patches, matls, true);
       }
     }
 
     subsched_->advanceDataWarehouse(grid);
-//    subsched_->setInitTimestep(false);
-    
+
+    //__________________
     // Iterate
-    int c = 0;
-    // dual time iteration goes here
+    int c = 1;
+    Uintah::max_vartype residual = 999999.9;
+
+    const Uintah::VarLabel* const ptcResLabel = Uintah::VarLabel::find("DualtimeResidual"); // this is the value reduced by Uintah
+        
     do {
-      proc0cout << "iteration: " << c << std::endl;
-      subOldDW = subsched_->get_dw(0);
-      subNewDW = subsched_->get_dw(1);
+      subOldDW = subsched_->get_dw(2);
+      subNewDW = subsched_->get_dw(3);
+
+      for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
+      {
+        if (!(*it)->typeDescription()->isReductionVariable()) // avoid reduction vars
+        {
+          subNewDW->transferFrom(subOldDW, *it, patches, matls, true);
+        }
+      }
+      
       subOldDW->setScrubbing(DataWarehouse::ScrubNone);
       subNewDW->setScrubbing(DataWarehouse::ScrubNone);
-
       subsched_->execute();
+
+      // now grab the maximum value of the error norm across all patches
+      subNewDW->get(residual, ptcResLabel);
+      
+      // advance the dws
       subsched_->advanceDataWarehouse(grid);
       
-      //----------------------------------------------------------------------
-      // THIS IS TEMPORARY SO THAT THE EXAMPLE WORKS
-      // grab the timestep
-      Uintah::delt_vartype deltat;
-      parentOldDW->get( deltat, sharedState_->get_delt_label() );
-      const Expr::Tag timeTag = TagNames::self().time;
-      //__________________
-      // loop over patches
-      for( int ip=0; ip<patches->size(); ++ip ){
-        SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(factory->retrieve_expression( timeTag, patches->get(ip)->getID(), false ) );
-        settimeexpr.set_integrator_stage( 1 );
-        settimeexpr.set_deltat  ( deltat );
-        settimeexpr.set_time    ( sharedState_->getElapsedTime() );
-        settimeexpr.set_timestep( sharedState_->getCurrentTopLevelTimeStep() );
-        c++;
-      }
-      //----------------------------------------------------------------------
-    } while(c < timeIntegrator_.dualTimeIterations);
-//    std::cout << "done iterating \n";
+      c++;
+    } while(c <= timeIntegrator_.dualTimeIterations && residual >= timeIntegrator_.dualTimeTolerance);
     
+    totalDualTimeIterations_ += c - 1;
+    proc0cout << " Dual time iterations = " << c-1 << ". Residual = " << residual << ". Average iterations = " << (double) totalDualTimeIterations_/sharedState_->getCurrentTopLevelTimeStep() << std::endl;
+    
+    // move dependencies to the parent DW
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = subsched_->getComputedVars();
     for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it)
     {
       if (!(*it)->typeDescription()->isReductionVariable()) // avoid reduction vars
+      {
         parentNewDW->transferFrom(subNewDW, *it, patches, matls);
+      }
     }
     
   }
@@ -1381,6 +1495,49 @@ namespace WasatchCore{
       settimeexpr.set_time    ( sharedState_->getElapsedTime() );
       settimeexpr.set_timestep( sharedState_->getCurrentTopLevelTimeStep() );
     }
+  }
+
+  //---------------------------------------------------------------------------------
+  
+  void
+  Wasatch::create_dual_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
+                                               const Uintah::MaterialSet* const materials,
+                                               const Uintah::LevelP& level,
+                                               Uintah::SchedulerP& sched )
+  {
+    GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
+    Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
+    
+    if( adaptors_.size() == 0 && gh->rootIDs.empty()) return; // no equations registered.
+    
+    for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+      const EqnTimestepAdaptorBase* const adaptor = *ia;
+      try{
+        adaptor->hook( *timeStepper_ );
+      }
+      catch( std::exception& e ){
+        std::ostringstream msg;
+        msg << "Problems plugging transport equation for '"
+        << adaptor->equation()->solution_variable_name()
+        << "' into the time integrator" << std::endl
+        << e.what() << std::endl;
+        proc0cout << msg.str() << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+    
+    typedef Expr::ConstantExpr<SpatialOps::SingleValueField>::Builder ConstantSingleValueT;
+    const double ds = timeIntegrator_.dualTimeds;
+    const TagNames& tagNames = TagNames::self();
+    const Expr::ExpressionID dsID = exprFactory.register_expression(scinew ConstantSingleValueT(tagNames.ds, ds), true );
+
+    //____________________________________________________________________
+    // create all of the required tasks on the timestepper.  This involves
+    // the task(s) that compute(s) the RHS for each transport equation and
+    // the task that updates the variables from time "n" to "n+1"
+    timeStepper_->create_dualtime_tasks( patchInfoMap_, localPatches,
+                                         materials, level, sched,
+                                         dualTimeIntegrators_, persistentFields_ );
   }
 
   
