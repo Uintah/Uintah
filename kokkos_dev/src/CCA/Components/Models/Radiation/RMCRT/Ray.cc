@@ -188,7 +188,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   proc0cout << "__________________________________ " << endl;
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if 0 && defined(UINTAH_ENABLE_KOKKOS)
   proc0cout << "  RMCRT:  Using the Kokkos-based implementation of RMCRT." << endl;
 #endif
 
@@ -494,7 +494,7 @@ Ray::sched_rayTrace( const LevelP& level,
 
 }
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if 0 && defined(UINTAH_ENABLE_KOKKOS)
 
 namespace {
 
@@ -1193,7 +1193,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //______________________________________________________________________
   if( d_solveDivQ){
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if 0 && defined(UINTAH_ENABLE_KOKKOS)
 
     bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
 
