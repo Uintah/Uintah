@@ -314,7 +314,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           }
           if (current_time > _t_interval){
             vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / _t_interval;
-            deposit_velocity[c] = deposit_velocity[c] + vel_i_ave; // add the contribution per particle.
+            deposit_velocity[c] =  vel_i_ave; // add the contribution per particle.
           } 
         }// if there is a deposition flux 
       } // wall or intrusion cell-type
