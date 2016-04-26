@@ -6,7 +6,7 @@
   <SimulationComponent type="wasatch"/>
   <Solver type="hypre"/>
   <Wasatch>
-      <DualTime iterations="500" tolerance="1e-3" ds="1e-6"/>
+      <DualTime iterations="20000" tolerance="1e-3" ds="1.6e-6"/>
     <TimeIntegrator> FE </TimeIntegrator>
     <Density method="COMPRESSIBLE">
       <NameTag name="density"/>
@@ -125,8 +125,8 @@
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1.0e-2</delt_min>
-    <delt_max>1.0e-2</delt_max>
+    <delt_min>1.0e-3</delt_min>
+    <delt_max>1.0e-3</delt_max>
     <max_Timesteps> 200 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
@@ -152,7 +152,7 @@
       <Box label="1">
         <lower>[-2,-2,0]</lower>
         <upper>[2,2,1]</upper>
-        <resolution>[100,100,1]</resolution>
+        <resolution>[64,64,1]</resolution>
         <patches>[2,2,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
