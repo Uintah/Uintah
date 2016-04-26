@@ -46,7 +46,7 @@ namespace Uintah {
   class VarLabel;
 
 /**************************************
-     
+
   CLASS
     Variable
 
@@ -59,25 +59,25 @@ namespace Uintah {
     Steven G. Parker
     Department of Computer Science
     University of Utah
-      
+
     Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-      
+
+
   KEYWORDS
     Variable
-      
+
   DESCRIPTION
     Long description...
-      
+
   WARNING
-      
+
   ****************************************/
-    
+
 class Variable {
 
 public:
   virtual ~Variable();
-  
+
   virtual const TypeDescription* virtualGetTypeDescription() const = 0;
 
   void setForeign();
@@ -89,7 +89,7 @@ public:
   //marks a variable as invalid (for example, it is in the process of receiving mpi)
   void setValid() { d_valid=true;}
 
-  void setInvalid() { d_valid=false;} 
+  void setInvalid() { d_valid=false;}
 
   //returns if a variable is marked valid or invalid
   bool isValid() const {return d_valid;}
@@ -106,7 +106,7 @@ public:
                 const IntVector& l,
                 const IntVector& h,
                 const size_t pidx_bufferSize);
-                
+
   void readPIDX( unsigned char* pidx_buffer,
                  const size_t& pidx_bufferSize,
                  bool swapBytes );
@@ -121,7 +121,7 @@ public:
                        const IntVector& h, ProblemSpecP /*varnode*/);
 
   virtual void readRLE(std::istream& /*in*/, bool swapbytes, int nByteMode);
-  
+
   virtual void allocate(const Patch* patch, const IntVector& boundary) = 0;
 
   virtual void getSizeInfo(std::string& elems, unsigned long& totsize, void*& ptr) const = 0;
@@ -137,12 +137,12 @@ public:
   // Only affects grid variables
   virtual void offsetGrid(const IntVector& /*offset*/);
 
-  virtual RefCounted* getRefCounted() = 0;
+  virtual RefBase* getRefBase() { return nullptr; };
 
 protected:
   Variable();
 
-private:    
+private:
   Variable(const Variable&);
   Variable& operator=(const Variable&);
 

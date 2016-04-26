@@ -608,7 +608,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
       ASSERT( sendset );
       if( sendset->numParticles() > 0 ) {
         var->getMPIBuffer( buffer, sendset );
-        buffer.addSendlist( var->getRefCounted() );
+        buffer.addSendlist( var->getRefBase() );
         buffer.addSendlist( var->getParticleSubset() );
       }
     }
@@ -626,7 +626,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
       GridVariableBase* var;
       var = dynamic_cast<GridVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
       var->getMPIBuffer( buffer, dep->low, dep->high );
-      buffer.addSendlist( var->getRefCounted() );
+      buffer.addSendlist( var->getRefBase() );
     }
       break;
     default :

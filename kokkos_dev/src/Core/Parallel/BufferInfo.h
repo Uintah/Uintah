@@ -44,33 +44,16 @@ class Sendlist
   : public AfterCommunicationHandler
 {
 
-  public:
-    Sendlist( Sendlist* next, RefCounted* obj ) : next(next), obj(obj) {}
+public:
+  Sendlist( Sendlist* next, RefBase* obj )
+    : next(next)
+    , obj(obj)
+  {}
 
-    virtual ~Sendlist()
-    {
-      if (obj && obj->removeReference()) {
-        delete obj;
-        obj = nullptr;
-      }
+  virtual ~Sendlist();
 
-      Sendlist * curr = next;
-
-      Sendlist * n;
-      while (curr) {
-        n = curr->next;
-        if (curr->obj->removeReference()) {
-          delete curr->obj;
-        }
-        curr->obj = nullptr;
-        curr->next = nullptr;
-        delete curr;;
-        curr = n;
-      }
-    }
-
-    Sendlist*   next;
-    RefCounted* obj;
+  Sendlist * next;
+  RefBase  * obj;
 };
 
 class BufferInfo {
@@ -92,7 +75,7 @@ class BufferInfo {
             , bool           free_datatype
             );
 
-    void addSendlist( RefCounted* );
+    void addSendlist( RefBase* );
 
     Sendlist* takeSendlist();
 
