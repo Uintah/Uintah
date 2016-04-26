@@ -83,18 +83,6 @@ endif
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
-# restart_merger
-
-#ifeq ($(IS_STATIC_BUILD),yes)
-#  PSELIBS := CCA/Components/Parent $(CORE_STATIC_PSELIBS)
-#endif
-
-SRCS := $(SRCDIR)/restart_merger.cc
-PROGRAM := StandAlone/restart_merger
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
 # DigitalFilterGenerator
 
 ifeq ($(BUILD_ARCHES),yes)
@@ -108,17 +96,6 @@ ifeq ($(BUILD_ARCHES),yes)
 endif
 
 ##############################################
-# compare_uda
-
-ifneq ($(IS_STATIC_BUILD),yes)
-   PSELIBS := $(ALL_PSE_CORE_LIBS)
-endif
-SRCS    := $(SRCDIR)/compare_uda.cc
-PROGRAM := StandAlone/compare_uda
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
 # parvarRange
 
 SRCS := $(SRCDIR)/partvarRange.cc
@@ -127,10 +104,30 @@ PROGRAM := StandAlone/partvarRange
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# compare_uda
+
+SRCS    := $(SRCDIR)/compare_uda.cc
+PROGRAM := StandAlone/compare_uda
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # slb
 
 SRCS := $(SRCDIR)/slb.cc
 PROGRAM := StandAlone/slb
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
+# restart_merger
+
+#ifeq ($(IS_STATIC_BUILD),yes)
+#  PSELIBS := CCA/Components/Parent $(CORE_STATIC_PSELIBS)
+#endif
+
+SRCS := $(SRCDIR)/restart_merger.cc
+PROGRAM := StandAlone/restart_merger
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
