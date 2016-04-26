@@ -47,7 +47,7 @@
 using namespace std;
 using namespace Uintah;
 
-#include <Core/Grid/Variables/BlockRange.h>
+#include <Core/Grid/Variables/BlockRange.hpp>
 
 #ifdef divergenceconstraint
 #include <CCA/Components/Arches/fortran/prescoef_var_fort.h>
@@ -73,7 +73,7 @@ using namespace Uintah;
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
 
-#include <Core/Grid/Variables/BlockRange.h>
+#include <Core/Grid/Variables/BlockRange.hpp>
 #ifdef UINTAH_ENABLE_KOKKOS
 #include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS

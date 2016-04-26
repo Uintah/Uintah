@@ -7,7 +7,7 @@
 
 
 #ifdef USE_FUNCTOR
-#include <Core/Grid/Variables/BlockRange.h>
+#include <Core/Grid/Variables/BlockRange.hpp>
 #endif
 
 using namespace Uintah;

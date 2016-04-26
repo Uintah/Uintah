@@ -17,7 +17,7 @@
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
 
-#include <Core/Grid/Variables/BlockRange.h>
+#include <Core/Grid/Variables/BlockRange.hpp>
 
 using namespace std;
 using namespace Uintah; 
