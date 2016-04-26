@@ -167,8 +167,14 @@ WARNING
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){
-        RunLengthEncoder<T> rle( typename Array3<T>::iterator(this, l),
-                                 typename Array3<T>::iterator(this, h) );
+        RunLengthEncoder<T> rle;
+
+        Array3<T> & a3 = *this;
+
+        serial_for( a3.range(), [&](int i, int j, int k) {
+          rle.addItem( a3(i,j,k) );
+        });
+
         rle.write(out);
       }
       else
@@ -190,7 +196,17 @@ WARNING
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if( td->isFlat() ) {
         RunLengthEncoder<T> rle( in, swapBytes, nByteMode );
-        rle.copyOut( Array3<T>::begin(), Array3<T>::end() );
+
+        Array3<T> & a3 = *this;
+        auto in_itr = rle.begin();
+        const auto end_itr = rle.end();
+
+        serial_for( a3.range(), [&](int i, int j, int k) {
+          if (in_itr != end_itr) {
+            a3(i,j,k) =  *in_itr;
+            ++in_itr;
+          }
+        });
       }
       else {
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));

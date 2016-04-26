@@ -33,24 +33,24 @@ using namespace std;
 
 namespace Uintah {
 
-  
+
   EnsightOpts::EnsightOpts(Args & args)
   {
     withpart = args.getLogical("withpart");
     onemesh  = args.getLogical("onemesh");
     binary   = args.getLogical("bin");
   }
-  
-  EnsightDumper::EnsightDumper(DataArchive* da_, string basedir_, 
+
+  EnsightDumper::EnsightDumper(DataArchive* da_, string basedir_,
                                const EnsightOpts & opts,
                                const FieldSelection & fselect)
-    : 
-    FieldDumper(da_, basedir_), 
-    nsteps_(0), flddumper_(opts.binary), 
+    :
+    FieldDumper(da_, basedir_),
+    nsteps_(0), flddumper_(opts.binary),
     data_(da_,&flddumper_, opts, fselect)
   {
     data_.dir_ = this->createDirectory();
-    
+
     // set up the file that contains a list of all the files
     string casefilename = data_.dir_ + string("/") + string("ensight.case");
     casestrm_.open(casefilename.c_str());
@@ -59,7 +59,7 @@ namespace Uintah {
       abort();
     }
     cout << "     " << casefilename << endl;
-  
+
     // header
     casestrm_ << "FORMAT" << endl;
     casestrm_ << "type: ensight gold" << endl;
@@ -71,7 +71,7 @@ namespace Uintah {
       casestrm_ << "model:   1   gridgeo_****" << endl;
     casestrm_ << endl;
     casestrm_ << "VARIABLE" << endl;
-  
+
     // time step data
     tscol_  = 0;
     tsstrm_ << "time values: ";;
@@ -107,18 +107,18 @@ namespace Uintah {
       typestr = "cell";
     else
       return; // FIXME: dont dump particle data
-    
+
     list<ScalarDiag const *> scalardiaggens = createScalarDiags(td, data_.fselect_);
     for(list<ScalarDiag const *>::const_iterator diagit(scalardiaggens.begin());
         diagit!=scalardiaggens.end();diagit++) {
       // NOTE: this must match the file name format used by the actual writer
-      casestrm_ << "scalar per " << typestr << ": 1 " 
+      casestrm_ << "scalar per " << typestr << ": 1 "
                 << fieldname << "_" << (*diagit)->name()
                 << " " << nodots(fieldname) << "_" << (*diagit)->name() << "_" << "****" << endl;
     }
   }
-  
-  EnsightDumper::Step * 
+
+  EnsightDumper::Step *
   EnsightDumper::addStep(int timestep, double time, int index)
   {
     Step * res = scinew Step(&data_, this->dirName(time, index), timestep, time, index, nsteps_);
@@ -150,11 +150,11 @@ namespace Uintah {
   {
     GridP grid = data_->da_->queryGrid(index_);
     FldDumper * fd = data_->dumper_;
-    
+
     // only support level 0 for now
     int lnum = 0;
     LevelP level = grid->getLevel(lnum);
-  
+
     // store to basename/grid.geo****
     char goutname[1024];
     char poutname[1024];
@@ -165,14 +165,14 @@ namespace Uintah {
       snprintf(goutname, 1024, "%s/gridgeo_%04d", data_->dir_.c_str(), fileindex_);
     }
     snprintf(poutname, 1024, "%s/partgeo_%04d", data_->dir_.c_str(), fileindex_);
-  
+
     // find ranges
     // dont bother dumping ghost stuff to ensight
     IntVector minind, maxind;
     level->findNodeIndexRange(minind, maxind);
     minind_ = minind;
     vshape_ = (maxind-minind);
-    
+
     /*
     cout << "  " << goutname << endl;
     cout << "   minind = " << minind_ << endl;
@@ -180,18 +180,18 @@ namespace Uintah {
     cout << "   vshape = " << vshape_ << endl;
     cout << endl;
     */
-    
+
     if(needmesh_) {
-    
+
       ofstream gstrm(goutname);
       fd->setstrm(&gstrm);
-  
+
       if(fd->bin_) fd->textfld("C Binary",79,80);
       fd->textfld("grid description",79,80) ; fd->endl();
       fd->textfld("grid description",79,80) ; fd->endl();
       fd->textfld("node id off",     79,80) ; fd->endl();
       fd->textfld("element id off",  79,80) ; fd->endl();
-  
+
       fd->textfld("part",            79,80) ; fd->endl();
       fd->numfld(1); fd->endl();
       fd->textfld("3d regular block",79,80); fd->endl();
@@ -200,7 +200,7 @@ namespace Uintah {
       fd->numfld(vshape_(1),10);
       fd->numfld(vshape_(2),10);
       fd->endl();
-    
+
       for(int id=0;id<3;id++) {
         for(int k=minind_[2];k<maxind[2];k++) {
           for(int j=minind_[1];j<maxind[1];j++) {
@@ -210,41 +210,41 @@ namespace Uintah {
           }
         }
       }
-    
+
       fd->unsetstrm();
     }
-  
+
     if(data_->withpart_) {
-      // store particles   
+      // store particles
       cout << "  " << poutname << endl;
-    
+
       ofstream pstrm(poutname);
       pstrm << "particle description" << endl;
       pstrm << "particle coordinates" << endl;
       streampos nspot = pstrm.tellp();
       pstrm << setw(8) << "XXXXXXXX" << endl;
       int nparts = 0;
-  
+
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
-    
+
         ConsecutiveRangeSet matls = data_->da_->queryMaterials("p.x", patch, index_);
-    
+
         // loop over materials
         for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
             matlIter != matls.end(); matlIter++) {
           const int matl = *matlIter;
           if(!data_->fselect_.wantMaterial(matl)) continue;
-          
+
           ParticleVariable<Matrix3> value;
           ParticleVariable<Point> partposns;
           data_->da_->query(partposns, "p.x", matl, patch, index_);
-      
+
           ParticleSubset* pset = partposns.getParticleSubset();
           for(ParticleSubset::iterator iter = pset->begin();
               iter != pset->end(); iter++) {
-        
+
             Point xpt = partposns[*iter];
             pstrm << setw(8) << ++nparts;
             for(int id=0;id<3;id++) {
@@ -254,16 +254,16 @@ namespace Uintah {
             }
             pstrm << endl;
           }
-      
+
         }
       }
       cout << "   nparts = " << nparts << endl;
       cout << endl;
-  
+
       pstrm.seekp(nspot);
       pstrm << setw(8) << setfill(' ') << nparts;
     }
-  
+
   }
 
   void
@@ -277,83 +277,84 @@ namespace Uintah {
       storeGridField(fieldname, td);
     }
   }
-  
+
   void
   EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescription * td)
   {
     GridP grid = data_->da_->queryGrid(index_);
     FldDumper * fd = data_->dumper_;
-    
+
     list<ScalarDiag const *> scalardiaggens = createScalarDiags(td, data_->fselect_);
-    
+
     for(list<ScalarDiag const *>::const_iterator diagit(scalardiaggens.begin());
-        diagit!=scalardiaggens.end();diagit++) 
+        diagit!=scalardiaggens.end();diagit++)
       {
         ScalarDiag const * diaggen = *diagit;
-        
+
         char outname[1024];
-        
+
         string diagname = diaggen->name();
         // NOTE: this must match the file name format used in EnsightDumper::addField
-        snprintf(outname, 1024, "%s/%s_%s_%04d", 
-                 data_->dir_.c_str(), nodots(fieldname).c_str(), 
+        snprintf(outname, 1024, "%s/%s_%s_%04d",
+                 data_->dir_.c_str(), nodots(fieldname).c_str(),
                  diagname.c_str(), fileindex_);
-        
+
         cout << "  " << outname;
         cout.flush();
-      
+
         ofstream vstrm(outname);
         fd->setstrm(&vstrm);
         int icol(0); // pretty format the columns
-        
+
         ostringstream descb;
         descb << "data field " << nodots(fieldname) << " at " << time_;
         fd->textfld(descb.str(),79,80); fd->endl();
         fd->textfld("part",     79,80); fd->endl();
         fd->numfld(1); fd->endl();
         fd->textfld("block",    79,80); fd->endl();
-        
+
         // only support level 0 for now
         int lnum = 0;
         LevelP level = grid->getLevel(lnum);
-        
+
         // store entire plane in field to allow correct order of writing component
         Uintah::Array3<double> vals(vshape_[0],vshape_[1],vshape_[2]);
-        for(Uintah::Array3<double>::iterator vit(vals.begin());vit!=vals.end();vit++)
-          *vit = 0.;
-        
+        parallel_for( vals.range(), [&](int i, int j, int k) {
+          vals(i,j,k) = 0.0;
+        });
+
         cout << ", patch ";
         for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
           const Patch* patch = *iter;
-          
+
           cout << patch->getID() << " ";
           cout.flush();
-          
+
           IntVector ilow, ihigh;
           patch->computeVariableExtents(td->getSubType()->getType(), IntVector(0,0,0), Ghost::None, 0, ilow, ihigh);
-          
+
           // loop over requested materials
           ConsecutiveRangeSet matls = data_->da_->queryMaterials(fieldname, patch, index_);
           for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
             int i,j,k;
             const int matl = *matlIter;
             if(!data_->fselect_.wantMaterial(matl)) continue;
-            
-            // FIXME: all materials get lumped into a single field in ensight 
+
+            // FIXME: all materials get lumped into a single field in ensight
             NCVariable<double> matvals;
             (*diaggen)(data_->da_, patch, fieldname, matl, index_, matvals);
             for(k=ilow[2];k<ihigh[2];k++) for(j=ilow[1];j<ihigh[1];j++) for(i=ilow[0];i<ihigh[0];i++) {
               IntVector ijk(i,j,k);
               vals[ijk-minind_] += matvals[ijk];
             }
-            
+
           } // materials
         } // patches
-	
+
         // dump this component as text
         for(int k=0;k<vshape_[2];k++) for(int j=0;j<vshape_[1];j++) for(int i=0;i<vshape_[0];i++) {
           fd->numfld(vals[IntVector(i,j,k)]);
-          if(++icol==1) 
+          if(++icol==1)
             {
               fd->endl();
               icol = 0;
@@ -361,12 +362,12 @@ namespace Uintah {
           if(icol!=0) fd->endl();
         }
         cout << endl;
-        
+
         fd->unsetstrm();
-        
-      } // diags  
+
+      } // diags
   }
-  
+
   void
   EnsightDumper::Step::storePartField(string /*fieldname*/, const Uintah::TypeDescription * /*td*/)
   {

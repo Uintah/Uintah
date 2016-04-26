@@ -54,7 +54,7 @@ Point Tri::centroid()
     cent += d_points[i].asVector();
 
   cent /= 3.;
-  
+
   return Point(cent.x(),cent.y(),cent.z());
 }
 
@@ -87,27 +87,27 @@ bool Tri::inside(Point& pt)
   else if (largest == plane_normal_abs.z()) dominant_coord = 3;
 
   coord x = X, y = Y; // Initialization is to remove compiler warning.
-  switch (dominant_coord) 
+  switch (dominant_coord)
     {
     case 1:
       x = Y;
       y = Z;
       break;
     case 2:
-      x = Z; 
+      x = Z;
       y = X;
       break;
     case 3:
       x = X;
       y = Y;
-      break; 
+      break;
     }
-  
+
   double tx = pt(x), ty = pt(y);
 
   Point *p1 = &d_points[2], *p2 = d_points;
   int yflag0 = ((*p1)(y) >= ty);
-  
+
   bool inside = false;
 
   for (int i = 3; i--;) {
@@ -153,41 +153,31 @@ UniformGrid::UniformGrid(const UniformGrid& copy)
   d_max_min = copy.d_max_min;
 
   d_grid.resize(copy.d_grid.getLowIndex(),copy.d_grid.getHighIndex());
-  for (Array3<list<Tri> >::const_iterator gridIter = copy.d_grid.begin();
-       gridIter != copy.d_grid.end(); gridIter++) {
-    IntVector index = gridIter.getIndex();
-    d_grid[index] = copy.d_grid[index];
-  }
-  
+
+  parallel_for( d_grid.range(), [&](int i, int j, int k) {
+    d_grid(i,j,k) = copy.d_grid(i,j,k);
+  });
 }
 
 
-UniformGrid& UniformGrid::operator=(const UniformGrid& rhs) 
+UniformGrid& UniformGrid::operator=(const UniformGrid& rhs)
 {
   if (this == &rhs)
     return *this;
 
-  std::cout << "d_grid size = " << d_grid.size() << endl;
-  if (d_grid.size() != IntVector(0,0,0) ) {
-    // Delete the lhs stuff grid and copy the rhs to it
-    for (Array3<list<Tri> >::iterator gridIter = d_grid.begin();
-         gridIter != d_grid.end(); gridIter++) {
-      IntVector index = gridIter.getIndex();
-      d_grid[index].clear();
-    }
-  }
+  parallel_for( d_grid.range(), [&](int i, int j, int k) {
+    d_grid(i,j,k).clear();
+  });
 
   d_grid.resize(rhs.d_grid.getLowIndex(),rhs.d_grid.getHighIndex());
-  
+
   d_bound_box = rhs.d_bound_box;
   d_max_min = rhs.d_max_min;
-  
-  for (Array3<list<Tri> >::const_iterator gridIter = rhs.d_grid.begin();
-       gridIter != rhs.d_grid.end(); gridIter++) {
-    IntVector index = gridIter.getIndex();
-    d_grid[index] = rhs.d_grid[index];
-  }
-   
+
+  parallel_for( d_grid.range(), [&](int i, int j, int k) {
+    d_grid(i,j,k) = rhs.d_grid(i,j,k);
+  });
+
   return *this;
 }
 
@@ -220,7 +210,7 @@ void UniformGrid::buildUniformGrid(list<Tri>& polygons)
     if (v2 > d_grid.getHighIndex())
       cout << "v2 = " << v2 << endl;
 
-    cout << "Tri = " << tri->vertex(0) << " " << tri->vertex(1) << " " 
+    cout << "Tri = " << tri->vertex(0) << " " << tri->vertex(1) << " "
 	 << tri->vertex(2) << endl;
     cout << "v0 " << v0 << " v1 " << v1 << " v2 " << v2 << endl;
 #endif
@@ -241,7 +231,7 @@ void UniformGrid::buildUniformGrid(list<Tri>& polygons)
 void UniformGrid::countIntersections(const Point& pt, int& crossings)
 {
   // Make a ray and shoot it in the +x direction
-  
+
   Vector infinity = Vector(pt.x()+1e10,pt.y(),pt.z());
   IntVector test_pt_id = cellID(pt);
   IntVector start = d_grid.getLowIndex();
@@ -251,7 +241,7 @@ void UniformGrid::countIntersections(const Point& pt, int& crossings)
   for (int i = start.x(); i < stop.x(); i++) {
     IntVector curr(i,test_pt_id.y(),test_pt_id.z());
     list<Tri> tris = d_grid[curr];
-    for (list<Tri>::iterator itr = tris.begin(); itr != tris.end(); 
+    for (list<Tri>::iterator itr = tris.begin(); itr != tris.end();
 	 ++itr) {
       Point hit;
       if ((itr->plane()).Intersect(pt,infinity,hit)) {
@@ -262,7 +252,7 @@ void UniformGrid::countIntersections(const Point& pt, int& crossings)
 	  continue;
 	if (itr->inside(hit)) {
 #if 0
-	  cout << "Inside_new hit = " << hit << "vertices: " 
+	  cout << "Inside_new hit = " << hit << "vertices: "
 	       << itr->vertex(0) << " " << itr->vertex(1) <<  " "
 	       << itr->vertex(2) << endl;
 #endif
