@@ -32,8 +32,9 @@ namespace WasatchCore{
   TagNames::TagNames() :
   
   time          ( "time"    , Expr::STATE_NONE ),
-  dt            ( "dt"      , Expr::STATE_NONE ),
-  timestep      ( "timestep", Expr::STATE_NONE ),
+  dt            ( "dt"      , Expr::STATE_NONE ),  // physical timestep size
+  ds            ( "ds"      , Expr::STATE_NONE ),  // dual timestep size
+  timestep      ( "timestep", Expr::STATE_NONE ),  // timestep counter
   rkstage       ( "rkstage" , Expr::STATE_NONE ),
   stableTimestep( "StableDT", Expr::STATE_NONE ),
   
@@ -60,8 +61,6 @@ namespace WasatchCore{
   radvrflux          ( "VRFlux"            , Expr::STATE_NONE ),
   kineticEnergy      ("KineticEnergy",      Expr::STATE_NONE ),
   totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
-  
-  
   
   // momentum related variables
   pressure  ( "pressure",   Expr::STATE_NONE ),
@@ -100,22 +99,23 @@ namespace WasatchCore{
   pdragcoef( "p.cd",       Expr::STATE_NONE ),
   
   // predictor related variables
-  star("*"),
-  rhs("_rhs"),
-  convectiveflux("_convFlux_"),
-  diffusiveflux("_diffFlux_"),
-  pressuresrc( "pressure_src", Expr::STATE_NONE ),
-  divu       ("divu",Expr::STATE_NONE),
-  drhodtstar ( "drhodt*",     Expr::STATE_NONE ),
-  drhodtstarnp1 ( "drhodt*",     Expr::STATE_NP1 ),
-  drhodt     ( "drhodt",       Expr::STATE_NONE ),
-  drhodtnp1  ( "drhodt",       Expr::STATE_NP1  ),
-  unconvergedpts("UnconvergedPts", Expr::STATE_NONE),
+  star           ( "*"),
+  rhs            ( "_rhs"),
+  convectiveflux ( "_convFlux_"),
+  diffusiveflux  ( "_diffFlux_"),
+  pressuresrc    ( "pressure_src"  , Expr::STATE_NONE ),
+  divu           ( "divu"          , Expr::STATE_NONE ),
+  drhodtstar     ( "drhodt*"       , Expr::STATE_NONE ),
+  drhodtstarnp1  ( "drhodt*"       , Expr::STATE_NP1  ),
+  drhodt         ( "drhodt"        , Expr::STATE_NONE ),
+  drhodtnp1      ( "drhodt"        , Expr::STATE_NP1  ),
+  unconvergedpts ( "UnconvergedPts", Expr::STATE_NONE ),
   
   // mms varden
   mms_mixfracsrc( "mms_mixture_fraction_src", Expr::STATE_NONE ),
   mms_continuitysrc("mms_continuity_src", Expr::STATE_NONE),
   mms_pressurecontsrc("mms_pressure_continuity_src", Expr::STATE_NONE),
+  
   // postprocessing
   continuityresidual( "ContinuityResidual", Expr::STATE_NONE ),
 

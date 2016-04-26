@@ -44,8 +44,8 @@ namespace WasatchCore{
   /**
    *  \ingroup WasatchCore
    *  \struct  TimeIntegrator
-   *  \author Tony Saad
-   *  \date   July 2013
+   *  \author  Tony Saad
+   *  \date    July 2013
    *
    *  \brief Defines coefficients for Runge-Kutta type integrators only two level
    storage requirements (i.e. old, and new).
@@ -59,6 +59,7 @@ namespace WasatchCore{
     bool hasDualTime;
     int dualTimeIterations;
     double dualTimeTolerance;
+    double dualTimeds;
 
     TimeIntegrator(TimeIntegratorEnum theTimeIntEnum)
     : timeIntEnum(theTimeIntEnum)    
@@ -77,18 +78,21 @@ namespace WasatchCore{
     {
       switch (timeIntEnum) {
         default:
+          
         case FE:
           nStages = 1;
           alpha[0] = 1.0; beta[0]  = 1.0;
           alpha[1] = 0.0; beta[1]  = 0.0;
           alpha[2] = 0.0; beta[2]  = 0.0;
           break;
+          
         case RK2SSP:
           nStages = 2;
           alpha[0] = 1.0; beta[0]  = 1.0;
           alpha[1] = 0.5; beta[1]  = 0.5;
           alpha[2] = 0.0; beta[2]  = 0.0;
           break;
+          
         case RK3SSP:
           nStages = 3;
           alpha[0] = 1.0;     beta[0]  = 1.0;
@@ -96,12 +100,12 @@ namespace WasatchCore{
           alpha[2] = 1.0/3.0; beta[2]  = 2.0/3.0;
           break;
       }
-      hasDualTime = false;
+      hasDualTime        = false;
       dualTimeIterations = 100;
-      dualTimeTolerance = 1.0e-8;
+      dualTimeTolerance  = 1.0e-8;
     }
     
-    void set_has_dual_time(const bool hasDT) { hasDualTime = hasDT; }
+    void has_dual_time(const bool hasDT) { hasDualTime = hasDT; }
     bool has_dual_time(){ return hasDualTime;}
   };
 
