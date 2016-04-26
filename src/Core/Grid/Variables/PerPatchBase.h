@@ -39,7 +39,7 @@ namespace Uintah {
 
 CLASS
    PerPatchBase
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -51,28 +51,27 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    PerPatchBase
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
   // inherits from Variable solely for the purpose of stuffing it in the DW
   class PerPatchBase : public Variable {
    public:
-      
+
       virtual ~PerPatchBase();
-      
+
       virtual const TypeDescription* virtualGetTypeDescription() const;
       virtual void copyPointer(Variable&) = 0;
       virtual PerPatchBase* clone() const = 0;
-      virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                                void*& ptr) const = 0;
 
@@ -82,16 +81,16 @@ WARNING
 
       // Only affects grid variables
       void offsetGrid(const IntVector& /*offset*/);
- 
+
       virtual void emitNormal(std::ostream& out, const IntVector& l,
                               const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
-      virtual void readNormal(std::istream& in, bool swapbytes);      
+      virtual void readNormal(std::istream& in, bool swapbytes);
       virtual void allocate(const Patch* patch, const IntVector& boundary);
 
    protected:
       PerPatchBase(const PerPatchBase&);
       PerPatchBase();
-      
+
    private:
       PerPatchBase& operator=(const PerPatchBase&);
    };

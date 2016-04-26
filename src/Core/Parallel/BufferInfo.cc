@@ -115,9 +115,12 @@ BufferInfo::get_type( void*&        out_buf,
 }
 
 void
-BufferInfo::addSendlist( RefCounted* obj )
+BufferInfo::addSendlist( RefBase* obj )
 {
-  obj->addReference();
+  auto ptr = dynamic_cast<RefCounted *>(obj);
+  if (ptr) {
+    ptr->addReference();
+  }
   d_sendlist = scinew Sendlist( d_sendlist, obj );
 }
 
@@ -127,4 +130,22 @@ BufferInfo::takeSendlist()
   Sendlist* rtn = d_sendlist;
   d_sendlist = 0; // They are now responsible for freeing...
   return rtn;
+}
+
+
+Sendlist::~Sendlist()
+{
+  if (obj) {
+    auto ptr = dynamic_cast<RefCounted*>(obj);
+    if (ptr && ptr->removeReference()) {
+      delete ptr;
+    }
+    else {
+      delete obj;
+    }
+  }
+
+  if (next) {
+    delete next;
+  }
 }
