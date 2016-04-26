@@ -1198,14 +1198,13 @@ buildPatchMap( LevelP                 level,
     patchMap.rewindow(patch->getExtraLowIndex(basis,bl),
                       patch->getExtraHighIndex(basis,bl));
 
-    for (Array3<const Patch*>::iterator iter = patchMap.begin(); iter != patchMap.end(); iter++) {
-
-      if (*iter != 0) {
+    serial_for( patchMap.range(), [&]( int i, int j, int k) {
+      if ( patchMap(i,j,k) != nullptr ) {
         static ProgressiveWarning pw("Two patches on the same grid overlap", 10);
         if (pw.invoke())
           cerr << "Patches " << patch->getID() << " and "
                << (*iter)->getID() << " overlap on the same file at time " << time
-               << " in " << filebase << " at index " << iter.getIndex() << endl;
+               << " in " << filebase << " at index " << IntVector(i,j,k) << endl;
         //abort_uncomparable();
 
         // in some cases, we can have overlapping patches, where an extra cell/node
@@ -1217,19 +1216,16 @@ buildPatchMap( LevelP                 level,
         IntVector in_low  = patch->getLowIndex(basis);
         IntVector in_high = patch->getHighIndex(basis);
 
-        IntVector pos = iter.getIndex();
-
-        if (pos.x() >= in_low.x() && pos.y() >= in_low.y() && pos.z() >= in_low.z() &&
-            pos.x() < in_high.x() && pos.y() < in_high.y() && pos.z() < in_high.z()) {
-          *iter = patch;
+        if (i >= in_low.x() && j >= in_low.y() && k >= in_low.z() &&
+            i < in_high.x() && j < in_high.y() && k < in_high.z()) {
+          patchMap(i,j,k) = patch;
         }
       }
       else
       {
-        IntVector pos = iter.getIndex();
-        *iter = patch;
+        patchMap(i,j,k) = patch;
       }
-    }
+    });
   }
   patchMap.rewindow(low, high);
 }
@@ -1759,28 +1755,25 @@ main(int argc, char** argv)
           buildPatchMap(level,  d_filebase1, patchMap,  time1, basis);
           buildPatchMap(level2, d_filebase2, patch2Map, time2, basis);
 
-          for (Array3<const Patch*>::iterator nodePatchIter = patchMap.begin();
-               nodePatchIter != patchMap.end(); nodePatchIter++) {
-
-            IntVector index = nodePatchIter.getIndex();
+          serial_for( patchMap.range(), [&](int i, int j, int k) {
 
             // bulletproofing
-            if ((patchMap[index]  == 0 && patch2Map[index] != 0) ||
-                (patch2Map[index] == 0 && patchMap[index] != 0)) {
+            if ((patchMap(i,j,k)  == nullptr && patch2Map(i,j,k) != nullptr) ||
+                (patch2Map(i,j,k) == nullptr && patchMap(i,j,k) != nullptr)) {
               cerr << "Inconsistent patch coverage on level " << l
                    << " at time " << time1 << endl;
 
-              if (patchMap[index] != 0) {
-                cerr << index << " is covered by " << d_filebase1 << endl
+              if (patchMap(i,j,k) != nullptr) {
+                cerr << IntVector(i,j,k) << " is covered by " << d_filebase1 << endl
                      << " and not " << d_filebase2 << endl;
               }
               else {
-                cerr << index << " is covered by " << d_filebase2 << endl
+                cerr << IntVector(i,j,k) << " is covered by " << d_filebase2 << endl
                      << " and not " << d_filebase1 << endl;
               }
               abort_uncomparable();
             }
-          }
+          });
 
           Level::const_patchIterator iter;
 

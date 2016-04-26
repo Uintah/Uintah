@@ -383,15 +383,8 @@ void BuildCellToPatchMap(LevelP level,
 
     patchMap.rewindow(ex_low, ex_high);
 
-    for (Array3<const Patch*>::iterator iter = patchMap.begin(); iter != patchMap.end(); iter++) {
-
-      if (*iter != 0) {
-
-       #if 0
-       cerr << "Patches " << patch->getID() << " and "
-               << (*iter)->getID() << " overlap on the same file at time " << time
-               << " in " << filebase << " at index " << iter.getIndex() << endl;
-        #endif
+    parallel_for( patchMap.range(), [&](int i, int j, int k) {
+      if (patchMap(i,j,k)) {
         // in some cases, we can have overlapping patches, where an extra cell/node
         // overlaps an interior cell/node of another patch.  We prefer the interior
         // one.  (if there are two overlapping interior ones (nodes or face centers only),
@@ -400,16 +393,18 @@ void BuildCellToPatchMap(LevelP level,
         // its interior cell centered variables
         IntVector in_low  = patch->getLowIndex(basis);
         IntVector in_high = patch->getHighIndex(basis);
-        IntVector pos = iter.getIndex();
 
-        if (pos.x() >= in_low.x() && pos.y() >= in_low.y() && pos.z() >= in_low.z() &&
-            pos.x() < in_high.x() && pos.y() < in_high.y() && pos.z() < in_high.z()) {
-          *iter = patch;
+        if (   i >= in_low[0] && j >= in_low[1] && k >= in_low[2]
+            && i < in_high[0] && j < in_high[1] && k < in_high[2] )
+        {
+          patchMap(i,j,k) = patch;
         }
-      }else{
-        *iter = patch;     // insert patch into the array
       }
-    }  //patchMap
+      else {
+        patchMap(i,j,k) = patch;
+      }
+    });
+
   }  //level
   patchMap.rewindow(low, high);
 }
@@ -661,24 +656,21 @@ main(int argc, char** argv)
         BuildCellToPatchMap(level1, filebase1, cellToPatchMap1,  time1, basis);
         BuildCellToPatchMap(level2, filebase2, cellToPatchMap2, time2, basis);
 
-        // bulletproofing
-        for ( Array3<const Patch*>::iterator nodePatchIter = cellToPatchMap1.begin(); nodePatchIter != cellToPatchMap1.end(); nodePatchIter++) {
+        serial_for( cellToPatchMap1.range(), [&](int i, int j, int k) {
 
-          IntVector index = nodePatchIter.getIndex();
-
-          if ((cellToPatchMap1[index] == 0 && cellToPatchMap2[index] != 0) ||
-              (cellToPatchMap2[index] == 0 && cellToPatchMap1[index] != 0)) {
+          if ((cellToPatchMap1(i,j,k) == nullptr && cellToPatchMap2(i,j,k) != nullptr) ||
+              (cellToPatchMap2(i,j,k) == nullptr && cellToPatchMap1(i,j,k) != nullptr)) {
             cerr << "Inconsistent patch coverage on level " << l << " at time " << time1 << endl;
 
-            if (cellToPatchMap1[index] != 0) {
-              cerr << index << " is covered by " << filebase1 << " and not " << filebase2 << endl;
+            if (cellToPatchMap1(i,j,k) != nullptr) {
+              cerr << "(" << i << "," << j << "," << k << ")" << " is covered by " << filebase1 << " and not " << filebase2 << endl;
             } else {
-              cerr << index << " is covered by " << filebase2 << " and not " << filebase1 << endl;
+              cerr << "(" << i << "," << j << "," << k << ")" << " is covered by " << filebase2 << " and not " << filebase1 << endl;
             }
 
             abort_uncomparable();
           }
-        }
+        });
 
         //__________________________________
         //  compare the fields (CC, SFC(X,Y,Z), NC variables

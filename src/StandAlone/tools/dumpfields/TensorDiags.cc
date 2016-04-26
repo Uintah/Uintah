@@ -31,73 +31,75 @@
 using namespace std;
 
 namespace Uintah {
-  
+
   TensorDiag::~TensorDiag() {}
-  
+
   // --------------------------------------------------------------------------
-  
+
   class TensorValueDiag : public TensorDiag {
   public:
     TensorValueDiag() {}
     string name() const { return "value"; }
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
-                    int imat, int index, 
+                    int imat, int index,
                     NCVariable<Matrix3> & res) const {
       da->query(res, fieldname, imat, patch, index);
     }
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
-                    int imat, int index, 
+                    int imat, int index,
                     CCVariable<Matrix3> & res) const {
       da->query(res, fieldname, imat, patch, index);
     }
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
-                    int imat, int index, 
+                    int imat, int index,
                     ParticleSubset * parts,
                     ParticleVariable<Matrix3> & res) const {
       da->query(res, fieldname, imat, patch, index);
     }
   };
-  
+
   // --------------------------------------------------------------------------
-  
+
   class TensorToTensorDiag : public TensorDiag {
   public:
     TensorToTensorDiag() {}
     virtual ~TensorToTensorDiag() {}
-        
+
     virtual Matrix3 convert(const Matrix3 & val) const = 0;
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
-                    int imat, int index, 
+                    int imat, int index,
                     NCVariable<Matrix3> & res) const {
       NCVariable<Matrix3> value;
       da->query(value, fieldname, imat, patch, index);
       res.allocate(value.getLowIndex(), value.getHighIndex());
-      for(NCVariable<Matrix3>::iterator it=value.begin();it!=value.end();it++)
-        res[it.getIndex()] = convert(*it);
+      parallel_for( value.range(), [&](int i, int j, int k) {
+        res(i,j,k) = convert(value(i,j,k));
+      });
     }
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
-                    int imat, int index, 
+                    int imat, int index,
                     CCVariable<Matrix3> & res) const {
       CCVariable<Matrix3> value;
       da->query(value, fieldname, imat, patch, index);
       res.allocate(value.getLowIndex(), value.getHighIndex());
-      for(CCVariable<Matrix3>::iterator it=value.begin();it!=value.end();it++)
-        res[it.getIndex()] = convert(*it);
+      parallel_for( value.range(), [&](int i, int j, int k) {
+        res(i,j,k) = convert(value(i,j,k));
+      });
     }
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
-                    int imat, int index, 
+                    int imat, int index,
                     ParticleSubset * parts,
                     ParticleVariable<Matrix3> & res) const {
       ParticleVariable<Matrix3> value;
@@ -107,41 +109,43 @@ namespace Uintah {
         res[*pit] = convert(value[*pit]);
     }
   };
-  
+
   // --------------------------------------------------------------------------
-  
+
   class PreTensorToTensorDiag : public TensorDiag {
   public:
     PreTensorToTensorDiag(const TensorDiag * preop_, const TensorToTensorDiag * realdiag_)
       : preop(preop_), realdiag(realdiag_) {}
-    
+
     ~PreTensorToTensorDiag() {}
-    
+
     std::string name() const { return preop->name()+"_"+realdiag->name(); }
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
-                    int imat, int index, 
+                    int imat, int index,
                     NCVariable<Matrix3>  & res) const {
       NCVariable<Matrix3> fullvals;
       (*preop)(da, patch, fieldname, imat, index, fullvals);
       res.allocate(fullvals.getLowIndex(), fullvals.getHighIndex());
-      for(NCVariable<Matrix3>::iterator it=fullvals.begin();it!=fullvals.end();it++)
-        res[it.getIndex()] = realdiag->convert(*it);
+      parallel_for( fullvals.range(), [&](int i, int j, int k) {
+        res(i,j,k) = realdiag->convert(fullvals(i,j,k));
+      });
     }
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
-                    int imat, int index, 
+                    int imat, int index,
                     CCVariable<Matrix3>  & res) const {
       NCVariable<Matrix3> fullvalues;
       (*preop)(da, patch, fieldname, imat, index, fullvalues);
       res.allocate(fullvalues.getLowIndex(), fullvalues.getHighIndex());
-      for(CCVariable<Matrix3>::iterator it=fullvalues.begin();it!=fullvalues.end();it++)
-        res[it.getIndex()] = realdiag->convert(*it);
+      parallel_for( fullvalues.range(), [&](int i, int j, int k) {
+        res(i,j,k) = realdiag->convert(fullvalues(i,j,k));
+      });
     }
-    
-    void operator()(DataArchive * da, const Patch * patch, 
+
+    void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
                     int imat, int index,
                     ParticleSubset * pset,
@@ -153,14 +157,14 @@ namespace Uintah {
       for(ParticleSubset::iterator pit(pset->begin());pit!=pset->end();pit++)
         res[*pit] = realdiag->convert( fullvalues[*pit] );
     }
-    
+
   private:
     const TensorDiag         * preop;
     const TensorToTensorDiag * realdiag;
   };
-  
+
   // --------------------------------------------------------------------------
-  
+
   class Matrix3ValueDiag : public TensorToTensorDiag {
   public:
     std::string name() const { return "value"; }
@@ -168,7 +172,7 @@ namespace Uintah {
       return a;
     }
   };
-  
+
   class Matrix3GreenStrainDiag : public TensorToTensorDiag {
   public:
     std::string name() const { return "green_strain"; }
@@ -180,7 +184,7 @@ namespace Uintah {
       return b;
     }
   };
-  
+
   class Matrix3RightCGDiag : public TensorToTensorDiag {
   public:
     std::string name() const { return "right_cg"; }
@@ -192,7 +196,7 @@ namespace Uintah {
       return b;
     }
   };
-  
+
   class Matrix3LogarithmicDiag : public TensorToTensorDiag {
   public:
     std::string name() const { return "logarithmic"; }
@@ -206,49 +210,49 @@ namespace Uintah {
       return b;
     }
   };
-  
+
   class Matrix3DeviatorDiag : public TensorToTensorDiag {
   public:
     std::string name() const { return "deviator"; }
     Matrix3 convert(const Matrix3 & a) const {
       Matrix3 b(0,0,0, 0,0,0, 0,0,0);
-      
+
       double P = 0.;
       for(int i=0;i<3;i++) P += -a(i,i)/3.0;
-      
+
       for(int i=0;i<3;i++) for(int j=0;j<3;j++) {
         b(i,j) = a(i,j) + P;
       }
       return b;
     }
   };
-  
+
   // --------------------------------------------------------------------------
-  
-  
+
+
   typedef vector<TensorDiag *>     TDiagTable;
   typedef map<string, TDiagTable > PreTDiagTable;
-  
+
   TDiagTable    _ttdiagtable;
   PreTDiagTable _ttprediagtable;
-  
+
   void createTensorDiags() {
     if(_ttdiagtable.size()) return;
-    
+
     _ttdiagtable.push_back(new Matrix3ValueDiag());
     _ttdiagtable.push_back(new Matrix3GreenStrainDiag());
     _ttdiagtable.push_back(new Matrix3RightCGDiag());
     _ttdiagtable.push_back(new Matrix3LogarithmicDiag());
     _ttdiagtable.push_back(new Matrix3DeviatorDiag());
   }
-  
+
   void destroyTensorDiags() {
     for(vector<TensorDiag *>::iterator dit(_ttdiagtable.begin());dit!=_ttdiagtable.end();dit++) {
         delete *dit;
       }
     _ttdiagtable.clear();
   }
-  
+
   void describeTensorDiags(ostream & os)
   {
     createTensorDiags();
@@ -258,20 +262,20 @@ namespace Uintah {
       os << "    " << (*dit)->name() << endl;
     }
   }
-  
+
   // --------------------------------------------------------------------------
-  
+
   int numberOfTensorDiags(const Uintah::TypeDescription * fldtype) {
     createTensorDiags();
     if(fldtype->getSubType()->getType()!=Uintah::TypeDescription::Matrix3) return 0;
     return _ttdiagtable.size();
   }
-  
+
   std::string tensorDiagName(const Uintah::TypeDescription * fldtype, int idiag) {
     createTensorDiags();
     return _ttdiagtable[idiag]->name();
   }
-  
+
   TensorDiag const * createTensorDiag(const Uintah::TypeDescription * fldtype, int idiag,
                                       const TensorDiag * tensorpreop)
   {
@@ -282,20 +286,20 @@ namespace Uintah {
     if(tensorpreop &&  ttres) {
       if(!_ttprediagtable.count(tensorpreop->name()))
         _ttprediagtable[ tensorpreop->name() ].resize( _ttprediagtable.size() );
-      
+
       if(!_ttprediagtable[ tensorpreop->name() ][idiag] )
         _ttprediagtable[ tensorpreop->name() ][idiag] = new PreTensorToTensorDiag( tensorpreop, ttres );
-      
+
       return _ttprediagtable[ tensorpreop->name() ][idiag];
     }
     return res;
   }
-  
+
   const TensorDiag*
   createTensorOp(const FieldSelection & fldselection)
   {
     createTensorDiags();
-    
+
     TensorDiag const *  res = 0;
     size_t ndiags = _ttdiagtable.size();
     for(size_t idiag=0;idiag<ndiags;idiag++)
@@ -307,9 +311,9 @@ namespace Uintah {
       }
     return res;
   }
-  
-  list<const TensorDiag*> 
-  createTensorDiags(const Uintah::TypeDescription * fldtype, 
+
+  list<const TensorDiag*>
+  createTensorDiags(const Uintah::TypeDescription * fldtype,
                     const FieldSelection & fldselection,
                     const TensorDiag * preop)
   {
@@ -323,5 +327,5 @@ namespace Uintah {
       }
     return res;
   }
-  
+
 }
