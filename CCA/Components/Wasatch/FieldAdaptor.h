@@ -312,7 +312,6 @@ namespace WasatchCore{
    *  \param ghostData information about the number of ghosts required for this field
    *  \param deviceIndex in the case of a GPU field, this specifies which GPU it is on
    *  \param uintahDeviceVar for GPU fields, this is the pointer to the field on the device
-   *  \param isGPUTask if true, then this will wrap fields on GPU rather than CPU.
    *
    *  \tparam FieldT the SpatialOps field type to produce
    *  \tparam UFT the Uintah field type that we began with

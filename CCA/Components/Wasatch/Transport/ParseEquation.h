@@ -80,11 +80,12 @@ namespace WasatchCore{
 
   /**
    *  \brief Build the momentum equation specified by "params"
-   *
-   *  \param momentumSpec The XML block from the input file specifying the
-   *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
+   *  \param wasatchSpec The XML block from the input file specifying the
+   *         wasatch block.
+   *  \param turbParams information on turbulence models
    *  \param turbParams
    *  \param useAdaptiveDt true for variable dt
+   *  \param doParticles true if particle transport is active
    *  \param isConstDensity true if density is constant
    *  \param densityTag the tag for the mixture mass density
    *  \param gc The GraphCategories.
