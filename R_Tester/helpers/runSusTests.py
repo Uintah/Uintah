@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from os import environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
+from os import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
 from time import strftime,time,gmtime,asctime,localtime
 from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
@@ -541,7 +541,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if not do_memory_test :
       unsetenv('MALLOC_STATS')
 
-  if environ['MALLOC_STATS'] == "":
+  if getenv('MALLOC_STATS') == None:
     MALLOCSTATS = ""
   else:
     MALLOCSTATS = "-x MALLOC_STATS"
