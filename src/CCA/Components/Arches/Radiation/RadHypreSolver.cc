@@ -342,10 +342,10 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          d_valueA[i] = AP[IntVector(colX,colY,colZ)];
-          d_valueA[i+1] = -AB[IntVector(colX,colY,colZ)];
-          d_valueA[i+2] = -AS[IntVector(colX,colY,colZ)];
-          d_valueA[i+3] = -AW[IntVector(colX,colY,colZ)];
+          d_valueA[i] = AP(colX,colY,colZ);
+          d_valueA[i+1] = -AB(colX,colY,colZ);
+          d_valueA[i+2] = -AS(colX,colY,colZ);
+          d_valueA[i+3] = -AW(colX,colY,colZ);
           d_valueA[i+4] = 0;
           d_valueA[i+5] = 0;
           d_valueA[i+6] = 0;
@@ -357,10 +357,10 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          d_valueA[i] = -AB[IntVector(colX,colY,colZ)];
-          d_valueA[i+1] = -AS[IntVector(colX,colY,colZ)];
-          d_valueA[i+2] = -AW[IntVector(colX,colY,colZ)];
-          d_valueA[i+3] = AP[IntVector(colX,colY,colZ)];
+          d_valueA[i] = -AB(colX,colY,colZ);
+          d_valueA[i+1] = -AS(colX,colY,colZ);
+          d_valueA[i+2] = -AW(colX,colY,colZ);
+          d_valueA[i+3] = AP(colX,colY,colZ);
 #if 0
           cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
           cerr << "value[AB]=" << d_value[i] << endl;
@@ -384,7 +384,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_valueB[i] = SU[IntVector(colX,colY,colZ)];
+        d_valueB[i] = SU(colX,colY,colZ);
         //cerr << "b[" << i << "] =" << d_value[i] << endl;
         i++;
       }
@@ -400,7 +400,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_valueX[i] = constvars->cenint[IntVector(colX, colY, colZ)];
+        d_valueX[i] = constvars->cenint(colX, colY, colZ);
         //cerr << "x0[" << i << "] =" << d_value[i] << endl;
         i++;;
       }
@@ -727,7 +727,7 @@ RadHypreSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          vars->cenint[IntVector(colX, colY, colZ)] = xvec[i];
+          vars->cenint(colX, colY, colZ) = xvec[i];
         //cerr << "xvec[" << i << "] = " << xvec[i] << endl;
         i++;
       }
