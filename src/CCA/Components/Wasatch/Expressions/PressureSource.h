@@ -27,9 +27,9 @@
  *         vactor and the density field in future time steps.
  *         OR
  *         of the form \f$ \frac{ \rho \nabla.u^n }{\Delta t} = \frac{\partial^2
- *         \rho}{\partial t^2} \f$ which requires knowledge of a dilitation field.
+ *         \rho}{\partial t^2} \f$ which requires knowledge of a dilatation field.
  *  
- *  Note that here the dilitation at time step n+1 is enforced to be 0, but at the
+ *  Note that here the dilatation at time step n+1 is enforced to be 0, but at the
  *       current time step is allowed not to be zero. By retaining this term, we can
  *       remain consistent even when initial conditions do not satisfy the governing
  *       equations.
@@ -88,8 +88,8 @@ class PressureSource : public Expr::Expression<SVolField>
 public:
   
   /**
-   *  \brief Builder for the source term in the pressure poisson equation 
-   *         (i.e. the second derivaive of density with respect to time)
+   *  \brief Builder for the source term in the pressure Poisson equation
+   *         (i.e. the second derivative of density with respect to time)
    */
   class Builder : public Expr::ExpressionBuilder
   {
@@ -102,12 +102,16 @@ public:
      *         Order is critically important.
      *  \param momTags a list tag which holds the tags for momentum in
      *         all directions
+     *  \param oldMomTags a list tag which holds the tags for momentum in
+     *         all directions at the previous time level
      *  \param velTags a list tag which holds the tags for velocity at
      *         the current time stage in all directions
+     *  \param velTags the TagList for velocity components
+     *  \param divuTag the dilatation
      *  \param isConstDensity
-     *  \param densTag a tag to hold density in constant density cases, which is 
+     *  \param rhoTag a tag to hold density in constant density cases, which is
      *         needed to obtain drhodt 
-     *  \param densStarTag a tag for estimation of density at the time stage "*"
+     *  \param rhoStarTag a tag for estimation of density at the time stage "*"
      *         which is needed to obtain momentum at that stage.
      */
     Builder( const Expr::TagList& results,
@@ -117,7 +121,7 @@ public:
              const Expr::Tag& divuTag,
              const bool isConstDensity,
              const Expr::Tag& rhoTag,
-             const Expr::Tag& rhoStarTag);
+             const Expr::Tag& rhoStarTag );
     
     ~Builder(){}
     

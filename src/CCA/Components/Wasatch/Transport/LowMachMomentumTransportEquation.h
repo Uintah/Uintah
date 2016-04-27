@@ -61,6 +61,7 @@ namespace WasatchCore{
 
     /**
      *  \brief Construct a LowMachMomentumTransportEquation
+     *  \param momComponent the direction of this component of momentum
      *  \param velName the name of the velocity component solved by this LowMachMomentumTransportEquation
      *  \param momName the name of the momentum component solved by this LowMachMomentumTransportEquation
      *  \param densTag the tag for the mixture mass density
@@ -73,18 +74,18 @@ namespace WasatchCore{
      *  \param linSolver the linear solver object for the pressure solve
      *  \param sharedState contains useful stuff like the value of timestep, etc.
      */
-    LowMachMomentumTransportEquation(const Direction momComponent,
-                                     const std::string velName,
-                               const std::string momName,
-                               const Expr::Tag densTag,
-                               const bool isConstDensity,
-                               const Expr::Tag bodyForceTag,                              
-                               const Expr::Tag srcTermTag,
-                               GraphCategories& gc,
-                               Uintah::ProblemSpecP params,
-                               TurbulenceParameters turbulenceParams,
-                               Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP sharedState );
+    LowMachMomentumTransportEquation( const Direction momComponent,
+                                      const std::string velName,
+                                      const std::string momName,
+                                      const Expr::Tag densTag,
+                                      const bool isConstDensity,
+                                      const Expr::Tag bodyForceTag,
+                                      const Expr::Tag srcTermTag,
+                                      GraphCategories& gc,
+                                      Uintah::ProblemSpecP params,
+                                      TurbulenceParameters turbulenceParams,
+                                      Uintah::SolverInterface& linSolver,
+                                      Uintah::SimulationStateP sharedState );
 
     ~LowMachMomentumTransportEquation();
 

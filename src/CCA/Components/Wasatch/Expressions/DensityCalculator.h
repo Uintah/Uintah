@@ -122,15 +122,18 @@ public:
   public:
     /**
      *  @param rhoEval calculates density given mixture fraction
-     *  @param resultTag the tag for the value that this expression computes
+     *  @param resultsTag the tag for the value that this expression computes
+     *  @param rhoOldTag the density from the previous timestep (used as a guess)
      *  @param rhoFTag the density weighted mixture fraction
+     *  @param rtol the relative solver tolerance
+     *  @param maxIter maximum number of solver iterations allowed
      */
     Builder( const InterpT& rhoEval,
              const Expr::TagList& resultsTag,
              const Expr::Tag& rhoOldTag,
              const Expr::Tag& rhoFTag,
              const double rtol,
-             const unsigned maxIter);
+             const unsigned maxIter );
     
     ~Builder(){ delete rhoEval_; }
     Expr::ExpressionBase* build() const{
@@ -221,7 +224,9 @@ public:
   public:
     /**
      *  @brief Build a DensHeatLossMixfrac expression
+     *  @param rhoOldTag the previous density, used as a guess for the solve
      *  @param rhoTag the density (calculated here) - should have CARRY_FORWARD context.
+     *  @param gammaOldTag the previous value for the heat loss parameter, used as a guess for the solve
      *  @param gammaTag the heat loss parameter (calculated here)
      *  @param rhofTag the density-weighted mixture fraction
      *  @param rhohTag the density-weighted enthalpy

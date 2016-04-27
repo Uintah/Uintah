@@ -155,7 +155,7 @@ namespace WasatchCore{
      *  with the Expression library.
      */
     template<typename FieldT>
-    void add_equation( const std::string& solnVarNames,
+    void add_equation( const std::string& solnVarName,
                        const Expr::Tag& rhsTag );
 
     /**
@@ -190,7 +190,7 @@ namespace WasatchCore{
                        const Uintah::LevelP& level,
                        Uintah::SchedulerP& sched,
                        const int rkStage,
-                       const std::set<std::string>& ioFieldSet);
+                       const std::set<std::string>& ioFieldSet );
     
     /**
      *  \brief schedule the tasks associated with this TimeStepper
@@ -200,7 +200,7 @@ namespace WasatchCore{
      *  \param materials the materials that this task will be executed on
      *  \param level the level of interest
      *  \param sched the scheduler
-     *  \param rkStage the RK stage (1 for forward euler)
+     *  \param dualTimeIntegrators
      *  \param ioFieldSet the set of fields that should be locked to maintain persistence
      */
     void create_dualtime_tasks( const PatchInfoMap& infoMap,
@@ -208,8 +208,8 @@ namespace WasatchCore{
                                 const Uintah::MaterialSet* const materials,
                                 const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched,
-                                DTIntegratorMapT& dualTimeIntegrators_,
-                                const std::set<std::string>& ioFieldSet);
+                                DTIntegratorMapT& dualTimeIntegrators,
+                                const std::set<std::string>& ioFieldSet );
 
 
     const std::list< TaskInterface* >&

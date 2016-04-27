@@ -161,10 +161,12 @@ public:
   }
   
   /**
-   *  \brief Specify whether this boundary condition applies to a staggered field that is staggered in a
-   direction normal to the boundary. For example, XVol and on x-boundaries, YVol on y-boundaries, and ZVol
-   on z-boundaries.
-   *  \param staggered Boolean that specifies whether this field in staggered and normal (see documentation above).
+   *  \brief Specify whether this boundary condition applies to a staggered
+   *         field that is staggered in a direction normal to the boundary.
+   *         For example, XVol and on x-boundaries, YVol on y-boundaries,
+   *         and ZVol on z-boundaries.
+   *  \param staggeredNormal Boolean that specifies whether this field in
+   *         staggered and normal (see documentation above).
    *
    */
   inline void set_staggered_normal( const bool staggeredNormal )
