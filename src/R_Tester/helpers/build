@@ -83,7 +83,8 @@ if [ "$OS" = "Linux" ]; then
   fi
   
   if [ "$MACHINE" == "cyrus.mech.utah.edu" ]; then
-    COMMON="      --with-cuda=/usr/local/cuda-6.5 \\
+    COMMON="       --with-mpi=/usr/installed/openmpi \\
+      --with-cuda=/usr/local/cuda-6.5 \\
       --enable-gencode=35 \\
       --enable-ray-scatter\\"
 
