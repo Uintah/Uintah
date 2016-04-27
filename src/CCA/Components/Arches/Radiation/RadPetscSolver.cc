@@ -375,11 +375,12 @@ void
 RadPetscSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 {
   PetscToUintah_Vector(patch, vars->cenint, d_x, d_petscLocalToGlobal);
+  destroyPetscObjects(A, d_x, d_b, d_u);
 }
 //______________________________________________________________________
 //  Destroy Petsc objects
 void
 RadPetscSolver::destroyMatrix() 
 {
-  destroyPetscObjects(A, d_x, d_b, d_u);
+// destroy was moved to end of copy rad Soln.  This change was required to give Hypre solver a speed-up
 }

@@ -93,9 +93,7 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       // HYPRE grid and stencil setup
-      void gridSetup(const ProcessorGroup*,
-                     const Patch* patch, 
-                     bool plusX, 
+      void gridSetup(bool plusX, 
                      bool plusY, 
                      bool plusZ);
 
@@ -103,8 +101,11 @@ public:
        // to close petsc
       void finalizeSolver();
 
-      virtual void matrixCreate(const PatchSet* allpatches,
+      void matrixCreate(const PatchSet* allpatches,
                             const PatchSubset* mypatc) {};
+
+      void matrixInit(const Patch* patch) ;
+
 
       void setMatrix(const ProcessorGroup* pc,
                      const Patch* patch,
@@ -147,7 +148,9 @@ private:
   double d_stored_residual;
   double init_norm;
   
-  double *d_value;
+  double *d_valueA;
+  double *d_valueB;
+  double *d_valueX;
   const ProcessorGroup* d_myworld;
   std::map<const Patch*, int> d_petscGlobalStart;
   std::map<const Patch*, Array3<int> > d_petscLocalToGlobal;

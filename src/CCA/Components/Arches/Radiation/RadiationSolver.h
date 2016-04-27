@@ -105,6 +105,10 @@ public:
    virtual void matrixCreate(const PatchSet* allpatches,
                              const PatchSubset* mypatches) = 0;
 
+   virtual void matrixInit(const Patch* patch) = 0;
+
+   virtual void gridSetup(bool plusX, bool plusY, bool plusZ) = 0;
+
    virtual void setMatrix(const ProcessorGroup* pc,
                             const Patch* patch,
                             ArchesVariables* vars,

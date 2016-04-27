@@ -277,7 +277,7 @@ DORadiationModel::computeOrdinatesOPL() {
 
   _sigma=5.67e-8;  //  w / m^2 k^4
 
-  if (_scatteringOn){
+  if(_scatteringOn){
     cosineTheta    = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
     solidAngleQuad = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
 
@@ -641,6 +641,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
   double solve_start = Time::currentSeconds();
+  
+  d_linearSolver->matrixInit(patch);
+ 
   rgamma.resize(1,29);
   sd15.resize(1,481);
   sd.resize(1,2257);
@@ -668,6 +671,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   CCVariable<double> ap;
 
   StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
+
 
   if(reflectionsTurnedOn){
     for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){
@@ -754,6 +758,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   vars->qfluxt.initialize(0.0);
   vars->qfluxb.initialize(0.0);
 
+
   //__________________________________
   //begin discrete ordinates
   for (int bands =1; bands <=d_lambda; bands++){
@@ -789,6 +794,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       plusX = (omu[direcn]  > 0.0)? 1 : 0;
       plusY = (oeta[direcn] > 0.0)? 1 : 0;
       plusZ = (oxi[direcn]  > 0.0)? 1 : 0;
+
+      d_linearSolver->gridSetup(plusX, plusY, plusZ);
 
       if(_scatteringOn){
       if(old_DW_isMissingIntensities)
@@ -844,7 +851,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
         throw InternalError("Radiation solver not converged", __FILE__, __LINE__);
       }
 
-      d_linearSolver->destroyMatrix();
 
 
       //fort_rdomvolq( idxLo, idxHi, direcn, wt, vars->cenint, vars->volq);
@@ -874,8 +880,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       //fort_rdomsrc( idxLo, idxHi, constvars->ABSKT, vars->ESRCG,vars->volq, divQ);
     }
 
-
   }  // bands loop
+
+  d_linearSolver->destroyMatrix();
 
   proc0cout << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
 
