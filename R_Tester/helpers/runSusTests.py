@@ -540,17 +540,22 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   if not do_memory_test :
       unsetenv('MALLOC_STATS')
-      
-  MPIHEAD="%s -np" % MPIRUN       #default 
+
+  if environ['MALLOC_STATS'] == "":
+    MALLOCSTATS = ""
+  else:
+    MALLOCSTATS = "-x MALLOC_STATS"
+
+  MPIHEAD="%s -np" % MPIRUN       #default  
   
   # pass in environmental variables to mpirun
   if environ['OS'] == "Linux":
-    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN 
+    MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
   
                                    # openmpi
   rc = system("mpirun -x TERM echo 'hello' > /dev/null 2>&1")
   if rc == 0:
-    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN
+    MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
   
                                    #  mvapich
   rc = system("mpirun -genvlist TERM echo 'hello' > /dev/null 2>&1")
