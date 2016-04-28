@@ -292,7 +292,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         print( "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n" )
         continue
     
-    if dbg_opt == "opt" : # qwerty: Think this is right now...
+    if dbg_opt == "opt" :
       do_memory = 0
 
     if environ['SCI_MALLOC_ENABLED'] != "yes" :
@@ -300,6 +300,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       
     if do_gpu == 1 and has_gpu == 1:
       environ['SCI_DEBUG'] = "SingleDevice:+"
+      environ['CUDA_VISIBLE_DEVICES'] = "0"            # This will have to change for multiple GPU runs.  May need to make it a machine dependent environmenal variable
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
     tolerances  = [abs_tolerance, rel_tolerance]
