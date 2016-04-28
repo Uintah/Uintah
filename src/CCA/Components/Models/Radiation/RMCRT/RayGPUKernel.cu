@@ -81,6 +81,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
                                 GPUDataWarehouse* old_gdw,
                                 GPUDataWarehouse* new_gdw )
 {
+
     // Not used right now
 //  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
 //  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
@@ -331,6 +332,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          GPUDataWarehouse* old_gdw,
                                          GPUDataWarehouse* new_gdw )
 {
+
     // Not used right now
 //  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
 //  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
@@ -1279,17 +1281,28 @@ __syncthreads();
       /*`==========TESTING==========*/
 #if DEBUG == 1
       if( isDbgCellDevice(origin) ) {
-        printf( "        B) cur [%i,%i,%i] prev [%i,%i,%i]", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
-        printf( " dir %i ", dir );
-        printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
-        printf( " tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
-        printf( "rayLoc [%g,%g,%g] ", ray_location.x,ray_location.y, ray_location.z);
-        printf( "inv_dir [%g,%g,%g] ",inv_ray_direction.x,inv_ray_direction.y, inv_ray_direction.z);
-        printf( "disMin %g inDomain %i\n",disMin, in_domain );
-
-        printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell], sigmaT4OverPi[prevLev][prevCell]);
-        printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-        printf( "            Dx[prevLev].x  %g \n", d_levels[prevLev].Dx.x);
+        printf( "        B) cur [%i,%i,%i] prev [%i,%i,%i]"
+            " dir %i "
+            " stepSize [%i,%i,%i] "
+            " tMax [%g,%g,%g] "
+            "rayLoc [%g,%g,%g] "
+            "inv_dir [%g,%g,%g] "
+            "disMin %g "
+            "inDomain %i\n"
+            "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n"
+            "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n"
+            "            Dx[prevLev].x  %g \n",
+            cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z,
+            dir,
+            step[0],step[1],step[2],
+            tMax.x,tMax.y, tMax.z,
+            ray_location.x,ray_location.y, ray_location.z,
+            inv_ray_direction.x,inv_ray_direction.y, inv_ray_direction.z,
+            disMin,
+            in_domain,
+            abskg[prevLev][prevCell], sigmaT4OverPi[prevLev][prevCell],
+            abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur],
+            d_levels[prevLev].Dx.x);
       }
 #endif
       /*===========TESTING==========`*/
@@ -1569,6 +1582,7 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                                                      cellType_gdw,
                                                                      old_gdw,
                                                                      new_gdw);
+
   // free device-side RNG states
   CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
   CUDA_RT_SAFE_CALL( cudaFree(dev_regionLo) );
