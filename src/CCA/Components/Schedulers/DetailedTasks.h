@@ -666,12 +666,12 @@ namespace Uintah {
     DetailedTasks& operator=( const DetailedTasks& );
 
 #ifdef HAVE_CUDA
-    TaskPQueue            verifyDataTransferCompletionTasks_;    // Some or all ghost cells still need to be processed before a task is ready.
-    TaskPQueue            initiallyReadyDeviceTasks_;       // initially ready, h2d copies pending
-    TaskPQueue            finalizeDevicePreparationTasks_;  // h2d copies completed, need to mark gpu data as valid and copy gpu ghost cell data internally on device
-    TaskPQueue            completionPendingDeviceTasks_;    // execution and d2h copies pending
-    TaskPQueue            finalizeHostPreparationTasks_;    // d2h copies completed, need to mark cpu data as valid
-    TaskPQueue            initiallyReadyHostTasks_;         // initially ready cpu task, d2h copies pending
+    TaskQueue            verifyDataTransferCompletionTasks_;    // Some or all ghost cells still need to be processed before a task is ready.
+    TaskQueue            initiallyReadyDeviceTasks_;       // initially ready, h2d copies pending
+    TaskQueue            finalizeDevicePreparationTasks_;  // h2d copies completed, need to mark gpu data as valid and copy gpu ghost cell data internally on device
+    TaskQueue            completionPendingDeviceTasks_;    // execution and d2h copies pending
+    TaskQueue            finalizeHostPreparationTasks_;    // d2h copies completed, need to mark cpu data as valid
+    TaskQueue            initiallyReadyHostTasks_;         // initially ready cpu task, d2h copies pending
 
     mutable CrowdMonitor  deviceVerifyDataTransferCompletionQueueLock_;
     mutable CrowdMonitor  deviceFinalizePreparationQueueLock_;
