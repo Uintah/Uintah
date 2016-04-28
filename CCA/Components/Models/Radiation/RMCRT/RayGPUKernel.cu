@@ -1496,7 +1496,7 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
   CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
 
 
-  setupRandNumKernel<<< dimGrid, dimBlock>>>( randNumStates );
+  setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
 
   rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                             dimBlock,
@@ -1564,7 +1564,7 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
   CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, (numStates * sizeof(curandState))) );
 
-  setupRandNumKernel<<< dimGrid, dimBlock>>>( randNumStates );
+  setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
 
   rayTraceDataOnionKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                                      dimBlock,
