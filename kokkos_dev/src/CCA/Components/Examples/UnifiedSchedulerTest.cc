@@ -396,38 +396,17 @@ void UnifiedSchedulerTest::timeAdvance1DP(const ProcessorGroup*,
 
     //__________________________________
     // 1D-Pointer Stencil
-    double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
-    double *newphi_data = (double*)newphi.getWindow()->getData()->getPointer();
-
-    int zhigh = h.z();
-    int yhigh = h.y();
-    int xhigh = h.x();
-    int ghostLayers = 1;
-    int ystride = yhigh + ghostLayers;
-    int xstride = xhigh + ghostLayers;
-
-//    cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
-
+    const int zhigh = h.z();
+    const int yhigh = h.y();
+    const int xhigh = h.x();
     for (int k = l.z(); k < zhigh; k++) {
       for (int j = l.y(); j < yhigh; j++) {
         for (int i = l.x(); i < xhigh; i++) {
-          //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
-          // For an array of [ A ][ B ][ C ], we can index it thus:
-          // (a * B * C) + (b * C) + (c * 1)
-          int idx = i + (j * xstride) + (k * xstride * ystride);
+          newphi(i,j,k) = (1.0/6.0) * ( phi(i-1,j,k) + phi(i+1,j,k)
+                                      + phi(i,j-1,k) + phi(i,j+1,k)
+                                      + phi(i,j,k-1) + phi(i,j,k+1) );
 
-          int xminus = (i - 1) + (j * xstride) + (k * xstride * ystride);
-          int xplus = (i + 1) + (j * xstride) + (k * xstride * ystride);
-          int yminus = i + ((j - 1) * xstride) + (k * xstride * ystride);
-          int yplus = i + ((j + 1) * xstride) + (k * xstride * ystride);
-          int zminus = i + (j * xstride) + ((k - 1) * xstride * ystride);
-          int zplus = i + (j * xstride) + ((k + 1) * xstride * ystride);
-
-          newphi_data[idx] = (1. / 6)
-                             * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus] + phi_data[yplus] + phi_data[zminus]
-                                + phi_data[zplus]);
-
-          double diff = newphi_data[idx] - phi_data[idx];
+          double diff = newphi_data(i,j,k) - phi_data(i,j,k);
           residual += diff * diff;
         }
       }
