@@ -30,12 +30,11 @@ void TiledRegridder::regrid(const std::vector<Uintah::Region> &cp, const std::ve
     //cout << "Coarse Patch: " << cp[patch].getLow() << " " << cp[patch].getHigh() << endl;
     //compute patch extents
     //compute possible tile index's
-    
+
     Uintah::IntVector tileLow(cp[patch].getLow()*rr/mps);
     Uintah::IntVector tileHigh(cp[patch].getHigh()*rr/mps);
 
-    //cout << "Tiles: " << tileLow << " " << tileHigh << endl; 
-    //cout << "window: " << (*flags[patch]).getWindow()->getLowIndex() << " " << (*flags[patch]).getWindow()->getHighIndex()  << endl;
+    //cout << "Tiles: " << tileLow << " " << tileHigh << endl;
 
     for (Uintah::CellIterator ti(tileLow,tileHigh); !ti.done(); ti++)
     {
@@ -52,7 +51,7 @@ void TiledRegridder::regrid(const std::vector<Uintah::Region> &cp, const std::ve
             static_cast<int>(searchLow[2]+inv_factor[2])
           );
       IntVector plow=searchLow*rr;
-      
+
       IntVector phigh=searchHigh*rr;
       //cout << "  Coarse Search: " << searchLow << " " << searchHigh << endl;
       for(Uintah::CellIterator c_it(searchLow,searchHigh);!c_it.done();c_it++)
