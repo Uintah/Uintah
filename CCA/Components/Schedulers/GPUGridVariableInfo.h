@@ -287,7 +287,8 @@ public:
               unsigned int whichGPU);
 
   //As the name suggests, to keep track of all vars for which this task is managing ghost cells.
-  void addVarToBeGhostReady(const Patch* patchPointer,
+  void addVarToBeGhostReady(const string& taskName,
+            const Patch* patchPointer,
             int matlIndx,
             int levelIndx,
             const Task::Dependency* dep,

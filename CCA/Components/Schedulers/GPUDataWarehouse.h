@@ -353,21 +353,21 @@ public:
 
   //______________________________________________________________________
   // GPU GridVariable methods
-  HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx);
-  HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx) {
+  HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, const int patchID, const int matlIndx, const int levelIndx);
+  HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, const int patchID, const int matlIndx) {
     get(var, label, patchID, matlIndx, 0);
   }
   HOST_DEVICE void getStagingVar(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
   HOST_DEVICE bool stagingVarExists(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
 
 
-  HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx);
-  HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx) {
+  HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, const int patchID, const int matlIndx, const int levelIndx);
+  HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, const int patchID, const int matlIndx) {
     get(var, label, patchID, matlIndx, 0);
   }
 
-  HOST_DEVICE void get(const GPUPerPatchBase& var, char const* label, int patchID, int matlIndx, int levelIndx);
-  HOST_DEVICE void get(const GPUPerPatchBase& var, char const* label, int patchID, int matlIndx) {
+  HOST_DEVICE void get(const GPUPerPatchBase& var, char const* label, const int patchID, const int matlIndx, const int levelIndx);
+  HOST_DEVICE void get(const GPUPerPatchBase& var, char const* label, const int patchID, const int matlIndx) {
     get(var, label, patchID, matlIndx, 0);
   }
 
@@ -453,7 +453,7 @@ public:
   __host__ void setValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ void setValidOnGPUStaging(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
   __host__ bool dwEntryExistsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
-  __host__ bool isValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool isValidOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx);
   __host__ void setValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
 
   __host__ bool testAndSetAwaitingGhostDataOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
