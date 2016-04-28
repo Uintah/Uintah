@@ -33,7 +33,7 @@ namespace Uintah {
 
 class ProcessorGroup;
 
-// A CommunicationRecord (CommRecMPI) keeps track of MPI::Requests and
+// A CommunicationRecord (CommRecMPI) keeps track of Uintah::MPI::Requests and
 // an AfterCommunicationHandler for each of these requests.  By calling
 // testsome, waitsome or waitall, it will call finishedCommunication(pg)
 // on the handlers of all finish requests and then delete these

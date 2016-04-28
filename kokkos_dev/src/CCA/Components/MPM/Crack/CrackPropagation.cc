@@ -85,8 +85,8 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
     double dx_bar=(dx.x()+dx.y()+dx.z())/3.;
 
     int pid,patch_size;
-    MPI::Comm_rank(mpi_crack_comm, &pid);
-    MPI::Comm_size(mpi_crack_comm, &patch_size);
+    Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
+    Uintah::MPI::Comm_size(mpi_crack_comm, &patch_size);
     
     MPI_Datatype MPI_POINT=fun_getTypeDescription((Point*)0)->getMPIType();
 
@@ -237,7 +237,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
               for(int k=0; k<patch_size; k++) newPtInPatch[k]=NO;
               if(patch->containsPointInExtraCells(new_pt)) newPtInPatch[pid]=YES;
               
-              MPI::Barrier(mpi_crack_comm);
+              Uintah::MPI::Barrier(mpi_crack_comm);
 
               // Detect if new_pt is inside material
               for(int k=0; k<patch_size; k++) {
@@ -256,7 +256,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
                   } // End of loop over j
                 } // End if(newPtInPatch[k])  
                 
-                MPI::Bcast(&newPtInMat,1,MPI_SHORT,k,mpi_crack_comm);
+                Uintah::MPI::Bcast(&newPtInMat,1,MPI_SHORT,k,mpi_crack_comm);
               } // End of loop over k   
 
               delete [] newPtInPatch;
@@ -275,7 +275,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
               for(int k=0; k<patch_size; k++) newPtInPatch[k]=NO;
               if(patch->containsPointInExtraCells(new_pt)) newPtInPatch[pid]=YES;
               
-              MPI::Barrier(mpi_crack_comm);            
+              Uintah::MPI::Barrier(mpi_crack_comm);            
              
               for(int k=0; k<patch_size; k++) {
                 if(newPtInPatch[k]) {
@@ -302,7 +302,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
                   new_pt=cross_pt+v*(dx_bar*0.1);
                 } // End of if(newPtInPatch[k])
                 
-                MPI::Bcast(&new_pt,1,MPI_POINT,k,mpi_crack_comm);
+                Uintah::MPI::Bcast(&new_pt,1,MPI_POINT,k,mpi_crack_comm);
                 
               } // End of loop over k         
               delete [] newPtInPatch;
@@ -704,7 +704,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
           }
         } // End of loop over crack-front segs
 
-        MPI::Barrier(mpi_crack_comm);
+        Uintah::MPI::Barrier(mpi_crack_comm);
 
         // Reset crack-front segment nodes after crack propagation
         cfSegNodes[m].clear();

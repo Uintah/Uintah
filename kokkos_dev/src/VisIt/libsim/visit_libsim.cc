@@ -149,8 +149,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
     int par_rank, par_size;
 
     // Initialize MPI
-    MPI::Comm_rank( MPI_COMM_WORLD, &par_rank );
-    MPI::Comm_size( MPI_COMM_WORLD, &par_size );
+    Uintah::MPI::Comm_rank( MPI_COMM_WORLD, &par_rank );
+    Uintah::MPI::Comm_size( MPI_COMM_WORLD, &par_size );
     
     // Tell libsim if the simulation is running in parallel.
     VisItSetParallel( par_size > 1 );
@@ -372,7 +372,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       visitstate = VisItDetectInput(blocking, -1);
 
     if( Parallel::usingMPI() )
-      MPI::Bcast(&visitstate, 1, MPI_INT, 0, MPI_COMM_WORLD);
+      Uintah::MPI::Bcast(&visitstate, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     /* Do different things depending on the output from VisItDetectInput. */
     if(visitstate <= -1 || 5 <= visitstate)

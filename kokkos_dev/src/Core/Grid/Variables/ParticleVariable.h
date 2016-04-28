@@ -448,7 +448,7 @@ template<class T>
     if(td->isFlat()){
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
-        MPI::Unpack(buf, bufsize, bufpos,
+        Uintah::MPI::Unpack(buf, bufsize, bufpos,
                    &d_pdata->data[*iter], 1, td->getMPIType(),
                    pg->getComm());
       }
@@ -484,7 +484,7 @@ template<class T>
     if(td->isFlat()){
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
-        MPI::Pack(&d_pdata->data[*iter], 1, td->getMPIType(),
+        Uintah::MPI::Pack(&d_pdata->data[*iter], 1, td->getMPIType(),
                  buf, bufsize, bufpos, pg->getComm());
       }
     } else {
@@ -503,7 +503,7 @@ template<class T>
     int n = pset->numParticles();
     if(td->isFlat()){
       int size;
-      MPI::Pack_size(n, td->getMPIType(), pg->getComm(), &size);
+      Uintah::MPI::Pack_size(n, td->getMPIType(), pg->getComm(), &size);
       (*bufpos)+= size;
     } else {
       SCI_THROW(InternalError("packsizeMPI not finished\n", __FILE__, __LINE__));

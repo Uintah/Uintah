@@ -60,7 +60,7 @@ void ProcessorGroup::setgComm( int nComm ) const
   d_gComms.resize(nComm);
   for (int i = curr_size; i < nComm; i++) {
     if (MPI::Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS) {
-      std::cerr << "Rank: " << d_rank << " - MPI Error in MPI::Comm_dup\n";
+      std::cerr << "Rank: " << d_rank << " - MPI Error in Uintah::MPI::Comm_dup\n";
       Parallel::exitAll(1);
     }
   }

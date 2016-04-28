@@ -52,7 +52,7 @@ using namespace std;
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
           Point p = d_pdata->data[*iter] - offset;
-          MPI::Pack(&p, 1, td->getMPIType(), buf, bufsize, bufpos, pg->getComm());
+          Uintah::MPI::Pack(&p, 1, td->getMPIType(), buf, bufsize, bufpos, pg->getComm());
         }
       } else {
         SCI_THROW(InternalError("packMPI not finished\n", __FILE__, __LINE__));

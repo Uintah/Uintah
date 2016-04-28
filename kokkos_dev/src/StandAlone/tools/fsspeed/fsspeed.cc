@@ -10,10 +10,10 @@ using namespace std;
 
 int main(int argc,char *argv[])
 {
-  MPI::Init(&argc,&argv);
+  Uintah::MPI::Init(&argc,&argv);
   int rank,processors;
-  MPI::Comm_rank(MPI_COMM_WORLD,&rank);
-  MPI::Comm_size(MPI_COMM_WORLD,&processors);
+  Uintah::MPI::Comm_rank(MPI_COMM_WORLD,&rank);
+  Uintah::MPI::Comm_size(MPI_COMM_WORLD,&processors);
 
   if(argc!=2)
   {
@@ -22,11 +22,11 @@ int main(int argc,char *argv[])
       cout << "Command Line Example: mpirun -np X fsspeed 16GB\n";
       cout << "acceptable file sizes include B (bytes), MB (megabytes), GB (gigabytes)\n";
     }
-    MPI::Finalize();
+    Uintah::MPI::Finalize();
     return 1;
   }
   stringstream str;
- 
+
   //write argument into stringstream
   str << argv[1];
 
@@ -55,10 +55,10 @@ int main(int argc,char *argv[])
       cout << "Command Line Example: mpirun -np X fsspeed 16GB\n";
       cout << "acceptable file sizes include bytes (B), megabytes (MB), gigabytes (GB)\n";
     }
-    MPI::Finalize();
+    Uintah::MPI::Finalize();
     return 1;
   }
-  
+
   long long isize=(long long)size;
   char *buff=new char[isize];
   for(int i=0;i<isize;i++)
@@ -78,8 +78,8 @@ int main(int argc,char *argv[])
   {
     cout << "Writing " << isize*processors/1048576.0 << " MB" << endl;
   }
-  MPI::Barrier(MPI_COMM_WORLD);
-  start=MPI::Wtime();
+  Uintah::MPI::Barrier(MPI_COMM_WORLD);
+  start = Uintah::MPI::Wtime();
 #ifdef CSTYLE
   fwrite(buff,sizeof(char),isize,fout);
   fflush(fout);
@@ -89,31 +89,31 @@ int main(int argc,char *argv[])
   fout.flush();
   fout.close();
 #endif
-  MPI::Barrier(MPI_COMM_WORLD);
-  finish=MPI::Wtime();
-  
+  Uintah::MPI::Barrier(MPI_COMM_WORLD);
+  finish = Uintah::MPI::Wtime();
+
   char command[100];
   sprintf(command,"rm -f %s",filename);
-  
+
   delete buff;
   if(rank==0)
   {
     cout << "Writing Total Time: " << finish-start << " seconds" << endl;
     cout << "Writing Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
-  
+
     cout << "Cleaning up datafiles\n";
   }
-  MPI::Barrier(MPI_COMM_WORLD);
-  start=MPI::Wtime();
+  Uintah::MPI::Barrier(MPI_COMM_WORLD);
+  start = Uintah::MPI::Wtime();
   system(command);
-  MPI::Barrier(MPI_COMM_WORLD);
-  finish=MPI::Wtime();
+  Uintah::MPI::Barrier(MPI_COMM_WORLD);
+  finish = Uintah::MPI::Wtime();
   if(rank==0)
   {
     cout << "Deleting Total Time: " << finish-start << " seconds" << endl;
     cout << "Deleting Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
   }
-  MPI::Finalize();
+  Uintah::MPI::Finalize();
 
   return 0;
 }

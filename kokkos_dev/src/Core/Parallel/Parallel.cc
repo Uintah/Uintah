@@ -75,7 +75,7 @@ MpiError(char* what, int errorcode)
   int  resultlen = -1;
   char string_name[ MPI_MAX_ERROR_STRING ];
 
-  MPI::Error_string( errorcode, string_name, &resultlen );
+  Uintah::MPI::Error_string( errorcode, string_name, &resultlen );
   cerr << "MPI Error in " << what << ": " << string_name << '\n';
 
   exit(1);
@@ -142,7 +142,7 @@ Parallel::forceNoMPI()
   usingMPI_             = false;
 }
 
-bool 
+bool
 Parallel::isInitialized()
 {
   return initialized_;
@@ -166,9 +166,9 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
       throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n", __FILE__, __LINE__ );
     }
   }
-  
+
   // Try to automatically determine if we are running under MPI (many MPIs set environment variables
-  // that can be used for this.) 
+  // that can be used for this.)
   if(getenv("MPI_ENVIRONMENT")){                                  // Look for SGI MPI
     usingMPI_ =true;
   }
@@ -228,7 +228,7 @@ Parallel::initializeManager(int& argc, char**& argv)
   int provided = -1;
   int required = MPI_THREAD_SINGLE;
 #endif
-  if( usingMPI_ ){     
+  if( usingMPI_ ){
 #ifdef THREADED_MPI_AVAILABLE
     if( numThreads_ > 0 ) {
       required = MPI_THREAD_MULTIPLE;
@@ -242,11 +242,11 @@ Parallel::initializeManager(int& argc, char**& argv)
     const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
 #endif
 #ifdef THREADED_MPI_AVAILABLE
-    if( ( status = MPI::Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
+    if( ( status = Uintah::MPI::Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
 #else
-    if( ( status = MPI::Init( &argc, &argv ) ) != MPI_SUCCESS) {
+    if( ( status = Uintah::MPI::Init( &argc, &argv ) ) != MPI_SUCCESS) {
 #endif
-      MpiError(const_cast<char*>("MPI::Init"), status);
+      MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
     }
 
 #ifdef THREADED_MPI_AVAILABLE
@@ -259,11 +259,11 @@ Parallel::initializeManager(int& argc, char**& argv)
 
     Uintah::worldComm_ = MPI_COMM_WORLD;
     if( ( status=MPI::Comm_size( Uintah::worldComm_, &worldSize_ ) ) != MPI_SUCCESS ) {
-      MpiError(const_cast<char*>("MPI::Comm_size"), status);
+      MpiError(const_cast<char*>("Uinath::MPI::Comm_size"), status);
     }
 
     if((status=MPI::Comm_rank( Uintah::worldComm_, &worldRank_ )) != MPI_SUCCESS) {
-      MpiError(const_cast<char*>("MPI::Comm_rank"), status);
+      MpiError(const_cast<char*>("Uinath::MPI::Comm_rank"), status);
     }
 
 #if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
@@ -321,7 +321,7 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     // finalizeManager() can be easily/mistakenly called multiple
     // times.  This catches that case and returns harmlessly.
     //
-    // (One example of this occurs when MPI::Abort causes an SIG_TERM
+    // (One example of this occurs when Uintah::MPI::Abort causes an SIG_TERM
     // to be thrown, which is caught by Uintah's exit handler, which
     // in turn calls finalizeManager.)
     return;
@@ -341,19 +341,19 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     if(circumstances == Abort) {
       int errorcode = 1;
       if(getenv("LAMWORLD") || getenv("LAMRANK")) {
-        errorcode = (errorcode << 16) + 1; // see LAM man MPI::Abort
+        errorcode = (errorcode << 16) + 1; // see LAM man Uintah::MPI::Abort
       }
       if( worldRank_ == 0 ) {
-        cout << "FinalizeManager() called... Calling MPI::Abort on rank " << worldRank_ << ".\n";
+        cout << "FinalizeManager() called... Calling Uintah::MPI::Abort on rank " << worldRank_ << ".\n";
       }
       cerr.flush();
       cout.flush();
       Time::waitFor(1.0);
-      MPI::Abort( Uintah::worldComm_, errorcode );
+      Uintah::MPI::Abort( Uintah::worldComm_, errorcode );
     } else {
       int status;
-      if ((status = MPI::Finalize()) != MPI_SUCCESS) {
-        MpiError(const_cast<char*>("MPI::Finalize"), status);
+      if ((status = Uintah::MPI::Finalize()) != MPI_SUCCESS) {
+        MpiError(const_cast<char*>("Uinath::MPI::Finalize"), status);
       }
     }
   }

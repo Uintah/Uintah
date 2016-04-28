@@ -128,7 +128,7 @@ using namespace std;
 #endif
 
 // If we are using MPICH version 1, 
-// we must call MPI::Init() before parsing args
+// we must call Uintah::MPI::Init() before parsing args
 #if defined(HAVE_MPICH) && (MPI_VERSION < 2)
 #  define HAVE_MPICH_OLD
 #endif
@@ -161,7 +161,7 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
   argv = 0;
 
   // Initialize MPI so that "usage" is only printed by proc 0.
-  // (If we are using MPICH, then MPI::Init() has already been called.)
+  // (If we are using MPICH, then Uintah::MPI::Init() has already been called.)
   Uintah::Parallel::initializeManager(argc, argv);
 #endif
 
@@ -296,7 +296,7 @@ main( int argc, char *argv[], char *env[] )
     */
   //
   // When using old verison of MPICH, initializeManager() uses the arg list to
-  // determine whether sus is running with MPI before calling MPI::Init())
+  // determine whether sus is running with MPI before calling Uintah::MPI::Init())
   //
   // NOTE: The main problem with calling initializeManager() before
   // parsing the args is that we don't know if thread MPI is going to
@@ -333,7 +333,7 @@ main( int argc, char *argv[], char *env[] )
       Uintah::Parallel::setNumThreads( numThreads );
     }
     else if (arg == "-threadmpi") {
-      //used threaded mpi (this option is handled in MPI::Communicator.cc  MPI::Init_thread
+      //used threaded mpi (this option is handled in Uintah::MPI::Communicator.cc  Uintah::MPI::Init_thread
     }
     else if (arg == "-solver") {
       if (++i == argc) {

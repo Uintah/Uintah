@@ -113,7 +113,7 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
   int     donecount;
   clock_t start = clock();
   
-  MPI::Waitsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
+  Uintah::MPI::Waitsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
   
   WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / donecount;
 
@@ -182,7 +182,7 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
   
   clock_t start = clock();
 
-  MPI::Waitsome( size, &combinedIDs[0], &donecount, &combinedIndices[0], &statii[0] );
+  Uintah::MPI::Waitsome( size, &combinedIDs[0], &donecount, &combinedIndices[0], &statii[0] );
   WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / donecount;
 
   mixedDebug << "after combined waitsome\n";
@@ -238,7 +238,7 @@ CommRecMPI::testsome( const ProcessorGroup * pg,
   int     donecount;
   clock_t start = clock();
   
-  MPI::Testsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
+  Uintah::MPI::Testsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
   
   if( donecount>0 ){
     WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / donecount;
@@ -358,7 +358,7 @@ CommRecMPI::waitall( const ProcessorGroup * pg )
 //    mixedDebug << me << " Calling waitall with " << ids.size() << " waiters\n";
   clock_t start = clock();
 
-  MPI::Waitall((int)ids_.size(), &ids_[0], &statii[0]);
+  Uintah::MPI::Waitall((int)ids_.size(), &ids_[0], &statii[0]);
 
   WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / ids_.size();
   //  mixedDebug << me << " Done calling waitall with " << ids_.size() << " waiters\n";

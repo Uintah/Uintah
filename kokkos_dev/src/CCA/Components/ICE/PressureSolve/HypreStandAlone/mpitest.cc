@@ -30,14 +30,14 @@ main( int argc, char *argv[] )
 {
   cout << "hello\n";
 
-  MPI::Init( &argc, &argv );
+  Uintah::MPI::Init( &argc, &argv );
 
   int num_procs;
-  MPI::Comm_size(MPI_COMM_WORLD, &num_procs);
+  Uintah::MPI::Comm_size(MPI_COMM_WORLD, &num_procs);
 
   cout << "goodbye\n";
 
-  MPI::Finalize();
+  Uintah::MPI::Finalize();
 
   return 0;
 }

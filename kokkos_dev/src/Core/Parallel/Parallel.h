@@ -30,7 +30,7 @@
 
 // Macros used to eliminate excess spew on large parallel runs...
 //
-//   Note, make sure that MPI::Init (or MPI::Init_thread) is called
+//   Note, make sure that Uintah::MPI::Init (or Uintah::MPI::Init_thread) is called
 //   before using isProc0_macro.
 //
 #define isProc0_macro ( Uintah::Parallel::getMPIRank() == 0 &&           \
