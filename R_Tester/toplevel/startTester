@@ -22,7 +22,7 @@ USE_TREE="new"
 VERBOSE="no"
 COMMON_GROUP=""
 CHECKPOINTS=""
-MPIRUN=""
+MPIRUN_PATH=""
 SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/trunk/src"
 
 ID=`date +%m%d%y`
@@ -60,7 +60,7 @@ if test "$MACHINE" = "albion" ; then
   TEMP_DIR=/home/${LOGNAME}/"$OS"
   SCRIPT_DIR=/home/${LOGNAME}/scripts
   CHECKPOINTS=/home/${LOGNAME}/CheckPoints
-  MPIRUN=/usr/local/openmpi/bin/
+  MPIRUN_PATH=/usr/local/openmpi/bin/
   
   if test "$LOGNAME" = "rt" ; then
     export TEST_COMPONENTS="Examples"             # only run gpu tests
@@ -84,6 +84,7 @@ if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
   TEMP_DIR=/raid/home/rt/"$OS"
   SCRIPT_DIR=/raid/home/rt/scripts
   CHECKPOINTS=/raid/home/rt/CheckPoints
+  MPIRUN_PATH=/usr/installed/openmpi/bin/
   export TEST_COMPONENTS="Examples"             # only run gpu tests
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
@@ -208,7 +209,7 @@ EOF
 fi
 
 
-PATH="$PATH":"$SCRIPT_DIR":.:"$MPIRUN"
+PATH=:"$MPIRUN_PATH":"$PATH":"$SCRIPT_DIR":.
 export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
 
 # set number of processors to use when building
