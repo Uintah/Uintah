@@ -38,6 +38,13 @@
 
 #include <string>
 
+#ifdef HAVE_CUDA
+static DebugStream gpu_stats("Unified_GPUStats", false);
+static DebugStream use_single_device("Unified_SingleDevice", false);
+static DebugStream simulate_multiple_gpus("GPUSimulateMultiple", false);
+static DebugStream gpudbg("GPUDataWarehouse", false);
+#endif
+
 namespace Uintah {
 
 class Task;

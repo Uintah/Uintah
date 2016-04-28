@@ -31,6 +31,7 @@
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
+#include <CCA/Components/Schedulers/GPUMemoryPool.h>
 
 #include <sci_defs/cuda_defs.h>
 
@@ -38,6 +39,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Core/Util/DebugStream.h>
 
 #ifndef __CUDA_ARCH__
 #  include <string.h>
@@ -49,15 +51,17 @@ using namespace std;
 
 extern DebugStream gpu_stats;
 
+#include <mutex>
+#include <map>
+
+using std::map;
+
+//namespace {
+//  std::mutex cerrLock;
+//}
 extern Uintah::Mutex cerrLock;
 
 
-
-namespace Uintah {
-
-std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>* GPUDataWarehouse::gpuMemoryPool = new std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>;
-//TODO, should be deallocated?
-Uintah::CrowdMonitor * GPUDataWarehouse::gpuPoolLock = new Uintah::CrowdMonitor("gpu pool lock");
 //______________________________________________________________________
 //
 HOST_DEVICE void
@@ -559,136 +563,6 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
 
 //______________________________________________________________________
 //
-__host__ void*
-GPUDataWarehouse::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
-
-  gpuPoolLock->writeLock();
-
-  void * addr = NULL;
-  bool claimedAnItem = false;
-
-  gpuMemoryPoolItem gpuItem(device_id, memSize);
-
-  std::pair <std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator,
-             std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator> ret;
-
-  ret = gpuMemoryPool->equal_range(gpuItem);
-  std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator gpuPoolIter = ret.first;
-  while (!claimedAnItem && gpuPoolIter != ret.second) {
-    if (gpuPoolIter->second.status == 0) {
-      //claim this one
-      addr = gpuPoolIter->second.ptr;
-      gpuPoolIter->second.status = 1;
-      claimedAnItem = true;
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << UnifiedScheduler::myRankThread()
-              << " GPUDataWarehouse::allocateCudaSpaceFromPool() -"
-              << " reusing space starting at " << gpuPoolIter->second.ptr
-              << " on device " << d_device_id
-              << " with size " << memSize
-              << " from the GPU memory pool"
-              << endl;
-        }
-        cerrLock.unlock();
-      }
-
-    } else {
-      ++gpuPoolIter;
-    }
-  }
-  //No open spot in the pool, go ahead and allocate it.
-  if (!claimedAnItem) {
-    CUDA_RT_SAFE_CALL( cudaMalloc(&addr, memSize) );
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      {
-        gpu_stats << UnifiedScheduler::myRankThread()
-            << " GPUDataWarehouse::allocateCudaSpaceFromPool() -"
-            << " allocated GPU space starting at " << addr
-            << " on device " << d_device_id
-            << " with size " << memSize
-            << endl;
-      }
-      cerrLock.unlock();
-    }
-    gpuMemoryData gmd;
-    gmd.status = 1;
-    gmd.timestep = 99999999; //Fix me
-    gmd.ptr = addr;
-    gpuPoolIter = gpuMemoryPool->insert(std::pair<gpuMemoryPoolItem, gpuMemoryData>(gpuItem,gmd));
-  }
-  gpuPoolLock->writeUnlock();
-  return addr;
-}
-
-
-//______________________________________________________________________
-//
-__host__ bool GPUDataWarehouse::freeCudaSpaceFromPool(int device_id, size_t memSize, void* addr){
-  gpuPoolLock->writeLock();
-  if (memSize == 0) {
-    printf("ERROR:\nGPUDataWarehouse::freeCudaSpaceFromPool(), requesting to free from pool memory of size zero at address %p\n", addr);
-    gpuPoolLock->writeUnlock();
-    return false;
-  }
-  bool foundItem = false;
-
-
-  /*//For debugging, shows everything in the pool
-  std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator end;
-  for (std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator it = gpuMemoryPool->begin();
-       it !=  gpuMemoryPool->end();
-       ++it) {
-    gpu_stats << "device: " << it->first.device_id
-              << " deviceSize: " << it->first.deviceSize << " - "
-              << " status: " << it->second.status
-              << " timestep: " << it->second.timestep
-              << " ptr: " << it->second.ptr
-              << endl;
-  }
-  gpu_stats << endl;
-  */
-  gpuMemoryPoolItem gpuItem(d_device_id, memSize);
-
-  std::pair <std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator,
-             std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator> ret;
-
-  ret = gpuMemoryPool->equal_range(gpuItem);
-  std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator gpuPoolIter = ret.first;
-
-  while (!foundItem && gpuPoolIter != ret.second) {
-    if (gpuPoolIter->second.ptr == addr) {
-      //Found it.
-      //Mark it as reusable
-      gpuPoolIter->second.status = 0;
-      foundItem = true;
-
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << UnifiedScheduler::myRankThread()
-              << " GPUDataWarehouse::freeCudaSpaceFromPool() -"
-              << " space starting at " << addr
-              << " on device " << d_device_id
-              << " with size " << memSize
-              << " marked for reuse in the GPU memory pool"
-              << endl;
-        }
-        cerrLock.unlock();
-      }
-
-    } else {
-      ++gpuPoolIter;
-    }
-  }
-  gpuPoolLock->writeUnlock();
-  return foundItem;
-
-}
-//______________________________________________________________________
-//
 __host__ void
 GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype, int numGhostCells)
 {
@@ -874,7 +748,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
       cerrLock.lock();
       {
         gpu_stats << UnifiedScheduler::myRankThread()
-           << " GPUDataWarehouse::allocateAndPut(), calling allocateCudaSpaceFromPool"
+           << " GPUDataWarehouse::allocateAndPut(), calling GPUMemoryPool::allocateCudaSpaceFromPool"
            << " for " << label
            << " patch " << patchID
            << " material " <<  matlIndx
@@ -895,7 +769,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
       cerrLock.unlock();
     //}
 
-    addr = allocateCudaSpaceFromPool(d_device_id, memSize);
+    addr = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, memSize);
 
     //Also update the var object itself
     var.setArray3(offset, size, addr);
@@ -1642,7 +1516,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
       cerrLock.lock();
       {
         gpu_stats << UnifiedScheduler::myRankThread()
-            << " GPUDataWarehouse::allocateAndPut(), calling allocateCudaSpaceFromPool"
+            << " GPUDataWarehouse::allocateAndPut(), calling GPUMemoryPool::allocateCudaSpaceFromPool"
             << " for reduction variable " << label
             << " patch " << patchID
             << " material " <<  matlIndx
@@ -1656,7 +1530,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
       cerrLock.unlock();
     }
 
-    addr = allocateCudaSpaceFromPool(d_device_id, memSize);
+    addr = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, memSize);
 
     //Also update the var object itself
     var.setData(addr);
@@ -1754,7 +1628,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
       cerrLock.lock();
       {
             gpu_stats << UnifiedScheduler::myRankThread()
-            << " GPUDataWarehouse::allocateAndPut(), calling allocateCudaSpaceFromPool"
+            << " GPUDataWarehouse::allocateAndPut(), calling GPUMemoryPool::allocateCudaSpaceFromPool"
             << " for PerPatch variable " << label
             << " patch " << patchID
             << " material " <<  matlIndx
@@ -1768,7 +1642,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
       cerrLock.unlock();
     }
 
-    addr = allocateCudaSpaceFromPool(d_device_id, memSize);
+    addr = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, memSize);
 
     //Also update the var object itself
     var.setData(addr);
@@ -2046,13 +1920,13 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int maxdVarDBIt
     OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
     void* temp = NULL;
     //CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
-    temp = allocateCudaSpaceFromPool(d_device_id, objectSizeInBytes);
+    temp = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, objectSizeInBytes);
     //if (gpu_stats.active()) {
       cerrLock.lock();
       {
        gpu_stats << UnifiedScheduler::myRankThread()
            << " GPUDataWarehouse::init_device() -"
-           << " requested GPU space from allocateCudaSpaceFromPool for Task DW of size " << objectSizeInBytes
+           << " requested GPU space from GPUMemoryPool::allocateCudaSpaceFromPool for Task DW of size " << objectSizeInBytes
            << " bytes at " << temp
            << " on device " << d_device_id
            << " the host GPUDW is at " << this
@@ -2151,7 +2025,7 @@ GPUDataWarehouse::clear()
           {
             gpu_stats << UnifiedScheduler::myRankThread()
                 << " GPUDataWarehouse::clear() -"
-                << " calling freeCudaSpaceFromPool() for staging var for " << varIter->first.label
+                << " calling GPUMemoryPool::freeCudaSpaceFromPool() for staging var for " << varIter->first.label
                 << " at device ptr " <<  stagingIter->second.device_ptr
                 << " on device " << d_device_id
                 << endl;
@@ -2166,7 +2040,7 @@ GPUDataWarehouse::clear()
                           stagingIter->first.device_size.y *
                           stagingIter->first.device_size.z *
                           varIter->second.sizeOfDataType;
-        if (freeCudaSpaceFromPool(d_device_id, memSize, stagingIter->second.device_ptr)) {
+        if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, memSize, stagingIter->second.device_ptr) ) {
           stagingIter->second.device_ptr == NULL;
         } else {
           //No open spot in the pool, go ahead and allocate it.
@@ -2188,7 +2062,7 @@ GPUDataWarehouse::clear()
           {
             gpu_stats << UnifiedScheduler::myRankThread()
                 << " GPUDataWarehouse::clear() -"
-                << " calling freeCudaSpaceFromPool() for non-staging var for " << varIter->first.label
+                << " calling GPUMemoryPool::freeCudaSpaceFromPool() for non-staging var for " << varIter->first.label
                 << " at device ptr " <<  varIter->second.device_ptr
                 << " on device " << d_device_id
                 << endl;
@@ -2202,7 +2076,7 @@ GPUDataWarehouse::clear()
                     varIter->second.device_size.y *
                     varIter->second.device_size.z;
         }
-        if (freeCudaSpaceFromPool(d_device_id, memSize, varIter->second.device_ptr)) {
+        if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, memSize, varIter->second.device_ptr)) {
           varIter->second.device_ptr == NULL;
         } else {
           printf("ERROR:\nGPUDataWarehouse::clear(), for a non-staging variable, couldn't find in the GPU memory pool the space starting at address %p\n", varIter->second.device_ptr);
@@ -2257,14 +2131,14 @@ GPUDataWarehouse::deleteSelfOnDevice()
       cerrLock.lock();
       {
         gpu_stats << UnifiedScheduler::myRankThread()
-           << "GPUDataWarehouse::deleteSelfOnDevice - calling freeCudaSpaceFromPool for Task DW at " << std::hex
+           << "GPUDataWarehouse::deleteSelfOnDevice - calling GPUMemoryPool::freeCudaSpaceFromPool for Task DW at " << std::hex
            << d_device_copy << " on device " << std::dec << d_device_id << std::endl;
       }
       cerrLock.unlock();
     }
 
     //cudaHostUnregister(this);
-    freeCudaSpaceFromPool(d_device_id, objectSizeInBytes, d_device_copy);
+    GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, objectSizeInBytes, d_device_copy);
     //CUDA_RT_SAFE_CALL(cudaFree( d_device_copy ));
 
   }
@@ -3637,5 +3511,3 @@ GPUDataWarehouse::getPlacementNewBuffer()
   return placementNewBuffer;
 #endif
 }
-
-} // end namespace Uintah
