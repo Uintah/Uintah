@@ -213,13 +213,13 @@ MPIScheduler::verifyChecksum()
     }
 
     int result_checksum;
-    MPI::Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
+    Uintah::MPI::Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
 
     if (checksum != result_checksum) {
       std::cerr << "Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
       std::cerr << "  Rank-" << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
                 << "  and global is " << result_checksum << '\n';
-      MPI::Abort(d_myworld->getComm(), 1);
+      Uintah::MPI::Abort(d_myworld->getComm(), 1);
     }
 
     if (mpidbg.active()) {
@@ -492,12 +492,12 @@ MPIScheduler::postMPISends( DetailedTask* task,
       numSend++;
       int typeSize;
 
-      MPI::Type_size(datatype, &typeSize);
+      Uintah::MPI::Type_size(datatype, &typeSize);
       messageVolume_ += count * typeSize;
       volSend += count * typeSize;
 
       MPI_Request requestid;
-      MPI::Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
+      Uintah::MPI::Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
       int bytes = count;
 
       // with multi-threaded schedulers (derived from MPIScheduler), this is written per thread
@@ -733,7 +733,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         cerrLock.unlock();
         }
 
-        MPI::Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
+        Uintah::MPI::Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
         int bytes = count;
         recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
         mpi_info_[TotalRecvMPI] += Time::currentSeconds() - start;
@@ -983,7 +983,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     // Copy the restart flag to all processors
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
-    MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();
       if (dws[0]) {
@@ -1058,8 +1058,8 @@ MPIScheduler::outputTimingStats(const char* label)
   double avgCell = -1, maxCell = -1;
 
   MPI_Comm comm = d_myworld->getComm();
-  MPI::Reduce(&d_times[0], &d_totaltimes[0], static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI::Reduce(&d_times[0], &d_maxtimes[0],   static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_MAX, 0, comm);
+  Uintah::MPI::Reduce(&d_times[0], &d_totaltimes[0], static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_SUM, 0, comm);
+  Uintah::MPI::Reduce(&d_times[0], &d_maxtimes[0],   static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_MAX, 0, comm);
 
   double total = 0, avgTotal = 0, maxTotal = 0;
   for (int i = 0; i < (int)d_totaltimes.size(); i++) {

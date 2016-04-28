@@ -654,20 +654,20 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   int msg = 128, tag = 256;
   MPI_Status status;
 
-  MPI::Comm_size(VISIT_MPI_COMM, &numProcs);
-  MPI::Comm_rank(VISIT_MPI_COMM, &rank);
+  Uintah::MPI::Comm_size(VISIT_MPI_COMM, &numProcs);
+  Uintah::MPI::Comm_rank(VISIT_MPI_COMM, &rank);
   //debug5 << "Proc: " << rank << " sent to mdserver" << std::endl;  
 
   if (rank == 0) {
     ReadMetaData(md, timeState);
-    MPI::Send(&msg, 1, MPI_INT, 1, tag, VISIT_MPI_COMM);
+    Uintah::MPI::Send(&msg, 1, MPI_INT, 1, tag, VISIT_MPI_COMM);
   }
   else {
-    MPI::Recv(&msg, 1, MPI_INT, rank - 1, tag, VISIT_MPI_COMM, &status);
+    Uintah::MPI::Recv(&msg, 1, MPI_INT, rank - 1, tag, VISIT_MPI_COMM, &status);
     if (msg == 128 && tag == 256) {
       return visit_ReadMetaData(cbdata);
       if (rank < (numProcs - 1))
-        MPI::Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
+        Uintah::MPI::Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
     }
   }
 #else      
@@ -1295,8 +1295,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     int msg = 128, tag = 256;
     MPI_Status status;
       
-    MPI::Comm_size(VISIT_MPI_COMM, &numProcs);
-    MPI::Comm_rank(VISIT_MPI_COMM, &rank);
+    Uintah::MPI::Comm_size(VISIT_MPI_COMM, &numProcs);
+    Uintah::MPI::Comm_rank(VISIT_MPI_COMM, &rank);
       
     int totalPatches = 0;
 
@@ -1315,14 +1315,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       
     // wait for previous read to finish
     if (prev>=0)
-      MPI::Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
+      Uintah::MPI::Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
       
     pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
                           matlNo, timestate);
 
     // let the next read go
     if (next>=0)
-      MPI::Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM); 
+      Uintah::MPI::Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM); 
 #else
     pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
                           matlNo, timestate);
@@ -1428,8 +1428,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       int msg = 128, tag = 256;
       MPI_Status status;
         
-      MPI::Comm_size(VISIT_MPI_COMM, &numProcs);
-      MPI::Comm_rank(VISIT_MPI_COMM, &rank);
+      Uintah::MPI::Comm_size(VISIT_MPI_COMM, &numProcs);
+      Uintah::MPI::Comm_rank(VISIT_MPI_COMM, &rank);
         
       int totalPatches = 0;
       for (int i=0; i<stepInfo->levelInfo.size(); ++i)
@@ -1447,14 +1447,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         
       // wait for previous read to finish
       if (prev>=0)
-        MPI::Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
+        Uintah::MPI::Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
 
       gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
                         atoi(matl.c_str()), timestate, qlow, qhigh);
 
       // let the next read go
       if (next>=0)
-        MPI::Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
+        Uintah::MPI::Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
 #else
       gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
                         atoi(matl.c_str()), timestate, qlow, qhigh);

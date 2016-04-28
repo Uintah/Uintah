@@ -48,7 +48,8 @@
 #ifndef MPI_MAX_THREADS
 #define MPI_MAX_THREADS 64
 #endif
-namespace MPI {
+
+namespace Uintah { namespace MPI {
 
 //------------------------------------------------------------------------------
 
@@ -1879,7 +1880,7 @@ inline int Win_wait( MPI_Win win )
 }
 
 
-} // namespace MPI
+}} // namespace Uintah::MPI
 
 
 #endif // SCI_DEFS_MPI_H

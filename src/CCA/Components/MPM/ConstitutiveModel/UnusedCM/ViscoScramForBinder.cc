@@ -1085,8 +1085,8 @@ makeMPI_CMData()
    int size = 22*9;
    ASSERTEQ(sizeof(ViscoScramForBinder::Statedata), sizeof(double)*size);
    MPI_Datatype mpitype;
-   MPI::Type_vector(1, size, size, MPI_DOUBLE, &mpitype);
-   MPI::Type_commit(&mpitype);
+   Uintah::MPI::Type_vector(1, size, size, MPI_DOUBLE, &mpitype);
+   Uintah::MPI::Type_commit(&mpitype);
    return mpitype;
 }
 

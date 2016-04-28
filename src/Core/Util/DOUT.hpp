@@ -54,15 +54,15 @@
 
 #define TOUT()                            \
   printf("TOUT:  %d  %d  %s:%d\n"         \
-      , MPI::Impl::prank( MPI_COMM_WORLD )\
-      , MPI::Impl::tid()                  \
+      , Uintah::MPI::Impl::prank( MPI_COMM_WORLD )\
+      , Uintah::MPI::Impl::tid()                  \
       , __FILE__                          \
       , __LINE__                          \
       )
 
 
 #define DOUTP0( cond, ... )                                 \
-  if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
+  if ( Uintah::MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
     std::ostringstream msg;                                 \
     msg << __FILE__ << ":";                                 \
     msg << __LINE__ << " : ";                               \

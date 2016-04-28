@@ -37,8 +37,8 @@ namespace Uintah {
   {
     ASSERTEQ(sizeof(Stencil4), sizeof(double)*4);
     MPI_Datatype mpitype;
-    MPI::Type_vector(1, 4, 4, MPI_DOUBLE, &mpitype);
-    MPI::Type_commit(&mpitype);
+    Uintah::MPI::Type_vector(1, 4, 4, MPI_DOUBLE, &mpitype);
+    Uintah::MPI::Type_commit(&mpitype);
     return mpitype;
   }
   

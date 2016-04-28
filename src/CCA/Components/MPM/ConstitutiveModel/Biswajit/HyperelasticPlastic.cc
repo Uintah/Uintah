@@ -2985,8 +2985,8 @@ static MPI_Datatype makeMPI_CMData()
   {
     ASSERTEQ(sizeof(HyperelasticPlastic::double), sizeof(double)*0);
     MPI_Datatype mpitype;
-    MPI::Type_vector(1, 1, 1, MPI_DOUBLE, &mpitype);
-    MPI::Type_commit(&mpitype);
+    Uintah::MPI::Type_vector(1, 1, 1, MPI_DOUBLE, &mpitype);
+    Uintah::MPI::Type_commit(&mpitype);
     return mpitype;
   }
   

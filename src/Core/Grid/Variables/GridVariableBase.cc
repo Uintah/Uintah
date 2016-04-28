@@ -45,14 +45,14 @@ void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
   startbuf += strides.x()*off.x()+strides.y()*off.y()+strides.z()*off.z();
   IntVector d = high-low;
   MPI_Datatype type1d;
-  MPI::Type_create_hvector(d.x(), 1, strides.x(), basetype, &type1d);
+  Uintah::MPI::Type_create_hvector(d.x(), 1, strides.x(), basetype, &type1d);
 
   MPI_Datatype type2d;
-  MPI::Type_create_hvector(d.y(), 1, strides.y(), type1d, &type2d);
-  MPI::Type_free(&type1d);
+  Uintah::MPI::Type_create_hvector(d.y(), 1, strides.y(), type1d, &type2d);
+  Uintah::MPI::Type_free(&type1d);
   MPI_Datatype type3d;
-  MPI::Type_create_hvector(d.z(), 1, strides.z(), type2d, &type3d);
-  MPI::Type_free(&type2d);
-  MPI::Type_commit(&type3d);
+  Uintah::MPI::Type_create_hvector(d.z(), 1, strides.z(), type2d, &type3d);
+  Uintah::MPI::Type_free(&type2d);
+  Uintah::MPI::Type_commit(&type3d);
   buffer.add(startbuf, 1, type3d, true);
 }

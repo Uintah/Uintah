@@ -281,18 +281,18 @@ int main(int argc, char *argv[]){
   //  cin >> casePlates;
 
 //   // starting up MPI
-//   MPI::Init(&argc, &argv);
-//   MPI::Barrier(MPI_COMM_WORLD);
+//   Uintah::MPI::Init(&argc, &argv);
+//   Uintah::MPI::Barrier(MPI_COMM_WORLD);
   
-//   precision = MPI::Wtick();
+//   precision = Uintah::MPI::Wtick();
   
-//   time1 = MPI::Wtime();
+//   time1 = Uintah::MPI::Wtime();
   
 //   // Find out process rank
-//    MPI::Comm_rank(MPI_COMM_WORLD, &my_rank);
+//    Uintah::MPI::Comm_rank(MPI_COMM_WORLD, &my_rank);
 
 //   // Find out number of processes
-//   MPI::Comm_size(MPI_COMM_WORLD, &np);
+//   Uintah::MPI::Comm_size(MPI_COMM_WORLD, &np);
 
 
   int rayNoSurface, rayNoVol;
@@ -345,17 +345,17 @@ int main(int argc, char *argv[]){
   eddington_g = 0;
   PhFunc = LINEAR_SCATTER;
   
-//   MPI::Barrier (MPI_COMM_WORLD);  
-//   MPI::Bcast(&rayNoSurface, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI::Bcast(&rayNoVol, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI::Bcast(&Ncx, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI::Bcast(&Ncy, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI::Bcast(&Ncz, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI::Bcast(&ratioBCx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-//   MPI::Bcast(&ratioBCy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
-//   MPI::Bcast(&ratioBCz, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Barrier (MPI_COMM_WORLD);  
+//   Uintah::MPI::Bcast(&rayNoSurface, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&rayNoVol, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&Ncx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&Ncy, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&Ncz, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&ratioBCx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&ratioBCy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
+//   Uintah::MPI::Bcast(&ratioBCz, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-//   MPI::Barrier (MPI_COMM_WORLD);
+//   Uintah::MPI::Barrier (MPI_COMM_WORLD);
 
 
   // numbers of grid points

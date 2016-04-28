@@ -238,7 +238,7 @@ ReductionVariable<bool, Reductions::And<bool> >
 
 #if !defined( __PGI ) && !defined( OSX_SNOW_LEOPARD_OR_LATER )
 // We reduce a "long", not a long64 because on 2/24/03, LAM-MPI did not
-// support MPI::Reduce for LONG_LONG_INT.  We could use MPI::Create_op instead?
+// support Uintah::MPI::Reduce for LONG_LONG_INT.  We could use Uintah::MPI::Create_op instead?
   #if !defined(__digital__) || defined(__GNUC__)
 template<>
   #endif

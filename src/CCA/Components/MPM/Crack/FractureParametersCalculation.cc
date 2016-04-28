@@ -286,8 +286,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
     vector<double> S(interpolator->size());
     
     int pid,patch_size;
-    MPI::Comm_size(mpi_crack_comm,&patch_size);
-    MPI::Comm_rank(mpi_crack_comm,&pid);
+    Uintah::MPI::Comm_size(mpi_crack_comm,&patch_size);
+    Uintah::MPI::Comm_rank(mpi_crack_comm,&pid);
     MPI_Datatype MPI_VECTOR=fun_getTypeDescription((Vector*)0)->getMPIType();
 
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -796,8 +796,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
             } // End if(pid==i)
 
             // Broadcast the results calculated by rank i to all the ranks
-            MPI::Bcast(cfJ,num,MPI_VECTOR,i,mpi_crack_comm);
-            MPI::Bcast(cfK,num,MPI_VECTOR,i,mpi_crack_comm);
+            Uintah::MPI::Bcast(cfJ,num,MPI_VECTOR,i,mpi_crack_comm);
+            Uintah::MPI::Bcast(cfK,num,MPI_VECTOR,i,mpi_crack_comm);
 
             // Save data in cfsegJ and cfSegK
             for(int l=0; l<num; l++) {

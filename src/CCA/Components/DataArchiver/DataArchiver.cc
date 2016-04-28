@@ -338,7 +338,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     if( Parallel::usingMPI() ) {
       // Make sure we are all writing at same time.  When node clocks disagree,
       // make decision based on processor zero time.
-      MPI::Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
+      Uintah::MPI::Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
     }
   }
   
@@ -377,7 +377,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
       setupSharedFileSystem();
     }
     // Wait for all ranks to finish verifying shared file system....
-    MPI::Barrier(d_myworld->getComm());
+    Uintah::MPI::Barrier(d_myworld->getComm());
   }
   else {
     // Not using MPI...
@@ -423,7 +423,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
 
   // Sync up before every rank can use the base dir.
   if (Parallel::usingMPI()) { 
-    MPI::Barrier(d_myworld->getComm());
+    Uintah::MPI::Barrier(d_myworld->getComm());
   }
 
 } // end initializeOutput()
@@ -520,7 +520,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
   if( d_checkpointWalltimeInterval > 0 ) {
     d_nextCheckpointWalltime = d_checkpointWalltimeInterval + (int)Time::currentSeconds();
     if(Parallel::usingMPI()) {
-      MPI::Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
+      Uintah::MPI::Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
     }
   }
 }
@@ -1030,7 +1030,7 @@ DataArchiver::beginOutputTimestep( double time,
   
   int currsecs = (int)Time::currentSeconds();
   if(Parallel::usingMPI() && d_checkpointWalltimeInterval != 0) {
-     MPI::Bcast(&currsecs, 1, MPI_INT, 0, d_myworld->getComm());
+     Uintah::MPI::Bcast(&currsecs, 1, MPI_INT, 0, d_myworld->getComm());
   }
   
   //__________________________________
@@ -3177,7 +3177,7 @@ DataArchiver::updateCheckpointInterval( double newinv )
 
     // Sync up before every rank can use the checkpoints dir
     if (Parallel::usingMPI())
-      MPI::Barrier(d_myworld->getComm());
+      Uintah::MPI::Barrier(d_myworld->getComm());
   }
 }
 
@@ -3203,7 +3203,7 @@ DataArchiver::updateCheckpointTimestepInterval( int newinv )
 
     // Sync up before every rank can use the checkpoints dir
     if (Parallel::usingMPI())
-      MPI::Barrier(d_myworld->getComm());
+      Uintah::MPI::Barrier(d_myworld->getComm());
   }
 }
 
@@ -3340,7 +3340,7 @@ DataArchiver::checkpointTimestep( double time,
 
   // Sync up before every rank can use the checkpoints dir
   if (Parallel::usingMPI())
-    MPI::Barrier(d_myworld->getComm());
+    Uintah::MPI::Barrier(d_myworld->getComm());
 
   // Set up the inital bits including the flag d_isCheckpointTimestep
   // which triggers most actions.
@@ -3444,8 +3444,8 @@ DataArchiver::setupSharedFileSystem()
     int         outlen = (int)strlen( outbuf );
 
     // Broadcast test filename length, and then broadcast the actual name.
-    MPI::Bcast( &outlen, 1, MPI_INT, 0, d_myworld->getComm() );
-    MPI::Bcast( const_cast<char*>(outbuf), outlen, MPI_CHAR, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( &outlen, 1, MPI_INT, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( const_cast<char*>(outbuf), outlen, MPI_CHAR, 0, d_myworld->getComm() );
     fs_test_file_name = test_filename_stream.str();
   } 
   else {
@@ -3454,9 +3454,9 @@ DataArchiver::setupSharedFileSystem()
     // All other ranks receive from rank 0 (code above) the length, and then name
     // of the file that we are going to look for...
     int inlen;
-    MPI::Bcast( &inlen, 1, MPI_INT, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( &inlen, 1, MPI_INT, 0, d_myworld->getComm() );
     char * inbuf = scinew char[ inlen + 1 ];
-    MPI::Bcast( inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm() );
     inbuf[ inlen ]='\0';
     fs_test_file_name = inbuf;
 
@@ -3474,7 +3474,7 @@ DataArchiver::setupSharedFileSystem()
     }
   }
 
-  MPI::Barrier(d_myworld->getComm()); // Wait until everyone has check for the file before proceeding.
+  Uintah::MPI::Barrier(d_myworld->getComm()); // Wait until everyone has check for the file before proceeding.
 
   if( d_writeMeta ) {
 
@@ -3492,16 +3492,16 @@ DataArchiver::setupSharedFileSystem()
     const char* outbuf = udadirname.c_str();
     int         outlen = (int)strlen(outbuf);
 
-    MPI::Bcast( &outlen, 1, MPI_INT, 0, d_myworld->getComm() );
-    MPI::Bcast( const_cast<char*>(outbuf), outlen, MPI_CHAR, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( &outlen, 1, MPI_INT, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( const_cast<char*>(outbuf), outlen, MPI_CHAR, 0, d_myworld->getComm() );
   }
   else {
 
     // Receive the name of the UDA from rank 0...
     int inlen;
-    MPI::Bcast( &inlen, 1, MPI_INT, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( &inlen, 1, MPI_INT, 0, d_myworld->getComm() );
     char * inbuf = scinew char[ inlen+1 ];
-    MPI::Bcast( inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm() );
+    Uintah::MPI::Bcast( inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm() );
     inbuf[ inlen ]='\0';
 
     d_dir = Dir( inbuf );
@@ -3564,16 +3564,16 @@ DataArchiver::setupLocalFileSystems()
     const char* outbuf = test_string.c_str();
     int outlen = (int)strlen(outbuf);
 
-    MPI::Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
-    MPI::Bcast(const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
+    Uintah::MPI::Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
+    Uintah::MPI::Bcast(const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
               d_myworld->getComm());
     basename = test_string;
   }
   else {
     int inlen;
-    MPI::Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
+    Uintah::MPI::Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
     char* inbuf = scinew char[inlen+1];
-    MPI::Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
+    Uintah::MPI::Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
     inbuf[inlen]='\0';
     basename=inbuf;
     delete[] inbuf;       
@@ -3598,7 +3598,7 @@ DataArchiver::setupLocalFileSystems()
   if(fclose(tmpout) != 0) {
     throw ErrnoException("fclose", errno, __FILE__, __LINE__);
   }
-  MPI::Barrier(d_myworld->getComm());
+  Uintah::MPI::Barrier(d_myworld->getComm());
   // See who else we can see
   d_writeMeta=true;
   int i;
@@ -3617,7 +3617,7 @@ DataArchiver::setupLocalFileSystems()
       throw ErrnoException("stat", errno, __FILE__, __LINE__);
     }
   }
-  MPI::Barrier(d_myworld->getComm());
+  Uintah::MPI::Barrier(d_myworld->getComm());
   if(d_writeMeta) {
     makeVersionedDir();
     string fname = myname.str();
@@ -3643,7 +3643,7 @@ DataArchiver::setupLocalFileSystems()
       throw ErrnoException("fclose", errno, __FILE__, __LINE__);
     }
   }
-  MPI::Barrier(d_myworld->getComm());
+  Uintah::MPI::Barrier(d_myworld->getComm());
   if(!d_writeMeta) {
     ostringstream name;
     name << basename << "-" << i << ".tmp";
@@ -3661,7 +3661,7 @@ DataArchiver::setupLocalFileSystems()
   int nunique;
   // This is an AllReduce, not a reduce.  This is necessary to
   // ensure that all processors wait before they remove the tmp files
-  MPI::Allreduce(&count, &nunique, 1, MPI_INT, MPI_SUM,
+  Uintah::MPI::Allreduce(&count, &nunique, 1, MPI_INT, MPI_SUM,
                 d_myworld->getComm());
   if(d_myworld->myrank() == 0) {
     double dt=Time::currentSeconds()-start;

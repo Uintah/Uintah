@@ -97,9 +97,9 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
     MPI_Datatype datatype;
 
     //    cerr << "cnt: " << count << ", buf: " << buf << "\n";
-    MPI::Type_indexed( count, &blocklens[0],
+    Uintah::MPI::Type_indexed( count, &blocklens[0],
                         sendset->getPointer(), td->getMPIType(), &datatype );
-    MPI::Type_commit(&datatype);
+    Uintah::MPI::Type_commit(&datatype);
 
     buffer.add(buf, 1, datatype, true);
   }

@@ -495,7 +495,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
     cerr << "press_ref for norm: " << pressureVars.press_ref << " " <<
       d_pressRefProc << endl;
   }
-  MPI::Bcast(&pressureVars.press_ref, 1, MPI_DOUBLE, d_pressRefProc, pg->getComm());
+  Uintah::MPI::Bcast(&pressureVars.press_ref, 1, MPI_DOUBLE, d_pressRefProc, pg->getComm());
   
   if (d_norm_pres){ 
     for (int p = 0; p < patches->size(); p++) {

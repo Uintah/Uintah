@@ -171,8 +171,8 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
   if (d_myworld->size() > 1) {
     //construct a mpi datatype for the PatchInfo
     MPI_Datatype particletype;
-    MPI::Type_contiguous(2, MPI_INT, &particletype);
-    MPI::Type_commit(&particletype);
+    Uintah::MPI::Type_contiguous(2, MPI_INT, &particletype);
+    Uintah::MPI::Type_commit(&particletype);
 
     vector<PatchInfo> recvbuf(totalsize);
     vector<int> displs(numProcs,0);
@@ -180,7 +180,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
       displs[i] = displs[i-1]+recvcounts[i-1];
     }
 
-    MPI::Gatherv(&subpatchParticles[0], recvcounts[d_myworld->myrank()], particletype, &recvbuf[0],
+    Uintah::MPI::Gatherv(&subpatchParticles[0], recvcounts[d_myworld->myrank()], particletype, &recvbuf[0],
         &recvcounts[0], &displs[0], particletype, 0, d_myworld->getComm());
 
     if ( d_myworld->myrank() == 0) {
@@ -190,8 +190,8 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
       }
     }
     // combine all the subpatches results
-    MPI::Bcast(&num_particles[0], num_particles.size(), MPI_INT,0,d_myworld->getComm());
-    MPI::Type_free(&particletype);
+    Uintah::MPI::Bcast(&num_particles[0], num_particles.size(), MPI_INT,0,d_myworld->getComm());
+    Uintah::MPI::Type_free(&particletype);
   }
   else {
     for (unsigned i = 0; i < subpatchParticles.size(); i++) {
@@ -295,7 +295,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
       displs[i] = displs[i-1]+recvcounts[i-1];
     }
 
-    MPI::Allgatherv(&particleList[0], particleList.size()*sizeof(PatchInfo),  MPI_BYTE,
+    Uintah::MPI::Allgatherv(&particleList[0], particleList.size()*sizeof(PatchInfo),  MPI_BYTE,
                    &all_particles[0], &recvcounts[0], &displs[0], MPI_BYTE, d_myworld->getComm());
 
     if (dbg.active() && d_myworld->myrank() == 0) {
@@ -424,7 +424,7 @@ ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCosts, co
     //gather the maxes
     //change to all reduce with loc
     if(numProcs>1)
-      MPI::Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
+      Uintah::MPI::Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
     else
       min=maxInfo;
 
@@ -444,7 +444,7 @@ ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCosts, co
   if(minProcLoc!=-1 && numProcs>1)
   {
     //broadcast load balance
-    MPI::Bcast(&assignments[0],assignments.size(),MPI_INT,minProcLoc,d_myworld->getComm());
+    Uintah::MPI::Bcast(&assignments[0],assignments.size(),MPI_INT,minProcLoc,d_myworld->getComm());
   }
 #if 0
   if(d_myworld->myrank()==0)

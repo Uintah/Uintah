@@ -64,7 +64,7 @@ using std::string;
 Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
              Output* d_dataArchiver, MPMLabel* Mlb,MPMFlags* MFlag)
 { 
-  MPI::Comm_dup( MPI_COMM_WORLD, & mpi_crack_comm );
+  Uintah::MPI::Comm_dup( MPI_COMM_WORLD, & mpi_crack_comm );
 
   // Task 1: Initialization of fracture analysis  
   
@@ -253,7 +253,7 @@ void
 Crack::OutputInitialCrackPlane(const int& numMatls)
 {
   int pid;
-  MPI::Comm_rank(mpi_crack_comm, &pid);
+  Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
   if(pid==0) { // output from the first rank
     for(int m=0; m<numMatls; m++) {
       if(crackType[m]=="NO_CRACK")
@@ -412,8 +412,8 @@ Crack::CrackDiscretization(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
        
     int pid,rankSize;
-    MPI::Comm_rank(mpi_crack_comm, &pid);
-    MPI::Comm_size(mpi_crack_comm,&rankSize);
+    Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
+    Uintah::MPI::Comm_size(mpi_crack_comm,&rankSize);
 
     // Set radius (rJ) of J-integral contour or number of cells
     Vector dx = patch->dCell();
@@ -2003,7 +2003,7 @@ void
 Crack::OutputInitialCrackMesh(const int& m)
 {
   int pid;
-  MPI::Comm_rank(mpi_crack_comm, &pid);
+  Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
   if(pid==0) { // Output from the first rank
     cout << "\n---Initial Crack mesh---" << endl;
     cout << "MatID: " << m << endl;

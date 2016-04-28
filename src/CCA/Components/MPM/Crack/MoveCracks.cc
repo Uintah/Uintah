@@ -77,8 +77,8 @@ Crack::CrackPointSubset(const ProcessorGroup*,
   for(int p=0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     int pid,patch_size;
-    MPI::Comm_rank(mpi_crack_comm, &pid);
-    MPI::Comm_size(mpi_crack_comm, &patch_size);
+    Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
+    Uintah::MPI::Comm_size(mpi_crack_comm, &patch_size);
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m=0; m<numMPMMatls; m++) {
@@ -91,15 +91,15 @@ Crack::CrackPointSubset(const ProcessorGroup*,
         }
       } 
       
-      MPI::Barrier(mpi_crack_comm);
+      Uintah::MPI::Barrier(mpi_crack_comm);
 
       // Broadcast cnset to all the ranks
       for(int i=0; i<patch_size; i++) {
         int num; // number of crack nodes in patch i
         if(i==pid) num=cnset[m][i].size();
-        MPI::Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
+        Uintah::MPI::Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
         if(pid!=i) cnset[m][i].resize(num);
-        MPI::Bcast(&cnset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
+        Uintah::MPI::Bcast(&cnset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
       }
       
     } // End of loop over matls
@@ -141,8 +141,8 @@ Crack::MoveCracks(const ProcessorGroup*,
     vector<double> S(interpolator->size());
 
     int pid,patch_size;
-    MPI::Comm_rank(mpi_crack_comm, &pid);
-    MPI::Comm_size(mpi_crack_comm, &patch_size);
+    Uintah::MPI::Comm_rank(mpi_crack_comm, &pid);
+    Uintah::MPI::Comm_size(mpi_crack_comm, &patch_size);
     MPI_Datatype MPI_POINT=fun_getTypeDescription((Point*)0)->getMPIType();
 
 
@@ -241,7 +241,7 @@ Crack::MoveCracks(const ProcessorGroup*,
           } // End if(pid==i)
 
           // Broadcast the updated position to all ranks
-          MPI::Bcast(cptmp,numNodes,MPI_POINT,i,mpi_crack_comm);
+          Uintah::MPI::Bcast(cptmp,numNodes,MPI_POINT,i,mpi_crack_comm);
 
           // Update cx
           for(int j=0; j<numNodes; j++) {
@@ -254,7 +254,7 @@ Crack::MoveCracks(const ProcessorGroup*,
         } // End of if(numNodes>0)
       } // End of loop over patch_size
 
-      MPI::Barrier(mpi_crack_comm);
+      Uintah::MPI::Barrier(mpi_crack_comm);
       
 
       // Task 2: Update crack extent

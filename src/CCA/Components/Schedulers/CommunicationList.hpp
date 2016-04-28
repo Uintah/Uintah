@@ -161,13 +161,13 @@ public:
   bool test() const
   {
     int flag;
-    MPI::Test(request(), &flag, MPI_STATUS_IGNORE);
+    Uintah::MPI::Test(request(), &flag, MPI_STATUS_IGNORE);
     return flag;
   }
 
   bool wait() const
   {
-    MPI::Wait(request(), MPI_STATUS_IGNORE);
+    Uintah::MPI::Wait(request(), MPI_STATUS_IGNORE);
     return true;
   }
 

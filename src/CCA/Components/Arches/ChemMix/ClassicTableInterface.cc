@@ -126,14 +126,14 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     proc0cout << tableFileName << " is " << table_size << " bytes" << endl;
   }
 
-  MPI::Bcast(&table_size,1,MPI_INT,0,
+  Uintah::MPI::Bcast(&table_size,1,MPI_INT,0,
       Parallel::getRootProcessorGroup()->getComm());
 
   if (mpi_rank != 0) {
     table_contents = scinew char[table_size];
   }
 
-  MPI::Bcast(table_contents, table_size, MPI_CHAR, 0,
+  Uintah::MPI::Bcast(table_contents, table_size, MPI_CHAR, 0,
       Parallel::getRootProcessorGroup()->getComm());
 
   std::stringstream table_contents_stream;

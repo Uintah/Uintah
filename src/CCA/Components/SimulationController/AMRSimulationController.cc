@@ -299,7 +299,7 @@ AMRSimulationController::run()
      
     if(dbg_barrier.active()) {
       start=Time::currentSeconds();
-      MPI::Barrier(d_myworld->getComm());
+      Uintah::MPI::Barrier(d_myworld->getComm());
       barrier_times[2]+=Time::currentSeconds()-start;
     }
 
@@ -363,7 +363,7 @@ AMRSimulationController::run()
 
     if(dbg_barrier.active()) {
       start=Time::currentSeconds();
-      MPI::Barrier(d_myworld->getComm());
+      Uintah::MPI::Barrier(d_myworld->getComm());
       barrier_times[3]+=Time::currentSeconds()-start;
     }
 
@@ -437,10 +437,10 @@ AMRSimulationController::run()
     // If debugging output the barrier times.
     if( dbg_barrier.active() ) {
       start = Time::currentSeconds();
-      MPI::Barrier( d_myworld->getComm() );
+      Uintah::MPI::Barrier( d_myworld->getComm() );
       barrier_times[4]+=Time::currentSeconds()-start;
       double avg[5];
-      MPI::Reduce( barrier_times, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
+      Uintah::MPI::Reduce( barrier_times, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
        
       if(d_myworld->myrank()==0) {
         cout << "Barrier Times: "; 
@@ -891,7 +891,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
   if(dbg_barrier.active()) {
     double start;
     start=Time::currentSeconds();
-    MPI::Barrier(d_myworld->getComm());
+    Uintah::MPI::Barrier(d_myworld->getComm());
     barrier_times[0]+=Time::currentSeconds()-start;
   }
   
@@ -908,7 +908,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
     if(dbg_barrier.active()) {
       double start;
       start=Time::currentSeconds();
-      MPI::Barrier(d_myworld->getComm());
+      Uintah::MPI::Barrier(d_myworld->getComm());
       barrier_times[1]+=Time::currentSeconds()-start;
     }
     

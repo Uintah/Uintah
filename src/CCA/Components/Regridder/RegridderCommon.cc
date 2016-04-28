@@ -227,7 +227,7 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
     GATHER:
     //Only reduce if we are running in parallel
     if (d_myworld->size() > 1) {
-      MPI::Allreduce(&result, &retval, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+      Uintah::MPI::Allreduce(&result, &retval, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
     }
     else {
       retval = result;
@@ -270,7 +270,7 @@ RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
         }
       }
     }
-    MPI::Allreduce(&thisproc, &allprocs, 1, MPI_INT, MPI_MAX, d_myworld->getComm());
+    Uintah::MPI::Allreduce(&thisproc, &allprocs, 1, MPI_INT, MPI_MAX, d_myworld->getComm());
     rdbg << "RegridderCommon::flaggedCellsOnFinestLevel() END" << std::endl;
     return allprocs;
   }
