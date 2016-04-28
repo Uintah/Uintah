@@ -75,14 +75,6 @@ static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
 static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 
 #ifdef HAVE_CUDA
-DebugStream gpu_stats("Unified_GPUStats", false);
-DebugStream use_single_device("Unified_SingleDevice", false);
-DebugStream simulate_multiple_gpus("GPUSimulateMultiple", false);
-DebugStream gpudbg("GPUDataWarehouse", false);
-#endif
-
-
-#ifdef HAVE_CUDA
 
   //TODO, should be deallocated
   std::map <unsigned int, queue<cudaStream_t*> > * UnifiedScheduler::idleStreams = new std::map <unsigned int, queue<cudaStream_t*> >;
@@ -5430,6 +5422,7 @@ void UnifiedScheduler::createTaskGpuDWs(DetailedTask * dtask) {
           //<< " Task: " << task->getTask()->getName();
       old_taskGpuDW->init( currentDevice, out.str());
       old_taskGpuDW->setDebug(gpudbg.active());
+
       old_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
       dtask->setTaskGpuDataWarehouse(currentDevice, Task::OldDW, old_taskGpuDW);
 

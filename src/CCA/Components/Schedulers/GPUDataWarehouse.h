@@ -35,11 +35,9 @@
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Thread/CrowdMonitor.h>
 
-
 #include <map> //for host code only.
 #include <string>
 #include <vector>
-#include <Core/Thread/CrowdMonitor.h>
 
 #define MAX_VARDB_ITEMS       10000000  //Due to how it's allocated, it will never use up this much space.
                                         //Only a very small fraction of it.
@@ -325,31 +323,6 @@ public:
 
   };
 
-  struct gpuMemoryData {
-    int            status;  //0 for available, 1 for in use.
-    unsigned int   timestep;
-    void*          ptr;
-  };
-  struct gpuMemoryPoolItem {
-
-     unsigned int  device_id;
-     size_t        deviceSize;
-
-     gpuMemoryPoolItem(unsigned int device_id, size_t deviceSize) {
-       this->device_id = device_id;
-       this->deviceSize = deviceSize;
-     }
-     //This so it can be used in an STL map
-     bool operator<(const gpuMemoryPoolItem& right) const {
-       if (this->device_id < right.device_id) {
-         return true;
-       } else if ((this->device_id == right.device_id) && (this->deviceSize < right.deviceSize)) {
-         return true;
-       } else {
-         return false;
-       }
-     }
-   };
 
   //______________________________________________________________________
   // GPU GridVariable methods
@@ -498,8 +471,6 @@ private:
   HOST_DEVICE void printGetError( const char* msg, char const* label, int patchID, int matlIndx, int levelIndx);
   HOST_DEVICE void printGetLevelError(const char* msg, char const* label, int levelIndx, int matlIndx);
 
-  __host__ void* allocateCudaSpaceFromPool(int device_id, size_t memSize);
-  __host__ bool freeCudaSpaceFromPool(int device_id, size_t memSize, void* addr);
 
   std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers;
 
@@ -507,7 +478,7 @@ private:
   //mutable Uintah::CrowdMonitor varLock;
   mutable Uintah::CrowdMonitor *allocateLock;
   mutable Uintah::CrowdMonitor *varLock;
-  static Uintah::CrowdMonitor *gpuPoolLock;
+
   char _internalName[80];
 
   materialItem       d_materialDB[MAX_MATERIALSDB_ITEMS];
@@ -525,9 +496,6 @@ private:
                                                 //So we create a buffer, and keep track of the start of that buffer here.
 
   //These STL data structures being here do not pose a problem for the CUDA compiler
-
-  static std::multimap<gpuMemoryPoolItem, gpuMemoryData> *gpuMemoryPool;
-
 
   std::map<std::string, contiguousArrayInfo> *contiguousArrays;
 

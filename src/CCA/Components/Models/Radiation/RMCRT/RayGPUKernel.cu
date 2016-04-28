@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+#include <CCA/Components/Schedulers/GPUMemoryPool.h>
 
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUStencil7.h>
@@ -1493,7 +1494,8 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
   // setup random number generator states on the device, 1 for each thread
   curandState* randNumStates;
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-  CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
+  randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
+  //CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
 
 
   setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
@@ -1512,7 +1514,8 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                                             old_gdw,
                                                             new_gdw);
     // free device-side RNG states
-    CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
+    GPUMemoryPool::freeCudaSpaceFromPool(0,numStates * sizeof(curandState), (void*)randNumStates);
+    //CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
 }
 
 //______________________________________________________________________
@@ -1540,8 +1543,11 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
   int3* dev_regionLo;
   int3* dev_regionHi;
   size_t size = d_MAXLEVELS *  sizeof(int3);
-  CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionLo, size) );
-  CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionHi, size) );
+  dev_regionLo = (int3*)GPUMemoryPool::allocateCudaSpaceFromPool(0, size);
+  dev_regionHi = (int3*)GPUMemoryPool::allocateCudaSpaceFromPool(0, size);
+
+  //CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionLo, size) );
+  //CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionHi, size) );
 
   int3 myLo[d_MAXLEVELS];
   int3 myHi[d_MAXLEVELS];
@@ -1550,19 +1556,21 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
     myHi[l] = levelP[l].regionHi;        // They are different on each patch
   }
 
-  CUDA_RT_SAFE_CALL( cudaMemcpy( dev_regionLo, myLo, size, cudaMemcpyHostToDevice) );
-  CUDA_RT_SAFE_CALL( cudaMemcpy( dev_regionHi, myHi, size, cudaMemcpyHostToDevice) );
+  CUDA_RT_SAFE_CALL( cudaMemcpyAsync( dev_regionLo, myLo, size, cudaMemcpyHostToDevice, *stream) );
+  CUDA_RT_SAFE_CALL( cudaMemcpyAsync( dev_regionHi, myHi, size, cudaMemcpyHostToDevice, *stream) );
 
 
   //__________________________________
   // copy levelParams array to constant memory on device
-  CUDA_RT_SAFE_CALL(cudaMemcpyToSymbol(d_levels, levelP, (maxLevels * sizeof(levelParams))));
+  CUDA_RT_SAFE_CALL(cudaMemcpyToSymbolAsync(d_levels, levelP, (maxLevels * sizeof(levelParams)),0, cudaMemcpyHostToDevice,*stream));
+  //CUDA_RT_SAFE_CALL(cudaMemcpyToSymbol(d_levels, levelP, (maxLevels * sizeof(levelParams))));
 
   //__________________________________
   // setup random number generator states on the device, 1 for each thread
   curandState* randNumStates;
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-  CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, (numStates * sizeof(curandState))) );
+  randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
+  //CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, (numStates * sizeof(curandState))) );
 
   setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
 
@@ -1584,9 +1592,13 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                                                      new_gdw);
 
   // free device-side RNG states
-  CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
-  CUDA_RT_SAFE_CALL( cudaFree(dev_regionLo) );
-  CUDA_RT_SAFE_CALL( cudaFree(dev_regionHi) );
+  //CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
+  //CUDA_RT_SAFE_CALL( cudaFree(dev_regionLo) );
+  //CUDA_RT_SAFE_CALL( cudaFree(dev_regionHi) );
+  GPUMemoryPool::freeCudaSpaceFromPool(0,numStates * sizeof(curandState), (void*)randNumStates);
+  GPUMemoryPool::freeCudaSpaceFromPool(0, size, (int3*)dev_regionLo);
+  GPUMemoryPool::freeCudaSpaceFromPool(0, size, (int3*)dev_regionHi);
+
 
 }
 
