@@ -32,9 +32,8 @@
 #include <string>
 #include <sstream>
 
-#include <Core/Util/Timers/Timers.hpp>
-
 #include <sci_defs/mpi_defs.h>
+
 
 #define DOUT( cond, ... )             \
   if (cond) {                         \
@@ -75,14 +74,15 @@ namespace Uintah {
 
 class Dout
 {
+
 public:
 
-  Dout() = default;
+  Dout()               = default;
   Dout( const Dout & ) = default;
-  Dout( Dout && ) = default;
+  Dout( Dout && )      = default;
 
   Dout & operator=( const Dout & ) = default;
-  Dout & operator=( Dout && ) = default;
+  Dout & operator=( Dout && )      = default;
 
   Dout( std::string const & name, bool default_active )
     : m_active{ is_active(name, default_active) }
@@ -98,7 +98,9 @@ public:
     return a.m_name < b.m_name;
   }
 
+
 private:
+
   static bool is_active( std::string const& arg_name,  bool default_active )
   {
     const char * sci_debug = std::getenv("SCI_DEBUG");
@@ -106,19 +108,25 @@ private:
     const char * name = tmp.c_str();
     size_t n = tmp.size();
 
-    if ( !sci_debug ) return default_active;
+    if ( !sci_debug ) {
+      return default_active;
+    }
 
     const char * sub =  strstr(sci_debug, name);
     if ( !sub ) {
       sub = strstr( sci_debug, name+1);
       --n;
       // name not found
-      if ( !sub || sub != sci_debug ) return default_active;
+      if ( !sub || sub != sci_debug ) {
+        return default_active;
+      }
     }
     return sub[n] == '+';
   }
 
+
 private:
+
   bool        m_active {false};
   std::string m_name   {""};
 };
