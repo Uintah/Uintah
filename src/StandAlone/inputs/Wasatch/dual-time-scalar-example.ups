@@ -65,13 +65,12 @@
 
   <DataArchiver>
     <filebase>dual-time-bc-example.uda</filebase>
-    <outputInterval>0.1</outputInterval>
-<!--     <outputTimestepInterval>1</outputTimestepInterval> -->
+<!--     <outputInterval>0.1</outputInterval> -->
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="0.0"/>
+    <checkpoint cycle="2" interval="2e-2"/>
     <compression>gzip</compression>
     <save label="f"/>
-    <save label="u"/>    
   </DataArchiver> 
 
   <Grid>

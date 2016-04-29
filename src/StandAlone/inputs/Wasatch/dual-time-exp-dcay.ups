@@ -52,7 +52,6 @@
     <save label="phi-source"/>
     <save label="phi_rhs"/>
     <save label="phi_residual"/>
-    <save label="DualtimeResidual"/>
   </DataArchiver> 
 
 

@@ -6,7 +6,7 @@
   <SimulationComponent type="wasatch"/>
   <Solver type="hypre"/>
   <Wasatch>
-      <DualTime iterations="20000" tolerance="1e-3" ds="1.6e-6"/>
+      <DualTime iterations="20000" tolerance="1e-3" ds="1.6e-5"/>
     <TimeIntegrator> FE </TimeIntegrator>
     <Density method="COMPRESSIBLE">
       <NameTag name="density"/>
@@ -127,14 +127,14 @@
     <initTime>0.0</initTime>
     <delt_min>1.0e-3</delt_min>
     <delt_max>1.0e-3</delt_max>
-    <max_Timesteps> 200 </max_Timesteps>
+    <max_Timesteps> 10 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <DataArchiver>
     <filebase>dual-time-compressible-2d-test.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" timestepInterval="20"/>
+    <checkpoint cycle="2" timestepInterval="2e-3"/>
     <save label="T"/>
     <save label="x-mom"/>
         <save label="u"/>
