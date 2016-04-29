@@ -292,7 +292,7 @@ MPIScheduler::runTask( DetailedTask* task,
     plain_old_dws[i] = dws[i].get_rep();
   }
 
-    task->doit(d_myworld, dws, plain_old_dws);
+  task->doit(d_myworld, dws, plain_old_dws);
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
