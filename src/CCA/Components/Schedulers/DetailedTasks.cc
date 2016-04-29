@@ -353,9 +353,20 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
     for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
       const unsigned int currentDevice = *deviceNums_it;
       OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
+      GPUDataWarehouse* host_oldtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
+      GPUDataWarehouse* device_oldtaskdw = NULL;
+      if (host_oldtaskdw) {
+        device_oldtaskdw = host_oldtaskdw->getdevice_ptr();
+      }
+      GPUDataWarehouse* host_newtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::NewDW);
+      GPUDataWarehouse* device_newtaskdw = NULL;
+      if (host_newtaskdw) {
+        device_newtaskdw = host_newtaskdw->getdevice_ptr();
+      }
+
       task->doit(event, pg, patches, matls, dws,
-                 getTaskGpuDataWarehouse(currentDevice, Task::OldDW),
-                 getTaskGpuDataWarehouse(currentDevice, Task::NewDW),
+                 device_oldtaskdw,
+                 device_newtaskdw,
                  getCudaStreamForThisTask(currentDevice), currentDevice);
     }
   }
@@ -1979,7 +1990,7 @@ DetailedTasks::getNextVerifyDataTransferCompletionTask()
   deviceVerifyDataTransferCompletionQueueLock_.writeLock();
   {
     if (!verifyDataTransferCompletionTasks_.empty()) {
-      nextTask = verifyDataTransferCompletionTasks_.top();
+      nextTask = verifyDataTransferCompletionTasks_.front();
       verifyDataTransferCompletionTasks_.pop();
     }
   }
@@ -1996,7 +2007,7 @@ DetailedTasks::getNextFinalizeDevicePreparationTask()
   DetailedTask* nextTask = nullptr;
   deviceFinalizePreparationQueueLock_.writeLock();
   if (!finalizeDevicePreparationTasks_.empty()) {
-    nextTask = finalizeDevicePreparationTasks_.top();
+    nextTask = finalizeDevicePreparationTasks_.front();
     finalizeDevicePreparationTasks_.pop();
   }
   deviceFinalizePreparationQueueLock_.writeUnlock();
@@ -2012,7 +2023,7 @@ DetailedTasks::getNextInitiallyReadyDeviceTask()
   deviceReadyQueueLock_.writeLock();
   {
     if (!initiallyReadyDeviceTasks_.empty()) {
-      nextTask = initiallyReadyDeviceTasks_.top();
+      nextTask = initiallyReadyDeviceTasks_.front();
       initiallyReadyDeviceTasks_.pop();
     }
   }
@@ -2029,7 +2040,7 @@ DetailedTasks::getNextCompletionPendingDeviceTask()
   DetailedTask* nextTask = nullptr;
   deviceCompletedQueueLock_.writeLock();
   if (!completionPendingDeviceTasks_.empty()) {
-    nextTask = completionPendingDeviceTasks_.top();
+    nextTask = completionPendingDeviceTasks_.front();
     completionPendingDeviceTasks_.pop();
   }
   deviceCompletedQueueLock_.writeUnlock();
@@ -2045,7 +2056,7 @@ DetailedTasks::getNextFinalizeHostPreparationTask()
   DetailedTask* nextTask = nullptr;
   hostFinalizePreparationQueueLock_.writeLock();
   if (!finalizeHostPreparationTasks_.empty()) {
-    nextTask = finalizeHostPreparationTasks_.top();
+    nextTask = finalizeHostPreparationTasks_.front();
     finalizeHostPreparationTasks_.pop();
   }
   hostFinalizePreparationQueueLock_.writeUnlock();
@@ -2059,7 +2070,7 @@ DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
   DetailedTask* nextTask = nullptr;
   hostReadyQueueLock_.writeLock();
   if (!initiallyReadyHostTasks_.empty()) {
-    nextTask = initiallyReadyHostTasks_.top();
+    nextTask = initiallyReadyHostTasks_.front();
     initiallyReadyHostTasks_.pop();
   }
   hostReadyQueueLock_.writeUnlock();
@@ -2074,7 +2085,7 @@ DetailedTask*
 DetailedTasks::peekNextVerifyDataTransferCompletionTask()
 {
   deviceVerifyDataTransferCompletionQueueLock_.readLock();
-  DetailedTask* dtask = verifyDataTransferCompletionTasks_.top();
+  DetailedTask* dtask = verifyDataTransferCompletionTasks_.front();
   deviceVerifyDataTransferCompletionQueueLock_.readUnlock();
 
   return dtask;
@@ -2086,7 +2097,7 @@ DetailedTask*
 DetailedTasks::peekNextFinalizeDevicePreparationTask()
 {
   deviceFinalizePreparationQueueLock_.readLock();
-  DetailedTask* dtask = finalizeDevicePreparationTasks_.top();
+  DetailedTask* dtask = finalizeDevicePreparationTasks_.front();
   deviceFinalizePreparationQueueLock_.readUnlock();
 
   return dtask;
@@ -2098,7 +2109,7 @@ DetailedTask*
 DetailedTasks::peekNextInitiallyReadyDeviceTask()
 {
   deviceReadyQueueLock_.readLock();
-  DetailedTask* dtask = initiallyReadyDeviceTasks_.top();
+  DetailedTask* dtask = initiallyReadyDeviceTasks_.front();
   deviceReadyQueueLock_.readUnlock();
 
   return dtask;
@@ -2112,7 +2123,7 @@ DetailedTasks::peekNextCompletionPendingDeviceTask()
   DetailedTask* dtask = nullptr;
   deviceCompletedQueueLock_.readLock();
   {
-    dtask = completionPendingDeviceTasks_.top();
+    dtask = completionPendingDeviceTasks_.front();
   }
   deviceCompletedQueueLock_.readUnlock();
 
@@ -2125,7 +2136,7 @@ DetailedTask*
 DetailedTasks::peekNextFinalizeHostPreparationTask()
 {
   hostFinalizePreparationQueueLock_.readLock();
-  DetailedTask* dtask = finalizeHostPreparationTasks_.top();
+  DetailedTask* dtask = finalizeHostPreparationTasks_.front();
   hostFinalizePreparationQueueLock_.readUnlock();
 
   return dtask;
@@ -2136,7 +2147,7 @@ DetailedTasks::peekNextFinalizeHostPreparationTask()
 DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
 {
   hostReadyQueueLock_.readLock();
-  DetailedTask* dtask = initiallyReadyHostTasks_.top();
+  DetailedTask* dtask = initiallyReadyHostTasks_.front();
   hostReadyQueueLock_.readUnlock();
 
   return dtask;

@@ -456,7 +456,8 @@ void DeviceGridVariables::addTaskGpuDWStagingVar(const Patch* patchPointer,
 
 //For adding taskVars, which are snapshots of the host-side GPU DW
 //This is the normal scenario, no "staging" variables.
-void DeviceGridVariables::addVarToBeGhostReady(const Patch* patchPointer,
+void DeviceGridVariables::addVarToBeGhostReady(const string& taskName,
+          const Patch* patchPointer,
           int matlIndx,
           int levelIndx,
           const Task::Dependency* dep,
@@ -472,7 +473,7 @@ void DeviceGridVariables::addVarToBeGhostReady(const Patch* patchPointer,
       {
         gpu_stats << UnifiedScheduler::myRankThread()
             << " DeviceGridVariables::addVarToBeGhostReady() - "
-            << "Added into this task's listing of vars for which it is managing ghost cells"
+            << "For task " << taskName << " added to the listing of vars for which it is managing ghost cells"
             << dep->var->getName()
             << " patch " << patchPointer->getID()
             << " matl " << matlIndx

@@ -39,6 +39,13 @@
 #include <string>
 #include <thread>
 
+#ifdef HAVE_CUDA
+static DebugStream gpu_stats("Unified_GPUStats", false);
+static DebugStream use_single_device("Unified_SingleDevice", false);
+static DebugStream simulate_multiple_gpus("GPUSimulateMultiple", false);
+static DebugStream gpudbg("GPUDataWarehouse", false);
+#endif
+
 namespace Uintah {
 
 class Task;
@@ -191,17 +198,19 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void markHostRequiresDataAsValid(DetailedTask* dtask);
 
+    void initiateD2HForHugeGhostCells(DetailedTask* dtask);
+
     void initiateD2H(DetailedTask* dtask);
 
     //void copyAllDataD2H(DetailedTask* dtask);
 
     //void processD2HCopies(DetailedTask* dtask);
 
-    void postD2HCopies( DetailedTask* dtask );
+    // postD2HCopies( DetailedTask* dtask );
     
-    void postH2DCopies(DetailedTask* dtask);
+    //void postH2DCopies(DetailedTask* dtask);
 
-    void preallocateDeviceMemory( DetailedTask* dtask );
+    //void preallocateDeviceMemory( DetailedTask* dtask );
 
     //void createCudaStreams(int numStreams, int device);
     bool ghostCellsProcessingReady( DetailedTask* dtask );

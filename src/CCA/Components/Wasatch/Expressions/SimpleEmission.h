@@ -7,7 +7,7 @@
  *  \class SimpleEmission
  *  \author James C. Sutherland
  *
- *  \f\[ \nabla \cdot \vec{q} = \sigma \epsilon (T^4 - T_\infty^4) \f\]
+ *  \f[ \nabla \cdot \vec{q} = \sigma \epsilon (T^4 - T_\infty^4) \f]
  */
 template< typename FieldT >
 class SimpleEmission

@@ -107,42 +107,11 @@ RadHypreSolver::problemSetup(const ProblemSpecP& params)
 // Set up the grid structure
 // ***************************************************************************
 void
-RadHypreSolver::gridSetup(const ProcessorGroup*,
-                          const Patch* patch,
-                          bool plusX, bool plusY, bool plusZ)
+RadHypreSolver::gridSetup(bool plusX, bool plusY, bool plusZ)
 {
-  int nx, ny, nz;
-  int bx, by, bz;
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
 
-  nx = idxHi.x() - idxLo.x() + 1;
-  ny = idxHi.y() - idxLo.y() + 1;
-  nz = idxHi.z() - idxLo.z() + 1;
-
-  for (int i = 0; i < 6; i++){    
-    d_A_num_ghost[i] = 0;
-  }
-
-  d_volume  = nx*ny*nz;    //number of nodes per processor
-  bx = 1;
-  by = 1;
-  bz = 1;
-  d_dim = 3;
-  d_stencilSize = (d_use7PointStencil) ? 7 : 4;
-  d_nblocks = bx*by*bz;           //number of blocks per processor, now is set to 1
-  d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
-  d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
 
   if(d_use7PointStencil){ 
-
-    d_offsets[0] = hypre_CTAlloc(int, 3); 
-    d_offsets[1] = hypre_CTAlloc(int, 3); 
-    d_offsets[2] = hypre_CTAlloc(int, 3); 
-    d_offsets[3] = hypre_CTAlloc(int, 3); 
-    d_offsets[4] = hypre_CTAlloc(int, 3); 
-    d_offsets[5] = hypre_CTAlloc(int, 3); 
-    d_offsets[6] = hypre_CTAlloc(int, 3); 
 
     d_offsets[0][0] = 0; // central                   
     d_offsets[0][1] = 0;                  
@@ -175,32 +144,86 @@ RadHypreSolver::gridSetup(const ProcessorGroup*,
 
 
   }else{
-    d_offsets[0] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
     d_offsets[0][0] = 0;                  //setting the location of each stencil.
     d_offsets[0][1] = 0;                  //First index is the stencil number.
     d_offsets[0][2] = 1;                  //Second index is the [0,1,2]=[i,j,k]
     if (plusZ)
       d_offsets[0][2] = -1;
-    d_offsets[1]    = hypre_CTAlloc(int, 3);
     d_offsets[1][0] = 0; 
     d_offsets[1][1] = 1; 
     if (plusY)
       d_offsets[1][1] = -1;
     d_offsets[1][2] = 0; 
-    d_offsets[2]    = hypre_CTAlloc(int, 3);
     d_offsets[2][0] = 1;
     if (plusX)
       d_offsets[2][0] = -1; 
     d_offsets[2][1] = 0; 
     d_offsets[2][2] = 0; 
-    d_offsets[3]    = hypre_CTAlloc(int, 3);
     d_offsets[3][0] = 0; 
     d_offsets[3][1] = 0; 
     d_offsets[3][2] = 0;
   }
+  for (int s = 0; s < d_stencilSize; s++){
+    HYPRE_StructStencilSetElement(d_stencil, s, d_offsets[s]);
+  }
      
+  /*
+   //This is not required for radiation -start
+  const Level* level = patch->getLevel();
+
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  int periodic[3];
+  periodic[0] = periodic_vector.x();
+  periodic[1] = periodic_vector.y();
+  periodic[2] = periodic_vector.z();
+  HYPRE_StructGridSetPeriodic(d_grid, periodic);
+
+  //This is not required for radiation -end
+  */
+
+
+
+}
+
+
+void
+RadHypreSolver::matrixInit(const Patch* patch){
+
+
+  d_stencilSize = (d_use7PointStencil) ? 7 : 4;
+
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+
+
+  for (int i = 0; i < 6; i++){    
+    d_A_num_ghost[i] = 0;
+  }
+
+  int nx, ny, nz;
+  int bx, by, bz;
+
+  nx = idxHi.x() - idxLo.x() + 1;
+  ny = idxHi.y() - idxLo.y() + 1;
+  nz = idxHi.z() - idxLo.z() + 1;
+
+  d_volume  = nx*ny*nz;    //number of nodes per processor
+  bx = 1;
+  by = 1;
+  bz = 1;
+  d_dim = 3;
+
+  d_nblocks = bx*by*bz;                             //number of blocks per processor, now is set to 1
   d_ilower = hypre_CTAlloc(int*, d_nblocks);
   d_iupper = hypre_CTAlloc(int*, d_nblocks);
+  d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
+  d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
+
+
+  for (int s = 0; s < (d_stencilSize); s++){
+    d_stencilIndices[s] = s;
+  }
+
 
   for (int i = 0; i < d_nblocks; i++){
     d_ilower[i] = hypre_CTAlloc(int, d_dim);
@@ -211,6 +234,7 @@ RadHypreSolver::gridSetup(const ProcessorGroup*,
     d_A_num_ghost[2*i] = 1;
     d_A_num_ghost[2*i + 1] = 1;
   }
+
   
   /* compute d_ilower and d_iupper from (p,q,r), (bx,by,bz), and (nx,ny,nz) */
   int ib = 0;
@@ -228,49 +252,64 @@ RadHypreSolver::gridSetup(const ProcessorGroup*,
       }
     }
   }
-#if 0
-  ib = 0;  
-  for (int iz = 0; iz < bz; iz++) {
-    for (int iy = 0; iy < by; iy++) {
-      for (int ix = 0; ix < bx; ix++) {
-        printf("  d_ilower[%d](i,j,k)= (%d, %d, %d)\n",ib, d_ilower[ib][0], d_ilower[ib][1],   d_ilower[ib][2]);
-        printf("  d_iupper[%d](i,j,k)= (%d, %d, %d)\n",ib, d_iupper[ib][0], d_iupper[ib][1],   d_iupper[ib][2]);
-        ib++;
-      }
-    }
+
+
+  d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
+  if(d_use7PointStencil){ 
+    d_offsets[0] = hypre_CTAlloc(int, 3); 
+    d_offsets[1] = hypre_CTAlloc(int, 3); 
+    d_offsets[2] = hypre_CTAlloc(int, 3); 
+    d_offsets[3] = hypre_CTAlloc(int, 3); 
+    d_offsets[4] = hypre_CTAlloc(int, 3); 
+    d_offsets[5] = hypre_CTAlloc(int, 3); 
+    d_offsets[6] = hypre_CTAlloc(int, 3); 
+  }else{
+    d_offsets[0] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
+    d_offsets[1] = hypre_CTAlloc(int, 3);
+    d_offsets[2] = hypre_CTAlloc(int, 3);
+    d_offsets[3] = hypre_CTAlloc(int, 3);
   }
-#endif
-  
+
   HYPRE_StructGridCreate(MPI_COMM_WORLD, d_dim, &d_grid);
 
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructGridSetExtents(d_grid, d_ilower[ib], d_iupper[ib]);
   }
-  /*
-   //This is not required for radiation -start
-  const Level* level = patch->getLevel();
 
-  IntVector periodic_vector = level->getPeriodicBoundaries();
-  int periodic[3];
-  periodic[0] = periodic_vector.x();
-  periodic[1] = periodic_vector.y();
-  periodic[2] = periodic_vector.z();
-  HYPRE_StructGridSetPeriodic(d_grid, periodic);
-
-  //This is not required for radiation -end
-  */
-  HYPRE_StructGridAssemble(d_grid);  
-
+  HYPRE_StructGridAssemble(d_grid);   // crashing here!!!!!!
   /*-----------------------------------------------------------
-   * Set up the stencil structure
+   * Set up the matrix structure
    *-----------------------------------------------------------*/
   HYPRE_StructStencilCreate(d_dim, d_stencilSize, &d_stencil);
-   
-  for (int s = 0; s < d_stencilSize; s++){
-    HYPRE_StructStencilSetElement(d_stencil, s, d_offsets[s]);
-  }
+  HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
+  HYPRE_StructMatrixSetSymmetric(d_A, 0);
+  HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
+  HYPRE_StructMatrixInitialize(d_A); 
+
+  /*-----------------------------------------------------------
+   * Set up the linear system (b & x)
+   *-----------------------------------------------------------*/
+  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
+  HYPRE_StructVectorInitialize(d_b);
+  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
+  HYPRE_StructVectorInitialize(d_x);
+
+  HYPRE_StructMatrixAssemble(d_A);
+  HYPRE_StructVectorAssemble(d_b); 
+  HYPRE_StructVectorAssemble(d_x);
+
+
+
+  d_valueA = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
+  d_valueB = hypre_CTAlloc(double, d_volume);
+  d_valueX = hypre_CTAlloc(double, d_volume);
+
+
+
+
 
 }
+
 // ****************************************************************************
 // Fill linear parallel matrix
 // ****************************************************************************
@@ -289,47 +328,27 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
 
 { 
   double start_time = Time::currentSeconds();
-  gridSetup(pc, patch, plusX, plusY, plusZ);
   
-  /*-----------------------------------------------------------
-   * Set up the matrix structure
-   *-----------------------------------------------------------*/
-  HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
-  HYPRE_StructMatrixSetSymmetric(d_A, 0);
-  HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
-  HYPRE_StructMatrixInitialize(d_A); 
-
-  /*-----------------------------------------------------------
-   * Set up the linear system (b & x)
-   *-----------------------------------------------------------*/
-  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
-  HYPRE_StructVectorInitialize(d_b);
-  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
-  HYPRE_StructVectorInitialize(d_x);
   
-  int i, s;
+  int i;
  
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
-  d_value = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
   
   /* Set the coefficients for the grid */
   i = 0;
-  for (s = 0; s < (d_stencilSize); s++){
-    d_stencilIndices[s] = s;
-  }
   
   if(d_use7PointStencil){  
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          d_value[i] = AP[IntVector(colX,colY,colZ)];
-          d_value[i+1] = -AB[IntVector(colX,colY,colZ)];
-          d_value[i+2] = -AS[IntVector(colX,colY,colZ)];
-          d_value[i+3] = -AW[IntVector(colX,colY,colZ)];
-          d_value[i+4] = 0;
-          d_value[i+5] = 0;
-          d_value[i+6] = 0;
+          d_valueA[i] = AP(colX,colY,colZ);
+          d_valueA[i+1] = -AB(colX,colY,colZ);
+          d_valueA[i+2] = -AS(colX,colY,colZ);
+          d_valueA[i+3] = -AW(colX,colY,colZ);
+          d_valueA[i+4] = 0;
+          d_valueA[i+5] = 0;
+          d_valueA[i+6] = 0;
           i = i + d_stencilSize;
         }
       }
@@ -338,10 +357,10 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          d_value[i] = -AB[IntVector(colX,colY,colZ)];
-          d_value[i+1] = -AS[IntVector(colX,colY,colZ)];
-          d_value[i+2] = -AW[IntVector(colX,colY,colZ)];
-          d_value[i+3] = AP[IntVector(colX,colY,colZ)];
+          d_valueA[i] = -AB(colX,colY,colZ);
+          d_valueA[i+1] = -AS(colX,colY,colZ);
+          d_valueA[i+2] = -AW(colX,colY,colZ);
+          d_valueA[i+3] = AP(colX,colY,colZ);
 #if 0
           cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
           cerr << "value[AB]=" << d_value[i] << endl;
@@ -354,27 +373,18 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
       }
     }
   }
-  
+  //stencilcreate
+  //
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructMatrixSetBoxValues(d_A, d_ilower[ib], d_iupper[ib], d_stencilSize,
-                                   d_stencilIndices, d_value);
+                                   d_stencilIndices, d_valueA);
   }
-
-
-  HYPRE_StructMatrixAssemble(d_A);
-  //cerr << "Matrix Assemble time = " << Time::currentSeconds()-start_time << endl;
-
-
-  hypre_TFree(d_value);
-
-  // assemble right hand side and solution vector
-  d_value = hypre_CTAlloc(double, d_volume);
  
   i = 0;
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_value[i] = SU[IntVector(colX,colY,colZ)];
+        d_valueB[i] = SU(colX,colY,colZ);
         //cerr << "b[" << i << "] =" << d_value[i] << endl;
         i++;
       }
@@ -382,7 +392,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   }
     
   for (int ib = 0; ib < d_nblocks; ib++){
-    HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], d_value);
+    HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], d_valueB);
   }
   
   i = 0;
@@ -390,7 +400,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_value[i] = constvars->cenint[IntVector(colX, colY, colZ)];
+        d_valueX[i] = constvars->cenint(colX, colY, colZ);
         //cerr << "x0[" << i << "] =" << d_value[i] << endl;
         i++;;
       }
@@ -398,12 +408,9 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   }
     
   for (int ib = 0; ib < d_nblocks; ib++){
-    HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], d_value);
+    HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], d_valueX);
   }
 
-  HYPRE_StructVectorAssemble(d_b); 
-  HYPRE_StructVectorAssemble(d_x);
-  
 #if 0
   int patchID = patch->getID();
   char A_fname[100],B_fname[100], X_fname[100];
@@ -417,10 +424,9 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   HYPRE_StructVectorPrint(X_fname, d_x, 0);  
 #endif
   
-  hypre_TFree(d_value);
 
   if ( print_all_info ) {
-    proc0cout << " Time in HYPRE Assemble: " << Time::currentSeconds()-start_time << " seconds\n";
+    proc0cout << " Time in HYPRE setMatrix: " << Time::currentSeconds()-start_time << " seconds\n";
   } 
 }
 //______________________________________________________________________
@@ -472,6 +478,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   HYPRE_StructSolver solver, precond;
 
   double start_time = Time::currentSeconds();
+  double solveTime=0;
 
   if( d_kspType == "1" ) {
     /*Solve the system using SMG*/
@@ -484,7 +491,10 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     HYPRE_StructSMGSetNumPostRelax(solver, n_post);
     HYPRE_StructSMGSetLogging(solver, 1);
     HYPRE_StructSMGSetup(solver, d_A, d_b, d_x);
+
+   solveTime = Time::currentSeconds();
     HYPRE_StructSMGSolve(solver, d_A, d_b, d_x);
+   solveTime = Time::currentSeconds() - solveTime;
     
     HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
@@ -505,7 +515,9 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     /*HYPRE_StructPFMGSetDxyz(solver, dxyz);*/
     HYPRE_StructPFMGSetLogging(solver, 1);
     HYPRE_StructPFMGSetup(solver, d_A, d_b, d_x);
+   solveTime = Time::currentSeconds();
     HYPRE_StructPFMGSolve(solver, d_A, d_b, d_x);
+   solveTime = Time::currentSeconds() - solveTime;
     
     HYPRE_StructPFMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructPFMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
@@ -577,8 +589,11 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     //cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
     //dummy_start = Time::currentSeconds();
 
+   solveTime = Time::currentSeconds();
     HYPRE_GMRESSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
+   solveTime = Time::currentSeconds() - solveTime;
+
     //cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
     
     HYPRE_GMRESGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
@@ -655,8 +670,10 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     //cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
 
     //dummy_start = Time::currentSeconds();
+   solveTime = Time::currentSeconds();
     HYPRE_PCGSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
+   solveTime = Time::currentSeconds() - solveTime;
     //cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
     
     HYPRE_PCGGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
@@ -675,10 +692,11 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
 
   }
 
+   
   if ( print_all_info ){ 
     proc0cout << "    Direction: " << direcn << "     Sum(B) = " << sum_b << "      Init Norm: " << init_norm << "      Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << endl;
   } else { 
-    proc0cout << "    Direction: " << direcn << "     Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << endl;
+    proc0cout << "  Direction: " << direcn << "   Total Iter: " << num_iterations << "   Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << "  Solve Only:"<< solveTime<< endl;
   } 
 
   if (final_res_norm < d_residual)
@@ -709,7 +727,7 @@ RadHypreSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          vars->cenint[IntVector(colX, colY, colZ)] = xvec[i];
+          vars->cenint(colX, colY, colZ) = xvec[i];
         //cerr << "xvec[" << i << "] = " << xvec[i] << endl;
         i++;
       }
@@ -726,14 +744,16 @@ RadHypreSolver::destroyMatrix()
   /*-----------------------------------------------------------
    * Finalize things
    *-----------------------------------------------------------*/
-  int i;
+
+  double destroyTime = Time::currentSeconds();
+
   HYPRE_StructGridDestroy(d_grid);
   HYPRE_StructStencilDestroy(d_stencil);
   HYPRE_StructMatrixDestroy(d_A);
   HYPRE_StructVectorDestroy(d_b);
   HYPRE_StructVectorDestroy(d_x);
    
-  for (i = 0; i < d_nblocks; i++){
+  for (int i = 0; i < d_nblocks; i++){
     hypre_TFree(d_iupper[i]);
     hypre_TFree(d_ilower[i]);
   }
@@ -741,12 +761,20 @@ RadHypreSolver::destroyMatrix()
   hypre_TFree(d_iupper);
   hypre_TFree(d_stencilIndices);
   
-  for ( i = 0; i < d_stencilSize; i++){
+  for (int i = 0; i < d_stencilSize; i++){
     hypre_TFree(d_offsets[i]);
   }
   hypre_TFree(d_offsets);
+
+
+  hypre_TFree(d_valueA);
+  hypre_TFree(d_valueB);
+  hypre_TFree(d_valueX);
+
   
   hypre_FinalizeMemoryDebug();
+
+  destroyTime = Time::currentSeconds()-destroyTime;
 }
 
 void

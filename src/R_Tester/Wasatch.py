@@ -24,6 +24,14 @@ bc_gpu_z_ups = modUPS( the_dir, \
 bc_gpu_xyz_ups = modUPS( the_dir, \
                   "bc-test-mixed.ups", \
                    ["<patches>[1,1,1]</patches>"])
+
+gpu_compressible_1d_ups = modUPS( the_dir, \
+                  "compressible-flow-test-1d.ups", \
+                   ["<patches>[1,1,1]</patches>"])
+
+gpu_compressible_2d_ups = modUPS( the_dir, \
+                  "compressible-flow-test-2d.ups", \
+                   ["<outputTimestepInterval>1</outputTimestepInterval>", "<patches>[1,1,1]</patches>"])
                  
 scalarequationperf_ups = modUPS( the_dir, \
                                        "ScalarTransportEquation.ups", \
@@ -141,6 +149,10 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+  ("dual-time-exponential-decay", "dual-time-exp-dcay.ups",   1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("dual-time-scalar-example", "dual-time-scalar-example.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("dual-time-compressible-flow-test-1d", "dual-time-compressible-flow-test-1d.ups",  2,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("dual-time-compressible-flow-test-2d", "dual-time-compressible-flow-test-2d.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-3d", "compressible-flow-test-3d.ups",   8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-2d", "compressible-flow-test-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-1d", "compressible-flow-test-1d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
@@ -254,6 +266,14 @@ NIGHTLYTESTS = [
   ("rk2-verification-timedep-source",          rk2_verification_timedep_source_ups,   1,  "Linux",   ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "Linux",  ["exactComparison","no_restart"] )
 ]
+
+DUALTIMETESTS=[
+  ("dual-time-exponential-decay", "dual-time-exp-dcay.ups",   1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("dual-time-scalar-example", "dual-time-scalar-example.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("dual-time-compressible-flow-test-1d", "dual-time-compressible-flow-test-1d.ups",  2,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("dual-time-compressible-flow-test-2d", "dual-time-compressible-flow-test-2d.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
+]
+
 
 COMPRESSIBLETESTS=[
   ("compressible-flow-test-3d", "compressible-flow-test-3d.ups",   8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
@@ -383,12 +403,13 @@ SCALARTRANSPORTTESTS=[
 
 GPUTESTS=[
   ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-#  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-  ("bc-test-svol-gpu-x"  , bc_gpu_x_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
-  ("bc-test-svol-gpu-y"  , bc_gpu_y_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
-  ("bc-test-svol-gpu-z"  , bc_gpu_z_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),      
-  ("bc-test-svol-gpu-xyz", bc_gpu_xyz_ups, 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
-#  ("scalability-test",             "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
+  ("scalability-test"     , "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("bc-test-svol-gpu-x"   , bc_gpu_x_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("bc-test-svol-gpu-y"   , bc_gpu_y_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("bc-test-svol-gpu-z"   , bc_gpu_z_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),      
+  ("bc-test-svol-gpu-xyz" , bc_gpu_xyz_ups, 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("gpu-compressible-1d"  , gpu_compressible_1d_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("gpu-compressible-2d"  , gpu_compressible_2d_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 #  ("taylor-green-vortex-2d-xy",    "taylor-green-vortex-2d-xy.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),
 #  ("taylor-green-vortex-2d-xz",    "taylor-green-vortex-2d-xz.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),
 #  ("taylor-green-vortex-2d-yz",    "taylor-green-vortex-2d-yz.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "])
@@ -420,9 +441,9 @@ PARTICLETESTS=[
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
 #__________________________________
-ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS + COMPRESSIBLETESTS
+ALLTESTS = DUALTIMETESTS + RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS + COMPRESSIBLETESTS
 
 
 # returns the list
@@ -461,6 +482,8 @@ def getTestList(me) :
     TESTS = PARTICLETESTS   
   elif me == "COMPRESSIBLETESTS":
     TESTS = COMPRESSIBLETESTS       
+  elif me == "DUALTIMETESTS":
+    TESTS = DUALTIMETESTS           
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

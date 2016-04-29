@@ -104,6 +104,10 @@ public:
 
       void matrixCreate(const PatchSet* allpatches,
                         const PatchSubset* mypatches);
+
+      void matrixInit(const Patch* patch){ };
+
+      void gridSetup(bool plusX, bool plusY, bool plusZ){ };
                         
       void setMatrix(const ProcessorGroup* pc, 
                      const Patch* patch,

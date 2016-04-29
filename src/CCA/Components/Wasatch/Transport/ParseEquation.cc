@@ -479,13 +479,13 @@ namespace WasatchCore{
   
   std::vector<EqnTimestepAdaptorBase*>
   parse_momentum_equations( Uintah::ProblemSpecP wasatchSpec,
-                           const TurbulenceParameters turbParams,
-                           const bool useAdaptiveDt,
-                           const bool doParticles,
-                           const bool isConstDensity,
-                           const Expr::Tag densityTag,
-                           GraphCategories& gc,
-                           Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
+                            const TurbulenceParameters turbParams,
+                            const bool useAdaptiveDt,
+                            const bool doParticles,
+                            const bool isConstDensity,
+                            const Expr::Tag densityTag,
+                            GraphCategories& gc,
+                            Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;

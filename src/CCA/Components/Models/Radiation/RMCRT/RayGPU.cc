@@ -48,8 +48,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
+                      void* d_oldTaskGpuDW,
+                      void* d_newTaskGpuDW,
                       void* stream,
                       int deviceID,
                       bool modifies_divQ,
@@ -71,7 +71,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     }
     
     const Level* level = getLevel(patches);
-    const int levelIndx = level->getIndex();
 
     //__________________________________
     //  increase the size of the printbuffer on the device
@@ -79,34 +78,34 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     //__________________________________
     //
-    GPUDataWarehouse* old_taskgdw = nullptr;
-    if (oldTaskGpuDW) {
-    	old_taskgdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW)->getdevice_ptr();
-    }
+    //GPUDataWarehouse* old_taskgdw = NULL;
+    //if (oldTaskGpuDW) {
+    //	old_taskgdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW)->getdevice_ptr();
+    //}
 
-    GPUDataWarehouse* new_taskgdw = nullptr;
-    if (newTaskGpuDW) {
-    	new_taskgdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW)->getdevice_ptr();
-    }
+    //GPUDataWarehouse* new_taskgdw = NULL;
+    //if (newTaskGpuDW) {
+    //	new_taskgdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW)->getdevice_ptr();
+    //}
 
-    GPUDataWarehouse* abskg_gdw = nullptr;
-    GPUDataWarehouse* sigmaT4_gdw = nullptr;
-    GPUDataWarehouse* celltype_gdw = nullptr;
+    GPUDataWarehouse* abskg_gdw = NULL;
+    GPUDataWarehouse* sigmaT4_gdw = NULL;
+    GPUDataWarehouse* celltype_gdw = NULL;
     if (which_abskg_dw == Task::OldDW) {
-    	abskg_gdw = old_taskgdw;
+      abskg_gdw = static_cast<GPUDataWarehouse*>(d_oldTaskGpuDW);
     } else {
-    	abskg_gdw = new_taskgdw;
+      abskg_gdw = static_cast<GPUDataWarehouse*>(d_newTaskGpuDW);
     }
     if (which_sigmaT4_dw == Task::OldDW) {
-    	sigmaT4_gdw = old_taskgdw;
-	} else {
-		sigmaT4_gdw = new_taskgdw;
-	}
+    	sigmaT4_gdw = static_cast<GPUDataWarehouse*>(d_oldTaskGpuDW);
+    } else {
+      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(d_newTaskGpuDW);
+    }
     if (which_celltype_dw == Task::OldDW) {
-    	celltype_gdw = old_taskgdw;
-	} else {
-		celltype_gdw = new_taskgdw;
-	}
+      celltype_gdw = static_cast<GPUDataWarehouse*>(d_oldTaskGpuDW);
+    } else {
+      celltype_gdw = static_cast<GPUDataWarehouse*>(d_newTaskGpuDW);
+    }
 
 
     //__________________________________
@@ -143,6 +142,19 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     RT_flags.nFluxRays = d_nFluxRays;
 
     double start = clock();
+
+    //__________________________________
+    //  Level Parameters - first batch of level data
+    levelParams levelP;     
+    levelP.hasFinerLevel = level->hasFinerLevel();
+
+    Uintah::Vector dx = level->dCell();
+    levelP.Dx     = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
+    levelP.index  = level->getIndex();
+    Point anchor  = level->getAnchor();
+    levelP.anchor = GPUPoint( make_double3(anchor.x(), anchor.y(), anchor.z()));
+    IntVector RR  = level->getRefinementRatio();
+    levelP.refinementRatio = GPUIntVector( make_int3(RR.x(), RR.y(), RR.z() ) );
 
     //______________________________________________________________________
     // patch loop
@@ -201,14 +213,14 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       launchRayTraceKernel<T>(dimGrid,
                               dimBlock,
                               d_matl,
-                              levelIndx,
+                              levelP,
                               patchP,
                               (cudaStream_t*)stream,
                               RT_flags, labelNames, abskg_gdw,
                               sigmaT4_gdw,
                               celltype_gdw,
-                              old_taskgdw,
-                              new_taskgdw);
+                              static_cast<GPUDataWarehouse*>(d_oldTaskGpuDW),
+                              static_cast<GPUDataWarehouse*>(d_newTaskGpuDW));
 
       //__________________________________
       //
@@ -309,27 +321,27 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
 
     //__________________________________
     //   Assign dataWarehouses
-    //GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
-    //GPUDataWarehouse* new_gdw = new_dw->getGPUDW()->getdevice_ptr();
 
-    GPUDataWarehouse* abskg_gdw = nullptr;
-    GPUDataWarehouse* sigmaT4_gdw = nullptr;
-    GPUDataWarehouse* celltype_gdw = nullptr;
+    GPUDataWarehouse* abskg_gdw = NULL;
+    GPUDataWarehouse* sigmaT4_gdw = NULL;
+    GPUDataWarehouse* celltype_gdw = NULL;
+
     if (which_abskg_dw == Task::OldDW) {
     	abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
     } else {
     	abskg_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
     }
+
     if (which_sigmaT4_dw == Task::OldDW) {
-    	sigmaT4_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
-	} else {
-		sigmaT4_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
-	}
-    if (which_celltype_dw == Task::OldDW) {
-    	celltype_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
-	} else {
-		celltype_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
-	}
+        sigmaT4_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+    } else {
+      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+    }
+      if (which_celltype_dw == Task::OldDW) {
+        celltype_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+    } else {
+      celltype_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+    }
     
     //__________________________________
     //  RMCRT_flags

@@ -42,8 +42,6 @@
 
 namespace Uintah {
 
-  using Uintah::Exception;
-
   class Level; 
   class Patch;
 

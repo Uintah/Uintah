@@ -1,0 +1,80 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Dual Time test using dphi/dt = - phi </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+  
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+     <TimeIntegrator>FE</TimeIntegrator>
+
+    <DualTime iterations="1000" tolerance="1e-7" ds="0.01"/>
+     
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="phi-source"/>
+      <LinearFunction slope="-1.3" intercept="0.0">
+        <NameTag name="phi" state="STATE_DYNAMIC"/>
+      </LinearFunction>
+    </BasicExpression>
+
+
+    <!-- Build a cell centered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi</SolutionVariable>
+
+      <SourceTermExpression>
+        <NameTag name="phi-source"/>
+      </SourceTermExpression>
+
+    </TransportEquation>
+  </Wasatch>
+  <DataArchiver>
+    <filebase>dual-time-exp-decay.uda</filebase>
+    <checkpoint cycle="2" interval="0.1"/>    
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="phi"/>
+    <save label="phi-source"/>
+    <save label="phi_rhs"/>
+    <save label="phi_residual"/>
+  </DataArchiver> 
+
+
+  <Time>
+    <maxTime>2</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.01</delt_max>
+<!--     <max_Timesteps>10</max_Timesteps>             -->
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <Grid>
+    <Level>
+      <Box label="domain">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[2,2,2]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

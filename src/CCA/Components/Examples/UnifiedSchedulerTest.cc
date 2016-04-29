@@ -285,7 +285,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       //GPUDataWarehouse* old_gpudw = old_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
       //GPUDataWarehouse* new_gpudw = new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
       GPUGridVariable<double> device_var;
-      new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
+      new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0, 0);
         //void* device_ptr = nullptr;
         //device_var.getArray3(device_offset, device_size, device_ptr);
         //device_ptr = device_var.getPointer();

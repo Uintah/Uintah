@@ -702,11 +702,9 @@ RMCRTCommon::updateSumI (const Level* level,
 /*`==========TESTING==========*/
 #if (DEBUG == 3)
         if( isDbgCell( origin)  ){
-          Vector mytDelta = tDelta / Dx;
-          Vector myrayLoc = ray_location / Dx;
-          printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",cur.x(), cur.y(), cur.z(),rayLength, tMax[0] / Dx[0], tMax[1] / Dx[1], tMax[2] / Dx[2], mytDelta.x(), mytDelta.y() , mytDelta.z(), ray_direction.x(), ray_direction.y() , ray_direction.z());
+          printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",cur.x(), cur.y(), cur.z(),rayLength, tMax[0], tMax[1], tMax[2], tDelta.x(), tDelta.y() , tDelta.z(), ray_direction.x(), ray_direction.y() , ray_direction.z());
           printf( "                    dir: %i sign: [%g, %g, %g], step [%i, %i, %i] cur: [%i, %i, %i], prevCell: [%i, %i, %i]\n", dir, sign[0], sign[1], sign[2], step[0], step[1], step[2], cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
-          printf( "                    ray_location: [%g, %g, %g]\n", myrayLoc[0], myrayLoc[1], myrayLoc[2] );
+          printf( "                    ray_location: [%g, %g, %g]\n", rayLocation[0], rayLocation[1], rayLocation[2] );
 //          printf("                     rayDx         [%g, %g, %g]  CC_pos[%g, %g, %g]\n", rayDx[0], rayDx[1], rayDx[2], CC_pos.x(), CC_pos.y(), CC_pos.z());
         }
 #endif
