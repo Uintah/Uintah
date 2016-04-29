@@ -78,11 +78,10 @@ enum class ThreadState : int
 
 std::vector<std::thread>   g_threads{};
 TaskWorker               * g_runners[MAX_THREADS]        = {};
-volatile ThreadState       g_thread_states[MAX_THREADS]  = {};
 int                        g_cpu_affinities[MAX_THREADS] = {};
 int                        g_num_threads{-1};
 
-volatile int               g_run_tasks{0};
+volatile int               g_run_tasks{1};
 
 
 //______________________________________________________________________
@@ -108,48 +107,23 @@ void thread_driver( const int tid )
   t_tid = tid;
 
   // set each TaskWorker thread's affinity
-  set_affinity( g_cpu_affinities[tid] );
+  set_affinity(g_cpu_affinities[tid]);
 
   try {
-    // wait until main thread sets function and changes states
-    g_thread_states[tid] = ThreadState::Inactive;
-    while (g_thread_states[tid] == ThreadState::Inactive) {
-      std::this_thread::yield();
-    }
-
-    while (g_thread_states[tid] == ThreadState::Active) {
-
-      // run the function and wait for main thread to reset state
+    while (g_run_tasks) {
       g_runners[tid]->run();
-
-      g_thread_states[tid] = ThreadState::Inactive;
-      while (g_thread_states[tid] == ThreadState::Inactive) {
-        std::this_thread::yield();
-      }
     }
-  } catch (const std::exception & e) {
+  }
+  catch (const std::exception & e) {
     std::cerr << "Exception thrown from worker thread: " << e.what() << std::endl;
     std::cerr.flush();
     std::abort();
-  } catch (...) {
+  }
+  catch (...) {
     std::cerr << "Unknown Exception thrown from worker thread" << std::endl;
     std::cerr.flush();
     std::abort();
   }
-}
-
-
-//______________________________________________________________________
-// only called by thread 0 (main thread)
-void thread_fence()
-{
-  for (int i = 0; i < g_num_threads; ++i) {
-    while (g_thread_states[i] == ThreadState::Active) {
-      std::this_thread::yield();
-//      std::this_thread::sleep_for(std::chrono::nanoseconds(100));
-    }
-  }
-  std::atomic_thread_fence(std::memory_order_seq_cst);
 }
 
 
@@ -159,7 +133,6 @@ void init_threads( ThreadedMPIScheduler * sched, int num_threads )
 {
   g_num_threads = num_threads;
   for (int i = 0; i < g_num_threads; ++i) {
-    g_thread_states[i]  = ThreadState::Active;
     g_cpu_affinities[i] = i;
   }
 
@@ -174,10 +147,8 @@ void init_threads( ThreadedMPIScheduler * sched, int num_threads )
 
   // spawn worker threads
   for (int i = 0; i < g_num_threads; ++i) {
-	Impl::g_threads.emplace_back(std::thread(thread_driver, i));
+    Impl::g_threads.emplace_back(std::thread(thread_driver, i));
   }
-  // sync threads
-  thread_fence();
 }
 
 } // namespace
@@ -190,7 +161,7 @@ ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup       * myworld
                                           , const Output               * oport
                                           ,       ThreadedMPIScheduler * parentScheduler
                                           )
-  : MPIScheduler(myworld, oport, parentScheduler)
+  : MPIScheduler( myworld, oport, parentScheduler )
 {
   if (g_output_mpi_info) {
     char filename[64];
@@ -219,11 +190,11 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
   }
 
   // join threads
-  for( int i = 0; i < m_num_threads; ++i ){
-	Impl::g_runners[i]->m_run_mutex.lock();
-	Impl::g_runners[i]->m_run_signal.notify_one();
-	Impl::g_runners[i]->m_run_mutex.unlock();
-	Impl::g_threads[i].join();
+  for (int i = 0; i < m_num_threads; ++i) {
+    Impl::g_runners[i]->m_run_mutex.lock();
+    Impl::g_runners[i]->m_run_signal.notify_one();
+    Impl::g_runners[i]->m_run_mutex.unlock();
+    Impl::g_threads[i].join();
   }
 
 }
@@ -232,8 +203,9 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
 //
 
 void
-ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
-                                          SimulationStateP& state)
+ThreadedMPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
+                                  ,       SimulationStateP & state
+                                  )
 {
   // Default taskReadyQueueAlg
   m_task_queue_alg = MostMessages;
@@ -307,8 +279,7 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // this spawns threads, sets affinity, etc
-  Impl::init_threads(this, m_num_threads);
-
+  init_threads(this, m_num_threads);
   SchedulerCommon::problemSetup(prob_spec, state);
 }
 
@@ -333,8 +304,9 @@ ThreadedMPIScheduler::createSubScheduler()
 //
 
 void
-ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
-                               int iteration /* = 0 */ )
+ThreadedMPIScheduler::execute( int tgnum     /* = 0 */
+                             , int iteration /* = 0 */
+                             )
 {
   // copy data timestep must be single threaded for now
   if (d_sharedState->isCopyDataTimestep()) {
@@ -402,16 +374,6 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
 	Impl::g_runners[i]->resetWaittime(Time::currentSeconds());
   }
 
-  //------------------------------------------------------------------------------------------------
-  // activate TaskRunners
-  //------------------------------------------------------------------------------------------------
-  if (!d_sharedState->isCopyDataTimestep()) {
-    Impl::g_run_tasks = 1;
-    for (int i = 0; i < m_num_threads; ++i) {
-      Impl::g_thread_states[i] = Impl::ThreadState::Active;
-    }
-  }
-  //------------------------------------------------------------------------------------------------
 
   // The main task loop
   while (numTasksDone < ntasks) {
@@ -471,19 +433,13 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
 
   }  // end while( numTasksDone < ntasks )
 
-  //------------------------------------------------------------------------------------------------
-  // deactivate TaskRunners
-  //------------------------------------------------------------------------------------------------
-  if (!d_sharedState->isCopyDataTimestep()) {
-    Impl::g_run_tasks = 0;
 
-    Impl::thread_fence();
-
-    for (int i = 0; i < m_num_threads; ++i) {
-      Impl::g_thread_states[i] = Impl::ThreadState::Inactive;
-    }
+  // wait for all tasks to finish
+  while (getAvailableThreadNum() < m_num_threads) {
+    // if any thread is busy, conditional wait here
+    std::unique_lock<std::mutex> next_lock(g_next_mutex);
+    g_next_signal.wait(next_lock, [this](){ return getAvailableThreadNum() == m_num_threads; });
   }
-  //------------------------------------------------------------------------------------------------
 
 
   if (g_output_mpi_info) {
@@ -554,10 +510,10 @@ int ThreadedMPIScheduler::getAvailableThreadNum()
 //______________________________________________________________________
 //
 
-void ThreadedMPIScheduler::assignTask( DetailedTask* task,
-                                       int           iteration )
+void ThreadedMPIScheduler::assignTask( DetailedTask * task
+                                     , int            iteration
+                                     )
 {
-  g_next_mutex.lock();
   if (getAvailableThreadNum() == 0) {
     std::unique_lock<std::mutex> next_lock(g_next_mutex);
     g_next_signal.wait(next_lock, [this](){return getAvailableThreadNum() > 0;});
@@ -571,7 +527,6 @@ void ThreadedMPIScheduler::assignTask( DetailedTask* task,
       break;
     }
   }
-  g_next_mutex.unlock();
 
   ASSERT(target_runner >= 0);
 
@@ -581,6 +536,14 @@ void ThreadedMPIScheduler::assignTask( DetailedTask* task,
   Impl::g_runners[target_runner]->m_run_signal.notify_one();
   Impl::g_runners[target_runner]->m_run_mutex.unlock();
 }
+
+//______________________________________________________________________
+//
+void ThreadedMPIScheduler::init_threads(ThreadedMPIScheduler * sched, int num_threads )
+{
+  Impl::init_threads(sched, num_threads);
+}
+
 
 //------------------------------------------
 // TaskWorker Thread Methods
@@ -594,13 +557,13 @@ TaskWorker::TaskWorker( ThreadedMPIScheduler * scheduler )
 
 //______________________________________________________________________
 //
-
 void
 TaskWorker::run()
 {
   while (true) {
+
     std::unique_lock<std::mutex> next_lock(m_run_mutex);
-    m_run_signal.wait(next_lock, [this](){return m_task != nullptr;}); // wait for main thread signal
+    m_run_signal.wait(next_lock, [this](){ return m_task != nullptr; }); // wait for main thread signal
     m_run_mutex.unlock();
     m_wait_time += Time::currentSeconds() - m_wait_start;
 
@@ -609,6 +572,7 @@ TaskWorker::run()
     }
 
     ASSERT(m_task != nullptr);
+
     try {
       if (m_task->getTask()->getType() == Task::Reduction) {
         m_scheduler->initiateReduction(m_task);
@@ -628,13 +592,11 @@ TaskWorker::run()
     }
 
     // Signal main thread for next task.
-//    g_next_mutex.lock();
     m_run_mutex.lock();
     m_task = nullptr;
     m_iteration = 0;
     m_wait_start = Time::currentSeconds();
     g_next_signal.notify_one();
-//    g_next_mutex.unlock();
   }
 }
 

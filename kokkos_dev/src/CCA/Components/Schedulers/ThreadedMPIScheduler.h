@@ -103,6 +103,10 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
     int getAvailableThreadNum();
 
+    static void init_threads( ThreadedMPIScheduler * scheduler, int num_threads );
+
+  private:
+
     QueueAlg                 m_task_queue_alg{MostMessages};
     int                      m_num_threads{-1};
 };
