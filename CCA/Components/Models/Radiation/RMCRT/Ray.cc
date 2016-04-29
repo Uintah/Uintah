@@ -35,7 +35,7 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if 0 && defined(UINTAH_ENABLE_KOKKOS)
 #include <Core/Grid/Variables/BlockRange.h>
 #include <Kokkos_Core.hpp>
 #endif // end UINTAH_ENABLE_KOKKOS
@@ -113,7 +113,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_radiometer     = NULL;
   d_dbgCells.push_back( IntVector(0,0,0));
   d_dbgCells.push_back( IntVector(5,5,5));
-  
+
   d_halo          = IntVector(-9,-9,-9);
   d_rayDirSampleAlgo = NAIVE;
   d_cellTypeCoarsenLogic = ROUNDUP;
@@ -188,7 +188,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   proc0cout << "__________________________________ " << endl;
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if 0 && defined(UINTAH_ENABLE_KOKKOS)
   proc0cout << "  RMCRT:  Using the Kokkos-based implementation of RMCRT." << endl;
 #endif
 
@@ -292,7 +292,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
     }
   }
-  
+
   //__________________________________
   //  Logic for coarsening of cellType
   if (isMultilevel){
@@ -302,7 +302,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       d_cellTypeCoarsenLogic = ROUNDDOWN;
       proc0cout << "  RMCRT: When coarsening cellType any partial cell is ROUNDEDDOWN to a FLOW cell" << endl;
     }
-    
+
     if (tmp == "ROUNDUP") {
       d_cellTypeCoarsenLogic = ROUNDUP;
       proc0cout << "  RMCRT: When coarsening cellType any partial cell is rounded UP to a INTRUSION cell" << endl;
@@ -494,7 +494,7 @@ Ray::sched_rayTrace( const LevelP& level,
 
 }
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if 0 && defined(UINTAH_ENABLE_KOKKOS)
 
 namespace {
 
@@ -1157,7 +1157,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
             }
 
             rayLocation_cellFace( mTwister, RayFace, Dx, CC_pos, rayOrigin);
-            
+
             updateSumI<T>( level, direction_vector, rayOrigin, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
@@ -1193,7 +1193,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //______________________________________________________________________
   if( d_solveDivQ){
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if 0 && defined(UINTAH_ENABLE_KOKKOS)
 
     bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
 
@@ -2520,9 +2520,9 @@ void Ray::computeCellType( const ProcessorGroup*,
       IntVector c = *iter;
 
       double tmp = (double) cellType_coarse[c] * inv_RR;
-      // Default 
+      // Default
       cellType_coarse[c] = (int) tmp;
-      
+
       if (tmp != FLOWCELL){
         //__________________________________
         // ROUND DOWN
@@ -2757,11 +2757,11 @@ void Ray::computeCellType( const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #ifdef FAST_EXP
-      double expOpticalThick = fast_exp(-optical_thickness); 
+      double expOpticalThick = fast_exp(-optical_thickness);
 #else
       double expOpticalThick = exp(-optical_thickness);
 #endif
-/*===========TESTING==========`*/      
+/*===========TESTING==========`*/
 
       sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
 
