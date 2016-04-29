@@ -25,6 +25,7 @@
 #define UINTAH_HOMEBREW_CONSTVARIABLE_H
 
 #include <Core/Grid/Variables/constVariableBase.h>
+#include <Core/Grid/Variables/BlockRange.hpp>
 #include <Core/Util/Assert.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -139,13 +140,17 @@ WARNING
         auto v = this->rep_.getKokkosView();
         return KokkosView3<const T>( v.m_view, v.m_i, v.m_j, v.m_k );
       }
-#else //UINTAH_ENABLE_KOKKOS
-      inline const T& operator()(int i, int j, int k) const
-      {
-        return this->rep_(i,j,k);
-      }
-#endif
+#endif //UINTAH_ENABLE_KOKKOS
+    
+    inline const T& operator()(int i, int j, int k) const
+    {
+      return this->rep_(i,j,k);
+    }
 
+    BlockRange range() const
+    {
+      return this->rep_.range();
+    }
 
     virtual const TypeDescription* virtualGetTypeDescription() const
     { return this->rep_.virtualGetTypeDescription(); }
