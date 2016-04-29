@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from os import environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
+from os import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
 from time import strftime,time,gmtime,asctime,localtime
 from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
@@ -292,7 +292,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         print( "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n" )
         continue
     
-    if dbg_opt == "opt" : # qwerty: Think this is right now...
+    if dbg_opt == "opt" :
       do_memory = 0
 
     if environ['SCI_MALLOC_ENABLED'] != "yes" :
@@ -300,6 +300,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       
     if do_gpu == 1 and has_gpu == 1:
       environ['SCI_DEBUG'] = "SingleDevice:+"
+      environ['CUDA_VISIBLE_DEVICES'] = "0"            # This will have to change for multiple GPU runs.  May need to make it a machine dependent environmenal variable
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
     tolerances  = [abs_tolerance, rel_tolerance]
@@ -540,17 +541,22 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   if not do_memory_test :
       unsetenv('MALLOC_STATS')
-      
-  MPIHEAD="%s -np" % MPIRUN       #default 
+
+  if getenv('MALLOC_STATS') == None:
+    MALLOCSTATS = ""
+  else:
+    MALLOCSTATS = "-x MALLOC_STATS"
+
+  MPIHEAD="%s -np" % MPIRUN       #default  
   
   # pass in environmental variables to mpirun
   if environ['OS'] == "Linux":
-    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN 
+    MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
   
                                    # openmpi
   rc = system("mpirun -x TERM echo 'hello' > /dev/null 2>&1")
   if rc == 0:
-    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN
+    MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
   
                                    #  mvapich
   rc = system("mpirun -genvlist TERM echo 'hello' > /dev/null 2>&1")

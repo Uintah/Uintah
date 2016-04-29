@@ -122,7 +122,7 @@ namespace WasatchCore{
       TreePtr tree;
     };
     typedef std::map< int, Info > PatchTreeTaskMap;
-
+    
     Uintah::SchedulerP& scheduler_;
     const Uintah::PatchSet* const patches_;
     const Uintah::MaterialSet* const materials_;
@@ -144,7 +144,7 @@ namespace WasatchCore{
                   void* new_TaskGpuDW,
                   void* stream,  // for GPU tasks, this is the associated stream
                   int deviceID,
-                  const int rkStage );
+                  const int rkStage);
 
 # ifdef HAVE_CUDA
 
@@ -226,6 +226,7 @@ namespace WasatchCore{
      *  \param lockAllFields if true, then all fields will be marked persistent.
      *         Otherwise, memory will be reclaimed when possible.
      */
+
     TreeTaskExecute( TreeMap& treeMap,
                      const std::string taskName,
                      Uintah::SchedulerP& scheduler,
@@ -242,8 +243,11 @@ namespace WasatchCore{
     void schedule( Expr::TagSet newDWFields, const int rkStage );
 
     PatchTreeTaskMap& get_patch_tree_map() {return patchTreeMap_;}
+    
+    Expr::FieldManagerList& get_fml(){return *fml_;}
 
   };
+  
 
   //------------------------------------------------------------------
 
@@ -303,6 +307,8 @@ namespace WasatchCore{
 
         const Expr::Tag fieldStateN   ( iof, Expr::STATE_N    );
         const Expr::Tag fieldStateNONE( iof, Expr::STATE_NONE );
+        const Expr::Tag fieldStateNP1 ( iof, Expr::STATE_NP1  );
+        
         if( tree->has_field(fieldStateN) ){
           if( tree->has_expression(tree->get_id(fieldStateN)) ){
             tree->set_expr_is_persistent( fieldStateN, *fml_ );
@@ -312,6 +318,17 @@ namespace WasatchCore{
           if( tree->has_expression(tree->get_id(fieldStateNONE)) ){
             tree->set_expr_is_persistent( fieldStateNONE, *fml_ );
           }
+        }
+        if( tree->has_field(fieldStateNP1) ){
+          if( tree->has_expression(tree->get_id(fieldStateNP1)) ){
+            tree->set_expr_is_persistent( fieldStateNP1, *fml_ );
+          }
+        }
+
+        // the error norm computed by the dual time integrator needs to be also persistent
+        const Expr::Tag normTag = Expr::Tag(iof + "_err_norm", Expr::STATE_NONE);
+        if (tree->has_field(normTag) ) {
+          tree->set_expr_is_persistent(normTag, *fml_);
         }
 
       } // loop over persistent fields
@@ -334,7 +351,6 @@ namespace WasatchCore{
       info.task = tsk;
       info.tree = tree;
       patchTreeMap_[patchID] = info;
-
     } // loop over trees
 
   }
@@ -442,6 +458,8 @@ namespace WasatchCore{
 
         //________________
         // set field mode
+        fieldInfo.useParentOldDataWarehouse = false;
+        const bool hasDualTime = WasatchCore::Wasatch::has_dual_time();
         if( tree.computes_field( fieldTag ) ){
 
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
@@ -455,6 +473,7 @@ namespace WasatchCore{
         else if( fieldTag.context() == Expr::STATE_N ){
           fieldInfo.mode = Expr::REQUIRES;
           fieldInfo.useOldDataWarehouse = true;
+          fieldInfo.useParentOldDataWarehouse = hasDualTime? true : false;
         }
         else if( fieldTag.context() == Expr::STATE_NP1 ){
           fieldInfo.mode = Expr::REQUIRES;
@@ -470,8 +489,20 @@ namespace WasatchCore{
             fieldInfo.useOldDataWarehouse = false;
         }
 
-        const Uintah::Task::WhichDW dw = ( fieldInfo.useOldDataWarehouse ) ? Uintah::Task::OldDW : Uintah::Task::NewDW;
-
+        
+        // here's what's happening here:
+        /*
+         _____________________________________________________________________________
+         | INTEGRATOR  |    STATE_N            |  STATE_NONE |  STATE_DYNAMIC          |
+         |-------------|-----------------------|-------------|-------------------------|
+         | REGULAR     | Task::OldDW           | Task::NewDW | stage==1? OldDW : NewDW |
+         |-------------|-----------------------|-------------|-------------------------|
+         | DUAL TIME   | Task::ParentOldDW     | Task::NewDW | Task::OldDW             |
+         |_____________|_______________________|_____________|_________________________|
+         */
+        const Uintah::Task::WhichDW dw = ( fieldInfo.useOldDataWarehouse ) ? ( (fieldTag.context() == Expr::STATE_DYNAMIC) ? Uintah::Task::OldDW : ( hasDualTime ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW) )  : Uintah::Task::NewDW;
+//        const Uintah::Task::WhichDW dw = ( fieldInfo.useOldDataWarehouse ) ? Uintah::Task::ParentOldDW : Uintah::Task::NewDW;
+        
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:
@@ -703,7 +734,7 @@ namespace WasatchCore{
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );
           tree->execute_tree();
-
+          
           dbg_tasks << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
           fml_->deallocate_fields();
         }
@@ -711,6 +742,107 @@ namespace WasatchCore{
           proc0cout << e.what() << endl;
           throw std::runtime_error( "Error" );
         }
+      }
+    }
+  }
+
+  //------------------------------------------------------------------
+  
+  TaskInterface::TaskInterface( const IDSet& roots,
+                               const std::string taskName,
+                               Expr::ExpressionFactory& factory,
+                               const Uintah::LevelP& level,
+                               Uintah::SchedulerP& sched,
+                               const Uintah::PatchSet* patches,
+                               const Uintah::MaterialSet* const materials,
+                               const PatchInfoMap& info,
+                               DTIntegratorMapT& dualTimeIntegrators,
+                               const std::vector<std::string> & varNames,
+                               const std::vector<Expr::Tag>   & rhsTags,
+                               Uintah::SimulationStateP state,
+                               const std::set<std::string>& ioFieldSet,
+                               const bool lockAllFields)
+  {
+    // only set up trees on the patches that we own on this process.
+    const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+    const Uintah::PatchSubset* const localPatches = perproc_patchset->getSubset(Uintah::Parallel::getMPIRank());
+    
+    typedef std::map<int,TreeMap> TreeMapTranspose;
+    TreeMapTranspose trLstTrns;
+    
+    const TagNames& tags = TagNames::self();
+    
+    for( int ip=0; ip<localPatches->size(); ++ip ){
+      const int patchID = localPatches->get(ip)->getID();
+      TreePtr tree( scinew Expr::ExpressionTree(roots,factory,patchID,taskName) );
+      
+      // tsaad: for the moment, just use a fixed point integrator with BDF order 1
+      dualTimeIntegrators[patchID] = scinew Expr::DualTime::FixedPointBDFDualTimeIntegrator<SVolField>(tree.get(),
+                                                                                                       &factory,
+                                                                                                       patchID, "Wasatch Dual Time Integrator",
+                                                                                                       tags.dt,
+                                                                                                       tags.ds,
+                                                                                                       tags.timestep,
+                                                                                                       1,
+                                                                                                       Expr::STATE_DYNAMIC);
+      
+      Expr::DualTime::BDFDualTimeIntegrator& dtIntegrator = *dualTimeIntegrators[patchID];
+      dtIntegrator.set_dual_time_step_expression(factory.get_id(tags.ds));
+
+      for (int i=0; i<varNames.size(); i++) {
+        dtIntegrator.add_variable<SVolField>(varNames[i], rhsTags[i]);
+      }
+      dtIntegrator.prepare_for_integration<SVolField>();
+      
+      const TreeList treeList = (dtIntegrator.get_tree()).split_tree();
+      
+      // write out graph information.
+      if( Uintah::Parallel::getMPIRank() == 0 && ip == 0 ){
+        const bool writeTreeDetails = dbg_tasks_on;
+        if( treeList.size() > 1 ){
+          std::ostringstream fnam;
+          fnam << tree->name() << "_original.dot";
+          proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
+          std::ofstream fout( fnam.str().c_str() );
+          tree->write_tree(fout,false,writeTreeDetails);
+        }
+        BOOST_FOREACH( TreePtr tr, treeList ){
+          std::ostringstream fnam;
+          fnam << tr->name() << ".dot";
+          std::ofstream fout( fnam.str().c_str() );
+          tr->write_tree(fout,false,writeTreeDetails);
+        }
+      }
+      
+      // Transpose the storage so that we have a vector with each entry in the
+      // vector containing the map of patch IDs to each tree
+      for( size_t i=0; i<treeList.size(); ++i ){
+        trLstTrns[i][patchID] = treeList[i];
+      }
+      
+    } // patch loop
+    
+    //__________________________________________________________________________
+    // create a TreeTaskExecute for each tree (on all patches)
+    
+    // set persistency on ALL transported variables. Important for Uintah.
+    std::set<std::string> persistentFields = ioFieldSet;
+    BOOST_FOREACH(const std::string& var, varNames)
+    {
+      persistentFields.insert(var);
+    }
+
+    BOOST_FOREACH( TreeMapTranspose::value_type& tlpair, trLstTrns ){
+      TreeMap& tl = tlpair.second;
+      TreeTaskExecute* tskExec = scinew TreeTaskExecute( tl, tl.begin()->second->name(),
+                                                        sched, patches, materials,
+                                                        info, 0, state,
+                                                        persistentFields, lockAllFields );
+      execList_.push_back( tskExec );
+      
+      for( int ip=0; ip<localPatches->size(); ++ip ){
+        const int patchID = localPatches->get(ip)->getID();
+        dualTimeIntegrators[patchID]->set_fml(tskExec->get_fml());
       }
     }
   }

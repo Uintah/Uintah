@@ -165,6 +165,67 @@ namespace WasatchCore{
 
   //------------------------------------------------------------------
 
+  // jcs this should be done on a single patch, since the PatchInfo is for a single patch.
+  void
+  TimeStepper::create_dualtime_tasks( const PatchInfoMap& patchInfoMap,
+                            const Uintah::PatchSet* const patches,
+                            const Uintah::MaterialSet* const materials,
+                            const Uintah::LevelP& level,
+                            Uintah::SchedulerP& sched,
+                            DTIntegratorMapT& dualTimeIntegrators_,
+                            const std::set<std::string>& ioFieldSet )
+  {
+    // need to explicitly make all RHS fields persistent.  This avoids the situation
+    // where they may be internal nodes in a graph and could thus turn into "temporary"
+    // fields, leading to non-exposure to Uintah and bad things...
+    std::set<std::string> persistentFields( ioFieldSet );
+    //BOOST_FOREACH( const FieldInfo<SpatialOps::SVolField>& f, scalarFields_ ) persistentFields.insert( f.rhsTag.name() );
+
+    std::vector<std::string> varNames;
+    std::vector<Expr::Tag> rhsTags;
+    BOOST_FOREACH( const FieldInfo<SpatialOps::SVolField>& f, scalarFields_ ) {
+      varNames.push_back(f.varname);
+      rhsTags.push_back(f.rhsTag);
+      persistentFields.insert( f.rhsTag.name() );
+    }
+    
+    //_________________________________________________________________
+    // Schedule the task to compute the RHS for the transport equations
+    //
+    try{
+      
+      TaskInterface* rhsTask = scinew TaskInterface( solnGraphHelper_->rootIDs,
+                                                    "rhs",
+                                                    *(solnGraphHelper_->exprFactory),
+                                                    level, sched, patches, materials,
+                                                    patchInfoMap,
+                                                    dualTimeIntegrators_,
+                                                    varNames,
+                                                    rhsTags,
+                                                    sharedState_,
+                                                    persistentFields );
+
+      taskInterfaceList_.push_back( rhsTask );
+      
+      rhsTask->schedule(); // must be scheduled after coordHelper_
+    }
+    catch( std::exception& e ){
+      std::ostringstream msg;
+      msg << "*************************************************" << endl
+      << "Error building ExpressionTree for RHS evaluation." << endl
+      << " root nodes: ";
+      for( IDSet::const_iterator id = solnGraphHelper_->rootIDs.begin(); id!=solnGraphHelper_->rootIDs.end(); ++id ){
+        msg << solnGraphHelper_->exprFactory->get_labels(*id);
+      }
+      msg << endl << e.what() << endl
+      << "*************************************************" << endl << endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+
+  }
+
+  //------------------------------------------------------------------
+  
   template<typename FieldT>
   void
   TimeStepper::add_equation( const std::string& solnVarName,
@@ -179,10 +240,11 @@ namespace WasatchCore{
     fields.insert( FieldInfo<FieldT>( solnVarName, solnVarTag, rhsVarTag ) );
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
-    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
-    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
-    
-    postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)), true );    
+    Expr::ExpressionFactory& solnFactory = *solnGraphHelper_->exprFactory;
+    solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
+    const Expr::ExpressionID np1ID = solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
+    solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NONE   )), true );
+    postProcGraphHelper_->exprFactory->register_expression ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );    
   }
 
   //------------------------------------------------------------------

@@ -469,9 +469,15 @@ namespace WasatchCore {
 
     //----------------------------------------------------------
     // body force tags
+    if( bodyForceTags.size() != 3 ){
+      std::ostringstream msg;
+      msg << "ERROR: You must specify three tags for the body force." << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+
+    }
     typedef ExprAlgebra<SVolField> ExprAlgbr;
     const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_DYNAMIC);
-    if (bodyForceTags_[0] != Expr::Tag()) {
+    if( bodyForceTags_[0] != Expr::Tag() ){
       const Expr::Tag xBodyForceWorkTag("xBodyForceWork", Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( rhoTag, velTags_[0], bodyForceTags_[0] ) );
       solnFactory.register_expression( new ExprAlgbr::Builder( xBodyForceWorkTag,
@@ -480,7 +486,7 @@ namespace WasatchCore {
       solnFactory.attach_dependency_to_expression(xBodyForceWorkTag, this->rhsTag_);
     }
     
-    if (bodyForceTags_[1] != Expr::Tag()) {
+    if( bodyForceTags_[1] != Expr::Tag() ){
       const Expr::Tag yBodyForceWorkTag("yBodyForceWork", Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( rhoTag, velTags_[1], bodyForceTags_[1] ) );
       solnFactory.register_expression( new ExprAlgbr::Builder( yBodyForceWorkTag,
@@ -489,7 +495,7 @@ namespace WasatchCore {
       solnFactory.attach_dependency_to_expression(yBodyForceWorkTag, this->rhsTag_);
     }
 
-    if (bodyForceTags_[2] != Expr::Tag()) {
+    if( bodyForceTags_[2] != Expr::Tag() ){
       const Expr::Tag zBodyForceWorkTag("zBodyForceWork", Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( rhoTag, velTags_[2], bodyForceTags_[2] ) );
       solnFactory.register_expression( new ExprAlgbr::Builder( zBodyForceWorkTag,

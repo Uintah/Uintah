@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 #
 #
-#
-#
-#
 # Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -43,49 +40,43 @@ SRCDIR := CCA/Components/Wasatch
 ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
   # Do not put the extension on files in this list as the .cc or .cu will
   # be added automatically as needed.
-  CUDA_ENABLED_SRCS =  \
+  CUDA_ENABLED_SRCS := \
 	TimeStepper    \
 	Wasatch
+else
+  CUDA_ENABLED_SRCS :=
 endif
 
 ifeq ($(HAVE_CUDA),yes)
-
    # CUDA enabled files, listed here (and with a rule at the end of
    # this sub.mk) are copied to the binary side and renamed with a .cu
    # extension (.cc replaced with .cu) so that they can be compiled
    # using the nvcc compiler.
-
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
    DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
-
 else
-
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).cc)
-
 endif
 
 # Only list of src files needed for Arches support here!
 SRCS +=                                              \
+        $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/ConvectiveInterpolationMethods.cc  \
         $(SRCDIR)/FieldAdaptor.cc                    \
-        $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/ParticlesHelper.cc                 
 
 # All other src files for Wastach should be listed here:
 ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
   SRCS +=                                            \
-        $(SRCDIR)/BCHelper.cc                        \
-        $(SRCDIR)/WasatchBCHelper.cc                 \
         $(SRCDIR)/CoordinateHelper.cc                \
-        $(SRCDIR)/FieldAdaptor.cc                    \
         $(SRCDIR)/GraphHelperTools.cc                \
         $(SRCDIR)/OldVariable.cc                     \
         $(SRCDIR)/ParseTools.cc                      \
-        $(SRCDIR)/ParticlesHelper.cc                 \
         $(SRCDIR)/Properties.cc                      \
         $(SRCDIR)/ReductionHelper.cc                 \
         $(SRCDIR)/TagNames.cc                        \
         $(SRCDIR)/TaskInterface.cc                   \
+        $(SRCDIR)/WasatchBCHelper.cc                 \
         $(SRCDIR)/WasatchParticlesHelper.cc          
 endif
 
@@ -133,14 +124,10 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 # Rules to copy CUDA enabled source (.cc) files to the binary build tree
 # and rename with a .cu extension.
 #
-
 ifeq ($(HAVE_CUDA),yes)
-  # If Copy the 'original' .cc files into the binary tree and rename as .cu
-
+  # Copy the 'original' .cc files into the binary tree and rename as .cu
   $(OBJTOP_ABS)/$(SRCDIR)/TimeStepper.cu : $(SRCTOP_ABS)/$(SRCDIR)/TimeStepper.cc
 	cp $< $@
-
   $(OBJTOP_ABS)/$(SRCDIR)/Wasatch.cu : $(SRCTOP_ABS)/$(SRCDIR)/Wasatch.cc
 	cp $< $@
-
 endif

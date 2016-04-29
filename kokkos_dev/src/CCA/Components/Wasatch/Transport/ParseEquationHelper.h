@@ -39,25 +39,23 @@ namespace WasatchCore{
    * \param densityTag the mixture mass density
    * \param primVarTag The primitive variable, \f$\phi\f$.
    * \param turbDiffTag The scalar turbulent diffusivity
-   * \param suffix a string containing the "_*" suffix or not, according to whether we
-   *        want to calculate the convection term at time step "n+1" or the current time step
    * \param factory the factory to register the resulting expression on
    * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
    */
   template< typename FieldT>
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
-                                       const Expr::Tag densityTag,
-                                       const Expr::Tag primVarTag,
-                                       const Expr::Tag turbDiffTag,
-                                       Expr::ExpressionFactory& factory,
-                                       FieldTagInfo& info );
+                                        const Expr::Tag densityTag,
+                                        const Expr::Tag primVarTag,
+                                        const Expr::Tag turbDiffTag,
+                                        Expr::ExpressionFactory& factory,
+                                        FieldTagInfo& info );
   template< typename FieldT>
   void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
-                                           const Expr::Tag primVarTag,
-                                           const Expr::Tag turbDiffTag,
-                                           Expr::ExpressionFactory& factory,
-                                           FieldTagInfo& info );
-  
+                                            const Expr::Tag primVarTag,
+                                            const Expr::Tag turbDiffTag,
+                                            Expr::ExpressionFactory& factory,
+                                            FieldTagInfo& info );
+
   /**
    * \brief Build the convective flux expression
    * \param dir the direction that this flux is associated with
@@ -66,34 +64,30 @@ namespace WasatchCore{
    *        flux, populate it to use a flux expression that already exists.
    * \param convMethod the upwind method to use
    * \param advVelocityTag the advecting velocity, which lives at staggered cell centers
-   * \param suffix a string containing the "_*" suffix or not, according to whether we
-   *        want to calculate the convection term at time step "n+1" or the current time step
    * \param factory the factory to associate the convective flux expression with
    * \param info this will be populated for use in the ScalarRHS expression if needed.
    */
   template< typename FieldT >
   void setup_convective_flux_expression( const std::string& dir,
-                                        const Expr::Tag& solnVarTag,
-                                        Expr::Tag convFluxTag,
-                                        const ConvInterpMethods convMethod,
-                                        const Expr::Tag& advVelocityTag,
-                                        Expr::ExpressionFactory& factory,
-                                        FieldTagInfo& info );
+                                         const Expr::Tag& solnVarTag,
+                                         Expr::Tag convFluxTag,
+                                         const ConvInterpMethods convMethod,
+                                         const Expr::Tag& advVelocityTag,
+                                         Expr::ExpressionFactory& factory,
+                                         FieldTagInfo& info );
   
   /**
    * \brief Register convective flux calculation for the given scalar quantity
    * \param convFluxParams Parser block "ConvectiveFlux"
    * \param solnVarTag the solution variable to be advected
-   * \param suffix a string containing the "_*" suffix or not, according to whether we
-   *        want to calculate the convection term at time step "n+1" or the current time step
    * \param factory the factory to register the resulting expression on
    * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
    */
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
-                                        const Expr::Tag& solnVarTag,
-                                        Expr::ExpressionFactory& factory,
-                                        FieldTagInfo& info );
+                                         const Expr::Tag& solnVarTag,
+                                         Expr::ExpressionFactory& factory,
+                                         FieldTagInfo& info );
 
 }// namespace WasatchCore
 

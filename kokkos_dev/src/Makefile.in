@@ -91,7 +91,7 @@ ifeq ($(BUILD_WASATCH_FOR_ARCHES),yes)
   WASATCH_LIB        = CCA/Components/Wasatch
 endif
 
-ALL_PSE_LIBS =             \
+ALL_PSE_CORE_LIBS =        \
         Core/Containers    \
         Core/DataArchive   \
         Core/Disclosure    \
@@ -105,8 +105,11 @@ ALL_PSE_LIBS =             \
         Core/OS            \
         Core/Parallel      \
         Core/ProblemSpec   \
-        Core/Util          \
-        CCA/Ports          \
+        Core/Util          
+
+ALL_PSE_LIBS =                              \
+        $(ALL_PSE_CORE_LIBS)                \
+        CCA/Ports                           \
         CCA/Components/DataArchiver         \
         CCA/Components/Examples             \
         CCA/Components/LoadBalancers        \

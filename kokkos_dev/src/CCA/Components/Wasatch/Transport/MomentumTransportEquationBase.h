@@ -123,11 +123,13 @@ namespace WasatchCore{
 
     /**
      *  \brief Construct a MomentumTransportEquationBase
+     *  \param momComponent the direction of this component of momentum
      *  \param velName the name of the velocity component solved by this MomentumTransportEquationBase
      *  \param momName the name of the momentum component solved by this MomentumTransportEquationBase
      *  \param densTag the tag for the mixture mass density
      *  \param isConstDensity
      *  \param bodyForceTag tag for body force
+     *  \param srcTermTag if not empty, this specifies a tag for an expression to add as a momentum source.
      *  \param gc
      *  \param params Parser information for this momentum equation
      *  \param turbulenceParams

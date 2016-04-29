@@ -60,7 +60,9 @@ namespace WasatchCore {
      *  \param temperatureTag a tag for the temperature
      *  \param pressureTag a tag for the temperature
      *  \param velTags tags for the x-, y- and z-components of velocity.
+     *  \param bodyForceTags the TagList of body forces for each of the three directions
      *  \param viscTag the tag for the viscosity
+     *  \param dilTag the tag for the dilatation
      *  \param turbulenceParams
      */
     TotalInternalEnergyTransportEquation( const std::string e0Name,

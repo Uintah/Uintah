@@ -59,7 +59,7 @@ unifiedSchedulerTestKernel( int                patchID,
 
   const GPUGridVariable<double> phi;
   GPUGridVariable<double> newphi;
-  old_gpudw->get(phi, "phi", patchID, 0);
+  old_gpudw->get(phi, "phi", patchID, 0, 0);
 
   new_gpudw->getModifiable(newphi, "phi", patchID, 0);
   //if (blockIdx.x == 0 && blockIdx.y == 0 && blockIdx.z == 0 && threadIdx.x == 0 && threadIdx.y == 0) {

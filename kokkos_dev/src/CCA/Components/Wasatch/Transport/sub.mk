@@ -21,13 +21,9 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 # 
-# 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/Wasatch/Transport
+SRCDIR := CCA/Components/Wasatch/Transport
 
 #
 # These are files that if CUDA is enabled (via configure), must be
@@ -36,28 +32,23 @@ SRCDIR   := CCA/Components/Wasatch/Transport
 # WARNING: If you add a file to the list of CUDA_ENABLED_SRCS, you must add a
 # corresponding rule at the end of this file!
 #
-CUDA_ENABLED_SRCS =                         \
-     CompressibleMomentumTransportEquation 	\
+CUDA_ENABLED_SRCS :=                        \
+     CompressibleMomentumTransportEquation  \
+     LowMachMomentumTransportEquation       \
      MomentTransportEquation                \
      MomentumTransportEquationBase          \
-     LowMachMomentumTransportEquation       \
-     TotalInternalEnergyTransportEquation   \
-     ParticleMomentumEquation
+     ParticleMomentumEquation               \
+     TotalInternalEnergyTransportEquation   
 
 ifeq ($(HAVE_CUDA),yes)
-
    # CUDA enabled files, listed here (and with a rule at the end of
    # this sub.mk) are copied to the binary side and renamed with a .cu
    # extension (.cc replaced with .cu) so that they can be compiled
    # using the nvcc compiler.
-
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
    DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
-
 else
-
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).cc)
-
 endif
 
 #
@@ -84,23 +75,17 @@ SRCS +=                                                \
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # If Copy the 'original' .cc files into the binary tree and rename as .cu
-
+  # Copy the 'original' .cc files into the binary tree and rename as .cu
   $(OBJTOP_ABS)/$(SRCDIR)/ParticleMomentumEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/ParticleMomentumEquation.cc
 	cp $< $@
-
   $(OBJTOP_ABS)/$(SRCDIR)/MomentTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentTransportEquation.cc
 	cp $< $@
-
   $(OBJTOP_ABS)/$(SRCDIR)/MomentumTransportEquationBase.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumTransportEquationBase.cc
 	cp $< $@
-
   $(OBJTOP_ABS)/$(SRCDIR)/LowMachMomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/LowMachMomentumTransportEquation.cc
 	cp $< $@
-
   $(OBJTOP_ABS)/$(SRCDIR)/CompressibleMomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/CompressibleMomentumTransportEquation.cc
 	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/TotalInternalEnergyTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/TotalInternalEnergyTransportEquation.cc
 	cp $< $@
-
 endif

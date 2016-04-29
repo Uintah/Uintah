@@ -622,8 +622,9 @@
          the Arches time integration scheme !-->
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, RK2SSP, FE'"/>
     <DualTime spec="OPTIONAL NO_DATA"
-             attribute1="iterations OPTIONAL INTEGER"
-             attribute2="tolerance OPTIONAL DOUBLE">
+             attribute1="iterations REQUIRED INTEGER"
+             attribute2="tolerance REQUIRED DOUBLE"
+             attribute3="ds REQUIRED DOUBLE">
    </DualTime>
 
 
