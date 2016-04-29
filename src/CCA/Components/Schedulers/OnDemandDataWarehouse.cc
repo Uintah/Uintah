@@ -3268,7 +3268,7 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
                                              Ghost::GhostType gtype,
                                              int              numGhostCells )
 {
-#if 1
+#if 0
 #if SCI_ASSERTION_LEVEL >= 1
   std::list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
 
@@ -3392,7 +3392,7 @@ OnDemandDataWarehouse::checkPutAccess( const VarLabel* label,
                                        const Patch*    patch,
                                              bool      replace )
 {
-#if 1
+#if 0
 #if SCI_ASSERTION_LEVEL >= 1
   std::list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
   if (runningTasks != 0) {
