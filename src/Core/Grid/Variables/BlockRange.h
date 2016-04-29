@@ -25,6 +25,8 @@
 #ifndef UINTAH_HOMEBREW_BLOCK_RANGE_H
 #define UINTAH_HOMEBREW_BLOCK_RANGE_H
 
+#include <cstddef>
+
 namespace Uintah {
 
 class BlockRange
@@ -71,12 +73,16 @@ void parallel_for( BlockRange const & r, const Functor & f )
 #pragma omp parallel for collapse(3)
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
+#pragma vector always
+#pragma ivdep
   for (int i=ib; i<ie; ++i) {
     f(i,j,k);
   }}}
 #else
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
+#pragma vector always
+#pragma ivdep
   for (int i=ib; i<ie; ++i) {
     f(i,j,k);
   }}}
