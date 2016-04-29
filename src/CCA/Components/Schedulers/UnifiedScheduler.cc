@@ -33,10 +33,8 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/ThreadGroup.h>
-#include <Core/Thread/Time.h>
+#include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Util/Time.h>
 
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -48,14 +46,16 @@
 
 #include <cstring>
 #include <iomanip>
+#include <mutex>
+
 #define USE_PACKING
 
 using namespace std;
 using namespace Uintah;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern Uintah::Mutex coutLock;
-extern Uintah::Mutex cerrLock;
+extern std::mutex coutLock;
+extern std::mutex cerrLock;
 
 extern DebugStream taskdbg;
 extern DebugStream waitout;
@@ -81,7 +81,145 @@ static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 
   CrowdMonitor UnifiedScheduler::idleStreamsLock_("CUDA streams lock");
 #endif
-//std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>* GPUDataWarehouse::gpuMemoryPool = new std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>;
+
+
+//______________________________________________________________________
+//
+namespace {
+
+std::mutex      g_lb_mutex;
+
+} // namespace
+
+
+//______________________________________________________________________
+//
+namespace Uintah { namespace Impl {
+
+namespace {
+
+__thread int       t_tid = 0;
+
+}
+
+namespace {
+
+enum class ThreadState : int
+{
+    Inactive
+  , Active
+  , Exit
+};
+
+UnifiedSchedulerWorker * g_runners[MAX_THREADS]        = {};
+volatile ThreadState     g_thread_states[MAX_THREADS]  = {};
+int                      g_cpu_affinities[MAX_THREADS] = {};
+int                      g_num_threads                 = 0;
+
+volatile int g_run_tasks{0};
+
+
+//______________________________________________________________________
+//
+void set_affinity( const int proc_unit )
+{
+#ifndef __APPLE__
+  //disable affinity on OSX since sched_setaffinity() is not available in OSX API
+  cpu_set_t mask;
+  unsigned int len = sizeof(mask);
+  CPU_ZERO(&mask);
+  CPU_SET(proc_unit, &mask);
+  sched_setaffinity(0, len, &mask);
+#endif
+}
+
+
+//______________________________________________________________________
+//
+void thread_driver( const int tid )
+{
+  // t_tid is __thread variable, unique to each std::thread spawned below
+  t_tid = tid;
+
+  // set each TaskWorker thread's affinity
+  set_affinity( g_cpu_affinities[tid] );
+
+  try {
+    // wait until main thread sets function and changes states
+    g_thread_states[tid] = ThreadState::Inactive;
+    while (g_thread_states[tid] == ThreadState::Inactive) {
+      std::this_thread::yield();
+    }
+
+    while (g_thread_states[tid] == ThreadState::Active) {
+
+      // run the function and wait for main thread to reset state
+      g_runners[tid]->run();
+
+      g_thread_states[tid] = ThreadState::Inactive;
+      while (g_thread_states[tid] == ThreadState::Inactive) {
+        std::this_thread::yield();
+      }
+    }
+  } catch (const std::exception & e) {
+    std::cerr << "Exception thrown from worker thread: " << e.what() << std::endl;
+    std::cerr.flush();
+    std::abort();
+  } catch (...) {
+    std::cerr << "Unknown Exception thrown from worker thread" << std::endl;
+    std::cerr.flush();
+    std::abort();
+  }
+}
+
+
+//______________________________________________________________________
+// only called by thread 0 (main thread)
+void thread_fence()
+{
+  // main thread tid is at [0]
+  g_thread_states[0] = ThreadState::Inactive;
+
+  // TaskRunner threads start at [1]
+  for (int i = 1; i < g_num_threads; ++i) {
+    while (g_thread_states[i] == ThreadState::Active) {
+      std::this_thread::yield();
+    }
+  }
+  std::atomic_thread_fence(std::memory_order_seq_cst);
+}
+
+
+//______________________________________________________________________
+// only called by main thread
+void init_threads( UnifiedScheduler * sched, int num_threads )
+{
+  g_num_threads = num_threads;
+  for (int i = 0; i < g_num_threads; ++i) {
+    g_thread_states[i]  = ThreadState::Active;
+    g_cpu_affinities[i] = i;
+  }
+
+  // set main thread's affinity - core 0
+  set_affinity(g_cpu_affinities[0]);
+  t_tid = 0;
+
+  // TaskRunner threads start at [1]
+  for (int i = 1; i < g_num_threads; ++i) {
+    g_runners[i] = new UnifiedSchedulerWorker(sched);
+  }
+
+  // spawn worker threads
+  // TaskRunner threads start at [1]
+  for (int i = 1; i < g_num_threads; ++i) {
+    std::thread(thread_driver, i).detach();
+  }
+
+  thread_fence();
+}
+
+} // namespace
+}} // namespace Uintah::Impl
 
 //______________________________________________________________________
 //
@@ -89,8 +227,7 @@ static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
     const Output* oport, UnifiedScheduler* parentScheduler) :
     MPIScheduler(myworld, oport, parentScheduler),
-    d_nextsignal("next condition"), d_nextmutex("next mutex"),
-    schedulerLock("scheduler lock")
+    schedulerLock{}
 {
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
@@ -152,17 +289,6 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
 
 UnifiedScheduler::~UnifiedScheduler()
 {
-  if (Uintah::Parallel::usingMPI()) {
-    for (int i = 0; i < numThreads_; i++) {
-      t_worker[i]->d_runmutex.lock();
-      t_worker[i]->quit();
-      t_worker[i]->d_runsignal.conditionSignal();
-      t_worker[i]->d_runmutex.unlock();
-      t_thread[i]->setCleanupFunction(NULL);
-      t_thread[i]->join();
-    }
-  }
-
   if (unified_timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
@@ -272,6 +398,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
         << "   Creating " << numThreads_ << " additional "
         << plural + " for task execution (total task execution threads = "
         << numThreads_ + 1 << ")." << std::endl;
+
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
       cudaError_t retVal;
@@ -289,23 +416,6 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
       }
     }
 #endif
-  }
-
-  if (unified_compactaffinity.active()) {
-    if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-      unified_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid() << ") to core 0\n";
-    }
-    Thread::self()->set_affinity(0);  // Bind main thread to core 0
-  }
-
-  // Create the UnifiedWorkers here (pinned to cores in UnifiedSchedulerWorker::run())
-  char name[1024];
-  for (int i = 0; i < numThreads_; i++) {
-    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(this, i);
-    t_worker[i] = worker;
-    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
-    Thread* t = scinew Thread(worker, name);
-    t_thread[i] = t;
   }
 
   SchedulerCommon::problemSetup(prob_spec, state);
@@ -340,6 +450,9 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 #endif
 
+  // this spawns threads, sets affinity, etc
+  init_threads(this, numThreads_);
+
 }
 
 //______________________________________________________________________
@@ -354,33 +467,6 @@ UnifiedScheduler::createSubScheduler()
   subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
-
-  if (subsched->numThreads_ > 0) {
-
-    proc0cout << "\n"
-              << "   Using EXPERIMENTAL multi-threaded sub-scheduler\n"
-              << "   WARNING: Component tasks must be thread safe.\n"
-              << "   Creating " << subsched->numThreads_ << " subscheduler threads for task execution.\n\n" << std::endl;
-
-    // Bind main execution thread
-    if (unified_compactaffinity.active()) {
-      if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-        unified_threaddbg << "Binding main subscheduler thread (ID " << Thread::self()->myid() << ") to core 0\n";
-      }
-      Thread::self()->set_affinity(0);    // bind subscheduler main thread to core 0
-    }
-
-    // Create UnifiedWorker threads for the subscheduler
-    char name[1024];
-    ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
-    for (int i = 0; i < subsched->numThreads_; i++) {
-      UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i);
-      subsched->t_worker[i] = worker;
-      sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
-      Thread* t = scinew Thread(worker, name, subGroup);
-      subsched->t_thread[i] = t;
-    }
-  }
 
   return subsched;
 
@@ -625,26 +711,47 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     coutLock.unlock();
   }
 
-  // signal worker threads to begin executing tasks
-  for (int i = 0; i < numThreads_; i++) {
-    t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
-    // sending signal to threads to wake them up
-    t_worker[i]->d_runmutex.lock();
-    t_worker[i]->d_idle = false;
-    t_worker[i]->d_runsignal.conditionSignal();
-    t_worker[i]->d_runmutex.unlock();
+
+
+
+  //------------------------------------------------------------------------------------------------
+  // activate TaskRunners
+  //------------------------------------------------------------------------------------------------
+  if (!d_sharedState->isCopyDataTimestep()) {
+    Impl::g_run_tasks = 1;
+    for (int i = 1; i < numThreads_; ++i) {
+      Impl::g_thread_states[i] = Impl::ThreadState::Active;
+    }
   }
+  //------------------------------------------------------------------------------------------------
+
+
 
   // main thread also executes tasks
-  runTasks(Thread::self()->myid());
+  runTasks(Impl::t_tid);
 
-  // wait for all tasks to finish
-  d_nextmutex.lock();
-  while (getAvailableThreadNum() < numThreads_) {
-    // if any thread is busy, conditional wait here
-    d_nextsignal.wait(d_nextmutex);
+
+
+  //------------------------------------------------------------------------------------------------
+  // deactivate TaskRunners
+  //------------------------------------------------------------------------------------------------
+  if (!d_sharedState->isCopyDataTimestep()) {
+    Impl::g_run_tasks = 0;
+
+    Impl::thread_fence();
+
+    for (int i = 1; i < numThreads_; ++i) {
+      Impl::g_thread_states[i] = Impl::ThreadState::Inactive;
+    }
   }
-  d_nextmutex.unlock();
+  //------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
 
   if (unified_queuelength.active()) {
     float lengthsum = 0;
@@ -683,8 +790,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
 
     for (int i = 0; i < numThreads_; i++) {
-      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] +=
-  t_worker[i]->getWaittime();
+      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += t_worker[i]->getWaittime();
     }
   }
 
@@ -6090,26 +6196,29 @@ std::string
 UnifiedScheduler::myRankThread()
 {
   std::ostringstream out;
-  out<< Uintah::Parallel::getMPIRank()<< "." << Thread::self()->myid();
+  out << Uintah::Parallel::getMPIRank()<< "." << Impl::t_tid;
   return out.str();
+}
+
+//______________________________________________________________________
+//
+void
+UnifiedScheduler::init_threads(UnifiedScheduler * sched, int numThreads_ )
+{
+  Impl::init_threads(sched, numThreads_);
 }
 
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
 //------------------------------------------
-UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler,
-                                                int                thread_id )
+UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler )
   : d_scheduler( scheduler ),
-    d_runsignal( "run condition" ),
-    d_runmutex( "run mutex" ),
     d_quit( false ),
     d_idle( true ),
-    d_thread_id( thread_id + 1),
     d_rank( scheduler->getProcessorGroup()->myrank() ),
     d_waittime( 0.0 ),
     d_waitstart( 0.0 )
 {
-  d_runmutex.lock();
 }
 
 //______________________________________________________________________
@@ -6118,22 +6227,8 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler,
 void
 UnifiedSchedulerWorker::run()
 {
-  Thread::self()->set_myid(d_thread_id);
-
-  // Set affinity
-  if (unified_compactaffinity.active()) {
-    if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
-      coutLock.lock();
-      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
-      unified_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to core " << d_thread_id << "\n";
-      coutLock.unlock();
-    }
-    Thread::self()->set_affinity(d_thread_id);
-  }
 
   while( true ) {
-    d_runsignal.wait(d_runmutex); // wait for main thread signal.
-    d_runmutex.unlock();
     d_waittime += Time::currentSeconds() - d_waitstart;
 
     if (d_quit) {
@@ -6152,7 +6247,7 @@ UnifiedSchedulerWorker::run()
     }
 
     try {
-      d_scheduler->runTasks(d_thread_id);
+      d_scheduler->runTasks(Impl::t_tid);
     } catch (Exception& e) {
       cerrLock.lock();
       std::cerr << "Worker " << d_rank << "-" << d_thread_id
@@ -6169,13 +6264,6 @@ UnifiedSchedulerWorker::run()
       coutLock.unlock();
     }
 
-    // Signal main thread for next group of tasks.
-    d_scheduler->d_nextmutex.lock();
-    d_runmutex.lock();
-    d_waitstart = Time::currentSeconds();
-    d_idle = true;
-    d_scheduler->d_nextsignal.conditionSignal();
-    d_scheduler->d_nextmutex.unlock();
   }
 }
 

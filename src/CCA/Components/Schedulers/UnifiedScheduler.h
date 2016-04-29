@@ -127,8 +127,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     int getAvailableThreadNum();
 
-    std::condition_variable    d_nextsignal;           // conditional wait mutex
-    std::mutex                 d_nextmutex;            // next mutex
     std::mutex                 schedulerLock;          // scheduler lock (acquire and release quickly)
     UnifiedSchedulerWorker*    t_worker[MAX_THREADS];  // the workers
     std::thread*               t_thread[MAX_THREADS];  // the threads themselves
@@ -151,6 +149,8 @@ class UnifiedScheduler : public MPIScheduler  {
     int      numThreads_;
 
     void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
+
+    static void init_threads( UnifiedScheduler * scheduler, int num_threads );
 
 #ifdef HAVE_CUDA
 
@@ -308,6 +308,7 @@ class UnifiedScheduler : public MPIScheduler  {
     };
 
 #endif
+
 };
 
 
@@ -316,7 +317,7 @@ class UnifiedSchedulerWorker {
 
 public:
   
-  UnifiedSchedulerWorker( UnifiedScheduler* scheduler, int thread_id );
+  UnifiedSchedulerWorker( UnifiedScheduler* scheduler);
 
   void run();
 
@@ -331,8 +332,6 @@ public:
 private:
 
   UnifiedScheduler*        d_scheduler;
-  std::condition_variable  d_runsignal;
-  std::mutex               d_runmutex;
   bool                     d_quit;
   bool                     d_idle;
   int                      d_thread_id;
