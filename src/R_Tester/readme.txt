@@ -15,6 +15,12 @@ make runLocalRT (or gold_standards) will run the Wasatch:GPUTESTS
 ______________________________________________________________________
 
 Setting up a new RT machine
+
+
+Create a user, i.e. rt
+and login at that user.
+
+
 __________________________________
 
 - create a ~/scripts directory and copy
@@ -26,7 +32,7 @@ to it.
 
 __________________________________
 
-- Edit startTester and add an additional conditional section near the top
+- Edit ~/scripts/startTester and add an additional conditional section near the top
 for your machine.  For example:
 
 if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
