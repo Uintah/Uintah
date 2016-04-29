@@ -244,7 +244,9 @@ CTAGS := ctags
 $(OBJTOP_ABS)/include/svn_info.h : .FORCE
 	@IFS=' ';                                                                                \
          tmp_svn=`svn info $(SRCTOP_ABS) 2> /dev/null` ;                                         \
-         sed -e "s%UNKNOWN_REVISION%`echo $$tmp_svn | grep Revision`%" -e "s%UNKNOWN_DATE%`echo $$tmp_svn | grep Date`%" \
+         sed -e "s%UNKNOWN_REVISION%`echo $$tmp_svn | grep Revision`%"                           \
+             -e "s%UNKNOWN_DATE%`echo $$tmp_svn | grep Date`%"                                   \
+             -e "s%UNKNOWN_URL%`echo $$tmp_svn | grep ^URL`%"                                    \
              $(SRCTOP_ABS)/include/svn_info.h.template > $(OBJTOP_ABS)/include/svn_info.h.new;   \
          if test -z "$$tmp_svn"; then                                                            \
             rm $(OBJTOP_ABS)/include/svn_info.h.new;                                             \
