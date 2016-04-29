@@ -70,19 +70,19 @@ void parallel_for( BlockRange const & r, const Functor & f )
   const int kb = r.begin(2); const int ke = r.end(2);
 
 #if defined( UINTAH_ENABLE_KOKKOS )
+#pragma vector always
+#pragma ivdep
 #pragma omp parallel for collapse(3)
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
-#pragma vector always
-#pragma ivdep
   for (int i=ib; i<ie; ++i) {
     f(i,j,k);
   }}}
 #else
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
 #pragma vector always
 #pragma ivdep
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
     f(i,j,k);
   }}}

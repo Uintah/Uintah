@@ -93,6 +93,24 @@ struct KokkosView3
 
   KokkosView3() = default;
 
+  template <typename U, typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value> >
+  KokkosView3( const KokkosView3<U> & v)
+    : m_view(v.m_view)
+    , m_i(v.m_i)
+    , m_j(v.m_j)
+    , m_k(v.m_k)
+  {}
+    
+  template <typename U, typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value> >
+  KokkosView3 & operator=( const KokkosView3<U> & v)
+  {
+    m_view = v.m_view;
+    m_i = v.m_i;
+    m_j = v.m_j;
+    m_k = v.m_k;
+    return *this;
+  }
+  
   view_type m_view;
   int       m_i;
   int       m_j;
