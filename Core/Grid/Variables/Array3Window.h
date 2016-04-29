@@ -91,6 +91,8 @@ struct KokkosView3
     , m_k(k)
   {}
 
+  KokkosView3() = default;
+
   view_type m_view;
   int       m_i;
   int       m_j;

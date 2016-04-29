@@ -139,12 +139,12 @@ WARNING
         auto v = this->rep_.getKokkosView();
         return KokkosView3<const T>( v.m_view, v.m_i, v.m_j, v.m_k );
       }
-#else //UINTAH_ENABLE_KOKKOS
-      inline const T& operator()(int i, int j, int k) const
-      {
-        return this->rep_(i,j,k);
-      }
 #endif
+
+    inline const T& operator()(int i, int j, int k) const
+    {
+      return this->rep_(i,j,k);
+    }
 
 
     virtual const TypeDescription* virtualGetTypeDescription() const

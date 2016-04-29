@@ -175,12 +175,14 @@ namespace Uintah {
     };
 
     public:
-      Array3() {
-        d_window = 0;
-      }
+      Array3() = default;
+
       Array3(int size1, int size2, int size3) {
         d_window=scinew Array3Window<T>(new Array3Data<T>( IntVector(size1, size2, size3) ));
         d_window->addReference();
+#if defined(UINTAH_ENABLE_KOKKOS)
+        m_view = d_window->getKokkosView();
+#endif
       }
       Array3(const IntVector& lowIndex, const IntVector& highIndex) {
         d_window = 0;
@@ -189,14 +191,22 @@ namespace Uintah {
       Array3(const Array3& copy)
         : d_window(copy.d_window)
       {
-        if(d_window)
+        if(d_window) {
           d_window->addReference();
+        }
+#if defined(UINTAH_ENABLE_KOKKOS)
+        m_view = d_window->getKokkosView();
+#endif
       }
       Array3(Array3Window<T>* window)
         : d_window(window)
       {
-        if(d_window)
+        if(d_window) {
           d_window->addReference();
+        }
+#if defined(UINTAH_ENABLE_KOKKOS)
+        m_view = d_window->getKokkosView();
+#endif
       }
       virtual ~Array3()
       {
@@ -216,6 +226,9 @@ namespace Uintah {
           d_window=0;
         }
         d_window = copy.d_window;
+#if defined(UINTAH_ENABLE_KOKKOS)
+        m_view = d_window->getKokkosView();
+#endif
       }
 
       IntVector size() const {
@@ -253,6 +266,9 @@ namespace Uintah {
         IntVector size = highIndex-lowIndex;
         d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
         d_window->addReference();
+#if defined(UINTAH_ENABLE_KOKKOS)
+        m_view = d_window->getKokkosView();
+#endif
       }
 
       void offset(const IntVector offset) {
@@ -273,6 +289,11 @@ namespace Uintah {
         return d_window->get(idx);
       }
 
+      inline T& operator[](const IntVector& idx) {
+        return d_window->get(idx);
+      }
+
+
       inline const Array3Window<T>* getWindow() const {
         return d_window;
       }
@@ -281,7 +302,21 @@ namespace Uintah {
       }
 
 #ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosView3<T>       getKokkosView() const { return d_window->getKokkosView(); }
+      inline KokkosView3<T>       getKokkosView() const { return m_view; }
+#endif
+
+#ifdef UINTAH_ENABLE_KOKKOS
+      KOKKOS_FORCEINLINE_FUNCTION
+      const T& operator()(int i, int j, int k) const
+      {
+        return m_view(i,j,k);
+      }
+
+      KOKKOS_FORCEINLINE_FUNCTION
+      T& operator()(int i, int j, int k)
+      {
+        return m_view(i,j,k);
+      }
 #else
       inline const T& operator()(int i, int j, int k) const {
         return (*this)[IntVector(i,j,k)];
@@ -292,9 +327,6 @@ namespace Uintah {
       }
 #endif
 
-      inline T& operator[](const IntVector& idx) {
-        return d_window->get(idx);
-      }
 
       IntVector getLowIndex() const {
         ASSERT(d_window != 0);
@@ -396,7 +428,10 @@ namespace Uintah {
       Array3& operator=(const Array3& copy);
 
     private:
-      Array3Window<T>* d_window;
+      Array3Window<T>* d_window{nullptr};
+#if defined(UINTAH_ENABLE_KOKKOS)
+      KokkosView3<T> m_view{};
+#endif
   };
 
   template <class T>
@@ -480,6 +515,10 @@ namespace Uintah {
         delete oldWindow;
         oldWindow=0;
       }
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+      m_view = d_window->getKokkosView();
+#endif
 
       return no_reallocation_needed;
     }
