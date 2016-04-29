@@ -149,6 +149,10 @@ void init_threads( ThreadedMPIScheduler * sched, int num_threads )
   for (int i = 0; i < g_num_threads; ++i) {
     Impl::g_threads.emplace_back(std::thread(thread_driver, i));
   }
+
+  for (auto& thread : g_threads) {
+   thread.detach();
+  }
 }
 
 } // namespace
@@ -188,15 +192,6 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
       avgStats.close();
     }
   }
-
-  // join threads
-  for (int i = 0; i < m_num_threads; ++i) {
-    Impl::g_runners[i]->m_run_mutex.lock();
-    Impl::g_runners[i]->m_run_signal.notify_one();
-    Impl::g_runners[i]->m_run_mutex.unlock();
-    Impl::g_threads[i].join();
-  }
-
 }
 
 //______________________________________________________________________
@@ -278,9 +273,10 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
               << plural + " for task execution." << std::endl;
   }
 
+  SchedulerCommon::problemSetup(prob_spec, state);
+
   // this spawns threads, sets affinity, etc
   init_threads(this, m_num_threads);
-  SchedulerCommon::problemSetup(prob_spec, state);
 }
 
 //______________________________________________________________________
@@ -531,10 +527,9 @@ void ThreadedMPIScheduler::assignTask( DetailedTask * task
   ASSERT(target_runner >= 0);
 
   // send task and wake up worker
-  Impl::g_runners[target_runner]->m_task = task;
+  Impl::g_runners[target_runner]->m_task      = task;
   Impl::g_runners[target_runner]->m_iteration = iteration;
   Impl::g_runners[target_runner]->m_run_signal.notify_one();
-  Impl::g_runners[target_runner]->m_run_mutex.unlock();
 }
 
 //______________________________________________________________________
@@ -552,7 +547,6 @@ TaskWorker::TaskWorker( ThreadedMPIScheduler * scheduler )
   : m_rank{ scheduler->getProcessorGroup()->myrank() }
   , m_scheduler{scheduler}
 {
-  m_run_mutex.lock();
 }
 
 //______________________________________________________________________
@@ -563,8 +557,8 @@ TaskWorker::run()
   while (true) {
 
     std::unique_lock<std::mutex> next_lock(m_run_mutex);
-    m_run_signal.wait(next_lock, [this](){ return m_task != nullptr; }); // wait for main thread signal
-    m_run_mutex.unlock();
+    m_run_signal.wait(next_lock, [this](){ return m_task != nullptr; });
+
     m_wait_time += Time::currentSeconds() - m_wait_start;
 
     if (m_quit) {
@@ -592,9 +586,8 @@ TaskWorker::run()
     }
 
     // Signal main thread for next task.
-    m_run_mutex.lock();
-    m_task = nullptr;
-    m_iteration = 0;
+    m_task       = nullptr;
+    m_iteration  = 0;
     m_wait_start = Time::currentSeconds();
     g_next_signal.notify_one();
   }
