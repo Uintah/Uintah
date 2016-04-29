@@ -24,6 +24,14 @@ bc_gpu_z_ups = modUPS( the_dir, \
 bc_gpu_xyz_ups = modUPS( the_dir, \
                   "bc-test-mixed.ups", \
                    ["<patches>[1,1,1]</patches>"])
+
+gpu_compressible_1d_ups = modUPS( the_dir, \
+                  "compressible-flow-test-1d.ups", \
+                   ["<patches>[1,1,1]</patches>"])
+
+gpu_compressible_2d_ups = modUPS( the_dir, \
+                  "compressible-flow-test-2d.ups", \
+                   ["<patches>[1,1,1]</patches>"])
                  
 scalarequationperf_ups = modUPS( the_dir, \
                                        "ScalarTransportEquation.ups", \
@@ -383,12 +391,13 @@ SCALARTRANSPORTTESTS=[
 
 GPUTESTS=[
   ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-#  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-  ("bc-test-svol-gpu-x"  , bc_gpu_x_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
-  ("bc-test-svol-gpu-y"  , bc_gpu_y_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
-  ("bc-test-svol-gpu-z"  , bc_gpu_z_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),      
-  ("bc-test-svol-gpu-xyz", bc_gpu_xyz_ups, 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
-#  ("scalability-test",             "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
+  ("scalability-test"     , "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("bc-test-svol-gpu-x"   , bc_gpu_x_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("bc-test-svol-gpu-y"   , bc_gpu_y_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("bc-test-svol-gpu-z"   , bc_gpu_z_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),      
+  ("bc-test-svol-gpu-xyz" , bc_gpu_xyz_ups, 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("gpu-compressible-1d"  , gpu_compressible_1d_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("gpu-compressible-2d"  , gpu_compressible_2d_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 #  ("taylor-green-vortex-2d-xy",    "taylor-green-vortex-2d-xy.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),
 #  ("taylor-green-vortex-2d-xz",    "taylor-green-vortex-2d-xz.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),
 #  ("taylor-green-vortex-2d-yz",    "taylor-green-vortex-2d-yz.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "])
