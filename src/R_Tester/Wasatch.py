@@ -31,7 +31,7 @@ gpu_compressible_1d_ups = modUPS( the_dir, \
 
 gpu_compressible_2d_ups = modUPS( the_dir, \
                   "compressible-flow-test-2d.ups", \
-                   ["<patches>[1,1,1]</patches>"])
+                   ["<outputTimestepInterval>1</outputTimestepInterval>", "<patches>[1,1,1]</patches>"])
                  
 scalarequationperf_ups = modUPS( the_dir, \
                                        "ScalarTransportEquation.ups", \
