@@ -171,7 +171,7 @@ private:
 #else
 
 #ifdef DO_TIMINGS
-      SpatialOps::TimeLogger timer("fe_update.out."+*i);
+      SpatialOps::TimeLogger timer("kokkos_fe_update.out."+*i);
       timer.start("fe_update");
 #endif
       //time update:
