@@ -53,10 +53,10 @@
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-#ifdef HAVE_CUDA
-#  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
-#  include <CCA/Components/Examples/PoissonGPU1.h>
-#endif
+//#ifdef HAVE_CUDA
+//#  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
+//#  include <CCA/Components/Examples/PoissonGPU1.h>
+//#endif
 
 #if !defined(NO_ARCHES)
 #  include <CCA/Components/Arches/Arches.h>
@@ -190,14 +190,14 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     return scinew Poisson1(world);
   }
 
-#ifdef HAVE_CUDA
-  if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
-    return scinew PoissonGPU1(world);
-  }
-  if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
-    return scinew UnifiedSchedulerTest(world);
-  }
-#endif
+//#ifdef HAVE_CUDA
+//  if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
+//    return scinew PoissonGPU1(world);
+//  }
+//  if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
+//    return scinew UnifiedSchedulerTest(world);
+//  }
+//#endif
 
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
     return scinew RegridderTest(world);
