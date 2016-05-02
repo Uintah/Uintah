@@ -1,6 +1,8 @@
 #ifndef Uintah_Component_Arches_DISCRETIZATIONTOOLS_h
 #define Uintah_Component_Arches_DISCRETIZATIONTOOLS_h
 
+#define DO_TIMINGS 
+
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/Variables/BlockRange.h>
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -78,6 +80,49 @@ namespace Uintah{
 #define STAGGERED_INDEX(dir) \
   const int ioff = dir == 0 ? 1 : 0;
 
+#define GET_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+  IntVector low_x_adjust = IntVector(0,0,0); IntVector high_x_adjust = IntVector(0,0,0);  \
+  IntVector low_y_adjust = IntVector(0,0,0); IntVector high_y_adjust = IntVector(0,0,0);  \
+  IntVector low_z_adjust = IntVector(0,0,0); IntVector high_z_adjust = IntVector(0,0,0);  \
+  if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ) low_x_adjust = IntVector(buffer_low,0,0); \
+  if ( patch->getBCType(Patch::yminus) != Patch::Neighbor ) low_y_adjust = IntVector(0,buffer_low,0); \
+  if ( patch->getBCType(Patch::zminus) != Patch::Neighbor ) low_z_adjust = IntVector(0,0,buffer_low); \
+  if ( patch->getBCType(Patch::xplus)  != Patch::Neighbor ) high_x_adjust = IntVector(buffer_high,0,0); \
+  if ( patch->getBCType(Patch::yplus)  != Patch::Neighbor ) high_y_adjust = IntVector(0,buffer_high,0); \
+  if ( patch->getBCType(Patch::zplus)  != Patch::Neighbor ) high_z_adjust = IntVector(0,0,buffer_high); \
+  IntVector low_patch_range = patch->getCellLowIndex()+low_x_adjust+low_y_adjust+low_z_adjust;      \
+  IntVector high_patch_range = patch->getCellHighIndex()+high_x_adjust+high_y_adjust+high_z_adjust;
+
+#define GET_FX_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+    IntVector low_fx_patch_range = patch->getCellLowIndex(); \
+    IntVector high_fx_patch_range = patch->getCellHighIndex(); \
+    if ( patch->getBCType(Patch::xminus) != Patch::Neighbor ){ \
+      low_fx_patch_range += IntVector(buffer_low,0,0); \
+    } \
+    if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ){ \
+      high_fx_patch_range += IntVector(buffer_high,0,0);\
+    }
+
+#define GET_FY_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+    IntVector low_fy_patch_range = patch->getCellLowIndex(); \
+    IntVector high_fy_patch_range = patch->getCellHighIndex(); \
+    if ( patch->getBCType(Patch::yminus) != Patch::Neighbor ){ \
+      low_fy_patch_range += IntVector(0,buffer_low,0); \
+    } \
+    if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ){ \
+      high_fy_patch_range += IntVector(0,buffer_high,0); \
+    }
+
+#define GET_FZ_BUFFERED_PATCH_RANGE(buffer_low, buffer_high) \
+    IntVector low_fz_patch_range = patch->getCellLowIndex(); \
+    IntVector high_fz_patch_range = patch->getCellHighIndex(); \
+    if ( patch->getBCType(Patch::zminus) != Patch::Neighbor ){ \
+      low_fz_patch_range += IntVector(0,0,buffer_low); \
+    } \
+    if ( patch->getBCType(Patch::zplus) != Patch::Neighbor ){ \
+      high_fz_patch_range += IntVector(0,0,buffer_high); \
+    }
+
   /**
       @struct VariableHelper
       @details Useful for reconciling the const and non-const types for a specific
@@ -107,11 +152,11 @@ namespace Uintah{
     typedef constSFCXVariable<double> ConstType;
     typedef SFCXVariable<double> Type;
     typedef CCVariable<double> XFaceType;
-    typedef SFCYVariable<double> YFaceType;
-    typedef SFCZVariable<double> ZFaceType;
+    typedef SFCXVariable<double> YFaceType;
+    typedef SFCXVariable<double> ZFaceType;
     typedef constCCVariable<double> ConstXFaceType;
-    typedef constSFCYVariable<double> ConstYFaceType;
-    typedef constSFCZVariable<double> ConstZFaceType;
+    typedef constSFCXVariable<double> ConstYFaceType;
+    typedef constSFCXVariable<double> ConstZFaceType;
     DIR dir;
     const int ioff;
     const int joff;
@@ -130,12 +175,12 @@ namespace Uintah{
   struct VariableHelper<SFCYVariable<double> >{
     typedef constSFCYVariable<double> ConstType;
     typedef SFCYVariable<double> Type;
-    typedef SFCXVariable<double> XFaceType;
+    typedef SFCYVariable<double> XFaceType;
     typedef CCVariable<double> YFaceType;
-    typedef SFCZVariable<double> ZFaceType;
-    typedef constSFCXVariable<double> ConstXFaceType;
+    typedef SFCYVariable<double> ZFaceType;
+    typedef constSFCYVariable<double> ConstXFaceType;
     typedef constCCVariable<double> ConstYFaceType;
-    typedef constSFCZVariable<double> ConstZFaceType;
+    typedef constSFCYVariable<double> ConstZFaceType;
     DIR dir;
     const int ioff;
     const int joff;
@@ -154,11 +199,11 @@ namespace Uintah{
   struct VariableHelper<SFCZVariable<double> >{
     typedef constSFCZVariable<double> ConstType;
     typedef SFCZVariable<double> Type;
-    typedef SFCXVariable<double> XFaceType;
-    typedef SFCYVariable<double> YFaceType;
+    typedef SFCZVariable<double> XFaceType;
+    typedef SFCZVariable<double> YFaceType;
     typedef CCVariable<double> ZFaceType;
-    typedef constSFCXVariable<double> ConstXFaceType;
-    typedef constSFCYVariable<double> ConstYFaceType;
+    typedef constSFCZVariable<double> ConstXFaceType;
+    typedef constSFCZVariable<double> ConstYFaceType;
     typedef constCCVariable<double> ConstZFaceType;
     DIR dir;
     const int ioff;

@@ -84,6 +84,7 @@ SRCS += $(SRCDIR)/ArchesConstVariables.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
         $(SRCDIR)/TurbulenceModel.cc           \
+        $(SRCDIR)/WBCHelper.cc                 \
         $(SRCDIR)/TurbulenceModelPlaceholder.cc
 
 ifeq ($(HAVE_CUDA),yes)

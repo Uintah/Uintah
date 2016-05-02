@@ -22,6 +22,7 @@ CUDA_ENABLED_SRCS =                      \
           SurfaceNormals                 \
           TaskAlgebra                    \
           UtilityFactory                 \
+          BoundaryInfo                   \
           WaveFormInit                   
 
 ifeq ($(HAVE_CUDA),yes)
