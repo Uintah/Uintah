@@ -285,15 +285,6 @@ namespace Uintah {
       // return true iff no reallocation is needed
       bool rewindow(const IntVector& lowIndex, const IntVector& highIndex);
 
-      inline const T& operator[](const IntVector& idx) const {
-        return d_window->get(idx);
-      }
-
-      inline T& operator[](const IntVector& idx) {
-        return d_window->get(idx);
-      }
-
-
       inline const Array3Window<T>* getWindow() const {
         return d_window;
       }
@@ -302,10 +293,23 @@ namespace Uintah {
       }
 
 #ifdef UINTAH_ENABLE_KOKKOS
-      inline KokkosView3<T>       getKokkosView() const { return m_view; }
-#endif
+      inline KokkosView3<T> getKokkosView() const
+      {
+        return m_view;
+      }
 
-#ifdef UINTAH_ENABLE_KOKKOS
+      KOKKOS_FORCEINLINE_FUNCTION
+      const T& operator[](const IntVector& idx) const
+      {
+        return m_view(idx[0],idx[1],idx[2]);
+      }
+
+      KOKKOS_FORCEINLINE_FUNCTION
+      T& operator[](const IntVector& idx)
+      {
+        return m_view(idx[0],idx[1],idx[2]);
+      }
+
       KOKKOS_FORCEINLINE_FUNCTION
       const T& operator()(int i, int j, int k) const
       {
@@ -318,6 +322,14 @@ namespace Uintah {
         return m_view(i,j,k);
       }
 #else
+      inline const T& operator[](const IntVector& idx) const {
+        return d_window->get(idx);
+      }
+
+      inline T& operator[](const IntVector& idx) {
+        return d_window->get(idx);
+      }
+
       inline const T& operator()(int i, int j, int k) const {
         return (*this)[IntVector(i,j,k)];
       }
@@ -326,7 +338,6 @@ namespace Uintah {
         return d_window->get(i,j,k);
       }
 #endif
-
 
       IntVector getLowIndex() const {
         ASSERT(d_window != 0);
