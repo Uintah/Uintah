@@ -125,28 +125,24 @@ class UnifiedScheduler : public MPIScheduler  {
     UnifiedScheduler( const UnifiedScheduler& );
     UnifiedScheduler& operator=( const UnifiedScheduler& );
 
-    int getAvailableThreadNum();
-
-    std::mutex                 schedulerLock;          // scheduler lock (acquire and release quickly)
-    UnifiedSchedulerWorker*    t_worker[MAX_THREADS];  // the workers
-    std::thread*               t_thread[MAX_THREADS];  // the threads themselves
+    std::mutex                 schedulerLock{};          // scheduler lock (acquire and release quickly)
 
     // thread shared data, needs lock protection when accessed
     std::vector<int>           phaseTasks;
     std::vector<int>           phaseTasksDone;
     std::vector<DetailedTask*> phaseSyncTask;
     std::vector<int>           histogram;
-    DetailedTasks*             dts;
+    DetailedTasks*             dts{nullptr};
 
-    QueueAlg taskQueueAlg_;
-    int      currentIteration;
-    int      numTasksDone;
-    int      ntasks;
-    int      currphase;
-    int      numPhases;
-    bool     abort;
-    int      abort_point;
-    int      numThreads_;
+    QueueAlg taskQueueAlg_{MostMessages};
+    int      currentIteration{0};
+    int      numTasksDone{0};
+    int      ntasks{0};
+    int      currphase{0};
+    int      numPhases{0};
+    bool     abort{false};
+    int      abort_point{0};
+    int      numThreads_{-1};
 
     void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
 
@@ -315,13 +311,12 @@ class UnifiedScheduler : public MPIScheduler  {
 
 class UnifiedSchedulerWorker {
 
+
 public:
   
-  UnifiedSchedulerWorker( UnifiedScheduler* scheduler);
+  UnifiedSchedulerWorker( UnifiedScheduler * scheduler );
 
   void run();
-
-  void quit() { d_quit = true; };
 
   double getWaittime();
 
@@ -329,15 +324,13 @@ public:
   
   friend class UnifiedScheduler;
 
+
 private:
 
-  UnifiedScheduler*        d_scheduler;
-  bool                     d_quit;
-  bool                     d_idle;
-  int                      d_thread_id;
-  int                      d_rank;
-  double                   d_waittime;
-  double                   d_waitstart;
+  UnifiedScheduler * d_scheduler;
+  int                d_rank{-1};
+  double             d_waittime{0.0};
+  double             d_waitstart{0.0};
 
 
 };
