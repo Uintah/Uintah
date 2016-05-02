@@ -79,9 +79,9 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    // const Patch* patch = patches->get(p);
+    // int archIndex = 0; // only one arches material
+    // int indx = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     new_dw->put(delt_vartype(0.1), m_sharedState->get_delt_label(), level);
 

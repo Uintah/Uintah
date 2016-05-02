@@ -15,10 +15,6 @@ UtilityFactory::~UtilityFactory()
 void
 UtilityFactory::register_all_tasks( ProblemSpecP& db )
 {
-  typedef SpatialOps::SVolField SVol;
-  typedef SpatialOps::XVolField XVol;
-  typedef SpatialOps::YVolField YVol;
-  typedef SpatialOps::ZVolField ZVol;
 
   //GRID INFORMATION
   std::string tname = "grid_info";
@@ -45,6 +41,7 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
 
         //Assume all SVOl for now:
         //otherwise would need to determine or parse for the variable types
+        typedef SpatialOps::SVolField SVol;
         TaskInterface::TaskBuilder* tsk = scinew TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
         register_task(name, tsk);
 
@@ -63,11 +60,6 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
 void
 UtilityFactory::add_task( ProblemSpecP& db ){
 
-  typedef SpatialOps::SVolField SVol;
-  typedef SpatialOps::XVolField XVol;
-  typedef SpatialOps::YVolField YVol;
-  typedef SpatialOps::ZVolField ZVol;
-
   ProblemSpecP db_all_util = db->findBlock("Utilities");
 
   //<Utilities>
@@ -84,6 +76,7 @@ UtilityFactory::add_task( ProblemSpecP& db ){
 
         //Assume all SVOl for now:
         //otherwise would need to determine or parse for the variable types
+        typedef SpatialOps::SVolField SVol;
         TaskInterface::TaskBuilder* tsk_builder = scinew TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
         register_task(name, tsk_builder);
 

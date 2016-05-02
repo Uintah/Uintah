@@ -147,31 +147,31 @@ void pack_uintah_iterator( const Uintah::Patch::FaceType& face,
                            Uintah::Iterator& bndIter,
                            BoundaryIterators& myBndIters )
 {
-  bool plusEdge[3];
-  bool minusEdge[3];
+  //bool plusEdge[3];
+  //bool minusEdge[3];
 
-  minusEdge[0] = patch->getBCType(Uintah::Patch::xminus) != Uintah::Patch::Neighbor;
-  plusEdge [0] = patch->getBCType(Uintah::Patch::xplus ) != Uintah::Patch::Neighbor;
-  minusEdge[1] = patch->getBCType(Uintah::Patch::yminus) != Uintah::Patch::Neighbor;
-  plusEdge [1] = patch->getBCType(Uintah::Patch::yplus ) != Uintah::Patch::Neighbor;
-  minusEdge[2] = patch->getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
-  plusEdge [2] = patch->getBCType(Uintah::Patch::zplus ) != Uintah::Patch::Neighbor;
+  //minusEdge[0] = patch->getBCType(Uintah::Patch::xminus) != Uintah::Patch::Neighbor;
+  //plusEdge [0] = patch->getBCType(Uintah::Patch::xplus ) != Uintah::Patch::Neighbor;
+  //minusEdge[1] = patch->getBCType(Uintah::Patch::yminus) != Uintah::Patch::Neighbor;
+  //plusEdge [1] = patch->getBCType(Uintah::Patch::yplus ) != Uintah::Patch::Neighbor;
+  //minusEdge[2] = patch->getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
+  //plusEdge [2] = patch->getBCType(Uintah::Patch::zplus ) != Uintah::Patch::Neighbor;
 
-  int i=-1, j=-1;
-  switch (face) {
-    case Uintah::Patch::xminus:
-    case Uintah::Patch::xplus: i=1; j=2; break;
-    case Uintah::Patch::yminus:
-    case Uintah::Patch::yplus: i=0; j=2; break;
-    case Uintah::Patch::zminus:
-    case Uintah::Patch::zplus: i=0; j=1; break;
-    default:{
-      std::ostringstream msg;
-      msg << "ERROR: invalid face specification encountered\n"
-          << "\n\t" << __FILE__ << " : " << __LINE__ << std::endl;
-      throw std::runtime_error( msg.str() );
-    }
-  }
+  // int i=-1, j=-1;
+  // switch (face) {
+  //   case Uintah::Patch::xminus:
+  //   case Uintah::Patch::xplus: i=1; j=2; break;
+  //   case Uintah::Patch::yminus:
+  //   case Uintah::Patch::yplus: i=0; j=2; break;
+  //   case Uintah::Patch::zminus:
+  //   case Uintah::Patch::zplus: i=0; j=1; break;
+  //   default:{
+  //     std::ostringstream msg;
+  //     msg << "ERROR: invalid face specification encountered\n"
+  //         << "\n\t" << __FILE__ << " : " << __LINE__ << std::endl;
+  //     throw std::runtime_error( msg.str() );
+  //   }
+  // }
 
   // save pointer to the Uintah iterator. This will be needed for expressions that require access to the
   // native uintah iterators, such as the pressure expression.

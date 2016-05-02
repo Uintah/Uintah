@@ -111,13 +111,13 @@ namespace Uintah{
 
   private:
 
-    std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
-
     SimulationStateP& m_sharedState;
+
+    std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
 
     WBCHelper* m_bcHelper;
 
-    int _rk_order; 
+    int _rk_order;
 
 };
 }

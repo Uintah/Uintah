@@ -280,7 +280,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   //Vector DX = patch->dCell();
   //double vol = DX.x()*DX.y()*DX.z();
-  const double dt = tsk_info->get_dt();
+  //const double dt = tsk_info->get_dt();
 
   //
   //--------------- actual work below this line ---------------------

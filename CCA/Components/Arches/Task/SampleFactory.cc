@@ -35,7 +35,7 @@ void
 SampleFactory::build_all_tasks( ProblemSpecP& db )
 {
 
-  typedef std::vector<std::string> SV;
+  //typedef std::vector<std::string> SV;
 
   TaskInterface* tsk1 = retrieve_task("sample_task");
   tsk1->problemSetup( db );
