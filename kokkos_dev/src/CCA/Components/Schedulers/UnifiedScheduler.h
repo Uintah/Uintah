@@ -121,11 +121,11 @@ class UnifiedScheduler : public MPIScheduler  {
 
   private:
 
-    // Disable copy and assignment
-    UnifiedScheduler( const UnifiedScheduler& );
-    UnifiedScheduler& operator=( const UnifiedScheduler& );
-
-    std::mutex                 schedulerLock{};          // scheduler lock (acquire and release quickly)
+    // eliminate copy, assignment and move
+    UnifiedScheduler( const UnifiedScheduler & )            = delete;
+    UnifiedScheduler& operator=( const UnifiedScheduler & ) = delete;
+    UnifiedScheduler( UnifiedScheduler && )                 = delete;
+    UnifiedScheduler& operator=( UnifiedScheduler && )      = delete;
 
     // thread shared data, needs lock protection when accessed
     std::vector<int>           phaseTasks;
