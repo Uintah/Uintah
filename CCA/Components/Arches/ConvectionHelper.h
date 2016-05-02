@@ -101,9 +101,9 @@ namespace Uintah{
       constSFCXVariable<double>& af_x, constSFCYVariable<double>& af_y, constSFCZVariable<double>& af_z ) :
 #ifdef UINTAH_ENABLE_KOKKOS
       phi(phi.getKokkosView()), u(u.getKokkosView()), v(v.getKokkosView()), w(w.getKokkosView()),
-      psi_x(psi_x.getKokkosView())), psi_y(psi_y.getKokkosView())), psi_z(psi_z.getKokkosView())),
-      flux_x(flux_x.getKokkosView())), flux_y(flux_y.getKokkosView())), flux_z(flux_z.getKokkosView())),
-      af_x(af_x.getKokkosView())), af_y(af_y.getKokkosView())), af_z(af_z.getKokkosView()))
+      psi_x(psi_x.getKokkosView()), psi_y(psi_y.getKokkosView()), psi_z(psi_z.getKokkosView()),
+      flux_x(flux_x.getKokkosView()), flux_y(flux_y.getKokkosView()), flux_z(flux_z.getKokkosView()),
+      af_x(af_x.getKokkosView()), af_y(af_y.getKokkosView()), af_z(af_z.getKokkosView())
 #else
       phi(phi), u(u), v(v), w(w), psi_x(psi_x), psi_y(psi_y), psi_z(psi_z),
       flux_x(flux_x), flux_y(flux_y), flux_z(flux_z),
@@ -140,7 +140,7 @@ namespace Uintah{
   private:
 
 #ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<double> phi;
+    KokkosView3<const double> phi;
     KokkosView3<const double> u;
     KokkosView3<const double> v;
     KokkosView3<const double> w;

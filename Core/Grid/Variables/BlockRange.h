@@ -61,6 +61,21 @@ private:
   int m_dim[rank];
 };
 
+template <typename Functor>
+void serial_for( BlockRange const & r, const Functor & f )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(i,j,k);
+  }}}
+}
+
+#if defined( UINTAH_ENABLE_KOKKOS )
 
 template <typename Functor>
 void parallel_for( BlockRange const & r, const Functor & f )
@@ -69,24 +84,12 @@ void parallel_for( BlockRange const & r, const Functor & f )
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
-#if defined( UINTAH_ENABLE_KOKKOS )
-#pragma vector always
-#pragma ivdep
-#pragma omp parallel for collapse(3)
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k);
-  }}}
-#else
-#pragma vector always
-#pragma ivdep
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k);
-  }}}
-#endif
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke), KOKKOS_LAMBDA(int k) {
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      f(i,j,k);
+    }}
+  });
 };
 
 template <typename Functor, typename ReductionType>
@@ -96,23 +99,49 @@ void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & r
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
-ReductionType tmp = red;
-#if defined( UINTAH_ENABLE_KOKKOS )
-#pragma omp parallel for collapse(3) reduction(+:tmp)
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k,tmp);
-  }}}
-#else
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k,tmp);
-  }}}
-#endif
+  ReductionType tmp = red;
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      f(i,j,k,tmp);
+    }}
+  }, tmp);
   red = tmp;
 };
+#else
+
+template <typename Functor>
+void parallel_for( BlockRange const & r, const Functor & f )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(i,j,k);
+  }}}
+};
+
+template <typename Functor, typename ReductionType>
+void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & red  )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  ReductionType tmp = red;
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(i,j,k,tmp);
+  }}}
+  red = tmp;
+};
+
+#endif
+
 
 } // namespace Uintah
 

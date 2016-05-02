@@ -27,6 +27,9 @@ namespace Uintah{
   const int jm  = dir == 1 ? j-1 : j; \
   const int kp  = dir == 2 ? k+1 : k; \
   const int km  = dir == 2 ? k-1 : k; \
+  (void)ip; (void)im; \
+  (void)jp; (void)jm; \
+  (void)kp; (void)km;
 
 #define STENCIL5_1D( dir ) \
   const int ip  = dir == 0 ? i+1 : i; \
@@ -40,7 +43,10 @@ namespace Uintah{
   const int kp  = dir == 2 ? k+1 : k; \
   const int kpp = dir == 2 ? k+2 : k; \
   const int km  = dir == 2 ? k-1 : k; \
-  const int kmm = dir == 2 ? k-2 : k
+  const int kmm = dir == 2 ? k-2 : k; \
+  (void)ip; (void)ipp; (void)im; (void)imm; \
+  (void)jp; (void)jpp; (void)jm; (void)jmm; \
+  (void)kp; (void)kpp; (void)km; (void)kmm;
 
 #define C_    i,   j,   k
 #define CP_   ip,  jp,  kp

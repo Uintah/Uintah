@@ -175,20 +175,6 @@ void Poisson1::initialize(const ProcessorGroup*,
         }
       }
     }
-#if 0
-    if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
-       IntVector l,h;
-       patch->getFaceNodes(Patch::xminus, 0, l, h);
-
-      for(NodeIterator iter(l,h); !iter.done(); iter++){
-        if (phi[*iter] != 1.0) {
-          cout << "phi_old[" << *iter << "]=" << phi[*iter] << endl;
-        }
-         phi[*iter]=1;
-      }
-    }
-#endif
-
     new_dw->put(sum_vartype(-1), residual_label);
   }
 }
