@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Arches "2D" Periodic Box Almgren MMS </title>
+  </Meta>
+
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>0.5</timestep_multiplier>
+    <max_Timesteps>50</max_Timesteps>
+  </Time>
+
+  <DataArchiver>
+    <filebase>kokkos.uda</filebase>
+    <outputInitTimestep/>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="phi-up"/>
+    <save label="phi-sb"/>
+    <save label="phi-vl"/>
+    <save label="phi-roe"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[8,8,8]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial> 
+      <Face side="x-">
+        <BCType var="Dirichlet" label="phi">
+          <value>0.</value>
+        </BCType>
+      </Face> 
+      <Face side="x+">
+        <BCType var="Dirichlet" label="phi">
+          <value>0.</value>
+        </BCType>
+      </Face> 
+      <Face side="y-">
+        <BCType var="Dirichlet" label="phi">
+          <value>0.</value>
+        </BCType>
+      </Face> 
+      <Face side="y+">
+        <BCType var="Dirichlet" label="phi">
+          <value>0.</value>
+        </BCType>
+      </Face> 
+      <Face side="z-">
+        <BCType var="Dirichlet" label="phi">
+          <value>0.</value>
+        </BCType>
+      </Face> 
+      <Face side="z+">
+        <BCType var="Dirichlet" label="phi">
+          <value>0.</value>
+        </BCType>
+      </Face> 
+    </BoundaryConditions>
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+
+  <CFD>
+<!-- ARCHES specification -->
+    <ARCHES>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
+      <Properties>
+        <ConstantProps>
+          <temperature>298.</temperature>
+          <density>298.</density>
+        </ConstantProps>
+      </Properties>
+
+      <PropertyModelsV2>
+        <model label="density" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.e-4</value>
+        </model>
+        <model label="viscosityCT" type="constant_property">
+          <grid type="CC"/>
+          <value>1.e-6</value>
+        </model>
+        <model label="uVel" type="constant_property">
+          <grid type="FX"/>
+          <value>1.</value>
+        </model>
+        <model label="vVel" type="constant_property">
+          <grid type="FY"/>
+          <value>0.</value>
+        </model>
+        <model label="wVel" type="constant_property">
+          <grid type="FZ"/>
+          <value>0.</value>
+        </model>
+        <model label="areaFractionX" type="constant_property">
+          <grid type="FX"/>
+          <value>1.</value>
+        </model>
+        <model label="areaFractionY" type="constant_property">
+          <grid type="FY"/>
+          <value>1.</value>
+        </model>
+        <model label="areaFractionZ" type="constant_property">
+          <grid type="FZ"/>
+          <value>1.</value>
+        </model>
+      </PropertyModelsV2>
+
+      <KScalarTransport>
+        <eqn label="phi-up" type="CC">
+          <convection scheme="upwind" />
+          <diffusion/>
+          <diffusion_coef label="gamma"/>
+          <velocity xlabel="uVel"
+                    ylabel="vVel"
+                    zlabel="wVel"/>
+        </eqn>
+        <eqn label="phi-sb" type="CC">
+          <convection scheme="superbee" />
+          <diffusion/>
+          <diffusion_coef label="gamma"/>
+          <velocity xlabel="uVel"
+                    ylabel="vVel"
+                    zlabel="wVel"/>
+        </eqn>
+        <eqn label="phi-vl" type="CC">
+          <convection scheme="vanleer" />
+          <diffusion/>
+          <diffusion_coef label="gamma"/>
+          <velocity xlabel="uVel"
+                    ylabel="vVel"
+                    zlabel="wVel"/>
+        </eqn>
+        <eqn label="phi-roe" type="CC">
+          <convection scheme="roe" />
+          <diffusion/>
+          <diffusion_coef label="gamma"/>
+          <velocity xlabel="uVel"
+                    ylabel="vVel"
+                    zlabel="wVel"/>
+        </eqn>
+      </KScalarTransport>
+
+      <Initialization> 
+        <task task_label="phi_initializer-up" 
+              variable_label="phi-up" 
+              type="wave">
+              <wave type="square">
+                <grid type="CC"/>
+                <independent_variable label="gridX"/>
+                <square min="0.0"
+                        max=".50"
+                        f="1.0"
+                        offset="0.0"/>
+              </wave>
+        </task>
+        <task task_label="phi_initializer-sb" 
+              variable_label="phi-sb" 
+              type="wave">
+              <wave type="square">
+                <grid type="CC"/>
+                <independent_variable label="gridX"/>
+                <square min="0.0"
+                        max=".50"
+                        f="1.0"
+                        offset="0.0"/>
+              </wave>
+        </task>
+        <task task_label="phi_initializer-vl" 
+              variable_label="phi-vl" 
+              type="wave">
+              <wave type="square">
+                <grid type="CC"/>
+                <independent_variable label="gridX"/>
+                <square min="0.0"
+                        max=".50"
+                        f="1.0"
+                        offset="0.0"/>
+              </wave>
+        </task>
+        <task task_label="phi_initializer-roe" 
+              variable_label="phi-roe" 
+              type="wave">
+              <wave type="square">
+                <grid type="CC"/>
+                <independent_variable label="gridX"/>
+                <square min="0.0"
+                        max=".50"
+                        f="1.0"
+                        offset="0.0"/>
+              </wave>
+        </task>
+      </Initialization>
+
+      <KokkosSolver>
+      </KokkosSolver>
+
+    </ARCHES>
+
+  </CFD>
+
+</Uintah_specification>

@@ -5,6 +5,9 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <spatialops/structured/FVStaggered.h>
 
+#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <spatialops/util/TimeLogger.h>
+
 namespace Uintah{
 
   template <typename T>
@@ -134,6 +137,10 @@ private:
     const double dt = tsk_info->get_dt();
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
+#ifdef DO_TIMINGS
+    SpatialOps::TimeLogger timer("nebo_scalar_update.out."+_task_name);
+    timer.start("update_scalar");
+#endif
 
       STFP phi = tsk_info->get_so_field<T>( *i );
       STFP rhs = tsk_info->get_const_so_field<T>( *i+"_RHS" );
@@ -143,6 +150,9 @@ private:
       //      If it does, another task will be responsible for removing it if needed.
       *phi <<= cond( (*interp)(*eps) > 0.0, *phi + dt * (*rhs) )
                     ( *phi );
+#ifdef DO_TIMINGS
+    timer.stop("update_scalar");
+#endif
 
     }
   }

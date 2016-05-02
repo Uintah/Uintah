@@ -2,22 +2,19 @@
 #define Uintah_Component_Arches_WaveFormInit_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
-#include <spatialops/structured/FVStaggered.h>
+#include <CCA/Components/Arches/DiscretizationTools.h>
 
 namespace Uintah{
 
-  //IT is the independent variable type
-  //DT is the dependent variable type
-  template <typename IT, typename DT>
+  template <typename T>
   class WaveFormInit : public TaskInterface {
 
 public:
 
     enum WAVE_TYPE { SINE, SQUARE };
 
-    WaveFormInit<IT, DT>( std::string task_name, int matl_index, const std::string var_name );
-    ~WaveFormInit<IT, DT>();
+    WaveFormInit<T>( std::string task_name, int matl_index, const std::string var_name );
+    ~WaveFormInit<T>();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -31,7 +28,7 @@ public:
       ~Builder(){}
 
       WaveFormInit* build()
-      { return scinew WaveFormInit<IT, DT>( _task_name, _matl_index, _var_name ); }
+      { return scinew WaveFormInit<T>( _task_name, _matl_index, _var_name ); }
 
       private:
 
@@ -63,7 +60,7 @@ protected:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                SpatialOps::OperatorDatabase& opr ){}
 
-    void create_local_labels();
+    void create_local_labels(){};
 
 private:
 
@@ -79,28 +76,26 @@ private:
     double _min_sq;
     double _max_sq;
 
+    typedef typename VariableHelper<T>::ConstType CT;
+
   };
 
   //Function definitions:
 
-  template <typename IT, typename DT>
-  void WaveFormInit<IT, DT>::create_local_labels(){
-  }
-
-  template <typename IT, typename DT>
-  WaveFormInit<IT, DT>::WaveFormInit( std::string task_name, int matl_index, const std::string var_name ) :
+  template <typename T>
+  WaveFormInit<T>::WaveFormInit( std::string task_name, int matl_index, const std::string var_name ) :
   TaskInterface( task_name, matl_index ), _var_name(var_name){
 
     _two_pi = 2.0*acos(-1.0);
 
   }
 
-  template <typename IT, typename DT>
-  WaveFormInit<IT, DT>::~WaveFormInit()
+  template <typename T>
+  WaveFormInit<T>::~WaveFormInit()
   {}
 
-  template <typename IT, typename DT>
-  void WaveFormInit<IT, DT>::problemSetup( ProblemSpecP& db ){
+  template <typename T>
+  void WaveFormInit<T>::problemSetup( ProblemSpecP& db ){
 
     std::string wave_type;
     db->findBlock("wave")->getAttribute("type",wave_type);
@@ -132,45 +127,36 @@ private:
     }
   }
 
-  template <typename IT, typename DT>
-  void WaveFormInit<IT, DT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  template <typename T>
+  void WaveFormInit<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-    //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
-    register_variable( _ind_var_name, ArchesFieldContainer::REQUIRES,       0, ArchesFieldContainer::NEWDW,  variable_registry );
-    register_variable( _var_name,     ArchesFieldContainer::MODIFIES,       0, ArchesFieldContainer::NEWDW,  variable_registry );
+    register_variable( _ind_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
+    register_variable( _var_name,     ArchesFieldContainer::MODIFIES, variable_registry );
 
   }
 
-  template <typename IT, typename DT>
-  void WaveFormInit<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  template <typename T>
+  void WaveFormInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                         SpatialOps::OperatorDatabase& opr ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<IT> ITptr;
-    typedef SpatialOps::SpatFldPtr<DT> DTptr;
-
-    //build an operator to interpolate the independent variable to the grid
-    //location of the dependent variable
-    typedef typename OperatorTypeBuilder< SpatialOps::Interpolant, IT, DT >::type InterpT;
-    const InterpT* const interp = opr.retrieve_operator<InterpT>();
-
-    DTptr dep_field = tsk_info->get_so_field<DT>( _var_name );
-    ITptr ind_field = tsk_info->get_const_so_field<IT>( _ind_var_name );
+    T& dep_field = *(tsk_info->get_uintah_field<T>( _var_name ));
+    CT& ind_field = *(tsk_info->get_const_uintah_field<CT>( _ind_var_name ));
+    Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
     switch (_wtype){
       case SINE:
 
-        *dep_field <<= _A*sin( _two_pi * _f1 * (*interp)( *ind_field ) ) + _offset;
+        Uintah::parallel_for(range, [&dep_field, &ind_field, this](int i, int j, int k){
+          dep_field(i,j,k) = _A * sin( _two_pi * _f1 * ind_field(i,j,k) ) + _offset;
+        });
 
         break;
       case SQUARE:
 
-        *dep_field <<= sin( _two_pi * _f1 * (*interp)( *ind_field )) + _offset;
-
-        *dep_field <<= cond( *dep_field < 0.0, _min_sq )
-                           ( *dep_field > 0.0, _max_sq )
-                           ( 0.0 );
+        Uintah::parallel_for(range, [&dep_field, &ind_field, this](int i, int j, int k){
+          dep_field(i,j,k) = sin( _two_pi * _f1 * ind_field(i,j,k)) + _offset;
+          dep_field(i,j,k) = (dep_field(i,j,k) <= 0.0) ? _min_sq : _max_sq ;
+         });
 
         break;
       default:

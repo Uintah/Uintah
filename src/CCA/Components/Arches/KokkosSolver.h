@@ -31,6 +31,8 @@
 
 namespace Uintah{
 
+  class WBCHelper;
+
   class KokkosSolver : NonlinearSolver {
 
   public:
@@ -100,13 +102,22 @@ namespace Uintah{
 
   void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart );
 
+  void sched_checkBCs( SchedulerP& sched, const LevelP& level );
+  void checkBCs(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse*,
+                        DataWarehouse* new_dw);
+
   private:
 
     std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
 
-    SimulationStateP& _shared_state;
+    SimulationStateP& m_sharedState;
 
+    WBCHelper* m_bcHelper;
 
+    int _rk_order; 
 
 };
 }

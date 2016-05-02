@@ -4,6 +4,9 @@
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/NeboStencilBuilder.h>
 
+#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <spatialops/util/TimeLogger.h>
+
 using namespace Uintah;
 
 using namespace SpatialOps;
@@ -77,7 +80,7 @@ ScalarRHS::problemSetup( ProblemSpecP& db ){
     } else if ( _conv_scheme == "hquick") {
       _limiter_type = WasatchCore::HQUICK;
     } else {
-      throw InvalidValue("Error: Convection scheme not supported for scalar.",__FILE__,__LINE__);
+      throw InvalidValue("Error: Convection scheme not supported for scalar: "+_conv_scheme,__FILE__,__LINE__);
     }
 
   }
@@ -279,6 +282,10 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   //
   //--------------- actual work below this line ---------------------
   //
+#ifdef DO_TIMINGS
+    SpatialOps::TimeLogger timer("nebo_scalar_assemble.out."+_task_name);
+    timer.start("assemble_rhs");
+#endif
 
   //diffusion:
   if ( _do_diff ) {
@@ -317,6 +324,9 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     *rhs <<= *rhs + i->weight * *src;
 
   }
+#ifdef DO_TIMINGS
+    timer.stop("assemble_rhs");
+#endif
 }
 
 //

@@ -666,7 +666,7 @@ DQMOMEqn::buildRHS( const ProcessorGroup* pc,
 
     Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
-    IntegrateFlux integrator( rhs, flux_x, flux_y, flux_z, Dx );
+    IntegrateFlux<CCVariable<double> > integrator( rhs, flux_x, flux_y, flux_z, Dx );
     Uintah::parallel_for( range, integrator );
 
   }
@@ -834,8 +834,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
 #ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
-      ComputeConvectiveFlux get_flux( phi, uu, vv, ww, psi_x, psi_y, psi_z,
-                                      flux_x, flux_y, flux_z, af_x, af_y, af_z );
+      ComputeConvectiveFlux<CCVariable<double> get_flux( phi, uu, vv, ww, psi_x, psi_y, psi_z,
+                                                         flux_x, flux_y, flux_z, af_x, af_y, af_z );
 
       Uintah::parallel_for( range, get_flux );
 #else

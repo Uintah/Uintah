@@ -26,7 +26,7 @@
    the three different directions is applicable.
 */
 
-namespace Uintah{
+namespace Uintah {
 
   enum LIMITER {CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER};
 
@@ -46,10 +46,19 @@ namespace Uintah{
       @struct IntegrateFlux
       @brief  Given a flux variable, integrate to get the total contribution to the RHS.
   **/
+  template <typename T>
   struct IntegrateFlux{
 
-    IntegrateFlux(CCVariable<double>& rhs, constSFCXVariable<double>& flux_x,
-                  constSFCYVariable<double>& flux_y, constSFCZVariable<double>& flux_z,
+    typedef typename VariableHelper<T>::ConstType CT;
+    typedef typename VariableHelper<T>::XFaceType FXT;
+    typedef typename VariableHelper<T>::YFaceType FYT;
+    typedef typename VariableHelper<T>::ZFaceType FZT;
+    typedef typename VariableHelper<T>::ConstXFaceType CFXT;
+    typedef typename VariableHelper<T>::ConstYFaceType CFYT;
+    typedef typename VariableHelper<T>::ConstZFaceType CFZT;
+
+    IntegrateFlux(T& rhs, CFXT& flux_x,
+                  CFYT& flux_y, CFZT& flux_z,
                   const Vector& Dx) :
 #ifdef UINTAH_ENABLE_KOKKOS
     rhs(rhs.getKokkosView()), flux_x(flux_x.getKokkosView()), flux_y(flux_y.getKokkosView()),
@@ -79,10 +88,10 @@ namespace Uintah{
     KokkosView3<const double> flux_y;
     KokkosView3<const double> flux_z;
 #else
-    CCVariable<double>& rhs;
-    constSFCXVariable<double>& flux_x;
-    constSFCYVariable<double>& flux_y;
-    constSFCZVariable<double>& flux_z;
+    T& rhs;
+    CFXT& flux_x;
+    CFYT& flux_y;
+    CFZT& flux_z;
 #endif
     const Vector& Dx;
 
@@ -92,13 +101,22 @@ namespace Uintah{
       @struct ComputeConvectiveFlux
       @brief Compute a convective flux given psi (flux limiter) with this functor.
   **/
+  template <typename T>
   struct ComputeConvectiveFlux{
 
-    ComputeConvectiveFlux( constCCVariable<double>& phi,
-      constSFCXVariable<double>& u, constSFCYVariable<double>& v, constSFCZVariable<double>& w,
-      constSFCXVariable<double>& psi_x, constSFCYVariable<double>& psi_y, constSFCZVariable<double>& psi_z,
-      SFCXVariable<double>& flux_x, SFCYVariable<double>& flux_y, SFCZVariable<double>& flux_z,
-      constSFCXVariable<double>& af_x, constSFCYVariable<double>& af_y, constSFCZVariable<double>& af_z ) :
+    typedef typename VariableHelper<T>::ConstType CT;
+    typedef typename VariableHelper<T>::XFaceType FXT;
+    typedef typename VariableHelper<T>::YFaceType FYT;
+    typedef typename VariableHelper<T>::ZFaceType FZT;
+    typedef typename VariableHelper<T>::ConstXFaceType CFXT;
+    typedef typename VariableHelper<T>::ConstYFaceType CFYT;
+    typedef typename VariableHelper<T>::ConstZFaceType CFZT;
+
+    ComputeConvectiveFlux( CT& phi,
+                           CFXT& u, CFYT& v, CFZT& w,
+                           CFXT& psi_x, CFYT& psi_y, CFZT& psi_z,
+                           FXT& flux_x, FYT& flux_y, FZT& flux_z,
+                           CFXT& af_x, CFYT& af_y, CFZT& af_z ) :
 #ifdef UINTAH_ENABLE_KOKKOS
       phi(phi.getKokkosView()), u(u.getKokkosView()), v(v.getKokkosView()), w(w.getKokkosView()),
       psi_x(psi_x.getKokkosView()), psi_y(psi_y.getKokkosView()), psi_z(psi_z.getKokkosView()),
@@ -154,19 +172,19 @@ namespace Uintah{
     KokkosView3<const double> af_y;
     KokkosView3<const double> af_z;
 #else
-    constCCVariable<double>& phi;
-    constSFCXVariable<double>& u;
-    constSFCYVariable<double>& v;
-    constSFCZVariable<double>& w;
-    constSFCXVariable<double>& psi_x;
-    constSFCYVariable<double>& psi_y;
-    constSFCZVariable<double>& psi_z;
-    SFCXVariable<double>& flux_x;
-    SFCYVariable<double>& flux_y;
-    SFCZVariable<double>& flux_z;
-    constSFCXVariable<double>& af_x;
-    constSFCYVariable<double>& af_y;
-    constSFCZVariable<double>& af_z;
+    CT& phi;
+    CFXT& u;
+    CFYT& v;
+    CFZT& w;
+    CFXT& psi_x;
+    CFYT& psi_y;
+    CFZT& psi_z;
+    FXT& flux_x;
+    FYT& flux_y;
+    FZT& flux_z;
+    CFXT& af_x;
+    CFYT& af_y;
+    CFZT& af_z;
 #endif
 
   };
@@ -593,5 +611,36 @@ namespace Uintah{
     int k2off;
   };
 
-} //namespace Uintah
+  /**
+    @class ConvectionHelper
+    @brief A set of useful tools
+  **/
+  class ConvectionHelper{
+
+    ConvectionHelper(){}
+    ~ConvectionHelper(){}
+
+  public:
+    /**
+      @brief Get the limiter enum from a string representation
+    **/
+    LIMITER get_limiter_from_string( const std::string value ){
+      if ( value == "central" ){
+        return CENTRAL;
+      } else if ( value == "upwind" ){
+        return UPWIND;
+      } else if ( value == "superbee" ){
+        return SUPERBEE;
+      } else if ( value == "roe" ){
+        return ROE;
+      } else if ( value == "vanleer" ){
+        return VANLEER;
+      } else {
+        throw InvalidValue("Error: flux limiter type not recognized: "+value, __FILE__, __LINE__);
+      }
+    }
+
+  };
+
+} //namespace
 #endif
