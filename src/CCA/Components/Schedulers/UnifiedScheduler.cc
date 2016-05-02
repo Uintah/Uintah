@@ -82,6 +82,7 @@ namespace {
 
 std::mutex      g_main_io_mutex{};
 std::mutex      g_worker_io_mutex{};
+std::mutex      g_scheduler_mutex{}; // scheduler lock (acquire and release quickly)
 
 } // namespace
 
@@ -885,7 +886,7 @@ UnifiedScheduler::runTasks( int thread_id )
     //    Check if anything this thread can do concurrently.
     //    If so, then update the various scheduler counters.
     // ----------------------------------------------------------------------------------
-    schedulerLock.lock();
+    g_scheduler_mutex.lock();
     while (!havework) {
       /*
        * (1.1)
@@ -1129,7 +1130,7 @@ UnifiedScheduler::runTasks( int thread_id )
       }
     } // end while (!havework)
 
-    schedulerLock.unlock();
+    g_scheduler_mutex.unlock();
 
     // ----------------------------------------------------------------------------------
     // Part 2
