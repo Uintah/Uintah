@@ -10,7 +10,10 @@
 #define YDIM
 #define ZDIM
 
-// used by: 
+// Turn on some timings
+//#define DO_TIMINGS
+
+// used by:
 // DQMOMEqn
 //#define VERIFY_DQMOM_TRANSPORT
 
@@ -31,4 +34,3 @@
 // used by:
 // SimpleHeatTransfer
 //#define VERIFY_SIMPLEHEATTRANSFER_MODEL
-

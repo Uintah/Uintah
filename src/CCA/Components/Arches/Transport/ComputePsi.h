@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/DiscretizationTools.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
+#include <CCA/Components/Arches/Directives.h>
 #include <spatialops/util/TimeLogger.h>
 
 #define GET_PSI(my_limiter) \

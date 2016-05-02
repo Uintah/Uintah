@@ -3,7 +3,7 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/NeboStencilBuilder.h>
-
+#include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/DiscretizationTools.h>
 #include <spatialops/util/TimeLogger.h>
 
@@ -284,7 +284,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   //
 #ifdef DO_TIMINGS
     SpatialOps::TimeLogger timer("nebo_scalar_assemble.out."+_task_name);
-    timer.start("assemble_rhs");
+    timer.start("work");
 #endif
 
   //diffusion:
@@ -325,7 +325,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   }
 #ifdef DO_TIMINGS
-    timer.stop("assemble_rhs");
+    timer.stop("work");
 #endif
 }
 

@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <spatialops/structured/FVStaggered.h>
-
+#include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/DiscretizationTools.h>
 #include <spatialops/util/TimeLogger.h>
 
@@ -139,7 +139,7 @@ private:
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 #ifdef DO_TIMINGS
     SpatialOps::TimeLogger timer("nebo_scalar_update.out."+ *i);
-    timer.start("update_scalar");
+    timer.start("work");
 #endif
 
       STFP phi = tsk_info->get_so_field<T>( *i );
@@ -151,7 +151,7 @@ private:
       *phi <<= cond( (*interp)(*eps) > 0.0, *phi + dt * (*rhs) )
                     ( *phi );
 #ifdef DO_TIMINGS
-    timer.stop("update_scalar");
+    timer.stop("work");
 #endif
 
     }

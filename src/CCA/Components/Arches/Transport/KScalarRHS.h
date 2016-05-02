@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/DiscretizationTools.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
+#include <CCA/Components/Arches/Directives.h>
 #include <spatialops/util/TimeLogger.h>
 
 namespace Uintah{
@@ -326,7 +327,7 @@ private:
 
 #ifdef DO_TIMINGS
     SpatialOps::TimeLogger timer("kokkos_scalar_assemble.out."+_task_name);
-    timer.start("assemble_rhs");
+    timer.start("work");
 #endif
 
     //Convection:
@@ -377,7 +378,7 @@ private:
     }
 
 #ifdef DO_TIMINGS
-    timer.stop("assemble_rhs");
+    timer.stop("work");
 #endif
 
   }
