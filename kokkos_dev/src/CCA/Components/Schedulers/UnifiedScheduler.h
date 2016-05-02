@@ -265,13 +265,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
     static CrowdMonitor idleStreamsLock_;
-    /*mutable CrowdMonitor deviceComputesLock_;
-    mutable CrowdMonitor hostComputesLock_;
-    mutable CrowdMonitor deviceRequiresLock_;
-    mutable CrowdMonitor hostRequiresLock_;
-    mutable CrowdMonitor deviceComputesAllocationLock_;
-    mutable CrowdMonitor hostComputesAllocationLock_;
-    mutable CrowdMonitor deviceComputesTemporaryLock_;*/
 
     struct labelPatchMatlDependency {
       std::string     label;
