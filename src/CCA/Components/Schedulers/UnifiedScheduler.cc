@@ -52,6 +52,9 @@
 
 using namespace Uintah;
 
+// sync cerr so they are readable when output by multiple threads
+extern std::mutex cerrLock;
+
 extern DebugStream taskdbg;
 extern DebugStream waitout;
 extern DebugStream execout;
@@ -72,7 +75,13 @@ static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
   //TODO, should be deallocated
   std::map <unsigned int, queue<cudaStream_t*> > * UnifiedScheduler::idleStreams = new std::map <unsigned int, queue<cudaStream_t*> >;
 
-  CrowdMonitor UnifiedScheduler::idleStreamsLock_("CUDA streams lock");
+  namespace {
+
+  struct idle_streams_tag{};
+  using  idle_streams_monitor = Uintah::CrowdMonitor<idle_streams_tag>;
+
+  }
+
 #endif
 
 
@@ -3238,7 +3247,7 @@ UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask ) {
 //______________________________________________________________________
 //
 bool
-UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtas ) {
+UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask ) {
 
   const Task* task = dtask->getTask();
 
@@ -3416,7 +3425,7 @@ UnifiedScheduler::markDeviceGhostsAsValid( DetailedTask * dtask ) {
 //______________________________________________________________________
 //
 void
-UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask  dtask ) {
+UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask ) {
   //Go through device computes vars and mark them as valid on the device.
 
   //The only thing we need to process is the requires.
@@ -3723,6 +3732,7 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask ) {
     }
   }
 }
+
 
 //______________________________________________________________________
 //
@@ -4259,89 +4269,52 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask ) {
 
 //______________________________________________________________________
 //
-//void
-//UnifiedScheduler::createCudaStreams( int device, int numStreams /* = 1 */ ) {
-//  cudaError_t retVal;
-//
-//  idleStreamsLock_.writeLock();
-//  cerrLock.lock();
-//   gpu_stats << myRankThread() << " locking createCudaStreams" << std::endl;
-//  cerrLock.unlock();
-//  {
-//    OnDemandDataWarehouse::uintahSetCudaDevice(device);
-//    for (int j = 0; j < numStreams; ++j) {
-//      cudaStream_t* stream = (cudaStream_t*) malloc(sizeof(cudaStream_t));
-//      CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
-//      idleStreams->operator[](device).push(stream);
-//
-//      if (gpu_stats.active()) {
-//        cerrLock.lock();
-//        {
-//          gpu_stats << myRankThread() << " Created CUDA stream " << std::hex
-//              << stream << " on device " << std::dec << device << std::endl;
-//        }
-//        cerrLock.unlock();
-//      }
-//    }
-//  }
-//  cerrLock.lock();
-//   gpu_stats << myRankThread() << " unlocking createCudaStreams" << std::endl;
-//  cerrLock.unlock();
-//  idleStreamsLock_.writeUnlock();
-//}
-
-
-//______________________________________________________________________
-//
 void UnifiedScheduler::freeCudaStreamsFromPool() {
   cudaError_t retVal;
 
-
-  idleStreamsLock_.writeLock();
-  if (gpu_stats.active()) {
-    cerrLock.lock();
-    gpu_stats << myRankThread() << " locking freeCudaStreams" << std::endl;
-    cerrLock.unlock();
-  }
-
-  unsigned int totalStreams = 0;
-  for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it=idleStreams->begin(); it!=idleStreams->end(); ++it) {
-    totalStreams += it->second.size();
+  idle_streams_monitor idle_streams_write_lock{ Uintah::CrowdMonitor<idle_streams_tag>::WRITER };
+  {
     if (gpu_stats.active()) {
       cerrLock.lock();
-      {
-        gpu_stats << myRankThread() << " Preparing to deallocate " << it->second.size()
-            << " CUDA stream(s) for device #" << it->first
-            << std::endl;
-      }
+      gpu_stats << myRankThread() << " locking freeCudaStreams" << std::endl;
       cerrLock.unlock();
     }
-  }
 
-
-  for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it=idleStreams->begin(); it!=idleStreams->end(); ++it) {
-    unsigned int device = it->first;
-    OnDemandDataWarehouse::uintahSetCudaDevice(device);
-
-    while (!idleStreams->operator[](device).empty()) {
-      cudaStream_t* stream = idleStreams->operator[](device).front();
-      idleStreams->operator[](device).pop();
+    unsigned int totalStreams = 0;
+    for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it = idleStreams->begin(); it != idleStreams->end(); ++it) {
+      totalStreams += it->second.size();
       if (gpu_stats.active()) {
         cerrLock.lock();
-        gpu_stats << myRankThread() << " Performing cudaStreamDestroy for stream "
-                    << stream << " on device " << device
-                    << std::endl;
+        {
+          gpu_stats << myRankThread() << " Preparing to deallocate " << it->second.size() << " CUDA stream(s) for device #"
+                    << it->first << std::endl;
+        }
         cerrLock.unlock();
       }
-      CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
-      free(stream);
     }
-  }
 
-  cerrLock.lock();
+    for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it = idleStreams->begin(); it != idleStreams->end(); ++it) {
+      unsigned int device = it->first;
+      OnDemandDataWarehouse::uintahSetCudaDevice(device);
+
+      while (!idleStreams->operator[](device).empty()) {
+        cudaStream_t* stream = idleStreams->operator[](device).front();
+        idleStreams->operator[](device).pop();
+        if (gpu_stats.active()) {
+          cerrLock.lock();
+          gpu_stats << myRankThread() << " Performing cudaStreamDestroy for stream " << stream << " on device " << device
+                    << std::endl;
+          cerrLock.unlock();
+        }
+        CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
+        free(stream);
+      }
+    }
+
+    cerrLock.lock();
     gpu_stats << myRankThread() << " unlocking freeCudaStreams " << std::endl;
-  cerrLock.unlock();
-  idleStreamsLock_.writeUnlock();
+    cerrLock.unlock();
+  }
 }
 
 
@@ -4352,7 +4325,7 @@ UnifiedScheduler::getCudaStreamFromPool( int device ) {
   cudaError_t retVal;
   cudaStream_t* stream;
 
-  idleStreamsLock_.writeLock();
+  idle_streams_monitor idle_streams_write_lock{ Uintah::CrowdMonitor<idle_streams_tag>::WRITER };
   {
     if (idleStreams->operator[](device).size() > 0) {
       stream = idleStreams->operator[](device).front();
@@ -4382,7 +4355,6 @@ UnifiedScheduler::getCudaStreamFromPool( int device ) {
       }
     }
   }
-  idleStreamsLock_.writeUnlock();
 
   return stream;
 }
@@ -4411,9 +4383,11 @@ UnifiedScheduler::reclaimCudaStreamsIntoPool( DetailedTask * dtask ) {
     cudaStream_t* stream = dtask->getCudaStreamForThisTask(*iter);
     if (stream != NULL) {
 
-      idleStreamsLock_.writeLock();
-      idleStreams->operator[](*iter).push(stream);
-      idleStreamsLock_.writeUnlock();
+      idle_streams_monitor idle_streams_write_lock{ Uintah::CrowdMonitor<idle_streams_tag>::WRITER };
+      {
+        idleStreams->operator[](*iter).push(stream);
+      }
+
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
@@ -4509,7 +4483,7 @@ UnifiedScheduler::createTaskGpuDWs( DetailedTask * dtask ) {
       std::ostringstream out;
       out << "New task GPU DW"
           << " MPIRank: " << Uintah::Parallel::getMPIRank()
-          << " Thread:" << Thread::self()->myid();
+          << " Thread:" << Impl::t_tid;
           //<< " Task: " << task->getName();
       new_taskGpuDW->init(currentDevice, out.str());
       new_taskGpuDW->setDebug(gpudbg.active());

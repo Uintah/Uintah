@@ -28,22 +28,23 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
-#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+  #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
 #include <sci_defs/cuda_defs.h>
 
 #include <condition_variable>
+
 #include <mutex>
 #include <string>
 #include <thread>
 
 #ifdef HAVE_CUDA
-static DebugStream gpu_stats("Unified_GPUStats", false);
-static DebugStream use_single_device("Unified_SingleDevice", false);
-static DebugStream simulate_multiple_gpus("GPUSimulateMultiple", false);
-static DebugStream gpudbg("GPUDataWarehouse", false);
+  static DebugStream gpu_stats("Unified_GPUStats", false);
+  static DebugStream use_single_device("Unified_SingleDevice", false);
+  static DebugStream simulate_multiple_gpus("GPUSimulateMultiple", false);
+  static DebugStream gpudbg("GPUDataWarehouse", false);
 #endif
 
 namespace Uintah {
@@ -174,6 +175,7 @@ class UnifiedScheduler : public MPIScheduler  {
     void syncTaskGpuDWs(DetailedTask* dtask);
 
     void performInternalGhostCellCopies(DetailedTask* dtask);
+
     void copyAllGpuToGpuDependences(DetailedTask* dtask);
 
     void copyAllExtGpuDependenciesToHost(DetailedTask* dtask);
@@ -198,17 +200,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void initiateD2H(DetailedTask* dtask);
 
-    //void copyAllDataD2H(DetailedTask* dtask);
-
-    //void processD2HCopies(DetailedTask* dtask);
-
-    // postD2HCopies( DetailedTask* dtask );
-    
-    //void postH2DCopies(DetailedTask* dtask);
-
-    //void preallocateDeviceMemory( DetailedTask* dtask );
-
-    //void createCudaStreams(int numStreams, int device);
     bool ghostCellsProcessingReady( DetailedTask* dtask );
 
     bool allHostVarsProcessingReady( DetailedTask* dtask );
@@ -262,9 +253,6 @@ class UnifiedScheduler : public MPIScheduler  {
     //std::vector<std::queue<cudaStream_t*> >  idleStreams;
     static std::map <unsigned int, queue<cudaStream_t*> > *idleStreams;
     std::vector< std::string >               materialsNames;
-
-    // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
-    static CrowdMonitor idleStreamsLock_;
 
     struct labelPatchMatlDependency {
       std::string     label;

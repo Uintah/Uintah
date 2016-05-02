@@ -52,15 +52,15 @@ ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS += $(SRCDIR)/RMCRT_Test.cc       
 endif
 
-ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/PoissonGPU1.cc                 \
-          $(SRCDIR)/PoissonGPU1Kernel.cu           \
-          $(SRCDIR)/UnifiedSchedulerTest.cc        \
-          $(SRCDIR)/UnifiedSchedulerTestKernel.cu
-  DLINK_FILES += \
-          CCA/Components/Examples/PoissonGPU1Kernel.o           \
-          CCA/Components/Examples/UnifiedSchedulerTestKernel.o 
-endif
+#ifeq ($(HAVE_CUDA),yes)
+#  SRCS += $(SRCDIR)/PoissonGPU1.cc                 \
+#          $(SRCDIR)/PoissonGPU1Kernel.cu           \
+#          $(SRCDIR)/UnifiedSchedulerTest.cc        \
+#          $(SRCDIR)/UnifiedSchedulerTestKernel.cu
+#  DLINK_FILES += \
+#          CCA/Components/Examples/PoissonGPU1Kernel.o           \
+#          CCA/Components/Examples/UnifiedSchedulerTestKernel.o 
+#endif
 
 PSELIBS := \
         CCA/Components/Models \

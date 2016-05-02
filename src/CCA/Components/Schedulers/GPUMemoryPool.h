@@ -27,7 +27,7 @@
 #define CCA_COMPONENTS_SCHEDULERS_GPUMEMORYPOOL_H
 
 #include <sci_defs/cuda_defs.h>
-#include <Core/Thread/CrowdMonitor.h>
+
 #include <map>
 
 namespace Uintah {
@@ -70,8 +70,6 @@ public:
   static bool freeCudaSpaceFromPool(int device_id, size_t memSize, void* addr);
 
 private:
-
-  static Uintah::CrowdMonitor *gpuPoolLock;
 
   static std::multimap<gpuMemoryPoolItem, gpuMemoryData> *gpuMemoryPool;
 

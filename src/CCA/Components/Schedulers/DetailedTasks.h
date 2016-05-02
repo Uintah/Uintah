@@ -176,7 +176,6 @@ namespace Uintah {
 
     void addReceiveListener( int mpiSignal );
     
-//    DependencyBatch*         req_next;
     DependencyBatch*         comp_next;
     DetailedTask*            fromTask;
     std::list<DetailedTask*> toTasks;
@@ -248,9 +247,8 @@ namespace Uintah {
                      std::vector<DataWarehouseP>&         dws,
                      Task::CallBackEvent                  event = Task::CPU);
 
-    // Called after doit and mpi data sent (packed in buffers) finishes.
-    // Handles internal dependencies and scrubbing.
-    // Called after doit finishes.
+    // Called after doit and mpi data sent (packed in buffers) finishes. Handles
+    // internal dependencies and scrubbing. Called after doit finishes.
     void done(std::vector<OnDemandDataWarehouseP>& dws);
 
     std::string getName() const;
@@ -281,8 +279,10 @@ namespace Uintah {
     
     void findRequiringTasks( const VarLabel* var, std::list<DetailedTask*>& requiringTasks );
 
-    void emitEdges( ProblemSpecP edgesElement ) ;
+    void emitEdges( ProblemSpecP edgesElement );
+
     bool addInternalRequires(DependencyBatch*);
+
     void addInternalComputes(DependencyBatch*);
 
     bool addRequires( DependencyBatch* );
@@ -319,18 +319,12 @@ namespace Uintah {
     //This is not a good idea.  A task should only run on one device.  But the capability for a task
     //to run on multiple nodes exists.
     std::set<unsigned int> getDeviceNums() const;
+
     std::map<unsigned int, TaskGpuDataWarehouses> TaskGpuDWs;
-
-
-    //bool queryCudaStreamCompletionForThisTask();
-
-    //void setCudaStreamForThisTask(cudaStream_t* s);
 
     void setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t* s);
 
     void clearCudaStreamsForThisTask();
-
-    //bool checkCudaStreamDoneForThisTask() const;
 
     bool checkCudaStreamDoneForThisTask(unsigned int deviceNum) const;
 

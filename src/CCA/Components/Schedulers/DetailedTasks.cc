@@ -1595,13 +1595,6 @@ cudaStream_t* DetailedTask::getCudaStreamForThisTask(unsigned int deviceNum) con
   return nullptr;
 }
 
-
-//void DetailedTask::setCudaStreamForThisTask(cudaStream_t* s)
-//{
-//  //d_cudaStream = s;
-//  setCudaStreamForThisTask(0, s);
-//};
-
 void DetailedTask::setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t* s)
 {
   if (s == nullptr) {
@@ -1621,41 +1614,6 @@ void DetailedTask::setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t
 void DetailedTask::clearCudaStreamsForThisTask() {
   d_cudaStreams.clear();
 }
-/*
-bool DetailedTask::checkCudaStreamDoneForThisTask() const
-{
-  //Check all
-  cudaError_t retVal;
-  for (std::map<unsigned int, cudaStream_t*>::const_iterator it = d_cudaStreams.begin(); it != d_cudaStreams.end(); ++it) {
-    OnDemandDataWarehouse::uintahSetCudaDevice(it->first);
-    if (it->second == nullptr) {
-      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with nullptr address for task %s\n", getName().c_str());
-      SCI_THROW(InternalError("Stream pointer with nullptr address for task: " + getName() , __FILE__, __LINE__));
-      return false;
-    }
-    retVal = cudaStreamQuery(*(it->second));
-    if (retVal == cudaSuccess) {
-    //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
-      continue;
-    } else if (retVal == cudaErrorNotReady ) {
-
-      retVal = cudaStreamQuery(*(it->second));
-      return false;
-    }
-    else if (retVal ==  cudaErrorLaunchFailure) {
-      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - CUDA kernel execution failure on Task: %s\n", getName().c_str());
-      SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
-      return false;
-    } else { //other error
-      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - The stream %p had this error code %d.  This could mean that something else in the stream just hit an error.\n",  it->second, retVal);
-      SCI_THROW(InternalError("ERROR! - Invalid stream query", __FILE__, __LINE__));
-      return false;
-    }
-
-  }
-  return true;
-}
-*/
 
 bool DetailedTask::checkCudaStreamDoneForThisTask(unsigned int deviceNum_) const
 {
@@ -2097,7 +2055,7 @@ DetailedTasks::peekNextVerifyDataTransferCompletionTask()
   DetailedTask* dtask = nullptr;
   device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::READER };
   {
-    DetailedTask* dtask = verifyDataTransferCompletionTasks_.front();
+    dtask = verifyDataTransferCompletionTasks_.front();
   }
 
   return dtask;
@@ -2111,7 +2069,7 @@ DetailedTasks::peekNextFinalizeDevicePreparationTask()
   DetailedTask* dtask = nullptr;
   device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::READER };
   {
-    DetailedTask* dtask = finalizeDevicePreparationTasks_.front();
+    dtask = finalizeDevicePreparationTasks_.front();
   }
 
   return dtask;
@@ -2125,7 +2083,7 @@ DetailedTasks::peekNextInitiallyReadyDeviceTask()
   DetailedTask* dtask = nullptr;
   device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::READER };
   {
-    DetailedTask* dtask = initiallyReadyDeviceTasks_.front();
+    dtask = initiallyReadyDeviceTasks_.front();
   }
 
   return dtask;
@@ -2153,7 +2111,7 @@ DetailedTasks::peekNextFinalizeHostPreparationTask()
   DetailedTask* dtask = nullptr;
   host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::READER };
   {
-    DetailedTask* dtask = finalizeHostPreparationTasks_.front();
+    dtask = finalizeHostPreparationTasks_.front();
   }
 
   return dtask;
@@ -2166,7 +2124,7 @@ DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
   DetailedTask* dtask = nullptr;
   host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::READER };
   {
-    DetailedTask* dtask = initiallyReadyHostTasks_.front();
+    dtask = initiallyReadyHostTasks_.front();
   }
 
   return dtask;
