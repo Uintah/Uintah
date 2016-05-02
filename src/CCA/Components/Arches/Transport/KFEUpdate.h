@@ -150,8 +150,8 @@ private:
 
 #ifdef UINTAH_ENABLE_KOKKOS
       KokkosView3<double> k_phi = phi.getKokkosView();
+      KokkosView3<double> k_rhs = rhs.getKokkosView();
       KokkosView3<const double> k_old_phi = old_phi.getKokkosView();
-      KokkosView3<const double> k_rhs = rhs.getKokkosView();
       KokkosView3<const double> k_flux_x = x_flux.getKokkosView();
       KokkosView3<const double> k_flux_y = y_flux.getKokkosView();
       KokkosView3<const double> k_flux_z = z_flux.getKokkosView();
