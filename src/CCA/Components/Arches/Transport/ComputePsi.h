@@ -216,7 +216,7 @@ private:
       ZFaceT& psi_z = *(tsk_info->get_uintah_field<ZFaceT>(*i+"_z_psi"));
 
 #ifdef DO_TIMINGS
-      SpatialOps::TimeLogger timer("compute_psi.out."+*i);
+      SpatialOps::TimeLogger timer("kokkos_compute_psi.out."+*i);
       timer.start("ComputePsi");
 #endif
       if ( my_limiter == UPWIND ){

@@ -325,7 +325,7 @@ private:
     Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
 
 #ifdef DO_TIMINGS
-    SpatialOps::TimeLogger timer("scalar_assemble.out."+_task_name);
+    SpatialOps::TimeLogger timer("kokkos_scalar_assemble.out."+_task_name);
     timer.start("assemble_rhs");
 #endif
 

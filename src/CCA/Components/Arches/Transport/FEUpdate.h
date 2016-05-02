@@ -138,7 +138,7 @@ private:
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 #ifdef DO_TIMINGS
-    SpatialOps::TimeLogger timer("nebo_scalar_update.out."+_task_name);
+    SpatialOps::TimeLogger timer("nebo_scalar_update.out."+ *i);
     timer.start("update_scalar");
 #endif
 
