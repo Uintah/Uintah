@@ -127,13 +127,13 @@ private:
   template <typename T> void
   KScalarRHS<T>::problemSetup( ProblemSpecP& db ){
 
-    ConvectionHelper* helper;
+    ConvectionHelper* conv_helper;
 
     _do_conv = false;
     if ( db->findBlock("convection")){
       std::string conv_scheme;
       db->findBlock("convection")->getAttribute("scheme", conv_scheme);
-      _conv_scheme = helper->get_limiter_from_string(conv_scheme);
+      _conv_scheme = conv_helper->get_limiter_from_string(conv_scheme);
       _do_conv = true;
     }
 

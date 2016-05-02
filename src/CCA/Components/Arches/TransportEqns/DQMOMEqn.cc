@@ -550,7 +550,7 @@ DQMOMEqn::computePsi( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    Vector Dx = patch->dCell();
+    //Vector Dx = patch->dCell();
 
     Ghost::GhostType  gac = Ghost::AroundCells;
 
