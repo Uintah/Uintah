@@ -667,13 +667,6 @@ namespace Uintah {
     TaskQueue            completionPendingDeviceTasks_;    // execution and d2h copies pending
     TaskQueue            finalizeHostPreparationTasks_;    // d2h copies completed, need to mark cpu data as valid
     TaskQueue            initiallyReadyHostTasks_;         // initially ready cpu task, d2h copies pending
-
-    mutable CrowdMonitor  deviceVerifyDataTransferCompletionQueueLock_;
-    mutable CrowdMonitor  deviceFinalizePreparationQueueLock_;
-    mutable CrowdMonitor  deviceReadyQueueLock_;
-    mutable CrowdMonitor  deviceCompletedQueueLock_;
-    mutable CrowdMonitor  hostFinalizePreparationQueueLock_;
-    mutable CrowdMonitor  hostReadyQueueLock_;
 #endif
 
   }; // end class DetailedTasks
