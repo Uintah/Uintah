@@ -348,8 +348,7 @@ private:
 
       Uintah::BlockRange range_diff(low_patch_range, high_patch_range);
 
-      Uintah::parallel_for( range_diff, [&phi, &D, &rhs, &ax, &ay, &az,
-                                         &af_x, &af_y, &af_z, &Dx](int i, int j, int k){
+      Uintah::parallel_for( range_diff, [&](int i, int j, int k){
 
         rhs(i,j,k) += ax/(2.*Dx.x()) * ( af_x(i+1,j,k) * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k) - phi(i,j,k))
                                        - af_x(i,j,k)   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)   - phi(i-1,j,k)) ) +
@@ -370,7 +369,7 @@ private:
       double weight = (*i).weight;
       Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
-      Uintah::parallel_for( src_range, [&rhs, &src, &V, &weight](int i, int j, int k){
+      Uintah::parallel_for( src_range, [&](int i, int j, int k){
 
         rhs(i,j,k) += weight * src(i,j,k) * V;
 

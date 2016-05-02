@@ -175,13 +175,15 @@ namespace Uintah {
     };
 
     public:
-      Array3() = default;
+      Array3() {}
 
       Array3(int size1, int size2, int size3) {
         d_window=scinew Array3Window<T>(new Array3Data<T>( IntVector(size1, size2, size3) ));
         d_window->addReference();
 #if defined(UINTAH_ENABLE_KOKKOS)
-        m_view = d_window->getKokkosView();
+        if (d_window) { 
+          m_view = d_window->getKokkosView();
+        }
 #endif
       }
       Array3(const IntVector& lowIndex, const IntVector& highIndex) {
@@ -195,7 +197,9 @@ namespace Uintah {
           d_window->addReference();
         }
 #if defined(UINTAH_ENABLE_KOKKOS)
-        m_view = d_window->getKokkosView();
+        if (d_window) { 
+          m_view = d_window->getKokkosView();
+        }
 #endif
       }
       Array3(Array3Window<T>* window)
@@ -205,7 +209,9 @@ namespace Uintah {
           d_window->addReference();
         }
 #if defined(UINTAH_ENABLE_KOKKOS)
-        m_view = d_window->getKokkosView();
+        if (d_window) { 
+          m_view = d_window->getKokkosView();
+        }
 #endif
       }
       virtual ~Array3()
@@ -227,7 +233,9 @@ namespace Uintah {
         }
         d_window = copy.d_window;
 #if defined(UINTAH_ENABLE_KOKKOS)
-        m_view = d_window->getKokkosView();
+        if (d_window) { 
+          m_view = d_window->getKokkosView();
+        }
 #endif
       }
 
@@ -267,7 +275,9 @@ namespace Uintah {
         d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
         d_window->addReference();
 #if defined(UINTAH_ENABLE_KOKKOS)
-        m_view = d_window->getKokkosView();
+        if (d_window) { 
+          m_view = d_window->getKokkosView();
+        }
 #endif
       }
 
@@ -528,7 +538,9 @@ namespace Uintah {
       }
 
 #if defined(UINTAH_ENABLE_KOKKOS)
-      m_view = d_window->getKokkosView();
+      if (d_window) { 
+        m_view = d_window->getKokkosView();
+      }
 #endif
 
       return no_reallocation_needed;

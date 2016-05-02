@@ -157,9 +157,7 @@ private:
       KokkosView3<const double> k_flux_z = z_flux.getKokkosView();
 
       //time update:
-      Uintah::parallel_for( range, [&k_phi, &k_old_phi,
-        &k_rhs, &k_flux_x, &k_flux_y, &k_flux_z,
-        &ax, &ay, &az, &dt, &V](int i, int j, int k){
+      Uintah::parallel_for( range, [&](int i, int j, int k){
 
         //add in the convective term
         k_rhs(i,j,k) = k_rhs(i,j,k) - ( ax * ( k_flux_x(i+1,j,k) - k_flux_x(i,j,k) ) +
@@ -176,9 +174,7 @@ private:
       timer.start("work");
 #endif
       //time update:
-      Uintah::parallel_for( range, [&phi, &old_phi,
-        &rhs, &x_flux, &y_flux, &z_flux,
-        &ax, &ay, &az, &dt, &V](int i, int j, int k){
+      Uintah::parallel_for( range, [&](int i, int j, int k){
 
         //note: the source term should already be in RHS (if any) which is why we have a +=
         //add in the convective term
