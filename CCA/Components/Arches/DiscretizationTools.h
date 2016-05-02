@@ -1,8 +1,6 @@
 #ifndef Uintah_Component_Arches_DISCRETIZATIONTOOLS_h
 #define Uintah_Component_Arches_DISCRETIZATIONTOOLS_h
 
-#define DO_TIMINGS 
-
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/Variables/BlockRange.h>
 #ifdef UINTAH_ENABLE_KOKKOS

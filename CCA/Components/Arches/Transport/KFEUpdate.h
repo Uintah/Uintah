@@ -3,6 +3,7 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/Directives.h>
 #include <spatialops/util/TimeLogger.h>
 
 namespace Uintah{
@@ -172,7 +173,7 @@ private:
 
 #ifdef DO_TIMINGS
       SpatialOps::TimeLogger timer("kokkos_fe_update.out."+*i);
-      timer.start("fe_update");
+      timer.start("work");
 #endif
       //time update:
       Uintah::parallel_for( range, [&phi, &old_phi,
@@ -189,7 +190,7 @@ private:
 
       });
 #ifdef DO_TIMINGS
-      timer.stop("fe_update");
+      timer.stop("work");
 #endif
 #endif
 
