@@ -144,9 +144,9 @@
         </eqn>
       </ScalarTransport>
 
-      <Initialization> 
-        <task task_label="phi_initializer-up" 
-              variable_label="phi-up" 
+      <Initialization>
+        <task task_label="phi_initializer-up"
+              variable_label="phi-up"
               type="wave">
               <wave type="square">
                 <grid type="CC"/>
@@ -157,8 +157,8 @@
                         offset="0.0"/>
               </wave>
         </task>
-        <task task_label="phi_initializer-sb" 
-              variable_label="phi-sb" 
+        <task task_label="phi_initializer-sb"
+              variable_label="phi-sb"
               type="wave">
               <wave type="square">
                 <grid type="CC"/>
@@ -169,8 +169,8 @@
                         offset="0.0"/>
               </wave>
         </task>
-        <task task_label="phi_initializer-vl" 
-              variable_label="phi-vl" 
+        <task task_label="phi_initializer-vl"
+              variable_label="phi-vl"
               type="wave">
               <wave type="square">
                 <grid type="CC"/>
@@ -181,8 +181,8 @@
                         offset="0.0"/>
               </wave>
         </task>
-        <task task_label="phi_initializer-roe" 
-              variable_label="phi-roe" 
+        <task task_label="phi_initializer-roe"
+              variable_label="phi-roe"
               type="wave">
               <wave type="square">
                 <grid type="CC"/>

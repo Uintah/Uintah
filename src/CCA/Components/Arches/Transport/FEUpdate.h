@@ -8,6 +8,9 @@
 #include <CCA/Components/Arches/DiscretizationTools.h>
 #include <spatialops/util/TimeLogger.h>
 
+#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <spatialops/util/TimeLogger.h>
+
 namespace Uintah{
 
   template <typename T>

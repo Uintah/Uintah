@@ -7,6 +7,9 @@
 #include <CCA/Components/Arches/DiscretizationTools.h>
 #include <spatialops/util/TimeLogger.h>
 
+#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <spatialops/util/TimeLogger.h>
+
 using namespace Uintah;
 
 using namespace SpatialOps;
