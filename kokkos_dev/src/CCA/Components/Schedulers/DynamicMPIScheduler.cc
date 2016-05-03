@@ -46,7 +46,6 @@ static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
 static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
 static DebugStream dynamicmpi_queuelength("DynamicMPI_QueueLength", false);
 
-
 //______________________________________________________________________
 //
 DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
@@ -436,8 +435,15 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
-  sends_[0].waitall(d_myworld);
-  ASSERT(sends_[0].numRequests() == 0);
+  auto ready_request = [](CommRequest const& n)->bool { return n.wait(); };
+  while (!m_comm_requests.empty()) {
+    CommPool::iterator comm_iter = m_comm_requests.find_any(ready_request);
+    if (comm_iter) {
+      m_comm_requests.erase(comm_iter);
+    }
+  }
+
+  ASSERT(m_comm_requests.empty());
 
   if (restartable && tgnum == (int)graphs.size() - 1) {
     // Copy the restart flag to all processors
