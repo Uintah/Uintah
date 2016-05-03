@@ -55,6 +55,8 @@ using namespace Uintah;
 // sync cerr so they are readable when output by multiple threads
 extern std::mutex cerrLock;
 
+extern __thread CommPool::handle t_send_request;
+
 extern DebugStream taskdbg;
 extern DebugStream waitout;
 extern DebugStream execout;
@@ -120,7 +122,7 @@ volatile ThreadState     g_thread_states[MAX_THREADS]  = {};
 int                      g_cpu_affinities[MAX_THREADS] = {};
 int                      g_num_threads                 = 0;
 
-volatile int g_run_tasks{0};
+volatile int             g_run_tasks{0};
 
 
 //______________________________________________________________________
@@ -602,8 +604,12 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     double test_start_time = Time::currentSeconds();
 
     if (Uintah::Parallel::usingMPI()) {
-      // This is per thread, no lock needed.
-      sends_[thread_id].testsome(d_myworld);
+      auto ready_request = [](CommRequest const& r) { return r.test(); };
+      CommPool::iterator comm_iter = m_comm_requests.find_any(t_send_request, REQUEST_SEND, ready_request);
+      if (comm_iter) {
+        t_send_request = comm_iter;
+        m_comm_requests.erase(comm_iter);
+      }
     }
 
     mpi_info_[TotalTestMPI] += Time::currentSeconds() - test_start_time;
@@ -754,6 +760,20 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   //------------------------------------------------------------------------------------------------
 
 
+//  auto ready_request = [](CommRequest const& n)->bool { return n.wait(); };
+//  while (!m_comm_requests.empty()) {
+//    CommPool::iterator comm_iter = m_comm_requests.find_any(t_send_request, REQUEST_SEND, ready_request);
+//    if (comm_iter) {
+//      t_send_request = comm_iter;
+//      m_comm_requests.erase(comm_iter);
+//    }
+//  }
+//
+//  std::cout << "m_comm_requests       SEND size: " << m_comm_requests.size(REQUEST_SEND)       << std::endl;
+//  std::cout << "m_comm_requests       RECV size: " << m_comm_requests.size(REQUEST_RECV)       << std::endl;
+//  std::cout << "m_comm_requests COLLECTIVE size: " << m_comm_requests.size(REQUEST_COLLECTIVE) << std::endl;
+//
+//  ASSERT(m_comm_requests.empty());
 
 
   if (unified_queuelength.active()) {
@@ -1298,6 +1318,13 @@ UnifiedScheduler::runTasks( int thread_id )
       ASSERT(numTasksDone == ntasks);
     }
   }  //end while (numTasksDone < ntasks)
+}
+
+//______________________________________________________________________
+//
+int UnifiedScheduler::pendingMPIRecvs()
+{
+  return m_comm_requests.size(REQUEST_RECV);
 }
 
 
