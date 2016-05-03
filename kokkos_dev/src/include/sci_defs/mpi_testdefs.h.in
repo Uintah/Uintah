@@ -49,6 +49,10 @@
 #define MPI_MAX_THREADS 64
 #endif
 
+#ifndef UINTAH_ENABLE_MPI3
+#define UINTAH_ENABLE_MPI3 false
+#endif
+
 namespace Uintah { namespace MPI {
 
 //------------------------------------------------------------------------------
@@ -331,8 +335,12 @@ using RecvVolumeStats = CommStats<RecvTag>;
 } //namespace Impl
 
 
+#if UINTAH_ENABLE_MPI3
 inline MPI_Aint Aint_add( MPI_Aint base , MPI_Aint disp )    { return MPI_Aint_add( base, disp ); }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline MPI_Aint Aint_diff( MPI_Aint addr1 , MPI_Aint addr2 ) { return MPI_Aint_diff( addr1, addr2 ); }
+#endif
 inline double Wtick( void ) { return MPI_Wtick(); }
 inline double Wtime( void ) { return MPI_Wtime(); }
 
@@ -540,11 +548,13 @@ inline int Comm_create_errhandler( MPI_Comm_errhandler_function *comm_errhandler
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Comm_create_errhandler( comm_errhandler_fn , errhandler ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Comm_create_group( MPI_Comm comm , MPI_Group group , int tag , MPI_Comm *newcomm )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Comm_create_group( comm , group , tag , newcomm ));
 }
+#endif
 inline int Comm_create_keyval( MPI_Comm_copy_attr_function *comm_copy_attr_fn , MPI_Comm_delete_attr_function *comm_delete_attr_fn , int *comm_keyval , void *extra_state )
 {
   Impl::CommTimer timer;
@@ -565,11 +575,13 @@ inline int Comm_dup( MPI_Comm comm , MPI_Comm *newcomm )
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Comm_dup( comm , newcomm ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Comm_dup_with_info( MPI_Comm comm , MPI_Info info , MPI_Comm *newcomm )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Comm_dup_with_info( comm , info , newcomm ));
 }
+#endif
 inline int Comm_free( MPI_Comm *comm )
 {
   Impl::CommTimer timer;
@@ -588,10 +600,12 @@ inline int Comm_get_errhandler( MPI_Comm comm , MPI_Errhandler *errhandler )
 {
   return Impl::mpi_check_err(MPI_Comm_get_errhandler( comm , errhandler ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Comm_get_info( MPI_Comm comm , MPI_Info *info )
 {
   return Impl::mpi_check_err(MPI_Comm_get_info( comm , info ));
 }
+#endif
 inline int Comm_get_name( MPI_Comm comm , char *comm_name , int *resultlen )
 {
   return Impl::mpi_check_err(MPI_Comm_get_name( comm , comm_name , resultlen ));
@@ -604,11 +618,13 @@ inline int Comm_group( MPI_Comm comm , MPI_Group *group )
 {
   return Impl::mpi_check_err(MPI_Comm_group( comm , group ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Comm_idup( MPI_Comm comm , MPI_Comm *newcomm , MPI_Request *request )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Comm_idup( comm , newcomm , request ));
 }
+#endif
 inline int Comm_join( int fd , MPI_Comm *intercomm )
 {
   Impl::CommTimer timer;
@@ -634,10 +650,12 @@ inline int Comm_set_errhandler( MPI_Comm comm , MPI_Errhandler errhandler )
 {
   return Impl::mpi_check_err(MPI_Comm_set_errhandler( comm , errhandler ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Comm_set_info( MPI_Comm comm , MPI_Info info )
 {
   return Impl::mpi_check_err(MPI_Comm_set_info( comm , info ));
 }
+#endif
 inline int Comm_set_name( MPI_Comm comm , const char *comm_name )
 {
   return Impl::mpi_check_err(MPI_Comm_set_name( comm , comm_name ));
@@ -661,47 +679,59 @@ inline int Comm_split( MPI_Comm comm , int color , int key , MPI_Comm *newcomm )
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Comm_split( comm , color , key , newcomm ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Comm_split_type( MPI_Comm comm , int split_type , int key , MPI_Info info , MPI_Comm *newcomm )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Comm_split_type( comm , split_type , key , info , newcomm ));
 }
+#endif
 inline int Comm_test_inter( MPI_Comm comm , int *flag )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Comm_test_inter( comm , flag ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Compare_and_swap( const void *origin_addr , const void *compare_addr , void *result_addr , MPI_Datatype datatype , int target_rank , MPI_Aint target_disp , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   Impl::OneVolumeStats( 1, datatype);
   return Impl::mpi_check_err(MPI_Compare_and_swap( origin_addr , compare_addr , result_addr , datatype , target_rank , target_disp , win ));
 }
+#endif
 inline int Dims_create( int nnodes , int ndims , int dims[] )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Dims_create( nnodes , ndims , dims ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Dist_graph_create( MPI_Comm comm_old , int n , const int sources[] , const int degrees[] , const int destinations[] , const int weights[] , MPI_Info info , int reorder , MPI_Comm *comm_dist_graph )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Dist_graph_create( comm_old , n , sources , degrees , destinations , weights , info , reorder , comm_dist_graph ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Dist_graph_create_adjacent( MPI_Comm comm_old , int indegree , const int sources[] , const int sourceweights[] , int outdegree , const int destinations[] , const int destweights[] , MPI_Info info , int reorder , MPI_Comm *comm_dist_graph )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Dist_graph_create_adjacent( comm_old , indegree , sources , sourceweights , outdegree , destinations , destweights , info , reorder , comm_dist_graph ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Dist_graph_neighbors( MPI_Comm comm , int maxindegree , int sources[] , int sourceweights[] , int maxoutdegree , int destinations[] , int destweights[] )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Dist_graph_neighbors( comm , maxindegree , sources , sourceweights , maxoutdegree , destinations , destweights ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Dist_graph_neighbors_count( MPI_Comm comm , int *indegree , int *outdegree , int *weighted )
 {
   Impl::CommTimer timer;
   return Impl::mpi_check_err(MPI_Dist_graph_neighbors_count( comm , indegree , outdegree , weighted ));
 }
+#endif
 inline int Errhandler_create( MPI_Handler_function *function , MPI_Errhandler *errhandler )
 {
   return Impl::mpi_check_err(MPI_Errhandler_create( function , errhandler ));
@@ -733,12 +763,14 @@ inline int Exscan( const void *sendbuf , void *recvbuf , int count , MPI_Datatyp
   Impl::RecvVolumeStats( count, datatype );
   return Impl::mpi_check_err(MPI_Exscan( sendbuf , recvbuf , count , datatype , op , comm ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Fetch_and_op( const void *origin_addr , void *result_addr , MPI_Datatype datatype , int target_rank , MPI_Aint target_disp , MPI_Op op , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   Impl::OneVolumeStats( 1, datatype);
   return Impl::mpi_check_err(MPI_Fetch_and_op( origin_addr , result_addr , datatype , target_rank , target_disp , op , win ));
 }
+#endif
 inline int File_call_errhandler( MPI_File fh , int errorcode )
 {
   return Impl::mpi_check_err(MPI_File_call_errhandler( fh , errorcode ));
@@ -791,12 +823,14 @@ inline int Get( void *origin_addr , int origin_count , MPI_Datatype origin_datat
   Impl::OneVolumeStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Get( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , win ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Get_accumulate( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , void *result_addr , int result_count , MPI_Datatype result_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Op op , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   Impl::OneVolumeStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Get_accumulate( origin_addr , origin_count , origin_datatype , result_addr , result_count , result_datatype , target_rank , target_disp , target_count , target_datatype , op , win ));
 }
+#endif
 inline int Get_address( const void *location , MPI_Aint *address )
 {
   return Impl::mpi_check_err(MPI_Get_address( location , address ));
@@ -809,14 +843,18 @@ inline int Get_elements( const MPI_Status *status , MPI_Datatype datatype , int 
 {
   return Impl::mpi_check_err(MPI_Get_elements( status , datatype , count ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Get_elements_x( const MPI_Status *status , MPI_Datatype datatype , MPI_Count *count )
 {
   return Impl::mpi_check_err(MPI_Get_elements_x( status , datatype , count ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Get_library_version( char *version , int *resultlen )
 {
   return Impl::mpi_check_err(MPI_Get_library_version( version , resultlen ));
 }
+#endif
 inline int Get_processor_name( char *name , int *resultlen )
 {
   return Impl::mpi_check_err(MPI_Get_processor_name( name , resultlen ));
@@ -911,6 +949,7 @@ inline int Group_union( MPI_Group group1 , MPI_Group group2 , MPI_Group *newgrou
 {
   return Impl::mpi_check_err(MPI_Group_union( group1 , group2 , newgroup ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Iallgather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::GatherTimer timer;
@@ -918,6 +957,8 @@ inline int Iallgather( const void *sendbuf , int sendcount , MPI_Datatype sendty
   Impl::RecvVolumeStats( recvcount, recvtype );
   return Impl::mpi_check_err(MPI_Iallgather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Iallgatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int displs[] , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::GatherTimer timer;
@@ -925,6 +966,8 @@ inline int Iallgatherv( const void *sendbuf , int sendcount , MPI_Datatype sendt
   Impl::RecvVolumeStats( recvcounts, recvtype, comm );
   return Impl::mpi_check_err(MPI_Iallgatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Iallreduce( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::ReduceTimer timer;
@@ -932,6 +975,8 @@ inline int Iallreduce( const void *sendbuf , void *recvbuf , int count , MPI_Dat
   Impl::RecvVolumeStats( count, datatype );
   return Impl::mpi_check_err(MPI_Iallreduce( sendbuf , recvbuf , count , datatype , op , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ialltoall( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::AlltoallTimer timer;
@@ -939,6 +984,8 @@ inline int Ialltoall( const void *sendbuf , int sendcount , MPI_Datatype sendtyp
   Impl::RecvVolumeStats( recvcount, recvtype );
   return Impl::mpi_check_err(MPI_Ialltoall( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ialltoallv( const void *sendbuf , const int sendcounts[] , const int sdispls[] , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int rdispls[] , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::AlltoallTimer timer;
@@ -946,6 +993,8 @@ inline int Ialltoallv( const void *sendbuf , const int sendcounts[] , const int 
   Impl::RecvVolumeStats( recvcounts, recvtype, comm );
   return Impl::mpi_check_err(MPI_Ialltoallv( sendbuf , sendcounts , sdispls , sendtype , recvbuf , recvcounts , rdispls , recvtype , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ialltoallw( const void *sendbuf , const int sendcounts[] , const int sdispls[] , const MPI_Datatype sendtypes[] , void *recvbuf , const int recvcounts[] , const int rdispls[] , const MPI_Datatype recvtypes[] , MPI_Comm comm , MPI_Request *request )
 {
   // TODO handle multiple send and recv types
@@ -961,11 +1010,15 @@ inline int Ialltoallw( const void *sendbuf , const int sendcounts[] , const int 
   Impl::RecvVolumeStats( rcounts, recvtypes[0] );
   return Impl::mpi_check_err(MPI_Ialltoallw( sendbuf , sendcounts , sdispls , sendtypes , recvbuf , recvcounts , rdispls , recvtypes , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ibarrier( MPI_Comm comm , MPI_Request *request )
 {
   Impl::WaitTimer timer;
   return Impl::mpi_check_err(MPI_Ibarrier( comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ibcast( void *buffer , int count , MPI_Datatype datatype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::BcastTimer timer;
@@ -977,12 +1030,14 @@ inline int Ibcast( void *buffer , int count , MPI_Datatype datatype , int root ,
   }
   return Impl::mpi_check_err(MPI_Ibcast( buffer , count , datatype , root , comm , request ));
 }
+#endif
 inline int Ibsend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
 {
   Impl::SendTimer timer;
   Impl::SendVolumeStats( count, datatype );
   return Impl::mpi_check_err(MPI_Ibsend( buf , count , datatype , dest , tag , comm , request ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Iexscan( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::ScanTimer timer;
@@ -990,6 +1045,8 @@ inline int Iexscan( const void *sendbuf , void *recvbuf , int count , MPI_Dataty
   Impl::RecvVolumeStats( count, datatype );
   return Impl::mpi_check_err(MPI_Iexscan( sendbuf , recvbuf , count , datatype , op , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Igather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::GatherTimer timer;
@@ -999,6 +1056,8 @@ inline int Igather( const void *sendbuf , int sendcount , MPI_Datatype sendtype 
   }
   return Impl::mpi_check_err(MPI_Igather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , root , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Igatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int displs[] , MPI_Datatype recvtype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::GatherTimer timer;
@@ -1008,34 +1067,46 @@ inline int Igatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype
   }
   return Impl::mpi_check_err(MPI_Igatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , root , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Improbe( int source , int tag , MPI_Comm comm , int *flag , MPI_Message *message , MPI_Status *status )
 {
   return Impl::mpi_check_err(MPI_Improbe( source , tag , comm , flag , message , status ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Imrecv( void *buf , int count , MPI_Datatype datatype , MPI_Message *message , MPI_Request *request )
 {
   Impl::RecvTimer timer;
   Impl::RecvVolumeStats( count, datatype );
   return Impl::mpi_check_err(MPI_Imrecv( buf , count , datatype , message , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ineighbor_allgather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::GatherTimer timer;
   Impl::OneVolumeStats( sendcount, sendtype );
   return Impl::mpi_check_err(MPI_Ineighbor_allgather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ineighbor_allgatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int displs[] , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::AlltoallTimer timer;
   Impl::OneVolumeStats( sendcount, sendtype );
   return Impl::mpi_check_err(MPI_Ineighbor_allgatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ineighbor_alltoall( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::AlltoallTimer timer;
   Impl::OneVolumeStats( sendcount, sendtype );
   return Impl::mpi_check_err(MPI_Ineighbor_alltoall( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ineighbor_alltoallv( const void *sendbuf , const int sendcounts[] , const int sdispls[] , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int rdispls[] , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::AlltoallTimer timer;
@@ -1047,6 +1118,8 @@ inline int Ineighbor_alltoallv( const void *sendbuf , const int sendcounts[] , c
   Impl::OneVolumeStats( scounts, sendtype );
   return Impl::mpi_check_err(MPI_Ineighbor_alltoallv( sendbuf , sendcounts , sdispls , sendtype , recvbuf , recvcounts , rdispls , recvtype , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ineighbor_alltoallw( const void *sendbuf , const int sendcounts[] , const MPI_Aint sdispls[] , const MPI_Datatype sendtypes[] , void *recvbuf , const int recvcounts[] , const MPI_Aint rdispls[] , const MPI_Datatype recvtypes[] , MPI_Comm comm , MPI_Request *request )
 {
   // TODO handle multiple send and recv types
@@ -1059,6 +1132,7 @@ inline int Ineighbor_alltoallw( const void *sendbuf , const int sendcounts[] , c
   Impl::OneVolumeStats( scounts, sendtypes[0] );
   return Impl::mpi_check_err(MPI_Ineighbor_alltoallw( sendbuf , sendcounts , sdispls , sendtypes , recvbuf , recvcounts , rdispls , recvtypes , comm , request ));
 }
+#endif
 inline int Info_create( MPI_Info *info )
 {
   return Impl::mpi_check_err(MPI_Info_create( info ));
@@ -1127,6 +1201,7 @@ inline int Irecv( void *buf , int count , MPI_Datatype datatype , int source , i
   Impl::RecvVolumeStats( count, datatype );
   return Impl::mpi_check_err(MPI_Irecv( buf , count , datatype , source , tag , comm , request ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Ireduce( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::ReduceTimer timer;
@@ -1136,6 +1211,8 @@ inline int Ireduce( const void *sendbuf , void *recvbuf , int count , MPI_Dataty
   }
   return Impl::mpi_check_err(MPI_Ireduce( sendbuf , recvbuf , count , datatype , op , root , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ireduce_scatter( const void *sendbuf , void *recvbuf , const int recvcounts[] , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::ReduceTimer timer;
@@ -1148,6 +1225,8 @@ inline int Ireduce_scatter( const void *sendbuf , void *recvbuf , const int recv
   Impl::RecvVolumeStats( counts, datatype );
   return Impl::mpi_check_err(MPI_Ireduce_scatter( sendbuf , recvbuf , recvcounts , datatype , op , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Ireduce_scatter_block( const void *sendbuf , void *recvbuf , int recvcount , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::ReduceTimer timer;
@@ -1155,6 +1234,7 @@ inline int Ireduce_scatter_block( const void *sendbuf , void *recvbuf , int recv
   Impl::RecvVolumeStats( recvcount, datatype );
   return Impl::mpi_check_err(MPI_Ireduce_scatter_block( sendbuf , recvbuf , recvcount , datatype , op , comm , request ));
 }
+#endif
 inline int Irsend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
 {
   Impl::SendTimer timer;
@@ -1165,6 +1245,7 @@ inline int Is_thread_main( int *flag )
 {
   return Impl::mpi_check_err(MPI_Is_thread_main( flag ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Iscan( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::ScanTimer timer;
@@ -1172,6 +1253,8 @@ inline int Iscan( const void *sendbuf , void *recvbuf , int count , MPI_Datatype
   Impl::RecvVolumeStats( count, datatype );
   return Impl::mpi_check_err(MPI_Iscan( sendbuf , recvbuf , count , datatype , op , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Iscatter( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::ScatterTimer timer;
@@ -1183,6 +1266,8 @@ inline int Iscatter( const void *sendbuf , int sendcount , MPI_Datatype sendtype
   }
   return Impl::mpi_check_err(MPI_Iscatter( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , root , comm , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Iscatterv( const void *sendbuf , const int sendcounts[] , const int displs[] , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::ScatterTimer timer;
@@ -1194,6 +1279,7 @@ inline int Iscatterv( const void *sendbuf , const int sendcounts[] , const int d
   }
   return Impl::mpi_check_err(MPI_Iscatterv( sendbuf , sendcounts , displs , sendtype , recvbuf , recvcount , recvtype , root , comm , request ));
 }
+#endif
 inline int Isend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
 {
   Impl::SendTimer timer;
@@ -1218,22 +1304,29 @@ inline int Lookup_name( const char *service_name , MPI_Info info , char *port_na
 {
   return Impl::mpi_check_err(MPI_Lookup_name( service_name , info , port_name ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Mprobe( int source , int tag , MPI_Comm comm , MPI_Message *message , MPI_Status *status )
 {
   return Impl::mpi_check_err(MPI_Mprobe( source , tag , comm , message , status ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Mrecv( void *buf , int count , MPI_Datatype datatype , MPI_Message *message , MPI_Status *status )
 {
   Impl::RecvTimer timer;
   Impl::RecvVolumeStats( count, datatype );
   return Impl::mpi_check_err(MPI_Mrecv( buf , count , datatype , message , status ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Neighbor_allgather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::GatherTimer timer;
   Impl::OneVolumeStats( sendcount, sendtype );
   return Impl::mpi_check_err(MPI_Neighbor_allgather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Neighbor_allgatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int displs[] , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::AlltoallTimer timer;
@@ -1246,6 +1339,8 @@ inline int Neighbor_allgatherv( const void *sendbuf , int sendcount , MPI_Dataty
   Impl::RecvVolumeStats( rcounts, recvtype );
   return Impl::mpi_check_err(MPI_Neighbor_allgatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , comm ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Neighbor_alltoall( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::AlltoallTimer timer;
@@ -1253,6 +1348,8 @@ inline int Neighbor_alltoall( const void *sendbuf , int sendcount , MPI_Datatype
   Impl::RecvVolumeStats( recvcount, recvtype );
   return Impl::mpi_check_err(MPI_Neighbor_alltoall( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Neighbor_alltoallv( const void *sendbuf , const int sendcounts[] , const int sdispls[] , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int rdispls[] , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::AlltoallTimer timer;
@@ -1267,6 +1364,8 @@ inline int Neighbor_alltoallv( const void *sendbuf , const int sendcounts[] , co
   Impl::RecvVolumeStats( rcounts, recvtype );
   return Impl::mpi_check_err(MPI_Neighbor_alltoallv( sendbuf , sendcounts , sdispls , sendtype , recvbuf , recvcounts , rdispls , recvtype , comm ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Neighbor_alltoallw( const void *sendbuf , const int sendcounts[] , const MPI_Aint sdispls[] , const MPI_Datatype sendtypes[] , void *recvbuf , const int recvcounts[] , const MPI_Aint rdispls[] , const MPI_Datatype recvtypes[] , MPI_Comm comm )
 {
   // TODO handle multiple send and recv types
@@ -1282,10 +1381,13 @@ inline int Neighbor_alltoallw( const void *sendbuf , const int sendcounts[] , co
   Impl::RecvVolumeStats( rcounts, recvtypes[0] );
   return Impl::mpi_check_err(MPI_Neighbor_alltoallw( sendbuf , sendcounts , sdispls , sendtypes , recvbuf , recvcounts , rdispls , recvtypes , comm ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Op_commutative( MPI_Op op , int *commute )
 {
   return Impl::mpi_check_err(MPI_Op_commutative( op , commute ));
 }
+#endif
 inline int Op_create( MPI_User_function *user_fn , int commute , MPI_Op *op )
 {
   return Impl::mpi_check_err(MPI_Op_create( user_fn , commute , op ));
@@ -1332,12 +1434,14 @@ inline int Query_thread( int *provided )
 {
   return Impl::mpi_check_err(MPI_Query_thread( provided ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Raccumulate( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Op op , MPI_Win win , MPI_Request *request )
 {
   Impl::OneSidedTimer timer;
   Impl::OneVolumeStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Raccumulate( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , op , win , request ));
 }
+#endif
 inline int Recv( void *buf , int count , MPI_Datatype datatype , int source , int tag , MPI_Comm comm , MPI_Status *status )
 {
   Impl::RecvTimer timer;
@@ -1374,6 +1478,7 @@ inline int Reduce_scatter( const void *sendbuf , void *recvbuf , const int recvc
   Impl::RecvVolumeStats( recvcounts, datatype, comm );
   return Impl::mpi_check_err(MPI_Reduce_scatter( sendbuf , recvbuf , recvcounts , datatype , op , comm ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Reduce_scatter_block( const void *sendbuf , void *recvbuf , int recvcount , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm )
 {
   Impl::ReduceTimer timer;
@@ -1381,6 +1486,7 @@ inline int Reduce_scatter_block( const void *sendbuf , void *recvbuf , int recvc
   Impl::RecvVolumeStats( recvcount, datatype );
   return Impl::mpi_check_err(MPI_Reduce_scatter_block( sendbuf , recvbuf , recvcount , datatype , op , comm ));
 }
+#endif
 inline int Request_free( MPI_Request *request )
 {
   return Impl::mpi_check_err(MPI_Request_free( request ));
@@ -1389,24 +1495,30 @@ inline int Request_get_status( MPI_Request request , int *flag , MPI_Status *sta
 {
   return Impl::mpi_check_err(MPI_Request_get_status( request , flag , status ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Rget( void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Win win , MPI_Request *request )
 {
   Impl::OneSidedTimer timer;
   Impl::OneVolumeStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Rget( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , win , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Rget_accumulate( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , void *result_addr , int result_count , MPI_Datatype result_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Op op , MPI_Win win , MPI_Request *request )
 {
   Impl::OneSidedTimer timer;
   Impl::OneVolumeStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Rget_accumulate( origin_addr , origin_count , origin_datatype , result_addr , result_count , result_datatype , target_rank , target_disp , target_count , target_datatype , op , win , request ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Rput( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Win win , MPI_Request *request )
 {
   Impl::OneSidedTimer timer;
   Impl::OneVolumeStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Rput( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , win , request ));
 }
+#endif
 inline int Rsend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm )
 {
   Impl::SendTimer timer;
@@ -1498,10 +1610,12 @@ inline int Status_set_elements( MPI_Status *status , MPI_Datatype datatype , int
 {
   return Impl::mpi_check_err(MPI_Status_set_elements( status , datatype , count ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Status_set_elements_x( MPI_Status *status , MPI_Datatype datatype , MPI_Count count )
 {
   return Impl::mpi_check_err(MPI_Status_set_elements_x( status , datatype , count ));
 }
+#endif
 inline int Test( MPI_Request *request , int *flag , MPI_Status *status )
 {
   Impl::TestTimer timer;
@@ -1546,10 +1660,12 @@ inline int Type_create_hindexed( int count , const int array_of_blocklengths[] ,
 {
   return Impl::mpi_check_err(MPI_Type_create_hindexed( count , array_of_blocklengths , array_of_displacements , oldtype , newtype ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Type_create_hindexed_block( int count , int blocklength , const MPI_Aint array_of_displacements[] , MPI_Datatype oldtype , MPI_Datatype *newtype )
 {
   return Impl::mpi_check_err(MPI_Type_create_hindexed_block( count , blocklength , array_of_displacements , oldtype , newtype ));
 }
+#endif
 inline int Type_create_hvector( int count , int blocklength , MPI_Aint stride , MPI_Datatype oldtype , MPI_Datatype *newtype )
 {
   return Impl::mpi_check_err(MPI_Type_create_hvector( count , blocklength , stride , oldtype , newtype ));
@@ -1610,10 +1726,12 @@ inline int Type_get_extent( MPI_Datatype datatype , MPI_Aint *lb , MPI_Aint *ext
 {
   return Impl::mpi_check_err(MPI_Type_get_extent( datatype , lb , extent ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Type_get_extent_x( MPI_Datatype datatype , MPI_Count *lb , MPI_Count *extent )
 {
   return Impl::mpi_check_err(MPI_Type_get_extent_x( datatype , lb , extent ));
 }
+#endif
 inline int Type_get_name( MPI_Datatype datatype , char *type_name , int *resultlen )
 {
   return Impl::mpi_check_err(MPI_Type_get_name( datatype , type_name , resultlen ));
@@ -1622,10 +1740,12 @@ inline int Type_get_true_extent( MPI_Datatype datatype , MPI_Aint *true_lb , MPI
 {
   return Impl::mpi_check_err(MPI_Type_get_true_extent( datatype , true_lb , true_extent ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Type_get_true_extent_x( MPI_Datatype datatype , MPI_Count *lb , MPI_Count *extent )
 {
   return Impl::mpi_check_err(MPI_Type_get_true_extent_x( datatype , lb , extent ));
 }
+#endif
 inline int Type_hindexed( int count , const int *array_of_blocklengths , const MPI_Aint *array_of_displacements , MPI_Datatype oldtype , MPI_Datatype *newtype )
 {
   return Impl::mpi_check_err(MPI_Type_hindexed( count , array_of_blocklengths , array_of_displacements , oldtype , newtype ));
@@ -1658,10 +1778,12 @@ inline int Type_size( MPI_Datatype datatype , int *size )
 {
   return Impl::mpi_check_err(MPI_Type_size( datatype , size ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Type_size_x( MPI_Datatype datatype , MPI_Count *size )
 {
   return Impl::mpi_check_err(MPI_Type_size_x( datatype , size ));
 }
+#endif
 inline int Type_struct( int count , const int *array_of_blocklengths , const MPI_Aint *array_of_displacements , const MPI_Datatype *array_of_types , MPI_Datatype *newtype )
 {
   return Impl::mpi_check_err(MPI_Type_struct( count , array_of_blocklengths , array_of_displacements , array_of_types , newtype ));
@@ -1706,21 +1828,27 @@ inline int Waitsome( int incount , MPI_Request array_of_requests[] , int *outcou
   Impl::WaitTimer timer;
   return Impl::mpi_check_err(MPI_Waitsome( incount , array_of_requests , outcount , array_of_indices , array_of_statuses ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_allocate( MPI_Aint size , int disp_unit , MPI_Info info , MPI_Comm comm , void *baseptr , MPI_Win *win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_allocate( size , disp_unit , info , comm , baseptr , win ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Win_allocate_shared( MPI_Aint size , int disp_unit , MPI_Info info , MPI_Comm comm , void *baseptr , MPI_Win *win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_allocate_shared( size , disp_unit , info , comm , baseptr , win ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Win_attach( MPI_Win win , void *base , MPI_Aint size )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_attach( win , base , size ));
 }
+#endif
 inline int Win_call_errhandler( MPI_Win win , int errorcode )
 {
   return Impl::mpi_check_err(MPI_Win_call_errhandler( win , errorcode ));
@@ -1735,11 +1863,13 @@ inline int Win_create( void *base , MPI_Aint size , int disp_unit , MPI_Info inf
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_create( base , size , disp_unit , info , comm , win ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_create_dynamic( MPI_Info info , MPI_Comm comm , MPI_Win *win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_create_dynamic( info , comm , win ));
 }
+#endif
 inline int Win_create_errhandler( MPI_Win_errhandler_function *win_errhandler_fn , MPI_Errhandler *errhandler )
 {
   return Impl::mpi_check_err(MPI_Win_create_errhandler( win_errhandler_fn , errhandler ));
@@ -1752,37 +1882,47 @@ inline int Win_delete_attr( MPI_Win win , int win_keyval )
 {
   return Impl::mpi_check_err(MPI_Win_delete_attr( win , win_keyval ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_detach( MPI_Win win , const void *base )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_detach( win , base ));
 }
+#endif
 inline int Win_fence( int assert , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   Impl::WaitTimer wtimer;
   return Impl::mpi_check_err(MPI_Win_fence( assert , win ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_flush( int rank , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_flush( rank , win ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Win_flush_all( MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_flush_all( win ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Win_flush_local( int rank , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_flush_local( rank , win ));
 }
+#endif
+#if UINTAH_ENABLE_MPI3
 inline int Win_flush_local_all( MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_flush_local_all( win ));
 }
+#endif
 inline int Win_free( MPI_Win *win )
 {
   return Impl::mpi_check_err(MPI_Win_free( win ));
@@ -1803,10 +1943,12 @@ inline int Win_get_group( MPI_Win win , MPI_Group *group )
 {
   return Impl::mpi_check_err(MPI_Win_get_group( win , group ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_get_info( MPI_Win win , MPI_Info *info_used )
 {
   return Impl::mpi_check_err(MPI_Win_get_info( win , info_used ));
 }
+#endif
 inline int Win_get_name( MPI_Win win , char *win_name , int *resultlen )
 {
   return Impl::mpi_check_err(MPI_Win_get_name( win , win_name , resultlen ));
@@ -1816,11 +1958,13 @@ inline int Win_lock( int lock_type , int rank , int assert , MPI_Win win )
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_lock( lock_type , rank , assert , win ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_lock_all( int assert , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_lock_all( assert , win ));
 }
+#endif
 inline int Win_post( MPI_Group group , int assert , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
@@ -1834,28 +1978,34 @@ inline int Win_set_errhandler( MPI_Win win , MPI_Errhandler errhandler )
 {
   return Impl::mpi_check_err(MPI_Win_set_errhandler( win , errhandler ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_set_info( MPI_Win win , MPI_Info info )
 {
   return Impl::mpi_check_err(MPI_Win_set_info( win , info ));
 }
+#endif
 inline int Win_set_name( MPI_Win win , const char *win_name )
 {
   return Impl::mpi_check_err(MPI_Win_set_name( win , win_name ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_shared_query( MPI_Win win , int rank , MPI_Aint *size , int *disp_unit , void *baseptr )
 {
   return Impl::mpi_check_err(MPI_Win_shared_query( win , rank , size , disp_unit , baseptr ));
 }
+#endif
 inline int Win_start( MPI_Group group , int assert , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_start( group , assert , win ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_sync( MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_sync( win ));
 }
+#endif
 inline int Win_test( MPI_Win win , int *flag )
 {
   Impl::OneSidedTimer timer;
@@ -1867,11 +2017,13 @@ inline int Win_unlock( int rank , MPI_Win win )
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_unlock( rank , win ));
 }
+#if UINTAH_ENABLE_MPI3
 inline int Win_unlock_all( MPI_Win win )
 {
   Impl::OneSidedTimer timer;
   return Impl::mpi_check_err(MPI_Win_unlock_all( win ));
 }
+#endif
 inline int Win_wait( MPI_Win win )
 {
   Impl::OneSidedTimer timer;
