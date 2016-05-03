@@ -3993,7 +3993,6 @@ bool UnifiedScheduler::allGPUVarsProcessingReady(DetailedTask* dtask) {
       if (curDependency->gtype != Ghost::None && curDependency->numGhostCells > 0) {
         //it has ghost cells.
         if (!(gpudw->isValidWithGhostsOnGPU(curDependency->var->getName().c_str(),patchID, matlID, levelID))) {
-          printf("allGPUVarsProcessingReady(), returning false for task %s for label %s patch %d matl %d, level %d\n", dtask->getTask()->getName().c_str(), curDependency->var->getName().c_str(), patchID, matlID, levelID);
           return false;
         }
       } else {
