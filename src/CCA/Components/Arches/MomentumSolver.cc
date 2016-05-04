@@ -53,10 +53,6 @@
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
 
-#include <Core/Grid/Variables/BlockRange.hpp>
-#ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
 using namespace Uintah;
 using namespace std;
 
@@ -710,7 +706,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,indx, patch);
     new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,indx, patch);
     new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,indx, patch);
-    
+
     SFCXVariable<double> conv_scheme_x;
     new_dw->getModifiable(conv_scheme_x, d_lab->d_conv_scheme_x_Label, indx, patch);
     SFCYVariable<double> conv_scheme_y;

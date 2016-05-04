@@ -319,7 +319,7 @@ namespace Uintah {
 
         // store entire plane in field to allow correct order of writing component
         Uintah::Array3<double> vals(vshape_[0],vshape_[1],vshape_[2]);
-        parallel_for( vals.range(), [&](int i, int j, int k) {
+        serial_for( vals.range(), [&](int i, int j, int k) {
           vals(i,j,k) = 0.0;
         });
 

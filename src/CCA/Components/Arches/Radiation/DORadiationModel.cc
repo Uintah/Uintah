@@ -67,12 +67,6 @@
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 
 
-#include <Core/Grid/Variables/BlockRange.hpp>
-#ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
-
-
 using namespace std;
 using namespace Uintah;
 
@@ -473,39 +467,39 @@ struct computeAMatrix{
 
 
 //***************************************************************************
-// Sums the intensities to compute the 6 fluxes, and incident radiation 
+// Sums the intensities to compute the 6 fluxes, and incident radiation
 //***************************************************************************
-struct compute4Flux{  
-       compute4Flux( double  _omu, double _oeta, double _oxi, double  _wt, 
+struct compute4Flux{
+       compute4Flux( double  _omu, double _oeta, double _oxi, double  _wt,
                    CCVariable<double> &_intensity,  ///< intensity field corresponding to unit direction vector [mu eta xi]
                    CCVariable<double> &_fluxX,  ///< either x+ or x- flux
                    CCVariable<double> &_fluxY,  ///< either y+ or y- flux
-                   CCVariable<double> &_fluxZ,  ///< either z+ or z- flux 
-                   CCVariable<double> &_volQ) :  
+                   CCVariable<double> &_fluxZ,  ///< either z+ or z- flux
+                   CCVariable<double> &_volQ) :
                    omu(_omu),    ///< absolute value of solid angle weighted x-component
                    oeta(_oeta),  ///< absolute value of solid angle weighted y-component
                    oxi(_oxi),    ///< absolute value of solid angle weighted z-component
-                   wt(_wt), 
+                   wt(_wt),
 #ifdef UINTAH_ENABLE_KOKKOS
                    intensity(_intensity.getKokkosView()),
-                   fluxX(_fluxX.getKokkosView()) , 
-                   fluxY(_fluxY.getKokkosView()) , 
-                   fluxZ(_fluxZ.getKokkosView()) ,  
-                   volQ(_volQ.getKokkosView()) 
+                   fluxX(_fluxX.getKokkosView()) ,
+                   fluxY(_fluxY.getKokkosView()) ,
+                   fluxZ(_fluxZ.getKokkosView()) ,
+                   volQ(_volQ.getKokkosView())
 #else
                    intensity(_intensity),
-                   fluxX(_fluxX) , 
-                   fluxY(_fluxY) , 
-                   fluxZ(_fluxZ) ,  
-                   volQ(_volQ) 
+                   fluxX(_fluxX) ,
+                   fluxY(_fluxY) ,
+                   fluxZ(_fluxZ) ,
+                   volQ(_volQ)
 #endif //UINTAH_ENABLE_KOKKOS
                      { }
 
        void operator()(int i , int j, int k ) const {
-                   fluxX(i,j,k) += omu*intensity(i,j,k);  
-                   fluxY(i,j,k) += oeta*intensity(i,j,k); 
-                   fluxZ(i,j,k) += oxi*intensity(i,j,k);  
-                   volQ(i,j,k)  += intensity(i,j,k)*wt;    
+                   fluxX(i,j,k) += omu*intensity(i,j,k);
+                   fluxY(i,j,k) += oeta*intensity(i,j,k);
+                   fluxZ(i,j,k) += oxi*intensity(i,j,k);
+                   volQ(i,j,k)  += intensity(i,j,k)*wt;
 
 
 
@@ -514,47 +508,47 @@ struct compute4Flux{
   private:
 
 
-       double  omu;    ///< x-directional component 
-       double  oeta;   ///< y-directional component 
-       double  oxi;    ///< z-directional component 
+       double  omu;    ///< x-directional component
+       double  oeta;   ///< y-directional component
+       double  oxi;    ///< z-directional component
        double  wt;     ///< ordinate weight
 
 #ifdef UINTAH_ENABLE_KOKKOS
-       KokkosView3<double> intensity; ///< intensity solution from linear solve   
+       KokkosView3<double> intensity; ///< intensity solution from linear solve
        KokkosView3<double> fluxX;   ///< x-directional flux ( positive or negative direction)
        KokkosView3<double> fluxY;   ///< y-directional flux ( positive or negative direction)
        KokkosView3<double> fluxZ;   ///< z-directional flux ( positive or negative direction)
-       KokkosView3<double> volQ;    ///< Incident radiation 
+       KokkosView3<double> volQ;    ///< Incident radiation
 #else
        CCVariable<double>& intensity; ///< intensity solution from linear solve
        CCVariable<double>& fluxX;  ///< x-directional flux ( positive or negative direction)
        CCVariable<double>& fluxY;  ///< y-directional flux ( positive or negative direction)
        CCVariable<double>& fluxZ;  ///< z-directional flux ( positive or negative direction)
-       CCVariable<double>& volQ;   ///< Incident radiation 
+       CCVariable<double>& volQ;   ///< Incident radiation
 #endif //UINTAH_ENABLE_KOKKOS
 };
 
 
 
 //***************************************************************************
-// Compute the heat flux divergence with scattering on.  (This is necessary because abskt includes scattering coefficients) 
+// Compute the heat flux divergence with scattering on.  (This is necessary because abskt includes scattering coefficients)
 //***************************************************************************
-struct computeDivQScat{  
-       computeDivQScat(constCCVariable<double> &_abskt, 
-                       CCVariable<double> &_intensitySource, 
-                       CCVariable<double> &_volQ,  
+struct computeDivQScat{
+       computeDivQScat(constCCVariable<double> &_abskt,
+                       CCVariable<double> &_intensitySource,
+                       CCVariable<double> &_volQ,
                        CCVariable<double> &_divQ,
                        constCCVariable<double> &_scatkt) :
 #ifdef UINTAH_ENABLE_KOKKOS
-                       abskt(_abskt.getKokkosView()), 
-                       intensitySource(_intensitySource.getKokkosView()), 
-                       volQ(_volQ.getKokkosView()),  
+                       abskt(_abskt.getKokkosView()),
+                       intensitySource(_intensitySource.getKokkosView()),
+                       volQ(_volQ.getKokkosView()),
                        divQ(_divQ.getKokkosView()),
                        scatkt(_scatkt.getKokkosView())
 #else
-                       abskt(_abskt), 
-                       intensitySource(_intensitySource), 
-                       volQ(_volQ),  
+                       abskt(_abskt),
+                       intensitySource(_intensitySource),
+                       volQ(_volQ),
                        divQ(_divQ),
                        scatkt(_scatkt)
 #endif //UINTAH_ENABLE_KOKKOS
@@ -566,38 +560,38 @@ struct computeDivQScat{
 
   private:
 #ifdef UINTAH_ENABLE_KOKKOS
-       KokkosView3<const double> abskt; 
-       KokkosView3<double>  intensitySource; 
-       KokkosView3<double>  volQ;  
+       KokkosView3<const double> abskt;
+       KokkosView3<double>  intensitySource;
+       KokkosView3<double>  volQ;
        KokkosView3<double>  divQ;
        KokkosView3<const double> scatkt;
 #else
-       constCCVariable<double> &abskt; 
-       CCVariable<double>  &intensitySource; 
-       CCVariable<double>  &volQ;  
+       constCCVariable<double> &abskt;
+       CCVariable<double>  &intensitySource;
+       CCVariable<double>  &volQ;
        CCVariable<double>  &divQ;
        constCCVariable<double> &scatkt;
 #endif //UINTAH_ENABLE_KOKKOS
 };
 
 //***************************************************************************
-// Compute the heat flux divergence with scattering off.  
+// Compute the heat flux divergence with scattering off.
 //***************************************************************************
-struct computeDivQ{  
-       computeDivQ(constCCVariable<double> &_abskt, 
-                       CCVariable<double> &_intensitySource, 
-                       CCVariable<double> &_volQ,  
+struct computeDivQ{
+       computeDivQ(constCCVariable<double> &_abskt,
+                       CCVariable<double> &_intensitySource,
+                       CCVariable<double> &_volQ,
                        CCVariable<double> &_divQ) :
 #ifdef UINTAH_ENABLE_KOKKOS
-                       abskt(_abskt.getKokkosView()), 
-                       intensitySource(_intensitySource.getKokkosView()), 
-                       volQ(_volQ.getKokkosView()),  
+                       abskt(_abskt.getKokkosView()),
+                       intensitySource(_intensitySource.getKokkosView()),
+                       volQ(_volQ.getKokkosView()),
                        divQ(_divQ.getKokkosView())
 #else
-                       abskt(_abskt), 
-                       intensitySource(_intensitySource), 
-                       volQ(_volQ),  
-                       divQ(_divQ) 
+                       abskt(_abskt),
+                       intensitySource(_intensitySource),
+                       volQ(_volQ),
+                       divQ(_divQ)
 #endif //UINTAH_ENABLE_KOKKOS
                        { }
 
@@ -607,14 +601,14 @@ struct computeDivQ{
 
   private:
 #ifdef UINTAH_ENABLE_KOKKOS
-       KokkosView3<const double> abskt; 
-       KokkosView3<double>  intensitySource; 
-       KokkosView3<double>  volQ;  
+       KokkosView3<const double> abskt;
+       KokkosView3<double>  intensitySource;
+       KokkosView3<double>  volQ;
        KokkosView3<double>  divQ;
 #else
-       constCCVariable<double> &abskt; 
-       CCVariable<double>  &intensitySource; 
-       CCVariable<double>  &volQ;  
+       constCCVariable<double> &abskt;
+       CCVariable<double>  &intensitySource;
+       CCVariable<double>  &volQ;
        CCVariable<double>  &divQ;
 #endif //UINTAH_ENABLE_KOKKOS
 };
@@ -641,9 +635,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
   double solve_start = Time::currentSeconds();
-  
+
   d_linearSolver->matrixInit(patch);
- 
+
   rgamma.resize(1,29);
   sd15.resize(1,481);
   sd.resize(1,2257);
@@ -842,7 +836,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       bool converged =  d_linearSolver->radLinearSolve( direcn, d_print_all_info );
 
       if(_usePreviousIntensity){
-        vars->cenint.initialize(0.0); // Extra cells of intensity solution are not set when using non-zero initial guess.  Reset field to initialize extra cells 
+        vars->cenint.initialize(0.0); // Extra cells of intensity solution are not set when using non-zero initial guess.  Reset field to initialize extra cells
       }
 
       if (converged) {
@@ -859,13 +853,13 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      //vars->qfluxe, vars->qfluxw,
                      //vars->qfluxn, vars->qfluxs,
                      //vars->qfluxt, vars->qfluxb);
-                       
+
       compute4Flux doFlux(wt[direcn]*abs(omu[direcn]),wt[direcn]*abs(oeta[direcn]),wt[direcn]*abs(oxi[direcn]),
-                                                                    wt[direcn],  vars->cenint, 
-                                                                    plusX ? vars->qfluxe :  vars->qfluxw, 
-                                                                    plusY ? vars->qfluxn :  vars->qfluxs, 
-                                                                    plusZ ? vars->qfluxt :  vars->qfluxb, 
-                                                                    vars->volq);                      
+                                                                    wt[direcn],  vars->cenint,
+                                                                    plusX ? vars->qfluxe :  vars->qfluxw,
+                                                                    plusY ? vars->qfluxn :  vars->qfluxs,
+                                                                    plusZ ? vars->qfluxt :  vars->qfluxb,
+                                                                    vars->volq);
       Uintah::parallel_for( range, doFlux );
 
     }  // ordinate loop

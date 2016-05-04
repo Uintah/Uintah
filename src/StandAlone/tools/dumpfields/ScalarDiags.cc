@@ -93,7 +93,7 @@ namespace Uintah {
 
       values.allocate(vectvalues.getLowIndex(), vectvalues.getHighIndex());
 
-      parallel_for( vectvalues.range(), [&](int i, int j, int k) {
+      serial_for( vectvalues.range(), [&](int i, int j, int k) {
         values(i,j,k) = reduce(vectvalues(i,j,k));
       });
     }
@@ -108,7 +108,7 @@ namespace Uintah {
 
       values.allocate(vectvalues.getLowIndex(), vectvalues.getHighIndex());
 
-      parallel_for( vectvalues.range(), [&](int i, int j, int k) {
+      serial_for( vectvalues.range(), [&](int i, int j, int k) {
         values(i,j,k) = reduce(vectvalues(i,j,k));
       });
     }
@@ -180,7 +180,7 @@ namespace Uintah {
       da->query(fullvalues, fieldname, imat, patch, index);
       res.allocate(fullvalues.getLowIndex(), fullvalues.getHighIndex());
 
-      parallel_for( fullvalues.range(), [&](int i, int j, int k) {
+      serial_for( fullvalues.range(), [&](int i, int j, int k) {
         res(i,j,k) = reduce(fullvalues(i,j,k));
       });
     }
@@ -192,7 +192,7 @@ namespace Uintah {
       CCVariable<Matrix3> fullvalues;
       da->query(fullvalues, fieldname, imat, patch, index);
       res.allocate(fullvalues.getLowIndex(), fullvalues.getHighIndex());
-      parallel_for( fullvalues.range(), [&](int i, int j, int k) {
+      serial_for( fullvalues.range(), [&](int i, int j, int k) {
         res(i,j,k) = reduce(fullvalues(i,j,k));
       });
     }
@@ -227,7 +227,7 @@ namespace Uintah {
       NCVariable<Matrix3> fullvals;
       (*preop)(da, patch, fieldname, imat, index, fullvals);
       res.allocate(fullvals.getLowIndex(), fullvals.getHighIndex());
-      parallel_for( fullvals.range(), [&](int i, int j, int k) {
+      serial_for( fullvals.range(), [&](int i, int j, int k) {
         res(i,j,k) = realdiag->reduce(fullvals(i,j,k));
       });
     }
@@ -239,7 +239,7 @@ namespace Uintah {
       NCVariable<Matrix3> fullvalues;
       (*preop)(da, patch, fieldname, imat, index, fullvalues);
       res.allocate(fullvalues.getLowIndex(), fullvalues.getHighIndex());
-      parallel_for( fullvalues.range(), [&](int i, int j, int k) {
+      serial_for( fullvalues.range(), [&](int i, int j, int k) {
         res(i,j,k) = realdiag->reduce(fullvalues(i,j,k));
       });
     }

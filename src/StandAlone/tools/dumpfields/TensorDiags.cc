@@ -80,7 +80,7 @@ namespace Uintah {
       NCVariable<Matrix3> value;
       da->query(value, fieldname, imat, patch, index);
       res.allocate(value.getLowIndex(), value.getHighIndex());
-      parallel_for( value.range(), [&](int i, int j, int k) {
+      serial_for( value.range(), [&](int i, int j, int k) {
         res(i,j,k) = convert(value(i,j,k));
       });
     }
@@ -92,7 +92,7 @@ namespace Uintah {
       CCVariable<Matrix3> value;
       da->query(value, fieldname, imat, patch, index);
       res.allocate(value.getLowIndex(), value.getHighIndex());
-      parallel_for( value.range(), [&](int i, int j, int k) {
+      serial_for( value.range(), [&](int i, int j, int k) {
         res(i,j,k) = convert(value(i,j,k));
       });
     }
@@ -128,7 +128,7 @@ namespace Uintah {
       NCVariable<Matrix3> fullvals;
       (*preop)(da, patch, fieldname, imat, index, fullvals);
       res.allocate(fullvals.getLowIndex(), fullvals.getHighIndex());
-      parallel_for( fullvals.range(), [&](int i, int j, int k) {
+      serial_for( fullvals.range(), [&](int i, int j, int k) {
         res(i,j,k) = realdiag->convert(fullvals(i,j,k));
       });
     }
@@ -140,7 +140,7 @@ namespace Uintah {
       NCVariable<Matrix3> fullvalues;
       (*preop)(da, patch, fieldname, imat, index, fullvalues);
       res.allocate(fullvalues.getLowIndex(), fullvalues.getHighIndex());
-      parallel_for( fullvalues.range(), [&](int i, int j, int k) {
+      serial_for( fullvalues.range(), [&](int i, int j, int k) {
         res(i,j,k) = realdiag->convert(fullvalues(i,j,k));
       });
     }

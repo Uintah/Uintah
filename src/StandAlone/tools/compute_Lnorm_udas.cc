@@ -383,7 +383,7 @@ void BuildCellToPatchMap(LevelP level,
 
     patchMap.rewindow(ex_low, ex_high);
 
-    parallel_for( patchMap.range(), [&](int i, int j, int k) {
+    serial_for( patchMap.range(), [&](int i, int j, int k) {
       if (patchMap(i,j,k)) {
         // in some cases, we can have overlapping patches, where an extra cell/node
         // overlaps an interior cell/node of another patch.  We prefer the interior
@@ -393,7 +393,6 @@ void BuildCellToPatchMap(LevelP level,
         // its interior cell centered variables
         IntVector in_low  = patch->getLowIndex(basis);
         IntVector in_high = patch->getHighIndex(basis);
-
         if (   i >= in_low[0] && j >= in_low[1] && k >= in_low[2]
             && i < in_high[0] && j < in_high[1] && k < in_high[2] )
         {
@@ -663,11 +662,10 @@ main(int argc, char** argv)
             cerr << "Inconsistent patch coverage on level " << l << " at time " << time1 << endl;
 
             if (cellToPatchMap1(i,j,k) != nullptr) {
-              cerr << "(" << i << "," << j << "," << k << ")" << " is covered by " << filebase1 << " and not " << filebase2 << endl;
+              cerr << IntVector(i,j,k) << " is covered by " << filebase1 << " and not " << filebase2 << endl;
             } else {
-              cerr << "(" << i << "," << j << "," << k << ")" << " is covered by " << filebase2 << " and not " << filebase1 << endl;
+              cerr << IntVector(i,j,k) << " is covered by " << filebase2 << " and not " << filebase1 << endl;
             }
-
             abort_uncomparable();
           }
         });

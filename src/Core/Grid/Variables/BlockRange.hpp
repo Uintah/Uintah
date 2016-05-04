@@ -22,8 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_BLOCK_RANGE_H
-#define UINTAH_HOMEBREW_BLOCK_RANGE_H
+#ifndef UINTAH_HOMEBREW_BLOCK_RANGE_HPP
+#define UINTAH_HOMEBREW_BLOCK_RANGE_HPP
+
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
 
 #include <cstddef>
 
@@ -61,6 +65,21 @@ private:
   int m_dim[rank];
 };
 
+template <typename Functor>
+void serial_for( BlockRange const & r, const Functor & f )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(i,j,k);
+  }}}
+}
+
+#if defined( UINTAH_ENABLE_KOKKOS )
 
 template <typename Functor>
 void parallel_for( BlockRange const & r, const Functor & f )
@@ -69,24 +88,34 @@ void parallel_for( BlockRange const & r, const Functor & f )
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
-#if defined( UINTAH_ENABLE_KOKKOS )
-#pragma omp parallel for collapse(3)
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k);
-  }}}
-#else
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k);
-  }}}
-#endif
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k) {
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      f(i,j,k);
+    }}
+  });
 };
 
+template <typename Functor, typename ReductionType>
+void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & red  )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  ReductionType tmp = red;
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      f(i,j,k,tmp);
+    }}
+  }, tmp);
+  red = tmp;
+};
+#else
+
 template <typename Functor>
-void serial_for( BlockRange const & r, const Functor & f )
+void parallel_for( BlockRange const & r, const Functor & f )
 {
   const int ib = r.begin(0); const int ie = r.end(0);
   const int jb = r.begin(1); const int je = r.end(1);
@@ -106,24 +135,18 @@ void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & r
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
-ReductionType tmp = red;
-#if defined( UINTAH_ENABLE_KOKKOS )
-#pragma omp parallel for collapse(3) reduction(+:tmp)
+  ReductionType tmp = red;
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
     f(i,j,k,tmp);
   }}}
-#else
-  for (int k=kb; k<ke; ++k) {
-  for (int j=jb; j<je; ++j) {
-  for (int i=ib; i<ie; ++i) {
-    f(i,j,k,tmp);
-  }}}
-#endif
   red = tmp;
 };
 
+#endif
+
+
 } // namespace Uintah
 
-#endif // UINTAH_HOMEBREW_BLOCK_RANGE_H
+#endif // UINTAH_HOMEBREW_BLOCK_RANGE_HPP
