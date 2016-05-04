@@ -34,7 +34,7 @@ do
   echo
   echo "----- Installing ---"
   echo
-
+  cd ../$dir-build
   ./doit
 
   cd ..

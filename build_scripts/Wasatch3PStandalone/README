@@ -35,7 +35,9 @@ etc.
 On Vulcan @ LLNL:
 ----------------
 
-   use cmake
+   # If this is ever fixed:
+   use cmake-3.1 
+   # otherwise use /usr/gapps/uintah/Thirdparty-install/vulcan/CMake/bin/cmake
 
 
 On Cab @ LLNL:
