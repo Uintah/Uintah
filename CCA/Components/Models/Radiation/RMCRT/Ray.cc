@@ -35,7 +35,7 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 
-#if 0 && defined(UINTAH_ENABLE_KOKKOS)
+#ifdef UINTAH_ENABLE_KOKKOS
 #include <Core/Grid/Variables/BlockRange.h>
 #include <Kokkos_Core.hpp>
 #endif // end UINTAH_ENABLE_KOKKOS
@@ -188,7 +188,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   proc0cout << "__________________________________ " << endl;
 
-#if 0 && defined(UINTAH_ENABLE_KOKKOS)
+#ifdef UINTAH_ENABLE_KOKKOS
   proc0cout << "  RMCRT:  Using the Kokkos-based implementation of RMCRT." << endl;
 #endif
 
@@ -494,7 +494,7 @@ Ray::sched_rayTrace( const LevelP& level,
 
 }
 
-#if 0 && defined(UINTAH_ENABLE_KOKKOS)
+#ifdef UINTAH_ENABLE_KOKKOS
 
 namespace {
 
@@ -1193,9 +1193,12 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //______________________________________________________________________
   if( d_solveDivQ){
 
-#if 0 && defined(UINTAH_ENABLE_KOKKOS)
+#ifdef UINTAH_ENABLE_KOKKOS
 
     bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
+
+    double DyDx = Dx.y() / Dx.x();
+    double DzDx = Dx.z() / Dx.x();
 
     IntVector lo = patch->getCellLowIndex();
     IntVector hi = patch->getCellHighIndex();
