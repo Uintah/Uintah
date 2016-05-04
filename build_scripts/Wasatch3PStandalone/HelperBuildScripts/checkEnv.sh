@@ -122,7 +122,7 @@ if test "$MACHINE" = "Mapache"; then
   echo
   echo "Have you run the appropriate 'module load' commands? Eg:"
   echo "   * module load gcc"
-  echo "   * module load cmake/3.0.0"
+  echo "   * module load cmake/3.1.0"
   echo
   sleep 1
 
@@ -139,7 +139,7 @@ if test "$MACHINE" = "Mustang"; then
   echo
   echo "Have you run the appropriate 'module load' commands? Eg:"
   echo "   * module load gcc"
-  echo "   * module load cmake/3.0.0"
+  echo "   * module load cmake/3.1.0"
   echo
   sleep 1
 
@@ -156,7 +156,7 @@ if test "$MACHINE" = "Wolf"; then
   echo
   echo "Have you run the appropriate 'module load' commands? Eg:"
   echo "   * module load intel/14.0.4"
-  echo "   * module load cmake/3.0.0"
+  echo "   * module load cmake/3.1.0"
   echo
   sleep 1
 
