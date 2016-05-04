@@ -25,7 +25,7 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SendState.h>
-#include <CCA/Components/Schedulers/CommunicationList.hpp>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/LoadBalancer.h>
@@ -34,9 +34,8 @@
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/ProcessorGroup.h>
-
+#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
@@ -50,7 +49,11 @@
 
 namespace {
 
+// Tags for each CrowdMonitor
+struct send_tag{};
 struct recv_tag{};
+
+using  send_monitor = Uintah::CrowdMonitor<send_tag>;
 using  recv_monitor = Uintah::CrowdMonitor<recv_tag>;
 
 }
@@ -321,12 +324,7 @@ MPIScheduler::runTask( DetailedTask* task,
 
   double teststart = Time::currentSeconds();
 
-  auto ready_request = [](CommRequest const& r) { return r.test(); };
-  CommPool::iterator comm_iter = m_comm_requests.find_any(t_send_request, REQUEST_SEND, ready_request);
-  if (comm_iter) {
-    t_send_request = comm_iter;
-    m_comm_requests.erase(comm_iter);
-  }
+  sends_[thread_id].testsome(d_myworld);
 
   mpi_info_[TotalTestMPI] += Time::currentSeconds() - teststart;
 
@@ -477,6 +475,12 @@ MPIScheduler::postMPISends( DetailedTask* task,
       mpibuff.get_type(buf, count, datatype);
 #endif
 
+      // TODO need to determine if this is actually true now - I don't think it is, APH - 01/07/15
+      //only send message if size is greater than zero
+      //we need this empty message to enforce modify after read dependencies
+      //if(count>0)
+      //{
+
       if (mpidbg.active()) {
         cerrLock.lock();
         mpidbg << "Rank-" << me << " Posting send for message number " << batch->messageTag << " to   rank-" << to << ", length: " << count
@@ -492,13 +496,28 @@ MPIScheduler::postMPISends( DetailedTask* task,
       messageVolume_ += count * typeSize;
       volSend += count * typeSize;
 
-      CommPool::iterator iter = m_comm_requests.emplace(t_send_emplace, REQUEST_SEND, new SendHandle(mpibuff.takeSendlist()));
-      t_send_emplace = iter;
+      MPI_Request requestid;
+      Uintah::MPI::Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
+      int bytes = count;
 
-      MPI::Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), iter->request());
+      // with multi-threaded schedulers (derived from MPIScheduler), this is written per thread
+      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      // TODO - Somehow, with only the ThreadedMPI scheduler, a race condition exists on a member
+      //        one of these CommRecMPI objects (deletion and access to this member)
+      //        "sends_" contains per-threads objects so this is puzzling... for now, just lock it.
+      //
+      // NOTE:  This may have something to do with the PackBufferInfo leak in the Unified Scheduler
+      //
+      // APH - 01/24/15
+      //
+      send_monitor send_lock{ Uintah::CrowdMonitor<send_tag>::WRITER };
+      {
+        sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
+      }
 
       mpi_info_[TotalSendMPI] += Time::currentSeconds() - start;
 
+      //}
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 
@@ -515,6 +534,16 @@ MPIScheduler::postMPISends( DetailedTask* task,
     }
   }
 }  // end postMPISends();
+
+//______________________________________________________________________
+//
+int MPIScheduler::pendingMPIRecvs()
+{
+  recv_monitor send_lock{ Uintah::CrowdMonitor<recv_tag>::READER };
+  {
+    return recvs_.numRequests();
+  }
+}
 
 //______________________________________________________________________
 //
@@ -688,8 +717,14 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         mpibuff.get_type(buf, count, datatype);
 #endif
 
+        //only receive message if size is greater than zero
+        //we need this empty message to enforce modify after read dependencies
+        //if(count>0)
+        //{
+
         int from = batch->fromTask->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
+        MPI_Request requestid;
 
         if (mpidbg.active()) {
         cerrLock.lock();
@@ -698,25 +733,28 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         cerrLock.unlock();
         }
 
-        CommPool::iterator iter = m_comm_requests.emplace(t_recv_emplace, REQUEST_RECV, new RecvHandle(p_mpibuff, pBatchRecvHandler));
-        t_recv_emplace = iter;
-
-        MPI::Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), iter->request());
-
+        Uintah::MPI::Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
+        int bytes = count;
+        recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
         mpi_info_[TotalRecvMPI] += Time::currentSeconds() - start;
 
+        /*}
+         else
+         {
+         //no message was sent so clean up buffer and handler
+         delete p_mpibuff;
+         delete pBatchRecvHandler;
+         }*/
       }
       else {
         // Nothing really need to be received, but let everyone else know
         // that it has what is needed (nothing).
         batch->received(d_myworld);
-
 #ifdef USE_PACKING
         // otherwise, these will be deleted after it receives and unpacks the data.
         delete p_mpibuff;
         delete pBatchRecvHandler;
 #endif
-
       }
     }  // end for loop over requires
   } // end dep_lock{ CrowdMonitor::WRITER }
@@ -730,47 +768,52 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 //
 void MPIScheduler::processMPIRecvs(int how_much)
 {
+  // Should only have external receives in the MixedScheduler version which
+  // shouldn't use this function.
+  // ASSERT(outstandingExtRecvs.empty());
+  if (recvs_.numRequests() == 0) {
+    return;
+  }
+
   double start = Time::currentSeconds();
 
-  auto ready_request    = [](CommRequest const& r) { return r.test(); };
-  auto finished_request = [](CommRequest const& r) { return r.wait(); };
+  recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
+  {
+    switch (how_much) {
+      case TEST :
+        recvs_.testsome(d_myworld);
+        break;
+      case WAIT_ONCE :
+        coutLock.lock();
+        mpidbg << "Rank-" << d_myworld->myrank() << " Start waiting once (WAIT_ONCE)...\n";
+        coutLock.unlock();
 
-  switch (how_much) {
-    case TEST : {
-      CommPool::iterator comm_iter = m_comm_requests.find_any(t_recv_request, REQUEST_RECV, ready_request);
-      if (comm_iter) {
-        t_recv_request = comm_iter;
-        MPI_Status status;
-        comm_iter->finishedCommunication(d_myworld, status);
-        m_comm_requests.erase(comm_iter);
-      }
-      break;
-    }
+        recvs_.waitsome(d_myworld);
 
-    case WAIT_ONCE : {
-      CommPool::iterator comm_iter = m_comm_requests.find_any(t_recv_request, REQUEST_RECV, finished_request);
-      if (comm_iter) {
-        t_recv_request = comm_iter;
-        MPI_Status status;
-        comm_iter->finishedCommunication(d_myworld, status);
-        m_comm_requests.erase(comm_iter);
-      }
-      break;
-    }
+        coutLock.lock();
+        mpidbg << "Rank-" << d_myworld->myrank() << " Done waiting once (WAIT_ONCE)...\n";
+        coutLock.unlock();
+        break;
+      case WAIT_ALL :
+        // This will allow some receives to be "handled" by their
+        // AfterCommincationHandler while waiting for others.
+        coutLock.lock();
+        mpidbg << "Rank-" << d_myworld->myrank() << "  Start waiting (WAIT_ALL)...\n";
+        coutLock.unlock();
 
-    case WAIT_ALL : {
-      while (!m_comm_requests.empty()) {
-        CommPool::iterator comm_iter = m_comm_requests.find_any(t_recv_request, REQUEST_RECV, finished_request);
-        if (comm_iter) {
-          t_recv_request = comm_iter;
-          MPI_Status status;
-          comm_iter->finishedCommunication(d_myworld, status);
-          m_comm_requests.erase(comm_iter);
+        while ((recvs_.numRequests() > 0)) {
+          bool keep_waiting = recvs_.waitsome(d_myworld);
+          if (!keep_waiting) {
+            break;
+          }
         }
-      }
-      break;
-    }
-  }  // end switch
+
+        coutLock.lock();
+        mpidbg << "Rank-" << d_myworld->myrank() << "  Done waiting (WAIT_ALL)...\n";
+        coutLock.unlock();
+        break;
+    } // end switch
+  } // end recv_lock{ CrowdMonitor::WRITER }
 
   mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
   CurrentWaitTime += Time::currentSeconds() - start;
@@ -822,10 +865,11 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 
   int me = d_myworld->myrank();
 
-  if(timeout.active()) {
-    makeTaskGraphDoc(dts, me);
-    emitTime("taskGraph output");
-  }
+  // TODO determine exactly what this does and at what cost/benefit (APH 01/22/15)
+  makeTaskGraphDoc(dts, me);
+
+  //if(timeout.active())
+  //emitTime("taskGraph output");
 
   mpi_info_.reset( 0 );
 
@@ -861,12 +905,17 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     // the maxMemUse for future reference, and that is why we are calling
     // it.
     //
-    // unsigned long memuse, highwater, maxMemUse;
-    // checkMemoryUse( memuse, highwater, maxMemUse );
+    //unsigned long memuse, highwater, maxMemUse;
+    //checkMemoryUse( memuse, highwater, maxMemUse );
 
     DetailedTask * task = dts->getNextInternalReadyTask();
 
     numTasksDone++;
+
+    if (taskorder.active()) {
+      taskorder << d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: "
+                << numTasksDone << std::endl;
+    }
 
     if (taskdbg.active()) {
       taskdbg << me << " Initiating task:  \t";
@@ -882,7 +931,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     else {
       initiateTask(task, abort, abort_point, iteration);
       processMPIRecvs(WAIT_ALL);
-      ASSERT(m_comm_requests.empty(REQUEST_RECV));
+      ASSERT(recvs_.numRequests() == 0);
       runTask(task, iteration);
 
       if (taskdbg.active()) {
@@ -924,21 +973,12 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
+  // Don't need to lock sends 'cause all threads are done at this point.
+  sends_[0].waitall(d_myworld);
 
-  auto ready_request = [](CommRequest const& n)->bool { return n.wait(); };
-  while (!m_comm_requests.empty()) {
-    CommPool::iterator comm_iter = m_comm_requests.find_any(ready_request);
-    if (comm_iter) {
-      m_comm_requests.erase(comm_iter);
-    }
-  }
-
-  ASSERT(m_comm_requests.empty());
-
-  if (timeout.active()) {
-    emitTime("final wait");
-  }
-
+  ASSERT(sends_[0].numRequests() == 0);
+  //if(timeout.active())
+    //emitTime("final wait");
   if (restartable && tgnum == (int)graphs.size() - 1) {
     // Copy the restart flag to all processors
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
@@ -958,6 +998,11 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     outputTimingStats("MPIScheduler");
   }
 
+  if (dbg.active()) {
+    coutLock.lock();
+    dbg << me << " MPIScheduler finished\n";
+    coutLock.unlock();
+  }
 }
 
 //______________________________________________________________________

@@ -128,13 +128,6 @@ class UnifiedScheduler : public MPIScheduler  {
     UnifiedScheduler( UnifiedScheduler && )                 = delete;
     UnifiedScheduler& operator=( UnifiedScheduler && )      = delete;
 
-
-    void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
-
-    static void init_threads( UnifiedScheduler * scheduler, int num_threads );
-
-    int  pendingMPIRecvs();
-
     // thread shared data, needs lock protection when accessed
     std::vector<int>           phaseTasks;
     std::vector<int>           phaseTasksDone;
@@ -151,6 +144,10 @@ class UnifiedScheduler : public MPIScheduler  {
     bool     abort{false};
     int      abort_point{0};
     int      numThreads_{-1};
+
+    void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
+
+    static void init_threads( UnifiedScheduler * scheduler, int num_threads );
 
 #ifdef HAVE_CUDA
 
@@ -171,6 +168,7 @@ class UnifiedScheduler : public MPIScheduler  {
         GpuUtilities::DeviceVarDestination dest);
 
     void createTaskGpuDWs(DetailedTask * dtask);
+
 
     void gpuInitialize( bool reset=false );
 
