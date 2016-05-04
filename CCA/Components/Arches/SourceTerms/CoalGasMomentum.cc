@@ -17,23 +17,17 @@
 //===========================================================================
 #include <CCA/Components/Arches/FunctorSwitch.h>
 
-#ifdef USE_FUNCTOR
-#  include <Core/Grid/Variables/BlockRange.h>
-#  ifdef UINTAH_ENABLE_KOKKOS
-#    include <Kokkos_Core.hpp>
-#  endif //UINTAH_ENABLE_KOKKOS
-#endif
 
 using namespace std;
-using namespace Uintah; 
+using namespace Uintah;
 
 CoalGasMomentum::CoalGasMomentum( std::string src_name, SimulationStateP& shared_state,
-                            vector<std::string> req_label_names, std::string type ) 
+                            vector<std::string> req_label_names, std::string type )
 : SourceTermBase(src_name, shared_state, req_label_names, type)
 {
-  _src_label = VarLabel::create( src_name, CCVariable<Vector>::getTypeDescription() ); 
+  _src_label = VarLabel::create( src_name, CCVariable<Vector>::getTypeDescription() );
 
-  _source_grid_type = CCVECTOR_SRC; 
+  _source_grid_type = CCVECTOR_SRC;
 }
 
 CoalGasMomentum::~CoalGasMomentum()
@@ -41,50 +35,50 @@ CoalGasMomentum::~CoalGasMomentum()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-void 
+void
 CoalGasMomentum::problemSetup(const ProblemSpecP& inputdb)
 {
 
-  ProblemSpecP db = inputdb; 
+  ProblemSpecP db = inputdb;
 
-  //db->getWithDefault("constant",d_constant, 0.1); 
+  //db->getWithDefault("constant",d_constant, 0.1);
   //db->getWithDefault( "drag_model_name", d_dragModelName, "dragforce" );
 
 }
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the source term 
+// Method: Schedule the calculation of the source term
 //---------------------------------------------------------------------------
-void 
+void
 CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
-{ 
+{
   std::string taskname = "CoalGasMomentum::eval";
   Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 ) { 
+  if (timeSubStep == 0 ) {
     tsk->computes(_src_label);
   } else {
-    tsk->modifies(_src_label); 
+    tsk->modifies(_src_label);
   }
 
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-  
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+  CoalModelFactory& modelFactory = CoalModelFactory::self();
+
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
 
-    std::string model_name = "xdragforce"; 
-    std::string node;  
-    std::stringstream out; 
-    out << iqn; 
-    node = out.str(); 
+    std::string model_name = "xdragforce";
+    std::string node;
+    std::stringstream out;
+    out << iqn;
+    node = out.str();
     model_name += "_qn";
-    model_name += node; 
+    model_name += node;
 
-    ModelBase& modelx = modelFactory.retrieve_model( model_name ); 
+    ModelBase& modelx = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_x = modelx.getGasSourceLabel();
     tsk->requires( Task::NewDW, tempgasLabel_x, Ghost::None, 0 );
 
-    model_name = "ydragforce"; 
+    model_name = "ydragforce";
     model_name += "_qn";
     model_name += node;
 
@@ -103,13 +97,13 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     tsk->requires( Task::NewDW, tempgasLabel_z, Ghost::None, 0 );
 
   }
-  
+
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 
 struct sumMomentum{
-       sumMomentum(constCCVariable<double> &_qn_gas_xdrag, 
+       sumMomentum(constCCVariable<double> &_qn_gas_xdrag,
                    constCCVariable<double> &_qn_gas_ydrag,
                    constCCVariable<double> &_qn_gas_zdrag,
                    CCVariable<Vector> &_dragSrc) :
@@ -122,22 +116,22 @@ struct sumMomentum{
        }
 
     private:
-       constCCVariable<double> &qn_gas_xdrag; 
+       constCCVariable<double> &qn_gas_xdrag;
        constCCVariable<double> &qn_gas_ydrag;
        constCCVariable<double> &qn_gas_zdrag;
        CCVariable<Vector> &dragSrc;
 };
 
-                   
+
 //---------------------------------------------------------------------------
-// Method: Actually compute the source term 
+// Method: Actually compute the source term
 //---------------------------------------------------------------------------
 void
-CoalGasMomentum::computeSource( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
+CoalGasMomentum::computeSource( const ProcessorGroup* pc,
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw,
                    int timeSubStep )
 {
   //patch loop
@@ -147,19 +141,19 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
-    
-    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-    
-    CCVariable<Vector> dragSrc; 
-    if ( timeSubStep == 0 ){ 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+
+    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+    CoalModelFactory& modelFactory = CoalModelFactory::self();
+
+    CCVariable<Vector> dragSrc;
+    if ( timeSubStep == 0 ){
       new_dw->allocateAndPut( dragSrc, _src_label, matlIndex, patch );
       dragSrc.initialize(Vector(0.,0.,0.));
-    } else { 
-      new_dw->getModifiable( dragSrc, _src_label, matlIndex, patch ); 
+    } else {
+      new_dw->getModifiable( dragSrc, _src_label, matlIndex, patch );
     }
-    
+
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
 
       Vector qn_gas_drag;
@@ -175,7 +169,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
 
       ModelBase& modelx = modelFactory.retrieve_model( model_name );
 
-      const VarLabel* XDragGasLabel = modelx.getGasSourceLabel();  
+      const VarLabel* XDragGasLabel = modelx.getGasSourceLabel();
       new_dw->get( qn_gas_xdrag, XDragGasLabel, matlIndex, patch, gn, 0 );
 
       constCCVariable<double> qn_gas_ydrag;
@@ -199,16 +193,16 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       new_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
 
 
-#ifdef USE_FUNCTOR              
+#ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
       sumMomentum doSumMomentum(qn_gas_xdrag,
                                 qn_gas_ydrag,
                                 qn_gas_zdrag,
                                 dragSrc);
       Uintah::parallel_for( range, doSumMomentum );
-#else              
+#else
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter; 
+        IntVector c = *iter;
         qn_gas_drag = Vector(qn_gas_xdrag[c],qn_gas_ydrag[c],qn_gas_zdrag[c]);
 
         dragSrc[c] += qn_gas_drag; // All the work is performed in Drag model
@@ -224,7 +218,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
 void
 CoalGasMomentum::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CoalGasMomentum::initialize"; 
+  string taskname = "CoalGasMomentum::initialize";
 
   Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::initialize);
 
@@ -233,11 +227,11 @@ CoalGasMomentum::sched_initialize( const LevelP& level, SchedulerP& sched )
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
-void 
-CoalGasMomentum::initialize( const ProcessorGroup* pc, 
-                             const PatchSubset* patches, 
-                             const MaterialSubset* matls, 
-                             DataWarehouse* old_dw, 
+void
+CoalGasMomentum::initialize( const ProcessorGroup* pc,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
                              DataWarehouse* new_dw )
 {
   //patch loop
@@ -245,13 +239,13 @@ CoalGasMomentum::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<Vector> src;
 
-    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch );
 
-    src.initialize(Vector(0.0,0.0,0.0)); 
+    src.initialize(Vector(0.0,0.0,0.0));
 
   }
 }

@@ -35,11 +35,6 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
-#include <Core/Grid/Variables/BlockRange.h>
-#include <Kokkos_Core.hpp>
-#endif // end UINTAH_ENABLE_KOKKOS
-
 #include <time.h>
 #include <fstream>
 

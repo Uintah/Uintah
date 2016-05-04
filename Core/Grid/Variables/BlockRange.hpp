@@ -22,8 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_BLOCK_RANGE_H
-#define UINTAH_HOMEBREW_BLOCK_RANGE_H
+#ifndef UINTAH_HOMEBREW_BLOCK_RANGE_HPP
+#define UINTAH_HOMEBREW_BLOCK_RANGE_HPP
+
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
 
 #include <cstddef>
 
@@ -84,7 +88,7 @@ void parallel_for( BlockRange const & r, const Functor & f )
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
-  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke), KOKKOS_LAMBDA(int k) {
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k) {
     for (int j=jb; j<je; ++j) {
     for (int i=ib; i<ie; ++i) {
       f(i,j,k);
@@ -100,7 +104,7 @@ void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & r
   const int kb = r.begin(2); const int ke = r.end(2);
 
   ReductionType tmp = red;
-  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k, ReductionType & tmp) {
     for (int j=jb; j<je; ++j) {
     for (int i=ib; i<ie; ++i) {
       f(i,j,k,tmp);
@@ -145,4 +149,4 @@ void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & r
 
 } // namespace Uintah
 
-#endif // UINTAH_HOMEBREW_BLOCK_RANGE_H
+#endif // UINTAH_HOMEBREW_BLOCK_RANGE_HPP

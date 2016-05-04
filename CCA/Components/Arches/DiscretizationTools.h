@@ -2,10 +2,6 @@
 #define Uintah_Component_Arches_DISCRETIZATIONTOOLS_h
 
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Grid/Variables/BlockRange.h>
-#ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
 
 /** @class DiscretizationTools
     @author J. Thornock
