@@ -36,9 +36,7 @@
 #include <Core/Exceptions/InternalError.h>
 #endif
 
-#ifdef UINTAH_ENABLE_KOKKOS
 #include <type_traits>
-#endif //UINTAH_ENABLE_KOKKOS
 
 /**************************************
 
@@ -100,7 +98,7 @@ struct KokkosView3
     , m_j(v.m_j)
     , m_k(v.m_k)
   {}
-    
+
   template <typename U, typename = std::enable_if< std::is_same<U,T>::value || std::is_same<const U,T>::value> >
   KokkosView3 & operator=( const KokkosView3<U> & v)
   {
@@ -110,7 +108,7 @@ struct KokkosView3
     m_k = v.m_k;
     return *this;
   }
-  
+
   view_type m_view;
   int       m_i;
   int       m_j;
