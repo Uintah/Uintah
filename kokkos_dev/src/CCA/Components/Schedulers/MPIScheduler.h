@@ -26,14 +26,14 @@
 #define CCA_COMPONENTS_SCHEDULERS_MPISCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Components/Schedulers/CommunicationList.hpp>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 
 #include <Core/Grid/Task.h>
-#include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/PackBufferInfo.h>
+#include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/InfoMapper.h>
 
 #include <fstream>
@@ -93,6 +93,8 @@ class MPIScheduler : public SchedulerCommon {
 
             void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
+            int  pendingMPIRecvs();
+
             void runTask( DetailedTask* task, int iteration, int thread_id = 0 );
 
     virtual void runReductionTask( DetailedTask* task );
@@ -115,10 +117,10 @@ class MPIScheduler : public SchedulerCommon {
         double max_volume;
 
         // do SUM and MAX reduction for numMessages and messageVolume
-        Uintah::MPI::Reduce(&numMessages_  , &total_messages,  1, MPI_UNSIGNED,MPI_SUM , 0,d_myworld->getComm());
-        Uintah::MPI::Reduce(&messageVolume_, &total_volume  ,  1, MPI_DOUBLE,MPI_SUM   , 0,d_myworld->getComm());
-        Uintah::MPI::Reduce(&numMessages_  , &max_messages  ,  1, MPI_UNSIGNED,MPI_MAX , 0,d_myworld->getComm());
-        Uintah::MPI::Reduce(&messageVolume_, &max_volume    ,  1, MPI_DOUBLE,MPI_MAX   , 0,d_myworld->getComm());
+        Uintah::MPI::Reduce(&numMessages_,&total_messages,1,MPI_UNSIGNED,MPI_SUM,0,d_myworld->getComm());
+        Uintah::MPI::Reduce(&messageVolume_,&total_volume,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+        Uintah::MPI::Reduce(&numMessages_,&max_messages,1,MPI_UNSIGNED,MPI_MAX,0,d_myworld->getComm());
+        Uintah::MPI::Reduce(&messageVolume_,&max_volume,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
 
         if( d_myworld->myrank() == 0 ) {
           mpi_stats << "MPIStats: Num Messages (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages << std::endl;
@@ -157,13 +159,6 @@ class MPIScheduler : public SchedulerCommon {
       WAIT_ALL
     };
 
-    enum : size_t {
-        REQUEST_COLLECTIVE
-      , REQUEST_RECV
-      , REQUEST_SEND
-      , REQUEST_SIZE
-    };
-
   protected:
 
     virtual void initiateTask( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
@@ -177,7 +172,8 @@ class MPIScheduler : public SchedulerCommon {
     void outputTimingStats( const char* label );
 
     const Output*               oport_;
-    CommPool                    m_comm_requests{REQUEST_SIZE};
+    CommRecMPI                  sends_[MAX_THREADS];
+    CommRecMPI                  recvs_;
 
     double                      d_lasttime;
     std::vector<const char*>    d_labels;
@@ -193,23 +189,12 @@ class MPIScheduler : public SchedulerCommon {
     std::mutex                  dlbLock{};                // load balancer lock
     std::mutex                  waittimesLock{};          // MPI wait times lock
 
-
   private:
 
-    // eliminate copy, assignment and move
-    MPIScheduler( const MPIScheduler & )            = delete;
-    MPIScheduler& operator=( const MPIScheduler & ) = delete;
-    MPIScheduler( MPIScheduler && )                 = delete;
-    MPIScheduler& operator=( MPIScheduler && )      = delete;
-
+    // Disable copy and assignment
+    MPIScheduler( const MPIScheduler& );
+    MPIScheduler& operator=( const MPIScheduler& );
 };
-
-static __thread Uintah::CommPool::handle t_send_emplace = {};
-static __thread Uintah::CommPool::handle t_recv_emplace = {};
-
-static __thread Uintah::CommPool::handle t_send_request = {};
-static __thread Uintah::CommPool::handle t_recv_request = {};
-
 
 } // End namespace Uintah
 
