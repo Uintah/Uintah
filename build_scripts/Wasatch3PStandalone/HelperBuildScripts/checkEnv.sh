@@ -194,7 +194,7 @@ if test "$MACHINE" = "Surface"; then
   fi
   CC=`which mpigcc`
   CXX=`which mpig++`
-  COMP=gcc-4.4.7
+  COMP=gcc-4.9.2
 
   NAME2="Surface"
   INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/surface/Wasatch3P
