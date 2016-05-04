@@ -3471,6 +3471,18 @@ else
            done 
         fi
 
+        # Reset CFLAGS as necessary... 
+        #
+        # This hack is necessary because we are using the xlc compiled Petsc on
+        # Vulcan with the gcc compilers... And the compilicated CFLAGS will not
+        # pass through configure into configVars.mk correctly... sigh.
+        #
+        # Note, the above "[[[" turns into the desired "[[" once passed through autoconf...
+        #
+        if [[[ $CC = *mpigcc* && $IS_BGQ = yes ]]]; then
+           CXXFLAGS=$ORIG_CXXFLAGS
+        fi
+
         # report error message
         if test "$HAVE_PETSC" != "yes" ; then
           AC_MSG_ERROR(Could not find PETSc...)
@@ -3499,18 +3511,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
 AC_LANG([C])
 
-
-# Reset CFLAGS as necessary... 
-#
-# This hack is necessary because we are using the xlc compiled Petsc on
-# Vulcan with the gcc compilers... And the compilicated CFLAGS will not
-# pass through configure into configVars.mk correctly... sigh.
-#
-# Note, the above "[[[" turns into the desired "[[" once passed through autoconf...
-#
-if [[[ $CC = *mpigcc* && $IS_BGQ = yes ]]]; then
-   CXXFLAGS=$ORIG_CXXFLAGS
-fi
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
