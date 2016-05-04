@@ -2403,11 +2403,17 @@ OnDemandDataWarehouse::getRegion(       GridVariableBase& var,
                                   const Level*            level,
                                   const IntVector&        low,
                                   const IntVector&        high,
-                                        bool              useBoundaryCells /*=true*/ )
+                                        bool              useBoundaryCells, /*=true*/
+                                        bool              onlyNeedAllocatedSpace /*=false*/)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getRegion(Grid Variable):" + label->getName());
 
   var.allocate(low, high);
+  if (onlyNeedAllocatedSpace) {
+    //For GPU runs needing a D2H transfer.  This allows for the space to be created, but we don't fill it with host side
+    //data, we just leave it as empty space which will be filled by the D2H copy call.
+    return;
+  }
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
   IntVector adjustment = IntVector(1, 1, 1);
@@ -2498,6 +2504,7 @@ OnDemandDataWarehouse::getRegion(       GridVariableBase& var,
     delete tmpVar;
     IntVector diff(h - l);
     totalCells += diff.x() * diff.y() * diff.z();
+
   }  // patches loop
 
   IntVector diff(high - low);

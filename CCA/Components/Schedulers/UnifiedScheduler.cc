@@ -4631,7 +4631,9 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                 dw->unfinalize();
               }
               if (uses_SHRT_MAX) {
-                dw->getRegion(*gridVar, dependantVar->var, matlID, level, host_low, host_high, true);
+                //dw->allocateAndPut(*gridVar, dependantVar->var, matlID, patch, gtype, numGhostCells);
+                //dw->getLevel(*gridVar, dependantVar->var, matlID, level);
+                dw->getRegion(*gridVar, dependantVar->var, matlID, level, host_low, host_high, true, true);
               } else {
                 dw->allocateAndPut(*gridVar, dependantVar->var, matlID, patch, gtype, numGhostCells);
               }
