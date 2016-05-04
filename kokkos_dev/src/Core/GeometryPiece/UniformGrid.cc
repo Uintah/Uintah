@@ -153,7 +153,6 @@ UniformGrid::UniformGrid(const UniformGrid& copy)
   d_max_min = copy.d_max_min;
 
   d_grid.resize(copy.d_grid.getLowIndex(),copy.d_grid.getHighIndex());
-
   parallel_for( d_grid.range(), [&](int i, int j, int k) {
     d_grid(i,j,k) = copy.d_grid(i,j,k);
   });

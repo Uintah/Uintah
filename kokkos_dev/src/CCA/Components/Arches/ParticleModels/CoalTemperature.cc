@@ -6,10 +6,6 @@
 #include <spatialops/structured/FVStaggered.h>
 
 
-#ifdef USE_FUNCTOR
-#include <Core/Grid/Variables/BlockRange.hpp>
-#endif
-
 using namespace Uintah;
 using namespace std;
 
@@ -28,7 +24,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
   db->getWithDefault("const_size",_const_size,true);
-  
+
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
 
     ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
@@ -137,7 +133,7 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
     register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( temperature_name  , ArchesFieldContainer::COMPUTES , variable_registry );
     register_variable( dTdt_name  , ArchesFieldContainer::COMPUTES , variable_registry );
-    
+
     if ( !_const_size ) {
       const std::string diameter_name   = get_env_name( i, _diameter_base_name );
       register_variable( diameter_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
@@ -235,7 +231,7 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
     register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
     register_variable( temperature_name , ArchesFieldContainer::MODIFIES, variable_registry );
     register_variable( dTdt_name , ArchesFieldContainer::COMPUTES, variable_registry );
-    
+
     if ( !_const_size ) {
       const std::string diameter_name   = get_env_name( i, _diameter_base_name );
       register_variable( diameter_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
@@ -279,25 +275,25 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
 
 
-#ifdef USE_FUNCTOR              
+#ifdef USE_FUNCTOR
 
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
       computeCoalTemperature doCoalTemperature(dt, ix,
                                                gas_temperature,
                                                vol_frac,
-                                               rcmass, 
+                                               rcmass,
                                                charmass,
                                                enthalpy,
                                                temperatureold,
                                                diameter,
-                                               temperature, 
+                                               temperature,
                                                dTdt,
                                                this);
 
       Uintah::parallel_for( range, doCoalTemperature );
 
-#else              
-    
+#else
+
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter;
@@ -326,14 +322,14 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       double massDry=0.0;
       double initAsh=0.0;
       double dp=0.0;
-      
+
       if (vf < 1.0e-10 ){
         temperature[c]=gT; // gas temperature
         dTdt[c]=(pT-pT_olddw)/dt;
       } else {
         int max_iter=15;
         int iter =0;
-        
+
         if ( !_const_size ) {
           dp = diameter[c];
           massDry = _pi/6.0 * std::pow( dp, 3.0 ) * _rhop_o;
@@ -341,7 +337,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         } else {
           initAsh = _init_ash[ix];
         }
-        
+
         if ( initAsh > 0.0 ) {
           for ( ; iter < max_iter; iter++) {
             icount++;
@@ -388,7 +384,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         } else {
           pT = _initial_temperature; //prevent nans when dp & ash = 0.0 in cqmom
         }
-        
+
         temperature[c]=pT;
         dTdt[c]=(pT-pT_olddw)/dt;
       }

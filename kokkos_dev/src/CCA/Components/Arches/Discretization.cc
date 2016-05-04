@@ -47,8 +47,6 @@
 using namespace std;
 using namespace Uintah;
 
-#include <Core/Grid/Variables/BlockRange.hpp>
-
 #ifdef divergenceconstraint
 #include <CCA/Components/Arches/fortran/prescoef_var_fort.h>
 #endif
@@ -73,15 +71,10 @@ using namespace Uintah;
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
 
-#include <Core/Grid/Variables/BlockRange.hpp>
-#ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
-
 //****************************************************************************
 // Default constructor for Discretization
 //****************************************************************************
-Discretization::Discretization(PhysicalConstants* physConst) 
+Discretization::Discretization(PhysicalConstants* physConst)
 {
   d_filter = 0;
   d_physicalConsts = physConst;
@@ -97,18 +90,18 @@ Discretization::~Discretization()
 //****************************************************************************
 // Velocity stencil weights
 //****************************************************************************
-void 
+void
 Discretization::calculateVelocityCoeff(const Patch* patch,
                                        double delta_t,
                                        bool lcentral,
                                        CellInformation* cellinfo,
                                        ArchesVariables* coeff_vars,
-                                       ArchesConstVariables* coeff_constvars, 
-                                       constCCVariable<double>* volFraction, 
-                                       SFCXVariable<double>* conv_scheme_x, 
-                                       SFCYVariable<double>* conv_scheme_y, 
-                                       SFCZVariable<double>* conv_scheme_z, 
-                                       MOMCONV conv_scheme, 
+                                       ArchesConstVariables* coeff_constvars,
+                                       constCCVariable<double>* volFraction,
+                                       SFCXVariable<double>* conv_scheme_x,
+                                       SFCYVariable<double>* conv_scheme_y,
+                                       SFCZVariable<double>* conv_scheme_z,
+                                       MOMCONV conv_scheme,
                                        double Re_limit)
 {
    // ignore faces that lie on the edge of the computational domain
@@ -121,20 +114,20 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
   IntVector idxLoU = patch->getSFCXLowIndex() - noNeighborsLow * oci;
   IntVector idxHiU = patch->getSFCXHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
-  Vector DX = patch->dCell(); 
-  double dx = DX.x(); 
-  double dy = DX.y(); 
-  double dz = DX.z(); 
+  Vector DX = patch->dCell();
+  double dx = DX.x();
+  double dy = DX.y();
+  double dz = DX.z();
 
-  int wall1 = BoundaryCondition::WALL; 
-  int wall2 = BoundaryCondition::INTRUSION; 
+  int wall1 = BoundaryCondition::WALL;
+  int wall2 = BoundaryCondition::INTRUSION;
 
   Vector gravity = d_physicalConsts->getGravity();
-  double grav = gravity.x(); 
+  double grav = gravity.x();
 
   // Calculate the coeffs
-  switch (conv_scheme){ 
-    case Discretization::CENTRAL: 
+  switch (conv_scheme){
+    case Discretization::CENTRAL:
       fort_uvelcoef_central( coeff_constvars->uVelocity,
                              coeff_vars->uVelocityConvectCoeff[Arches::AE],
                              coeff_vars->uVelocityConvectCoeff[Arches::AW],
@@ -152,12 +145,12 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                              coeff_constvars->vVelocity, coeff_constvars->wVelocity,
                              coeff_constvars->density, coeff_constvars->viscosity,
                              coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
-                             coeff_constvars->old_density, coeff_constvars->old_uVelocity, 
-                             *volFraction, 
+                             coeff_constvars->old_density, coeff_constvars->old_uVelocity,
+                             *volFraction,
                              delta_t, grav, dx, dy, dz,
                              idxLoU, idxHiU );
-      break; 
-    case Discretization::UPWIND: 
+      break;
+    case Discretization::UPWIND:
       fort_uvelcoef_upwind( coeff_constvars->uVelocity,
                             coeff_vars->uVelocityConvectCoeff[Arches::AE],
                             coeff_vars->uVelocityConvectCoeff[Arches::AW],
@@ -178,9 +171,9 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                             *volFraction,
                             delta_t, grav, dx, dy, dz,
                             idxLoU, idxHiU);
-      break; 
-    case Discretization::WALLUPWIND: 
-      fort_uvelcoef_mixed( coeff_constvars->uVelocity, coeff_constvars->cellType, 
+      break;
+    case Discretization::WALLUPWIND:
+      fort_uvelcoef_mixed( coeff_constvars->uVelocity, coeff_constvars->cellType,
                            coeff_vars->uVelocityConvectCoeff[Arches::AE],
                            coeff_vars->uVelocityConvectCoeff[Arches::AW],
                            coeff_vars->uVelocityConvectCoeff[Arches::AN],
@@ -197,13 +190,13 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->vVelocity, coeff_constvars->wVelocity,
                            coeff_constvars->density, coeff_constvars->viscosity,
                            coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
-                           *volFraction, 
+                           *volFraction,
                            delta_t, grav, dx, dy, dz,
                            wall1, wall2, Re_limit,
                            idxLoU, idxHiU);
-      break; 
-    case Discretization::HYBRID: 
-      fort_uvelcoef_hybrid( coeff_constvars->uVelocity, coeff_constvars->cellType, 
+      break;
+    case Discretization::HYBRID:
+      fort_uvelcoef_hybrid( coeff_constvars->uVelocity, coeff_constvars->cellType,
                            coeff_vars->uVelocityConvectCoeff[Arches::AE],
                            coeff_vars->uVelocityConvectCoeff[Arches::AW],
                            coeff_vars->uVelocityConvectCoeff[Arches::AN],
@@ -220,13 +213,13 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->vVelocity, coeff_constvars->wVelocity,
                            coeff_constvars->density, coeff_constvars->viscosity,
                            coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
-                           *volFraction, 
-                           *conv_scheme_x, 
+                           *volFraction,
+                           *conv_scheme_x,
                            delta_t, grav, dx, dy, dz,
                            wall1, wall2, Re_limit,
                            idxLoU, idxHiU);
-      break; 
-    case Discretization::OLD: 
+      break;
+    case Discretization::OLD:
       fort_uvelcoef(coeff_constvars->uVelocity,
                     coeff_vars->uVelocityConvectCoeff[Arches::AE],
                     coeff_vars->uVelocityConvectCoeff[Arches::AW],
@@ -244,7 +237,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                     coeff_constvars->vVelocity, coeff_constvars->wVelocity,
                     coeff_constvars->density, coeff_constvars->viscosity,
                     coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
-                    coeff_constvars->old_density, coeff_constvars->old_uVelocity, 
+                    coeff_constvars->old_density, coeff_constvars->old_uVelocity,
                     *volFraction,
                     delta_t, grav, lcentral,
                     cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
@@ -263,8 +256,8 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                     cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
                     idxLoU, idxHiU);
 
-    default: 
-      break; 
+    default:
+      break;
   }
 
   //__________________________________
@@ -273,10 +266,10 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
   IntVector idxLoV = patch->getSFCYLowIndex() - noNeighborsLow * oci;
   IntVector idxHiV = patch->getSFCYHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
-  grav = gravity.y(); 
+  grav = gravity.y();
 
-  switch (conv_scheme){ 
-    case Discretization::CENTRAL: 
+  switch (conv_scheme){
+    case Discretization::CENTRAL:
       fort_vvelcoef_central( coeff_constvars->vVelocity,
                              coeff_vars->vVelocityConvectCoeff[Arches::AE],
                              coeff_vars->vVelocityConvectCoeff[Arches::AW],
@@ -294,11 +287,11 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                              coeff_constvars->uVelocity, coeff_constvars->wVelocity,
                              coeff_constvars->density, coeff_constvars->viscosity,
                              coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
-                             *volFraction, 
-                             delta_t, grav, dx, dy, dz, 
+                             *volFraction,
+                             delta_t, grav, dx, dy, dz,
                              idxLoV, idxHiV);
       break;
-    case Discretization::UPWIND: 
+    case Discretization::UPWIND:
       fort_vvelcoef_upwind( coeff_constvars->vVelocity,
                             coeff_vars->vVelocityConvectCoeff[Arches::AE],
                             coeff_vars->vVelocityConvectCoeff[Arches::AW],
@@ -317,10 +310,10 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                             coeff_constvars->density, coeff_constvars->viscosity,
                             coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
                             *volFraction,
-                            delta_t, grav, dx, dy, dz, 
+                            delta_t, grav, dx, dy, dz,
                             idxLoV, idxHiV);
-      break; 
-    case Discretization::WALLUPWIND: 
+      break;
+    case Discretization::WALLUPWIND:
       fort_vvelcoef_mixed( coeff_constvars->vVelocity, coeff_constvars->cellType,
                            coeff_vars->vVelocityConvectCoeff[Arches::AE],
                            coeff_vars->vVelocityConvectCoeff[Arches::AW],
@@ -339,11 +332,11 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->density, coeff_constvars->viscosity,
                            coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
                            *volFraction,
-                           delta_t, grav, dx, dy, dz, 
+                           delta_t, grav, dx, dy, dz,
                            wall1, wall2, Re_limit,
                            idxLoV, idxHiV);
-      break; 
-    case Discretization::HYBRID: 
+      break;
+    case Discretization::HYBRID:
       fort_vvelcoef_hybrid( coeff_constvars->vVelocity, coeff_constvars->cellType,
                            coeff_vars->vVelocityConvectCoeff[Arches::AE],
                            coeff_vars->vVelocityConvectCoeff[Arches::AW],
@@ -362,12 +355,12 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->density, coeff_constvars->viscosity,
                            coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
                            *volFraction,
-                           *conv_scheme_y, 
-                           delta_t, grav, dx, dy, dz, 
+                           *conv_scheme_y,
+                           delta_t, grav, dx, dy, dz,
                            wall1, wall2, Re_limit,
                            idxLoV, idxHiV);
-      break; 
-    case Discretization::OLD: 
+      break;
+    case Discretization::OLD:
       fort_vvelcoef(coeff_constvars->vVelocity,
                     coeff_vars->vVelocityConvectCoeff[Arches::AE],
                     coeff_vars->vVelocityConvectCoeff[Arches::AW],
@@ -402,20 +395,20 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                     cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
                     cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
                     idxLoV, idxHiV);
-    default: 
-      break; 
-  } 
+    default:
+      break;
+  }
 
   //__________________________________
   //    Z DIR
-  oci = IntVector(0,0,-1); //one cell inward.  Only offset at the edge of the computational domain. 
+  oci = IntVector(0,0,-1); //one cell inward.  Only offset at the edge of the computational domain.
   IntVector idxLoW = patch->getSFCZLowIndex() - noNeighborsLow * oci;
   IntVector idxHiW = patch->getSFCZHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
   grav = gravity.z();
 
-  switch (conv_scheme){ 
-    case Discretization::CENTRAL: 
+  switch (conv_scheme){
+    case Discretization::CENTRAL:
       fort_wvelcoef_central( coeff_constvars->wVelocity,
                              coeff_vars->wVelocityConvectCoeff[Arches::AE],
                              coeff_vars->wVelocityConvectCoeff[Arches::AW],
@@ -433,11 +426,11 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                              coeff_constvars->uVelocity, coeff_constvars->vVelocity,
                              coeff_constvars->density, coeff_constvars->viscosity,
                              coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
-                             *volFraction, 
+                             *volFraction,
                              delta_t, grav, dx, dy, dz,
                              idxLoW, idxHiW);
       break;
-    case Discretization::UPWIND: 
+    case Discretization::UPWIND:
       fort_wvelcoef_upwind( coeff_constvars->wVelocity,
                             coeff_vars->wVelocityConvectCoeff[Arches::AE],
                             coeff_vars->wVelocityConvectCoeff[Arches::AW],
@@ -458,9 +451,9 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                             *volFraction,
                             delta_t, grav, dx, dy, dz,
                             idxLoW, idxHiW);
-      break; 
-    case Discretization::WALLUPWIND: 
-      fort_wvelcoef_mixed( coeff_constvars->wVelocity, coeff_constvars->cellType, 
+      break;
+    case Discretization::WALLUPWIND:
+      fort_wvelcoef_mixed( coeff_constvars->wVelocity, coeff_constvars->cellType,
                            coeff_vars->wVelocityConvectCoeff[Arches::AE],
                            coeff_vars->wVelocityConvectCoeff[Arches::AW],
                            coeff_vars->wVelocityConvectCoeff[Arches::AN],
@@ -479,34 +472,34 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
                            *volFraction,
                            delta_t, grav, dx, dy, dz,
-                           wall1, wall2, Re_limit, 
-                           idxLoW, idxHiW);
-      break; 
-    case Discretization::HYBRID: 
-      fort_wvelcoef_hybrid( coeff_constvars->wVelocity, coeff_constvars->cellType, 
-                           coeff_vars->wVelocityConvectCoeff[Arches::AE],
-                           coeff_vars->wVelocityConvectCoeff[Arches::AW],
-                           coeff_vars->wVelocityConvectCoeff[Arches::AN],
-                           coeff_vars->wVelocityConvectCoeff[Arches::AS],
-                           coeff_vars->wVelocityConvectCoeff[Arches::AT],
-                           coeff_vars->wVelocityConvectCoeff[Arches::AB],
-                           coeff_vars->wVelocityCoeff[Arches::AP],
-                           coeff_vars->wVelocityCoeff[Arches::AE],
-                           coeff_vars->wVelocityCoeff[Arches::AW],
-                           coeff_vars->wVelocityCoeff[Arches::AN],
-                           coeff_vars->wVelocityCoeff[Arches::AS],
-                           coeff_vars->wVelocityCoeff[Arches::AT],
-                           coeff_vars->wVelocityCoeff[Arches::AB],
-                           coeff_constvars->uVelocity, coeff_constvars->vVelocity,
-                           coeff_constvars->density, coeff_constvars->viscosity,
-                           coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
-                           *volFraction,
-                           *conv_scheme_z, 
-                           delta_t, grav, dx, dy, dz,
-                           wall1, wall2, Re_limit, 
+                           wall1, wall2, Re_limit,
                            idxLoW, idxHiW);
       break;
-    case Discretization::OLD: 
+    case Discretization::HYBRID:
+      fort_wvelcoef_hybrid( coeff_constvars->wVelocity, coeff_constvars->cellType,
+                           coeff_vars->wVelocityConvectCoeff[Arches::AE],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AW],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AN],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AS],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AT],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AB],
+                           coeff_vars->wVelocityCoeff[Arches::AP],
+                           coeff_vars->wVelocityCoeff[Arches::AE],
+                           coeff_vars->wVelocityCoeff[Arches::AW],
+                           coeff_vars->wVelocityCoeff[Arches::AN],
+                           coeff_vars->wVelocityCoeff[Arches::AS],
+                           coeff_vars->wVelocityCoeff[Arches::AT],
+                           coeff_vars->wVelocityCoeff[Arches::AB],
+                           coeff_constvars->uVelocity, coeff_constvars->vVelocity,
+                           coeff_constvars->density, coeff_constvars->viscosity,
+                           coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
+                           *volFraction,
+                           *conv_scheme_z,
+                           delta_t, grav, dx, dy, dz,
+                           wall1, wall2, Re_limit,
+                           idxLoW, idxHiW);
+      break;
+    case Discretization::OLD:
       fort_wvelcoef(coeff_constvars->wVelocity,
                     coeff_vars->wVelocityConvectCoeff[Arches::AE],
                     coeff_vars->wVelocityConvectCoeff[Arches::AW],
@@ -541,22 +534,22 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                     cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
                     cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
                     idxLoW, idxHiW);
-      
 
-    default: 
-      break; 
-  } 
+
+    default:
+      break;
+  }
 }
-  
+
 //****************************************************************************
 // Calculate the diagonal term A.p in the matrix
 //****************************************************************************
 template<class T> void
 Discretization::compute_Ap(CellIterator iter,
                            CCVariable<Stencil7>& A,
-                           T& source) 
+                           T& source)
 {
-  for(; !iter.done();iter++) { 
+  for(; !iter.done();iter++) {
     IntVector c = *iter;
     Stencil7&  A_tmp=A[c];
     A_tmp.p = -(A_tmp.e + A_tmp.w + A_tmp.n + A_tmp.s + A_tmp.t + A_tmp.b) - source[c];
@@ -567,17 +560,17 @@ Discretization::compute_Ap(CellIterator iter,
 
 
 //****************************************************************************
-// Calculate the diagonal term A.p in the matrix 
+// Calculate the diagonal term A.p in the matrix
 //****************************************************************************
 template<class T> void
 Discretization::compute_Ap_stencilMatrix(CellIterator iter,
                                          StencilMatrix<T>& A,
-                                         T& source) 
+                                         T& source)
 {
-  for(; !iter.done();iter++) { 
+  for(; !iter.done();iter++) {
     IntVector c = *iter;
-    A[Arches::AP][c] = A[Arches::AE][c] + A[Arches::AW][c] 
-                     + A[Arches::AN][c] + A[Arches::AS][c] 
+    A[Arches::AP][c] = A[Arches::AE][c] + A[Arches::AW][c]
+                     + A[Arches::AN][c] + A[Arches::AS][c]
                      + A[Arches::AT][c] + A[Arches::AB][c] - source[c];
   }
 }
@@ -603,8 +596,8 @@ struct computeADiagonal{
                         source(_source)  {  }
 
        void operator()(int i , int j, int k ) const {
-       A_diag(i,j,k) = A_east(i,j,k)  + A_west(i,j,k) 
-                     + A_north(i,j,k) + A_south(i,j,k) 
+       A_diag(i,j,k) = A_east(i,j,k)  + A_west(i,j,k)
+                     + A_north(i,j,k) + A_south(i,j,k)
                      + A_top(i,j,k)   + A_bot(i,j,k)- source(i,j,k);
        }
 
@@ -616,18 +609,18 @@ struct computeADiagonal{
        T &A_top;
        T &A_bot;
        T &A_diag;
-       T &source;    
+       T &source;
 };
 
 //****************************************************************************
 // Calculate the diagonal terms (velocity)
 //****************************************************************************
-void 
+void
 Discretization::calculateVelDiagonal(const Patch* patch,
                                      ArchesVariables* coeff_vars)
 {
 
-#ifdef USE_FUNCTOR              
+#ifdef USE_FUNCTOR
   Uintah::BlockRange rangex(patch->getSFCXLowIndex(),patch->getSFCXHighIndex());
   Uintah::BlockRange rangey(patch->getSFCYLowIndex(),patch->getSFCYHighIndex());
   Uintah::BlockRange rangez(patch->getSFCZLowIndex(),patch->getSFCZHighIndex());
@@ -679,9 +672,9 @@ Discretization::calculateVelDiagonal(const Patch* patch,
 //****************************************************************************
 // Pressure diagonal
 //****************************************************************************
-void 
+void
 Discretization::calculatePressDiagonal(const Patch* patch,
-                                       ArchesVariables* coeff_vars) 
+                                       ArchesVariables* coeff_vars)
 {
   CellIterator iter = patch->getCellIterator();
   compute_Ap<CCVariable<double> >(iter,coeff_vars->pressCoeff,

@@ -18,12 +18,6 @@
 #include <iostream>
 #include <iomanip>
 
-
-#include <Core/Grid/Variables/BlockRange.hpp>
-#ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
-
 using namespace std;
 using namespace Uintah;
 
@@ -220,7 +214,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   // get coal properties
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")) {
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
-    std::string particleType;  
+    std::string particleType;
     db_coal->getAttribute("type",particleType);
     if (particleType != "coal"){
       throw InvalidValue("ERROR: EnthalpyShaddix: Can't transport enthalpy of particles of type: "+particleType,__FILE__,__LINE__);
@@ -281,11 +275,11 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 void
 EnthalpyShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "EnthalpyShaddix::initVars"; 
+  string taskname = "EnthalpyShaddix::initVars";
   Task* tsk = scinew Task(taskname, this, &EnthalpyShaddix::initVars);
 
   tsk->computes(d_modelLabel);
-  tsk->computes(d_gasLabel); 
+  tsk->computes(d_gasLabel);
   tsk->computes(d_qconvLabel);
   tsk->computes(d_qradLabel);
 
@@ -306,13 +300,13 @@ EnthalpyShaddix::initVars( const ProcessorGroup * pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> heat_rate;
-    CCVariable<double> gas_heat_rate; 
+    CCVariable<double> gas_heat_rate;
     CCVariable<double> qconv;
     CCVariable<double> qrad;
-    
+
     new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
     heat_rate.initialize(0.0);
     new_dw->allocateAndPut( gas_heat_rate, d_gasLabel, matlIndex, patch );
@@ -473,19 +467,19 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
 
-      
-#ifdef USE_FUNCTOR              
+
+#ifdef USE_FUNCTOR
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   computeEnthalpySource doEnthalpySource(dt,
                                          weight,
                                          rawcoal_mass,
                                          char_mass,
                                          particle_temperature,
-                                         temperature,               
+                                         temperature,
                                          specific_heat,
                                          radiationVolqIN,
                                          abskp,
-                                         rad_particle_temperature, 
+                                         rad_particle_temperature,
                                          den,
                                          devol_gas_source,
                                          chargas_source,
@@ -500,9 +494,9 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
                                          qrad,
                                          this );
       Uintah::parallel_for( range, doEnthalpySource );
-      
-      
-#else              
+
+
+#else
     double max_Q_convection;
     double heat_rate_;
     double gas_heat_rate_;
@@ -618,7 +612,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       qrad[c] = Q_radiation;
     }//end cell loop
 
-#endif              
+#endif
   }//end patch loop
 
 }

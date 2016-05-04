@@ -14,11 +14,6 @@
 //===========================================================================
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
- 
-#include <Core/Grid/Variables/BlockRange.hpp>
-#ifdef UINTAH_ENABLE_KOKKOS
-#  include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
 
 using namespace std;
 using namespace Uintah;
@@ -28,7 +23,7 @@ MomentumDragSrc::MomentumDragSrc( std::string src_name, SimulationStateP& shared
 : SourceTermBase(src_name, shared_state, req_label_names, type)
 {
   _src_label = VarLabel::create( src_name, CCVariable<Vector>::getTypeDescription() );
-  
+
   _source_grid_type = CCVECTOR_SRC;
 }
 
@@ -41,7 +36,7 @@ void
 MomentumDragSrc::problemSetup(const ProblemSpecP& inputdb)
 {
   ProblemSpecP db = inputdb;
-  
+
   db->get("N", _N); //number of quad nodes
   db->getWithDefault( "base_x_label", _base_x_drag, "none" );
   db->getWithDefault( "base_y_label", _base_y_drag, "none" );
@@ -55,7 +50,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
 {
   std::string taskname = "MomentumDragSrc::eval";
   Task* tsk = scinew Task(taskname, this, &MomentumDragSrc::computeSource, timeSubStep);
-  
+
   if (timeSubStep == 0 ) {
     tsk->computes(_src_label);
   } else {
@@ -66,7 +61,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     std::stringstream out;
     out << i;
     std::string node = out.str();
-    
+
     if ( _base_x_drag != "none" ) {
       std::string model_name;
       model_name = "gas_";
@@ -76,7 +71,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
       const VarLabel* tempLabel = VarLabel::find( model_name );
       tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
     }
-    
+
     if ( _base_y_drag != "none" ) {
       std::string model_name;
       model_name = "gas_";
@@ -86,7 +81,7 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
       const VarLabel* tempLabel = VarLabel::find( model_name );
       tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0);
     }
-    
+
     if ( _base_z_drag != "none" ) {
       std::string model_name;
       model_name = "gas_";
@@ -101,23 +96,23 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 }
 
-struct sumGasDrag{                                    
-       sumGasDrag( std::string _base_x_drag, 
-                   std::string _base_y_drag, 
-                   std::string _base_z_drag, 
+struct sumGasDrag{
+       sumGasDrag( std::string _base_x_drag,
+                   std::string _base_y_drag,
+                   std::string _base_z_drag,
                    constCCVariable<double> &_gas_xdrag,
                    constCCVariable<double> &_gas_ydrag,
                    constCCVariable<double> &_gas_zdrag,
-                   CCVariable<Vector> &_dragSrc) : 
+                   CCVariable<Vector> &_dragSrc) :
                    gas_xdrag(_gas_xdrag),
                    gas_ydrag(_gas_ydrag),
                    gas_zdrag(_gas_zdrag),
                    dragSrc(_dragSrc)
-                   { sumX=(_base_x_drag != "none");     
-                     sumY=(_base_y_drag != "none");     
+                   { sumX=(_base_x_drag != "none");
+                     sumY=(_base_y_drag != "none");
                      sumZ=(_base_z_drag != "none");}
-                    
-      void operator()(int i , int j, int k ) const { 
+
+      void operator()(int i , int j, int k ) const {
          dragSrc(i,j,k) += Vector(sumX ? gas_xdrag(i,j,k) : 0.0,sumY ? gas_ydrag(i,j,k): 0.0, sumZ ? gas_zdrag(i,j,k): 0.0);
       }
 
@@ -145,11 +140,11 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
 
     Ghost::GhostType  gn  = Ghost::None;
-    
+
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
-    
+
     CCVariable<Vector> dragSrc;
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
       new_dw->getModifiable( dragSrc, _src_label, matlIndex, patch );
@@ -158,7 +153,7 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( dragSrc, _src_label, matlIndex, patch );
       dragSrc.initialize(Vector(0.,0.,0.));
     }
-    
+
     for (int i = 0; i < _N; i++ ) {
       constCCVariable<double> gas_xdrag;
       constCCVariable<double> gas_ydrag;
@@ -167,7 +162,7 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
       std::stringstream out;
       out << i;
       std::string node = out.str();
-      
+
       if ( _base_x_drag != "none" ) {
         std::string model_name;
         model_name = "gas_";
@@ -177,7 +172,7 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
         const VarLabel* tempLabel = VarLabel::find( model_name );
         old_dw->get( gas_xdrag, tempLabel, matlIndex, patch, gn, 0);
       }
-      
+
       if ( _base_y_drag != "none" ) {
         std::string model_name;
         model_name = "gas_";
@@ -187,7 +182,7 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
         const VarLabel* tempLabel = VarLabel::find( model_name );
         old_dw->get( gas_ydrag, tempLabel, matlIndex, patch, gn, 0);
       }
-      
+
       if ( _base_z_drag != "none" ) {
         std::string model_name;
         model_name = "gas_";
@@ -201,9 +196,9 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
 #ifdef USE_FUNCTOR
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-  sumGasDrag doSumGas(_base_x_drag, 
-                      _base_y_drag, 
-                      _base_z_drag, 
+  sumGasDrag doSumGas(_base_x_drag,
+                      _base_y_drag,
+                      _base_z_drag,
                       gas_xdrag,
                       gas_ydrag,
                       gas_zdrag,
@@ -213,7 +208,7 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
 #else
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-        
+
         gas_drag = Vector(0.0, 0.0, 0.0);
         if ( _base_x_drag != "none" )
           gas_drag += Vector( gas_xdrag[c], 0.0, 0.0);
@@ -221,9 +216,9 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
           gas_drag += Vector( 0.0, gas_ydrag[c], 0.0);
         if ( _base_z_drag != "none" )
           gas_drag += Vector( 0.0, 0.0, gas_zdrag[c]);
-        
+
         dragSrc[c] += gas_drag;
-        
+
       }
 #endif
     }
@@ -236,17 +231,17 @@ void
 MomentumDragSrc::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "MomentumDragSrc::initialize";
-  
+
   Task* tsk = scinew Task(taskname, this, &MomentumDragSrc::initialize);
-  
+
   tsk->computes(_src_label);
-  
+
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
     tsk->computes(*iter);
   }
-  
+
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
-  
+
 }
 //---------------------------------------------------------------------------
 // Method: initialization
@@ -260,20 +255,20 @@ MomentumDragSrc::initialize( const ProcessorGroup* pc,
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
-    
+
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
-    
+
     CCVariable<Vector> src;
-    
+
     new_dw->allocateAndPut( src, _src_label, matlIndex, patch );
-    
+
     src.initialize(Vector(0.0,0.0,0.0));
-    
+
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-      CCVariable<double> tempVar; 
-      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
+      CCVariable<double> tempVar;
+      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch );
     }
   }
 }
