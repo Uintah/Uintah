@@ -100,6 +100,7 @@ usage(const std::string& badarg, const std::string& progname)
   cerr << "  -abs_tolerance [double]  (Allowable absolute difference of any number, default: 1e-9)\n";
   cerr << "  -rel_tolerance [double]  (Allowable relative difference of any number, default: 1e-6)\n";
   cerr << "  -exact                   (Perform an exact comparison, absolute/relative tolerance = 0)\n";
+  cerr << "  -levels     [int int]    (Optional:  level index for uda 1 and uda 2)\n";
   cerr << "  -as_warnings             (Treat tolerance errors as warnings and continue)\n";
   cerr << "  -concise                 (With '-as_warnings', only print first incidence of error per var.)\n";
   cerr << "  -skip_unknown_types      (Skip variable comparisons of unknown types without error)\n";
@@ -1241,6 +1242,9 @@ main(int argc, char** argv)
   double abs_tolerance  = 1e-9; //   values...
   string ignoreVar      = "none";
   bool sortVariables    = true;
+  int  udaLevels[2];                // user can override and specify the levels to compare.  Useful for 1L vs N level comparison
+  udaLevels[0]          =-9;
+  udaLevels[1]          =-9;
 
   // Parse Args:
   for( int i = 1; i < argc; i++ ) {
@@ -1272,6 +1276,12 @@ main(int argc, char** argv)
     else if(s == "-exact") {
       abs_tolerance = 0;
       rel_tolerance = 0;
+    }
+    else if(s == "-levels") {
+      udaLevels[0] = atoi(argv[++i]);
+      cout << "udaLevels: " << udaLevels[0];
+      udaLevels[1] = atoi(argv[++i]);
+      cout << "  " << udaLevels[1];
     }
     else if(s == "-ignoreVariable") {
       if (++i == argc){
@@ -1317,6 +1327,11 @@ main(int argc, char** argv)
 
   cerr << "Using absolute tolerance: " << abs_tolerance << endl;
   cerr << "Using relative tolerance: " << rel_tolerance << endl;
+
+
+  if( udaLevels[0] != -9 ){
+    cerr << "Comparing uda1: Level("<< udaLevels[0] << ") against uda2: level(" << udaLevels[1] << ")" << endl;
+  }
 
   if (rel_tolerance < 0) {
     cerr << "Must have a non-negative value rel_tolerance.\n";
@@ -1449,11 +1464,33 @@ main(int argc, char** argv)
       GridP grid  = da1->queryGrid(tstep);
       GridP grid2 = da2->queryGrid(tstep);
 
-      if (grid->numLevels() != grid2->numLevels()) {
+      int maxLevels[2];
+      maxLevels[0] = grid->numLevels();
+      maxLevels[1] = grid2->numLevels();
+
+      int minLevel[2];
+      minLevel[0] = 0;
+      minLevel[1] = 0;
+
+       // override if user has specified the levels to compare
+      if( udaLevels[0] != -9 ){
+        minLevel[0]  = udaLevels[0];
+        minLevel[1]  = udaLevels[1];
+        maxLevels[0] = minLevel[0] +1;
+        maxLevels[1] = minLevel[1] +1;
+
+        if( maxLevels[0] > grid->numLevels() || maxLevels[1] > grid2->numLevels() ) {
+          cerr << " The level(s) specified (uda:" << maxLevels[0] << " , uda2: " << maxLevels[1] << ") are invalid.\n";
+          cerr << " The maximum level index that are valid are (uda:" << grid->numLevels() << " , uda2: " << grid2->numLevels() << ").\n";
+          abort_uncomparable();
+        }
+
+      } else if ( maxLevels[0] != maxLevels[1] ) {
         cerr << "Grid at time " << time1 << " in " << d_filebase1 << " has " << grid->numLevels() << " levels.\n";
         cerr << "Grid at time " << time2 << " in " << d_filebase2 << " has " << grid2->numLevels() << " levels.\n";
         abort_uncomparable();
       }
+
 
       // do some consistency checking first
       bool hasParticleIDs  = false;
@@ -1469,9 +1506,10 @@ main(int argc, char** argv)
           hasParticleData = true;
         }
 
-        for( int l = 0; l < grid->numLevels(); l++ ) {
-          LevelP level = grid->getLevel(l);
-          LevelP level2 = grid2->getLevel(l);
+        for( int l1 = minLevel[0], l2 = minLevel[1]; (l1 < maxLevels[0] &&  l2 < maxLevels[1]); l1++, l2++) {
+
+          LevelP level  = grid->getLevel(l1);
+          LevelP level2 = grid2->getLevel(l2);
 
           ConsecutiveRangeSet matls;
 
@@ -1572,12 +1610,13 @@ main(int argc, char** argv)
             continue;
           }
 
-          for( int l = 0; l < grid->numLevels(); l++ ) {
-            LevelP level  = grid->getLevel(l);
-            LevelP level2 = grid2->getLevel(l);
+          for( int l1 = minLevel[0], l2 = minLevel[1]; (l1 < maxLevels[0] &&  l2 < maxLevels[1]); l1++, l2++) {
+
+            LevelP level  = grid->getLevel(l1);
+            LevelP level2 = grid2->getLevel(l2);
 
             if (level->numPatches() != level2->numPatches()) {
-              cerr << "Inconsistent number of patches on level " << l << " at time " << time1 << ":" << endl;
+              cerr << "Inconsistent number of patches on level " << l1 << " at time " << time1 << ":" << endl;
               cerr << d_filebase1 << " has " << level->numPatches()  << " patches.\n";
               cerr << d_filebase2 << " has " << level2->numPatches() << " patches.\n";
               abort_uncomparable();
@@ -1592,7 +1631,7 @@ main(int argc, char** argv)
               const Patch* patch2 = *iter2;
 
               if (patch->getID() != patch2->getID()) {
-                cerr << "Inconsistent patch ids on level " << l << " at time " << time1 << endl;
+                cerr << "Inconsistent patch ids on level " << l1 << " at time " << time1 << endl;
                 cerr << d_filebase1 << " has patch id " << patch->getID() << " where\n";
                 cerr << d_filebase2 << " has patch id " << patch2->getID() << endl;
                 abort_uncomparable();
@@ -1667,10 +1706,10 @@ main(int argc, char** argv)
         // Compare Particle variables with p.particleID -- patches don't
         // need to be cosistent.  It will gather and sort the particles
         // so they can be compared in particleID order.
-        for( int l = 0; l < grid->numLevels(); l++ ) {
+        for( int l1 = minLevel[0], l2 = minLevel[1]; (l1 < maxLevels[0] &&  l2 < maxLevels[1]); l1++, l2++) {
 
-          LevelP level = grid->getLevel(l);
-          LevelP level2 = grid2->getLevel(l);
+          LevelP level  = grid->getLevel(l1);
+          LevelP level2 = grid2->getLevel(l2);
 
           MaterialParticleDataMap matlParticleDataMap1;
           MaterialParticleDataMap matlParticleDataMap2;
@@ -1724,9 +1763,10 @@ main(int argc, char** argv)
 
         Patch::VariableBasis basis=Patch::translateTypeToBasis(td->getType(),false);
 
-        for( int l = 0; l < grid->numLevels(); l++ ) {
-          LevelP level  = grid->getLevel(l);
-          LevelP level2 = grid2->getLevel(l);
+        for( int l1 = minLevel[0], l2 = minLevel[1]; (l1 < maxLevels[0] &&  l2 < maxLevels[1]); l1++, l2++) {
+
+          LevelP level  = grid->getLevel(l1);
+          LevelP level2 = grid2->getLevel(l2);
 
           //check patch coverage
           vector<Region> region1, region2, difference1, difference2;
@@ -1744,7 +1784,7 @@ main(int argc, char** argv)
           difference2 = Region::difference(region1,region2);
 
           if(!difference1.empty() || !difference2.empty()){
-            cerr << "Patches on level:" << l << " do not cover the same area\n";
+            cerr << "Patches on level:" << l1 << " do not cover the same area\n";
             abort_uncomparable();
           }
 
@@ -1756,11 +1796,10 @@ main(int argc, char** argv)
           buildPatchMap(level2, d_filebase2, patch2Map, time2, basis);
 
           serial_for( patchMap.range(), [&](int i, int j, int k) {
-
             // bulletproofing
             if ((patchMap(i,j,k)  == nullptr && patch2Map(i,j,k) != nullptr) ||
                 (patch2Map(i,j,k) == nullptr && patchMap(i,j,k) != nullptr)) {
-              cerr << "Inconsistent patch coverage on level " << l
+              cerr << "Inconsistent patch coverage on level " << l1
                    << " at time " << time1 << endl;
 
               if (patchMap(i,j,k) != nullptr) {

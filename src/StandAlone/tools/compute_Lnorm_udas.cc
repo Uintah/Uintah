@@ -398,13 +398,11 @@ void BuildCellToPatchMap(LevelP level,
         {
           patchMap(i,j,k) = patch;
         }
+      }else{
+        patchMap(i,j,k) = patch;     // insert patch into the array
       }
-      else {
-        patchMap(i,j,k) = patch;
-      }
-    });
-
-  }  //level
+    });  //patchMap
+  } //level
   patchMap.rewindow(low, high);
 }
 //______________________________________________________________________

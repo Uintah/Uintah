@@ -317,7 +317,7 @@ SparseRowMatrix::transpose()
     }
   }
 
-  delete at;
+  delete [] at;
   return t;
 }
 

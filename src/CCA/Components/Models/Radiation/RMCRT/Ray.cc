@@ -1192,6 +1192,9 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
     bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
 
+    double DyDx = Dx.y() / Dx.x();
+    double DzDx = Dx.z() / Dx.x();
+
     IntVector lo = patch->getCellLowIndex();
     IntVector hi = patch->getCellHighIndex();
 

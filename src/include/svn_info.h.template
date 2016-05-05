@@ -5,3 +5,6 @@
 
 // the date of the svn revision
 #define SVN_DATE "UNKNOWN_DATE"
+
+// the svn URL:
+#define SVN_URL "UNKNOWN_URL"

@@ -27,6 +27,22 @@ env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8
 env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git
 env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git
 
+To git *OLDER* files, do not use "--depth 1" on the clone... Then when you have the entire tree, use the
+following command to get a git version has number:
+
+> git rev-list -n 1 --before="2016-01-01 13:37" master
+
+Then use that hash number #### in this command:
+
+> git checkout #### -b branch_version_name
+
+You can then switch between these two branches using:
+
+> git checkout master
+
+or
+
+> git checkout branch_version_name
 
 etc.
 
@@ -35,7 +51,9 @@ etc.
 On Vulcan @ LLNL:
 ----------------
 
-   use cmake
+   # If this is ever fixed:
+   use cmake-3.1 
+   # otherwise use /usr/gapps/uintah/Thirdparty-install/vulcan/CMake/bin/cmake
 
 
 On Cab @ LLNL:

@@ -54,7 +54,19 @@
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable,
                                                                           variable_stats,
                                                                           density_predictor,
+                                                                          constant_property,
                                                                           CO'">
+
+          <grid                         spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
+                                        need_applies_to="type constant_property"/>
+          <!-- Constant Property
+                Just create a variable with a constant value
+                Must specify a grid type (CC,FX,FY,FZ)
+                Specify the value of the constant which is held across the entire simulation.
+          -->
+          <value                        spec="REQUIRED DOUBLE"
+                                        need_applies_to="type constant_property"/>
 
           <!-- Wall heat flux variable:
                 This model produces a few variables, all stored in the first wall/intrusion cell exposed to the gas
@@ -79,7 +91,7 @@
                a time average can be computed.
 
                NOTE: only cc-scalars can be averaged. Fluxes at faces are computed using the flux_variable option. If you really
-               need to time average a velocity, please contact a developer for this request. 
+               need to time average a velocity, please contact a developer for this request.
 
                For single variables:
                 - The summed variable to save is the label+"_running_sum". (i.e., label=my_var then my_var_running_sum)
@@ -429,7 +441,7 @@
 
 
         <!-- Coal Properties -->
-          <ultimate_analysis            spec="REQUIRED NO_DATA"               
+          <ultimate_analysis            spec="REQUIRED NO_DATA"
                                           need_applies_to="type coal"><!-- Ultimate analysis. Specified as mass fractions. -->
             <C                          spec="REQUIRED DOUBLE"/>
             <H                          spec="REQUIRED DOUBLE"/>
@@ -442,24 +454,24 @@
           </ultimate_analysis>
 
           <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
-          <ksi                            spec="OPTIONAL DOUBLE"  
+          <ksi                            spec="OPTIONAL DOUBLE"
                                           need_applies_to="type coal"/><!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
-          <raw_coal_enthalpy              spec="REQUIRED DOUBLE"  
+          <raw_coal_enthalpy              spec="REQUIRED DOUBLE"
                                           need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
-          <char_enthalpy                  spec="REQUIRED DOUBLE"  
+          <char_enthalpy                  spec="REQUIRED DOUBLE"
                                           need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
-          <ash_enthalpy                   spec="REQUIRED DOUBLE"      
+          <ash_enthalpy                   spec="REQUIRED DOUBLE"
                                           need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
 
-          <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" 
+          <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES"
                                                need_applies_to="type coal"/>
           <!-- Yamamto 1 step rate coefficients in the following order:  -->
           <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
-          <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" 
+          <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES"
                                                   need_applies_to="type coal"/>
           <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  -->
-          <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" 
+          <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES"
                                                   need_applies_to="type coal"/>
           <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  -->
@@ -475,14 +487,14 @@
             <e                            spec="REQUIRED DOUBLE" />
             <sigma                        spec="REQUIRED DOUBLE" />
           </FOWYDevol>
-          
+
           <ShaddixChar                    spec="OPTIONAL NO_DATA"
                                           need_applies_to="type coal">
             <As                           spec="REQUIRED DOUBLE"/> <!-- [mol/s.m^2.atm^n] -->
             <Es                           spec="REQUIRED DOUBLE"/> <!-- [J/mol] -->
             <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
           </ShaddixChar>
-          
+
           <SmithChar                     spec="OPTIONAL NO_DATA"
                                          need_applies_to="type coal">
             <use_simple_inversion        spec="OPTIONAL BOOLEAN"/> <!-- default is false.. this option uses a simple 2x2 matrix inversion function which can be faster than using Lapack-->
@@ -498,7 +510,7 @@
             </reaction>
           </SmithChar>
 
-          <optics                       spec="OPTIONAL NO_DATA" 
+          <optics                       spec="OPTIONAL NO_DATA"
                                             need_applies_to="type coal">
             <RawCoal_real            spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction -->
             <RawCoal_imag            spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction -->
@@ -824,7 +836,7 @@
 
             <geom_object/>
           </region>
-          <deposit_velocity_name             spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>  
+          <deposit_velocity_name             spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
           <coal_region                       spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
             <T_slag                     spec="REQUIRED DOUBLE"/>  <!-- Slagging Temperature, [K] -->
             <erosion_thickness          spec="REQUIRED DOUBLE"/>  <!-- maximum deposit thickness, [m] -->
@@ -849,7 +861,11 @@
       </WallHT>
       </BoundaryConditions>
 
-      <ExplicitSolver                   spec="REQUIRED NO_DATA" >
+      <KokkosSolver                     spec="OPTIONAL NO_DATA">
+
+      </KokkosSolver>
+
+      <ExplicitSolver                   spec="OPTIONAL NO_DATA" >
 
         <initial_dt                     spec="OPTIONAL DOUBLE 'positive'"/>  <!-- Sets the initial timestep of the simulation.  Note that this value will
                                                                                   be superceded if the CFL condition determines a smaller timestep as determined
@@ -936,8 +952,8 @@
           <outputEquations              spec="OPTIONAL BOOLEAN" />
           <skip                         spec="OPTIONAL INTEGER" />
           <setupFrequency               spec="OPTIONAL INTEGER" />
-          <updateCoefFrequency          spec="OPTIONAL INTEGER" />          
-          <solveFrequency               spec="OPTIONAL INTEGER"/>          
+          <updateCoefFrequency          spec="OPTIONAL INTEGER" />
+          <solveFrequency               spec="OPTIONAL INTEGER"/>
           <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />
           <tolerance                    spec="REQUIRED DOUBLE 'positive'" />
           <relax_type                   spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
@@ -1015,6 +1031,34 @@
         </eqn>
       </ScalarTransport>
 
+      <!-- Kokkos scalar -->
+      <KScalarTransport                 spec="OPTIONAL NO_DATA">
+        <eqn                            spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'CC,FX,FY,FZ'">
+
+          <velocity                     spec="OPTIONAL NO_DATA"
+                                        attribute1="xlabel REQUIRED STRING"
+                                        attribute2="ylabel REQUIRED STRING"
+                                        attribute3="zlabel REQUIRED STRING"/>
+          <!--If this tag is present, diffusion is computed.-->
+          <diffusion                    spec="OPTIONAL NO_DATA"/>
+          <diffusion_coef               spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+          <!-- If this tag is present, convection is computed.
+           The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
+          <convection                   spec="OPTIONAL NO_DATA"
+                                        attribute1="scheme REQUIRED STRING"/>
+          <!-- Clip the scalar to maintain specified low and high bounds -->
+          <clip                         spec="OPTIONAL NO_DATA"
+                                        attribute1="low  REQUIRED DOUBLE"
+                                        attribute2="high REQUIRED DOUBLE"/>
+          <!-- reference a source (defined in the <Sources> block) to add it to the RHS -->
+          <src                          spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+        </eqn>
+      </KScalarTransport>
+
       <!-- New Task interface for Momentum -->
       <MomentumTransport                spec="OPTIONAL NO_DATA">
 
@@ -1029,8 +1073,8 @@
              eqn   = pointer to the scalartransport or momentumtransport eqn name
              type  = type of initialization -->
         <task                           spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        attribute2="eqn   OPTIONAL STRING"
+                                        attribute1="task_label REQUIRED STRING"
+                                        attribute2="variable_label   OPTIONAL STRING"
                                         attribute3="type  REQUIRED STRING 'wave, random_lagrangian_particles,
                                                                            lagrangian_particle_velocity, lagrangian_particle_size'">
 
@@ -1039,8 +1083,7 @@
                                         attribute1="type REQUIRED STRING 'sine,square'">
 
             <grid                       spec="REQUIRED NO_DATA"
-                                        attribute1="dependent_type REQUIRED STRING 'svol, xvol, yvol, zvol'"
-                                        attribute2="independent_type REQUIRED STRING 'svol, xvol, yvol, zvol'"/>
+                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"/>
 
 
             <independent_variable       spec="REQUIRED NO_DATA"
@@ -1051,6 +1094,7 @@
                                         attribute2="f REQUIRED DOUBLE"
                                         attribute3="offset REQUIRED DOUBLE"
                                         need_applies_to="type sine"/>
+
             <square                     spec="REQUIRED NO_DATA"
                                         attribute1="min REQUIRED DOUBLE"
                                         attribute2="max REQUIRED DOUBLE"
@@ -1152,17 +1196,17 @@
             <!-- constant property model: set a constant/environment -->
             <const_size                 spec="OPTIONAL BOOLEAN"
                                         need_applies_to="type coal_temperature, coal_density"/>  <!-- defaults to true, so no change to DQMOM input files needed -->
-                                        
+
             <!-- FOWY devolatilization -->
             <birth_label                spec="OPTIONAL STRING"
                                         need_applies_to="type fowy_devolatilization, shaddix_oxidation"/>
             <weight_clip                spec="OPTIONAL DOUBLE"
                                         need_applies_to="type fowy_devolatilization, shaddix_oxidation, shaddix_enthalpy"/>
-            
+
             <!-- Shaddix Oxidation -->
             <char_production_label      spec="REQUIRED STRING"
                                         need_applies_to="type shaddix_oxidation"/>
-                                        
+
             <!-- Shaddix Enthalpy -->
             <char_temprate_label        spec="REQUIRED STRING"
                                         need_applies_to="type shaddix_enthalpy"/>
@@ -1173,7 +1217,7 @@
             <devol_gas_label            spec="REQUIRED STRING"
                                         need_applies_to="type shaddix_enthalpy"/>
             <noRadiation                spec="OPTIONAL NO_DATA"/>
-            
+
             <!-- gas source name, optional name for integrated gas source term, else default to gas_"model"_tot -->
             <gas_source_name            spec="OPTIONAL STRING"
                                         need_applies_to="type fowy_devolatilization, shaddix_oxidation, shaddix_enthalpy"/>

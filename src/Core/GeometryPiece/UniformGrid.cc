@@ -156,6 +156,7 @@ UniformGrid::UniformGrid(const UniformGrid& copy)
   parallel_for( d_grid.range(), [&](int i, int j, int k) {
     d_grid(i,j,k) = copy.d_grid(i,j,k);
   });
+
 }
 
 
