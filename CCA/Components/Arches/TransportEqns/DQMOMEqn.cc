@@ -834,7 +834,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
 #ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
-      ComputeConvectiveFlux<CCVariable<double> get_flux( phi, uu, vv, ww, psi_x, psi_y, psi_z,
+      ComputeConvectiveFlux< CCVariable<double> > get_flux( phi, uu, vv, ww, psi_x, psi_y, psi_z,
                                                          flux_x, flux_y, flux_z, af_x, af_y, af_z );
 
       Uintah::parallel_for( range, get_flux );
