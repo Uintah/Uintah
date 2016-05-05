@@ -28,7 +28,7 @@ using namespace Uintah;
 using namespace std;
 
 CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag)
-                 : NullIFConcDiff(ps, sS, Mflag)
+                 : SDInterfaceModel(ps, sS, Mflag)
 {
 }
 

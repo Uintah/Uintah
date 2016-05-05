@@ -30,23 +30,9 @@
 using namespace Uintah;
 
 SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag){
-
-  d_Mflag = Mflag;
-  d_sharedState = sS;
-
-  d_lb = scinew MPMLabel;
-
-  if(d_Mflag->d_8or27==8){
-    NGP=1;
-    NGN=1;
-  } else {
-    NGP=2;
-    NGN=2;
-  }
 }
 
 SDInterfaceModel::~SDInterfaceModel(){
-  delete(d_lb);
 }
 
 void SDInterfaceModel::addComputesAndRequiresInterpolated(SchedulerP & sched,
