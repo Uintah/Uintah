@@ -363,7 +363,7 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
     task->doit(task, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
   }
 #else
-  task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+  task->doit(NULL, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
