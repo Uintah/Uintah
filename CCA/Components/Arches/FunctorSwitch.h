@@ -3,4 +3,4 @@
 // code to show speed improvements using functors
 // relative to old cell iterators
 
-#define USE_FUNCTOR 1;
+//#define USE_FUNCTOR 1;
