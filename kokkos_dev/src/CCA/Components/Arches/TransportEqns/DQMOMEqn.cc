@@ -629,9 +629,9 @@ DQMOMEqn::sched_buildRHS( const LevelP& level, SchedulerP& sched )
 
   tsk->modifies(d_RHSLabel);
 
-  tsk->requires(Task::OldDW, d_X_flux_label, Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, d_Y_flux_label, Ghost::AroundCells, 1);
-  tsk->requires(Task::OldDW, d_Z_flux_label, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_X_flux_label, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_Y_flux_label, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_Z_flux_label, Ghost::AroundCells, 1);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 

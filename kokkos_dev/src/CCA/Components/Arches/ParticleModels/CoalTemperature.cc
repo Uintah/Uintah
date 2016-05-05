@@ -271,26 +271,44 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       const std::string diameter_name = get_env_name( ix, _diameter_base_name );
       vdiameter = tsk_info->get_const_uintah_field<constCCVariable<double> >(diameter_name);
     }
-    constCCVariable<double>& diameter = *vdiameter;
 
 
 
 #ifdef USE_FUNCTOR
 
-      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-      computeCoalTemperature doCoalTemperature(dt, ix,
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+
+    if (_const_size ) {
+
+      computeCoalTemperature<true> doCoalTemperature(dt, ix,
                                                gas_temperature,
                                                vol_frac,
                                                rcmass,
                                                charmass,
                                                enthalpy,
                                                temperatureold,
-                                               diameter,
+                                               vdiameter,
                                                temperature,
                                                dTdt,
                                                this);
 
       Uintah::parallel_for( range, doCoalTemperature );
+    } else {
+      computeCoalTemperature<false> doCoalTemperature(dt, ix,
+                                               gas_temperature,
+                                               vol_frac,
+                                               rcmass,
+                                               charmass,
+                                               enthalpy,
+                                               temperatureold,
+                                               vdiameter,
+                                               temperature,
+                                               dTdt,
+                                               this);
+
+      Uintah::parallel_for( range, doCoalTemperature );
+
+    }
 
 #else
 
@@ -331,7 +349,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         int iter =0;
 
         if ( !_const_size ) {
-          dp = diameter[c];
+          dp = (*vdiameter)[c];
           massDry = _pi/6.0 * std::pow( dp, 3.0 ) * _rhop_o;
           initAsh = massDry * _ash_mf;
         } else {
