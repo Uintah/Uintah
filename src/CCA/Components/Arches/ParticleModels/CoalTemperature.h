@@ -53,7 +53,7 @@ namespace Uintah{
                                }
 #else
                                if (!ConstSize) {
-                                 diameter = *_diameter;
+                                 diameter = _diameter;
                                }
 #endif
                              }
@@ -93,7 +93,11 @@ namespace Uintah{
           int iter =0;
 
           if ( !ConstSize ) {
+#ifdef UINTAH_ENABLE_KOKKOS
             dp = diameter(i,j,k);
+#else
+            dp = (*diameter)(i,j,k);
+#endif
             massDry = TCA->_pi/6.0 * std::pow( dp, 3.0 ) * TCA->_rhop_o;
             initAsh = massDry * TCA->_ash_mf;
           } else {
@@ -173,7 +177,7 @@ namespace Uintah{
       constCCVariable<double>& charmass;
       constCCVariable<double>& enthalpy;
       constCCVariable<double>& temperatureold;
-      constCCVariable<double>& diameter;
+      constCCVariable<double>* diameter;
       CCVariable<double>& temperature;
       CCVariable<double>& dTdt;
 #endif
