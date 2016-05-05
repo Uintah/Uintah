@@ -4,22 +4,22 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
- 
-namespace Uintah{ 
 
-  class Operators; 
-  class CoalTemperature : public TaskInterface { 
+namespace Uintah{
+
+  class Operators;
+  class CoalTemperature : public TaskInterface {
     struct computeCoalTemperature{
       computeCoalTemperature(double _dt,
                              int    _ix,
                              constCCVariable<double>& _gas_temperature,
                              constCCVariable<double>& _vol_frac,
-                             constCCVariable<double>& _rcmass, 
+                             constCCVariable<double>& _rcmass,
                              constCCVariable<double>& _charmass,
                              constCCVariable<double>& _enthalpy,
                              constCCVariable<double>& _temperatureold,
-                             constCCVariable<double>& _diameter,
-                             CCVariable<double>& _temperature, 
+                             constCCVariable<double>* _diameter,
+                             CCVariable<double>& _temperature,
                              CCVariable<double>& _dTdt,
                              CoalTemperature* theClassAbove ) :
                              dt(_dt),
@@ -27,20 +27,20 @@ namespace Uintah{
 #ifdef UINTAH_ENABLE_KOKKOS
                              gas_temperature(_gas_temperature.getKokkosView()),
                              vol_frac(_vol_frac.getKokkosView()),
-                             rcmass(_rcmass.getKokkosView()), 
+                             rcmass(_rcmass.getKokkosView()),
                              charmass(_charmass.getKokkosView()),
                              enthalpy(_enthalpy.getKokkosView()),
-                             temperatureold(_temperatureold.getKokkosView()), 
-                             diameter(_diameter.getKokkosView()),
+                             temperatureold(_temperatureold.getKokkosView()),
+                             diameter(_diameter),
                              temperature(_temperature.getKokkosView()),
                              dTdt(_dTdt.getKokkosView()),
 #else
                              gas_temperature(_gas_temperature),
                              vol_frac(_vol_frac),
-                             rcmass(_rcmass), 
+                             rcmass(_rcmass),
                              charmass(_charmass),
                              enthalpy(_enthalpy),
-                             temperatureold(_temperatureold), 
+                             temperatureold(_temperatureold),
                              diameter(_diameter),
                              temperature(_temperature),
                              dTdt(_dTdt),
@@ -81,8 +81,8 @@ namespace Uintah{
           int max_iter=15;
           int iter =0;
 
-          if ( !TCA->_const_size ) {
-            dp = diameter(i,j,k);
+          if ( diameter ) {
+            dp = (*diameter)(i,j,k);
             massDry = TCA->_pi/6.0 * std::pow( dp, 3.0 ) * TCA->_rhop_o;
             initAsh = massDry * TCA->_ash_mf;
           } else {
@@ -148,65 +148,65 @@ namespace Uintah{
 #ifdef UINTAH_ENABLE_KOKKOS
       KokkosView3<const double> gas_temperature;
       KokkosView3<const double> vol_frac;
-      KokkosView3<const double> rcmass; 
+      KokkosView3<const double> rcmass;
       KokkosView3<const double> charmass;
       KokkosView3<const double> enthalpy;
-      KokkosView3<const double> temperatureold; 
-      KokkosView3<const double> diameter;
-      KokkosView3<double> temperature; 
+      KokkosView3<const double> temperatureold;
+      constCCVariable<double>* diameter;
+      KokkosView3<double> temperature;
       KokkosView3<double> dTdt;
 #else
       constCCVariable<double>& gas_temperature;
       constCCVariable<double>& vol_frac;
-      constCCVariable<double>& rcmass; 
+      constCCVariable<double>& rcmass;
       constCCVariable<double>& charmass;
       constCCVariable<double>& enthalpy;
-      constCCVariable<double>& temperatureold; 
-      constCCVariable<double>& diameter;
-      CCVariable<double>& temperature; 
+      constCCVariable<double>& temperatureold;
+      constCCVariable<double>* diameter;
+      CCVariable<double>& temperature;
       CCVariable<double>& dTdt;
 #endif
-      CoalTemperature* TCA;     
+      CoalTemperature* TCA;
     };
 
-public: 
+public:
 
     CoalTemperature( std::string task_name, int matl_index, const int N );
-    ~CoalTemperature(); 
+    ~CoalTemperature();
 
-    void problemSetup( ProblemSpecP& db ); 
+    void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ); 
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ); 
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){}; 
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                      SpatialOps::OperatorDatabase& opr ){}; 
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                      SpatialOps::OperatorDatabase& opr ){};
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                      SpatialOps::OperatorDatabase& opr );
-    
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                         SpatialOps::OperatorDatabase& opr );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                SpatialOps::OperatorDatabase& opr );
 
-    void create_local_labels(); 
+    void create_local_labels();
 
-    const std::string get_env_name( const int i, const std::string base_name ){ 
+    const std::string get_env_name( const int i, const std::string base_name ){
       std::stringstream out;
       std::string env;
       out << i;
       env = out.str();
       return base_name + "_" + env;
     }
-               
-    const std::string get_qn_env_name( const int i, const std::string base_name ){ 
+
+    const std::string get_qn_env_name( const int i, const std::string base_name ){
       std::stringstream out;
       std::string env;
       out << i;
@@ -214,10 +214,10 @@ public:
       return base_name + "_qn" + env;
     }
 
-    //Build instructions for this (CoalTemperature) class. 
-    class Builder : public TaskInterface::TaskBuilder { 
+    //Build instructions for this (CoalTemperature) class.
+    class Builder : public TaskInterface::TaskBuilder {
 
-      public: 
+      public:
 
       Builder( std::string task_name, int matl_index, const int N ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N){}
       ~Builder(){}
@@ -225,27 +225,27 @@ public:
       CoalTemperature* build()
       { return scinew CoalTemperature( _task_name, _matl_index, _Nenv ); }
 
-      private: 
+      private:
 
-      std::string _task_name; 
+      std::string _task_name;
       int _matl_index;
       int _Nenv;
 
     };
 
-private: 
+private:
 
     bool _const_size;
     int _Nenv;
     double _rhop_o;
-    double _pi; 
-    double _initial_temperature; 
-    double _Ha0; 
-    double _Hc0; 
-    double _Hh0; 
-    double _Rgas; 
-    double _RdC; 
-    double _RdMW; 
+    double _pi;
+    double _initial_temperature;
+    double _Ha0;
+    double _Hc0;
+    double _Hh0;
+    double _Rgas;
+    double _RdC;
+    double _RdMW;
     double _MW_avg;
     double _ash_mf;
 
@@ -253,27 +253,27 @@ private:
     std::vector<double> _init_rawcoal;
     std::vector<double> _init_char;
     std::vector<double> _sizes;
-    std::vector<double> _denom; 
+    std::vector<double> _denom;
 
     std::string _diameter_base_name;
     std::string _rawcoal_base_name;
-    std::string _char_base_name; 
-    std::string _enthalpy_base_name; 
-    std::string _dTdt_base_name; 
+    std::string _char_base_name;
+    std::string _enthalpy_base_name;
+    std::string _dTdt_base_name;
     std::string _gas_temperature_name;
     std::string _vol_fraction_name;
 
     struct CoalAnalysis{
       double C;
-      double H; 
-      double O; 
-      double N; 
-      double S; 
-      double CHAR; 
-      double ASH; 
-      double H2O; 
+      double H;
+      double O;
+      double N;
+      double S;
+      double CHAR;
+      double ASH;
+      double H2O;
     };
-  
+
   };
 }
-#endif 
+#endif
