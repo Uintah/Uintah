@@ -105,6 +105,9 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
 {
 #ifdef UINTAH_ENABLE_KOKKOS
   Kokkos::initialize();
+  std::ostringstream kokkos_conf;
+  Kokkos::OpenMP::print_configuration( kokkos_conf, true );
+  printf("%s\n", kokkos_conf.str().c_str());
 #endif //UINTAH_ENABLE_KOKKOS
   d_lasttime = Time::currentSeconds();
   reloc_new_posLabel_ = 0;
@@ -969,7 +972,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
 
-  if( !parentScheduler_ ) { // If this scheduler is the root scheduler...    
+  if( !parentScheduler_ ) { // If this scheduler is the root scheduler...
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
@@ -1191,7 +1194,7 @@ void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeSt
 {
     runTimeStats[SimulationState::TaskExecTime]       += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
                                                                               - runTimeStats[SimulationState::OutputFileIORate];
-     
+
     runTimeStats[SimulationState::TaskLocalCommTime]  += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
     runTimeStats[SimulationState::TaskWaitCommTime]   += mpi_info_[TotalWaitMPI];
     runTimeStats[SimulationState::TaskGlobalCommTime] += mpi_info_[TotalReduce];
