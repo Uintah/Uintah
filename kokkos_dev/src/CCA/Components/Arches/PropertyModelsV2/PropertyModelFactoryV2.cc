@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
+#include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 
 using namespace Uintah;
@@ -63,9 +64,33 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         register_task( name, tsk );
         _finalize_property_tasks.push_back( name );
 
+      } else if ( type == "constant_property"){
+
+        std::string var_type = "NA";
+        db_model->findBlock("grid")->getAttribute("type",var_type);
+
+        TaskInterface::TaskBuilder* tsk;
+        if ( var_type == "CC" ){
+          tsk = scinew ConstantProperty<CCVariable<double> >::Builder(name, 0);
+          _pre_update_property_tasks.push_back(name);
+        } else if ( var_type == "FX" ){
+          tsk = scinew ConstantProperty<SFCXVariable<double> >::Builder(name, 0);
+          _pre_update_property_tasks.push_back(name);
+        } else if ( var_type == "FY" ){
+          tsk = scinew ConstantProperty<SFCYVariable<double> >::Builder(name, 0);
+          _pre_update_property_tasks.push_back(name);
+        } else if ( var_type == "FZ" ){
+          tsk = scinew ConstantProperty<SFCZVariable<double> >::Builder(name, 0);
+          _pre_update_property_tasks.push_back(name);
+        } else {
+          throw InvalidValue("Error: Property grid type not recognized for model: "+name,__FILE__,__LINE__);
+        }
+        register_task( name, tsk );
+        _pre_update_property_tasks.push_back(name);
+
       } else {
 
-        throw InvalidValue("Error: Property model not recognized.",__FILE__,__LINE__);
+        throw InvalidValue("Error: Property model not recognized: "+type,__FILE__,__LINE__);
 
       }
 

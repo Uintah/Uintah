@@ -30,7 +30,7 @@ if ! test "$DATE"; then
 fi
 
 if test "$COMPILER" = ""; then
-   echo "Please set the env var COMPILER to icc or gcc!"
+   echo "Please set the env var COMPILER to icc, gcc, or xlc!"
    echo
    exit
 fi
@@ -47,9 +47,16 @@ else
       CXX=`which g++`
       COMP=gcc-4.4.7
    else
-      echo "ERROR: Env var COMPILER was set to '$COMPILER', but must be set to 'icc' or 'gcc'"
-      echo
-      exit
+      if test "$COMPILER" = "xlc"; then
+         echo "  Building with xlc"
+         CC=`which xlc`
+         CXX=`which xlC`
+         COMP=xlc-12.1
+      else
+         echo "ERROR: Env var COMPILER was set to '$COMPILER', but must be set to 'icc', 'gcc', or 'xlc'"
+         echo
+         exit
+      fi
    fi
 fi
 
@@ -115,7 +122,7 @@ if test "$MACHINE" = "Mapache"; then
   echo
   echo "Have you run the appropriate 'module load' commands? Eg:"
   echo "   * module load gcc"
-  echo "   * module load cmake/3.0.0"
+  echo "   * module load cmake/3.1.0"
   echo
   sleep 1
 
@@ -132,7 +139,7 @@ if test "$MACHINE" = "Mustang"; then
   echo
   echo "Have you run the appropriate 'module load' commands? Eg:"
   echo "   * module load gcc"
-  echo "   * module load cmake/3.0.0"
+  echo "   * module load cmake/3.1.0"
   echo
   sleep 1
 
@@ -149,7 +156,7 @@ if test "$MACHINE" = "Wolf"; then
   echo
   echo "Have you run the appropriate 'module load' commands? Eg:"
   echo "   * module load intel/14.0.4"
-  echo "   * module load cmake/3.0.0"
+  echo "   * module load cmake/3.1.0"
   echo
   sleep 1
 
@@ -172,13 +179,13 @@ if test "$MACHINE" = "Vulcan"; then
      echo "Error: hostname did not return vulcanlac*... Goodbye."
      exit
   fi
-  CC=`which mpigcc`
-  CXX=`which mpig++`
-  COMP=gcc-4.4.7
+  CC=`which bggcc-4.7.2`
+  CXX=`which bgg++-4.7.2`
+  COMP=bggcc4.7.2
 
   NAME2="Vulcan"
   INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/vulcan/Wasatch3P
-  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/vulcan/Boost/v1_55_0
+  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/vulcan/Boost/v1_55_0-$COMP
 else
 if test "$MACHINE" = "Surface"; then
   if [[ $host != surface* ]]; then
@@ -187,7 +194,7 @@ if test "$MACHINE" = "Surface"; then
   fi
   CC=`which mpigcc`
   CXX=`which mpig++`
-  COMP=gcc-4.4.7
+  COMP=gcc-4.9.2
 
   NAME2="Surface"
   INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/surface/Wasatch3P

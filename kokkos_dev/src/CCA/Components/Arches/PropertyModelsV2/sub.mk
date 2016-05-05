@@ -15,10 +15,11 @@ SRCDIR   := CCA/Components/Arches/PropertyModelsV2
 #
 CUDA_ENABLED_SRCS =            \
         CO                     \
+        ConstantProperty       \
         DensityPredictor       \
         VariableStats          \
         WallHFVariable         \
-        PropertyModelFactoryV2 
+        PropertyModelFactoryV2
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of

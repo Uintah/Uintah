@@ -330,7 +330,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
                            const Level* level,
                            const IntVector& low,
                            const IntVector& high,
-                           bool useBoundaryCells = true);
+                           bool useBoundaryCells = true,
+                           bool onlyNeedAllocatedSpace = false);
 
     virtual void copyOut(GridVariableBase& var,
                          const VarLabel* label,

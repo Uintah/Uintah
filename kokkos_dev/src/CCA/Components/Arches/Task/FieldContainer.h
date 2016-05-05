@@ -540,7 +540,8 @@ namespace Uintah{
 
         std::stringstream msg;
         msg << "Error: variable with name: " << name << " not found in the registry." <<
-        " Did you register it?" << std::endl;
+        " Did you register it?" << std::endl <<
+        " Or is it possible that you have a mix up with const type and non-const?" << std::endl;
         throw InvalidValue( msg.str(), __FILE__, __LINE__ );
 
       }
@@ -563,7 +564,8 @@ namespace Uintah{
 
         std::stringstream msg;
         msg << "Error: variable with name" << name << " not found in the registry." <<
-        " Did you register it?" << std::endl;
+        " Did you register it?" << std::endl <<
+        " Or is it possible that you have a mix up with const type and non-const?" << std::endl;
         throw InvalidValue( msg.str(), __FILE__, __LINE__ );
 
       }

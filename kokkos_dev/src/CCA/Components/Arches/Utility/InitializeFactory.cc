@@ -41,61 +41,30 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
       std::string task_name;
       std::string eqn_name;
       std::string type;
-      db_task->getAttribute("label",task_name );
-      db_task->getAttribute("eqn", eqn_name );
+      db_task->getAttribute("task_label",task_name );
+      db_task->getAttribute("variable_label", eqn_name );
       db_task->getAttribute("type", type );
 
       if ( type == "wave" ){
 
-        std::string dependent_type;
-        std::string independent_type;
+        std::string variable_type;
 
-        db_task->findBlock("wave")->findBlock("grid")->getAttribute("dependent_type",dependent_type);
-        db_task->findBlock("wave")->findBlock("grid")->getAttribute("independent_type", independent_type);
+        db_task->findBlock("wave")->findBlock("grid")->getAttribute("type",variable_type);
 
-        typedef SpatialOps::SVolField SVol;
-        typedef SpatialOps::XVolField XVol;
-        typedef SpatialOps::YVolField YVol;
-        typedef SpatialOps::ZVolField ZVol;
-
-        if ( dependent_type == "svol"){
-
-          if ( independent_type == "svol"){
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SVol, SVol>::Builder(task_name, 0, eqn_name);
-            register_task( task_name, tsk );
-          } else if ( independent_type == "xvol"){
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<XVol, SVol>::Builder(task_name, 0, eqn_name);
-            register_task( task_name, tsk );
-          } else if ( independent_type == "yvol"){
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<YVol, SVol>::Builder(task_name, 0, eqn_name);
-            register_task( task_name, tsk );
-          } else if ( independent_type == "zvol"){
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<ZVol, SVol>::Builder(task_name, 0, eqn_name);
-            register_task( task_name, tsk );
-          } else {
-            throw InvalidValue("Error: SpatalOps grid variable type not recognized for waveform.",__FILE__,__LINE__);
-          }
-
-        } else if ( dependent_type == "xvol"){
-
-          if ( independent_type == "svol"){
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SVol, XVol>::Builder(task_name, 0, eqn_name);
-            register_task( task_name, tsk );
-          } else if ( independent_type == "xvol"){
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<XVol, XVol>::Builder(task_name, 0, eqn_name);
-            register_task( task_name, tsk );
-          } else if ( independent_type == "yvol"){
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<YVol, XVol>::Builder(task_name, 0, eqn_name);
-            register_task( task_name, tsk );
-          } else if ( independent_type == "zvol"){
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<ZVol, XVol>::Builder(task_name, 0, eqn_name);
-            register_task( task_name, tsk );
-          } else {
-            throw InvalidValue("Error: SpatalOps grid variable type not recognized for waveform.",__FILE__,__LINE__);
-          }
-
+        if ( variable_type == "CC"){
+          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<CCVariable<double> >::Builder(task_name, 0, eqn_name);
+          register_task( task_name, tsk );
+        } else if ( variable_type == "FX" ){
+          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCXVariable<double> >::Builder(task_name, 0, eqn_name);
+          register_task( task_name, tsk );
+        } else if ( variable_type == "FY" ){
+          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCYVariable<double> >::Builder(task_name, 0, eqn_name);
+          register_task( task_name, tsk );
+        } else if ( variable_type == "FZ" ){
+          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCZVariable<double> >::Builder(task_name, 0, eqn_name);
+          register_task( task_name, tsk );
         } else {
-          throw InvalidValue("Error: Grid type not recognized (must be a SO field).",__FILE__,__LINE__);
+          throw InvalidValue("Error: Grid type not valid for WaveForm initializer: "+variable_type, __FILE__, __LINE__);
         }
 
       } else if ( type == "random_lagrangian_particles"){
@@ -132,7 +101,7 @@ InitializeFactory::build_all_tasks( ProblemSpecP& db )
         db_task = db_task->findNextBlock("task")){
 
       std::string task_name;
-      db_task->getAttribute("label",task_name );
+      db_task->getAttribute("task_label",task_name );
 
       TaskInterface* tsk = retrieve_task(task_name);
       tsk->problemSetup( db_task );

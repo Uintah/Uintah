@@ -98,11 +98,11 @@
       <save label = "p.scalefactor"/>
       <save label = "p.deformationMeasure"/>
       <save label = "p.velocity"/>
-      <save label = "p.externalscalarflux"/>
       <save label = "p.particleID"/>
       <save label = "p.loadCurveID"/>
       <save label = "g.concentration"/>
 <!--
+      <save label = "p.externalscalarflux"/>
       <save label = "p.diffusivity"/>
       <save label = "p.equivalentStress_t1"/>
       <save label = "p.concentrationInterp"/>

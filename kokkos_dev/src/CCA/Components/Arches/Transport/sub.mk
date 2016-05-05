@@ -15,10 +15,13 @@ SRCDIR := CCA/Components/Arches/Transport
 #
 CUDA_ENABLED_SRCS =      \
         FEUpdate         \
+        KFEUpdate        \
         SSPInt           \
         ScalarRHS        \
+        KScalarRHS       \
         TransportFactory \
-        URHS             
+        ComputePsi       \
+        URHS
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of

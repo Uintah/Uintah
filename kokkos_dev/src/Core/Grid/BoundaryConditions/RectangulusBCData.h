@@ -37,16 +37,16 @@ namespace Uintah {
   /*!
 
   \class RectangulusBCData
-  
+
   \ brief Defines a rectangulus geometry for a boundary condition.
-  
+
   \author Ben Isaac \n
   Department of Chemical Engineering \n
   University of Utah \n
   PSAAP II \n\n
 
   */
-  
+
 
   class RectangulusBCData : public BCGeomBase  {
 
@@ -77,7 +77,7 @@ namespace Uintah {
     /// Get the boundary condition data
     void getBCData(BCData& bc) const;
 
-    /// Determines if a point is inside the rectangulus 
+    /// Determines if a point is inside the rectangulus
     bool inside(const Point& p) const;
 
     /// Print out the boundary condition geometry type.
@@ -85,18 +85,17 @@ namespace Uintah {
 
     /// Determine the cell and node centered iterators
     virtual void determineIteratorLimits(Patch::FaceType face,
-                                         const Patch* patch, 
+                                         const Patch* patch,
                                          std::vector<Point>& test_pts);
-    
+
   private:
     BCData d_bc;
-    Point d_min_in,d_min_out,d_max_in,d_max_out;
+    Point d_min_in;
+    Point d_max_in;
+    Point d_min_out;
+    Point d_max_out;
   };
-  
+
 } // End namespace Uintah
 
 #endif
-
-
-
-

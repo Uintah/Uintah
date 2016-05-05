@@ -1,17 +1,17 @@
-#ifndef Uintah_Component_Arches_GridInfo_h
-#define Uintah_Component_Arches_GridInfo_h
+#ifndef Uintah_Component_Arches_BoundaryInfo_h
+#define Uintah_Component_Arches_BoundaryInfo_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 namespace Uintah{
 
   class Operators;
-  class GridInfo : public TaskInterface {
+  class BoundaryInfo : public TaskInterface {
 
 public:
 
-    GridInfo( std::string task_name, int matl_index );
-    ~GridInfo();
+    BoundaryInfo( std::string task_name, int matl_index );
+    ~BoundaryInfo();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -38,7 +38,7 @@ public:
     void create_local_labels();
 
 
-    //Build instructions for this (GridInfo) class.
+    //Build instructions for this (BoundaryInfo) class.
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
@@ -46,8 +46,8 @@ public:
       Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
       ~Builder(){}
 
-      GridInfo* build()
-      { return scinew GridInfo( _task_name, _matl_index ); }
+      BoundaryInfo* build()
+      { return scinew BoundaryInfo( _task_name, _matl_index ); }
 
       private:
 

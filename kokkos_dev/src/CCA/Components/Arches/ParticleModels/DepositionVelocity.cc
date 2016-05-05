@@ -116,14 +116,14 @@ void
 DepositionVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  ); 
+  register_variable( _task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string dep_vel_rs = get_env_name(i, _dep_vel_rs_name);
     const std::string dep_vel_rs_start = get_env_name(i, _dep_vel_rs_start_name);
     register_variable( dep_vel_rs, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( dep_vel_rs_start, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( dep_vel_rs, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  ); 
-    register_variable( dep_vel_rs_start, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  ); 
+    register_variable( dep_vel_rs, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
+    register_variable( dep_vel_rs_start, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
   }
 
 }
@@ -137,17 +137,17 @@ DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
   constCCVariable<double>* vdeposit_velocity_old = tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name);
   constCCVariable<double>& deposit_velocity_old = *vdeposit_velocity_old;
 
-  const double delta_t = tsk_info->get_dt();
-  double current_time = _shared_state->getElapsedTime();  
+  //const double delta_t = tsk_info->get_dt();
+  double current_time = _shared_state->getElapsedTime();
   _averaging_update = true;
   if (current_time > _t_interval){
     _averaging_update = false;
-  } 
+  }
   for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     deposit_velocity[c]=deposit_velocity_old[c];
   }
-  
+
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string dep_vel_rs = get_env_name(i, _dep_vel_rs_name);
     const std::string dep_vel_rs_start = get_env_name(i, _dep_vel_rs_start_name);
@@ -177,7 +177,7 @@ DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 
   register_variable( _cellType_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
   register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry );
-  
+
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string RateDepositionX = get_env_name(i, _ratedepx_name);
     const std::string RateDepositionY = get_env_name(i, _ratedepy_name);
@@ -185,7 +185,7 @@ DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::Va
     const std::string rho_name = get_env_name(i, _rhoP_name);
     const std::string dep_vel_rs = get_env_name(i, _dep_vel_rs_name);
     const std::string dep_vel_rs_start = get_env_name(i, _dep_vel_rs_start_name);
-    
+
     register_variable( RateDepositionX, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
     register_variable( RateDepositionY, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
     register_variable( RateDepositionZ, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST , variable_registry );
@@ -200,7 +200,7 @@ void
 DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
   const int FLOW = -1;
-  double current_time = _shared_state->getElapsedTime();  
+  double current_time = _shared_state->getElapsedTime();
   Vector Dx = patch->dCell(); // cell spacing
   double DxDy = Dx.x() * Dx.y();
   double DxDz = Dx.x() * Dx.z();
@@ -214,12 +214,12 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   area_face.push_back(DxDy);
   const double delta_t = tsk_info->get_dt();
   std::vector<int> container_flux_ind;
-  int total_flux_ind = 0; 
-  double total_area_face = 0.0; 
-  double flux = 0.0; 
-  double rhoi = 0.0; 
-  double d_velocity = 0.0; 
-  double vel_i_ave = 0.0; 
+  int total_flux_ind = 0;
+  double total_area_face = 0.0;
+  double flux = 0.0;
+  double rhoi = 0.0;
+  double d_velocity = 0.0;
+  double vel_i_ave = 0.0;
   IntVector lowPindex = patch->getCellLowIndex();
   IntVector highPindex = patch->getCellHighIndex();
   //Pad for ghosts
@@ -230,9 +230,9 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   CCVariable<double>& deposit_velocity = *vdeposit_velocity;
   constCCVariable<int>* vcelltype = tsk_info->get_const_uintah_field<constCCVariable<int> >(_cellType_name);
   constCCVariable<int>& celltype = *vcelltype;
-  
+
   for( int i = 0; i < _Nenv; i++ ){
-   
+
     const std::string RateDepositionX = get_env_name(i, _ratedepx_name);
     const std::string RateDepositionY = get_env_name(i, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(i, _ratedepz_name);
@@ -251,7 +251,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     CCVariable<double>& d_velocity_rs = *vd_velocity_rs;
     CCVariable<double>* vd_velocity_rs_start = tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs_start);
     CCVariable<double>& d_velocity_rs_start = *vd_velocity_rs_start;
-  
+
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter;
@@ -305,7 +305,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
             // The total cell surface area exposed to radiation:
             total_area_face += area_face[container_flux_ind[pp]];
           }
-          // compute the current deposit velocity for each particle: d_vel [m3/s * 1/m2 = m/s] 
+          // compute the current deposit velocity for each particle: d_vel [m3/s * 1/m2 = m/s]
           d_velocity /= total_area_face; // area weighted incoming velocity to the cell for particle i.
           // update the running-sum for time-averaging the deposit velocity for particle i.
           d_velocity_rs[c]=d_velocity_rs[c] + d_velocity*delta_t; // during timestep init d_velocity_rs[c] is set to the old values..
@@ -315,8 +315,8 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           if (current_time > _t_interval){
             vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / _t_interval;
             deposit_velocity[c] =  vel_i_ave; // add the contribution per particle.
-          } 
-        }// if there is a deposition flux 
+          }
+        }// if there is a deposition flux
       } // wall or intrusion cell-type
     } // cell loop
   } // environment loop

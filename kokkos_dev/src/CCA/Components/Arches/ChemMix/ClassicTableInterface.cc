@@ -107,7 +107,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "----------Mixing Table Information---------------  " << endl;
 
   int table_size = 0;
-  char* table_contents;
+  char* table_contents=NULL;
   std::string uncomp_table_contents;
 
   int mpi_rank = Parallel::getMPIRank();

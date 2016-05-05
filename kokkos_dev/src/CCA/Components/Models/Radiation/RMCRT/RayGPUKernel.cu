@@ -1513,6 +1513,9 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                                             cellType_gdw,
                                                             old_gdw,
                                                             new_gdw);
+    //TODO: Remove when these extra fields can be managed by the task (because it's asynchronous, you need to wait
+    //until the task is completed before reclaiming the data.  That should happen in the task completion phase of the scheduler queue.
+    CUDA_RT_SAFE_CALL( cudaDeviceSynchronize() );
     // free device-side RNG states
     GPUMemoryPool::freeCudaSpaceFromPool(0,numStates * sizeof(curandState), (void*)randNumStates);
     //CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
@@ -1595,6 +1598,10 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
   //CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
   //CUDA_RT_SAFE_CALL( cudaFree(dev_regionLo) );
   //CUDA_RT_SAFE_CALL( cudaFree(dev_regionHi) );
+
+  //TODO: Remove when these extra fields can be managed by the task (because it's asynchronous, you need to wait
+  //until the task is completed before reclaiming the data.  That should happen in the task completion phase of the scheduler queue.
+  CUDA_RT_SAFE_CALL( cudaDeviceSynchronize() );
   GPUMemoryPool::freeCudaSpaceFromPool(0,numStates * sizeof(curandState), (void*)randNumStates);
   GPUMemoryPool::freeCudaSpaceFromPool(0, size, (int3*)dev_regionLo);
   GPUMemoryPool::freeCudaSpaceFromPool(0, size, (int3*)dev_regionHi);
