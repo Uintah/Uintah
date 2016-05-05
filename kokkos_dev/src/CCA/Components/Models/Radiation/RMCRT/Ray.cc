@@ -35,6 +35,8 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 
+#include <Core/Util/Timers/Timers.hpp>
+
 #include <time.h>
 #include <fstream>
 
@@ -1025,6 +1027,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
                Task::WhichDW which_celltype_dw,
                const int radCalc_freq )
 {
+  Timers::ThreadTrip<Ray> ray_timer;
 
   const Level* level = getLevel(patches);
 
@@ -1282,7 +1285,20 @@ Ray::rayTrace( const ProcessorGroup* pg,
       cout << " Efficiency: " << efficiency << " steps per sec" << endl;
       cout << endl;
     }
+
   }  //end patch loop
+
+  ray_timer.stop();
+
+  {
+    const int prank = Uintah::MPI::Impl::prank( MPI_COMM_WORLD );
+    const double sec = ray_timer().seconds();
+    const double total = Timers::ThreadTrip<Ray>::total().seconds();
+    std::ostringstream msg;
+
+    msg << "RANK[" << prank << "]: RAY_TRACE: " << sec << "   TOTAL: " << total;
+    printf("%s\n", msg.str().c_str());
+  }
 }  // end ray trace method
 
 
