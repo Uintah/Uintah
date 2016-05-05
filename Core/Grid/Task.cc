@@ -911,7 +911,8 @@ getOtherLevelPatchSubset(Task::PatchDomainSpec dom,
 
 //__________________________________
 void
-Task::doit(CallBackEvent event,
+Task::doit(Task *task,
+           CallBackEvent event,
            const ProcessorGroup* pg,
            const PatchSubset* patches,
            const MaterialSubset* matls,
@@ -925,7 +926,7 @@ Task::doit(CallBackEvent event,
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
 
   if (d_action) {
-    d_action->doit(event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
+    d_action->doit(this, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
   }
 }
 

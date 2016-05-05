@@ -108,7 +108,8 @@ namespace Uintah {
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-      void timeAdvanceUnified(Task::CallBackEvent event,
+      void timeAdvanceUnified(Task* task,
+                              Task::CallBackEvent event,
                               const ProcessorGroup* pg,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,

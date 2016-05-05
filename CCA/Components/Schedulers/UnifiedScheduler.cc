@@ -1419,6 +1419,7 @@ void UnifiedScheduler::prepareGpuDependencies(DetailedTask* dtask, DependencyBat
         dtask->getGhostVars().add(dep->req->var, fromPatch, fromPatch,
             matlIndx, levelID, false, true, host_offset, host_size, dep->low, dep->high,
             OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->var->typeDescription()->getSubType()->getType()),
+            dep->req->var->typeDescription()->getSubType()->getType(),
             temp,
             fromDeviceIndex, toDeviceIndex, fromresource, toresource,
             (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::sameDeviceSameMpiRank);
@@ -1445,6 +1446,7 @@ void UnifiedScheduler::prepareGpuDependencies(DetailedTask* dtask, DependencyBat
           dtask->getGhostVars().add(dep->req->var, fromPatch, toPatch,
              matlIndx, levelID, true, true, host_offset, host_size, dep->low, dep->high,
              OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->var->typeDescription()->getSubType()->getType()),
+             dep->req->var->typeDescription()->getSubType()->getType(),
              temp,
              fromDeviceIndex, toDeviceIndex, fromresource, toresource,
              (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherDeviceSameMpiRank);
@@ -1466,6 +1468,7 @@ void UnifiedScheduler::prepareGpuDependencies(DetailedTask* dtask, DependencyBat
           dtask->getGhostVars().add(dep->req->var, fromPatch, toPatch,
              matlIndx, levelID, true, true, host_offset, host_size, dep->low, dep->high,
              OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->var->typeDescription()->getSubType()->getType()),
+             dep->req->var->typeDescription()->getSubType()->getType(),
              temp,
              fromDeviceIndex, toDeviceIndex, fromresource, toresource,
              (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherMpiRank);
@@ -2429,6 +2432,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
       Patch::getGhostOffsets(type, curDependency->gtype, curDependency->numGhostCells, lowOffset, highOffset);
       patch->computeExtents(basis, curDependency->var->getBoundaryLayer(), lowOffset, highOffset, low, high);
       const IntVector host_size = high - low;
+      const TypeDescription::Type datatype = curDependency->var->typeDescription()->getSubType()->getType();
       const size_t elementDataSize =
           OnDemandDataWarehouse::getTypeDescriptionSize(curDependency->var->typeDescription()->getSubType()->getType());
 
@@ -2730,7 +2734,9 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                                    iter->validNeighbor->isForeign(), false,
                                    ghost_host_offset, ghost_host_size,
                                    iter->low, iter->high,
-                                   elementDataSize, virtualOffset,
+                                   elementDataSize,
+                                   curDependency->var->typeDescription()->getSubType()->getType(),
+                                   virtualOffset,
                                    destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
                                    (Task::WhichDW) curDependency->mapDataWarehouse(),
                                    GpuUtilities::sameDeviceSameMpiRank);
@@ -2825,7 +2831,9 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                                               false, false,
                                               ghost_host_offset, ghost_host_size,
                                               iter->low, iter->high,
-                                              elementDataSize, virtualOffset,
+                                              elementDataSize,
+                                              curDependency->var->typeDescription()->getSubType()->getType(),
+                                              virtualOffset,
                                               destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
                                               (Task::WhichDW) curDependency->mapDataWarehouse(),
                                               GpuUtilities::sameDeviceSameMpiRank);
@@ -2870,7 +2878,9 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                       iter->validNeighbor->isForeign(), false,
                       ghost_host_offset, ghost_host_size,
                       iter->low, iter->high,
-                      elementDataSize, virtualOffset,
+                      elementDataSize,
+                      curDependency->var->typeDescription()->getSubType()->getType(),
+                      virtualOffset,
                       destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
                       (Task::WhichDW) curDependency->mapDataWarehouse(),
                       GpuUtilities::sameDeviceSameMpiRank);
@@ -2930,7 +2940,9 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                       IntVector(iter->high.x() - iter->low.x(), iter->high.y() - iter->low.y(), iter->high.z() - iter->low.z()),
                       iter->low,
                       iter->high,
-                      elementDataSize, virtualOffset,
+                      elementDataSize,
+                      curDependency->var->typeDescription()->getSubType()->getType(),
+                      virtualOffset,
                       destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
                       (Task::WhichDW) curDependency->mapDataWarehouse(),
                       GpuUtilities::sameDeviceSameMpiRank);
@@ -3228,7 +3240,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
             //this simply sets the var to reuse the existing pointer.
             switch (it->second.dep->var->typeDescription()->getType()) {
             case TypeDescription::PerPatch: {
-              GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(it->second.sizeOfDataType);
+              GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(it->second.dep->var->typeDescription()->getSubType()->getType());
               gpudw->allocateAndPut(*patchVar,
                   it->second.dep->var->getName().c_str(), it->first.patchID,
                   it->first.matlIndx, it->first.levelIndx,
@@ -3239,7 +3251,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
             }
             case TypeDescription::ReductionVariable: {
 
-              GPUReductionVariableBase* reductionVar = OnDemandDataWarehouse::createGPUReductionVariable(it->second.sizeOfDataType);
+              GPUReductionVariableBase* reductionVar = OnDemandDataWarehouse::createGPUReductionVariable(it->second.dep->var->typeDescription()->getSubType()->getType());
               gpudw->allocateAndPut(*reductionVar,
                   it->second.dep->var->getName().c_str(), it->first.patchID,
                   it->first.matlIndx, it->first.levelIndx,
@@ -3258,7 +3270,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
               tempGhostvar->allocate(low, high);
               delete tempGhostvar;
 
-              GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.sizeOfDataType);
+              GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.dep->var->typeDescription()->getSubType()->getType());
               if (gpudw) {
 
                 gpudw->allocateAndPut(
@@ -4219,7 +4231,8 @@ void UnifiedScheduler::initiateD2HForHugeGhostCells(DetailedTask* dtask) {
 
             //It's not valid on the CPU but it is on the GPU.  Copy it on over.
             if (!gpudw->isValidOnCPU( compVarName.c_str(), patchID, matlID, levelID)) {
-              TypeDescription::Type type = comp->var->typeDescription()->getType();
+              const TypeDescription::Type type = comp->var->typeDescription()->getType();
+              const TypeDescription::Type datatype = comp->var->typeDescription()->getSubType()->getType();
               switch (type) {
                 case TypeDescription::CCVariable:
                 case TypeDescription::NCVariable:
@@ -4319,7 +4332,7 @@ void UnifiedScheduler::initiateD2HForHugeGhostCells(DetailedTask* dtask) {
 
                     int3 device_offset;
                     int3 device_size;
-                    GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(host_strides.x());
+                    GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(datatype);
                     gpudw->get(*device_var, compVarName.c_str(), patchID, matlID, levelID);
                     device_var->getArray3(device_offset, device_size, device_ptr);
                     delete device_var;
@@ -4509,7 +4522,8 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
           gpudw->isAllocatedOnGPU( varName.c_str(), patchID, matlID, levelID) &&
           gpudw->isValidOnGPU( varName.c_str(), patchID, matlID, levelID)) {
 
-        TypeDescription::Type type = dependantVar->var->typeDescription()->getType();
+        const TypeDescription::Type type = dependantVar->var->typeDescription()->getType();
+        const TypeDescription::Type datatype = dependantVar->var->typeDescription()->getSubType()->getType();
         switch (type) {
         case TypeDescription::CCVariable:
         case TypeDescription::NCVariable:
@@ -4607,7 +4621,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
             }
 
             //get the device var so we can get the pointer.
-            GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(elementDataSize);
+            GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(datatype);
             gpudw->get(*device_var, varName.c_str(), patchID, matlID, levelID);
             device_var->getArray3(device_offset, device_size, device_ptr);
             delete device_var;
@@ -4805,7 +4819,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
             host_ptr = hostPerPatchVar->getBasePointer();
             host_bytes = hostPerPatchVar->getDataSize();
 
-            GPUPerPatchBase* gpuPerPatchVar = OnDemandDataWarehouse::createGPUPerPatch(host_bytes);
+            GPUPerPatchBase* gpuPerPatchVar = OnDemandDataWarehouse::createGPUPerPatch(datatype);
             gpudw->get(*gpuPerPatchVar, varName.c_str(), patchID, matlID, levelID);
             device_ptr = gpuPerPatchVar->getVoidPointer();
             size_t device_bytes = gpuPerPatchVar->getMemSize();
@@ -4856,7 +4870,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
             host_ptr   = hostReductionVar->getBasePointer();
             host_bytes = hostReductionVar->getDataSize();
 
-            GPUReductionVariableBase* gpuReductionVar = OnDemandDataWarehouse::createGPUReductionVariable(host_bytes);
+            GPUReductionVariableBase* gpuReductionVar = OnDemandDataWarehouse::createGPUReductionVariable(datatype);
             gpudw->get(*gpuReductionVar, varName.c_str(), patchID, matlID, levelID);
             device_ptr = gpuReductionVar->getVoidPointer();
             size_t device_bytes = gpuReductionVar->getMemSize();
@@ -5762,7 +5776,7 @@ void UnifiedScheduler::copyAllGpuToGpuDependences(DetailedTask* dtask) {
       void *device_source_ptr;
       size_t elementDataSize = it->second.xstride;
       size_t memSize = ghostSize.x() * ghostSize.y() * ghostSize.z() * elementDataSize;
-      GPUGridVariableBase* device_source_var = OnDemandDataWarehouse::createGPUGridVariable(elementDataSize);
+      GPUGridVariableBase* device_source_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.datatype);
       OnDemandDataWarehouseP dw = dws[it->first.dataWarehouse];
       GPUDataWarehouse* gpudw = dw->getGPUDW(it->second.sourceDeviceNum);
       gpudw->getStagingVar(*device_source_var,
@@ -5779,7 +5793,7 @@ void UnifiedScheduler::copyAllGpuToGpuDependences(DetailedTask* dtask) {
       int3 device_dest_offset;
       int3 device_dest_size;
       void *device_dest_ptr;
-      GPUGridVariableBase* device_dest_var = OnDemandDataWarehouse::createGPUGridVariable(elementDataSize);
+      GPUGridVariableBase* device_dest_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.datatype);
       gpudw->getStagingVar(*device_dest_var,
                      it->first.label.c_str(),
                      it->second.destPatchPointer->getID(),
@@ -5891,7 +5905,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
       //d2hComputesLock_.writeLock();
       //{
 
-        GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(host_strides.x());
+        GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.datatype);
         OnDemandDataWarehouseP dw = dws[it->first.dataWarehouse];
         GPUDataWarehouse* gpudw = dw->getGPUDW(it->second.sourceDeviceNum);
         gpudw->getStagingVar(*device_var,

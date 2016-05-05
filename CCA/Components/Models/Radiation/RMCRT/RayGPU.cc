@@ -42,7 +42,8 @@ static DebugStream dbggpu("RAYGPU", false);
 // Method: The GPU ray tracer - setup for ray trace kernel
 //---------------------------------------------------------------------------
 template<class T>
-void Ray::rayTraceGPU(Task::CallBackEvent event,
+void Ray::rayTraceGPU(Task* task,
+                      Task::CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
@@ -244,7 +245,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 // Method: The GPU data onion ray tracer - setup for ray trace data onion kernel
 //---------------------------------------------------------------------------
 template<class T>
-void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
+void Ray::rayTraceDataOnionGPU( Task* task,
+                               Task::CallBackEvent event,
                                const ProcessorGroup* pg,
                                const PatchSubset* finePatches,
                                const MaterialSubset* matls,
@@ -481,7 +483,8 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
 //______________________________________________________________________
 //  Explicit template instantiations
 template
-void Ray::rayTraceGPU< float > ( Task::CallBackEvent,
+void Ray::rayTraceGPU< float > ( Task* task,
+                                 Task::CallBackEvent,
                                  const ProcessorGroup*,
                                  const PatchSubset*,
                                  const MaterialSubset*,
@@ -498,7 +501,8 @@ void Ray::rayTraceGPU< float > ( Task::CallBackEvent,
                                  const int );
 
 template
-void Ray::rayTraceGPU< double > ( Task::CallBackEvent,
+void Ray::rayTraceGPU< double > ( Task* task,
+                                  Task::CallBackEvent,
                                   const ProcessorGroup*,
                                   const PatchSubset*,
                                   const MaterialSubset*,
@@ -515,7 +519,8 @@ void Ray::rayTraceGPU< double > ( Task::CallBackEvent,
                                   const int );
 
 template
-void Ray::rayTraceDataOnionGPU< float > ( Task::CallBackEvent,
+void Ray::rayTraceDataOnionGPU< float > ( Task* task,
+                                          Task::CallBackEvent,
                                           const ProcessorGroup*,
                                           const PatchSubset*,
                                           const MaterialSubset*,
@@ -532,7 +537,8 @@ void Ray::rayTraceDataOnionGPU< float > ( Task::CallBackEvent,
                                           const int );
 
 template
-void Ray::rayTraceDataOnionGPU< double > ( Task::CallBackEvent,
+void Ray::rayTraceDataOnionGPU< double > ( Task* task,
+                                           Task::CallBackEvent,
                                            const ProcessorGroup*,
                                            const PatchSubset*,
                                            const MaterialSubset*,

@@ -36,6 +36,7 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
     IntVector low,
     IntVector high,
     int xstride,
+    TypeDescription::Type datatype,
     IntVector virtualOffset,
     int sourceDeviceNum,
     int destDeviceNum,
@@ -55,6 +56,7 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
   this->low = low;
   this->high = high;
   this->xstride = xstride;
+  this->datatype = datatype;
   this->virtualOffset = virtualOffset;
   this->sourceDeviceNum = sourceDeviceNum;
   this->destDeviceNum = destDeviceNum;
@@ -82,6 +84,7 @@ void DeviceGhostCells::add(const VarLabel* label,
           IntVector low,
           IntVector high,
           int xstride,
+          TypeDescription::Type datatype,
           IntVector virtualOffset,
           int sourceDeviceNum,
           int destDeviceNum,
@@ -118,7 +121,7 @@ void DeviceGhostCells::add(const VarLabel* label,
       destinationDevices.insert(deviceID);
     }
     DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx, sourceStaging, destStaging,
-                               varOffset, varSize, low, high, xstride, virtualOffset, sourceDeviceNum, destDeviceNum,
+                               varOffset, varSize, low, high, xstride, datatype, virtualOffset, sourceDeviceNum, destDeviceNum,
                                fromResource, toResource, dwIndex, dest);
     ghostVars.insert( std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::value_type( gvt, tmp ) );
   } else {
