@@ -2427,10 +2427,18 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
       GPUDataWarehouse* gpudw = dw->getGPUDW(deviceIndex);
 
       //Get all size information about this dependency.
-      IntVector low, high, lowOffset, highOffset;
-      Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
-      Patch::getGhostOffsets(type, curDependency->gtype, curDependency->numGhostCells, lowOffset, highOffset);
-      patch->computeExtents(basis, curDependency->var->getBoundaryLayer(), lowOffset, highOffset, low, high);
+      IntVector low, high; //, lowOffset, highOffset;
+      if (uses_SHRT_MAX) {
+        level->computeVariableExtents(type, low, high);
+      } else {
+        Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+        patch->computeVariableExtents(basis, curDependency->var->getBoundaryLayer(), curDependency->gtype, curDependency->numGhostCells, low, high);
+
+        //
+        //Patch::getGhostOffsets(type, curDependency->gtype, curDependency->numGhostCells, lowOffset, highOffset);
+        //patch->computeExtents(basis, curDependency->var->getBoundaryLayer(), lowOffset, highOffset, low, high);
+
+      }
       const IntVector host_size = high - low;
       const TypeDescription::Type datatype = curDependency->var->typeDescription()->getSubType()->getType();
       const size_t elementDataSize =
@@ -3134,14 +3142,19 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
               curDependency->var->typeDescription()->getType(), false);
           IntVector lowIndex, highIndex;
           IntVector lowOffset, highOffset;
-
-          Patch::getGhostOffsets(
-              gridVar->virtualGetTypeDescription()->getType(),
-              curDependency->gtype, curDependency->numGhostCells, lowOffset,
-              highOffset);
-          patch->computeExtents(basis,
-              curDependency->var->getBoundaryLayer(), lowOffset, highOffset,
-              lowIndex, highIndex);
+          if (uses_SHRT_MAX) {
+            level->computeVariableExtents(type, lowIndex, highIndex);
+          } else {
+            Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+            patch->computeVariableExtents(basis, curDependency->var->getBoundaryLayer(), curDependency->gtype, curDependency->numGhostCells, lowIndex, highIndex);
+          }
+          //Patch::getGhostOffsets(
+          //    gridVar->virtualGetTypeDescription()->getType(),
+          //    curDependency->gtype, curDependency->numGhostCells, lowOffset,
+          //    highOffset);
+          //patch->computeExtents(basis,
+          //    curDependency->var->getBoundaryLayer(), lowOffset, highOffset,
+          //    lowIndex, highIndex);
           size_t memSize = (highIndex.x() - lowIndex.x())
               * (highIndex.y() - lowIndex.y())
               * (highIndex.z() - lowIndex.z()) * elementDataSize;
@@ -3151,15 +3164,14 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
           //TODO: Is this even needed?  InitiateD2H seems to create the var when it's needed host side.
           //So what happens if we remove this?
           //I know it crashes if this is removed, but it seems like that crash should be fixed
-    const bool finalized = dw->isFinalized();
-    if (finalized) {
-      dw->unfinalize();
-    }
+          const bool finalized = dw->isFinalized();
+          if (finalized) {
+            dw->unfinalize();
+          }
 
           dw->allocateAndPut(*gridVar, curDependency->var, matlID,
               patch, curDependency->gtype,
               curDependency->numGhostCells);
-
 
           if (finalized) {
             dw->refinalize();
@@ -4258,13 +4270,12 @@ void UnifiedScheduler::initiateD2HForHugeGhostCells(DetailedTask* dtask) {
 
                     //size the host var to be able to fit all r::oom needed.
                     IntVector host_low, host_high, host_lowOffset, host_highOffset, host_offset, host_size, host_strides;
-                    Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
-
-
-                    Patch::getGhostOffsets(type, comp->gtype, comp->numGhostCells, host_lowOffset, host_highOffset);
-                    patch->computeExtents(basis,
-                        comp->var->getBoundaryLayer(), host_lowOffset,
-                        host_highOffset, host_low, host_high);
+                    //Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+                    //Patch::getGhostOffsets(type, comp->gtype, comp->numGhostCells, host_lowOffset, host_highOffset);
+                    //patch->computeExtents(basis,
+                    //    comp->var->getBoundaryLayer(), host_lowOffset,
+                    //    host_highOffset, host_low, host_high);
+                    level->computeVariableExtents(type, host_low, host_high);
                     int dwIndex = comp->mapDataWarehouse();
                     OnDemandDataWarehouseP dw = dws[dwIndex];
 
@@ -6006,19 +6017,32 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
 
         //Also get the existing host copy
         GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(it->second.label->typeDescription()->createInstance());
+        const Patch * patch = it->second.sourcePatchPointer;
+        TypeDescription::Type type = it->second.label->typeDescription()->getType();
+        IntVector lowIndex, highIndex;
+
+        bool uses_SHRT_MAX = (item.dep->numGhostCells == SHRT_MAX);
+        if (uses_SHRT_MAX) {
+          const Level * level = patch->getLevel();
+          level->computeVariableExtents(type, lowIndex, highIndex);
+        } else {
+          Patch::VariableBasis basis = Patch::translateTypeToBasis(it->second.label->typeDescription()->getType(), false);
+          patch->computeVariableExtents(basis, item.dep->var->getBoundaryLayer(), item.dep->gtype, item.dep->numGhostCells, lowIndex, highIndex);
+        }
+
 
         //Get variable size. Scratch computes means we need to factor that in when computing the size.
-        Patch::VariableBasis basis = Patch::translateTypeToBasis(it->second.label->typeDescription()->getType(), false);
-        IntVector lowIndex, highIndex;
-        IntVector lowOffset, highOffset;
+        //Patch::VariableBasis basis = Patch::translateTypeToBasis(it->second.label->typeDescription()->getType(), false);
+        //IntVector lowIndex, highIndex;
+        //IntVector lowOffset, highOffset;
 
-        Patch::getGhostOffsets(
-            gridVar->virtualGetTypeDescription()->getType(),
-            item.dep->gtype, item.dep->numGhostCells, lowOffset,
-            highOffset);
-        it->second.sourcePatchPointer->computeExtents(basis,
-            item.dep->var->getBoundaryLayer(), lowOffset, highOffset,
-            lowIndex, highIndex);
+        //Patch::getGhostOffsets(
+        //    gridVar->virtualGetTypeDescription()->getType(),
+        //    item.dep->gtype, item.dep->numGhostCells, lowOffset,
+        //    highOffset);
+        //it->second.sourcePatchPointer->computeExtents(basis,
+        //    item.dep->var->getBoundaryLayer(), lowOffset, highOffset,
+        //    lowIndex, highIndex);
 
         //size_t memSize = (highIndex.x() - lowIndex.x())
         //    * (highIndex.y() - lowIndex.y())
