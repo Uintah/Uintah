@@ -266,12 +266,11 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     constCCVariable<double>& enthalpy = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name));
     constCCVariable<double>& temperatureold = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(temperature_name));
 
-    constCCVariable<double>* vdiameter;
+    constCCVariable<double>* vdiameter = nullptr;
     if ( !_const_size ) {
       const std::string diameter_name = get_env_name( ix, _diameter_base_name );
       vdiameter = tsk_info->get_const_uintah_field<constCCVariable<double> >(diameter_name);
     }
-    constCCVariable<double>& diameter = *vdiameter;
 
 
 
@@ -285,7 +284,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                                charmass,
                                                enthalpy,
                                                temperatureold,
-                                               diameter,
+                                               vdiameter,
                                                temperature,
                                                dTdt,
                                                this);
@@ -330,8 +329,8 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         int max_iter=15;
         int iter =0;
 
-        if ( !_const_size ) {
-          dp = diameter[c];
+        if ( vdiameter ) {
+          dp = (*vdiameter)[c];
           massDry = _pi/6.0 * std::pow( dp, 3.0 ) * _rhop_o;
           initAsh = massDry * _ash_mf;
         } else {
