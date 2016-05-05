@@ -24,10 +24,7 @@
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/CommonIFConcDiff.h>
-#include <CCA/Components/MPM/ReactionDiffusion/NullIFConcDiff.h>
-
 #include <CCA/Components/MPM/MPMFlags.h>
-
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -38,8 +35,8 @@ using namespace std;
 using namespace Uintah;
 
 SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
-                                                          SimulationStateP& ss,
-                                                          MPMFlags* flags)
+                                                  SimulationStateP& ss,
+                                                  MPMFlags* flags)
 {
   ProblemSpecP mpm_ps = 
      ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
@@ -69,9 +66,7 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   if (diff_interface_type == "common"){
     return(scinew CommonIFConcDiff(mpm_ps, ss, flags));
   }else if (diff_interface_type == "null"){
-    return(scinew NullIFConcDiff(mpm_ps, ss, flags));
-  }else if (diff_interface_type == "paired"){
-    return(scinew NullIFConcDiff(mpm_ps, ss, flags));
+    return(scinew SDInterfaceModel(mpm_ps, ss, flags));
   }else{
     throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }

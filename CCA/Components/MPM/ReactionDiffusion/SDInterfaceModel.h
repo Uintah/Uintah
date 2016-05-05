@@ -25,17 +25,13 @@
 #ifndef __SDINTERFACEMODEL_H__
 #define __SDINTERFACEMODEL_H__
 
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
+#include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -69,12 +65,6 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
   protected:
-    MPMLabel* d_lb;
-    MPMFlags* d_Mflag;
-    SimulationStateP d_sharedState;
-
-    int NGP, NGN;
-    int numMPMmatls;
 
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);

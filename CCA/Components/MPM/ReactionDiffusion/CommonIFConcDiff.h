@@ -26,11 +26,10 @@
 #define __COMMONIFCONCDIFF_H__
 
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/NullIFConcDiff.h>
 
 namespace Uintah {
 
-  class CommonIFConcDiff : public NullIFConcDiff {
+  class CommonIFConcDiff : public SDInterfaceModel {
   public:
     
     CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
