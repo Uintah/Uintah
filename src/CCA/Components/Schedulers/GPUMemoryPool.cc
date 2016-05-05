@@ -54,10 +54,19 @@ namespace Uintah {
 void*
 GPUMemoryPool::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
 
+  //Right now the memory pool assumes that each time step is going to be using variables of the same size as the previous time step
+  //So for that reason there should be 100% recycling after the 2nd timestep or so.
+  //If a task is constantly using different memory sizes, this pool doesn't deallocate memory yet, so it will fail.
+
   gpuPoolLock->writeLock();
 
   void * addr = NULL;
   bool claimedAnItem = false;
+
+  size_t available, total;
+  cudaError_t err = cudaMemGetInfo(&available, &total);
+  //printf("There is %u bytes available of %u bytes total, %1.1lf\%% used\n", available, total, 100 - (double)available/total * 100.0);
+
 
   gpuMemoryPoolItem gpuItem(device_id, memSize);
 
@@ -92,8 +101,16 @@ GPUMemoryPool::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
   }
   //No open spot in the pool, go ahead and allocate it.
   if (!claimedAnItem) {
+
+    //Set the device
     OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
-    CUDA_RT_SAFE_CALL( cudaMalloc(&addr, memSize) );
+
+    //Allocate the memory.
+    err = cudaMalloc(&addr, memSize);
+    if (err == cudaErrorMemoryAllocation) {
+      printf("The pool is full.  Need to clear!\n");
+    }
+
     if (gpu_stats.active()) {
       cerrLock.lock();
       {
@@ -129,7 +146,7 @@ GPUMemoryPool::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
   }
   bool foundItem = false;
 
-
+  //printf("Freeing %u bytes\n", memSize);
   /*//For debugging, shows everything in the pool
   std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator end;
   for (std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator it = gpuMemoryPool->begin();

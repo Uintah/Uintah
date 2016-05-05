@@ -4,6 +4,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h> //For GpuUtilities
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Grid/Task.h>
 #include <vector>
@@ -37,6 +38,7 @@ public:
       IntVector low,
       IntVector high,
       int xstride,
+      TypeDescription::Type datatype,
       IntVector virtualOffset,
       int sourceDeviceNum,
       int destDeviceNum,
@@ -79,6 +81,7 @@ public:
       IntVector low,
       IntVector high,
       int xstride,
+      TypeDescription::Type datatype,
       IntVector virtualOffset,
       int sourceDeviceNum,
       int destDeviceNum,
@@ -99,6 +102,7 @@ public:
   IntVector low;        //The low coordinate within the variable we're copying
   IntVector high;       //the high coordinate within the region of the variable we're copying
   int xstride;
+  TypeDescription::Type datatype;
   IntVector virtualOffset;
   int sourceDeviceNum;
   int destDeviceNum;

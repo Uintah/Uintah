@@ -134,7 +134,8 @@ namespace WasatchCore{
     PatchTreeTaskMap patchTreeMap_;
 
     /** \brief main execution driver - the callback function exposed to Uintah. */
-    void execute( Uintah::Task::CallBackEvent event,
+    void execute( Uintah::Task* task,
+                  Uintah::Task::CallBackEvent event,
                   const Uintah::ProcessorGroup* const,
                   const Uintah::PatchSubset* const,
                   const Uintah::MaterialSubset* const,
@@ -626,7 +627,8 @@ namespace WasatchCore{
   //------------------------------------------------------------------
 
   void
-  TreeTaskExecute::execute( Uintah::Task::CallBackEvent event,
+  TreeTaskExecute::execute( Uintah::Task* task,
+                            Uintah::Task::CallBackEvent event,
                             const Uintah::ProcessorGroup* const pg,
                             const Uintah::PatchSubset* const patches,
                             const Uintah::MaterialSubset* const materials,

@@ -353,14 +353,14 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
         device_newtaskdw = host_newtaskdw->getdevice_ptr();
       }
 
-      task->doit(event, pg, patches, matls, dws,
+      task->doit(task, event, pg, patches, matls, dws,
                  device_oldtaskdw,
                  device_newtaskdw,
                  getCudaStreamForThisTask(currentDevice), currentDevice);
     }
   }
   else {
-    task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+    task->doit(task, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
   }
 #else
   task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);

@@ -32,6 +32,7 @@
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -198,6 +199,7 @@ public:
 
   IntVector sizeVector;
   size_t sizeOfDataType;
+  TypeDescription::Type type;
   size_t varMemSize;
   IntVector offset;
   int matlIndx;

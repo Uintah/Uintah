@@ -391,9 +391,9 @@ class OnDemandDataWarehouse : public DataWarehouse {
    static int getNumDevices();
    static void uintahSetCudaDevice(int deviceNum);
    static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
-   static GPUGridVariableBase* createGPUGridVariable(size_t sizeOfDataType);
-   static GPUPerPatchBase* createGPUPerPatch(size_t sizeOfDataType);
-   static GPUReductionVariableBase* createGPUReductionVariable(size_t sizeOfDataType);
+   static GPUGridVariableBase* createGPUGridVariable(const TypeDescription::Type& type);
+   static GPUPerPatchBase* createGPUPerPatch(const TypeDescription::Type& type);
+   static GPUReductionVariableBase* createGPUReductionVariable(const TypeDescription::Type& type);
 
 #endif
 

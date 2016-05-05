@@ -430,6 +430,10 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
       return sizeof(double);
       break;
     }
+    case TypeDescription::float_type : {
+          return sizeof(float);
+          break;
+    }
     case TypeDescription::int_type : {
       return sizeof(int);
       break;
@@ -444,69 +448,94 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
   }
 }
 
+
 GPUGridVariableBase*
-OnDemandDataWarehouse::createGPUGridVariable(size_t sizeOfDataType)
+OnDemandDataWarehouse::createGPUGridVariable(const TypeDescription::Type& type)
 {
   //Note: For C++11, these should return a unique_ptr.
   GPUGridVariableBase* device_var = NULL;
-  switch ( sizeOfDataType ) {
-    case sizeof(int) : {
-      device_var = new GPUGridVariable<int>();
-      break;
-    }
-    case sizeof(double) : {
+  switch(type){
+    case TypeDescription::double_type : {
       device_var = new GPUGridVariable<double>();
       break;
     }
-    case sizeof(GPUStencil7) : {
+    case TypeDescription::float_type : {
+      device_var = new GPUGridVariable<float>();
+      break;
+    }
+    case TypeDescription::int_type : {
+      device_var = new GPUGridVariable<int>();
+      break;
+    }
+    case TypeDescription::Stencil7 : {
       device_var = new GPUGridVariable<GPUStencil7>();
       break;
     }
     default : {
-      printf("it's zero?\n");
       SCI_THROW(InternalError("createGPUGridVariable, unsupported GPUGridVariable type: ", __FILE__, __LINE__));
     }
   }
   return device_var;
 }
 
+
 GPUPerPatchBase*
-OnDemandDataWarehouse::createGPUPerPatch(size_t sizeOfDataType)
+OnDemandDataWarehouse::createGPUPerPatch(const TypeDescription::Type& type)
 {
   GPUPerPatchBase* device_var = NULL;
-  switch ( sizeOfDataType ) {
-    case sizeof(int) : {
-      device_var = new GPUPerPatch<int>();
-      break;
-    }
-    case sizeof(double) : {
-      device_var = new GPUPerPatch<double>();
-      break;
-    }
-    default : {
-      SCI_THROW(InternalError("createGPUPerPatch, unsupported GPUPerPatch type: ", __FILE__, __LINE__));
-    }
-  }
+
+  switch(type){
+     case TypeDescription::double_type : {
+       device_var = new GPUPerPatch<double>();
+       break;
+     }
+     case TypeDescription::float_type : {
+       device_var = new GPUPerPatch<float>();
+       break;
+     }
+     case TypeDescription::int_type : {
+       device_var = new GPUPerPatch<int>();
+       break;
+     }
+     case TypeDescription::Stencil7 : {
+       device_var = new GPUPerPatch<GPUStencil7>();
+       break;
+     }
+     default : {
+       SCI_THROW(InternalError("createGPUPerPatch, unsupported GPUPerPatch type: ", __FILE__, __LINE__));
+     }
+   }
+
   return device_var;
 }
 
 GPUReductionVariableBase*
-OnDemandDataWarehouse::createGPUReductionVariable(size_t sizeOfDataType)
+OnDemandDataWarehouse::createGPUReductionVariable(const TypeDescription::Type& type)
 {
   GPUReductionVariableBase* device_var = NULL;
-  switch ( sizeOfDataType ) {
-    case sizeof(int) : {
-      device_var = new GPUReductionVariable<int>();
-      break;
+
+  switch(type){
+    case TypeDescription::double_type : {
+     device_var = new GPUReductionVariable<double>();
+     break;
     }
-    case sizeof(double) : {
-      device_var = new GPUReductionVariable<double>();
-      break;
+    case TypeDescription::float_type : {
+     device_var = new GPUReductionVariable<float>();
+     break;
+    }
+    case TypeDescription::int_type : {
+     device_var = new GPUReductionVariable<int>();
+     break;
+    }
+    case TypeDescription::Stencil7 : {
+     device_var = new GPUReductionVariable<GPUStencil7>();
+     break;
     }
     default : {
-      SCI_THROW(InternalError("createGPUReductionVariable, unsupported GPUReductionVariable type: ", __FILE__, __LINE__));
+     SCI_THROW(InternalError("createGPUReductionVariable, unsupported GPUReductionVariable type: ", __FILE__, __LINE__));
     }
   }
+
   return device_var;
 }
 
