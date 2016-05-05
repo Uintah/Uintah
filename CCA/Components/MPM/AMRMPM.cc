@@ -97,6 +97,7 @@ static DebugStream amr_doing("AMRMPM", false);
 //#define DEBUG_VEL
 //#define DEBUG_ACC
 #undef CBDI_FLUXBCS
+//#define USE_FLUX_RESTRICTION
 
 //__________________________________
 //   TODO:
@@ -1428,7 +1429,9 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pTempPreviousLabel_preReloc);
     t->modifies(lb->pDeformationMeasureLabel_preReloc);
     t->modifies(lb->pRefinedLabel_preReloc);
-    t->modifies(lb->pScaleFactorLabel_preReloc);
+    if(flags->d_computeScaleFactor){
+     t->modifies(lb->pScaleFactorLabel_preReloc);
+    }
     t->modifies(lb->pLastLevelLabel_preReloc);
     t->modifies(lb->pVelGradLabel_preReloc);
     t->modifies(lb->MPMRefineCellLabel, d_one_matl);
@@ -3958,7 +3961,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(pstress,  lb->pStressLabel_preReloc,       pset);
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,       pset);
       new_dw->getModifiable(pvelocity,lb->pVelocityLabel_preReloc,     pset);
-      new_dw->getModifiable(pscalefac,lb->pScaleFactorLabel_preReloc,  pset);
+      if(flags->d_computeScaleFactor){
+        new_dw->getModifiable(pscalefac,lb->pScaleFactorLabel_preReloc,pset);
+      }
       new_dw->getModifiable(pextforce,lb->pExtForceLabel_preReloc,     pset);
       new_dw->getModifiable(ptemp,    lb->pTemperatureLabel_preReloc,  pset);
       new_dw->getModifiable(ptempP,   lb->pTempPreviousLabel_preReloc, pset);
@@ -4129,7 +4134,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(pxtmp,    pset);
       new_dw->allocateTemporary(pvoltmp,  pset);
       new_dw->allocateTemporary(pveltmp,  pset);
-      new_dw->allocateTemporary(pSFtmp,   pset);
+      if(flags->d_computeScaleFactor){
+        new_dw->allocateTemporary(pSFtmp, pset);
+      }
       new_dw->allocateTemporary(pextFtmp, pset);
       new_dw->allocateTemporary(ptemptmp, pset);
       new_dw->allocateTemporary(ptempPtmp,pset);
@@ -4163,7 +4170,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         pxtmp[pp]    = px[pp];
         pvoltmp[pp]  = pvolume[pp];
         pveltmp[pp]  = pvelocity[pp];
-        pSFtmp[pp]   = pscalefac[pp];
         pextFtmp[pp] = pextforce[pp];
         ptemptmp[pp] = ptemp[pp];
         ptempPtmp[pp]= ptempP[pp];
@@ -4171,6 +4177,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         psizetmp[pp] = pSize[pp];
         pdisptmp[pp] = pdisp[pp];
         pstrstmp[pp] = pstress[pp];
+        if(flags->d_computeScaleFactor){
+          pSFtmp[pp]   = pscalefac[pp];
+        }
         if (flags->d_with_color) {
           pcolortmp[pp]= pcolor[pp];
         }
@@ -4305,7 +4314,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
             pLoadCIDtmp[new_idx]  = pLoadCID[idx];
           }
           if(fourOrEight==8){
-            pSFtmp[new_idx]     = 0.5*pscalefac[idx];
+            if(flags->d_computeScaleFactor){
+              pSFtmp[new_idx]     = 0.5*pscalefac[idx];
+            }
             psizetmp[new_idx]   = 0.5*pSize[idx];
           } else if(fourOrEight==4){
            if(pSplitR1R2R3[idx]){
@@ -4330,7 +4341,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
                               dsize(1,0), dsize(1,1), 0.25*dsize(1,2),
                               dsize(2,0), dsize(2,1), 0.25*dsize(2,2));
             }
-            pSFtmp[new_idx]  = dSNew;
+            if(flags->d_computeScaleFactor){
+              pSFtmp[new_idx]  = dSNew;
+            }
             psizetmp[new_idx]= pF[idx].Inverse()*dSNew*Matrix3(1./dx[0],0.,0.,
                                                               0.,1./dx[1],0.,
                                                               0.,0.,1./dx[2]);
@@ -4340,7 +4353,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
               Matrix3 tmp(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
                           0.5*ps(1,0), 0.5*ps(1,1), 0.0,
                           0.0,         0.0,         ps(2,2));
-              pSFtmp[new_idx]     = tmp;
+              if(flags->d_computeScaleFactor){
+               pSFtmp[new_idx]     = tmp;
+              }
               ps = pSize[idx];
               tmp = Matrix3(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
                             0.5*ps(1,0), 0.5*ps(1,1), 0.0,
@@ -4406,7 +4421,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->put(pxtmp,    lb->pXLabel_preReloc,                    true);
       new_dw->put(pvoltmp,  lb->pVolumeLabel_preReloc,               true);
       new_dw->put(pveltmp,  lb->pVelocityLabel_preReloc,             true);
-      new_dw->put(pSFtmp,   lb->pScaleFactorLabel_preReloc,          true);
+      if(flags->d_computeScaleFactor){
+        new_dw->put(pSFtmp,   lb->pScaleFactorLabel_preReloc,          true);
+      }
       new_dw->put(pextFtmp, lb->pExtForceLabel_preReloc,             true);
       new_dw->put(pmasstmp, lb->pMassLabel_preReloc,                 true);
       new_dw->put(ptemptmp, lb->pTemperatureLabel_preReloc,          true);
