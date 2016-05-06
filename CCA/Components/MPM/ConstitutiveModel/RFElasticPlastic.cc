@@ -737,7 +737,6 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
         //cout << "Concentration Rate: " << conc_rate << ", delT: " << delT << endl;
       }
       //********** Concentration Component****************************
-
       // Calculate the deviatoric part of the non-concentration part
       // of the rate of deformation tensor
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
@@ -925,12 +924,12 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
 
       //********** Concentration Component****************************
-			// -- not used currently in model
+      // -- not used currently in model
       // double Dkk = tensorD.Trace();
       // double dTdt_isentropic = d_eos->computeIsentropicTemperatureRate(
       //                                           temperature,rho_0,rho_cur,Dkk);
       // pdTdt[idx] += dTdt_isentropic;
-			//
+      //
       // // Calculate Tdot from viscoelasticity
       // double taylorQuinney = d_initialData.Chi;
       // double fac = taylorQuinney/(rho_cur*state->specificHeat);
@@ -1250,7 +1249,8 @@ RFElasticPlastic::computeDeltaGamma(const double& delT,
            << " sigy = " << sigma_y 
            << " dsigy/depdot = " << dsigy_depdot << " dsigy/dep= " << dsigy_dep 
            << " epdot = " << state->plasticStrainRate 
-           << " ep = " << state->plasticStrain << endl;
+           << " ep = " << state->plasticStrain
+           << " normTrialS = " << normTrialS << endl;
       throw InternalError("nans in computation",__FILE__,__LINE__);
     }
 
