@@ -2040,7 +2040,7 @@ GPUDataWarehouse::clear()
                           stagingIter->first.device_size.y *
                           stagingIter->first.device_size.z *
                           varIter->second.sizeOfDataType;
-        if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, memSize, stagingIter->second.device_ptr) ) {
+        if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, stagingIter->second.device_ptr) ) {
           stagingIter->second.device_ptr == NULL;
         } else {
           //No open spot in the pool, go ahead and allocate it.
@@ -2076,7 +2076,7 @@ GPUDataWarehouse::clear()
                     varIter->second.device_size.y *
                     varIter->second.device_size.z;
         }
-        if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, memSize, varIter->second.device_ptr)) {
+        if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, varIter->second.device_ptr)) {
           varIter->second.device_ptr == NULL;
         } else {
           printf("ERROR:\nGPUDataWarehouse::clear(), for a non-staging variable, couldn't find in the GPU memory pool the space starting at address %p\n", varIter->second.device_ptr);
@@ -2138,7 +2138,7 @@ GPUDataWarehouse::deleteSelfOnDevice()
     }
 
     //cudaHostUnregister(this);
-    GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, objectSizeInBytes, d_device_copy);
+    GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, d_device_copy);
     //CUDA_RT_SAFE_CALL(cudaFree( d_device_copy ));
 
   }

@@ -38,42 +38,70 @@ class GPUMemoryPool {
 
 public:
 
-  struct gpuMemoryData {
-    int            status;  //0 for available, 1 for in use.
-    unsigned int   timestep;
-    void*          ptr;
+  struct gpuMemoryPoolDevicePtrValue {
+    unsigned int timestep;
+    size_t       size;
+  };
+  struct gpuMemoryPoolDevicePtrItem {
+
+    unsigned int  device_id;
+    void*         ptr;
+
+
+    gpuMemoryPoolDevicePtrItem(unsigned int device_id, void* ptr) {
+      this->device_id = device_id;
+      this->ptr = ptr;
+    }
+
+    //This so it can be used in an STL map
+    bool operator<(const gpuMemoryPoolDevicePtrItem& right) const {
+      if (this->device_id < right.device_id) {
+        return true;
+      } else if ((this->device_id == right.device_id) && (this->ptr < right.ptr)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   };
 
-  struct gpuMemoryPoolItem {
+  struct gpuMemoryPoolDeviceSizeValue {
+    void * ptr;
+  };
 
-   unsigned int  device_id;
-   size_t        deviceSize;
+  struct gpuMemoryPoolDeviceSizeItem {
 
-   gpuMemoryPoolItem(unsigned int device_id, size_t deviceSize) {
+    unsigned int  device_id;
+    size_t        deviceSize;
+
+    gpuMemoryPoolDeviceSizeItem(unsigned int device_id, size_t deviceSize) {
      this->device_id = device_id;
      this->deviceSize = deviceSize;
-   }
-   //This so it can be used in an STL map
-   bool operator<(const gpuMemoryPoolItem& right) const {
-     if (this->device_id < right.device_id) {
-       return true;
-     } else if ((this->device_id == right.device_id) && (this->deviceSize < right.deviceSize)) {
-       return true;
-     } else {
-       return false;
-     }
-   }
- };
+    }
+    //This so it can be used in an STL map
+    bool operator<(const gpuMemoryPoolDeviceSizeItem& right) const {
+      if (this->device_id < right.device_id) {
+        return true;
+      } else if ((this->device_id == right.device_id) && (this->deviceSize < right.deviceSize)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  };
 
-  static void* allocateCudaSpaceFromPool(int device_id, size_t memSize);
+  static void* allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize);
 
-  static bool freeCudaSpaceFromPool(int device_id, size_t memSize, void* addr);
+  static bool freeCudaSpaceFromPool(unsigned int device_id, void* addr);
 
 private:
 
   static Uintah::CrowdMonitor *gpuPoolLock;
 
-  static std::multimap<gpuMemoryPoolItem, gpuMemoryData> *gpuMemoryPool;
+  //For a given device and address, holds the timestep
+  static std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue> *gpuMemoryPoolInUse;
+
+  static std::multimap<gpuMemoryPoolDeviceSizeItem, gpuMemoryPoolDeviceSizeValue> *gpuMemoryPoolUnused;
 
 };
 

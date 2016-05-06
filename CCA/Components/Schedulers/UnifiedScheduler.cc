@@ -1125,6 +1125,8 @@ UnifiedScheduler::runTasks( int thread_id )
         //The Task GPU Datawarehouses are no longer needed.  Delete them on the host and device.
         readyTask->deleteTaskGpuDataWarehouses();
 
+        readyTask->deleteTemporaryTaskVars();
+
         // Run post GPU part of task.  It won't actually rerun the task
         // But it will run post computation management logic, which includes
         // marking the task as done.

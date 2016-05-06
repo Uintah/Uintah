@@ -45,7 +45,8 @@ namespace Uintah {
 class Level;
 class DataWarehouse;
 class ProcessorGroup;
-
+class Task;
+class DetailedTask;
 /**************************************
 
  CLASS
@@ -90,7 +91,7 @@ class Task {
     class ActionBase {
       public:
         virtual ~ActionBase();
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask *task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -132,7 +133,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -178,7 +179,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -228,7 +229,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -282,7 +283,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -340,7 +341,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -402,7 +403,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -425,7 +426,7 @@ class Task {
     template<class T>
     class ActionDevice : public ActionBase {
         T* ptr;
-        void (T::*pmf)(Task *task,
+        void (T::*pmf)(DetailedTask* task,
                        CallBackEvent event,
                        const ProcessorGroup* pg,
                        const PatchSubset* patches,
@@ -439,7 +440,7 @@ class Task {
       public:
         // class ActionDevice
         ActionDevice( T * ptr,
-                      void (T::*pmf)(Task *task,
+                      void (T::*pmf)(DetailedTask* task,
                                      CallBackEvent event,
                                      const ProcessorGroup* pg,
                                      const PatchSubset* patches,
@@ -459,7 +460,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -478,7 +479,7 @@ class Task {
     template<class T, class Arg1>
     class ActionDevice1 : public ActionBase {
         T* ptr;
-        void (T::*pmf)(Task *task,
+        void (T::*pmf)(DetailedTask* task,
                         CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -494,7 +495,7 @@ class Task {
       public:
         // class ActionDevice1
         ActionDevice1(T* ptr,
-                      void (T::*pmf)(Task *task,
+                      void (T::*pmf)(DetailedTask* task,
                                      CallBackEvent event,
                                      const ProcessorGroup* pg,
                                      const PatchSubset* patches,
@@ -516,7 +517,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -535,7 +536,7 @@ class Task {
     template<class T, class Arg1, class Arg2>
     class ActionDevice2 : public ActionBase {
         T* ptr;
-        void (T::*pmf)(Task *task,
+        void (T::*pmf)(DetailedTask* task,
                        CallBackEvent event,
                        const ProcessorGroup* pg,
                        const PatchSubset* patches,
@@ -553,7 +554,7 @@ class Task {
       public:
         // class ActionDevice2
         ActionDevice2(T* ptr,
-                      void (T::*pmf)(Task *task,
+                      void (T::*pmf)(DetailedTask* task,
                                      CallBackEvent event,
                                      const ProcessorGroup* pg,
                                      const PatchSubset* patches,
@@ -577,7 +578,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -596,7 +597,7 @@ class Task {
     template<class T, class Arg1, class Arg2, class Arg3>
     class ActionDevice3 : public ActionBase {
         T* ptr;
-        void (T::*pmf)(Task *task,
+        void (T::*pmf)(DetailedTask* task,
                        CallBackEvent event,
                        const ProcessorGroup* pg,
                        const PatchSubset* patches,
@@ -617,7 +618,7 @@ class Task {
       public:
         // class ActionDevice3
         ActionDevice3(T* ptr,
-                      void (T::*pmf)(Task *task,
+                      void (T::*pmf)(DetailedTask* task,
                                      CallBackEvent event,
                                      const ProcessorGroup* pg,
                                      const PatchSubset* patches,
@@ -662,7 +663,7 @@ class Task {
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
     class ActionDevice4 : public ActionBase {
         T* ptr;
-        void (T::*pmf)(Task *task,
+        void (T::*pmf)(DetailedTask* task,
                        CallBackEvent event,
                        const ProcessorGroup* pg,
                        const PatchSubset* patches,
@@ -684,7 +685,7 @@ class Task {
       public:
         // class ActionDevice4
         ActionDevice4(T* ptr,
-                      void (T::*pmf)(Task *task,
+                      void (T::*pmf)(DetailedTask* task,
                                      CallBackEvent event,
                                      const ProcessorGroup* pg,
                                      const PatchSubset* patches,
@@ -712,7 +713,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task *task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -731,7 +732,7 @@ class Task {
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
     class ActionDevice5 : public ActionBase {
         T* ptr;
-        void (T::*pmf)(Task *task,
+        void (T::*pmf)(DetailedTask* task,
                        CallBackEvent event,
                        const ProcessorGroup* pg,
                        const PatchSubset* patches,
@@ -755,7 +756,7 @@ class Task {
       public:
         // class ActionDevice5
         ActionDevice5( T* ptr,
-                       void (T::*pmf)(Task *task,
+                       void (T::*pmf)(DetailedTask* task,
                                       CallBackEvent event,
                                       const ProcessorGroup* pg,
                                       const PatchSubset* patches,
@@ -785,7 +786,7 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(Task* task,
+        virtual void doit(DetailedTask* task,
                           CallBackEvent event,
                           const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -969,7 +970,7 @@ class Task {
     Task(
          const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(Task *task,
+         void (T::*pmf)(DetailedTask* task,
                         CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -992,7 +993,7 @@ class Task {
     Task(
          const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(Task *task,
+         void (T::*pmf)(DetailedTask* task,
                         CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -1016,7 +1017,7 @@ class Task {
     template<class T, class Arg1, class Arg2>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(Task *task,
+         void (T::*pmf)(DetailedTask* task,
                         CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -1042,7 +1043,7 @@ class Task {
     template<class T, class Arg1, class Arg2, class Arg3>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(Task *task,
+         void (T::*pmf)(DetailedTask* task,
                         CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -1070,7 +1071,7 @@ class Task {
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(Task *task,
+         void (T::*pmf)(DetailedTask* task,
                         CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -1100,7 +1101,7 @@ class Task {
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(Task *task,
+         void (T::*pmf)(DetailedTask* task,
                         CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -1384,7 +1385,7 @@ class Task {
     //////////
     // Tells the task to actually execute the function assigned to it.
     //
-    virtual void doit(Task *task,
+    virtual void doit(DetailedTask *task,
                       CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset*,

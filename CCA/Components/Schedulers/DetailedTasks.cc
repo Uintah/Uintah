@@ -28,6 +28,9 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
+#ifdef HAVE_CUDA
+#include <CCA/Components/Schedulers/GPUMemoryPool.h>
+#endif
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Parallel/Parallel.h>
@@ -352,18 +355,17 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
       if (host_newtaskdw) {
         device_newtaskdw = host_newtaskdw->getdevice_ptr();
       }
-
-      task->doit(task, event, pg, patches, matls, dws,
+      task->doit(this, event, pg, patches, matls, dws,
                  device_oldtaskdw,
                  device_newtaskdw,
                  getCudaStreamForThisTask(currentDevice), currentDevice);
     }
   }
   else {
-    task->doit(task, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+    task->doit(this, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
   }
 #else
-  task->doit(NULL, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+  task->doit(this, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
@@ -1746,7 +1748,6 @@ void DetailedTask::deleteTaskGpuDataWarehouses() {
   }
 }
 
-
 void DetailedTask::clearPreparationCollections(){
 
   deviceVars.clear();
@@ -1755,6 +1756,24 @@ void DetailedTask::clearPreparationCollections(){
   varsToBeGhostReady.clear();
   varsBeingCopiedByTask.clear();
 }
+
+void DetailedTask::clearTempCudaMemory() {
+
+}
+
+void DetailedTask::addTempCudaMemoryToBeFreedOnCompletion(unsigned int device_id, void *ptr) {
+
+  gpuMemoryPoolDevicePtrItem gpuItem(device_id, ptr);
+  taskCudaMemoryPoolItems.push_back(gpuItem);
+}
+
+void DetailedTask::deleteTemporaryTaskVars() {
+  for (auto p : taskCudaMemoryPoolItems) {
+    GPUMemoryPool::freeCudaSpaceFromPool(p.device_id, p.ptr);
+  }
+  taskCudaMemoryPoolItems.clear();
+}
+
 #endif // HAVE_CUDA
 
 //_____________________________________________________________________________

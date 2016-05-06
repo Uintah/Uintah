@@ -39,6 +39,7 @@
 //-- Uintah includes --//
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -134,7 +135,7 @@ namespace WasatchCore{
     PatchTreeTaskMap patchTreeMap_;
 
     /** \brief main execution driver - the callback function exposed to Uintah. */
-    void execute( Uintah::Task* task,
+    void execute( Uintah::DetailedTask* dtask,
                   Uintah::Task::CallBackEvent event,
                   const Uintah::ProcessorGroup* const,
                   const Uintah::PatchSubset* const,
@@ -627,7 +628,7 @@ namespace WasatchCore{
   //------------------------------------------------------------------
 
   void
-  TreeTaskExecute::execute( Uintah::Task* task,
+  TreeTaskExecute::execute( Uintah::DetailedTask* dtask,
                             Uintah::Task::CallBackEvent event,
                             const Uintah::ProcessorGroup* const pg,
                             const Uintah::PatchSubset* const patches,

@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #include <Core/Geometry/GPUVector.h>
+#include <Core/Grid/Task.h>
 
 #include <sci_defs/cuda_defs.h>
 #include <curand.h>
@@ -699,7 +700,8 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
 //______________________________________________________________________
 //
 template< class T >
-__host__ void launchRayTraceKernel( dim3 dimGrid,
+__host__ void launchRayTraceKernel( DetailedTask* dtask,
+                                    dim3 dimGrid,
                                     dim3 dimBlock,
                                     const int matlIndex,
                                     levelParams level,
@@ -733,7 +735,8 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 //______________________________________________________________________
 //
 template< class T >
-__host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
+__host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
+                                             dim3 dimGrid,
                                              dim3 dimBlock,
                                              int matlIndex,
                                              patchParams patchP,

@@ -182,7 +182,7 @@ void UnifiedSchedulerTest::initialize(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerTest::timeAdvanceUnified(Task* task,
+void UnifiedSchedulerTest::timeAdvanceUnified(DetailedTask* task,
                                               Task::CallBackEvent event,
                                               const ProcessorGroup* pg,
                                               const PatchSubset* patches,

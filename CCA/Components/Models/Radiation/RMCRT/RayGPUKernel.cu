@@ -25,6 +25,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUStencil7.h>
@@ -1453,12 +1454,12 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
         for (int k = Lo.z; k < Hi.z; k++) {
           GPUIntVector idx = make_int3(i, j, k);
           T me = Q[idx];
-          if ( isnan(me) || isinf(me)){
-            printf ( "isNan or isInf was detected at [%i,%i,%i]\n", i,j,k);
-            printf(" Now existing...");
-            __threadfence();
-            asm("trap;");
-          }
+          //if ( isnan(me) || isinf(me)){
+          //  printf ( "isNan or isInf was detected at [%i,%i,%i]\n", i,j,k);
+          //  printf(" Now existing...");
+          //  __threadfence();
+          //  asm("trap;");
+          //}
 
         }  // k loop
       }  // j loop
@@ -1477,7 +1478,8 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<double>& Q,
 //______________________________________________________________________
 //
 template< class T>
-__host__ void launchRayTraceKernel(dim3 dimGrid,
+__host__ void launchRayTraceKernel(DetailedTask* dtask,
+                                   dim3 dimGrid,
                                    dim3 dimBlock,
                                    const int matlIndx,
                                    levelParams level,
@@ -1496,7 +1498,7 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
   //CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
-
+  dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
 
   setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
 
@@ -1515,16 +1517,17 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                                             new_gdw);
     //TODO: Remove when these extra fields can be managed by the task (because it's asynchronous, you need to wait
     //until the task is completed before reclaiming the data.  That should happen in the task completion phase of the scheduler queue.
-    CUDA_RT_SAFE_CALL( cudaDeviceSynchronize() );
+    //CUDA_RT_SAFE_CALL( cudaDeviceSynchronize() );
     // free device-side RNG states
-    GPUMemoryPool::freeCudaSpaceFromPool(0,numStates * sizeof(curandState), (void*)randNumStates);
+    //GPUMemoryPool::freeCudaSpaceFromPool(0, (void*)randNumStates);
     //CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
 }
 
 //______________________________________________________________________
 //
 template< class T>
-__host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
+__host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
+                                             dim3 dimGrid,
                                              dim3 dimBlock,
                                              int matlIndex,
                                              patchParams patch,
@@ -1548,6 +1551,10 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
   size_t size = d_MAXLEVELS *  sizeof(int3);
   dev_regionLo = (int3*)GPUMemoryPool::allocateCudaSpaceFromPool(0, size);
   dev_regionHi = (int3*)GPUMemoryPool::allocateCudaSpaceFromPool(0, size);
+
+  dtask->clearTempCudaMemory();
+  dtask->addTempCudaMemoryToBeFreedOnCompletion(0, dev_regionLo);
+  dtask->addTempCudaMemoryToBeFreedOnCompletion(0, dev_regionHi);
 
   //CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionLo, size) );
   //CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionHi, size) );
@@ -1573,6 +1580,7 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
   curandState* randNumStates;
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
+  dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
   //CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, (numStates * sizeof(curandState))) );
 
   setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
@@ -1601,10 +1609,10 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
 
   //TODO: Remove when these extra fields can be managed by the task (because it's asynchronous, you need to wait
   //until the task is completed before reclaiming the data.  That should happen in the task completion phase of the scheduler queue.
-  CUDA_RT_SAFE_CALL( cudaDeviceSynchronize() );
-  GPUMemoryPool::freeCudaSpaceFromPool(0,numStates * sizeof(curandState), (void*)randNumStates);
-  GPUMemoryPool::freeCudaSpaceFromPool(0, size, (int3*)dev_regionLo);
-  GPUMemoryPool::freeCudaSpaceFromPool(0, size, (int3*)dev_regionHi);
+  //CUDA_RT_SAFE_CALL( cudaDeviceSynchronize() );
+  //GPUMemoryPool::freeCudaSpaceFromPool(0,numStates * sizeof(curandState), (void*)randNumStates);
+  //GPUMemoryPool::freeCudaSpaceFromPool(0, size, (int3*)dev_regionLo);
+  //GPUMemoryPool::freeCudaSpaceFromPool(0, size, (int3*)dev_regionHi);
 
 
 }
@@ -1613,7 +1621,8 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
 //  Explicit template instantiations
 
 template
-__host__ void launchRayTraceKernel<double>( dim3 dimGrid,
+__host__ void launchRayTraceKernel<double>( DetailedTask* dtask,
+                                            dim3 dimGrid,
                                             dim3 dimBlock,
                                             const int matlIndx,
                                             levelParams level,
@@ -1630,7 +1639,8 @@ __host__ void launchRayTraceKernel<double>( dim3 dimGrid,
 //______________________________________________________________________
 //
 template
-__host__ void launchRayTraceKernel<float>( dim3 dimGrid,
+__host__ void launchRayTraceKernel<float>( DetailedTask* dtask,
+                                           dim3 dimGrid,
                                            dim3 dimBlock,
                                            const int matlIndx,
                                            levelParams level,
@@ -1647,7 +1657,8 @@ __host__ void launchRayTraceKernel<float>( dim3 dimGrid,
 //______________________________________________________________________
 //
 template
-__host__ void launchRayTraceDataOnionKernel<double>( dim3 dimGrid,
+__host__ void launchRayTraceDataOnionKernel<double>( DetailedTask* dtask,
+                                                     dim3 dimGrid,
                                                      dim3 dimBlock,
                                                      int matlIndex,
                                                      patchParams patch,
@@ -1666,7 +1677,8 @@ __host__ void launchRayTraceDataOnionKernel<double>( dim3 dimGrid,
 //______________________________________________________________________
 //
 template
-__host__ void launchRayTraceDataOnionKernel<float>( dim3 dimGrid,
+__host__ void launchRayTraceDataOnionKernel<float>( DetailedTask* dtask,
+                                                    dim3 dimGrid,
                                                     dim3 dimBlock,
                                                     int matlIndex,
                                                     patchParams patch,

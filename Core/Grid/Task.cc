@@ -32,6 +32,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/StringUtil.h>
+//#include <CCA/Components/Schedulers/DetailedTasks.h>
 
 #include <set>
 
@@ -911,7 +912,7 @@ getOtherLevelPatchSubset(Task::PatchDomainSpec dom,
 
 //__________________________________
 void
-Task::doit(Task *task,
+Task::doit(DetailedTask *task,
            CallBackEvent event,
            const ProcessorGroup* pg,
            const PatchSubset* patches,
@@ -926,7 +927,7 @@ Task::doit(Task *task,
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
 
   if (d_action) {
-    d_action->doit(this, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
+    d_action->doit(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
   }
 }
 
