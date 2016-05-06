@@ -38,7 +38,16 @@
 using Uintah::CrowdMonitor;
 //using std::endl;
 
-std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolItem, Uintah::GPUMemoryPool::gpuMemoryData>* Uintah::GPUMemoryPool::gpuMemoryPool = new std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolItem, Uintah::GPUMemoryPool::gpuMemoryData>;
+//static std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue> *gpuMemoryPoolInUse;
+
+//static std::multimap<gpuMemoryPoolDeviceSizeItem, gpuMemoryPoolDeviceSizeValue> *gpuMemoryPoolUnused;
+
+
+std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrItem, Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue>* Uintah::GPUMemoryPool::gpuMemoryPoolInUse =
+    new std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrItem, Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue>;
+
+std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem, Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>* Uintah::GPUMemoryPool::gpuMemoryPoolUnused =
+    new std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem, Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>;
 
 CrowdMonitor * Uintah::GPUMemoryPool::gpuPoolLock = new CrowdMonitor("gpu pool lock");
 
@@ -52,7 +61,7 @@ namespace Uintah {
 //______________________________________________________________________
 //
 void*
-GPUMemoryPool::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
+GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize) {
 
   //Right now the memory pool assumes that each time step is going to be using variables of the same size as the previous time step
   //So for that reason there should be 100% recycling after the 2nd timestep or so.
@@ -62,46 +71,38 @@ GPUMemoryPool::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
 
   void * addr = NULL;
   bool claimedAnItem = false;
-
-  size_t available, total;
-  cudaError_t err = cudaMemGetInfo(&available, &total);
+  cudaError_t err;
+  //size_t available, total;
+  //err = cudaMemGetInfo(&available, &total);
   //printf("There is %u bytes available of %u bytes total, %1.1lf\%% used\n", available, total, 100 - (double)available/total * 100.0);
 
+  gpuMemoryPoolDeviceSizeItem item(device_id, memSize);
 
-  gpuMemoryPoolItem gpuItem(device_id, memSize);
+  std::multimap<gpuMemoryPoolDeviceSizeItem,gpuMemoryPoolDeviceSizeValue>::iterator ret = gpuMemoryPoolUnused->find(item);
 
-  std::pair <std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator,
-             std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator> ret;
-
-  ret = gpuMemoryPool->equal_range(gpuItem);
-  std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator gpuPoolIter = ret.first;
-  while (!claimedAnItem && gpuPoolIter != ret.second) {
-    if (gpuPoolIter->second.status == 0) {
-      //claim this one
-      addr = gpuPoolIter->second.ptr;
-      gpuPoolIter->second.status = 1;
-      claimedAnItem = true;
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << UnifiedScheduler::myRankThread()
-              << " GPUMemoryPool::allocateCudaSpaceFromPool() -"
-              << " reusing space starting at " << gpuPoolIter->second.ptr
-              << " on device " << device_id
-              << " with size " << memSize
-              << " from the GPU memory pool"
-              << endl;
-        }
-        cerrLock.unlock();
-      }
-
-    } else {
-      ++gpuPoolIter;
+  if (ret != gpuMemoryPoolUnused->end()){
+    //we found one
+    addr = ret->second.ptr;
+    if (gpu_stats.active()) {
+    cerrLock.lock();
+    {
+      gpu_stats << UnifiedScheduler::myRankThread()
+          << " GPUMemoryPool::allocateCudaSpaceFromPool() -"
+          << " reusing space starting at " << addr
+          << " on device " << device_id
+          << " with size " << memSize
+          << " from the GPU memory pool"
+          << endl;
     }
-  }
-  //No open spot in the pool, go ahead and allocate it.
-  if (!claimedAnItem) {
-
+    cerrLock.unlock();
+    }
+    gpuMemoryPoolDevicePtrValue insertValue;
+    insertValue.timestep = 99999;
+    insertValue.size = memSize;
+    gpuMemoryPoolInUse->insert(std::pair<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue>(gpuMemoryPoolDevicePtrItem(device_id,addr), insertValue));
+    gpuMemoryPoolUnused->erase(ret);
+  } else {
+    //There wasn't one
     //Set the device
     OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
@@ -123,11 +124,10 @@ GPUMemoryPool::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
       }
       cerrLock.unlock();
     }
-    gpuMemoryData gmd;
-    gmd.status = 1;
-    gmd.timestep = 99999999; //Fix me
-    gmd.ptr = addr;
-    gpuPoolIter = gpuMemoryPool->insert(std::pair<gpuMemoryPoolItem, gpuMemoryData>(gpuItem,gmd));
+    gpuMemoryPoolDevicePtrValue insertValue;
+    insertValue.timestep = 99999;
+    insertValue.size = memSize;
+    gpuMemoryPoolInUse->insert(std::pair<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue>(gpuMemoryPoolDevicePtrItem(device_id,addr), insertValue));
   }
   gpuPoolLock->writeUnlock();
   return addr;
@@ -137,16 +137,11 @@ GPUMemoryPool::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
 
 //______________________________________________________________________
 //
- bool GPUMemoryPool::freeCudaSpaceFromPool(int device_id, size_t memSize, void* addr){
+ bool GPUMemoryPool::freeCudaSpaceFromPool(unsigned int device_id, void* addr){
   gpuPoolLock->writeLock();
-  if (memSize == 0) {
-    printf("ERROR:\nGPUMemoryPool::freeCudaSpaceFromPool(), requesting to free from pool memory of size zero at address %p\n", addr);
-    gpuPoolLock->writeUnlock();
-    return false;
-  }
-  bool foundItem = false;
+  size_t memSize;
 
-  //printf("Freeing %u bytes\n", memSize);
+  //printf("Freeing data on device %u starting at %p\n", device_id, addr);
   /*//For debugging, shows everything in the pool
   std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator end;
   for (std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator it = gpuMemoryPool->begin();
@@ -161,41 +156,43 @@ GPUMemoryPool::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
   }
   gpu_stats << endl;
   */
-  gpuMemoryPoolItem gpuItem(device_id, memSize);
+  gpuMemoryPoolDevicePtrItem item(device_id, addr);
+  //gpuMemoryPoolItem gpuItem(device_id, memSize);
 
-  std::pair <std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator,
-             std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator> ret;
+  std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue>::iterator ret = gpuMemoryPoolInUse->find(item);
 
-  ret = gpuMemoryPool->equal_range(gpuItem);
-  std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator gpuPoolIter = ret.first;
+  if (ret != gpuMemoryPoolInUse->end()){
+    //We found it
+    memSize = ret->second.size;
 
-  while (!foundItem && gpuPoolIter != ret.second) {
-    if (gpuPoolIter->second.ptr == addr) {
-      //Found it.
-      //Mark it as reusable
-      gpuPoolIter->second.status = 0;
-      foundItem = true;
-
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << UnifiedScheduler::myRankThread()
-              << " GPUMemoryPool::freeCudaSpaceFromPool() -"
-              << " space starting at " << addr
-              << " on device " << device_id
-              << " with size " << memSize
-              << " marked for reuse in the GPU memory pool"
-              << endl;
-        }
-        cerrLock.unlock();
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " GPUMemoryPool::freeCudaSpaceFromPool() -"
+            << " space starting at " << addr
+            << " on device " << device_id
+            << " with size " << memSize
+            << " marked for reuse in the GPU memory pool"
+            << endl;
       }
-
-    } else {
-      ++gpuPoolIter;
+      cerrLock.unlock();
     }
+    gpuMemoryPoolDeviceSizeItem insertItem(device_id, memSize);
+    gpuMemoryPoolDeviceSizeValue insertValue;
+    insertValue.ptr = addr;
+
+    gpuMemoryPoolUnused->insert(std::pair<gpuMemoryPoolDeviceSizeItem, gpuMemoryPoolDeviceSizeValue>(insertItem, insertValue));
+    gpuMemoryPoolInUse->erase(ret);
+
+  } else {
+    printf("ERROR: GPUMemoryPool::freeCudaSpaceFromPool - No memory found at pointer %p on device %u\n", addr, device_id);
+    return false;
   }
   gpuPoolLock->writeUnlock();
-  return foundItem;
+  return true;
+
+
   //TODO: Actually deallocate!!!
 }
 

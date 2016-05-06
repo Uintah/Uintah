@@ -226,7 +226,7 @@ namespace Uintah{
 
       //__________________________________
       template<class T>
-      void rayTraceGPU( Task* task,
+      void rayTraceGPU( DetailedTask* dtask,
                         Task::CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -258,7 +258,7 @@ namespace Uintah{
 
       //__________________________________
       template<class T>
-      void rayTraceDataOnionGPU( Task* task,
+      void rayTraceDataOnionGPU( DetailedTask* dtask,
                                  Task::CallBackEvent event,
                                  const ProcessorGroup* pg,
                                  const PatchSubset* patches,

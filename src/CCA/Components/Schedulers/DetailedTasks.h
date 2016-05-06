@@ -352,6 +352,11 @@ namespace Uintah {
     DeviceGridVariables& getVarsBeingCopiedByTask() { return varsBeingCopiedByTask; }
     void clearPreparationCollections();
 
+    void clearTempCudaMemory();
+
+    void addTempCudaMemoryToBeFreedOnCompletion(unsigned int device_ptr, void *ptr);
+
+    void deleteTemporaryTaskVars();
 
 #endif
 
@@ -430,6 +435,31 @@ namespace Uintah {
                                             //two or more destination patches.  We only want to copy ghost cells once.
 
     DeviceGridVariables varsBeingCopiedByTask;  //Holds a list of the vars that this task is actually copying into the GPU.
+
+    struct gpuMemoryPoolDevicePtrItem {
+
+      unsigned int  device_id;
+      void*         ptr;
+
+
+      gpuMemoryPoolDevicePtrItem(unsigned int device_id, void* ptr) {
+        this->device_id = device_id;
+        this->ptr = ptr;
+      }
+
+      //This so it can be used in an STL map
+      bool operator<(const gpuMemoryPoolDevicePtrItem& right) const {
+        if (this->device_id < right.device_id) {
+          return true;
+        } else if ((this->device_id == right.device_id) && (this->ptr < right.ptr)) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    };
+
+    std::vector<gpuMemoryPoolDevicePtrItem> taskCudaMemoryPoolItems;
 #endif
 
 

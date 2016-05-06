@@ -26,6 +26,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #ifdef HAVE_CUDA
   #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #endif
@@ -42,7 +43,7 @@ static DebugStream dbggpu("RAYGPU", false);
 // Method: The GPU ray tracer - setup for ray trace kernel
 //---------------------------------------------------------------------------
 template<class T>
-void Ray::rayTraceGPU(Task* task,
+void Ray::rayTraceGPU(DetailedTask* dtask,
                       Task::CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
@@ -211,7 +212,8 @@ void Ray::rayTraceGPU(Task* task,
 
       //__________________________________
       // set up and launch kernel
-      launchRayTraceKernel<T>(dimGrid,
+      launchRayTraceKernel<T>(dtask,
+                              dimGrid,
                               dimBlock,
                               d_matl,
                               levelP,
@@ -245,7 +247,7 @@ void Ray::rayTraceGPU(Task* task,
 // Method: The GPU data onion ray tracer - setup for ray trace data onion kernel
 //---------------------------------------------------------------------------
 template<class T>
-void Ray::rayTraceDataOnionGPU( Task* task,
+void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                Task::CallBackEvent event,
                                const ProcessorGroup* pg,
                                const PatchSubset* finePatches,
@@ -444,7 +446,8 @@ void Ray::rayTraceDataOnionGPU( Task* task,
 
       //__________________________________
       // set up and launch kernel
-      launchRayTraceDataOnionKernel<T>(dimGrid,
+      launchRayTraceDataOnionKernel<T>(dtask,
+                                       dimGrid,
                                        dimBlock,
                                        d_matl,
                                        patchP,
@@ -483,7 +486,7 @@ void Ray::rayTraceDataOnionGPU( Task* task,
 //______________________________________________________________________
 //  Explicit template instantiations
 template
-void Ray::rayTraceGPU< float > ( Task* task,
+void Ray::rayTraceGPU< float > ( DetailedTask* dtask,
                                  Task::CallBackEvent,
                                  const ProcessorGroup*,
                                  const PatchSubset*,
@@ -501,7 +504,7 @@ void Ray::rayTraceGPU< float > ( Task* task,
                                  const int );
 
 template
-void Ray::rayTraceGPU< double > ( Task* task,
+void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
                                   Task::CallBackEvent,
                                   const ProcessorGroup*,
                                   const PatchSubset*,
@@ -519,7 +522,7 @@ void Ray::rayTraceGPU< double > ( Task* task,
                                   const int );
 
 template
-void Ray::rayTraceDataOnionGPU< float > ( Task* task,
+void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
                                           Task::CallBackEvent,
                                           const ProcessorGroup*,
                                           const PatchSubset*,
@@ -537,7 +540,7 @@ void Ray::rayTraceDataOnionGPU< float > ( Task* task,
                                           const int );
 
 template
-void Ray::rayTraceDataOnionGPU< double > ( Task* task,
+void Ray::rayTraceDataOnionGPU< double > ( DetailedTask* dtask,
                                            Task::CallBackEvent,
                                            const ProcessorGroup*,
                                            const PatchSubset*,
