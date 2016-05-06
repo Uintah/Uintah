@@ -65,5 +65,7 @@ void SDInterfaceModel::sdInterfaceDivergence(const ProcessorGroup*,
 
 void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps)
 {
-  // To be filled out in interface model
+  ProblemSpecP sdim_ps = ps;
+  sdim_ps = ps->appendChild("diffusion_interface");
+  sdim_ps->appendElement("type","null");
 }
