@@ -1803,10 +1803,10 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
                                              int               numGhostCells )
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateAndPut(Grid Variable):" + label->getName());
-  if (d_finalized) {
-    std::cerr << "OnDemandDataWarehouse::allocateAndPut - When trying to allocate " << label->getName() << std::endl; 
-    std::cerr << "  DW " << getID() << " finalized!\n";
-  }
+//  if (d_finalized) {
+//    std::cerr << "OnDemandDataWarehouse::allocateAndPut - When trying to allocate " << label->getName() << std::endl;
+//    std::cerr << "  DW " << getID() << " finalized!\n";
+//  }
   ASSERT(!d_finalized);
 
   // Note: almost the entire function is write locked in order to prevent dual
