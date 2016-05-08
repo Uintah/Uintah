@@ -29,6 +29,14 @@ if test $? == 0; then
   echo ""
   make clean
   make -j4
+
+  if test $? != 0; then
+    echo ""
+    echo "SpatialOps make failed...  Goodbye."
+    echo ""
+    exit -1
+  fi
+
   make install
 
   echo ""
