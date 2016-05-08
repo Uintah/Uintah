@@ -14,6 +14,7 @@ SRCDIR   := CCA/Components/Arches/Utility
 # will be added automatically as needed.
 #
 CUDA_ENABLED_SRCS =                      \
+          BoundaryInfo                   \
           GridInfo                       \
           InitializeFactory              \
           InitLagrangianParticleSize     \
@@ -22,7 +23,6 @@ CUDA_ENABLED_SRCS =                      \
           SurfaceNormals                 \
           TaskAlgebra                    \
           UtilityFactory                 \
-          BoundaryInfo                   \
           WaveFormInit                   
 
 ifeq ($(HAVE_CUDA),yes)
@@ -50,6 +50,8 @@ endif
 ifeq ($(HAVE_CUDA),yes)
   # Copy the 'original' .cc files into the binary tree and rename as .cu
 
+  $(OBJTOP_ABS)/$(SRCDIR)/BoundaryInfo.cu : $(SRCTOP_ABS)/$(SRCDIR)/BoundaryInfo.cc
+	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/GridInfo.cu : $(SRCTOP_ABS)/$(SRCDIR)/GridInfo.cc
 	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/InitializeFactory.cu : $(SRCTOP_ABS)/$(SRCDIR)/InitializeFactory.cc
@@ -68,5 +70,4 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/WaveFormInit.cu : $(SRCTOP_ABS)/$(SRCDIR)/WaveFormInit.cc
 	cp $< $@
-
 endif
