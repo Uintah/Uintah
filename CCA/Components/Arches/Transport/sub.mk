@@ -14,13 +14,13 @@ SRCDIR := CCA/Components/Arches/Transport
 # will be added automatically as needed.
 #
 CUDA_ENABLED_SRCS =      \
+        ComputePsi       \
         FEUpdate         \
         KFEUpdate        \
-        SSPInt           \
-        ScalarRHS        \
         KScalarRHS       \
+        ScalarRHS        \
+        SSPInt           \
         TransportFactory \
-        ComputePsi       \
         URHS
 
 ifeq ($(HAVE_CUDA),yes)
@@ -50,11 +50,17 @@ ifeq ($(HAVE_CUDA),yes)
 
   $(OBJTOP_ABS)/$(SRCDIR)/FEUpdate.cu : $(SRCTOP_ABS)/$(SRCDIR)/FEUpdate.cc
 	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/KFEUpdate.cu : $(SRCTOP_ABS)/$(SRCDIR)/KFEUpdate.cc
+	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/SSPInt.cu : $(SRCTOP_ABS)/$(SRCDIR)/SSPInt.cc
 	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
 	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/KScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/KScalarRHS.cc
+	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/TransportFactory.cu : $(SRCTOP_ABS)/$(SRCDIR)/TransportFactory.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/ComputePsi.cu : $(SRCTOP_ABS)/$(SRCDIR)/ComputePsi.cc
 	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/URHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/URHS.cc
 	cp $< $@

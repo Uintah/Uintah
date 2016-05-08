@@ -17,9 +17,9 @@ CUDA_ENABLED_SRCS =            \
         CO                     \
         ConstantProperty       \
         DensityPredictor       \
+        PropertyModelFactoryV2 \
         VariableStats          \
-        WallHFVariable         \
-        PropertyModelFactoryV2
+        WallHFVariable         
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -47,6 +47,8 @@ ifeq ($(HAVE_CUDA),yes)
   # Copy the 'original' .cc files into the binary tree and rename as .cu
 
   $(OBJTOP_ABS)/$(SRCDIR)/CO.cu : $(SRCTOP_ABS)/$(SRCDIR)/CO.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/ConstantProperty.cu : $(SRCTOP_ABS)/$(SRCDIR)/ConstantProperty.cc
 	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/DensityPredictor.cu : $(SRCTOP_ABS)/$(SRCDIR)/DensityPredictor.cc
 	cp $< $@
