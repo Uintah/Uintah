@@ -3,7 +3,7 @@
 from sys import argv,exit
 from os import environ, system
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
-from helpers.modUPS import modUPS
+from helpers.modUPS import modUPS,modUPS2
 
 from os import system
 
@@ -29,6 +29,23 @@ system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_1L_reflect.ups   RMCRT_GPU_1L_refle
 RMCRT_isoScat_LHC_ups = modUPS( the_dir, \
                                "RMCRT_isoScat.ups", \
                                ["<rayDirSampleAlgo>LatinHyperCube</rayDirSampleAlgo>"])
+
+# Modify base files
+RMCRT_1L_perf_GPU_ups = modUPS( the_dir, \
+                               "RMCRT_1L_perf.ups", \
+                               ["<resolution> [64,64,64]  </resolution>",
+                                "<patches>    [2,2,2]     </patches>",
+                                "<nDivQRays>  100         </nDivQRays>"
+                               ]  )
+
+RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
+                               "RMCRT_DO_perf.ups", \
+                               ["/Uintah_specification/Grid/Level/Box[@label=0]/resolution :[32,32,32]",
+                                "/Uintah_specification/Grid/Level/Box[@label=0]/patches    :[2,2,2]",
+                                "/Uintah_specification/Grid/Level/Box[@label=1]/resolution :[64,64,64]",
+                                "/Uintah_specification/Grid/Level/Box[@label=1]/patches    :[4,4,4]",
+                                "Uintah_specification/RMCRT/nDivQRays                      : 100"
+                               ] )
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
@@ -90,9 +107,12 @@ FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_test_1L.ups",    1.1, "ALL",
                    ("RMCRT_FLT_bm1_DO",  "RMCRT_FLT_bm1_DO.ups",     1.1, "ALL", ["exactComparison"])
                  ]
 
-GPUTESTS      = [  ("RMCRT_test_1L_GPU",    "RMCRT_GPU_1L.ups",         1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_ML_GPU",         "RMCRT_GPU_ML.ups",         1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_1L_reflect_GPU", "RMCRT_GPU_1L_reflect.ups", 1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+GPUTESTS      = [
+                   ("RMCRT_test_1L_GPU",     "RMCRT_GPU_1L.ups",          1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_ML_GPU",          "RMCRT_GPU_ML.ups",          1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_reflect_GPU",  "RMCRT_GPU_1L_reflect.ups",  1.1, "Linux", ["gpu",  "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_perf_GPU",      RMCRT_1L_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"]),
+                   ("RMCRT_DO_perf_GPU",      RMCRT_DO_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"])
                ]
 
 DEBUGTESTS   =[]
@@ -131,5 +151,5 @@ if __name__ == "__main__":
   # cleanup modified files
   command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
   system( command )
-  
+
   exit( result )
