@@ -1074,12 +1074,11 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                     f1    = - TW_new + wi.T_inner + net_q * R_tot;
 
                   }
-                  TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);
                 } // negative deposit if statement
               } // slagging temperature if statement
-              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW;
+              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new;
+              TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);
               T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
-
             }
           }
         }
