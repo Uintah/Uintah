@@ -845,7 +845,6 @@
             <k_deposit                  spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity of deposit, [W/(m K)] -->
             <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] -->
             <initial_deposit_thickness     spec="REQUIRED DOUBLE"/>  <!-- thickness of wall deposit that depents on time averaged deposition flux in meters, [meters] -->
-            <permanent_deposit_thickness   spec="REQUIRED DOUBLE"/>  <!-- thickness of permanent wall deposit in meters, [meters] -->
             <wall_emissivity            spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 -->
             <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
             <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
