@@ -78,51 +78,51 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_st = db->findBlock("KScalarTransport");
 
-    for (ProblemSpecP eqn_db = db_st->findBlock("eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("eqn")){
+    for (ProblemSpecP eqn_db = db_st->findBlock("eqn_group"); eqn_db != 0;
+         eqn_db = eqn_db->findNextBlock("eqn_group")){
 
-      std::string eqn_name = "null";
+      std::string group_name = "null";
       std::string type = "null";
-      eqn_db->getAttribute("label", eqn_name);
+      eqn_db->getAttribute("label", group_name);
       eqn_db->getAttribute("type", type );
 
       TaskInterface::TaskBuilder* tsk;
       if ( type == "CC" ){
-        tsk = scinew KScalarRHS<CCVariable<double> >::Builder(eqn_name, 0);
-        _scalar_builders.push_back(eqn_name);
+        tsk = scinew KScalarRHS<CCVariable<double> >::Builder(group_name, 0);
+        _scalar_builders.push_back(group_name);
       } else if ( type == "SX" ){
-        tsk = scinew KScalarRHS<SFCXVariable<double> >::Builder(eqn_name, 0);
-        _momentum_builders.push_back(eqn_name);
+        tsk = scinew KScalarRHS<SFCXVariable<double> >::Builder(group_name, 0);
+        _momentum_builders.push_back(group_name);
       } else if ( type == "SY" ){
-        tsk = scinew KScalarRHS<SFCYVariable<double> >::Builder(eqn_name, 0);
-        _momentum_builders.push_back(eqn_name);
+        tsk = scinew KScalarRHS<SFCYVariable<double> >::Builder(group_name, 0);
+        _momentum_builders.push_back(group_name);
       } else if ( type == "SZ" ){
-        tsk = scinew KScalarRHS<SFCZVariable<double> >::Builder(eqn_name, 0);
-        _momentum_builders.push_back(eqn_name);
+        tsk = scinew KScalarRHS<SFCZVariable<double> >::Builder(group_name, 0);
+        _momentum_builders.push_back(group_name);
       } else {
-        throw InvalidValue("Error: Eqn type not recognized named: "+eqn_name,__FILE__,__LINE__);
+        throw InvalidValue("Error: Eqn type for group not recognized named: "+group_name,__FILE__,__LINE__);
       }
-      register_task( eqn_name, tsk );
+      register_task( group_name, tsk );
 
+      //Generate a psi function for each scalar:
+      std::string compute_psi_name = "compute_scalar_psi_"+group_name;
+      TaskInterface::TaskBuilder* compute_psi_tsk =
+      scinew ComputePsi<CCVariable<double> >::Builder( compute_psi_name, 0 );
+      _scalar_compute_psi.push_back(compute_psi_name);
+      register_task( compute_psi_name, compute_psi_tsk );
+
+      std::string update_task_name = "scalar_fe_update_"+group_name;
+      KFEUpdate<CCVariable<double> >::Builder* update_tsk =
+      scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name, 0 );
+      register_task( update_task_name, update_tsk );
+
+      // std::string ssp_task_name = "scalar_ssp_update";
+      // SSPInt::Builder* tsk2 = scinew SSPInt::Builder( ssp_task_name, 0, _scalar_builders );
+      // register_task( ssp_task_name, tsk2 );
+
+      _scalar_update.push_back( update_task_name );
+      // _scalar_ssp.push_back( ssp_task_name );
     }
-
-   //Generate a psi function for each scalar:
-   std::string compute_psi_name = "compute_scalar_psi";
-   TaskInterface::TaskBuilder* compute_psi_tsk =
-    scinew ComputePsi<CCVariable<double> >::Builder( compute_psi_name, 0, _scalar_builders );
-   _scalar_compute_psi.push_back(compute_psi_name);
-   register_task( compute_psi_name, compute_psi_tsk );
-
-    std::string update_task_name = "scalar_fe_update";
-    KFEUpdate<CCVariable<double> >::Builder* tsk =
-      scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name, 0, _scalar_builders );
-    register_task( update_task_name, tsk );
-
-    // std::string ssp_task_name = "scalar_ssp_update";
-    // SSPInt::Builder* tsk2 = scinew SSPInt::Builder( ssp_task_name, 0, _scalar_builders );
-    // register_task( ssp_task_name, tsk2 );
-
-    _scalar_update.push_back( update_task_name );
-    // _scalar_ssp.push_back( ssp_task_name );
 
   }
 
@@ -233,32 +233,32 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_st = db->findBlock("KScalarTransport");
 
-    for (ProblemSpecP eqn_db = db_st->findBlock("eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("eqn")){
+    for (ProblemSpecP group_db = db_st->findBlock("eqn_group"); group_db != 0;
+         group_db = group_db->findNextBlock("eqn_group")){
 
-      std::string eqn_name = "null";
-      eqn_db->getAttribute("label", eqn_name);
-      TaskInterface* tsk = retrieve_task(eqn_name);
-      tsk->problemSetup( eqn_db );
+      std::string group_name = "null";
+      group_db->getAttribute("label", group_name);
 
+      //RHS builders
+      TaskInterface* tsk = retrieve_task(group_name);
+      tsk->problemSetup(group_db);
       tsk->create_local_labels();
 
+      //create one task that generates psi for ALL scalars
+      TaskInterface* psi_tsk = retrieve_task("compute_scalar_psi_"+group_name);
+      psi_tsk->problemSetup( group_db );
+      psi_tsk->create_local_labels();
+
+      //create one task that generates an FE update for ALL scalars
+      TaskInterface* fe_tsk = retrieve_task("scalar_fe_update_"+group_name);
+      fe_tsk->problemSetup( group_db );
+      fe_tsk->create_local_labels();
+
+      // tsk = retrieve_task("scalar_ssp_update_"+group_name);
+      // tsk->problemSetup( group_db );
+      //
+      // tsk->create_local_labels();
     }
-
-    //create one task that generates psi for ALL scalars
-    TaskInterface* psi_tsk = retrieve_task("compute_scalar_psi");
-    psi_tsk->problemSetup( db_st );
-    psi_tsk->create_local_labels();
-
-    //create one task that generates an FE update for ALL scalars
-    TaskInterface* tsk = retrieve_task("scalar_fe_update");
-    tsk->problemSetup( db );
-    tsk->create_local_labels();
-
-    // tsk = retrieve_task("scalar_ssp_update");
-    // tsk->problemSetup( db );
-    //
-    // tsk->create_local_labels();
-
   }
 
   if ( db->findBlock("MomentumTransport")){

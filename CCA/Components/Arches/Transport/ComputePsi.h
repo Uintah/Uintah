@@ -28,7 +28,7 @@ namespace Uintah{
 
 public:
 
-    ComputePsi<T>( std::string task_name, int matl_index, std::vector<std::string> eqn_names );
+    ComputePsi<T>( std::string task_name, int matl_index );
     ~ComputePsi<T>();
 
     /** @brief Input file interface **/
@@ -56,18 +56,17 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
-        _task_name(task_name), _matl_index(matl_index), _eqn_names(eqn_names){}
+      Builder( std::string task_name, int matl_index ) :
+        _task_name(task_name), _matl_index(matl_index){}
       ~Builder(){}
 
       ComputePsi* build()
-      { return scinew ComputePsi( _task_name, _matl_index, _eqn_names ); }
+      { return scinew ComputePsi( _task_name, _matl_index ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
-      std::vector<std::string> _eqn_names;
 
     };
 
@@ -106,13 +105,8 @@ private:
   //---------------------------------------------------------------------------------------
   //Function definitions:
   template <typename T>
-  ComputePsi<T>::ComputePsi( std::string task_name, int matl_index,
-                             std::vector<std::string> eqn_names ) :
-  TaskInterface( task_name, matl_index ){
-
-    _eqn_names = eqn_names;
-
-  }
+  ComputePsi<T>::ComputePsi( std::string task_name, int matl_index ) :
+  TaskInterface( task_name, matl_index ){}
 
   template <typename T>
   ComputePsi<T>::~ComputePsi(){}
@@ -132,7 +126,11 @@ private:
 
       _name_to_limiter_map.insert(std::make_pair(scalar_name, enum_limiter));
 
+      _eqn_names.push_back(scalar_name);
+
     }
+
+    std::cout << "hello" << std::endl;
   }
 
   template <typename T>

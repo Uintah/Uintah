@@ -75,122 +75,136 @@ private:
     typedef typename VariableHelper<T>::ConstYFaceType CFYT;
     typedef typename VariableHelper<T>::ConstZFaceType CFZT;
 
-    std::string _rhs_name;
     std::string _D_name;
-    std::string _X_flux_name;
-    std::string _Y_flux_name;
-    std::string _Z_flux_name;
-    std::string _X_psi_name;
-    std::string _Y_psi_name;
-    std::string _Z_psi_name;
-    std::string _Xvelocity_name;
-    std::string _Yvelocity_name;
-    std::string _Zvelocity_name;
+    std::string _x_velocity_name;
+    std::string _y_velocity_name;
+    std::string _z_velocity_name;
 
-    bool _do_conv;
-    bool _do_diff;
-    bool _do_clip;
+    std::vector<std::string> _eqn_names;
+    std::vector<bool> _do_diff;
+    std::vector<bool> _do_clip;
+    std::vector<double> _low_clip;
+    std::vector<double> _high_clip;
+    std::vector<double> _init_value;
 
-    double _low_clip;
-    double _high_clip;
-    double _init_value;
+    bool _has_D;
+
+    int _total_eqns;
 
     struct SourceInfo{
       std::string name;
       double weight;
     };
 
-    std::vector<SourceInfo> _source_info;
+    std::vector<std::vector<SourceInfo> > _source_info;
 
-    LIMITER _conv_scheme;
+    std::vector<LIMITER> _conv_scheme;
 
   };
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
   KScalarRHS<T>::KScalarRHS( std::string task_name, int matl_index ) :
-  TaskInterface( task_name, matl_index ) {
-
-    _rhs_name    = task_name+"_rhs";
-    _X_flux_name = task_name+"_x_flux";
-    _Y_flux_name = task_name+"_y_flux";
-    _Z_flux_name = task_name+"_z_flux";
-    _X_psi_name  = task_name+"_x_psi";
-    _Y_psi_name  = task_name+"_y_psi";
-    _Z_psi_name  = task_name+"_z_psi";
-
-  }
+  TaskInterface( task_name, matl_index ) {}
 
   template <typename T>
   KScalarRHS<T>::~KScalarRHS(){}
 
   template <typename T> void
-  KScalarRHS<T>::problemSetup( ProblemSpecP& db ){
+  KScalarRHS<T>::problemSetup( ProblemSpecP& input_db ){
+
+    _total_eqns = 0;
 
     ConvectionHelper* conv_helper;
+    for (ProblemSpecP db = input_db->findBlock("eqn"); db != 0;
+         db = db->findNextBlock("eqn")){
 
-    _do_conv = false;
-    if ( db->findBlock("convection")){
-      std::string conv_scheme;
-      db->findBlock("convection")->getAttribute("scheme", conv_scheme);
-      _conv_scheme = conv_helper->get_limiter_from_string(conv_scheme);
-      _do_conv = true;
-    }
+      //Equation name
+      std::string eqn_name;
+      db->getAttribute("label", eqn_name);
+      _eqn_names.push_back(eqn_name);
 
-    _do_diff = false;
-    if ( db->findBlock("diffusion")){
-      _do_diff = true;
-    }
-
-    _do_clip = false;
-    if ( db->findBlock("clip")){
-      _do_clip = true;
-      db->findBlock("clip")->getAttribute("low", _low_clip);
-      db->findBlock("clip")->getAttribute("high", _high_clip);
-    }
-
-    _init_value = 0.0;
-    if ( db->findBlock("initialize")){
-      db->findBlock("initialize")->getAttribute("value",_init_value);
-    }
-
-    for ( ProblemSpecP src_db = db->findBlock("src"); src_db != 0;
-          src_db = src_db->findNextBlock("src") ){
-
-      std::string src_label;
-      double weight = 1.0;
-
-      src_db->getAttribute("label",src_label);
-
-      if ( src_db->findBlock("weight")){
-        src_db->findBlock("weight")->getAttribute("value",weight);
+      //Convection
+      if ( db->findBlock("convection")){
+        std::string conv_scheme;
+        db->findBlock("convection")->getAttribute("scheme", conv_scheme);
+        _conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
+      } else {
+        _conv_scheme.push_back(NOCONV);
       }
 
-      SourceInfo info;
-      info.name = src_label;
-      info.weight = weight;
+      //Diffusion
+      if ( db->findBlock("diffusion")){
+        _do_diff.push_back(true);
+      } else {
+        _do_diff.push_back(false);
+      }
 
-      _source_info.push_back(info);
+      //Clipping
+      if ( db->findBlock("clip")){
+        _do_clip.push_back(true);
+        double low; double high;
+        db->findBlock("clip")->getAttribute("low", low);
+        db->findBlock("clip")->getAttribute("high", high);
+        _low_clip.push_back(low);
+        _high_clip.push_back(high);
+      } else {
+        _do_clip.push_back(false);
+        _low_clip.push_back(-999.9);
+        _high_clip.push_back(999.9);
+      }
+
+      //Initial Value
+      if ( db->findBlock("initialize") ){
+        double value;
+        db->findBlock("initialize")->getAttribute("value",value);
+        _init_value.push_back(value);
+      } else {
+        _init_value.push_back(0.0);
+      }
+
+      std::vector<SourceInfo> eqn_srcs;
+      for ( ProblemSpecP src_db = db->findBlock("src"); src_db != 0;
+            src_db = src_db->findNextBlock("src") ){
+
+        std::string src_label;
+        double weight = 1.0;
+
+        src_db->getAttribute("label",src_label);
+
+        if ( src_db->findBlock("weight")){
+          src_db->findBlock("weight")->getAttribute("value",weight);
+        }
+
+        SourceInfo info;
+        info.name = src_label;
+        info.weight = weight;
+
+        eqn_srcs.push_back(info);
+
+      }
+
+      _source_info.push_back(eqn_srcs);
 
     }
 
     // Default velocity names:
-    _Xvelocity_name = "uVelocitySPBC";
-    _Yvelocity_name = "vVelocitySPBC";
-    _Zvelocity_name = "wVelocitySPBC";
-    if ( db->findBlock("velocity") ){
-      db->findBlock("velocity")->getAttribute("xlabel",_Xvelocity_name);
-      db->findBlock("velocity")->getAttribute("ylabel",_Yvelocity_name);
-      db->findBlock("velocity")->getAttribute("zlabel",_Zvelocity_name);
+    _x_velocity_name = "uVelocitySPBC";
+    _y_velocity_name = "vVelocitySPBC";
+    _z_velocity_name = "wVelocitySPBC";
+    if ( input_db->findBlock("velocity") ){
+      input_db->findBlock("velocity")->getAttribute("xlabel",_x_velocity_name);
+      input_db->findBlock("velocity")->getAttribute("ylabel",_y_velocity_name);
+      input_db->findBlock("velocity")->getAttribute("zlabel",_z_velocity_name);
     }
 
-    // Diffusion coeff:
+    // Diffusion coeff -- assuming the same one across all eqns.
     _D_name = "NA";
-    if ( _do_diff ) {
-      if ( !db->findBlock("diffusion_coef")){
-        throw InvalidValue("Error: when using diffusion for transport, you must specify the diffusion coefficient for eqn "+_task_name, __FILE__, __LINE__);
-      }
-      db->findBlock("diffusion_coef")->getAttribute("label",_D_name);
+    _has_D = false;
+
+    if ( input_db->findBlock("diffusion_coef") ) {
+      input_db->findBlock("diffusion_coef")->getAttribute("label",_D_name);
+      _has_D = true;
     }
 
   }
@@ -199,11 +213,15 @@ private:
   void
   KScalarRHS<T>::create_local_labels(){
 
-    register_new_variable<T>( _rhs_name );
-    register_new_variable<T>( _task_name );
-    register_new_variable<T>( _X_flux_name );
-    register_new_variable<T>( _Y_flux_name );
-    register_new_variable<T>( _Z_flux_name );
+    const int istart = 0;
+    int iend = _eqn_names.size();
+    for (int i = istart; i < iend; i++ ){
+      register_new_variable<T>( _eqn_names[i] );
+      register_new_variable<T>( _eqn_names[i]+"_rhs" );
+      register_new_variable<T>( _eqn_names[i]+"_x_flux" );
+      register_new_variable<T>( _eqn_names[i]+"_y_flux" );
+      register_new_variable<T>( _eqn_names[i]+"_z_flux" );
+    }
 
   }
 
@@ -211,90 +229,106 @@ private:
   KScalarRHS<T>::register_initialize(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-    register_variable(  _rhs_name    , ArchesFieldContainer::COMPUTES , variable_registry );
-    register_variable(  _task_name   , ArchesFieldContainer::COMPUTES , variable_registry );
-    register_variable(  _X_flux_name , ArchesFieldContainer::COMPUTES , variable_registry );
-    register_variable(  _Y_flux_name , ArchesFieldContainer::COMPUTES , variable_registry );
-    register_variable(  _Z_flux_name , ArchesFieldContainer::COMPUTES , variable_registry );
-
+    const int istart = 0;
+    const int iend = _eqn_names.size();
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable(  _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry );
+    }
   }
 
   template <typename T> void
   KScalarRHS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                          SpatialOps::OperatorDatabase& opr ){
 
-    T& rhs    = *(tsk_info->get_uintah_field<T>(_rhs_name));
-    T& phi    = *(tsk_info->get_uintah_field<T>(_task_name));
-    T& x_flux = *(tsk_info->get_uintah_field<T>(_X_flux_name));
-    T& y_flux = *(tsk_info->get_uintah_field<T>(_Y_flux_name));
-    T& z_flux = *(tsk_info->get_uintah_field<T>(_Z_flux_name));
+    const int istart = 0;
+    const int iend = _eqn_names.size();
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-    rhs.initialize(0.0);
-    phi.initialize(_init_value);
-    x_flux.initialize(0.0);
-    y_flux.initialize(0.0);
-    z_flux.initialize(0.0);
-    phi.initialize(_init_value);
+      T& phi    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
+      T& rhs    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]));
+      T& x_flux = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_x_flux"));
+      T& y_flux = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_y_flux"));
+      T& z_flux = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_z_flux"));
 
+      double scalar_init_value = _init_value[ieqn];
+
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        phi(i,j,k) = scalar_init_value;
+        rhs(i,j,k) = 0.0;
+        x_flux(i,j,k) = 0.0;
+        y_flux(i,j,k) = 0.0;
+        z_flux(i,j,k) = 0.0;
+      });
+    } //eqn loop
   }
 
   //------------------------------------------------------------------------------------------------
   template <typename T> void
   KScalarRHS<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-    register_variable( _task_name   , ArchesFieldContainer::COMPUTES , variable_registry  );
-    register_variable( _task_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
-    register_variable( _X_flux_name , ArchesFieldContainer::COMPUTES , variable_registry  );
-    register_variable( _Y_flux_name , ArchesFieldContainer::COMPUTES , variable_registry  );
-    register_variable( _Z_flux_name , ArchesFieldContainer::COMPUTES , variable_registry  );
-    register_variable( _rhs_name    , ArchesFieldContainer::COMPUTES , variable_registry  );
+    const int istart = 0;
+    const int iend = _eqn_names.size();
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      register_variable( _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
+      register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
+    }
   }
 
   template <typename T> void
   KScalarRHS<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                             SpatialOps::OperatorDatabase& opr ){
 
-    T& phi = *(tsk_info->get_uintah_field<T>( _task_name ));
-    typedef typename VariableHelper<T>::ConstType CT;
-    CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( _task_name ));
+    const int istart = 0;
+    const int iend = _eqn_names.size();
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      T& phi = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn] ));
+      typedef typename VariableHelper<T>::ConstType CT;
+      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( _eqn_names[ieqn] ));
 
-    T& rhs    = *(tsk_info->get_uintah_field<T>(_rhs_name));
-    T& x_flux = *(tsk_info->get_uintah_field<T>(_X_flux_name));
-    T& y_flux = *(tsk_info->get_uintah_field<T>(_Y_flux_name));
-    T& z_flux = *(tsk_info->get_uintah_field<T>(_Z_flux_name));
+      phi.copyData(old_phi);
 
-    x_flux.initialize(0.0);
-    y_flux.initialize(0.0);
-    z_flux.initialize(0.0);
-    rhs.initialize(0.0);
-    phi.copyData(old_phi);
-
+    } //equation loop
   }
 
   //------------------------------------------------------------------------------------------------
   template <typename T> void
   KScalarRHS<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-    register_variable( _rhs_name       , ArchesFieldContainer::MODIFIES , variable_registry , time_substep );
-    register_variable( _X_flux_name    , ArchesFieldContainer::MODIFIES , variable_registry , time_substep );
-    register_variable( _Y_flux_name    , ArchesFieldContainer::MODIFIES , variable_registry , time_substep );
-    register_variable( _Z_flux_name    , ArchesFieldContainer::MODIFIES , variable_registry , time_substep );
-    register_variable( _X_psi_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-    register_variable( _Y_psi_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-    register_variable( _Z_psi_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-    if ( _do_diff )
-      register_variable( _D_name         , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-    register_variable( _task_name      , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-    register_variable( _Xvelocity_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-    register_variable( _Yvelocity_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-    register_variable( _Zvelocity_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-    register_variable( "areaFractionX" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
-    register_variable( "areaFractionY" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
-    register_variable( "areaFractionZ" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
+    const int istart = 0;
+    const int iend = _eqn_names.size();
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-    typedef std::vector<SourceInfo> VS;
-    for (typename VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){
-      register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      if ( _conv_scheme[ieqn] != NOCONV ){
+        register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+        register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+        register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+        register_variable( _eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( _eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( _eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      }
+
+      typedef std::vector<SourceInfo> VS;
+      for (typename VS::iterator i = _source_info[ieqn].begin(); i != _source_info[ieqn].end(); i++){
+        register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      }
+
     }
+
+    //globally common variables
+    if ( _has_D )
+      register_variable( _D_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+    register_variable( _x_velocity_name, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _y_velocity_name, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _z_velocity_name, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( "areaFractionX", ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+    register_variable( "areaFractionY", ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+    register_variable( "areaFractionZ", ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
   }
 
@@ -302,80 +336,82 @@ private:
   KScalarRHS<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                    SpatialOps::OperatorDatabase& opr ){
 
-    T& rhs      = *(tsk_info->get_uintah_field<T>(_rhs_name));
-    CT& phi     = *(tsk_info->get_const_uintah_field<CT>(_task_name));
-    FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(_X_flux_name));
-    FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(_Y_flux_name));
-    FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(_Z_flux_name));
-    CFXT& x_psi = *(tsk_info->get_const_uintah_field<CFXT>(_X_psi_name));
-    CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(_Y_psi_name));
-    CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(_Z_psi_name));
-    CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(_Xvelocity_name));
-    CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(_Yvelocity_name));
-    CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(_Zvelocity_name));
-    CFXT& af_x  = *(tsk_info->get_const_uintah_field<CFXT>("areaFractionX"));
-    CFYT& af_y  = *(tsk_info->get_const_uintah_field<CFYT>("areaFractionY"));
-    CFZT& af_z  = *(tsk_info->get_const_uintah_field<CFZT>("areaFractionZ"));
-
     Vector Dx = patch->dCell();
     double ax = Dx.y() * Dx.z();
     double ay = Dx.z() * Dx.x();
     double az = Dx.x() * Dx.y();
     double V = Dx.x()*Dx.y()*Dx.z();
 
-    Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
+    CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(_x_velocity_name));
+    CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(_y_velocity_name));
+    CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(_z_velocity_name));
+    CFXT& af_x  = *(tsk_info->get_const_uintah_field<CFXT>("areaFractionX"));
+    CFYT& af_y  = *(tsk_info->get_const_uintah_field<CFYT>("areaFractionY"));
+    CFZT& af_z  = *(tsk_info->get_const_uintah_field<CFZT>("areaFractionZ"));
+    Uintah::BlockRange range_cl_to_ech(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
+
 
 #ifdef DO_TIMINGS
     SpatialOps::TimeLogger timer("kokkos_scalar_assemble.out."+_task_name);
     timer.start("work");
 #endif
+    const int istart = 0;
+    const int iend = _eqn_names.size();
+    for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      CT& phi     = *(tsk_info->get_const_uintah_field<CT>(_eqn_names[ieqn]));
+      T& rhs      = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
+      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(_eqn_names[ieqn]+"_x_flux"));
+      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(_eqn_names[ieqn]+"_y_flux"));
+      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(_eqn_names[ieqn]+"_z_flux"));
+      CFXT& x_psi = *(tsk_info->get_const_uintah_field<CFXT>(_eqn_names[ieqn]+"_x_psi"));
+      CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(_eqn_names[ieqn]+"_y_psi"));
+      CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(_eqn_names[ieqn]+"_z_psi"));
 
-    //Convection:
-    if ( _do_conv ){
-      Uintah::ComputeConvectiveFlux<T> get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
-                                                 x_flux, y_flux, z_flux, af_x, af_y, af_z );
-      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
-      Uintah::parallel_for( range, get_flux );
-    }
+      //Convection:
+      if ( _conv_scheme[ieqn] != NOCONV ){
+        Uintah::ComputeConvectiveFlux<T> get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
+                                                   x_flux, y_flux, z_flux, af_x, af_y, af_z );
+        Uintah::parallel_for( range_cl_to_ech, get_flux );
+      }
 
-    //Diffusion:
-    if ( _do_diff ) {
+      //Diffusion:
+      if ( _do_diff[ieqn] ) {
 
-      CT& D       = *(tsk_info->get_const_uintah_field<CT>(_D_name));
+        CT& D = *(tsk_info->get_const_uintah_field<CT>(_D_name));
 
-      //NOTE: No diffusion allowed on boundaries.
-      GET_BUFFERED_PATCH_RANGE(1,-1);
+        //NOTE: No diffusion allowed on boundaries.
+        GET_BUFFERED_PATCH_RANGE(1,-1);
 
-      Uintah::BlockRange range_diff(low_patch_range, high_patch_range);
+        Uintah::BlockRange range_diff(low_patch_range, high_patch_range);
 
-      Uintah::parallel_for( range_diff, [&](int i, int j, int k){
+        Uintah::parallel_for( range_diff, [&](int i, int j, int k){
 
-        rhs(i,j,k) += ax/(2.*Dx.x()) * ( af_x(i+1,j,k) * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k) - phi(i,j,k))
-                                       - af_x(i,j,k)   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)   - phi(i-1,j,k)) ) +
-                      ay/(2.*Dx.y()) * ( af_y(i,j+1,k) * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k) - phi(i,j,k))
-                                       - af_y(i,j,k)   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)   - phi(i,j-1,k)) ) +
-                      az/(2.*Dx.z()) * ( af_z(i,j,k+1) * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1) - phi(i,j,k))
-                                       - af_z(i,j,k)   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)   - phi(i,j,k-1)) );
+          rhs(i,j,k) += ax/(2.*Dx.x()) * ( af_x(i+1,j,k) * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k) - phi(i,j,k))
+                                         - af_x(i,j,k)   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)   - phi(i-1,j,k)) ) +
+                        ay/(2.*Dx.y()) * ( af_y(i,j+1,k) * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k) - phi(i,j,k))
+                                         - af_y(i,j,k)   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)   - phi(i,j-1,k)) ) +
+                        az/(2.*Dx.z()) * ( af_z(i,j,k+1) * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1) - phi(i,j,k))
+                                         - af_z(i,j,k)   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)   - phi(i,j,k-1)) );
 
 
-      });
-    }
+        });
+      }
 
-    //Sources:
-    typedef std::vector<SourceInfo> VS;
-    for (typename VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){
+      //Sources:
+      typedef std::vector<SourceInfo> VS;
+      for (typename VS::iterator isrc = _source_info[ieqn].begin(); isrc != _source_info[ieqn].end(); isrc++){
 
-      CT& src = *(tsk_info->get_const_uintah_field<CT>((*i).name));
-      double weight = (*i).weight;
-      Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
+        CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
+        double weight = (*isrc).weight;
+        Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
-      Uintah::parallel_for( src_range, [&](int i, int j, int k){
+        Uintah::parallel_for( src_range, [&](int i, int j, int k){
 
-        rhs(i,j,k) += weight * src(i,j,k) * V;
+          rhs(i,j,k) += weight * src(i,j,k) * V;
 
-      });
-    }
-
+        });
+      }
+    } // equation loop
 #ifdef DO_TIMINGS
     timer.stop("work");
 #endif
