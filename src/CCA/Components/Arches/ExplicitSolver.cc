@@ -1369,38 +1369,38 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
     //total KE:
     new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel );
 
-    allocateAndInitializeToZero( d_lab->d_densityGuessLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_uVelRhoHatLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_uVelocitySPBCLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_vVelRhoHatLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_vVelocitySPBCLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_wVelRhoHatLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_wVelocitySPBCLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_CCUVelocityLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_CCVVelocityLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_CCWVelocityLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_CCVelocityLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_kineticEnergyLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_pressurePSLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_pressurePredLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_pressureIntermLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_densityCPLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_viscosityCTSLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_turbViscosLabel, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_conv_scheme_x_Label, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_conv_scheme_y_Label, new_dw, indx, patch );
-    allocateAndInitializeToZero( d_lab->d_conv_scheme_z_Label, new_dw, indx, patch );
+    allocateAndInitializeToC( d_lab->d_densityGuessLabel  , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_uVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_uVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_vVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_vVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_wVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_wVelocitySPBCLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_CCUVelocityLabel   , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_CCVVelocityLabel   , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_CCWVelocityLabel   , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_CCVelocityLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_kineticEnergyLabel , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_pressurePSLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_pressurePredLabel  , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_pressureIntermLabel, new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_densityCPLabel     , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_viscosityCTSLabel  , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_turbViscosLabel    , new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_conv_scheme_x_Label, new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_conv_scheme_y_Label, new_dw, indx, patch, 0.0 );
+    allocateAndInitializeToC( d_lab->d_conv_scheme_z_Label, new_dw, indx, patch, 0.0 );
 
     if ( VarLabel::find("true_wall_temperature")){
-      allocateAndInitializeToZero( VarLabel::find("true_wall_temperature"), new_dw, indx, patch );
+      allocateAndInitializeToC( VarLabel::find("true_wall_temperature"), new_dw, indx, patch, 0.0 );
     }
 
     if ( VarLabel::find("deposit_thickness"))
-      allocateAndInitializeToZero( VarLabel::find("deposit_thickness"), new_dw, indx, patch );
+      allocateAndInitializeToC( VarLabel::find("deposit_thickness"), new_dw, indx, patch, 0.0 );
 
     if ( d_MAlab ){
-      allocateAndInitializeToZero( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch );
-      allocateAndInitializeToZero( d_lab->d_mmgasVolFracLabel, new_dw, indx, patch );
+      allocateAndInitializeToC( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch, 0.0 );
+      allocateAndInitializeToC( d_lab->d_mmgasVolFracLabel, new_dw, indx, patch, 0.0 );
     }
 
     CCVariable<double> viscosity;
@@ -1412,10 +1412,10 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 }
 
 void
-ExplicitSolver::allocateAndInitializeToZero( const VarLabel* label,
-                                             DataWarehouse* dw,
-                                             const int index,
-                                             const Patch* patch ){
+ExplicitSolver::allocateAndInitializeToC( const VarLabel* label,
+                                          DataWarehouse* dw,
+                                          const int index,
+                                          const Patch* patch, const double C ){
 
   const Uintah::TypeDescription* type_desc = label->typeDescription();
 

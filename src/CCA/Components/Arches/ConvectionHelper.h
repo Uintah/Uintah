@@ -28,7 +28,7 @@
 
 namespace Uintah {
 
-  enum LIMITER {CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER};
+  enum LIMITER {NOCONV, CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER};
 
 #define SUPERBEEMACRO(r) \
       my_psi = ( r < huge ) ? std::max( std::min( 2.*r, 1.), std::min(r, 2. ) ) : 2.; \

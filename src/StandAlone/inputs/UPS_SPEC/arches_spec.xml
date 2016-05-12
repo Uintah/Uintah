@@ -1033,30 +1033,34 @@
 
       <!-- Kokkos scalar -->
       <KScalarTransport                 spec="OPTIONAL NO_DATA">
-        <eqn                            spec="MULTIPLE NO_DATA"
+        <eqn_group                      spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'CC,FX,FY,FZ'">
+          <eqn                            spec="MULTIPLE NO_DATA"
+                                          attribute1="label REQUIRED STRING">
 
+            <!--If this tag is present, diffusion is computed.-->
+            <diffusion                    spec="OPTIONAL NO_DATA"/>
+            <!-- If this tag is present, convection is computed.
+             The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
+            <convection                   spec="OPTIONAL NO_DATA"
+                                          attribute1="scheme REQUIRED STRING"/>
+            <!-- Clip the scalar to maintain specified low and high bounds -->
+            <clip                         spec="OPTIONAL NO_DATA"
+                                          attribute1="low  REQUIRED DOUBLE"
+                                          attribute2="high REQUIRED DOUBLE"/>
+            <!-- reference a source (defined in the <Sources> block) to add it to the RHS -->
+            <src                          spec="MULTIPLE NO_DATA"
+                                          attribute1="label REQUIRED STRING"/>
+          </eqn>
+          <!-- The code is currently assuming that these variables are the same across the group -->
           <velocity                     spec="OPTIONAL NO_DATA"
                                         attribute1="xlabel REQUIRED STRING"
                                         attribute2="ylabel REQUIRED STRING"
                                         attribute3="zlabel REQUIRED STRING"/>
-          <!--If this tag is present, diffusion is computed.-->
-          <diffusion                    spec="OPTIONAL NO_DATA"/>
           <diffusion_coef               spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
-          <!-- If this tag is present, convection is computed.
-           The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
-          <convection                   spec="OPTIONAL NO_DATA"
-                                        attribute1="scheme REQUIRED STRING"/>
-          <!-- Clip the scalar to maintain specified low and high bounds -->
-          <clip                         spec="OPTIONAL NO_DATA"
-                                        attribute1="low  REQUIRED DOUBLE"
-                                        attribute2="high REQUIRED DOUBLE"/>
-          <!-- reference a source (defined in the <Sources> block) to add it to the RHS -->
-          <src                          spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"/>
-        </eqn>
+        </eqn_group>
       </KScalarTransport>
 
       <!-- New Task interface for Momentum -->

@@ -13,7 +13,7 @@ namespace Uintah{
 
 public:
 
-    KFEUpdate<T>( std::string task_name, int matl_index, std::vector<std::string> eqn_names );
+    KFEUpdate<T>( std::string task_name, int matl_index );
     ~KFEUpdate<T>();
 
     /** @brief Input file interface **/
@@ -26,18 +26,17 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
-        _task_name(task_name), _matl_index(matl_index), _eqn_names(eqn_names){}
+      Builder( std::string task_name, int matl_index ) :
+        _task_name(task_name), _matl_index(matl_index) {}
       ~Builder(){}
 
       KFEUpdate* build()
-      { return scinew KFEUpdate( _task_name, _matl_index, _eqn_names ); }
+      { return scinew KFEUpdate( _task_name, _matl_index ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
-      std::vector<std::string> _eqn_names;
 
     };
 
@@ -80,12 +79,8 @@ private:
 
   //Function definitions:
   template <typename T>
-  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
-  TaskInterface( task_name, matl_index ){
-
-    _eqn_names = eqn_names;
-
-  }
+  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index ) :
+  TaskInterface( task_name, matl_index ){}
 
   template <typename T>
   KFEUpdate<T>::~KFEUpdate()
@@ -94,7 +89,13 @@ private:
 
   template <typename T>
   void KFEUpdate<T>::problemSetup( ProblemSpecP& db ){
+    for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("eqn")){
+      std::string scalar_name;
 
+      eqn_db->getAttribute("label", scalar_name);
+      _eqn_names.push_back(scalar_name);
+
+    }
   }
 
   template <typename T>

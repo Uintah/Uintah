@@ -392,10 +392,10 @@ public:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
 
-  void allocateAndInitializeToZero( const VarLabel* label,
+  void allocateAndInitializeToC( const VarLabel* label,
                                     DataWarehouse* dw,
                                     const int index,
-                                    const Patch* patch );
+                                    const Patch* patch, const double C );
 
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
