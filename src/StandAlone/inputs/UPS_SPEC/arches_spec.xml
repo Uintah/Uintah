@@ -1172,7 +1172,7 @@
             <!-- deposition model -->
             <ash_density                spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type deposition_velocity"/>       <!-- at burnout ash density is rho_0*ash_mass_fraction, if you want to use another constant density specify here. -->
-            <t_interval                 spec="REQUIRED DOUBLE 'positive'"
+            <t_ave_start                spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type deposition_velocity"/>       <!-- simulation time interval required for a steady-state thermal profile -->
             <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"
