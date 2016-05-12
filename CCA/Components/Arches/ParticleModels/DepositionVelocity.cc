@@ -28,8 +28,8 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   _rhoP_name  = ParticleTools::parse_for_role_to_label(db,"density");
   _dep_vel_rs_name= "DepositVelRunningSum";
   _dep_vel_rs_start_name= "DepositVelRunningSumStart";
-  if ( db->findBlock("t_interval")){
-  db->require("t_interval",_t_interval);
+  if ( db->findBlock("t_ave_start")){
+  db->require("t_ave_start",_t_ave_start);
   } else {
     throw ProblemSetupException("Error: DepositionVelocity.cc time-averaging start time not specified.", __FILE__, __LINE__);
   }
@@ -140,7 +140,7 @@ DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
   //const double delta_t = tsk_info->get_dt();
   double current_time = _shared_state->getElapsedTime();
   _averaging_update = true;
-  if (current_time > _t_interval){
+  if (current_time > _t_ave_start){
     _averaging_update = false;
   }
   for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -312,8 +312,8 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           if (_averaging_update){
             d_velocity_rs_start[c]=d_velocity_rs[c];
           }
-          if (current_time > _t_interval){
-            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / std::max(0.1,(current_time-_t_interval));
+          if (current_time > _t_ave_start){
+            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / std::max(0.1,(current_time-_t_ave_start));
             deposit_velocity[c] =  vel_i_ave; // add the contribution per particle.
           }
         }// if there is a deposition flux

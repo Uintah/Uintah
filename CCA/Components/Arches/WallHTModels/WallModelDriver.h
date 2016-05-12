@@ -56,7 +56,7 @@ namespace Uintah{
         bool averaging_update; 
         double time; 
         double delta_t; 
-        double t_interval; // time to reach steady thermal profile
+        double t_ave_start; // time to reach steady thermal profile
         CCVariable<double> T; 
         CCVariable<double> T_copy; 
         CCVariable<double> T_real; 
@@ -85,7 +85,7 @@ namespace Uintah{
       };
 
     private: 
-      double _t_interval; 
+      double _t_ave_start; 
       std::string _dep_vel_name;
       bool do_coal_region; 
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency

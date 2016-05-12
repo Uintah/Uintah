@@ -81,7 +81,7 @@ private:
       std::string _dep_vel_rs_name;
       std::string _dep_vel_rs_start_name;
       std::string _new_time_name;
-      double _t_interval; // the time interval required for a steady-state thermal profile.
+      double _t_ave_start; // sim time to start time averaging.
       double _new_time;
       double _user_specified_rho;
 

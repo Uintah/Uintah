@@ -144,7 +144,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       std::string type;
       db_model->getAttribute("type", type);
       if ( type == "deposition_velocity" ){ 
-        db_model->require("t_interval",_t_interval);
+        db_model->require("t_ave_start",_t_ave_start);
         missing_tstart = false; 
       }
     } 
@@ -250,10 +250,10 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     delt_vartype DT;
     old_dw->get(DT, _shared_state->get_delt_label());
     vars.delta_t = DT;
-    vars.t_interval = _t_interval;  
+    vars.t_ave_start = _t_ave_start;  
 
     vars.averaging_update = true;
-    if (vars.time > vars.t_interval){
+    if (vars.time > vars.t_ave_start){
       vars.averaging_update = false;
     }
     // Note: The local T_copy is necessary because boundary conditions are being applied
@@ -996,7 +996,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                
               R_wall = wi.dy / wi.k; 
               
-              if (vars.time < vars.t_interval + 0.1 ) {
+              if (vars.time < vars.t_ave_start + 0.1 ) {
                 vars.deposit_thickness[c] = wi.dy_dep_init;
               } else {
                 vars.deposit_thickness[c] = vars.ave_deposit_velocity[c] * wi.t_sb;
@@ -1026,8 +1026,8 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 vars.d_hat_rs_start[c]=vars.d_hat_rs[c];
               }
               double d_ave;
-              if (vars.time > vars.t_interval){
-                vars.deposit_thickness[c] = (vars.d_hat_rs[c] - vars.d_hat_rs_start[c] ) / std::max(0.1,(vars.time-vars.t_interval));  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
+              if (vars.time > vars.t_ave_start){
+                vars.deposit_thickness[c] = (vars.d_hat_rs[c] - vars.d_hat_rs_start[c] ) / std::max(0.1,(vars.time-vars.t_ave_start));  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
               }
               R_d = vars.deposit_thickness[c] / wi.k_deposit; 
 
