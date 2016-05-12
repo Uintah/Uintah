@@ -47,6 +47,8 @@ WallModelDriver::~WallModelDriver()
   VarLabel::destroy( _True_T_Label );
   if (do_coal_region){
     VarLabel::destroy( _deposit_thickness_label );
+    VarLabel::destroy( _deposit_thickness_rs_label );
+    VarLabel::destroy( _deposit_thickness_rs_start_label );
   }
 }
 
@@ -134,6 +136,8 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
   if (do_coal_region){
     const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
     _deposit_thickness_label = VarLabel::create( "deposit_thickness", CC_double );
+    _deposit_thickness_rs_label = VarLabel::create( "deposit_thickness_rs", CC_double );
+    _deposit_thickness_rs_start_label = VarLabel::create( "deposit_thickness_rs_start", CC_double );
     bool missing_tstart=true; 
     ProblemSpecP PM_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
     for ( ProblemSpecP db_model = PM_db->findBlock("model"); db_model != 0; db_model = db_model->findNextBlock("model")){ 
@@ -194,6 +198,10 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     if (do_coal_region){
       task->computes( _deposit_thickness_label );
       task->requires( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
+      task->computes( _deposit_thickness_rs_label );
+      task->requires( Task::OldDW, _deposit_thickness_rs_label, Ghost::None, 0 );
+      task->computes( _deposit_thickness_rs_start_label );
+      task->requires( Task::OldDW, _deposit_thickness_rs_start_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _ave_dep_vel_label, Ghost::None, 0 );
     }
     //task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 );
@@ -239,8 +247,15 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     const Patch* patch = patches->get(p);
     HTVariables vars;
     vars.time = _shared_state->getElapsedTime();  
+    delt_vartype DT;
+    old_dw->get(DT, _shared_state->get_delt_label());
+    vars.delta_t = DT;
     vars.t_interval = _t_interval;  
 
+    vars.averaging_update = true;
+    if (vars.time > vars.t_interval){
+      vars.averaging_update = false;
+    }
     // Note: The local T_copy is necessary because boundary conditions are being applied
     // in the table lookup to T based on the conditions for the independent variables. These
     // BCs are being applied regardless of the type of wall temperature model.
@@ -272,12 +287,20 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
         old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
         new_dw->allocateAndPut( vars.deposit_thickness, _deposit_thickness_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        old_dw->get( vars.d_hat_rs_old , _deposit_thickness_rs_label, _matl_index, patch, Ghost::None, 0 );
+        new_dw->allocateAndPut( vars.d_hat_rs, _deposit_thickness_rs_label , _matl_index, patch );
+        old_dw->get( vars.d_hat_rs_start_old , _deposit_thickness_rs_start_label, _matl_index, patch, Ghost::None, 0 );
+        new_dw->allocateAndPut( vars.d_hat_rs_start, _deposit_thickness_rs_start_label , _matl_index, patch );
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( vars.celltype[*c] > 7 && vars.celltype[*c] < 11 ){
             vars.deposit_thickness[*c] = vars.deposit_thickness_old[*c];
+            vars.d_hat_rs[*c] = vars.d_hat_rs_old[*c];
+            vars.d_hat_rs_start[*c] = vars.d_hat_rs_start_old[*c];
           } else {
             vars.deposit_thickness[*c] = 0.0;
+            vars.d_hat_rs[*c] = 0.0;
+            vars.d_hat_rs_start[*c] = 0.0;
           }
         }
       }
@@ -345,14 +368,31 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       if (do_coal_region){
         CCVariable<double> deposit_thickness;
         constCCVariable<double> deposit_thickness_old;
+        CCVariable<double> d_hat_rs;
+        constCCVariable<double> d_hat_rs_old;
+        CCVariable<double> d_hat_rs_start;
+        constCCVariable<double> d_hat_rs_start_old;
         old_dw->get( deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
         new_dw->allocateAndPut( deposit_thickness, _deposit_thickness_label, _matl_index , patch );
+        old_dw->get( d_hat_rs_old , _deposit_thickness_rs_label, _matl_index, patch, Ghost::None, 0 );
+        new_dw->allocateAndPut( d_hat_rs, _deposit_thickness_rs_label, _matl_index , patch );
+        old_dw->get( d_hat_rs_start_old , _deposit_thickness_rs_start_label, _matl_index, patch, Ghost::None, 0 );
+        new_dw->allocateAndPut( d_hat_rs_start, _deposit_thickness_rs_start_label, _matl_index , patch );
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( cell_type[*c] > 7 && cell_type[*c] < 11 ){
             deposit_thickness[*c] = deposit_thickness_old[*c];
+            // here we update the running_sums on a time-step where computeHT isn't called.
+            d_hat_rs[*c]=d_hat_rs_old[*c]; 
+            d_hat_rs_start[*c]=d_hat_rs_start_old[*c]; 
+            d_hat_rs[*c]=d_hat_rs[*c] + deposit_thickness[*c]*vars.delta_t; 
+            if (vars.averaging_update){
+              d_hat_rs_start[*c]=d_hat_rs[*c];
+            }
           } else {
             deposit_thickness[*c] = 0.0;
+            d_hat_rs[*c] = 0.0;
+            d_hat_rs_start[*c] = 0.0;
           }
         }
       }
@@ -849,7 +889,6 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->require("k_deposit", info.k_deposit);
     r_db->require("wall_thickness", info.dy);
     r_db->require("initial_deposit_thickness", info.dy_dep_init);
-    r_db->require("permanent_deposit_thickness", info.dy_dep);
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner);
     r_db->getWithDefault("relaxation_coef", info.relax, 1.0);
@@ -862,7 +901,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
 void
 WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){
 
-  double net_q, rad_q, total_area_face, dep_thickness, R_wall, R_dp, R_d, R_tot;
+  double TW_new, T_old, net_q, rad_q, total_area_face, R_wall, R_d, R_tot;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); // cell spacing
@@ -956,7 +995,6 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               rad_q /= total_area_face; // representative radiative flux to the cell.
                
               R_wall = wi.dy / wi.k; 
-              R_dp = wi.dy_dep / wi.k_deposit;
               
               if (vars.time < vars.t_interval + 0.1 ) {
                 vars.deposit_thickness[c] = wi.dy_dep_init;
@@ -966,119 +1004,45 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
 
               vars.deposit_thickness[c] = min(vars.deposit_thickness[c],wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
               
-              R_d = vars.deposit_thickness[c] / wi.k_deposit; 
-              R_tot = R_wall + R_dp + R_d;
-              double d_tol    = 1e-15;
-              double delta    = 1;
-              int NIter       = 15;
-              double f0       = 0.0;
-              double f1       = 0.0;
-              double TW       = vars.T_old[c];
-              double T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
-              double TW_guess, TW_tmp, TW_old, TW_new;
+              // here we computed quantaties to find which deposition regime we are in.
+              double qnet_max = rad_q - _sigma_constant * std::pow( wi.T_slag, 4.0 );
+              qnet_max *= wi.emissivity;
+              qnet_max = qnet_max > 1e-8 ? qnet_max : 1e-8; // to avoid div by zero we min is 1e-8
+              double dp_max = wi.k_deposit * ( (wi.T_slag-wi.T_inner)/qnet_max - R_wall);
+              double rad_q_max = (wi.T_slag-wi.T_inner)/(R_wall*wi.emissivity) + _sigma_constant*std::pow(wi.T_slag,4.0);
 
-              TW_guess = vars.T_old[c];
-              TW_old = TW_guess-delta;
-              net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
-              net_q = net_q > 0 ? net_q : 0;
-              net_q *= wi.emissivity;
-              f0 = - TW_old + wi.T_inner + net_q * R_tot;
-
-              TW_new = TW_guess+delta;
-              net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
-              net_q = net_q>0 ? net_q : 0;
-              net_q *= wi.emissivity;
-              f1 = - TW_new + wi.T_inner + net_q * R_tot;
-
-              for ( int iterT=0; iterT < NIter; iterT++) {
-
-                TW_tmp = TW_old;
-                TW_old = TW_new;
-
-                TW_new = TW_tmp - ( TW_new - TW_tmp )/( f1 - f0 ) * f0;
-                TW_new = max( wi.T_inner , min( T_max, TW_new ) );
-
-                if (std::abs(TW_new-TW_old) < d_tol){
-
-                  TW    =  TW_new;
-                  net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
-                  net_q =  net_q > 0 ? net_q : 0;
-                  net_q *= wi.emissivity;
-
-                  break;
-
-                }
-
-                f0    =  f1;
-                net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
-                net_q =  net_q>0 ? net_q : 0;
-                net_q *= wi.emissivity;
-                f1    = - TW_new + wi.T_inner + net_q * R_tot;
-
+              if (vars.deposit_thickness[c] < dp_max) {
+                // Regime 1 
+                //vars.deposit_thickness[c] = vars.deposit_thickness[c]; 
+              } else if (rad_q > rad_q_max) {
+                // Regime 3
+                vars.deposit_thickness[c]=0;
+              } else {
+                // Regime 2
+                vars.deposit_thickness[c]=dp_max;
               }
+              vars.d_hat_rs[c]=vars.d_hat_rs[c] + vars.deposit_thickness[c]*vars.delta_t; // during timestep init d_hat_rs[c] is set to the old value..
+              if (vars.averaging_update){
+                vars.d_hat_rs_start[c]=vars.d_hat_rs[c];
+              }
+              double d_ave;
+              if (vars.time > vars.t_interval){
+                vars.deposit_thickness[c] = (vars.d_hat_rs[c] - vars.d_hat_rs_start[c] ) / std::max(0.1,(vars.time-vars.t_interval));  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
+              }
+              R_d = vars.deposit_thickness[c] / wi.k_deposit; 
 
+              R_tot = R_wall + R_d; // total thermal resistance
+              T_old =  vars.T_real_old[c]; 
+              TW_new = vars.T_real_old[c];
+              net_q = rad_q;
+              newton_solve( wi, vars, TW_new, T_old, rad_q, net_q, R_tot );
+              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
               // now to make consistent with assumed emissivity of 1 in radiation model:
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
               // q_radiation - sigma Tw' ^ 4 = net_q
-
-
-              TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);
-
-              if (TW > wi.T_slag){ // if we are slagging fix TW to the slag temperature and back calculate deposit thickness with everything else held constant.
-                TW=wi.T_slag;
-                net_q = rad_q - _sigma_constant * pow( TW, 4 );
-                vars.deposit_thickness[c]=wi.k_deposit*((TW-wi.T_inner)/net_q - R_wall - R_dp);
-                
-                if (vars.deposit_thickness[c]<0){ // if the deposit is negative then set it to zero and recompute the wall temperature.
-                  vars.deposit_thickness[c]=0;
-                  R_d = 0.0; 
-                  R_tot = R_wall + R_dp + R_d;
-                  d_tol    = 1e-15;
-                  delta    = 1;
-                  NIter       = 15;
-                  f0       = 0.0;
-                  f1       = 0.0;
-                  TW       = vars.T_old[c];
-                  T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
-                  TW_guess = TW;
-                  TW_old = TW_guess-delta;
-                  net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
-                  net_q = net_q > 0 ? net_q : 0;
-                  net_q *= wi.emissivity;
-                  f0 = - TW_old + wi.T_inner + net_q * R_tot;
-                  TW_new = TW_guess+delta;
-                  net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
-                  net_q = net_q>0 ? net_q : 0;
-                  net_q *= wi.emissivity;
-                  f1 = - TW_new + wi.T_inner + net_q * R_tot;
-                  for ( int iterT=0; iterT < NIter; iterT++) {
-
-                    TW_tmp = TW_old;
-                    TW_old = TW_new;
-                    TW_new = TW_tmp - ( TW_new - TW_tmp )/( f1 - f0 ) * f0;
-                    TW_new = max( wi.T_inner , min( T_max, TW_new ) );
-
-                    if (std::abs(TW_new-TW_old) < d_tol){
-                      TW    =  TW_new;
-                      net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
-                      net_q =  net_q > 0 ? net_q : 0;
-                      net_q *= wi.emissivity;
-                      break;
-
-                    }
-
-                    f0    =  f1;
-                    net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
-                    net_q =  net_q>0 ? net_q : 0;
-                    net_q *= wi.emissivity;
-                    f1    = - TW_new + wi.T_inner + net_q * R_tot;
-
-                  }
-                } // negative deposit if statement
-              } // slagging temperature if statement
-              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new;
-              TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);
-              T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
+              // Tw' = ((q_radiation - net_q)/sigma)^0.25
+              TW_new = std::pow( (rad_q-net_q) / _sigma_constant, 0.25); // correct TW_new for radiation model
+              T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW_new; // this is the radiation wall temperature, var.T_old[c] is the old solution for radiation "temperature".
             }
           }
         }
@@ -1133,5 +1097,50 @@ WallModelDriver::CoalRegionHT::copySolution( const Patch* patch, CCVariable<doub
         }
       }
     }
+  }
+}
+//----------------------------------
+void
+WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, double TW_new, double T_old, double rad_q, double net_q, double R_tot )
+{
+  // solver constants
+  double d_tol    = 1e-15;
+  double delta    = 1;
+  int NIter       = 15;
+  double f0       = 0.0;
+  double f1       = 0.0;
+  double T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
+  double TW_guess, TW_tmp, TW_old;
+  
+  //required variables
+  
+  // new solve
+  TW_guess = T_old;
+  TW_old = TW_guess-delta;
+  net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
+  net_q = net_q > 0 ? net_q : 0;
+  net_q *= wi.emissivity;
+  f0 = - TW_old + wi.T_inner + net_q * R_tot;
+  TW_new = TW_guess+delta;
+  net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
+  net_q *= wi.emissivity;
+  net_q = net_q>0 ? net_q : 0;
+  f1 = - TW_new + wi.T_inner + net_q * R_tot;
+  for ( int iterT=0; iterT < NIter; iterT++) {
+    TW_tmp = TW_old;
+    TW_old = TW_new;
+    TW_new = TW_tmp - ( TW_new - TW_tmp )/( f1 - f0 ) * f0;
+    TW_new = max( wi.T_inner , min( T_max, TW_new ) );
+    if (std::abs(TW_new-TW_old) < d_tol){
+      net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
+      net_q =  net_q > 0 ? net_q : 0;
+      net_q *= wi.emissivity;
+      break;
+    }
+    f0    =  f1;
+    net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
+    net_q =  net_q>0 ? net_q : 0;
+    net_q *= wi.emissivity;
+    f1    = - TW_new + wi.T_inner + net_q * R_tot;
   }
 }
