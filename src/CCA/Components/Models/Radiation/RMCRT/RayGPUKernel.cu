@@ -37,6 +37,10 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
+#define __CUDA_INTERNAL_COMPILATION__
+#include "math_functions.h"               // needed for max()
+#undef __CUDA_INTERNAL_COMPILATION__
+
 #define DEBUG -9                 // 1: divQ, 2: boundFlux, 3: scattering
 #define FIXED_RANDOM_NUM         // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 
@@ -1428,6 +1432,47 @@ __device__ bool isDbgCellDevice( GPUIntVector me )
   }
   return false;
 }
+
+
+//Math.h has an std::isnan and std::isinf.  CUDA has an isnan and isinf macro (not in a namespace, and not a function)
+//This .cu file sees both, so trying to use the CUDA isnan gives compiler ambiguity errors.
+//Dan Sutherland with Sandia said they solved this problem by using their own isnan and isinf
+//So here is the code for that.  They're also renamed to isNan and isInf to keep things separate.
+//(Code was found at http://stackoverflow.com/questions/2249110/how-do-i-make-a-portable-isnan-isinf-function
+//and adapted from https://github.com/Itseez/opencv/blob/3.0.0/modules/hal/include/opencv2/hal/defs.h#L447 )
+typedef unsigned long long uint64;
+
+__device__ int isInf(double x)
+{
+    union { uint64 u; double f; } ieee754;
+    ieee754.f = x;
+    return ( (unsigned)(ieee754.u >> 32) & 0x7fffffff ) == 0x7ff00000 &&
+           ( (unsigned)ieee754.u == 0 );
+}
+
+__device__ int isNan(double x)
+{
+    union { uint64 u; double f; } ieee754;
+    ieee754.f = x;
+    return ( (unsigned)(ieee754.u >> 32) & 0x7fffffff ) +
+           ( (unsigned)ieee754.u != 0 ) > 0x7ff00000;
+}
+
+__device__ int isInf( float value )
+{
+    union { uint64 u; double f; } ieee754;
+    ieee754.f = value;
+    return (ieee754.u & 0x7fffffff) == 0x7f800000;
+}
+
+__device__ int isNan( float value )
+{
+    union { uint64 u; double f; } ieee754;
+    ieee754.f = value;
+    return (ieee754.u & 0x7fffffff) > 0x7f800000;
+}
+
+
 //______________________________________________________________________
 //   Perform some sanity checks on the Variable.  This is for debugging
 template< class T>
@@ -1454,12 +1499,12 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
         for (int k = Lo.z; k < Hi.z; k++) {
           GPUIntVector idx = make_int3(i, j, k);
           T me = Q[idx];
-          //if ( isnan(me) || isinf(me)){
-          //  printf ( "isNan or isInf was detected at [%i,%i,%i]\n", i,j,k);
-          //  printf(" Now existing...");
-          //  __threadfence();
-          //  asm("trap;");
-          //}
+          if ( isNan(me) || isInf(me)){
+            printf ( "isNan or isInf was detected at [%i,%i,%i]\n", i,j,k);
+            printf(" Now existing...");
+            __threadfence();
+            asm("trap;");
+          }
 
         }  // k loop
       }  // j loop
