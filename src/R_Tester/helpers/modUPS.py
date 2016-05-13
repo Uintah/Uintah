@@ -75,8 +75,12 @@ def modUPS(directory, filename, changes):
       
       command   = "echo \'%s\' > sedscript" % sedscript
       system(command)
-
-      command = "sed -i -f sedscript %s" % (mod_filename)
+      
+      # be careful not all sed options (-i) are portable between OSs
+      command = "sed -i.bak -f sedscript %s" % (mod_filename)
+      system(command)
+      
+      command = "rm -f %s.bak" % (mod_filename)
       system(command)
 
     return "tmp/%s" % filename
