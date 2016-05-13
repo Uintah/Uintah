@@ -225,6 +225,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   }
 
+  task->requires( Task::OldDW,_shared_state->get_delt_label(), Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
@@ -996,7 +997,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                
               R_wall = wi.dy / wi.k; 
               
-              if (vars.time < vars.t_ave_start + 0.1 ) {
+              if (vars.time < vars.t_ave_start) {
                 vars.deposit_thickness[c] = wi.dy_dep_init;
               } else {
                 vars.deposit_thickness[c] = vars.ave_deposit_velocity[c] * wi.t_sb;
@@ -1021,16 +1022,18 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 // Regime 2
                 vars.deposit_thickness[c]=dp_max;
               }
+
+              // compute time-averaged deposit thickness
               vars.d_hat_rs[c]=vars.d_hat_rs[c] + vars.deposit_thickness[c]*vars.delta_t; // during timestep init d_hat_rs[c] is set to the old value..
               if (vars.averaging_update){
                 vars.d_hat_rs_start[c]=vars.d_hat_rs[c];
               }
               double d_ave;
               if (vars.time > vars.t_ave_start){
-                vars.deposit_thickness[c] = (vars.d_hat_rs[c] - vars.d_hat_rs_start[c] ) / std::max(0.1,(vars.time-vars.t_ave_start));  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
+                vars.deposit_thickness[c] = (vars.d_hat_rs[c] - vars.d_hat_rs_start[c] ) / std::max(1e-8,(vars.time-vars.t_ave_start));  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
               }
-              R_d = vars.deposit_thickness[c] / wi.k_deposit; 
 
+              R_d = vars.deposit_thickness[c] / wi.k_deposit; 
               R_tot = R_wall + R_d; // total thermal resistance
               T_old =  vars.T_real_old[c]; 
               TW_new = vars.T_real_old[c];

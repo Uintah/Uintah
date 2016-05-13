@@ -313,7 +313,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
             d_velocity_rs_start[c]=d_velocity_rs[c];
           }
           if (current_time > _t_ave_start){
-            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / std::max(0.1,(current_time-_t_ave_start));
+            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / std::max(1e-8,(current_time-_t_ave_start));
             deposit_velocity[c] =  vel_i_ave; // add the contribution per particle.
           }
         }// if there is a deposition flux
