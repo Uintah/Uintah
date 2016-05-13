@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Uintah_specification>
-  <!--This is input file is the OFC (an oxy-coal furnace),-->
-  <!--with variations to allow it to run at a coarse level-->
-  <!--this file includes the wall heat transfer model used-->
-  <!--for year 1 of PSAAP2.-->
-  <!--Original file can be recovered by altering lines below 
-     the catch phrase "originalOFC" -->
   <Meta>
     <title>OFC_Utah_SUFCO</title>
   </Meta>
@@ -16,21 +10,15 @@
   </Scheduler>
   <Time>
     <maxTime>100</maxTime>
-    <max_Timesteps>30</max_Timesteps>
+    <max_Timesteps>10</max_Timesteps>
     <initTime>0.0</initTime>
     <delt_min>1e-9</delt_min>
-    <delt_max>1e-3</delt_max>
+    <delt_max>4e-4</delt_max>
     <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
   <DataArchiver>
     <filebase>OFC4_smith.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="char_reaction0_qn0"/>
-    <save label="char_reaction0_qn1"/>
-    <save label="char_reaction0_qn2"/>
-    <save label="char_reaction1_qn0"/>
-    <save label="char_reaction1_qn1"/>
-    <save label="char_reaction1_qn2"/>
     <save label="residence_time"/>
     <save label="res_source"/>
     <save label="coal_gas_momentum"/>
@@ -91,6 +79,12 @@
     <save label="char_qn0_surfacerate"/>
     <save label="char_qn1_surfacerate"/>
     <save label="char_qn2_surfacerate"/>
+    <save label="char_reaction0_qn0"/>
+    <save label="char_reaction0_qn1"/>
+    <save label="char_reaction0_qn2"/>
+    <save label="char_reaction1_qn0"/>
+    <save label="char_reaction1_qn1"/>
+    <save label="char_reaction1_qn2"/>
     <save label="devol_qn0"/>
     <save label="devol_qn1"/>
     <save label="devol_qn2"/>
@@ -150,18 +144,16 @@
     <save label="temperature" table_lookup="true"/>
     <save label="density" table_lookup="true"/>
     <save label="H2" table_lookup="true"/>
-    <!--save label="CO" table_lookup="true"/>
-    <save label="CO2" table_lookup="true"/-->
+    <save label="CO" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
     <save label="H2O" table_lookup="true"/>
     <save label="OH" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
-    <save label="N2" table_lookup="true"/>
     <save label="sensibleenthalpy" table_lookup="true"/>
     <save label="adiabaticenthalpy" table_lookup="true"/>
+    <save label="N2" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
-    <!-- originalOFC -->
-    <!-- The original OFC file didn't use interval instead used: walltimeInterval="1600" walltimeStart="0" -->
-    <checkpoint cycle="2" interval="0.009"/>
+    <checkpoint cycle="2" interval="0.003"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -774,9 +766,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <!-- originalOFC -->
-      <!-- <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.008"><BCType label="mass_inlet_primary_air" var="MassFlowInlet"> -->
-      <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.03">
+      <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.2">
         <BCType label="mass_inlet_primary_air" var="MassFlowInlet">
           <value>0.001828154</value>
         </BCType>
@@ -877,9 +867,7 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      <!-- originalOFC -->
-      <!-- <Face annulus="x-" inner_radius="0.012" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.018"><BCType label="mass_inlet_secondary_air" var="MassFlowInlet"> -->
-      <Face annulus="x-" inner_radius="0.03" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.08">
+      <Face annulus="x-" inner_radius="0.2" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.6">
         <BCType label="mass_inlet_secondary_air" var="MassFlowInlet">
           <value>0.002078968</value>
         </BCType>
@@ -933,6 +921,309 @@
         </BCType>
         <BCType label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
+        </BCType>
+        <BCType label="RCmass_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="RCmass_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="RCmass_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="Charmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="Charmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="Charmass_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="w_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="w_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="w_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="pE_qn0" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="pE_qn1" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="pE_qn2" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="length_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="length_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="length_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+      </Face>
+      <Face circle="y-" name="purge_C1" origin="0.174 0.0 0.3" radius="0.1">
+        <BCType label="mass_inlet_purge_C1" var="MassFlowInlet">
+          <value>0.000293021</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="coal_gas_mix_frac" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Tabulated">
+          <value>table_enthalpy</value>
+        </BCType>
+        <BCType label="transported_adiabatic_enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value>300.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uy_qn0" var="Dirichlet">
+          <value>0.66368798030714615e-15</value>
+        </BCType>
+        <BCType label="uy_qn1" var="Dirichlet">
+          <value>0.66368798030714615e-15</value>
+        </BCType>
+        <BCType label="uy_qn2" var="Dirichlet">
+          <value>0.66368798030714615e-15</value>
+        </BCType>
+        <BCType label="RCmass_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="RCmass_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="RCmass_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="Charmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="Charmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="Charmass_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="w_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="w_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="w_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="pE_qn0" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="pE_qn1" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="pE_qn2" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="length_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="length_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="length_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+      </Face>
+      <Face circle="y-" name="purge_C2" origin="0.555 0.0 0.3" radius="0.1">
+        <BCType label="mass_inlet_purge_C2" var="MassFlowInlet">
+          <value>0.000293021</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="coal_gas_mix_frac" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Tabulated">
+          <value>table_enthalpy</value>
+        </BCType>
+        <BCType label="transported_adiabatic_enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value>300.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uy_qn0" var="Dirichlet">
+          <value>0.75850054892245278e-15</value>
+        </BCType>
+        <BCType label="uy_qn1" var="Dirichlet">
+          <value>0.75850054892245278e-15</value>
+        </BCType>
+        <BCType label="uy_qn2" var="Dirichlet">
+          <value>0.75850054892245278e-15</value>
+        </BCType>
+        <BCType label="RCmass_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="RCmass_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="RCmass_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="Charmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="Charmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="Charmass_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="w_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="w_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="w_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="pE_qn0" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="pE_qn1" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="pE_qn2" var="Dirichlet">
+          <value>-1e-15</value>
+        </BCType>
+        <BCType label="length_qn0" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="length_qn1" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+        <BCType label="length_qn2" var="Dirichlet">
+          <value>1e-15</value>
+        </BCType>
+      </Face>
+      <Face circle="y-" name="purge_C3" origin="0.939 0.0 0.3" radius="0.1">
+        <BCType label="mass_inlet_purge_C3" var="MassFlowInlet">
+          <value>0.000293021</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="coal_gas_mix_frac" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Tabulated">
+          <value>table_enthalpy</value>
+        </BCType>
+        <BCType label="transported_adiabatic_enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value>300.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="ux_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="ux_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="ux_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uz_qn2" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="uy_qn0" var="Dirichlet">
+          <value>0.75850054892245278e-15</value>
+        </BCType>
+        <BCType label="uy_qn1" var="Dirichlet">
+          <value>0.75850054892245278e-15</value>
+        </BCType>
+        <BCType label="uy_qn2" var="Dirichlet">
+          <value>0.75850054892245278e-15</value>
         </BCType>
         <BCType label="RCmass_qn0" var="Dirichlet">
           <value>1e-15</value>
@@ -1087,12 +1378,8 @@
         <lower>[0.0,0,0]</lower>
         <upper>[1.7,0.6,0.6]</upper>
         <extraCells>[1,1,1]</extraCells>
-        <!-- originalOFC -->
-        <!-- <resolution>[425,150,150]<resolution> -->
         <resolution>[60,20,20]</resolution>
-        <!-- originalOFC -->
-        <!-- <patches>[21,8,8]<patches> -->
-        <patches>[1,1,1]</patches>
+        <patches>[3,1,1]</patches>
       </Box>
     </Level>
   </Grid>
@@ -1184,32 +1471,36 @@
             <e>-1.23</e>
             <sigma>8.258e2</sigma>
           </FOWYDevol>
+          <ShaddixChar>
+            <As> 344.0 </As>
+            <Es> 45.5e3 </Es>
+            <n> 0.18 </n>
+          </ShaddixChar>
           <SmithChar>
             <use_simple_inversion>true</use_simple_inversion>
             <char_MW>12.0</char_MW>
             <surface_area_mult_factor>1.0</surface_area_mult_factor>
-            <!--species>H2</species-->
+            <species>H2</species>
             <species>O2</species>
             <species>H2O</species>
-            <!--species>CO</species-->
+            <species>CO</species>
             <species>CO2</species>
             <species>N2</species>
             <reaction>
               <oxidizer_name>O2</oxidizer_name>
               <oxidizer_MW>32.0</oxidizer_MW>
-              <pre_exponential_factor>145</pre_exponential_factor>
-              <activation_energy>19970</activation_energy>
+              <pre_exponential_factor>47.5</pre_exponential_factor>
+              <activation_energy>21869.02486</activation_energy>
               <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
             </reaction>
             <reaction>
               <oxidizer_name>CO2</oxidizer_name>
               <oxidizer_MW>48.0</oxidizer_MW>
-              <pre_exponential_factor>1040</pre_exponential_factor>
-              <activation_energy>42470</activation_energy>
+              <pre_exponential_factor>660</pre_exponential_factor>
+              <activation_energy>49832.69598</activation_energy>
               <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
             </reaction>
           </SmithChar>
-          <ksi>1</ksi>
         </ParticleProperties>
       <EulerianParticles>
         <ParticleVariables>
@@ -1562,50 +1853,9 @@
       <BoundaryConditions>
         <wall_csmag>0.0</wall_csmag>
         <intrusions>
-          <intrusion label="pipe_wall">
-            <constant_temperature T="1250.0"/>
-            <geom_object>
-              <difference>
-                <cylinder label="primary_out">
-                  <bottom>[-0.01, 0.3, 0.3]</bottom>
-                  <top>   [0.02, 0.3, 0.3]</top>
-                  <radius>0.012</radius>
-                  <cylinder_end>false</cylinder_end>
-                  <axisymmetric_end>false</axisymmetric_end>
-                  <axisymmetric_side>false</axisymmetric_side>
-                </cylinder>
-                <cylinder label="primary_inner">
-                  <bottom>[-0.01, 0.3, 0.3]</bottom>
-                  <top>   [0.02, 0.3, 0.3]</top>
-                  <radius>0.009</radius>
-                  <cylinder_end>false</cylinder_end>
-                  <axisymmetric_end>false</axisymmetric_end>
-                  <axisymmetric_side>false</axisymmetric_side>
-                </cylinder>
-              </difference>
-            </geom_object>
-          </intrusion>
           <intrusion label="FurnaceWall">
             <constant_temperature T="1250.0"/>
             <geom_object>
-              <!--difference>
-                <cylinder label="secondary_out">
-                  <bottom>[-0.01, 0.3, 0.3]</bottom>
-                  <top>   [0.02, 0.3, 0.3]</top>
-                  <radius>0.6</radius>
-                  <cylinder_end>false</cylinder_end>
-                  <axisymmetric_end>false</axisymmetric_end>
-                  <axisymmetric_side>false</axisymmetric_side>
-                </cylinder>
-                <cylinder label="secondary_inner">
-                  <bottom>[-0.01, 0.3, 0.3]</bottom>
-                  <top>   [0.02, 0.3, 0.3]</top>
-                  <radius>0.018</radius>
-                  <cylinder_end>false</cylinder_end>
-                  <axisymmetric_end>false</axisymmetric_end>
-                  <axisymmetric_side>false</axisymmetric_side>
-                </cylinder>
-              </difference-->
               <difference>
                 <cylinder label="furnace_out">
                   <bottom>[0.00, 0.3, 0.3]</bottom>
