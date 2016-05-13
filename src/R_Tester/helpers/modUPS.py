@@ -32,7 +32,22 @@ def modUPS(directory, filename, changes):
       stat("%s/tmp" % realdir)
     except Exception:
       mkdir("%s/tmp" % realdir)
-
+      
+    #__________________________________
+    # append numbers to the end of  filename.  You need to return a unique filename
+    # if a base ups file is modified more than once from multiple modUPS calls.
+    # go through loop until stat fails
+    append = 1
+    try:
+      while 1:
+        appendedFilename = "%s.%d" % (mod_filename,append)
+	stat(appendedFilename)
+	append = append + 1
+    except Exception:
+      mod_filename = "%s.%d" % (mod_filename, append)
+      filename = "%s.%d" % (filename, append)
+    
+    
     #__________________________________
     # copy filename to tmp
     command = "cp %s %s" % (org_filename, mod_filename)
@@ -64,7 +79,6 @@ def modUPS(directory, filename, changes):
       command = "sed -i -f sedscript %s" % (mod_filename)
       system(command)
 
-    
     return "tmp/%s" % filename
     
     
