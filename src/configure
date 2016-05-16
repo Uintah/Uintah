@@ -675,6 +675,7 @@ HAVE_EXPRLIB
 POKITT_LIB_DIR_FLAG
 POKITT_LIB_FLAG
 INC_POKITT_H
+DEF_CANTERA
 DEF_POKITT
 HAVE_POKITT
 SPATIALOPS_LIB_DIR_FLAG
@@ -39670,6 +39671,7 @@ $as_echo "yes" >&6; }
 
   ## Now check for Cantera based on POKITT installation...
   # Still discussing with James the best way to do this...
+  DEF_CANTERA=""
 
   DEF_POKITT="#define HAVE_POKITT 1"
   INC_POKITT_H="-I$with_pokitt/include"
@@ -39684,6 +39686,9 @@ fi
 
 
 
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/wasatch_testdefs.h"
 
 ##  --  search for Exprlib Library ------------------------
 
