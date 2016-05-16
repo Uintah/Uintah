@@ -4245,6 +4245,7 @@ if test "$with_pokitt"; then
 
   ## Now check for Cantera based on POKITT installation...
   # Still discussing with James the best way to do this...
+  DEF_CANTERA=""
 
   DEF_POKITT="#define HAVE_POKITT 1"
   INC_POKITT_H="-I$with_pokitt/include"
@@ -4256,9 +4257,12 @@ if test "$with_pokitt"; then
 fi
 AC_SUBST(HAVE_POKITT)
 AC_SUBST(DEF_POKITT)
+AC_SUBST(DEF_CANTERA)
 AC_SUBST(INC_POKITT_H)
 AC_SUBST(POKITT_LIB_FLAG)
 AC_SUBST(POKITT_LIB_DIR_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/wasatch_testdefs.h"
 
 ##  --  search for Exprlib Library ------------------------
 
