@@ -7,11 +7,8 @@ SRCDIR   := CCA/Components/Arches/WallHTModels
 # CUDA_ENABLED_SRCS are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
-#
-# Also, do not put the .cc on this list of files as the .cc or .cu
-# will be added automatically as needed.
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
 CUDA_ENABLED_SRCS =  \
     WallModelDriver
@@ -34,14 +31,13 @@ endif
 
 ########################################################################
 #
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
+# Automatically created rules to copy CUDA enabled source (.cc) files
+# to the binary build tree and rename with a .cu extension.
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # Copy the 'original' .cc files into the binary tree and rename as .cu
 
-  $(OBJTOP_ABS)/$(SRCDIR)/WallModelDriver.cu : $(SRCTOP_ABS)/$(SRCDIR)/WallModelDriver.cc
-	cp $< $@
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
 endif

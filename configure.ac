@@ -4165,7 +4165,23 @@ if test "$with_spatialops"; then
       echo ""
       AC_MSG_ERROR( '$with_spatialops' directory does not exist. )
     fi
+
     SPOPS_INCLUDE_DIR="include/spatialops"
+
+    # Determine if W3P has CUDA...
+    grep -q "#define ENABLE_CUDA" $with_spatialops/$SPOPS_INCLUDE_DIR/SpatialOpsConfigure.h
+    if test $? = 0; then
+      # W3P has cuda, verify that Uintah has CUDA too...
+      if test "$HAVE_CUDA" != "yes"; then
+        AC_MSG_ERROR( ['$with_spatialops' built with CUDA, but Uintah is not...] )
+      fi
+    else
+      # W3P does not have CUDA, verify that Uintah does NOT have CUDA too...
+      if test "$HAVE_CUDA" = "yes"; then
+        AC_MSG_ERROR( ['$with_spatialops' not built with CUDA, but Uintah is...] )
+      fi
+    fi
+
     # Check includes
     for file in Nebo.h OperatorDatabase.h \
                 structured/SpatialField.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
@@ -4226,6 +4242,10 @@ if test "$with_pokitt"; then
     fi
   fi
   AC_MSG_RESULT(yes)
+
+  ## Now check for Cantera based on POKITT installation...
+  # Still discussing with James the best way to do this...
+
   DEF_POKITT="#define HAVE_POKITT 1"
   INC_POKITT_H="-I$with_pokitt/include"
   POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"

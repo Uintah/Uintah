@@ -32,8 +32,8 @@ SRCDIR := CCA/Components/Wasatch
 # These are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
 
 # If only building Arches required files, then we don't need these...
@@ -105,6 +105,24 @@ INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
             $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE)                 \
             $(BOOST_INCLUDE) $(LAPACK_INCLUDE)
 
+########################################################################
+#
+# Create rules to copy CUDA enabled source (.cc) files to the binary build tree
+# and rename them with a .cu extension so they can be compiled by the NVCC
+# compiler.
+#
+
+ifeq ($(HAVE_CUDA),yes)
+
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
+
+endif
+
+########################################################################
+#
+# Sub-dir recurse...
+
 ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
   SUBDIRS :=                    \
         $(SRCDIR)/Operators     \
@@ -120,15 +138,3 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-########################################################################
-#
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
-#
-ifeq ($(HAVE_CUDA),yes)
-  # Copy the 'original' .cc files into the binary tree and rename as .cu
-  $(OBJTOP_ABS)/$(SRCDIR)/TimeStepper.cu : $(SRCTOP_ABS)/$(SRCDIR)/TimeStepper.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/Wasatch.cu : $(SRCTOP_ABS)/$(SRCDIR)/Wasatch.cc
-	cp $< $@
-endif

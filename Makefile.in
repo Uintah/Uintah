@@ -57,6 +57,15 @@ configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
 ifeq ($(HAVE_CUDA),yes)
   GPU_EXTRA_LINK := gpu_extra_link
   ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+
+  # Function to create a make rule to copy the original .cc file from the .../src/ tree
+  # to the .../binary/ tree and rename it with a .cu extension.
+  #
+  define make-cuda-target
+    $(OBJTOP_ABS)/$(SRCDIR)/$1.cu : $(SRCTOP_ABS)/$(SRCDIR)/$1.cc
+	cp $$< $$@
+  endef
+
 endif
 
 # The following variables are used by the Fake* scripts... please
@@ -350,6 +359,8 @@ ifneq ($(IS_OSX),yes)
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
 endif
 	rm -f $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+	@( find CCA/Components -name "*.cu" -exec rm -f {} \;)
+	@( find CCA/Components -name "*.h" -exec rm -f {} \;)
 	@( find CCA/Components -name "*.$(OBJEXT)" -exec rm -f {} \;)
 	@( find CCA/Components -name "*.d" -exec rm -f {} \;)	
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
