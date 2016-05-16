@@ -41,7 +41,7 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG -9     // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG 0     // 1: divQ, 2: boundFlux, 3: scattering
 #define CUDA_PRINTF   // increase the printf buffer
 
 /*______________________________________________________________________
@@ -107,7 +107,9 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_onOff_SetBCs   = true;
   d_radiometer     = NULL;
   d_dbgCells.push_back( IntVector(0,0,0));
-  d_dbgCells.push_back( IntVector(5,5,5));
+
+//  d_dbgCells.push_back( IntVector(0,1,0));
+//  d_dbgCells.push_back( IntVector(5,5,5));
 
   d_halo          = IntVector(-9,-9,-9);
   d_rayDirSampleAlgo = NAIVE;
@@ -1446,8 +1448,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
   vector<Vector> Dx(maxLevels);
-  double DyDx[maxLevels];
-  double DzDx[maxLevels];
 
   for(int L = 0; L<maxLevels; L++) {
     LevelP level = new_dw->getGrid()->getLevel(L);
@@ -1460,8 +1460,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       dbg << " getting coarse level data L-" << L << endl;
     }
     Vector dx = level->dCell();
-    DyDx[L] = dx.y() / dx.x();
-    DzDx[L] = dx.z() / dx.x();
     Dx[L] = dx;
   }
 
@@ -1542,6 +1540,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
       IntVector origin = *iter;
+      Point CC_pos = fineLevel->getCellPosition(origin);
 
       if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
         randVector(rand_i, mTwister, origin);
@@ -1575,9 +1574,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
         Vector rayOrigin;
         int my_L = maxLevels - 1;
-        ray_Origin( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, rayOrigin);
+        ray_Origin( mTwister, CC_pos, Dx[my_L], d_CCRays, rayOrigin );
 
-        updateSumI_ML< T >( direction_vector, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
+        updateSumI_ML< T >( direction_vector, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType,
                        nRaySteps, sumI, mTwister);
 
@@ -2550,14 +2549,12 @@ void Ray::computeCellType( const ProcessorGroup*,
 //  Multi-level
  template< class T>
  void Ray::updateSumI_ML ( Vector& ray_direction,
-                           Vector& ray_location,
+                           Vector& ray_origin,
                            const IntVector& origin,
                            const vector<Vector>& Dx,
                            const BBox& domain_BB,
                            const int maxLevels,
                            const Level* fineLevel,
-                           double DyDx[],
-                           double DzDx[],
                            const IntVector& fineLevel_ROI_Lo,
                            const IntVector& fineLevel_ROI_Hi,
                            vector<IntVector>& regionLo,
@@ -2569,15 +2566,6 @@ void Ray::computeCellType( const ProcessorGroup*,
                            double& sumI,
                            MTRand& mTwister)
 {
-
-
-/*`==========TESTING==========*/
-#if DEBUG == 1
-  if( isDbgCell(origin) ) {
-    printf("        A) updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
-  }
-#endif
-/*===========TESTING==========`*/
   int L       = maxLevels -1;  // finest level
   int prevLev = L;
 
@@ -2585,32 +2573,52 @@ void Ray::computeCellType( const ProcessorGroup*,
   IntVector prevCell = cur;
 
   int step[3];                                           // Gives +1 or -1 based on sign
-  bool sign[3];
+  double sign[3];
 
   Vector inv_direction = Vector(1.0)/ray_direction;
-  findStepSize( step, sign, inv_direction );
+
+/*`==========TESTING==========*/
+#if DEBUG == 1
+  if( isDbgCell(origin) ) {
+    printf("        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_origin.x(), ray_origin.y(), ray_origin.z());
+  }
+#endif
+/*===========TESTING==========`*/
+
+  raySignStep(sign, step, ray_direction);
 
   //__________________________________
   // define tMax & tDelta on all levels
   // go from finest to coarset level so you can compare
   // with 1L rayTrace results.
 
-  Vector tMax;
-  tMax.x( (origin[0] + sign[0]           - ray_location[0]) * inv_direction[0] );
-  tMax.y( (origin[1] + sign[1] * DyDx[L] - ray_location[1]) * inv_direction[1] );
-  tMax.z( (origin[2] + sign[2] * DzDx[L] - ray_location[2]) * inv_direction[2] );
+  Point CC_posOrigin = fineLevel->getCellPosition(origin);
+  
+  // rayDx is the distance from bottom, left, back, corner of cell to ray
+  Vector rayDx;
+  rayDx[0] = ray_origin.x() - ( CC_posOrigin.x() - 0.5*Dx[L][0] );
+  rayDx[1] = ray_origin.y() - ( CC_posOrigin.y() - 0.5*Dx[L][1] );
+  rayDx[2] = ray_origin.z() - ( CC_posOrigin.z() - 0.5*Dx[L][2] );
+  
+  // tMax is the physical distance from the ray origin to each of the respective planes of intersection
+  Vector tMaxV;
+  tMaxV[0] = (sign[0] * Dx[L][0] - rayDx[0]) * inv_direction.x();
+  tMaxV[1] = (sign[1] * Dx[L][1] - rayDx[1]) * inv_direction.y();
+  tMaxV[2] = (sign[2] * Dx[L][2] - rayDx[2]) * inv_direction.z();
 
   vector<Vector> tDelta(maxLevels);
   for(int Lev = maxLevels-1; Lev>-1; Lev--){
     //Length of t to traverse one cell
-    tDelta[Lev].x( fabs(inv_direction[0]) );
-    tDelta[Lev].y( fabs(inv_direction[1]) * DyDx[Lev] );
-    tDelta[Lev].z( fabs(inv_direction[2]) * DzDx[Lev] );
+    tDelta[Lev].x( std::fabs(inv_direction[0]) * Dx[Lev][0]);
+    tDelta[Lev].y( std::fabs(inv_direction[1]) * Dx[Lev][1] );
+    tDelta[Lev].z( std::fabs(inv_direction[2]) * Dx[Lev][2] );
   }
 
   //Initializes the following values for each ray
   bool   in_domain      = true;
-  double tMax_prev      = 0;
+  Vector tMaxV_prev     = Vector(0,0,0);
+  double old_length     = 0.0;
+  
   double intensity      = 1.0;
   double fs             = 1.0;
   int    nReflect       = 0;             // Number of reflections
@@ -2618,6 +2626,9 @@ void Ray::computeCellType( const ProcessorGroup*,
   const  Level* level   = fineLevel;
   double optical_thickness     = 0;
   double expOpticalThick_prev  = 1.0;    // exp(-opticalThick_prev)
+  double rayLength             = 0.0;
+  Vector ray_location          = ray_origin;
+  Point CC_pos                 = CC_posOrigin;
 
   //______________________________________________________________________
   //  Threshold  loop
@@ -2627,20 +2638,20 @@ void Ray::computeCellType( const ProcessorGroup*,
 
       prevCell = cur;
       prevLev  = L;
-
-      double disMin = -9;   // Ray segment length.
+      Point prevCC_pos = CC_pos;
 
       //__________________________________
       //  Determine the princple direction the ray is traveling
       //
-      if ( tMax[0] < tMax[1] ){    // X < Y
-        if ( tMax[0] < tMax[2] ){  // X < Z
+      dir = NONE;
+      if ( tMaxV[0] < tMaxV[1] ){    // X < Y
+        if ( tMaxV[0] < tMaxV[2] ){  // X < Z
           dir = X;
         } else {
           dir = Z;
         }
       } else {
-        if(tMax[1] <tMax[2] ){     // Y < Z
+        if(tMaxV[1] <tMaxV[2] ){     // Y < Z
           dir = Y;
         } else {
           dir = Z;
@@ -2649,16 +2660,14 @@ void Ray::computeCellType( const ProcessorGroup*,
 
       // next cell index and position
       cur[dir]  = cur[dir] + step[dir];
-      Vector dx_prev = Dx[L];           //  Used to compute coarsenRatio  FIX ME
 
       //__________________________________
       // Logic for moving between levels
       // - Currently you can only move from fine to coarse level
       // - Don't jump levels if ray is at edge of domain
 
-      Point pos = level->getCellPosition(cur);           // position could be outside of domain
-      in_domain = domain_BB.inside(pos);
-      //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
+      CC_pos = level->getCellPosition(cur);           // position could be outside of domain
+      in_domain = domain_BB.inside(CC_pos);
 
       bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
       bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
@@ -2666,7 +2675,8 @@ void Ray::computeCellType( const ProcessorGroup*,
       bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
       bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
 
-#if (DEBUG == 1 || DEBUG == 4)
+//#define ML_DEBUG
+#if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
       if( isDbgCell(origin) ) {
         printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ", cur.x(), cur.y(), cur.z(), jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
             containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
@@ -2681,7 +2691,7 @@ void Ray::computeCellType( const ProcessorGroup*,
         L     = level->getIndex();
         onFineLevel = false;
 
-#if (DEBUG == 1 || DEBUG == 4)
+#if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
         if( isDbgCell(origin) ) {
           printf( "        ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x(), cur.y(), cur.z());
         }
@@ -2692,72 +2702,66 @@ void Ray::computeCellType( const ProcessorGroup*,
         cur   = level->mapCellToCoarser(cur);
         level = level->getCoarserLevel().get_rep();
         L     = level->getIndex();
-#if (DEBUG == 1 || DEBUG == 4)
+#if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
         if( isDbgCell(origin) ) {
           printf( "        ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x(), cur.y(), cur.z(), c_old.x(), c_old.y(), c_old.z());
         }
 #endif
       }
 
-
-
       //__________________________________
       //  update marching variables
-      disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
-      tMax_prev     = tMax[dir];
-      tMax[dir]     = tMax[dir] + tDelta[L][dir];
-
-      ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
-      ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
-      ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
-
+      double distanceTraveled = (tMaxV[dir] - old_length);
+      old_length     = tMaxV[dir];
+      tMaxV_prev     = tMaxV;
+      
+      tMaxV[dir]     = tMaxV[dir] + tDelta[L][dir];
+      
+      ray_location[0] = ray_location[0] + ( distanceTraveled  * ray_direction[0] );
+      ray_location[1] = ray_location[1] + ( distanceTraveled  * ray_direction[1] );
+      ray_location[2] = ray_location[2] + ( distanceTraveled  * ray_direction[2] );     
+      
       //__________________________________
-      // Account for uniqueness of first step after reaching a new level
-      Vector dx = level->dCell();
-      IntVector coarsenRatio = IntVector(1,1,1);
-
-      coarsenRatio[0] = dx[0]/dx_prev[0];
-      coarsenRatio[1] = dx[1]/dx_prev[1];
-      coarsenRatio[2] = dx[2]/dx_prev[2];
-
-      Vector lineup;
-      for (int ii=0; ii<3; ii++){
-        if (sign[ii]) {
-          lineup[ii] = -(cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 ));
-        }
-        else {
-          lineup[ii] = cur[ii] % coarsenRatio[ii];
-        }
+      // when moving to a coarse level tmax will change only in the direction the ray is moving
+      if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ){
+      
+        double rayDx_Level = ray_location[dir] - ( CC_pos(dir) - 0.5*Dx[L][dir] );
+        double tMax_tmp    = ( sign[dir] * Dx[L][dir] - rayDx_Level ) * inv_direction[dir];
+        
+        tMaxV        = tMaxV_prev;
+        tMaxV[dir]  += tMax_tmp;
       }
 
-      tMax += lineup * tDelta[prevLev];
+      rayLength    += distanceTraveled;
 
- /*`==========TESTING==========*/
-#if DEBUG == 1
-  if( isDbgCell( origin) ){
-    printf( "        B) cur [%d,%d,%d] prev [%d,%d,%d]", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
-    printf( " dir %d ", dir );
-    printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
-    printf( " tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
-    printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
-    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
-    printf( "disMin %g inDomain %i\n",disMin, in_domain );
-
-    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
-    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-    printf( "            Dx[prevLev].x  %g \n",  Dx[prevLev].x() );
-  }
-#endif
-/*===========TESTING==========`*/
-
-      optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
+      optical_thickness += abskg[prevLev][prevCell]*distanceTraveled;
       nRaySteps++;
-
+      
 /*`==========TESTING==========*/
 #ifdef FAST_EXP
-      double expOpticalThick = fast_exp(-optical_thickness);
+      double expOpticalThick = fast_exp(-optical_thickness); 
 #else
       double expOpticalThick = exp(-optical_thickness);
+#endif
+/*===========TESTING==========`*/
+      
+ /*`==========TESTING==========*/
+#if DEBUG == 1
+  if( isDbgCell( origin ) ){
+    printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
+    printf( " dir %d ", dir );
+//    printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
+    printf( "tMax [%g,%g,%g] ", tMax[0],tMax[1], tMax[2]);
+    printf( "rayLoc [%4.5f,%4.5f,%4.5f] ",ray_location.x(),ray_location.y(), ray_location.z());
+    printf( "\tdistanceTraveled %4.5f tMax[dir]: %g tMax_prev[dir]: %g , Dx[dir]: %g\n",distanceTraveled, tMax[dir], tMax_prev[dir], Dx[L][dir]);
+    printf( "                tDelta [%g,%g,%g] \n",tDelta[L].x(),tDelta[L].y(), tDelta[L].z());
+    
+//    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
+//    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
+//    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
+//    printf( "            Dx[prevLev].x  %g \n",  Dx[prevLev].x() );
+    printf( "                optical_thickkness %g \t rayLength: %g \tSumI %g\n", optical_thickness, rayLength, sumI);
+  }
 #endif
 /*===========TESTING==========`*/
 
@@ -2780,13 +2784,14 @@ void Ray::computeCellType( const ProcessorGroup*,
     intensity = intensity * fs;
 
     // when a ray reaches the end of the domain, we force it to terminate.
-    if(!d_allowReflect) intensity = 0;
-
+    if(!d_allowReflect){
+      intensity = 0;
+    }
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
   if( isDbgCell(origin) ){
-    printf( "        C) intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, d_allowReflect );
+    printf( "        C) intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, exp(-optical_thickness), fs, d_allowReflect );
 
   }
 #endif
@@ -2931,8 +2936,6 @@ template void  Ray::updateSumI_ML< double> ( Vector&,
                                              const BBox&,
                                              const int,
                                              const Level* ,
-                                             double DyDx[],
-                                             double DzDx[],
                                              const IntVector&,
                                              const IntVector&,
                                              vector<IntVector>&,
@@ -2951,8 +2954,6 @@ template void  Ray::updateSumI_ML< float> ( Vector&,
                                              const BBox&,
                                              const int,
                                              const Level* ,
-                                             double DyDx[],
-                                             double DzDx[],
                                              const IntVector&,
                                              const IntVector&,
                                              vector<IntVector>&,
