@@ -33,8 +33,8 @@ SRCDIR := CCA/Components/Wasatch/Operators
 # These are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
 CUDA_ENABLED_SRCS :=             \
         UpwindInterpolant        \
@@ -58,18 +58,14 @@ endif
 
 ########################################################################
 #
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
+# Create rules to copy CUDA enabled source (.cc) files to the binary build tree
+# and rename them with a .cu extension so they can be compiled by the NVCC
+# compiler.
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # Copy the 'original' .cc files into the binary tree and rename as .cu
-  $(OBJTOP_ABS)/$(SRCDIR)/Operators.cu : $(SRCTOP_ABS)/$(SRCDIR)/Operators.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/UpwindInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/UpwindInterpolant.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/Extrapolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/Extrapolant.cc
-	cp $< $@
+
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
+
 endif

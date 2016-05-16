@@ -30,8 +30,8 @@ SRCDIR := CCA/Components/Wasatch/Expressions
 # These are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
 CUDA_ENABLED_SRCS :=      \
      BasicExprBuilder     \
@@ -83,8 +83,23 @@ SRCS += \
         $(SRCDIR)/CellType.cc      \
         $(SRCDIR)/TabPropsHeatLossEvaluator.cc
 
+########################################################################
 #
-# Subdirectories to build...
+# Create rules to copy CUDA enabled source (.cc) files to the binary build tree
+# and rename them with a .cu extension so they can be compiled by the NVCC
+# compiler.
+#
+
+ifeq ($(HAVE_CUDA),yes)
+
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
+
+endif
+
+########################################################################
+#
+# Recursively build subdirectories...
 #
 
 SUBDIRS := \
@@ -98,58 +113,3 @@ SUBDIRS := \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-########################################################################
-#
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
-#
-
-ifeq ($(HAVE_CUDA),yes)
-  # Copy the 'original' .cc files into the binary tree and rename as .cu
-  $(OBJTOP_ABS)/$(SRCDIR)/BasicExprBuilder.cu : $(SRCTOP_ABS)/$(SRCDIR)/BasicExprBuilder.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/ConvectiveFlux.cu : $(SRCTOP_ABS)/$(SRCDIR)/ConvectiveFlux.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/DiffusiveFlux.cu : $(SRCTOP_ABS)/$(SRCDIR)/DiffusiveFlux.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/DiffusiveVelocity.cu : $(SRCTOP_ABS)/$(SRCDIR)/DiffusiveVelocity.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/Dilatation.cu : $(SRCTOP_ABS)/$(SRCDIR)/Dilatation.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/MomentumPartialRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumPartialRHS.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/MomentumRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumRHS.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/MonolithicRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/MonolithicRHS.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/PoissonExpression.cu : $(SRCTOP_ABS)/$(SRCDIR)/PoissonExpression.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/Pressure.cu : $(SRCTOP_ABS)/$(SRCDIR)/Pressure.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/PressureSource.cu : $(SRCTOP_ABS)/$(SRCDIR)/PressureSource.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/PrimVar.cu : $(SRCTOP_ABS)/$(SRCDIR)/PrimVar.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/ScalarEOSCoupling.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarEOSCoupling.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/SetCurrentTime.cu : $(SRCTOP_ABS)/$(SRCDIR)/SetCurrentTime.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/SimpleEmission.cu : $(SRCTOP_ABS)/$(SRCDIR)/SimpleEmission.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/SolnVarEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/SolnVarEst.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/Strain.cu : $(SRCTOP_ABS)/$(SRCDIR)/Strain.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/ScalabilityTestSrc.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalabilityTestSrc.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/VelEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/VelEst.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/ExprAlgebra.cu : $(SRCTOP_ABS)/$(SRCDIR)/ExprAlgebra.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/TimeAdvance.cu : $(SRCTOP_ABS)/$(SRCDIR)/TimeAdvance.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/DensityCalculator.cu : $(SRCTOP_ABS)/$(SRCDIR)/DensityCalculator.cc
-	cp $< $@
-endif

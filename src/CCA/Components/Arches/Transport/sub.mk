@@ -7,11 +7,8 @@ SRCDIR := CCA/Components/Arches/Transport
 # CUDA_ENABLED_SRCS are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
-#
-# Also, do not put the .cc on this list of files as the .cc or .cu
-# will be added automatically as needed.
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
 CUDA_ENABLED_SRCS =      \
         ComputePsi       \
@@ -41,28 +38,13 @@ endif
 
 ########################################################################
 #
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
+# Automatically create rules to copy CUDA enabled source (.cc) files
+# to the binary build tree and rename with a .cu extension.
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # Copy the 'original' .cc files into the binary tree and rename as .cu
 
-  $(OBJTOP_ABS)/$(SRCDIR)/FEUpdate.cu : $(SRCTOP_ABS)/$(SRCDIR)/FEUpdate.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/KFEUpdate.cu : $(SRCTOP_ABS)/$(SRCDIR)/KFEUpdate.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/SSPInt.cu : $(SRCTOP_ABS)/$(SRCDIR)/SSPInt.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/KScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/KScalarRHS.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/TransportFactory.cu : $(SRCTOP_ABS)/$(SRCDIR)/TransportFactory.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/ComputePsi.cu : $(SRCTOP_ABS)/$(SRCDIR)/ComputePsi.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/URHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/URHS.cc
-	cp $< $@
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
 endif

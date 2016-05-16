@@ -1,17 +1,14 @@
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components/Arches/Utility
+SRCDIR := CCA/Components/Arches/Utility
 
 ########################################################################
 #
 # CUDA_ENABLED_SRCS are files that if CUDA is enabled (via configure), must be
 # compiled using the nvcc compiler.
 #
-# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
-# corresponding rule at the end of this file!
-#
-# Also, do not put the .cc on this list of files as the .cc or .cu
-# will be added automatically as needed.
+# Do not put the .cc on the file name as the .cc or .cu will be added automatically
+# as needed.
 #
 CUDA_ENABLED_SRCS =                      \
           BoundaryInfo                   \
@@ -43,31 +40,13 @@ endif
 
 ########################################################################
 #
-# Rules to copy CUDA enabled source (.cc) files to the binary build tree
-# and rename with a .cu extension.
+# Automatically create rules to copy CUDA enabled source (.cc) files
+# to the binary build tree and rename with a .cu extension.
 #
 
 ifeq ($(HAVE_CUDA),yes)
-  # Copy the 'original' .cc files into the binary tree and rename as .cu
 
-  $(OBJTOP_ABS)/$(SRCDIR)/BoundaryInfo.cu : $(SRCTOP_ABS)/$(SRCDIR)/BoundaryInfo.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/GridInfo.cu : $(SRCTOP_ABS)/$(SRCDIR)/GridInfo.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/InitializeFactory.cu : $(SRCTOP_ABS)/$(SRCDIR)/InitializeFactory.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/InitLagrangianParticleSize.cu : $(SRCTOP_ABS)/$(SRCDIR)/InitLagrangianParticleSize.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/InitLagrangianParticleVelocity.cu : $(SRCTOP_ABS)/$(SRCDIR)/InitLagrangianParticleVelocity.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/RandParticleLoc.cu : $(SRCTOP_ABS)/$(SRCDIR)/RandParticleLoc.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/SurfaceNormals.cu : $(SRCTOP_ABS)/$(SRCDIR)/SurfaceNormals.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/TaskAlgebra.cu : $(SRCTOP_ABS)/$(SRCDIR)/TaskAlgebra.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/UtilityFactory.cu : $(SRCTOP_ABS)/$(SRCDIR)/UtilityFactory.cc
-	cp $< $@
-  $(OBJTOP_ABS)/$(SRCDIR)/WaveFormInit.cu : $(SRCTOP_ABS)/$(SRCDIR)/WaveFormInit.cc
-	cp $< $@
+  # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
+  $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
+
 endif
