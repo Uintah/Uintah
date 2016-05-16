@@ -48,7 +48,7 @@
 #include <iosfwd>
 #include <vector>
 
-#if defined( __PGI )
+#if defined( __PGI ) || defined ( __GNUC__ )
 #  define WARNS_ABOUT_UNREACHABLE_STATEMENTS 1
 #endif
 
