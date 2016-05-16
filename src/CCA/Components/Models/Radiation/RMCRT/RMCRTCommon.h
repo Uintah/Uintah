@@ -114,21 +114,6 @@ namespace Uintah{
                    int& step,
                    double& sign,
                    double& ray_direction);
-                   
-      void reflect(double& fs,
-                   IntVector& cur,
-                   IntVector& prevCell,
-                   const double abskg,
-                   bool& in_domain,
-                   int& step,
-                   bool& sign,
-                   double& ray_direction);
-
-      //__________________________________
-      //
-      void findStepSize(int step[],
-                        bool sign[],
-                        const Vector& inv_direction_vector);
 
       //__________________________________
       //  returns +- 1 for ray direction sign and cellStep
@@ -141,15 +126,6 @@ namespace Uintah{
       void ray_Origin( MTRand& mTwister,
                        const Point  CC_position,  
                        const Vector Dx,
-                       const bool useCCRays,
-                       Vector& rayOrigin);
-
-      //__________________________________
-      //
-      void ray_Origin( MTRand& mTwister,
-                       const IntVector origin,
-                       const double DyDx, 
-                       const double DzDx,
                        const bool useCCRays,
                        Vector& rayOrigin);
 

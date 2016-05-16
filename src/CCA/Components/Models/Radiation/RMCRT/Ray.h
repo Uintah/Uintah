@@ -277,14 +277,12 @@ namespace Uintah{
       //__________________________________
       template<class T>
       void updateSumI_ML ( Vector& ray_direction,
-                           Vector& ray_location,
+                           Vector& ray_origin,
                            const IntVector& origin,
                            const std::vector<Vector>& Dx,
                            const BBox& domain_BB,
                            const int maxLevels,
                            const Level* fineLevel,
-                           double DyDx[],
-                           double DzDx[],
                            const IntVector& fineLevel_ROI_Lo,
                            const IntVector& fineLevel_ROI_Hi,
                            std::vector<IntVector>& regionLo,
