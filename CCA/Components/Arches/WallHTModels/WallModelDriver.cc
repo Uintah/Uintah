@@ -1036,9 +1036,8 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               R_d = vars.deposit_thickness[c] / wi.k_deposit; 
               R_tot = R_wall + R_d; // total thermal resistance
               T_old =  vars.T_real_old[c]; 
-              TW_new = vars.T_real_old[c];
               net_q = rad_q;
-              newton_solve( wi, vars, TW_new, T_old, rad_q, net_q, R_tot );
+              TW_new = newton_solve( wi, vars, T_old, rad_q, net_q, R_tot );
               vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
               // now to make consistent with assumed emissivity of 1 in radiation model:
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
@@ -1103,8 +1102,8 @@ WallModelDriver::CoalRegionHT::copySolution( const Patch* patch, CCVariable<doub
   }
 }
 //----------------------------------
-void
-WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, double TW_new, double T_old, double rad_q, double net_q, double R_tot )
+double
+WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, double T_old, double rad_q, double net_q, double R_tot )
 {
   // solver constants
   double d_tol    = 1e-15;
@@ -1113,7 +1112,7 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, dou
   double f0       = 0.0;
   double f1       = 0.0;
   double T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
-  double TW_guess, TW_tmp, TW_old;
+  double TW_new, TW_guess, TW_tmp, TW_old;
   
   //required variables
   
@@ -1146,4 +1145,5 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, dou
     net_q *= wi.emissivity;
     f1    = - TW_new + wi.T_inner + net_q * R_tot;
   }
+  return TW_new;
 }
