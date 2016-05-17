@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Cartridge Brass -->
+<Uintah_Include>
+  <flow_model type="johnson_cook">
+    <A>236.36e1</A>
+    <B>397.27e1</B>
+    <C>0.0</C>
+    <n>0.226</n>
+    <m>1.00</m>
+    <T_r>294.0</T_r>
+    <T_m>930.0</T_m>
+    <epdot_0>1.0e-6</epdot_0>
+  </flow_model>
+</Uintah_Include>

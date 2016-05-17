@@ -1,0 +1,72 @@
+#!/bin/csh -f
+
+#______________________________________________________________________
+# RMCRT_doubleToFloat:
+#    This script modifies the input file so they will run on a GPU
+#   cal_frequency -> 1
+#   halo = [0,0,0]
+#
+# Usage:  RMCRT_gpuWorkAround  <ups file> < output file>
+#  
+# To find the xml path run the command:
+#
+# xmlstarlet el -v <xmlFile>
+#______________________________________________________________________
+
+if ($#argv != 2 ) then
+  echo ""
+  echo " ERROR"  
+  echo " Usage: $0 <ups file> < output file>"
+  echo ""
+  exit (-1)
+endif
+
+set ups  = $argv[1]
+set out  = $argv[2]
+
+set tmp = (`which xmlstarlet`)
+if ( $status ) then
+  echo ""
+  echo " ERROR: Could not find the xml editing program xmlstarlet.  Make sure that it's installed and in your path"
+  echo ""
+  exit(-1)
+endif
+
+if ( ! -e $ups ) then
+  echo ""
+  echo " ERROR: Could not find the ups file ($ups) to edit."
+  echo ""
+  exit(-1)
+endif
+
+
+#__________________________________
+#   cal_frequency -> 1
+set xmlpath = "Uintah_specification/calc_frequency"
+set value   = "     1            "
+xmlstarlet ed -u "$xmlpath" -v "$value"  $ups > .tmp
+
+# bulletproofing:
+set me = `xmlstarlet sel --template --value-of "$xmlpath" .tmp`
+
+if ($me != $value ) then
+  echo ""
+  echo " ERROR there was a problem editing the xml file.  No changes have been made"
+  echo " $me  $value"
+  echo ""
+  exit(-1)  
+endif
+
+#__________________________________
+#  halo = [0,0,0]
+set xmlpath = 'Uintah_specification/RMCRT/algorithm/halo'
+set value   = "           [0,0,0]      "
+grep -q halo $ups
+
+if ( $status == 0 ) then
+  xmlstarlet ed -u "$xmlpath" -v "$value"  .tmp >& $out
+else
+   mv .tmp $out
+endif
+
+/bin/rm -rf .tmp >& /dev/null

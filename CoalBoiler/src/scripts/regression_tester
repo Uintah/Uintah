@@ -1,0 +1,712 @@
+#! /bin/bash
+
+if test "$GOLD_STANDARD" = "" ; then
+    echo "The variable GOLD_STANDARD has not been set.  Please set the GOLD_STANDARD"
+    echo "variable to a valid directory (either in your environment or in this script."
+    echo "Goodbye."
+    exit
+
+elif test -d ${GOLD_STANDARD}; then
+    test_dir=${GOLD_STANDARD}
+    CHECKPOINTS=${GOLD_STANDARD}/CheckPoints
+fi
+
+
+if test ! -d $GOLD_STANDARD; then
+    echo "The directory, '$GOLD_STANDARD', does not exist.  Please set the variable"
+    echo "GOLD_STANDARD, either in your environment or in this script, to a valid directory."
+    echo "Goodbye."
+    exit
+fi
+
+if test ! -x "sus"; then
+   echo
+   echo "You must run this script from a directory that contains the 'sus' executable."
+   echo
+   exit
+fi
+
+
+# Set the default TestData directory
+DIR=dbg
+
+# Set up MPI 
+MPI=''
+MPI_RUN="no"
+
+# Set up NICE
+NICE=''
+
+# Set the default inputs directory
+INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
+
+if test ! -d "$INPUTS"; then
+
+   INPUTS=./inputs
+   if test ! -d "$INPUTS"; then
+      echo ""
+      echo "ERROR: can't find your 'inputs' directory..."
+      echo "       Looked:"
+      echo "               $INPUTS"
+      echo "               ./inputs"
+      echo ""
+      exit
+   fi
+fi
+
+in_file=
+
+# Set the test results directory
+
+#results=TestResults
+#if test ! -d $results; then
+#    echo
+#    echo "Creating 'TestResults' directory..."
+#    echo
+#    mkdir $results
+#fi
+
+do_mpm=0
+do_mpmf=0
+do_ice=0
+do_ice_amr=0
+do_mpmice=0
+do_mpmice_amr=0
+do_models=0
+do_impm=0
+do_smpm=0
+do_arches=0
+do_mpmarches=0
+do_examples=0
+do_ucf=0
+do_wasatch=0
+do_remove=0
+do_restart=0
+do_mem=0
+compare_uda_options=""
+create_goldStandard=false
+
+ALL=
+
+usage () {
+    echo
+    echo "Usage: regression_tester [OPTION]..."
+    echo "  Run the regression tester.  With no OPTION, run all the tests."
+    echo
+    echo "  -main          run the mpm,ice,mpmice,arches and mpmarches tests"
+    echo "  -all           run all tests (overrides other tests flags)"
+    echo "  -arches        run the arches tests"
+    echo "  -ice_amr       run the tests ice amr tests"
+    echo "  -examples      run the example tests"
+    echo "  -mpm           run the mpm tests"
+    echo "  -mpmf          run the mpm fracture tests"
+    echo "  -models        run the Models tests"
+    echo "  -mpmarches     run the mpmarches tests"
+    echo "  -smpm          run the smpm tests"
+    echo "  -ice           run the ice tests"
+    echo "  -mpmice        run the mpmice tests"
+    echo "  -mpmice_amr    run the mpmice amr tests"
+    echo "  -impm          run the implicit mpm tests"
+    echo "  -ucf           run the UCF tests"
+    echo "  -wasatch       run the wasatch tests"
+    echo "  -dbg           use the dbg (debug) TestData"
+    echo "  -opt           use the opt (optimized) TestData"
+    echo "  -nompi         do not use mpi"
+    echo "  -restart       restart and compare with the original uda.000"
+    echo "  -mem           check for memory leaks"
+    echo "  -clean         remove the *.out *.compare and uda directories"
+    echo "  -exact         perform an exact comparison (absolute/relative tolerance == 0)"
+    echo "  -create_goldStandard create gold standard data for that test"
+    echo "  -nice          lower the priority of the running jobs"
+    echo "  -h[elp]        display this help and exit"
+    echo;
+    exit
+}
+
+for arg in $*; do
+
+    case $arg in
+        -all)
+            ALL=yes
+            ;;
+        -main)
+            echo; echo "Scheduling mpm, ice, and mpmice tests . . ."
+            do_ice=1
+            do_mpm=1
+            do_mpmf=0
+            do_mpmice=1
+            do_models=1
+            do_arches=1
+            do_mpmarches=1
+            do_examples=1
+            do_wasatch=1
+            MPI_RUN="yes";;
+        -arches)
+            echo "Scheduling the arches tests . . ."
+            do_arches=1
+            MPI_RUN="yes";;
+        -ice_amr)
+            echo "Scheduling the ICE AMR tests . . ."
+            do_ice_amr=1
+            MPI_RUN="yes";;
+        -examples)
+            echo "Scheduling the examples tests . . ."
+            do_examples=1;;
+        -ice) 
+            echo "Scheduling the ice tests . . ."
+            do_ice=1;;
+        -mpm)
+            echo "Scheduling the mpm tests . . ."
+            do_mpm=1;;
+        -mpmf)
+            echo "Scheduling the mpmfracture tests . . ."
+            do_mpmf=1;;
+        -models)
+            echo "Scheduling the models tests . . ."
+            do_models=1
+            MPI_RUN="yes";;
+        -mpmarches)
+            echo "Scheduling the mpmarches tests . . ."
+            do_mpmarches=1
+            MPI_RUN="yes";;
+        -smpm)
+            echo "Scheduling the smpm tests . . ."
+            do_smpm=1;;
+        -mpmice)
+            echo "Scheduling the mpmice tests . . ."
+            do_mpmice=1;;
+        -mpmice_amr)
+            echo "Scheduling the MPMICE AMR tests . . ."
+            do_mpmice_amr=1;;
+        -impm)
+            echo "Scheduling the implicit mpm tests . . ."
+            do_impm=1
+            MPI_RUN="yes";;
+        -ucf)
+            echo "Scheduling the UCF tests . . ."
+            do_ucf=1;;
+        -wasatch)
+            echo "Scheduling the wasatch tests . . ."
+            do_wasatch=1;;
+        -clean)
+            echo "Removing *.out *.compare and *.uda files . . ."
+            do_remove=1;;
+        -dbg)
+            echo "Using the dbg TestData . . ."
+            DIR=dbg;;
+        -opt)
+            echo "Using the opt TestData . . ."
+            DIR=opt;;
+        -nompi)
+            echo "Not using mpi . . ."
+            MPI_RUN="no";;
+        -restart)
+            echo "Doing restart tests . . ."
+            do_restart=1;;
+        -mem)
+            echo; echo "Doing memory leak . . ."
+            do_mem=1;;
+        -exact)
+            echo; echo "Doing an exact comparison test"
+            compare_uda_options="-exact";;
+        -create_goldStandard)
+            echo; echo "Creating gold standard data"
+            create_goldStandard=true;;
+        -nice)
+            echo; echo "Lowering the priority of the running jobs"
+            NICE='nice -n 16';;
+        *)
+            usage ;;
+    esac
+done
+
+# If no args, run all the tests...
+if test $# = 0; then
+   ALL=yes
+fi
+
+echo
+echo "Using the >> $DIR << gold standard directory."
+
+# Set up the various test cases
+
+mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush periodic_disks const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts advect_3L_3D"
+mpmf_test_cases="regressionFMPM"
+ice_test_cases="advect riemann_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
+ice_amr_test_cases="hotBlob_AMR advect2matAMR"
+mpmice_test_cases="massX guni2dRT SteadyBurn_2dRT TBurner_2dRT TRWnoz testConvertMPMICEAdd"
+#mpmice_amr_test_cases="advect_2L_MI explode2D_amr"
+mpmice_amr_test_cases="advect_2L_MI"
+model_test_cases="HePlume JP8_Radiation"
+smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
+impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
+#arches_test_cases="constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
+#arches_test_cases="dqmom_test_1 dqmom_test_2 dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
+arches_test_cases="dqmom_test_1 dqmom_test_2 dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
+mpmarches_test_cases="mpmpipe_test methaneFireWContainer"
+examples_test_cases="poisson1"
+ucf_test_cases="LBwoRegrid icePerformanceTest mpmicePerformanceTest"
+wasatch_test_cases="BasicScalarTransportEquation TabPropsInterface convection-test convection-test2 convection-test3 convection-test-superbee boundary-conditions-test"
+
+# Check if the applications sus and compare_uda are available
+
+if test ! -x compare_uda; then
+    echo; echo "compare_uda is not available . . . exiting"
+    exit
+fi
+
+if test ! -e inputs; then
+    echo; echo "'inputs' data directory is not available . . . exiting"
+    exit
+fi
+
+#if test  -e $results; then
+#   echo; echo "Cleaning out old '$results' directory"
+#   rm -rf $results/*
+#fi
+
+
+REMOVE () {
+   rm -rf $results
+}
+
+num_proc () {
+    numproc=`grep -m1 patches $in_file | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
+#   echo "number of patches" $numproc
+}
+
+mem_check () {
+    
+    if test $do_mem -eq 0; then
+        return 0;
+    fi
+
+    /usr/local/MallocTrace/bin/parser mallocTrace-0 flat &> $n.mem
+
+    grep Location ${n}.mem | grep -v unspecified-file > $n.leak
+
+    echo
+    echo Testing for Memory Leaks . . . 
+
+    if test -s $n.leak; then
+        echo 
+        echo warning:  memory leaks . . .
+        echo
+        cat $n.leak
+        echo 
+        return 0
+    else
+        echo
+        echo "No memory leaks"
+        echo
+        return 0
+    fi
+    
+
+}
+
+lam_status () {
+
+    if [ $1 = "boot" ]; then
+        if [ -x /usr/bin/lamboot ]; then
+            /usr/bin/lamboot
+        fi
+    fi
+    if [ $1 = "halt" ]; then
+        if [ -x /usr/bin/lamhalt ]; then
+            /usr/bin/lamhalt
+        fi
+    fi
+}
+    
+check_output () {
+
+    grep "Sus: going down successfully" $n.out
+    return $?
+
+}    
+
+run_test () {
+
+    echo; date
+
+    run_test_return=0
+
+    lam_status boot
+
+
+    if [ $n = "explode2D_amr" ]; then
+        numproc=8
+        opts="-restart"
+    elif [ $n = "periodic_disks" ]; then
+	cp $in_file .
+	numproc=1
+	opts=""
+    elif [ $n = "advect_3L_3D" ]; then
+	cp $in_file .
+	numproc=1
+        do_restart=0
+	opts=""
+    else
+        cp $in_file .
+        num_proc
+        opts=""
+    fi
+  
+    if test $numproc -gt 1; then
+        MPI="mpirun -np $numproc"
+        opts="$opts -mpi"
+    elif test $MPI_RUN = "yes"; then
+        MPI="mpirun -np $numproc"
+        opts="$opts -mpi"
+    else
+        MPI=""
+    fi
+
+
+    if [ $n = "explode2D_amr" ]; then
+        echo; echo "Running: $MPI $NICE sus $opts $CHECKPOINTS/$CASE/$n/$n.uda.000"
+        $MPI $NICE ../sus $opts $CHECKPOINTS/$CASE/$n/$n.uda.000 &> $n.out
+    else
+        echo; echo "Running: $MPI $NICE sus $opts $n.ups"
+        $MPI $NICE ../sus $opts $n.ups &> $n.out
+    fi
+
+    check_output
+
+    if [ $? -eq 0 ]; then
+        echo "Success running sus . . ."
+        run_test_return=0
+    else
+        echo; echo "FAILURE running sus . . ."
+        cat $n.out
+        run_test_return=1
+    fi
+
+    if [ $run_test_return -eq 0 ]; then
+        mem_check
+        if [ $? -eq 0 ]; then
+            run_test_return=0
+        else
+            run_test_return=1
+        fi
+    fi
+
+    if [ $n != "explode2D_amr" ]; then
+        rm $n.ups
+    fi
+
+    lam_status halt
+
+    return $run_test_return
+}
+
+
+compare_results () {
+
+    # Inside of the component directory find the location of the 
+    # gold standard uda and pass it to compare_uda
+    
+    uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
+
+    goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
+    if [ $? -eq 1 ]; then
+    	goldStandard=`find $test_dir/$DIR/$CASE/ -maxdepth 3 -type d -name $uda_tmp`
+    fi
+    
+    echo "Comparing $uda results against '$goldStandard'"
+        
+    echo   "Running command: ../compare_uda $compare_uda_options $goldStandard $uda"
+    echo "../compare_uda $compare_uda_options  $goldStandard' $uda'" > $n.compare 2>&1
+    ../compare_uda $compare_uda_options $goldStandard $uda >> $n.compare 2>&1
+        
+    if [ $? -eq 0 ]; then 
+        echo "Sucess running compare_uda . . ."
+        compare=true
+    else
+        echo; echo "FAILURE running compare_uda . . ."   
+	cat $n.compare
+        compare=false
+    fi
+    
+    echo; echo   "Running command: ../compare_uda -skip_unknown_types  $compare_uda_options $goldStandard/checkpoints  $uda/checkpoints"
+    echo "../compare_uda -skip_unknown_types $compare_uda_options  $goldStandard/checkpoints $uda/checkpoints" > $n.compare 2>&1
+    ../compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda/checkpoints > $n.compare_checkpoints 2>&1
+
+    if [ $? -eq 0 ]; then
+        echo "Success running compare_uda on checkpoints . . ."
+        compare=true
+    else
+        echo; echo "FAILURE running compare_uda on checkpoints . . ."
+        cat $n.compare_checkpoints
+        compare=false
+    fi
+    
+    if [ $compare = true ] ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+run_restart () {
+
+    run_restart_return=0
+
+    if test $do_restart -eq 1; then
+#        cd $results
+	echo $PWD
+        uda_new=`echo $uda | tr -d "/"`
+        uda_new=`ls -d -1 $uda_new* | tail -n1`
+        echo; echo "Running: $MPI $NICE sus $opts -restart -t 0 -copy $uda_new"
+        $MPI $NICE ../sus $opts -restart -t 0 -copy $uda_new &> $n.out_restart
+        if [ $? -eq 0 ] ; then
+            echo "Sus: going down successfully"
+            echo
+            echo "Comparing restart results"
+            echo "compare_uda $compare_uda_options $goldStandard $uda_new"
+            ../compare_uda $compare_uda_options $goldStandard $uda_new &> $n.compare_restart
+            if [ $? -eq 0 ]; then
+                echo "compare restart passed . . . "
+		run_restart_return=0
+            else
+                echo; echo "FAILURE running compare_uda on restart test . . ."
+		run_restart_return=1
+            fi
+            echo
+            echo "Comparing restart results for checkpoints"
+            echo "compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda_new/checkpoints"
+            ../compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda_new/checkpoints &> $n.compare_restart_checkpoints
+            if [ $? -eq 0 ]; then
+                echo "compare restart checkpoints passed . . ."
+                run_restart_checkpoints=0
+            else
+                echo; echo "FAILURE running compare_uda on restart checkpoints"
+                run_restart_checkpoints=1
+            fi
+        else
+            echo; echo "FAILURE running sus . . ."
+	    run_restart_return=1
+        fi
+    fi
+    return $run_restart_return && $run_restart_checkpoints
+}
+
+input_file () {
+
+   in_file=`find -L $1 -name "$2.ups"`
+   if [ -z $in_file ]; then
+       return 1
+   else
+       return 0
+   fi
+
+}
+
+uda_name () {
+    uda=`grep filebase $1 | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
+    
+}
+
+run_compare () {
+    (run_test && compare_results && run_restart)
+    return $?
+
+}
+
+run_case () {
+
+## Use indirect expansion to get the list of cases to run found 
+## in tc variable
+    mkdir -p TestResults
+
+    test_case=$1
+    results=TestResults_${test_case}
+
+    rm -rf ${results}*
+    rm -rf TestResults/${results}*
+
+    mkdir -p ${results}
+
+    tc=${test_case}_test_cases
+
+    echo; echo "Testing ${!tc}"
+
+    all_tests_pass=true
+
+    cd $results
+
+    if [ ! -h inputs ]; then
+        ln -s ../inputs .
+    fi
+
+    for n in ${!tc}; do
+        if [ $n != "explode2D_amr" ]; then
+	    input_file inputs/$CASE $n
+            uda_name $in_file
+        else
+            uda="explode2D_amr.uda"
+        fi
+
+        MPI=""
+        
+        if [ $create_goldStandard = "true" ]; then
+            run_test;
+        else
+            if run_compare  && $all_tests_pass ; then
+                all_tests_pass=true
+            else
+                all_tests_pass=false
+            fi
+        fi
+    done
+
+    if [ $create_goldStandard = "true" ]; then
+        for n in ${!tc}; do
+            input_file inputs/$CASE $n
+            uda_name $in_file
+            uda=`echo $uda | tr -d [=/=]`
+            mkdir -p $GOLD_STANDARD/$DIR/$CASE/$n
+            mv $GOLD_STANDARD/$DIR/$CASE/$n/$uda  $GOLD_STANDARD/$DIR/$CASE/$n/$uda.bad
+            cp -r -L $uda $GOLD_STANDARD/$DIR/$CASE/$n
+            rm -rf $GOLD_STANDARD/$DIR/$CASE/$n/$uda.bad
+            chmod ugo+rw $GOLD_STANDARD/$DIR/$CASE/$n/$uda
+        done 
+    fi
+
+    cd ..
+    
+    if [ $all_tests_pass = true ]; then
+        echo "returning 0"
+#        tar cf ${results}.tar ${results}/
+#        gzip ${results}.tar
+#        mv ${results}.tar.gz TestResults/
+        return 0
+    else
+        echo "returning 1"
+        tar cf ${results}.tar ${results}/
+        gzip ${results}.tar
+        mv ${results}.tar.gz TestResults/
+        return 1
+    fi
+
+}
+
+
+if test -n "$ALL"; then
+   do_mpm=1
+   do_mpmf=0
+   do_ice=1
+   do_ice_amr=1
+   do_mpmice=1
+   do_mpmice_amr=1
+   do_models=1
+   do_smpm=0
+   do_impm=1
+   do_arches=1
+   do_mpmarches=1
+   do_examples=1
+   do_wasatch=1
+fi
+
+echo
+echo "Running tests using gold standard:  $test_dir"
+echo "Starting tests at: `date`"
+echo
+
+if test "$do_mpm" -eq 1; then
+    CASE=MPM
+    run_case mpm
+    rt_value=$?
+fi
+
+if test "$do_mpmf" -eq 1; then
+    CASE=MPMF
+    run_case mpmf
+    rt_value=$?
+fi
+
+if test "$do_ice" -eq 1; then
+    CASE=ICE
+    run_case ice
+    rt_value=$?
+fi
+if test "$do_ice_amr" -eq 1; then
+    MPI_RUN="yes"
+    CASE=ICE   
+    run_case ice_amr
+    rt_value=$?
+fi
+if test "$do_mpmice" -eq 1; then
+    CASE=MPMICE
+    run_case mpmice
+    rt_value=$?
+fi
+if test "$do_mpmice_amr" -eq 1; then
+    CASE=MPMICE
+    run_case mpmice_amr
+    rt_value=$?
+fi
+if test "$do_models" -eq 1; then 
+    MPI_RUN="yes"
+    CASE=Models
+    run_case model
+    rt_value=$?
+fi
+if test "$do_smpm" -eq 1; then
+    CASE=SMPM
+    run_case smpm
+    rt_value=$?
+fi
+if test "$do_impm" -eq 1; then
+    MPI_RUN="yes"
+    CASE=IMPM
+    run_case impm
+    rt_value=$?
+fi
+if test "$do_arches" -eq 1; then
+
+    MPI_RUN="yes"
+    CASE=ARCHES
+
+#    opts=-arches
+#    arches_test
+
+    run_case arches
+exit
+    rt_value=$?
+fi
+if test "$do_mpmarches" -eq 1; then
+    CASE=MPMARCHES
+#    opts=-mpmarches
+#    mpmarches_test
+    run_case mpmarches
+    rt_value=$?
+fi
+if test "$do_examples" -eq 1; then
+    CASE=Examples
+    run_case examples
+    rt_value=$?
+fi
+if test "$do_ucf" -eq 1; then
+    CASE=UCF
+    run_case ucf
+    rt_value=$?
+fi
+if test "$do_wasatch" -eq 1; then
+    CASE=Wasatch
+    do_restart=0
+    run_case wasatch
+    rt_value=$?
+fi
+if test "$do_remove" -eq 1; then
+    REMOVE
+fi
+
+echo
+echo "Ending tests at:   `date`"
+echo
+
+
+exit $rt_value
+
