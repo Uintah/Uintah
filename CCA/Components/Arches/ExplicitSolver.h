@@ -143,8 +143,6 @@ public:
 
   void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
 
-  void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched );
-
   /** @brief Input file interface. **/
   virtual void problemSetup( const ProblemSpecP& input_db,
                              SimulationStateP& state,

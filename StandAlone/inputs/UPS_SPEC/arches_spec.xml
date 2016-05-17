@@ -5,7 +5,6 @@
 
     <ARCHES                             spec="OPTIONAL NO_DATA" >
 
-      <new_BC_on_restart                spec="OPTIONAL NO_DATA" />
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
 

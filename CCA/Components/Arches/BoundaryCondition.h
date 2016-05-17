@@ -218,14 +218,13 @@ void setupBCInletVelocities( const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset*,
                              DataWarehouse*,
-                             DataWarehouse* new_dw,
-                             bool doing_restart );
+                             DataWarehouse* new_dw);
 
 void setupBCInletVelocitiesHack( const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset*,
                                  DataWarehouse*,
-                                 DataWarehouse* new_dw );
+                                 DataWarehouse* new_dw ){}
 
 void sched_setInitProfile( SchedulerP& sched,
                            const LevelP& level,

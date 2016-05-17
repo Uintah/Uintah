@@ -1294,8 +1294,11 @@ sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials
 void
 ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 {
+  // This is necessary because restartInitialize is called from all levels (I think), and arches operates only on the finest level
+  if( level->hasFinerLevel() ){   
+    return;
+  }
 
-  //bool doingRestart = true;
   //__________________________________
   //  initialize src terms
   SourceTermFactory& srcFactory = SourceTermFactory::self();
@@ -1313,12 +1316,6 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     PropertyModelBase* prop = iprop->second;
     prop->sched_restartInitialize(level, sched);
   }
-
-}
-
-void
-ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
-{
 
   bool doingRestart = true;
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
