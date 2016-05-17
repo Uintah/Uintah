@@ -25,10 +25,9 @@
  * IN THE SOFTWARE.
  */
 
-// Defines for having POKITT and/or CANTERA will be found below (if
-// they were specified during configure).
+// Define for having POKITT (which also means CANTERA exists) will be found below 
+// (if it was specified during configure).
 
 @DEF_POKITT@
-@DEF_CANTERA@
 
 #endif // WASATCH_DEFS_H

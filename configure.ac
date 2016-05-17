@@ -4241,23 +4241,37 @@ if test "$with_pokitt"; then
       AC_MSG_ERROR( '$the_lib' does not exist. )
     fi
   fi
-  AC_MSG_RESULT(yes)
 
   ## Now check for Cantera based on POKITT installation...
-  # Still discussing with James the best way to do this...
-  DEF_CANTERA=""
+  cantera_info=$with_pokitt/share/PoKiTTConfig.cmake
+  if test ! -f $cantera_info; then
+    echo ""
+    AC_MSG_ERROR( '$cantera_info' does not exist. )
+  fi
+
+  # The CANTERA_LIB_FLAG is the whole path to (and including) the .a file.
+  CANTERA_LIB_FLAG=`grep Cantera_LIBRARIES   $cantera_info | cut -f3 -d" "`
+  INC_CANTERA_H=`grep Cantera_INCLUDE_DIR $cantera_info | cut -f3 -d" "`
+
+  if test ! -d "$INC_CANTERA_H"; then
+    echo ""
+    AC_MSG_ERROR(Cantera include dir ($INC_CANTERA_H) does not exist.)
+  fi
+
+  # Add -I to include var:
+  INC_CANTERA_H=-I$INC_CANTERA_H
 
   DEF_POKITT="#define HAVE_POKITT 1"
-  INC_POKITT_H="-I$with_pokitt/include"
-  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
+  INC_POKITT_H="-I$with_pokitt/include $INC_CANTERA_H"
 
-  POKITT_LIB_FLAG="-lpokitt"
+  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
+  POKITT_LIB_FLAG="-lpokitt $CANTERA_LIB_FLAG"
 
   HAVE_POKITT="yes"
+  AC_MSG_RESULT(yes)
 fi
 AC_SUBST(HAVE_POKITT)
 AC_SUBST(DEF_POKITT)
-AC_SUBST(DEF_CANTERA)
 AC_SUBST(INC_POKITT_H)
 AC_SUBST(POKITT_LIB_FLAG)
 AC_SUBST(POKITT_LIB_DIR_FLAG)
