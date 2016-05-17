@@ -36,7 +36,7 @@
  *  this is a size dependent coefficient with one value for each absicassae combination as \f$ \psi = m1/(1+m1) \f$
  *  with \f$ m1 = L * G(r_i) / \rho \bar{d}^2 \epsilon \f$, \f$ m1 \f$ is specific to each particle combination
  *  \f$ L \f$ is a physical property, \f$ G(r_i) \f$ is the growth rate specific to that particle size,
- *  \f$ \bar{d}^2 \f$ is the average particle size of that collision and \f$ \epislon \f$ is the energy dissipation
+ *  \f$ \bar{d}^2 \f$ is the average particle size of that collision and \f$ \epsilon \f$ is the energy dissipation
  */
 template< typename FieldT >
 class AggregationEfficiency
