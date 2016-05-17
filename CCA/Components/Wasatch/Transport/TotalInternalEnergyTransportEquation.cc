@@ -39,12 +39,12 @@
 namespace WasatchCore {
 
   //====================================================================
-  
+
   /**
    *  \class ArtCompPGSEnergy
    *  \author Tony Saad
    *  \date May, 2016
-   *  \brief When using Artificial Compressibility to rescale the acoustic speed in compressible flows,
+   *  \brief When using the PGS (Pressure Gradient Scaling) model in Artificial Compressibility to rescale the acoustic speed in compressible flows,
    this expression computes the term required in the total internal energy equation. It will be added
    as a dependency to the total internal energy RHS.
      \f[
@@ -528,15 +528,304 @@ namespace WasatchCore {
           const ZFace& strainzz = strainzz_->field_ref();
           result <<= result + (*divZ_)( 2.0*(*zInterp_)(visc) * (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*zInterp_)( zvel_->field_ref() ) );
         }
-        
-        // PGS AC
-//        if (doX_) result <<= result + (1.0 - 1.0/alpha/alpha) * xvel_->field_ref() * ( *dpdx_ )( p_->field_ref() );
-//        if (doY_) result <<= result + (1.0 - 1.0/alpha/alpha) * yvel_->field_ref() * ( *dpdy_ )( p_->field_ref() );
-//        if (doZ_) result <<= result + (1.0 - 1.0/alpha/alpha) * zvel_->field_ref() * ( *dpdz_ )( p_->field_ref() );
       }
     }
   };
+  
+  //============================================================================
+  
+  /**
+   *  \class ArtCompASREnergy
+   *  \author Tony Saad
+   *  \date May, 2016
+   *  \brief When using the ASR (Acoustic Stiffness Reduction) Artificial Compressibility to rescale the acoustic speed in compressible flows,
+   this expression computes the term required in the total internal energy equation. It will be added
+   as a dependency to the total internal energy RHS.
+   \f[
+     (1 - \frac{1}{\alpha^2}) \frac{\gamma p}{\gamma - 1} \frac{\partial u_j}{\partial x_j} - (1 - \frac{1}{\alpha^2})(\tau_{ij}\frac{\partial u_i}{\partial x_j} - \frac{\partial q_j}{\partial x_j} )
+   \f]
+   where
+   \f[
+    q_j = - k \frac{\partial T}{\partial x_j}
+   \f]
+   */
+  template< typename VolFieldT >
+  class ArtCompASREnergy
+  : public Expr::Expression<VolFieldT>
+  {
+    typedef typename SpatialOps::FaceTypes<VolFieldT>::XFace XFace;
+    typedef typename SpatialOps::FaceTypes<VolFieldT>::YFace YFace;
+    typedef typename SpatialOps::FaceTypes<VolFieldT>::ZFace ZFace;
+    
+    DECLARE_FIELDS( VolFieldT, xvel_, yvel_, zvel_, visc_, dil_, p_ )
+    DECLARE_FIELDS( XFace, strainxx_, strainxy_, strainxz_, diffFluxX_ )
+    DECLARE_FIELDS( YFace, strainyx_, strainyy_, strainyz_, diffFluxY_ )
+    DECLARE_FIELDS( ZFace, strainzx_, strainzy_, strainzz_, diffFluxZ_ )
+    
+    const bool doX_, doY_, doZ_;
+    const double alpha_;
+    
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::InterpC2FX  XInterp;
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::InterpC2FY  YInterp;
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::InterpC2FZ  ZInterp;
+    XInterp* xInterp_;
+    YInterp* yInterp_;
+    ZInterp* zInterp_;
+    
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::DivX  DivX;
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::DivY  DivY;
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::DivZ  DivZ;
+    DivX* divX_;
+    DivY* divY_;
+    DivZ* divZ_;
+    
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::GradX  DDXT;
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::GradY  DDYT;
+    typedef typename SpatialOps::BasicOpTypes<SVolField>::GradZ  DDZT;
+    DDXT* ddx_;
+    DDYT* ddy_;
+    DDZT* ddz_;
+    
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,XFace>::type  SVol2XFluxInterpT;
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,YFace>::type  SVol2YFluxInterpT;
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,ZFace>::type  SVol2ZFluxInterpT;
+    const SVol2XFluxInterpT* sVol2XFluxInterpOp_;
+    const SVol2YFluxInterpT* sVol2YFluxInterpOp_;
+    const SVol2ZFluxInterpT* sVol2ZFluxInterpOp_;
 
+    
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant, XFace,SVolField>::type  XFlux2SVolInterpT;
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant, YFace,SVolField>::type  YFlux2SVolInterpT;
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant, ZFace,SVolField>::type  ZFlux2SVolInterpT;
+    const XFlux2SVolInterpT* xFluxInterpOp_;
+    const YFlux2SVolInterpT* yFluxInterpOp_;
+    const ZFlux2SVolInterpT* zFluxInterpOp_;
+
+    
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
+    const GradXT* dpdx_;
+    const GradYT* dpdy_;
+    const GradZT* dpdz_;
+    
+    ArtCompASREnergy(  const Expr::Tag& xvelTag, const Expr::Tag& yvelTag, const Expr::Tag& zvelTag,
+                       const Expr::Tag& diffFluxXTag, const Expr::Tag& diffFluxYTag, const Expr::Tag& diffFluxZTag,
+                       const Expr::Tag viscTag,
+                       const Expr::Tag& dilataionTag,
+                       const Expr::Tag& pressureTag,
+                       const Expr::Tag& strainxxTag, const Expr::Tag& strainyxTag, const Expr::Tag& strainzxTag,
+                       const Expr::Tag& strainxyTag, const Expr::Tag& strainyyTag, const Expr::Tag& strainzyTag,
+                       const Expr::Tag& strainxzTag, const Expr::Tag& strainyzTag, const Expr::Tag& strainzzTag,
+                       const double alpha)
+    : Expr::Expression<VolFieldT>(),
+      doX_   ( xvelTag != Expr::Tag() ),
+      doY_   ( yvelTag != Expr::Tag() ),
+      doZ_   ( zvelTag != Expr::Tag() ),
+      alpha_ ( alpha                  )
+    {
+      this->set_gpu_runnable( true );
+      
+      visc_ = this->template create_field_request<VolFieldT>( viscTag      );
+      dil_  = this->template create_field_request<VolFieldT>( dilataionTag );
+      p_  = this->template create_field_request<VolFieldT>( pressureTag );
+      
+      if( doX_ ){
+        xvel_     = this->template create_field_request<VolFieldT>( xvelTag );
+        strainxx_ = this->template create_field_request<XFace>( strainxxTag );
+        diffFluxX_ = this->template create_field_request<XFace> (diffFluxXTag);
+        if( doY_ ) strainyx_ = this->template create_field_request<YFace>( strainyxTag );
+        if( doZ_ ) strainzx_ = this->template create_field_request<ZFace>( strainzxTag );
+      }
+      if( doY_ ){
+        yvel_     = this->template create_field_request<VolFieldT>( yvelTag );
+        strainyy_ = this->template create_field_request<YFace>( strainyyTag );
+        diffFluxY_ = this->template create_field_request<YFace> (diffFluxYTag);
+        if( doX_ ) strainxy_ = this->template create_field_request<XFace>( strainxyTag );
+        if( doZ_ ) strainzy_ = this->template create_field_request<ZFace>( strainzyTag );
+      }
+      if( doZ_ ){
+        zvel_     = this->template create_field_request<VolFieldT>( zvelTag );
+        strainzz_ = this->template create_field_request<ZFace>( strainzzTag );
+        if( doX_ ) strainxz_ = this->template create_field_request<XFace>( strainxzTag );
+        if( doY_ ) strainyz_ = this->template create_field_request<YFace>( strainyzTag );
+        diffFluxZ_ = this->template create_field_request<ZFace> (diffFluxZTag);
+      }
+    }
+    
+  public:
+    
+    class Builder : public Expr::ExpressionBuilder
+    {
+      const Expr::TagList velTags_, diffFluxTags_;
+      const Expr::Tag viscTag_, dilTag_, pressureTag_;
+      const Expr::Tag strainxxTag_, strainyxTag_, strainzxTag_;
+      const Expr::Tag strainxyTag_, strainyyTag_, strainzyTag_;
+      const Expr::Tag strainxzTag_, strainyzTag_, strainzzTag_;
+      const double alpha_;
+    public:
+      /**
+       *  @brief Build a ArtCompASREnergy expression
+       *  @param resultTag the tag for the value that this expression computes
+       */
+      Builder( const Expr::Tag& resultTag,
+              const Expr::TagList& velTags,
+              const Expr::TagList& diffFluxTags,
+              const Expr::Tag& viscTag,
+              const Expr::Tag& dilataionTag,
+              const Expr::Tag& pressureTag,
+              const Expr::Tag& strainxxTag, const Expr::Tag& strainyxTag, const Expr::Tag& strainzxTag, // X-momentum
+              const Expr::Tag& strainxyTag, const Expr::Tag& strainyyTag, const Expr::Tag& strainzyTag, // Y-momentum
+              const Expr::Tag& strainxzTag, const Expr::Tag& strainyzTag, const Expr::Tag& strainzzTag, // Z-momentum
+              const double alpha,
+              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
+      : ExpressionBuilder( resultTag, nghost ),
+        velTags_     ( velTags ),
+        diffFluxTags_( diffFluxTags),
+        viscTag_     ( viscTag ),
+        dilTag_      ( dilataionTag ),
+        pressureTag_ (pressureTag),
+        strainxxTag_ ( strainxxTag ), strainyxTag_( strainyxTag ), strainzxTag_( strainzxTag ),
+        strainxyTag_ ( strainxyTag ), strainyyTag_( strainyyTag ), strainzyTag_( strainzyTag ),
+        strainxzTag_ ( strainxzTag ), strainyzTag_( strainyzTag ), strainzzTag_( strainzzTag ),
+        alpha_(alpha)
+      {
+        assert( velTags.size()      == 3 );
+        assert( diffFluxTags.size() == 3 );
+      }
+      
+      Expr::ExpressionBase* build() const{
+        return new ArtCompASREnergy<VolFieldT>( velTags_[0], velTags_[1], velTags_[2],
+                                                      diffFluxTags_[0], diffFluxTags_[1], diffFluxTags_[2],
+                                                      viscTag_, dilTag_, pressureTag_,
+                                                      strainxxTag_, strainyxTag_, strainzxTag_,
+                                                      strainxyTag_, strainyyTag_, strainzyTag_,
+                                                      strainxzTag_, strainyzTag_, strainzzTag_, alpha_ );
+      }
+      
+    };  /* end of Builder class */
+    
+    ~ArtCompASREnergy(){}
+    
+    void bind_operators( const SpatialOps::OperatorDatabase& opDB )
+    {
+      if( doX_ ) xInterp_ = opDB.retrieve_operator<XInterp>();
+      if( doY_ ) yInterp_ = opDB.retrieve_operator<YInterp>();
+      if( doZ_ ) zInterp_ = opDB.retrieve_operator<ZInterp>();
+      
+      if( doX_ ) divX_    = opDB.retrieve_operator<DivX   >();
+      if( doY_ ) divY_    = opDB.retrieve_operator<DivY   >();
+      if( doZ_ ) divZ_    = opDB.retrieve_operator<DivZ   >();
+      
+      if( doX_ ) sVol2XFluxInterpOp_ = opDB.retrieve_operator<SVol2XFluxInterpT>();
+      if( doY_ ) sVol2YFluxInterpOp_ = opDB.retrieve_operator<SVol2YFluxInterpT>();
+      if( doZ_ ) sVol2ZFluxInterpOp_ = opDB.retrieve_operator<SVol2ZFluxInterpT>();
+      
+      if(doX_) dpdx_ = opDB.retrieve_operator<GradXT>();
+      if(doY_) dpdy_ = opDB.retrieve_operator<GradYT>();
+      if(doZ_) dpdz_ = opDB.retrieve_operator<GradZT>();
+      
+      if(doX_) ddx_ = opDB.retrieve_operator<DDXT>();
+      if(doY_) ddy_ = opDB.retrieve_operator<DDYT>();
+      if(doZ_) ddz_ = opDB.retrieve_operator<DDZT>();
+
+      if(doX_) xFluxInterpOp_ = opDB.retrieve_operator<XFlux2SVolInterpT>();
+      if(doY_) yFluxInterpOp_ = opDB.retrieve_operator<YFlux2SVolInterpT>();
+      if(doZ_) zFluxInterpOp_ = opDB.retrieve_operator<ZFlux2SVolInterpT>();
+    }
+    
+    void evaluate()
+    {
+      VolFieldT& result = this->value();
+      const VolFieldT& visc = visc_->field_ref();
+      const VolFieldT& dil = dil_->field_ref();
+      const VolFieldT& p   = p_->field_ref();
+      
+      const double gamma = 1.4;
+      const double scale = (1.0 - 1.0/alpha_/alpha_);
+      
+      if( doX_ && doY_ && doZ_ ){
+        
+        const XFace& strainxx = strainxx_->field_ref();
+        const YFace& strainyx = strainyx_->field_ref();
+        const ZFace& strainzx = strainzx_->field_ref();
+        const XFace& strainxy = strainxy_->field_ref();
+        const YFace& strainyy = strainyy_->field_ref();
+        const ZFace& strainzy = strainzy_->field_ref();
+        const XFace& strainxz = strainxz_->field_ref();
+        const YFace& strainyz = strainyz_->field_ref();
+        const ZFace& strainzz = strainzz_->field_ref();
+        
+        const VolFieldT& xvel = xvel_->field_ref();
+        const VolFieldT& yvel = yvel_->field_ref();
+        const VolFieldT& zvel = zvel_->field_ref();
+        
+        const XFace& diffFluxX = diffFluxX_->field_ref();
+        const YFace& diffFluxY = diffFluxY_->field_ref();
+        const ZFace& diffFluxZ = diffFluxZ_->field_ref();
+        
+        result <<=   scale * gamma / ( gamma - 1.0) * p * dil
+                   - scale * 2.0 * visc * (  (*xFluxInterpOp_) ( (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * (*ddx_)(xvel) + strainxy * (*ddx_)(yvel) + strainxz * (*ddx_)(zvel) )
+                                           + (*yFluxInterpOp_) ( (strainyx * (*ddy_)(xvel) + strainyy - 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*ddy_)(yvel) + strainyz * (*ddy_)(zvel) )
+                                           + (*zFluxInterpOp_) ( (strainzx * (*ddz_)(xvel) + strainzy * (*ddz_)(yvel) + strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*ddz_)(zvel) )
+                                           - (*divX_)(diffFluxX) - (*divY_)(diffFluxY) - (*divZ_)(diffFluxZ)
+                                         );
+      }
+      else{
+        result <<=   scale * gamma / ( gamma - 1.0) * p * dil;
+        if( doX_ ){ // 1D x or 2D xy or 2D xz
+          const XFace& strainxx = strainxx_->field_ref();
+          const VolFieldT& xvel = xvel_->field_ref();
+          const XFace& diffFluxX = diffFluxX_->field_ref();
+
+          result <<= result
+                    - scale * 2.0 * visc * (  (*xFluxInterpOp_) ( (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * (*ddx_)(xvel)  )
+                                ) + scale * (*divX_)(diffFluxX);
+          
+          if( doY_ ){
+            const VolFieldT& yvel = yvel_->field_ref();
+            const YFace& diffFluxY = diffFluxY_->field_ref();
+            const YFace& strainyx = strainyx_->field_ref();
+            const XFace& strainxy = strainxy_->field_ref();
+            const YFace& strainyy = strainyy_->field_ref();
+            
+            result <<= result
+                      - scale * 2.0 * visc * (  (*xFluxInterpOp_) ( strainxy * (*ddx_)(yvel)  )
+                                              + (*yFluxInterpOp_) ( (strainyx * (*ddy_)(xvel) + strainyy - 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*ddy_)(yvel) )
+                                              ) + scale * (*divY_)(diffFluxY);
+
+          }
+          if( doZ_ ){
+            const ZFace& strainzx = strainzx_->field_ref();
+            const XFace& strainxz = strainxz_->field_ref();
+            const ZFace& strainzz = strainzz_->field_ref();
+            
+            result <<= result + (*divX_)( 2.0*(*xInterp_)(visc) * strainxz * (*xInterp_)(xvel_->field_ref()) )
+            + (*divZ_)( 2.0*(*zInterp_)(visc) * strainzx * (*zInterp_)(zvel_->field_ref()) );
+          }
+        } // doX_
+        else if( doY_ ){ // 1D y or 2D yz
+          const YFace& strainyy = strainyy_->field_ref();
+          
+          result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * (strainyy- 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*yInterp_)( yvel_->field_ref() ) );
+          
+          if( doZ_ ){
+            const ZFace& strainzy = strainzy_->field_ref();
+            const YFace& strainyz = strainyz_->field_ref();
+            const ZFace& strainzz = strainzz_->field_ref();
+            
+            result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * strainyz * (*yInterp_)( yvel_->field_ref() ) )
+            + (*divZ_)( 2.0*(*zInterp_)(visc) * strainzy * (*zInterp_)(zvel_->field_ref()) );
+          }
+        }
+        else if( doZ_ ){ // 1D z
+          const ZFace& strainzz = strainzz_->field_ref();
+          result <<= result + (*divZ_)( 2.0*(*zInterp_)(visc) * (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*zInterp_)( zvel_->field_ref() ) );
+        }
+      }
+    }
+  };
+  
   //============================================================================
 
   TotalInternalEnergyTransportEquation::
@@ -585,6 +874,9 @@ namespace WasatchCore {
                                                         tags.strainxy, tags.strainyy, tags.strainzy,
                                                         tags.strainxz, tags.strainyz, tags.strainzz ) );
 
+    //----------------------------------------------------------
+
+    
     setup();  // base setup stuff (register RHS, etc.)
 
     // attach viscous dissipation expression to the RHS as a source
@@ -597,15 +889,30 @@ namespace WasatchCore {
       Uintah::ProblemSpecP acSpec = momentumSpec->findBlock("ArtificialCompressibility");
       std::string model;
       acSpec->getAttribute("model",model);
-      if (model == " PGS") {
-        double alpha = 10.0;
-        acSpec->getAttribute("coef",alpha);
+      double alpha = 10.0;
+      acSpec->getAttribute("coef",alpha);
+      if (model == "PGS") {
         const Expr::Tag acEnergyTag("AC_Energy",Expr::STATE_NONE);
         solnFactory.register_expression( scinew ACEnergy( acEnergyTag,
                                                          pressureTag, velTags, alpha ) );
         
         // attach PGS energy preconditioning expression to the RHS as a source
         solnFactory.attach_dependency_to_expression(acEnergyTag, this->rhsTag_);
+      } else if (model == "ASR") {
+        // ASR
+        typedef ArtCompASREnergy<MyFieldT>::Builder ASR;
+        const Expr::Tag asrTag("ASR_Energy",Expr::STATE_NONE);
+        
+        const Expr::TagList diffFluxTags = tag_list(Expr::Tag("T_diffVelocity_X", Expr::STATE_NONE),
+                                                    Expr::Tag("T_diffVelocity_Y", Expr::STATE_NONE),
+                                                    Expr::Tag("T_diffVelocity_Z", Expr::STATE_NONE));
+        
+        solnFactory.register_expression( scinew ASR( asrTag,
+                                                     velTags, diffFluxTags, viscTag, dilTag, pressureTag,
+                                                     tags.strainxx, tags.strainyx, tags.strainzx,
+                                                     tags.strainxy, tags.strainyy, tags.strainzy,
+                                                     tags.strainxz, tags.strainyz, tags.strainzz, alpha ) );
+        solnFactory.attach_dependency_to_expression(asrTag,    this->rhsTag_);
       }
     }
 

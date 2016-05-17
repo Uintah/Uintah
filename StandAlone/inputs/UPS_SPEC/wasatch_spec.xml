@@ -982,7 +982,7 @@
     <MomentumEquations        spec="OPTIONAL NO_DATA">
 
       <ArtificialCompressibility spec="OPTIONAL NO_DATA"
-                                 attribute1="model REQUIRED STRING 'PGS'"
+                                 attribute1="model REQUIRED STRING 'PGS, ASR'"
                                  attribute2="coef REQUIRED DOUBLE"/>
       
       <EnergyEquation spec="OPTIONAL NO_DATA">      
