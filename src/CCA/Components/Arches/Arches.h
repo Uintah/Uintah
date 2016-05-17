@@ -191,7 +191,6 @@ private:
   std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _task_factory_map;
 
   bool d_doingRestart;
-  bool d_newBC_on_Restart;
   bool d_with_mpmarches;
   bool d_doAMR;             //<<< Multilevel related
   bool _doLagrangianParticles;

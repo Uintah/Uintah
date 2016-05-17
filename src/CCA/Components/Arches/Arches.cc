@@ -204,12 +204,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   //==================== NEW STUFF ===============================
 
-  // This will allow for changing the BC's on restart:
-  if ( db->findBlock("new_BC_on_restart") )
-    d_newBC_on_Restart = true;
-  else
-    d_newBC_on_Restart = false;
-
   db->getWithDefault("recompileTaskgraph",  d_recompile_taskgraph,false);
 
   // physical constant
@@ -353,7 +347,6 @@ void
 Arches::restartInitialize()
 {
   d_doingRestart = true;
-  d_recompile_taskgraph = true; //always recompile on restart...
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -401,8 +394,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     opr.set_my_world( d_myworld );
     opr.create_patch_operators( level, sched, matls );
 
-    d_nlSolver->sched_restartInitializeTimeAdvance( level, sched );
-
   }
 
   d_nlSolver->nonlinearSolve(level, sched);
@@ -444,7 +435,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if (d_doingRestart) {
     d_doingRestart = false;
-    d_recompile_taskgraph = true;
 
   }
 }

@@ -130,7 +130,7 @@
     <save label="sensibleenthalpy" table_lookup="true"/>
     <save label="adiabaticenthalpy" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
-    <checkpoint cycle="2" interval="0.02"/>
+    <checkpoint cycle="2" interval="0.024"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
