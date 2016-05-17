@@ -766,21 +766,19 @@ namespace WasatchCore {
         
         result <<=   scale * gamma / ( gamma - 1.0) * p * dil
                    - scale * 2.0 * visc * (  (*xFluxInterpOp_) ( (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * (*ddx_)(xvel) + strainxy * (*ddx_)(yvel) + strainxz * (*ddx_)(zvel) )
-                                           + (*yFluxInterpOp_) ( (strainyx * (*ddy_)(xvel) + strainyy - 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*ddy_)(yvel) + strainyz * (*ddy_)(zvel) )
-                                           + (*zFluxInterpOp_) ( (strainzx * (*ddz_)(xvel) + strainzy * (*ddz_)(yvel) + strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*ddz_)(zvel) )
-                                           - (*divX_)(diffFluxX) - (*divY_)(diffFluxY) - (*divZ_)(diffFluxZ)
-                                         );
+                                           + (*yFluxInterpOp_) (  strainyx * (*ddy_)(xvel) + (strainyy - 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*ddy_)(yvel) + strainyz * (*ddy_)(zvel) )
+                                           + (*zFluxInterpOp_) (  strainzx * (*ddz_)(xvel) + strainzy * (*ddz_)(yvel) + (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*ddz_)(zvel) )
+                                           ) + scale * ( (*divX_)(diffFluxX) + (*divY_)(diffFluxY) + (*divZ_)(diffFluxZ) );
       }
       else{
-        result <<=   scale * gamma / ( gamma - 1.0) * p * dil;
+        result <<= 0.0;
         if( doX_ ){ // 1D x or 2D xy or 2D xz
           const XFace& strainxx = strainxx_->field_ref();
           const VolFieldT& xvel = xvel_->field_ref();
           const XFace& diffFluxX = diffFluxX_->field_ref();
 
           result <<= result
-                    - scale * 2.0 * visc * (  (*xFluxInterpOp_) ( (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * (*ddx_)(xvel)  )
-                                ) + scale * (*divX_)(diffFluxX);
+                     - (*xFluxInterpOp_) ( (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * (*ddx_)(xvel) );
           
           if( doY_ ){
             const VolFieldT& yvel = yvel_->field_ref();
@@ -789,38 +787,54 @@ namespace WasatchCore {
             const XFace& strainxy = strainxy_->field_ref();
             const YFace& strainyy = strainyy_->field_ref();
             
-            result <<= result
-                      - scale * 2.0 * visc * (  (*xFluxInterpOp_) ( strainxy * (*ddx_)(yvel)  )
-                                              + (*yFluxInterpOp_) ( (strainyx * (*ddy_)(xvel) + strainyy - 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*ddy_)(yvel) )
-                                              ) + scale * (*divY_)(diffFluxY);
+            result <<= result - (  (*xFluxInterpOp_) ( strainxy * (*ddx_)(yvel)  )
+                                 + (*yFluxInterpOp_) ( strainyx * (*ddy_)(xvel)  ) );
 
           }
           if( doZ_ ){
+            const VolFieldT& zvel = zvel_->field_ref();
             const ZFace& strainzx = strainzx_->field_ref();
             const XFace& strainxz = strainxz_->field_ref();
-            const ZFace& strainzz = strainzz_->field_ref();
             
-            result <<= result + (*divX_)( 2.0*(*xInterp_)(visc) * strainxz * (*xInterp_)(xvel_->field_ref()) )
-            + (*divZ_)( 2.0*(*zInterp_)(visc) * strainzx * (*zInterp_)(zvel_->field_ref()) );
+            result <<= result
+                       - ( (*xFluxInterpOp_) ( strainxz * (*ddx_)(zvel) )
+                          + (*zFluxInterpOp_) ( strainzx * (*ddz_)(xvel) ) );
           }
         } // doX_
-        else if( doY_ ){ // 1D y or 2D yz
+        else if( doY_ ) { // 1D y or 2D yz
           const YFace& strainyy = strainyy_->field_ref();
-          
-          result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * (strainyy- 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*yInterp_)( yvel_->field_ref() ) );
+          const VolFieldT& yvel = yvel_->field_ref();
+          result <<= result
+                    - ( (*yFluxInterpOp_) (  (strainyy - 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*ddy_)(yvel) ) );
           
           if( doZ_ ){
+            const VolFieldT& zvel = zvel_->field_ref();
             const ZFace& strainzy = strainzy_->field_ref();
             const YFace& strainyz = strainyz_->field_ref();
             const ZFace& strainzz = strainzz_->field_ref();
-            
-            result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * strainyz * (*yInterp_)( yvel_->field_ref() ) )
-            + (*divZ_)( 2.0*(*zInterp_)(visc) * strainzy * (*zInterp_)(zvel_->field_ref()) );
+            result <<= result
+                      - (*zFluxInterpOp_) ( strainzy * (*ddz_)(yvel) + (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*ddz_)(zvel) );
           }
         }
-        else if( doZ_ ){ // 1D z
+        else if( doZ_ ) { // 1D z
+          const VolFieldT& zvel = zvel_->field_ref();
           const ZFace& strainzz = strainzz_->field_ref();
-          result <<= result + (*divZ_)( 2.0*(*zInterp_)(visc) * (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*zInterp_)( zvel_->field_ref() ) );
+          result <<= result
+                     - (*zFluxInterpOp_) ( (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*ddz_)(zvel) );
+        }
+        
+        result <<= scale * gamma / ( gamma - 1.0) * p * dil - scale * 2.0 * visc * result;
+        if (doX_) {
+          const XFace& diffFluxX = diffFluxX_->field_ref();
+          result <<= result + scale * (*divX_)(diffFluxX);
+        }
+        if (doY_) {
+          const YFace& diffFluxY = diffFluxY_->field_ref();
+          result <<= result + scale * (*divY_)(diffFluxY);
+        }
+        if (doZ_) {
+          const ZFace& diffFluxZ = diffFluxZ_->field_ref();
+          result <<= result + scale * (*divZ_)(diffFluxZ);
         }
       }
     }
