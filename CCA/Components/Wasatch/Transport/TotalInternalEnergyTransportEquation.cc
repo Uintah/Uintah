@@ -38,6 +38,112 @@
 
 namespace WasatchCore {
 
+  //====================================================================
+  
+  /**
+   *  \class ArtCompPGSEnergy
+   *  \author Tony Saad
+   *  \date May, 2016
+   *  \brief When using Artificial Compressibility to rescale the acoustic speed in compressible flows,
+   this expression computes the term required in the total internal energy equation. It will be added
+   as a dependency to the total internal energy RHS.
+     \f[
+       (1 - \frac{1}{\alpha^2}) u_j \frac{\partial p}{\partial x_j}
+     \f]
+   */
+  template< typename FieldT >
+  class ArtCompPGSEnergy
+  : public Expr::Expression<FieldT>
+  {
+    DECLARE_FIELDS( FieldT, p_, u_, v_, w_ )
+    const bool doX_, doY_, doZ_;
+    const double alpha_;
+    
+    
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
+    const GradXT* dpdx_;
+    const GradYT* dpdy_;
+    const GradZT* dpdz_;
+
+    ArtCompPGSEnergy( const Expr::Tag& pTag,
+                   const Expr::TagList& velTags,
+                   const double alpha)
+    : Expr::Expression<FieldT>(),
+    doX_( velTags[0] != Expr::Tag() ),
+    doY_( velTags[1] != Expr::Tag() ),
+    doZ_( velTags[2] != Expr::Tag() ),
+    alpha_(alpha)
+    {
+      this->set_gpu_runnable( true );
+      
+      p_ = this->template create_field_request<FieldT>( pTag );
+      
+      if( doX_ ) u_ = this->template create_field_request<FieldT>( velTags[0] );
+      if( doY_ ) v_ = this->template create_field_request<FieldT>( velTags[1] );
+      if( doZ_ ) w_ = this->template create_field_request<FieldT>( velTags[2] );
+    }
+    
+    
+  public:
+    
+    class Builder : public Expr::ExpressionBuilder
+    {
+      const Expr::Tag pTag_;
+      const Expr::TagList velTags_;
+      double alpha_;
+    public:
+      Builder( const Expr::Tag& resultTag,
+              const Expr::Tag& pTag,
+              const Expr::TagList& velTags,
+              const double alpha,
+              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
+      : ExpressionBuilder( resultTag, nghost ),
+      pTag_( pTag ),
+      velTags_( velTags ),
+      alpha_(alpha)
+      {
+        assert( velTags.size() == 3 );
+      }
+      
+      Expr::ExpressionBase* build() const{
+        return new ArtCompPGSEnergy<FieldT>( pTag_,velTags_, alpha_ );
+      }
+      
+    };  /* end of Builder class */
+    
+    ~ArtCompPGSEnergy(){}
+    
+    void bind_operators( const SpatialOps::OperatorDatabase& opDB )
+    {
+      if(doX_) dpdx_ = opDB.retrieve_operator<GradXT>();
+      if(doY_) dpdy_ = opDB.retrieve_operator<GradYT>();
+      if(doZ_) dpdz_ = opDB.retrieve_operator<GradZT>();
+    }
+
+    void evaluate()
+    {
+      FieldT& result = this->value();
+      
+      const FieldT& p = p_->field_ref();
+      const double a2 = alpha_*alpha_;
+      if( doX_ && doY_ && doZ_ ){
+        result <<= (1.0 - 1.0/a2) * (   u_->field_ref() * ( *dpdx_ )( p_->field_ref() )
+                                      + v_->field_ref() * ( *dpdy_ )( p_->field_ref() )
+                                      + w_->field_ref() * ( *dpdz_ )( p_->field_ref() )
+                                    );
+      }
+      else{
+        if (doX_) result <<= (1.0 - 1.0/a2) * u_->field_ref() * ( *dpdx_ )( p_->field_ref() );
+        else result <<= 0.0;
+        if (doY_) result <<= result + (1.0 - 1.0/a2) * v_->field_ref() * ( *dpdy_ )( p_->field_ref() );
+        if (doZ_) result <<= result + (1.0 - 1.0/a2) * w_->field_ref() * ( *dpdz_ )( p_->field_ref() );
+      }
+    }
+  };
+
+  //============================================================================
 
   /**
    *  \class  TemperaturePurePerfectGas
@@ -110,9 +216,7 @@ namespace WasatchCore {
 
   };
 
-
   //============================================================================
-
 
   /**
    *  \class TotalInternalEnergy_PurePerfectGas_IC
@@ -219,7 +323,7 @@ namespace WasatchCore {
     typedef typename SpatialOps::FaceTypes<VolFieldT>::YFace YFace;
     typedef typename SpatialOps::FaceTypes<VolFieldT>::ZFace ZFace;
 
-    DECLARE_FIELDS( VolFieldT, xvel_, yvel_, zvel_, visc_, dil_ )
+    DECLARE_FIELDS( VolFieldT, xvel_, yvel_, zvel_, visc_, dil_, p_ )
     DECLARE_FIELDS( XFace, strainxx_, strainxy_, strainxz_ )
     DECLARE_FIELDS( YFace, strainyx_, strainyy_, strainyz_ )
     DECLARE_FIELDS( ZFace, strainzx_, strainzy_, strainzz_ )
@@ -248,6 +352,13 @@ namespace WasatchCore {
     const SVol2ZFluxInterpT* sVol2ZFluxInterpOp_;
 
 
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
+    typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
+    const GradXT* dpdx_;
+    const GradYT* dpdy_;
+    const GradZT* dpdz_;
+
     ViscousDissipation( const Expr::Tag& xvelTag, const Expr::Tag& yvelTag, const Expr::Tag& zvelTag,
                         const Expr::Tag viscTag,
                         const Expr::Tag& dilataionTag,
@@ -263,6 +374,8 @@ namespace WasatchCore {
 
       visc_ = this->template create_field_request<VolFieldT>( viscTag      );
       dil_  = this->template create_field_request<VolFieldT>( dilataionTag );
+      p_  = this->template create_field_request<VolFieldT>( Expr::Tag("pressure",Expr::STATE_NONE) );
+      
       if( doX_ ){
         xvel_     = this->template create_field_request<VolFieldT>( xvelTag );
         strainxx_ = this->template create_field_request<XFace>( strainxxTag );
@@ -341,6 +454,10 @@ namespace WasatchCore {
       if( doX_ ) sVol2XFluxInterpOp_ = opDB.retrieve_operator<SVol2XFluxInterpT>();
       if( doY_ ) sVol2YFluxInterpOp_ = opDB.retrieve_operator<SVol2YFluxInterpT>();
       if( doZ_ ) sVol2ZFluxInterpOp_ = opDB.retrieve_operator<SVol2ZFluxInterpT>();
+      
+      if(doX_) dpdx_ = opDB.retrieve_operator<GradXT>();
+      if(doY_) dpdy_ = opDB.retrieve_operator<GradYT>();
+      if(doZ_) dpdz_ = opDB.retrieve_operator<GradZT>();
     }
 
     void evaluate()
@@ -348,7 +465,8 @@ namespace WasatchCore {
       VolFieldT& result = this->value();
       const VolFieldT& visc = visc_->field_ref();
       const VolFieldT& dil = dil_->field_ref();
-      
+      const double alpha = 10.0;
+      const double gamma = 1.4;
       if( doX_ && doY_ && doZ_ ){
         const XFace& strainxx = strainxx_->field_ref();
         const YFace& strainyx = strainyx_->field_ref();
@@ -370,12 +488,11 @@ namespace WasatchCore {
       }
       else{
         result <<= 0.0; // accumulate in as needed
-
         if( doX_ ){ // 1D x or 2D xy or 2D xz
           const XFace& strainxx = strainxx_->field_ref();
 
           result <<= (*divX_)( 2.0*(*xInterp_)(visc) * (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * (*xInterp_)(xvel_->field_ref()) );
-
+          
           if( doY_ ){
             const YFace& strainyx = strainyx_->field_ref();
             const XFace& strainxy = strainxy_->field_ref();
@@ -411,6 +528,11 @@ namespace WasatchCore {
           const ZFace& strainzz = strainzz_->field_ref();
           result <<= result + (*divZ_)( 2.0*(*zInterp_)(visc) * (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*zInterp_)( zvel_->field_ref() ) );
         }
+        
+        // PGS AC
+//        if (doX_) result <<= result + (1.0 - 1.0/alpha/alpha) * xvel_->field_ref() * ( *dpdx_ )( p_->field_ref() );
+//        if (doY_) result <<= result + (1.0 - 1.0/alpha/alpha) * yvel_->field_ref() * ( *dpdy_ )( p_->field_ref() );
+//        if (doZ_) result <<= result + (1.0 - 1.0/alpha/alpha) * zvel_->field_ref() * ( *dpdz_ )( p_->field_ref() );
       }
     }
   };
@@ -419,7 +541,7 @@ namespace WasatchCore {
 
   TotalInternalEnergyTransportEquation::
   TotalInternalEnergyTransportEquation( const std::string e0Name,
-                                        Uintah::ProblemSpecP params,
+                                        Uintah::ProblemSpecP momentumSpec,
                                         GraphCategories& gc,
                                         const Expr::Tag& densityTag,
                                         const Expr::Tag& temperatureTag,
@@ -429,11 +551,12 @@ namespace WasatchCore {
                                         const Expr::Tag& viscTag,
                                         const Expr::Tag& dilTag,
                                         const TurbulenceParameters& turbulenceParams )
-    : ScalarTransportEquation<SVolField>( e0Name, params, gc, densityTag,
+    : ScalarTransportEquation<SVolField>( e0Name,
+                                          momentumSpec->findBlock("EnergyEquation"),
+                                          gc, densityTag,
                                           false, /* variable density */
                                           turbulenceParams,
                                           false /* don't call setup */ ),
-      parserParams_( params ),
       kineticEnergyTag_( "kinetic energy", Expr::STATE_NONE ),
       temperatureTag_( temperatureTag ),
       pressureTag_( TagNames::self().pressure ),
@@ -466,6 +589,25 @@ namespace WasatchCore {
 
     // attach viscous dissipation expression to the RHS as a source
     solnFactory.attach_dependency_to_expression(visDisTag, this->rhsTag_);
+    
+    //----------------------------------------------------------
+    // register artifical compressibility if any
+    typedef ArtCompPGSEnergy<MyFieldT>::Builder ACEnergy;
+    if (momentumSpec->findBlock("ArtificialCompressibility")) {
+      Uintah::ProblemSpecP acSpec = momentumSpec->findBlock("ArtificialCompressibility");
+      std::string model;
+      acSpec->getAttribute("model",model);
+      if (model == " PGS") {
+        double alpha = 10.0;
+        acSpec->getAttribute("coef",alpha);
+        const Expr::Tag acEnergyTag("AC_Energy",Expr::STATE_NONE);
+        solnFactory.register_expression( scinew ACEnergy( acEnergyTag,
+                                                         pressureTag, velTags, alpha ) );
+        
+        // attach PGS energy preconditioning expression to the RHS as a source
+        solnFactory.attach_dependency_to_expression(acEnergyTag, this->rhsTag_);
+      }
+    }
 
     //----------------------------------------------------------
     // body force tags

@@ -86,7 +86,6 @@ namespace WasatchCore {
 
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 
-    Uintah::ProblemSpecP parserParams_;
     const Expr::Tag kineticEnergyTag_, temperatureTag_, pressureTag_;
     const Expr::TagList velTags_, bodyForceTags_;
   };

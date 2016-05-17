@@ -25,6 +25,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <expression/Expression.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 #include <CCA/Components/Wasatch/Transport/CompressibleMomentumTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquationHelper.h>
@@ -35,6 +36,86 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OpenBC.h>
 
 namespace WasatchCore{
+
+  //====================================================================
+  
+  /**
+   *  \class ArtCompPGSPressure
+   *  \author Tony Saad
+   *  \date May, 2016
+   *  \brief When using Artifical Compressibility to scale the acoustic speed, this expression
+             computes the extra term required in the momentum equations. This term will
+             be added as a dependency to the momentum RHS:
+     \f[
+       (1 - \frac{1}{\alpha^2}) \frac{\partial p}{\partial x_i}
+     \f]
+   for the ith momentum equation. When added to the momentum RHS, the net contribution/scaling to the
+   momentum RHS is:
+     \f[
+        - \frac{\partial p}{\partial x_i} + (1 - \frac{1}{\alpha^2}) \frac{\partial p}{\partial x_i} = - \frac{1}{\alpha^2} \frac{\partial p}{\partial x_i} 
+     \f]
+   
+   */
+  template< typename MomDirT >
+  class ArtCompPGSPressure
+  : public Expr::Expression<SVolField>
+  {
+    DECLARE_FIELDS( SVolField, p_ )
+    const double alpha_;
+    
+    typedef typename SpatialOps::OperatorTypeBuilder< typename GradOpSelector<SVolField, MomDirT>::Gradient, SVolField, SVolField >::type GradT;    
+    const GradT* grad_;
+    
+    ArtCompPGSPressure( const Expr::Tag& pTag,
+                        const double alpha)
+    : Expr::Expression<SVolField>(),
+      alpha_(alpha)
+    {
+      this->set_gpu_runnable( true );
+      p_ = this->template create_field_request<SVolField>( pTag );
+    }
+    
+  public:
+    
+    class Builder : public Expr::ExpressionBuilder
+    {
+      const Expr::Tag pTag_;
+      double alpha_;
+    public:
+
+      Builder( const Expr::Tag& resultTag,
+              const Expr::Tag& pTag,
+              const double alpha,
+              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
+      : ExpressionBuilder( resultTag, nghost ),
+      pTag_( pTag ),
+      alpha_(alpha)
+      {}
+      
+      Expr::ExpressionBase* build() const{
+        return new ArtCompPGSPressure<MomDirT>( pTag_, alpha_ );
+      }
+      
+    };  /* end of Builder class */
+    
+    ~ArtCompPGSPressure(){}
+    
+    void bind_operators( const SpatialOps::OperatorDatabase& opDB )
+    {
+      grad_ = opDB.retrieve_operator<GradT>();
+    }
+    
+    void evaluate()
+    {
+      SVolField& result = this->value();
+      const SVolField& p = p_->field_ref();
+      const double a2 = alpha_*alpha_;
+      result <<= (1.0 - 1.0/a2) * ( *grad_ )( p_->field_ref() );
+    }
+  };
+
+  
+  
 
   //============================================================================
   
@@ -229,9 +310,7 @@ namespace WasatchCore{
                                                    temperatureTag,
                                                    mixMWTag,
                                                    gasConstant) );
-
     }
-
     setup();
   }
 
@@ -249,10 +328,29 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
 
     typedef typename MomRHS<SVolField, MomDirT>::Builder RHS;
-    return factory.register_expression( scinew RHS( this->rhsTag_,
+    const Expr::ExpressionID rhsID = factory.register_expression( scinew RHS( this->rhsTag_,
                                                    this->pressureTag_,
                                                    rhs_part_tag(this->solnVarTag_),
                                                    volFracTag ) );
+  
+    if (this->params_->findBlock("ArtificialCompressibility")) {
+      Uintah::ProblemSpecP ACSpec = this->params_->findBlock("ArtificialCompressibility");
+      std::string model;
+      std::cout << "got here \n";
+      ACSpec->getAttribute("model", model);
+      if (model == "PGS") {
+        double alpha;
+        ACSpec->getAttribute("coef",alpha);
+        const Expr::Tag pgsPressureTag("PGS_pressure_" + this->solnVarTag_.name(), Expr::STATE_NONE);
+        typedef typename ArtCompPGSPressure<MomDirT>::Builder ACPGSPressure;
+        factory.register_expression( scinew ACPGSPressure(pgsPressureTag, TagNames::self().pressure, alpha ) );
+        // attach viscous dissipation expression to the RHS as a source
+        factory.attach_dependency_to_expression(pgsPressureTag, this->rhsTag_);
+      }
+    }
+    
+    return rhsID;
+
   }
 
   //----------------------------------------------------------------------------
