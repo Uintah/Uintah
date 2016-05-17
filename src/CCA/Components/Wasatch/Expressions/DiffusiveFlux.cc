@@ -41,8 +41,8 @@ DiffusiveFlux( const Expr::Tag& rhoTag,
                const Expr::Tag& coefTag )
   : Expr::Expression<FluxT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
-    isConstCoef_( false       ),
-    coefVal_    ( 0.0         )
+    isConstCoef_( false ),
+    coefVal_    ( 0.0   )
 {
    phi_ = this->template create_field_request<ScalarT>(phiTag);
    rho_ = this->template create_field_request<ScalarT>(rhoTag);
@@ -60,8 +60,8 @@ DiffusiveFlux( const Expr::Tag& rhoTag,
                const double coefVal )
   : Expr::Expression<FluxT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
-    isConstCoef_( true        ),
-    coefVal_    ( coefVal     )
+    isConstCoef_( true    ),
+    coefVal_    ( coefVal )
 {
    phi_ = this->template create_field_request<ScalarT>(phiTag);
    rho_ = this->template create_field_request<ScalarT>(rhoTag);
@@ -100,11 +100,11 @@ evaluate()
   FluxT& result = this->value();
   if( isTurbulent_ ){
     if( isConstCoef_ ) result <<= - (*interpOp_)( rho_->field_ref() * (coefVal_ + turbDiff_->field_ref())) * (*gradOp_)(phi_->field_ref());
-    else               result <<= - (*interpOp_)( rho_->field_ref() * (coef_->field_ref()   + turbDiff_->field_ref())) * (*gradOp_)(phi_->field_ref());
+    else               result <<= - (*interpOp_)( rho_->field_ref() * (coef_->field_ref() + turbDiff_->field_ref())) * (*gradOp_)(phi_->field_ref());
   }
   else{
     if( isConstCoef_ ) result <<= - (*interpOp_)( rho_->field_ref() * coefVal_ ) * (*gradOp_)(phi_->field_ref());
-    else               result <<= - (*interpOp_)( rho_->field_ref() * coef_->field_ref()   ) * (*gradOp_)(phi_->field_ref());
+    else               result <<= - (*interpOp_)( rho_->field_ref() * coef_->field_ref() ) * (*gradOp_)(phi_->field_ref());
   }
 }
 
@@ -126,7 +126,7 @@ DiffusiveFlux<FluxT>::Builder::build() const
 //
 #include <spatialops/structured/FVStaggered.h>
 
-#define DECLARE_DIFF_FLUX( VOL )                                                 \
+#define DECLARE_DIFF_FLUX( VOL )                                     \
   template class DiffusiveFlux< SpatialOps::FaceTypes<VOL>::XFace >; \
   template class DiffusiveFlux< SpatialOps::FaceTypes<VOL>::YFace >; \
   template class DiffusiveFlux< SpatialOps::FaceTypes<VOL>::ZFace >;
