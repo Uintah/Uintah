@@ -8,9 +8,9 @@
 #include <spatialops/util/TimeLogger.h>
 
 #define GET_PSI(my_limiter_struct) \
-    GetPsiA3 get_psi_x( phi, psi_x, u, af_x, 0 ); \
-    GetPsiA3 get_psi_y( phi, psi_y, v, af_y, 1 ); \
-    GetPsiA3 get_psi_z( phi, psi_z, w, af_z, 2 ); \
+    GetPsi get_psi_x( phi, psi_x, u, af_x, 0 ); \
+    GetPsi get_psi_y( phi, psi_y, v, af_y, 1 ); \
+    GetPsi get_psi_z( phi, psi_z, w, af_z, 2 ); \
     GET_FX_BUFFERED_PATCH_RANGE(1,0); \
     Uintah::BlockRange x_range(low_fx_patch_range, high_fx_patch_range); \
     Uintah::parallel_for(x_range, get_psi_x, my_limiter_struct); \

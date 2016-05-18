@@ -29,15 +29,15 @@
       low_z_adjust = IntVector(0,0,1); \
     } \
     Uintah::BlockRange range_x(low+low_x_adjust, high); \
-    GetPsiA3 get_psi_x( phi, psi_x, u, af_x, 0 ); \
+    GetPsi get_psi_x( phi, psi_x, u, af_x, 0 ); \
     Uintah::parallel_for( range_x, get_psi_x, my_limiter ); \
     \
     Uintah::BlockRange range_y(low+low_y_adjust, high); \
-    GetPsiA3 get_psi_y( phi, psi_y, v, af_y, 1 ); \
+    GetPsi get_psi_y( phi, psi_y, v, af_y, 1 ); \
     Uintah::parallel_for( range_y, get_psi_y, my_limiter ); \
     \
     Uintah::BlockRange range_z(low+low_z_adjust, high); \
-    GetPsiA3 get_psi_z( phi, psi_z, w, af_z, 2 ); \
+    GetPsi get_psi_z( phi, psi_z, w, af_z, 2 ); \
     Uintah::parallel_for( range_z, get_psi_z, my_limiter );
 
 //==========================================================================

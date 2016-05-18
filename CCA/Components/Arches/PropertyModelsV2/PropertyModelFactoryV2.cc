@@ -31,10 +31,10 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
   */
 
   //Force the face velocity property model to be created:
-  m_vel_name = "face_velocities";
-  TaskInterface::TaskBuilder* vel_tsk = scinew FaceVelocities::Builder(m_vel_name, 0 );
-  register_task(m_vel_name, vel_tsk);
-  _pre_update_property_tasks.push_back(m_vel_name);
+  //m_vel_name = "face_velocities";
+  //TaskInterface::TaskBuilder* vel_tsk = scinew FaceVelocities::Builder(m_vel_name, 0 );
+  //register_task(m_vel_name, vel_tsk);
+  //_pre_update_property_tasks.push_back(m_vel_name);
 
   if ( db->findBlock("PropertyModelsV2")){
 
@@ -111,9 +111,9 @@ void
 PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
 {
 
-  TaskInterface* vel_tsk = retrieve_task(m_vel_name);
-  vel_tsk->problemSetup(db);
-  vel_tsk->create_local_labels();
+  //TaskInterface* vel_tsk = retrieve_task(m_vel_name);
+  //vel_tsk->problemSetup(db);
+  //vel_tsk->create_local_labels();
 
   if ( db->findBlock("PropertyModelsV2")){
 
