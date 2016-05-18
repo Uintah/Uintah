@@ -218,11 +218,10 @@ private:
     for (int i = istart; i < iend; i++ ){
       register_new_variable<T>( _eqn_names[i] );
       register_new_variable<T>( _eqn_names[i]+"_rhs" );
-      register_new_variable<T>( _eqn_names[i]+"_x_flux" );
-      register_new_variable<T>( _eqn_names[i]+"_y_flux" );
-      register_new_variable<T>( _eqn_names[i]+"_z_flux" );
+      register_new_variable<FXT>( _eqn_names[i]+"_x_flux" );
+      register_new_variable<FYT>( _eqn_names[i]+"_y_flux" );
+      register_new_variable<FZT>( _eqn_names[i]+"_z_flux" );
     }
-
   }
 
   template <typename T> void
@@ -250,9 +249,9 @@ private:
 
       T& phi    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
       T& rhs    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]));
-      T& x_flux = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_x_flux"));
-      T& y_flux = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_y_flux"));
-      T& z_flux = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_z_flux"));
+      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(_eqn_names[ieqn]+"_x_flux"));
+      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(_eqn_names[ieqn]+"_y_flux"));
+      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(_eqn_names[ieqn]+"_z_flux"));
 
       double scalar_init_value = _init_value[ieqn];
 

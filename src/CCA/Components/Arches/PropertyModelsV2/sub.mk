@@ -16,7 +16,8 @@ CUDA_ENABLED_SRCS =            \
         DensityPredictor       \
         PropertyModelFactoryV2 \
         VariableStats          \
-        WallHFVariable         
+        FaceVelocities         \
+        WallHFVariable
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of

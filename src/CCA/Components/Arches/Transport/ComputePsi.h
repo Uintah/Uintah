@@ -7,19 +7,20 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <spatialops/util/TimeLogger.h>
 
-#define GET_PSI(my_limiter) \
-    GetPsi<my_limiter, XFaceT> get_psi_x( phi, psi_x, u, af_x ); \
-    GetPsi<my_limiter, YFaceT> get_psi_y( phi, psi_y, v, af_y ); \
-    GetPsi<my_limiter, ZFaceT> get_psi_z( phi, psi_z, w, af_z ); \
+#define GET_PSI(my_limiter_struct) \
+    GetPsiA3 get_psi_x( phi, psi_x, u, af_x, 0 ); \
+    GetPsiA3 get_psi_y( phi, psi_y, v, af_y, 1 ); \
+    GetPsiA3 get_psi_z( phi, psi_z, w, af_z, 2 ); \
     GET_FX_BUFFERED_PATCH_RANGE(1,0); \
     Uintah::BlockRange x_range(low_fx_patch_range, high_fx_patch_range); \
-    Uintah::parallel_for(x_range, get_psi_x); \
+    Uintah::parallel_for(x_range, get_psi_x, my_limiter_struct); \
     GET_FY_BUFFERED_PATCH_RANGE(1,0); \
     Uintah::BlockRange y_range(low_fy_patch_range, high_fy_patch_range); \
-    Uintah::parallel_for(y_range, get_psi_y); \
+    Uintah::parallel_for(y_range, get_psi_y, my_limiter_struct); \
     GET_FZ_BUFFERED_PATCH_RANGE(1,0); \
     Uintah::BlockRange z_range(low_fz_patch_range, high_fz_patch_range); \
-    Uintah::parallel_for(z_range, get_psi_z);
+    Uintah::parallel_for(z_range, get_psi_z, my_limiter_struct);
+
 
 namespace Uintah{
 
@@ -36,11 +37,6 @@ public:
 
     void create_local_labels(){
 
-      typedef typename VariableHelper<T>::XFaceType XFaceT;
-      typedef typename VariableHelper<T>::YFaceType YFaceT;
-      typedef typename VariableHelper<T>::ZFaceType ZFaceT;
-
-      typedef std::vector<std::string> SV;
       for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
         register_new_variable<XFaceT>( *i + "_x_psi" );
@@ -48,7 +44,6 @@ public:
         register_new_variable<ZFaceT>( *i + "_z_psi" );
 
       }
-
     }
 
     /** @brief Build instruction for this class **/
@@ -99,6 +94,16 @@ private:
     std::vector<std::string> _eqn_names;
     std::map<std::string, LIMITER> _name_to_limiter_map;
 
+    typedef std::vector<std::string> SV;
+    typedef typename VariableHelper<T>::ConstType CT;
+    typedef typename VariableHelper<T>::XFaceType XFaceT;
+    typedef typename VariableHelper<T>::YFaceType YFaceT;
+    typedef typename VariableHelper<T>::ZFaceType ZFaceT;
+    typedef typename VariableHelper<T>::ConstXFaceType ConstXFaceT;
+    typedef typename VariableHelper<T>::ConstYFaceType ConstYFaceT;
+    typedef typename VariableHelper<T>::ConstZFaceType ConstZFaceT;
+
+
 
   };
 
@@ -129,13 +134,10 @@ private:
       _eqn_names.push_back(scalar_name);
 
     }
-
-    std::cout << "hello" << std::endl;
   }
 
   template <typename T>
   void ComputePsi<T>::register_initialize( AVarInfo& variable_registry ){
-    typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       register_variable( *i+"_x_psi", ArchesFieldContainer::COMPUTES, variable_registry );
       register_variable( *i+"_y_psi", ArchesFieldContainer::COMPUTES, variable_registry );
@@ -147,11 +149,6 @@ private:
   template <typename T>
   void ComputePsi<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                   SpatialOps::OperatorDatabase& opr ){
-    typedef typename VariableHelper<T>::XFaceType XFaceT;
-    typedef typename VariableHelper<T>::YFaceType YFaceT;
-    typedef typename VariableHelper<T>::ZFaceType ZFaceT;
-
-    typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       XFaceT& psi_x = *(tsk_info->get_uintah_field<XFaceT>(*i+"_x_psi"));
       YFaceT& psi_y = *(tsk_info->get_uintah_field<YFaceT>(*i+"_y_psi"));
@@ -167,7 +164,6 @@ private:
   template <typename T>
   void ComputePsi<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-    typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       register_variable( *i+"_x_psi", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
       register_variable( *i+"_y_psi", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
@@ -185,15 +181,6 @@ private:
   template <typename T>
   void ComputePsi<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                           SpatialOps::OperatorDatabase& opr ){
-
-    typedef std::vector<std::string> SV;
-    typedef typename VariableHelper<T>::ConstType CT;
-    typedef typename VariableHelper<T>::XFaceType XFaceT;
-    typedef typename VariableHelper<T>::YFaceType YFaceT;
-    typedef typename VariableHelper<T>::ZFaceType ZFaceT;
-    typedef typename VariableHelper<T>::ConstXFaceType ConstXFaceT;
-    typedef typename VariableHelper<T>::ConstYFaceType ConstYFaceT;
-    typedef typename VariableHelper<T>::ConstZFaceType ConstZFaceT;
 
     ConstXFaceT& af_x = *(tsk_info->get_const_uintah_field<ConstXFaceT>("areaFractionX"));
     ConstYFaceT& af_y = *(tsk_info->get_const_uintah_field<ConstYFaceT>("areaFractionY"));
@@ -219,15 +206,20 @@ private:
       timer.start("ComputePsi");
 #endif
       if ( my_limiter == UPWIND ){
-        GET_PSI(UPWIND);
+        UpwindStruct up;
+        GET_PSI(up);
       } else if ( my_limiter == CENTRAL ){
-        GET_PSI(CENTRAL);
+        CentralStruct central;
+        GET_PSI(central);
       } else if ( my_limiter == SUPERBEE ){
-        GET_PSI(SUPERBEE);
+        SuperBeeStruct sb;
+        GET_PSI(sb);
       } else if ( my_limiter == ROE ){
-        GET_PSI(ROE);
+        RoeStruct roe;
+        GET_PSI(roe);
       } else if ( my_limiter == VANLEER ){
-        GET_PSI(VANLEER);
+        VanLeerStruct vl;
+        GET_PSI(vl);
       }
 #ifdef DO_TIMINGS
       timer.stop("ComputePsi");

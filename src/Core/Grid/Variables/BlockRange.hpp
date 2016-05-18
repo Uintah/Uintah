@@ -96,6 +96,21 @@ void parallel_for( BlockRange const & r, const Functor & f )
   });
 };
 
+template <typename Functor, typename Option>
+void parallel_for( BlockRange const & r, const Functor & f, const Option & op )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::OpenMP, int>(kb, ke).set_chunk_size(2), KOKKOS_LAMBDA(int k) {
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      f(op,i,j,k);
+    }}
+  });
+};
+
 template <typename Functor, typename ReductionType>
 void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & red  )
 {
@@ -125,6 +140,20 @@ void parallel_for( BlockRange const & r, const Functor & f )
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
     f(i,j,k);
+  }}}
+};
+
+template <typename Functor, typename Option>
+void parallel_for( BlockRange const & r, const Functor & f, const Option& op )
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(op,i,j,k);
   }}}
 };
 

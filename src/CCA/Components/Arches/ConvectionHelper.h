@@ -195,12 +195,140 @@ namespace Uintah {
       actually used, this function should throw an error since the specialized versions
       are the functors actually doing the work.
   **/
-  template<int MYLIMITER, typename GT>
+  struct SuperBeeStruct{};
+  struct UpwindStruct{};
+  struct CentralStruct{};
+  struct RoeStruct{};
+  struct VanLeerStruct{};
+
+  struct GetPsiA3{
+    GetPsiA3( const Array3<double>& i_phi, Array3<double>& i_psi, const Array3<double>& i_u,
+              const Array3<double>& i_af, const int& i_dir ) :
+             phi(i_phi), psi(i_psi), u(i_u), af(i_af), dir(i_dir),
+             huge(1.e10), tiny(1.e-16)
+    {}
+
+    void operator()(int i, int j, int k) const {
+      throw InvalidValue(
+        "Error: No implementation of this limiter type or direction in DiscretizationTools.h",
+        __FILE__, __LINE__);
+    }
+
+  /*
+    .d8888. db    db d8888b. d88888b d8888b. d8888b. d88888b d88888b
+    88'  YP 88    88 88  `8D 88'     88  `8D 88  `8D 88'     88'
+    `8bo.   88    88 88oodD' 88ooooo 88oobY' 88oooY' 88ooooo 88ooooo
+      `Y8b. 88    88 88~~~   88~~~~~ 88`8b   88~~~b. 88~~~~~ 88~~~~~
+    db   8D 88b  d88 88      88.     88 `88. 88   8D 88.     88.
+    `8888Y' ~Y8888P' 88      Y88888P 88   YD Y8888P' Y88888P Y88888P
+  */
+    void operator()(const SuperBeeStruct& op, int i, int j, int k) const {
+
+      double my_psi;
+      double r;
+
+      STENCIL5_1D(dir);
+      r = u(C_) > 0 ?
+        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
+        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+      SUPERBEEMACRO(r);
+      psi(C_) = my_psi * af(C_) * af(CM_);
+
+    }
+
+  /*
+    d8888b.  .d88b.  d88888b      .88b  d88. d888888b d8b   db .88b  d88.  .d88b.  d8888b.
+    88  `8D .8P  Y8. 88'          88'YbdP`88   `88'   888o  88 88'YbdP`88 .8P  Y8. 88  `8D
+    88oobY' 88    88 88ooooo      88  88  88    88    88V8o 88 88  88  88 88    88 88   88
+    88`8b   88    88 88~~~~~      88  88  88    88    88 V8o88 88  88  88 88    88 88   88
+    88 `88. `8b  d8' 88.          88  88  88   .88.   88  V888 88  88  88 `8b  d8' 88  .8D
+    88   YD  `Y88P'  Y88888P      YP  YP  YP Y888888P VP   V8P YP  YP  YP  `Y88P'  Y8888D'
+  */
+    void
+    operator()(const RoeStruct& op, int i, int j, int k) const {
+
+      double my_psi;
+      double r;
+
+      STENCIL5_1D(dir);
+      r = u(C_) > 0 ?
+        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
+        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+      ROEMACRO(r);
+      psi(C_) = my_psi * af(C_) * af(CM_);
+
+    }
+
+  /*
+    db    db  .d8b.  d8b   db      db      d88888b d88888b d8888b.
+    88    88 d8' `8b 888o  88      88      88'     88'     88  `8D
+    Y8    8P 88ooo88 88V8o 88      88      88ooooo 88ooooo 88oobY'
+    `8b  d8' 88~~~88 88 V8o88      88      88~~~~~ 88~~~~~ 88`8b
+     `8bd8'  88   88 88  V888      88booo. 88.     88.     88 `88.
+       YP    YP   YP VP   V8P      Y88888P Y88888P Y88888P 88   YD
+  */
+    void
+    operator()(const VanLeerStruct& op, int i, int j, int k) const {
+
+      double my_psi;
+      double r;
+
+      STENCIL5_1D(dir);
+      r = u(C_) > 0 ?
+        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
+        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+      VANLEERMACRO(r);
+      psi(C_) = my_psi * af(C_) * af(CM_);
+
+    }
+
+  /*
+    db    db d8888b. db   d8b   db d888888b d8b   db d8888b.
+    88    88 88  `8D 88   I8I   88   `88'   888o  88 88  `8D
+    88    88 88oodD' 88   I8I   88    88    88V8o 88 88   88
+    88    88 88~~~   Y8   I8I   88    88    88 V8o88 88   88
+    88b  d88 88      `8b d8'8b d8'   .88.   88  V888 88  .8D
+    ~Y8888P' 88       `8b8' `8d8'  Y888888P VP   V8P Y8888D'
+  */
+    void
+    operator()(const UpwindStruct& op, int i, int j, int k) const {
+
+      psi(C_) = 0.;
+
+    }
+
+  /*
+     .o88b. d88888b d8b   db d888888b d8888b.  .d8b.  db
+    d8P  Y8 88'     888o  88 `~~88~~' 88  `8D d8' `8b 88
+    8P      88ooooo 88V8o 88    88    88oobY' 88ooo88 88
+    8b      88~~~~~ 88 V8o88    88    88`8b   88~~~88 88
+    Y8b  d8 88.     88  V888    88    88 `88. 88   88 88booo.
+     `Y88P' Y88888P VP   V8P    YP    88   YD YP   YP Y88888P
+  */
+    void
+    operator()(const CentralStruct& op, int i, int j, int k) const {
+
+      psi(C_) = 1.;
+
+    }
+
+  private:
+
+    const Array3<double>& phi;
+    const Array3<double>& u, af;
+    Array3<double>& psi;
+    const int& dir;
+    const double huge;
+    const double tiny;
+
+  };
+
+  template<int MYLIMITER, typename VT, typename GT>
   struct GetPsi{
 
     typedef typename VariableHelper<GT>::ConstType constGT;
 
-    GetPsi( constCCVariable<double>& phi, GT& psi, constGT& u, constGT& af ) :
+    GetPsi( VT& phi, GT& psi, constGT& u, constGT& af ) :
 #ifdef UINTAH_ENABLE_KOKKOS
     phi(phi.getKokkosView()), psi(psi.getKokkosView()), u(u.getKokkosView()),
     af(af.getKokkosView()),
@@ -225,7 +353,7 @@ namespace Uintah {
     KokkosView3<const double> u;
     KokkosView3<const double> af;
 #else
-    constCCVariable<double>& phi;
+    VT& phi;
     GT& psi;
     constGT& u;
     constGT& af;
@@ -233,285 +361,6 @@ namespace Uintah {
     const double huge;
     DIR dir;
 
-
-  };
-
-  //-------------------------------------
-  //------- Specialized functions -------
-  //-------------------------------------
-
-  /*
-          .d8888. db    db d8888b. d88888b d8888b. d8888b. d88888b d88888b
-          88'  YP 88    88 88  `8D 88'     88  `8D 88  `8D 88'     88'
-          `8bo.   88    88 88oodD' 88ooooo 88oobY' 88oooY' 88ooooo 88ooooo
-            `Y8b. 88    88 88~~~   88~~~~~ 88`8b   88~~~b. 88~~~~~ 88~~~~~
-          db   8D 88b  d88 88      88.     88 `88. 88   8D 88.     88.
-          `8888Y' ~Y8888P' 88      Y88888P 88   YD Y8888P' Y88888P Y88888P
-  */
-  template<typename GT>
-  struct GetPsi<SUPERBEE, GT>{
-
-    typedef typename VariableHelper<GT>::ConstType constGT;
-
-    GetPsi( constCCVariable<double>& phi, GT& psi, constGT& u, constGT& af ) :
-#ifdef UINTAH_ENABLE_KOKKOS
-    phi(phi.getKokkosView()), psi(psi.getKokkosView()), u(u.getKokkosView()),
-    af(af.getKokkosView()),
-#else
-    phi(phi), psi(psi), u(u),
-    af(af),
-#endif
-    huge(1.e10), tiny(1.e-16)
-    {
-      VariableHelper<GT> helper;
-      dir = helper.dir;
-    } //end constructor
-    void
-    operator()(int i, int j, int k ) const {
-
-      double my_psi;
-      double r;
-
-      STENCIL5_1D(dir);
-      r = u(C_) > 0 ?
-        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
-      SUPERBEEMACRO(r);
-      psi(C_) = my_psi * af(C_) * af(CM_);
-
-    }
-
-  private:
-#ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<const double> phi;
-    KokkosView3<double> psi;
-    KokkosView3<const double> u;
-    KokkosView3<const double> af;
-#else
-    constCCVariable<double>& phi;
-    GT& psi;
-    constGT& u;
-    constGT& af;
-#endif
-    const double huge;
-    const double tiny;
-    DIR dir;
-
-  };
-
-  /*
-    d8888b.  .d88b.  d88888b      .88b  d88. d888888b d8b   db .88b  d88.  .d88b.  d8888b.
-    88  `8D .8P  Y8. 88'          88'YbdP`88   `88'   888o  88 88'YbdP`88 .8P  Y8. 88  `8D
-    88oobY' 88    88 88ooooo      88  88  88    88    88V8o 88 88  88  88 88    88 88   88
-    88`8b   88    88 88~~~~~      88  88  88    88    88 V8o88 88  88  88 88    88 88   88
-    88 `88. `8b  d8' 88.          88  88  88   .88.   88  V888 88  88  88 `8b  d8' 88  .8D
-    88   YD  `Y88P'  Y88888P      YP  YP  YP Y888888P VP   V8P YP  YP  YP  `Y88P'  Y8888D'
-  */
-  template<typename GT>
-  struct GetPsi<ROE, GT>{
-
-    typedef typename VariableHelper<GT>::ConstType constGT;
-
-    GetPsi( constCCVariable<double>& phi, GT& psi, constGT& u, constGT& af ) :
-#ifdef UINTAH_ENABLE_KOKKOS
-    phi(phi.getKokkosView()), psi(psi.getKokkosView()), u(u.getKokkosView()),
-    af(af.getKokkosView()),
-#else
-    phi(phi), psi(psi), u(u),
-    af(af),
-#endif
-    huge(1.e10), tiny(1.e-16)
-    {
-      VariableHelper<GT> helper;
-      dir = helper.dir;
-    } //end constructor
-    void
-    operator()(int i, int j, int k ) const {
-
-      double my_psi;
-      double r;
-
-      STENCIL5_1D(dir);
-      r = u(C_) > 0 ?
-        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
-      ROEMACRO(r);
-      psi(C_) = my_psi * af(C_) * af(CM_);
-
-    }
-
-  private:
-#ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<const double> phi;
-    KokkosView3<double> psi;
-    KokkosView3<const double> u;
-    KokkosView3<const double> af;
-#else
-    constCCVariable<double>& phi;
-    GT& psi;
-    constGT& u;
-    constGT& af;
-#endif
-    const double huge;
-    const double tiny;
-    DIR dir;
-
-  };
-
-
-  /*
-          db    db  .d8b.  d8b   db      db      d88888b d88888b d8888b.
-          88    88 d8' `8b 888o  88      88      88'     88'     88  `8D
-          Y8    8P 88ooo88 88V8o 88      88      88ooooo 88ooooo 88oobY'
-          `8b  d8' 88~~~88 88 V8o88      88      88~~~~~ 88~~~~~ 88`8b
-           `8bd8'  88   88 88  V888      88booo. 88.     88.     88 `88.
-             YP    YP   YP VP   V8P      Y88888P Y88888P Y88888P 88   YD
-  */
-  template<typename GT>
-  struct GetPsi<VANLEER, GT>{
-
-    typedef typename VariableHelper<GT>::ConstType constGT;
-
-    GetPsi( constCCVariable<double>& phi, GT& psi, constGT& u, constGT& af ) :
-#ifdef UINTAH_ENABLE_KOKKOS
-    phi(phi.getKokkosView()), psi(psi.getKokkosView()), u(u.getKokkosView()),
-    af(af.getKokkosView()),
-#else
-    phi(phi), psi(psi), u(u),
-    af(af),
-#endif
-    huge(1.e10), tiny(1.e-16)
-    {
-      VariableHelper<GT> helper;
-      dir = helper.dir;
-    } //end constructor
-    void
-    operator()(int i, int j, int k ) const {
-
-      double my_psi;
-      double r;
-
-      STENCIL5_1D(dir);
-      r = u(C_) > 0 ?
-        ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
-      VANLEERMACRO(r);
-      psi(C_) = my_psi * af(C_) * af(CM_);
-
-    }
-
-  private:
-#ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<const double> phi;
-    KokkosView3<double> psi;
-    KokkosView3<const double> u;
-    KokkosView3<const double> af;
-#else
-    constCCVariable<double>& phi;
-    GT& psi;
-    constGT& u;
-    constGT& af;
-#endif
-    const double huge;
-    const double tiny;
-    DIR dir;
-
-  };
-
-
-  /*
-           db    db d8888b. db   d8b   db d888888b d8b   db d8888b.
-           88    88 88  `8D 88   I8I   88   `88'   888o  88 88  `8D
-           88    88 88oodD' 88   I8I   88    88    88V8o 88 88   88
-           88    88 88~~~   Y8   I8I   88    88    88 V8o88 88   88
-           88b  d88 88      `8b d8'8b d8'   .88.   88  V888 88  .8D
-           ~Y8888P' 88       `8b8' `8d8'  Y888888P VP   V8P Y8888D'
-  */
-  template<typename GT>
-  struct GetPsi<UPWIND, GT>{
-
-    typedef typename VariableHelper<GT>::ConstType constGT;
-
-    GetPsi( constCCVariable<double>& phi, GT& psi, constGT& u, constGT& af ) :
-#ifdef UINTAH_ENABLE_KOKKOS
-    phi(phi.getKokkosView()), psi(psi.getKokkosView()), u(u.getKokkosView()),
-    af(af.getKokkosView()),
-#else
-    phi(phi), psi(psi), u(u),
-    af(af),
-#endif
-    huge(1.e10), tiny(1.e-16)
-    {} //end constructor
-    void
-    operator()(int i, int j, int k ) const {
-
-      psi(C_) = 0.;
-
-    }
-
-  private:
-#ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<const double> phi;
-    KokkosView3<double> psi;
-    KokkosView3<const double> u;
-    KokkosView3<const double> af;
-#else
-    constCCVariable<double>& phi;
-    GT& psi;
-    constGT& u;
-    constGT& af;
-#endif
-    const double huge;
-    const double tiny;
-    DIR dir;
-
-  };
-
-  /*
-              .o88b. d88888b d8b   db d888888b d8888b.  .d8b.  db
-             d8P  Y8 88'     888o  88 `~~88~~' 88  `8D d8' `8b 88
-             8P      88ooooo 88V8o 88    88    88oobY' 88ooo88 88
-             8b      88~~~~~ 88 V8o88    88    88`8b   88~~~88 88
-             Y8b  d8 88.     88  V888    88    88 `88. 88   88 88booo.
-              `Y88P' Y88888P VP   V8P    YP    88   YD YP   YP Y88888P
-  */
-  template<typename GT>
-  struct GetPsi<CENTRAL, GT>{
-
-    typedef typename VariableHelper<GT>::ConstType constGT;
-
-    GetPsi( constCCVariable<double>& phi, GT& psi, constGT& u, constGT& af ) :
-#ifdef UINTAH_ENABLE_KOKKOS
-    phi(phi.getKokkosView()), psi(psi.getKokkosView()), u(u.getKokkosView()),
-    af(af.getKokkosView()),
-#else
-    phi(phi), psi(psi), u(u),
-    af(af),
-#endif
-    huge(1.e10), tiny(1.e-16)
-    {} //end constructor
-    void
-    operator()(int i, int j, int k ) const {
-
-      psi(C_) = 1.;
-
-    }
-
-  private:
-#ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<const double> phi;
-    KokkosView3<double> psi;
-    KokkosView3<const double> u;
-    KokkosView3<const double> af;
-#else
-    constCCVariable<double>& phi;
-    GT& psi;
-    constGT& u;
-    constGT& af;
-#endif
-    const double huge;
-    const double tiny;
-    DIR dir;
 
   };
 

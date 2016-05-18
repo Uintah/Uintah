@@ -31,9 +31,9 @@ namespace Uintah{
 
         return _finalize_property_tasks;
 
-      } else if ( subset == "variable_stat_models" ){ 
+      } else if ( subset == "variable_stat_models" ){
 
-        return _var_stats_tasks; 
+        return _var_stats_tasks;
 
       } else {
 
@@ -52,6 +52,8 @@ namespace Uintah{
     std::vector<std::string> _finalize_property_tasks;    ///<Tasks that execute at the end of the time step
     std::vector<std::string> _pre_table_post_iv_update;   ///<Tasks that execute after IV update and before table lookup
     std::vector<std::string> _var_stats_tasks;            ///<All Tasks associated with variable stats
+
+    std::string m_vel_name;                               ///<Name of the task that creates all face velocities
 
   };
 }

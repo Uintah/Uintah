@@ -583,15 +583,20 @@ DQMOMEqn::computePsi( const ProcessorGroup* pc,
     old_dw->get( af_z, d_fieldLabels->d_areaFractionFZLabel, matlIndex, patch, gac, 2 );
 
     if ( d_which_limiter == UPWIND ){
-      DQMOM_CONV(UPWIND);
+      UpwindStruct up;
+      DQMOM_CONV(up);
     } else if ( d_which_limiter == SUPERBEE ){
-      DQMOM_CONV(SUPERBEE);
+      SuperBeeStruct sb;
+      DQMOM_CONV(sb);
     } else if ( d_which_limiter == ROE ){
-      DQMOM_CONV(ROE);
+      RoeStruct roe; 
+      DQMOM_CONV(roe);
     } else if ( d_which_limiter == CENTRAL ){
-      DQMOM_CONV(CENTRAL);
+      CentralStruct central;
+      DQMOM_CONV(central);
     } else if ( d_which_limiter == VANLEER ){
-      DQMOM_CONV(VANLEER);
+      VanLeerStruct vl;
+      DQMOM_CONV(vl);
     }
 
   }
