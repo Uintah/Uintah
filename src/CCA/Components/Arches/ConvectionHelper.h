@@ -201,8 +201,8 @@ namespace Uintah {
   struct RoeStruct{};
   struct VanLeerStruct{};
 
-  struct GetPsiA3{
-    GetPsiA3( const Array3<double>& i_phi, Array3<double>& i_psi, const Array3<double>& i_u,
+  struct GetPsi{
+    GetPsi( const Array3<double>& i_phi, Array3<double>& i_psi, const Array3<double>& i_u,
               const Array3<double>& i_af, const int& i_dir ) :
              phi(i_phi), psi(i_psi), u(i_u), af(i_af), dir(i_dir),
              huge(1.e10), tiny(1.e-16)
@@ -320,47 +320,6 @@ namespace Uintah {
     const int& dir;
     const double huge;
     const double tiny;
-
-  };
-
-  template<int MYLIMITER, typename VT, typename GT>
-  struct GetPsi{
-
-    typedef typename VariableHelper<GT>::ConstType constGT;
-
-    GetPsi( VT& phi, GT& psi, constGT& u, constGT& af ) :
-#ifdef UINTAH_ENABLE_KOKKOS
-    phi(phi.getKokkosView()), psi(psi.getKokkosView()), u(u.getKokkosView()),
-    af(af.getKokkosView()),
-#else
-    phi(phi), psi(psi), u(u),
-    af(af),
-#endif
-    huge(1.e10)
-    {} //end constructor
-
-    void
-    operator()(int i, int j, int k ) const {
-      throw InvalidValue(
-        "Error: No implementation of this method in DiscretizationTools.h",
-        __FILE__, __LINE__);
-    }
-
-  private:
-#ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<const double> phi;
-    KokkosView3<double> psi;
-    KokkosView3<const double> u;
-    KokkosView3<const double> af;
-#else
-    VT& phi;
-    GT& psi;
-    constGT& u;
-    constGT& af;
-#endif
-    const double huge;
-    DIR dir;
-
 
   };
 
