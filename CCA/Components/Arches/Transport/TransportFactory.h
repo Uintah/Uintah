@@ -32,7 +32,9 @@ namespace Uintah{
       } else if ( subset == "mom_ssp"){
         return _momentum_spp;
       } else if ( subset == "scalar_psi_builders" ){
-        return _scalar_compute_psi; 
+        return _scalar_compute_psi;
+      } else if ( subset == "momentum_psi_builders" ){
+        return _momentum_compute_psi; 
       } else {
         throw InvalidValue("Error: Task subset not recognized for TransportFactory.",__FILE__,__LINE__);
       }
@@ -48,6 +50,7 @@ namespace Uintah{
     std::vector<std::string> _scalar_ssp;
     std::vector<std::string> _momentum_spp;
     std::vector<std::string> _scalar_compute_psi;
+    std::vector<std::string> _momentum_compute_psi;
 
   };
 }

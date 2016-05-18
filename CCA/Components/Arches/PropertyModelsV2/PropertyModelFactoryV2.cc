@@ -5,6 +5,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
+#include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 
 using namespace Uintah;
@@ -28,6 +29,12 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
   </PropertyModelsV2>
 
   */
+
+  //Force the face velocity property model to be created:
+  m_vel_name = "face_velocities";
+  TaskInterface::TaskBuilder* vel_tsk = scinew FaceVelocities::Builder(m_vel_name, 0 );
+  register_task(m_vel_name, vel_tsk);
+  _pre_update_property_tasks.push_back(m_vel_name);
 
   if ( db->findBlock("PropertyModelsV2")){
 
@@ -103,6 +110,11 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 void
 PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
 {
+
+  TaskInterface* vel_tsk = retrieve_task(m_vel_name);
+  vel_tsk->problemSetup(db);
+  vel_tsk->create_local_labels();
+
   if ( db->findBlock("PropertyModelsV2")){
 
     ProblemSpecP db_m = db->findBlock("PropertyModelsV2");

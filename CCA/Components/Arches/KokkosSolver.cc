@@ -159,10 +159,10 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
   //RK loop
   for ( int time_substep = 0; time_substep < _rk_order; time_substep++ ){
 
-    //(vel)
-    SVec mom_rhs_builders = i_transport->second->retrieve_task_subset("mom_rhs_builders");
-    for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+    //(pre-update properties tasks)
+    SVec prop_preupdate_tasks = i_prop_fac->second->retrieve_task_subset("pre_update_property_models");
+    for (auto i = prop_preupdate_tasks.begin(); i != prop_preupdate_tasks.end(); i++){
+      TaskInterface* tsk = i_prop_fac->second->retrieve_task(*i);
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
@@ -187,6 +187,21 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
+
+    //(momentum)
+    // first compute the psi functions for the limiters:
+    SVec momentum_psi_builders = i_transport->second->retrieve_task_subset("momentum_psi_builders");
+    for ( SVec::iterator i = momentum_psi_builders.begin(); i != momentum_psi_builders.end(); i++){
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+    }
+
+    SVec mom_rhs_builders = i_transport->second->retrieve_task_subset("mom_rhs_builders");
+    for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+    }
+
   }
 
   return 0;
