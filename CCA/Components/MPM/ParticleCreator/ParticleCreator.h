@@ -107,11 +107,9 @@ namespace Uintah {
     ParticleVariable<double> pExternalHeatFlux;
     //MembraneParticleCreator
     ParticleVariable<Vector> pTang1, pTang2, pNorm;
-    //Scalar Diffusion
     ParticleVariable<double> pConcentration;
     ParticleVariable<double> pConcPrevious;
     ParticleVariable<Vector> pConcGrad;
-    ParticleVariable<double> pExternalScalarFlux;
     } ParticleVars;
 
   protected:
