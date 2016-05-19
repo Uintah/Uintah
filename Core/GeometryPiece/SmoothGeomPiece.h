@@ -109,7 +109,7 @@ namespace Uintah {
     std::vector<double>* getTemperature();
     
     //////////////////////////////////////////////////////////////////////
-    /*! Returns the vector containing the set of particle temperatures */
+    /*! Returns the vector containing the set of particle concentrations*/
     //////////////////////////////////////////////////////////////////////
     std::vector<double>* getConcentration();
 

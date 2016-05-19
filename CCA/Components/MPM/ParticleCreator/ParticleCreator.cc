@@ -493,11 +493,13 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   }
   if(d_doScalarDiffusion){
      new_dw->allocateAndPut(pvars.pConcentration,
-                                          d_lb->pConcentrationLabel,  subset);
+                                          d_lb->pConcentrationLabel,      subset);
      new_dw->allocateAndPut(pvars.pConcPrevious,
-                                          d_lb->pConcPreviousLabel,   subset);
+                                          d_lb->pConcPreviousLabel,       subset);
      new_dw->allocateAndPut(pvars.pConcGrad,
-                                          d_lb->pConcGradientLabel,   subset);
+                                          d_lb->pConcGradientLabel,       subset);
+     new_dw->allocateAndPut(pvars.pExternalScalarFlux,
+                                          d_lb->pExternalScalarFluxLabel, subset);
   }
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
@@ -713,6 +715,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
     pvars.pConcentration[i] = (*obj)->getInitialData_double("concentration");
     pvars.pConcPrevious[i]  = pvars.pConcentration[i];
     pvars.pConcGrad[i]  = Vector(0.0);
+    pvars.pExternalScalarFlux[i] = 0.0;
   }
   if(d_artificial_viscosity){
     pvars.p_q[i] = 0.;
@@ -916,6 +919,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
     particle_state.push_back(d_lb->pConcGradientLabel);
     particle_state_preReloc.push_back(d_lb->pConcGradientLabel_preReloc);
+
+    particle_state.push_back(d_lb->pExternalScalarFluxLabel);
+    particle_state_preReloc.push_back(d_lb->pExternalScalarFluxLabel_preReloc);
+
 
     matl->getScalarDiffusionModel()->addParticleState(particle_state,
                                                       particle_state_preReloc);
