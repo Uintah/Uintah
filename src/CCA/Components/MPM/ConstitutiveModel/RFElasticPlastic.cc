@@ -355,11 +355,13 @@ RFElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pPlasticStrainRateLabel);
   from.push_back(pLocalizedLabel);
   from.push_back(pEnergyLabel);
+  from.push_back(lb->pEquivalentStress_t1);
 
   to.push_back(pPlasticStrainLabel_preReloc);
   to.push_back(pPlasticStrainRateLabel_preReloc);
   to.push_back(pLocalizedLabel_preReloc);
   to.push_back(pEnergyLabel_preReloc);
+  to.push_back(lb->pEquivalentStress_t1_preReloc);
 
   // Add the particle state for the flow & deviatoric stress model
   d_flow     ->addParticleState(from, to);
@@ -374,10 +376,11 @@ RFElasticPlastic::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->computes(pPlasticStrainLabel, matlset);
-  task->computes(pPlasticStrainRateLabel, matlset);
-  task->computes(pLocalizedLabel,     matlset);
-  task->computes(pEnergyLabel,        matlset);
+  task->computes(pPlasticStrainLabel,      matlset);
+  task->computes(pPlasticStrainRateLabel,  matlset);
+  task->computes(pLocalizedLabel,          matlset);
+  task->computes(pEnergyLabel,             matlset);
+  task->computes(lb->pEquivalentStress_t1, matlset);
  
   // Add internal evolution variables computed by flow & deviatoric stress model
   d_flow     ->addInitialComputesAndRequires(task, matl, patch);
@@ -403,18 +406,21 @@ RFElasticPlastic::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double>  pPlasticStrain, pPlasticStrainRate, pEnergy;
+  ParticleVariable<double>  pEquivalentStress;
   ParticleVariable<int>     pLocalized;
 
-  new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
-  new_dw->allocateAndPut(pPlasticStrainRate, pPlasticStrainRateLabel, pset);
-  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
-  new_dw->allocateAndPut(pEnergy,            pEnergyLabel, pset);
+  new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel,      pset);
+  new_dw->allocateAndPut(pPlasticStrainRate, pPlasticStrainRateLabel,  pset);
+  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel,          pset);
+  new_dw->allocateAndPut(pEnergy,            pEnergyLabel,             pset);
+  new_dw->allocateAndPut(pEquivalentStress,  lb->pEquivalentStress_t1, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pPlasticStrain[*iter] = 0.0;
     pPlasticStrainRate[*iter] = 0.0;
     pLocalized[*iter] = 0;
     pEnergy[*iter] = 0.;
+    pEquivalentStress[*iter] = 0.;
   }
 
   // Initialize the data for the flow model
@@ -515,7 +521,7 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   d_devStress->addComputesAndRequires(task, matl);
 
   //******* start - temporary use, CG
-  task->computes(lb->pEquivalentStress_t1,  matlset);
+  task->computes(lb->pEquivalentStress_t1_preReloc,  matlset);
   //******* end   - temporary use, CG
 }
 //______________________________________________________________________
@@ -535,7 +541,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
   }
 
   //*********Start - Used for testing purposes - CG *******
-  // double timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  // int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   //*********End   - Used for testing purposes - CG *******
 
   // General stuff
@@ -655,7 +661,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
     //******* start - temporary use, CG
     ParticleVariable<double>  pEquStress;
-    new_dw->allocateAndPut(pEquStress, lb->pEquivalentStress_t1,  pset);
+    new_dw->allocateAndPut(pEquStress, lb->pEquivalentStress_t1_preReloc,  pset);
     //******* end   - temporary use, CG
     
     d_flow     ->getInternalVars(pset, old_dw);
@@ -734,7 +740,6 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       if(flag->d_doScalarDiffusion){
         tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
-        //cout << "Concentration Rate: " << conc_rate << ", delT: " << delT << endl;
       }
       //********** Concentration Component****************************
       // Calculate the deviatoric part of the non-concentration part
@@ -866,10 +871,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                        traceOfTrialStress, 
                                                        porosity, state->yieldStress);
         // Compute the deviatoric stress
-        /*
-        cout << "flow_rule = " << flow_rule << " s_eq = " << equivStress
-             << " s_flow = " << flowStress << endl;
-        */
+
+        //cout << "flow_rule = " << flow_rule << " s_eq = " << equivStress
+        //     << " s_flow = " << flowStress << endl;
+
 
         //if (timestep == 10000)
 				//  cout << "Index: " << idx << ", Equiv: " << equivStress << endl;
@@ -1178,7 +1183,7 @@ RFElasticPlastic::computePlasticStateViaRadialReturn(const Matrix3& trialS,
                                                      double& delGamma)
 {
   double normTrialS = trialS.Norm();
-  
+
   // Do Newton iteration to compute delGamma and updated 
   // plastic strain, plastic strain rate, and yield stress
   double tolerance = min(delT, 1.0e-6);

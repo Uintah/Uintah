@@ -94,7 +94,7 @@ class RFElasticPlastic : public ConstitutiveModel {
     const VarLabel* pPlasticStrainLabel;  
     const VarLabel* pPlasticStrainRateLabel;  
     const VarLabel* pLocalizedLabel;  
-    const VarLabel* pEnergyLabel;  
+    const VarLabel* pEnergyLabel;
 
     const VarLabel* pPlasticStrainLabel_preReloc;  
     const VarLabel* pPlasticStrainRateLabel_preReloc;  

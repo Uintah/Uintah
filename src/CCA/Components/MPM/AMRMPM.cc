@@ -501,6 +501,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     t->computes(lb->pConcentrationLabel);
     t->computes(lb->pConcPreviousLabel);
     t->computes(lb->pConcGradientLabel);
+    t->computes(lb->pExternalScalarFluxLabel);
   }
 
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -818,7 +819,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if(flags->d_doScalarDiffusion){
     t->requires(Task::OldDW, lb->pStressLabel,             d_gan, NGP);
     t->requires(Task::OldDW, lb->pConcentrationLabel,      d_gan, NGP);
-    t->requires(Task::NewDW, lb->pExternalScalarFluxLabel, d_gan, NGP);
+    t->requires(Task::NewDW, lb->pExternalScalarFluxLabel_preReloc, d_gan, NGP);
     t->computes(lb->gConcentrationLabel);
     t->computes(lb->gHydrostaticStressLabel);
     t->computes(lb->gExternalScalarFluxLabel);
@@ -888,7 +889,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
                                       Task::CoarseLevel,allMatls, ND, d_gac, npc);
       t->requires(Task::OldDW, lb->pStressLabel,             allPatches,
                                       Task::CoarseLevel,allMatls, ND, d_gac, npc);
-      t->requires(Task::NewDW, lb->pExternalScalarFluxLabel, allPatches,
+      t->requires(Task::NewDW, lb->pExternalScalarFluxLabel_preReloc, allPatches,
                                       Task::CoarseLevel,allMatls, ND, d_gac, npc);
  
       t->modifies(lb->gConcentrationLabel);
@@ -1416,7 +1417,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
       t->modifies(lb->pConcentrationLabel_preReloc);
       t->modifies(lb->pConcPreviousLabel_preReloc);
       t->modifies(lb->pConcGradientLabel_preReloc);
-      t->modifies(lb->pExternalScalarFluxLabel);
+      t->modifies(lb->pExternalScalarFluxLabel_preReloc);
       t->modifies(lb->pAreaLabel_preReloc);
       t->modifies(lb->pDiffusivityLabel_preReloc);
     }
@@ -1493,7 +1494,7 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
   t->computes(lb->pdTdtLabel);
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pExternalForceLabel);
-  t->computes(lb->pExternalScalarFluxLabel);
+  t->computes(lb->pExternalScalarFluxLabel_preReloc);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
@@ -1970,7 +1971,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         old_dw->get(pVelGrad,           lb->pVelGradLabel,            pset);
       }
       if(flags->d_doScalarDiffusion){
-        new_dw->get(pExternalScalarFlux,lb->pExternalScalarFluxLabel, pset);
+        new_dw->get(pExternalScalarFlux,lb->pExternalScalarFluxLabel_preReloc, pset);
         old_dw->get(pConcentration,     lb->pConcentrationLabel,      pset);
         old_dw->get(pStress,            lb->pStressLabel,             pset);
       }
@@ -2213,7 +2214,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         new_dw->get(pExternalforce_coarse, lb->pExtForceLabel_preReloc,  pset);
         if(flags->d_doScalarDiffusion){
           old_dw->get(pConc_coarse,        lb->pConcentrationLabel,      pset);
-          new_dw->get(pExtScalarFlux_c,    lb->pExternalScalarFluxLabel, pset);
+          new_dw->get(pExtScalarFlux_c,    lb->pExternalScalarFluxLabel_preReloc, pset);
           old_dw->get(pStress_coarse,      lb->pStressLabel,             pset);
         }
 
@@ -2377,7 +2378,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI_GIMP(const ProcessorGroup*,
         new_dw->get(pExternalforce_coarse, lb->pExtForceLabel_preReloc,  pset);
         if(flags->d_doScalarDiffusion){
           old_dw->get(pConc_coarse,        lb->pConcentrationLabel,      pset);
-          new_dw->get(pExtScalarFlux_c,    lb->pExternalScalarFluxLabel, pset);
+          new_dw->get(pExtScalarFlux_c,    lb->pExternalScalarFluxLabel_preReloc, pset);
           old_dw->get(pStress_coarse,      lb->pStressLabel,             pset);
         }
 
@@ -3979,7 +3980,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_dw->getModifiable(pconc,    lb->pConcentrationLabel_preReloc,pset);
         new_dw->getModifiable(pconcpre, lb->pConcPreviousLabel_preReloc, pset);
         new_dw->getModifiable(pconcgrad,lb->pConcGradientLabel_preReloc, pset);
-        new_dw->getModifiable(pESF,     lb->pExternalScalarFluxLabel,    pset);
+        new_dw->getModifiable(pESF,     lb->pExternalScalarFluxLabel_preReloc, pset);
         new_dw->getModifiable(pArea,    lb->pAreaLabel_preReloc,         pset);
         new_dw->getModifiable(pD,       lb->pDiffusivityLabel_preReloc,  pset);
       }
@@ -4438,7 +4439,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_dw->put(pconctmp,     lb->pConcentrationLabel_preReloc,  true);
         new_dw->put(pconcpretmp,  lb->pConcPreviousLabel_preReloc,   true);
         new_dw->put(pconcgradtmp, lb->pConcGradientLabel_preReloc,   true);
-        new_dw->put(pESFtmp,      lb->pExternalScalarFluxLabel,      true);
+        new_dw->put(pESFtmp,      lb->pExternalScalarFluxLabel_preReloc, true);
         new_dw->put(pareatmp,     lb->pAreaLabel_preReloc,           true);
         new_dw->put(pDtmp,        lb->pDiffusivityLabel_preReloc,    true);
       }
@@ -4708,7 +4709,7 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
         new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
         new_dw->allocateAndPut(pTempPrev,      lb->pTempPreviousLabel,  pset);
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
-        new_dw->allocateAndPut(pExtScalFlux,   lb->pExternalScalarFluxLabel,
+        new_dw->allocateAndPut(pExtScalFlux,   lb->pExternalScalarFluxLabel_preReloc,
                                                                         pset);
         new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
         new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
@@ -5484,7 +5485,7 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pConcentrationLabel,     Ghost::None);
   }
 #endif
-  t->computes(             lb->pExternalScalarFluxLabel);
+  t->computes(             lb->pExternalScalarFluxLabel_preReloc);
   if (flags->d_useLoadCurves) {
     t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
   }
@@ -5518,7 +5519,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
         pbcP.push_back(pbc);
 
         // Calculate the force per particle at current time
-//        fluxPerPart.push_back(pbc->fluxPerParticle(time));
+        //fluxPerPart.push_back(pbc->fluxPerParticle(time));
       }
     }
   }
@@ -5545,6 +5546,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<double> pExternalScalarFlux;
+      ParticleVariable<double> pExternalScalarFlux_pR;
 
 
       old_dw->get(px,    lb->pXLabel,    pset);
@@ -5555,7 +5557,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
       old_dw->get(psize, lb->pSizeLabel, pset);
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pExternalScalarFlux,
-                                      lb->pExternalScalarFluxLabel,  pset);
+                                       lb->pExternalScalarFluxLabel_preReloc,  pset);
 
 #if defined USE_FLUX_RESTRICTION
       constParticleVariable<double> pConcentration;

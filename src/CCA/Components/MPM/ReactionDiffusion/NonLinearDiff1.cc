@@ -33,8 +33,8 @@
 #include <iostream>
 using namespace Uintah;
 
-#undef USE_PARTICLE_VALUES
-
+//#undef USE_PARTICLE_VALUES
+#define USE_PARTICLE_VALUES
 NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type):
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 
@@ -99,7 +99,10 @@ void NonLinearDiff1::addInitialComputesAndRequires(Task* task, const MPMMaterial
                                                    const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->pDiffusivityLabel,   matlset);
+  task->computes(d_lb->pDiffusivityLabel, matlset);
+  task->computes(d_lb->pPressureLabel_t1, matlset);
+  task->computes(d_lb->pConcInterpLabel,  matlset);
+  task->computes(d_lb->pFluxLabel,        matlset);
 }
 
 void NonLinearDiff1::initializeSDMData(const Patch* patch, const MPMMaterial* matl,
@@ -108,11 +111,20 @@ void NonLinearDiff1::initializeSDMData(const Patch* patch, const MPMMaterial* ma
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double>  pDiffusivity;
+  ParticleVariable<double>  pPressure;
+  ParticleVariable<double>  pConcInterp;
+  ParticleVariable<Vector>  pFlux;
 
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
+  new_dw->allocateAndPut(pPressure,    d_lb->pPressureLabel_t1,    pset);
+  new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel,  pset);
+  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pDiffusivity[*iter] = diffusivity;
+    pPressure[*iter]    = 0.0;
+    pConcInterp[*iter]  = 0.0;
+    pFlux[*iter]        = Vector(0,0,0);
   }
 }
 
@@ -120,7 +132,14 @@ void NonLinearDiff1::addParticleState(std::vector<const VarLabel*>& from,
                                             std::vector<const VarLabel*>& to)
 {
   from.push_back(d_lb->pDiffusivityLabel);
+  from.push_back(d_lb->pPressureLabel_t1);
+  from.push_back(d_lb->pConcInterpLabel);
+  from.push_back(d_lb->pFluxLabel);
+
   to.push_back(d_lb->pDiffusivityLabel_preReloc);
+  to.push_back(d_lb->pPressureLabel_t1_preReloc);
+  to.push_back(d_lb->pConcInterpLabel_preReloc);
+  to.push_back(d_lb->pFluxLabel_preReloc);
 }
 
 void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
@@ -142,10 +161,10 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
 
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 
-  task->computes(d_lb->pFluxLabel,                 matlset);
+  task->computes(d_lb->pFluxLabel_preReloc,        matlset);
   task->computes(d_lb->pDiffusivityLabel_preReloc, matlset);
-  task->computes(d_lb->pPressureLabel_t1,          matlset);
-  task->computes(d_lb->pConcInterpLabel,           matlset);
+  task->computes(d_lb->pPressureLabel_t1_preReloc, matlset);
+  task->computes(d_lb->pConcInterpLabel_preReloc,  matlset);
 }
 
 void NonLinearDiff1::computeFlux(const Patch* patch,
@@ -192,13 +211,13 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
   new_dw->get(psize,          d_lb->pSizeLabel_preReloc,      pset);
 
-  new_dw->get(gConcentration, d_lb->gConcentrationLabel,     dwi, patch, gac, NGP);
-  new_dw->get(gHydroStress,   d_lb->gHydrostaticStressLabel, dwi, patch, gac, NGP);
+  new_dw->get(gConcentration, d_lb->gConcentrationLabel,     dwi, patch, gac, NGN);
+  new_dw->get(gHydroStress,   d_lb->gHydrostaticStressLabel, dwi, patch, gac, NGN);
 
-  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,                 pset);
+  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel_preReloc,        pset);
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel_preReloc, pset);
-  new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1,          pset);
-  new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel,           pset);
+  new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1_preReloc, pset);
+  new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel_preReloc,  pset);
 
   double non_lin_comp;
   double D;
@@ -225,7 +244,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 #if defined USE_PARTICLE_VALUES
     double neg_one_third = -1.0/3.0;
     concentration = pConcentration[idx];
-    pressure = neg_one_third * pStress[idx].Trace(); 
+    pressure = neg_one_third * pStress[idx].Trace();
 #else
     concentration = 0.0;
     pressure      = 0.0;
