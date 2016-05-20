@@ -2630,9 +2630,10 @@ BoundaryCondition::computeBCArea( const ProcessorGroup*,
 //
 void
 BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
-                                                     const LevelP& level,
-                                                     const MaterialSet* matls,
-                                                     bool doing_restart )
+                                                const LevelP& level,
+                                                const MaterialSet* matls,
+                                                bool doing_restart,
+                                                bool doing_regrid = 0)
 {
   // cell type initialization
   if ( doing_restart ) {
@@ -2645,7 +2646,7 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
   }
 
   Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities",
-                          this, &BoundaryCondition::setupBCInletVelocities);
+                          this, &BoundaryCondition::setupBCInletVelocities,doing_regrid);
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
         bc_iter != d_bc_information.end(); bc_iter++) {
@@ -2655,9 +2656,15 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
 
   }
 
-
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::None, 0 );
+  if(doing_regrid){
+    tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+    tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
+  }else{
+    tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
+    //tsk->modifies(d_lab->d_volFractionLabel ); // to create task dependancy??  Needs further testing
+    //tsk->modifies(d_lab->d_densityCPLabel );   // see sched_checkBCs for more info
+  }
 
   sched->addTask(tsk, level->eachPatch(), matls);
 }
@@ -2670,13 +2677,10 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset*,
                                           DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw)
+                                          DataWarehouse* new_dw,
+                                          bool doing_regrid )
 {
-  for (int p=0; p < patches->size(); p++) {
-    cout << p <<"  " << patches->size() << " \n";
-  }
   for (int p = 0; p < patches->size(); p++) {
-    cout << p <<"  " << patches->size() << " \n";
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
@@ -2689,8 +2693,13 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
     constCCVariable<double> density;
     constCCVariable<double> volFraction;
 
+  if(doing_regrid){
+    old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
+    old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
+  }else{
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
     new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
+  }
 
     proc0cout << "\nDomain boundary condition summary: \n";
 

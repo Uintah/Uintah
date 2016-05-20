@@ -384,6 +384,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if( d_sharedState->isRegridTimestep() ) { // needed for single level regridding on restarts
     d_doingRestart = true;      // this task is called twice on a regrid.
+    d_recompile_taskgraph =true;
   }
 
   if (d_doingRestart  ) {
@@ -393,6 +394,9 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     Operators& opr = Operators::self();
     opr.set_my_world( d_myworld );
     opr.create_patch_operators( level, sched, matls );
+
+    if(d_recompile_taskgraph)
+    d_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
 
   }
 
