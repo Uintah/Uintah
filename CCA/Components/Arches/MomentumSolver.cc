@@ -51,8 +51,6 @@
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
 #include <Core/Containers/StaticArray.h>
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 using namespace Uintah;
 using namespace std;
 
@@ -571,9 +569,9 @@ struct sumNonlinearSources{
                            vectorSource(_vectorSource){ }
 
        void operator()(int i , int j, int k ) const {
-         uNonlinearSrc(i,j,k)  += vectorSource(i,j,k).x()*vol;
-         vNonlinearSrc(i,j,k)  += vectorSource(i,j,k).y()*vol;
-         wNonlinearSrc(i,j,k)  += vectorSource(i,j,k).z()*vol;
+         uNonlinearSrc(i,j,k)  += (vectorSource(i,j,k).x()+vectorSource(i-1,j  ,k  ).x())*0.5*vol;
+         vNonlinearSrc(i,j,k)  += (vectorSource(i,j,k).y()+vectorSource(i  ,j-1,k  ).y())*0.5*vol;
+         wNonlinearSrc(i,j,k)  += (vectorSource(i,j,k).z()+vectorSource(i  ,j  ,k-1).z())*0.5*vol;
        }
 
   private:
@@ -904,21 +902,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
 
-#ifdef USE_FUNCTOR
           Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
           sumNonlinearSources doSumSrc(vol,velocityVars.uVelNonlinearSrc,
                                            velocityVars.vVelNonlinearSrc,
                                            velocityVars.wVelNonlinearSrc,
                                            velocityVars.otherVectorSource);
           Uintah::parallel_for( range, doSumSrc);
-#else
-          for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-            IntVector c = *iter;
-            velocityVars.uVelNonlinearSrc[c]  += ( velocityVars.otherVectorSource[c].x() + velocityVars.otherVectorSource[c - IntVector(1,0,0)].x() )*0.5*vol;
-            velocityVars.vVelNonlinearSrc[c]  += ( velocityVars.otherVectorSource[c].y() + velocityVars.otherVectorSource[c - IntVector(0,1,0)].y() )*0.5*vol;
-            velocityVars.wVelNonlinearSrc[c]  += ( velocityVars.otherVectorSource[c].z() + velocityVars.otherVectorSource[c - IntVector(0,0,1)].z() )*0.5*vol;
-          }
-#endif
           }
           break;
         case SourceTermBase::FX_SRC:

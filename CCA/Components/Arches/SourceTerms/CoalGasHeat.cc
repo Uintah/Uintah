@@ -13,8 +13,6 @@
 
 //===========================================================================
 //
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 using namespace std;
 using namespace Uintah;
 
@@ -164,19 +162,12 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
 
       new_dw->get( qn_gas_heat, gasModelLabel, matlIndex, patch, gn, 0 );
 
-#ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
       sumEnthalpyGasSource doSumEnthalpySource(qn_gas_heat,
                                                heatSrc);
 
       Uintah::parallel_for(range, doSumEnthalpySource);
-#else
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        heatSrc[c] += qn_gas_heat[c];
-      }
-#endif
     }
   }
 }

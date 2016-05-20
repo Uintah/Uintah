@@ -3,8 +3,6 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 namespace Uintah{
 
   class Operators;

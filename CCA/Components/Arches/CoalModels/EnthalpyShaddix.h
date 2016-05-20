@@ -23,8 +23,6 @@
   *
   */
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 namespace Uintah{
 
 //---------------------------------------------------------------------------

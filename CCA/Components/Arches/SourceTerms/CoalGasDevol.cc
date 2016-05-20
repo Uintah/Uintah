@@ -12,8 +12,6 @@
 
 //===========================================================================
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 using namespace std;
 using namespace Uintah;
 
@@ -151,19 +149,12 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
 
       new_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
 
-#ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
       sumDevolGasSource doSumDevolGas(qn_gas_devol,
                                       devolSrc);
 
       Uintah::parallel_for(range, doSumDevolGas);
-#else
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-              IntVector c = *iter;
-        devolSrc[c] += qn_gas_devol[c]; // All the work is performed in Devol model
-      }
-#endif
     }
   }
 }
