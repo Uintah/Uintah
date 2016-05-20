@@ -83,6 +83,8 @@ public:
 
   virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ) = 0;
 
+  virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
+
   class NLSolverBuilder {
 
     public:

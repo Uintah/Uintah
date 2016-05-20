@@ -212,13 +212,15 @@ void computeBCArea( const ProcessorGroup*,
 void sched_setupBCInletVelocities( SchedulerP& sched,
                                    const LevelP& level,
                                    const MaterialSet* matls,
-                                   bool doing_restart );
+                                   bool doing_restart,
+                                   bool doing_regrid);
 
 void setupBCInletVelocities( const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset*,
                              DataWarehouse*,
-                             DataWarehouse* new_dw);
+                             DataWarehouse* new_dw, 
+                             bool doing_regrid);
 
 void setupBCInletVelocitiesHack( const ProcessorGroup*,
                                  const PatchSubset* patches,

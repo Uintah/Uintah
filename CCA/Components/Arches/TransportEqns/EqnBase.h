@@ -87,7 +87,7 @@ public:
 
   /** @brief Checks that boundary conditions for this variable are set for every 
    * face for every child */ 
-  void sched_checkBCs( const LevelP&, SchedulerP& sched ); 
+  void sched_checkBCs( const LevelP&, SchedulerP& sched, bool isRegrid ); 
   void checkBCs( const ProcessorGroup* pc, 
                  const PatchSubset* patches, 
                  const MaterialSubset* matls, 

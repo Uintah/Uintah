@@ -1160,7 +1160,7 @@ ExplicitSolver::initialize( const LevelP& level,
   //d_boundaryCondition->printBCInfo();
 
   //Setup initial inlet velocities
-  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doing_restart );
+  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doing_restart,false );
 
   //Set the initial profiles
   d_boundaryCondition->sched_setInitProfile( sched, level, matls );
@@ -1186,7 +1186,7 @@ ExplicitSolver::initialize( const LevelP& level,
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
       EqnBase* eqn = ieqn->second;
-      eqn->sched_checkBCs( level, sched );
+      eqn->sched_checkBCs( level, sched, false );
       //as needed for the coal propery models
       DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
       dqmom_eqn->sched_getUnscaledValues( level, sched );
@@ -1205,7 +1205,7 @@ ExplicitSolver::initialize( const LevelP& level,
     CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
     for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
       EqnBase* eqn = ieqn->second;
-      eqn->sched_checkBCs( level, sched );
+      eqn->sched_checkBCs( level, sched,false );
     }
     //call the cqmom inversion so weights and abscissas are calculated at the start
     d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
@@ -1227,7 +1227,7 @@ ExplicitSolver::initialize( const LevelP& level,
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
     EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched );
+    eqn->sched_checkBCs( level, sched,false );
 
     // also, do table initialization here since all scalars should be initialized by now
     if (eqn->does_table_initialization()) {
@@ -1321,13 +1321,13 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   d_boundaryCondition->sched_computeBCArea( sched, level, matls );
-  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart );
+  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart ,false);
 
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
     EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched );
+    eqn->sched_checkBCs( level, sched,false );
   }
 
   // check to make sure that all dqmom equations have BCs set.
@@ -1335,7 +1335,7 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
   for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
     EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched );
+    eqn->sched_checkBCs( level, sched,false );
   }
 
   checkMomBCs( sched, level, matls );
@@ -1343,7 +1343,38 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
   d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
+
+
 }
+
+void
+ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
+{
+  bool doingRestart = true;
+  bool doingRegrid  = true;
+  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
+  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, false, doingRegrid);
+
+  EqnFactory& eqnFactory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+    EqnBase* eqn = ieqn->second;
+    eqn->sched_checkBCs( level, sched,doingRegrid );
+  }
+
+  // check to make sure that all dqmom equations have BCs set.
+  DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+    EqnBase* eqn = ieqn->second;
+    eqn->sched_checkBCs( level, sched ,doingRegrid);
+  }
+
+  checkMomBCs( sched, level, matls );
+}
+
 
 void
 ExplicitSolver::initializeVariables(const ProcessorGroup* ,
@@ -3788,7 +3819,7 @@ ExplicitSolver::sched_scalarInit( const LevelP& level,
 
     EqnBase* eqn = ieqn->second;
 
-    eqn->sched_checkBCs( level, sched );
+    eqn->sched_checkBCs( level, sched, false );
 
     const VarLabel* tempVar = eqn->getTransportEqnLabel();
     tsk->computes( tempVar );
