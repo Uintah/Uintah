@@ -361,7 +361,6 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
 
 
 
-#ifdef USE_FUNCTOR
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
     computeDevolSource doDevolSource(dt,
@@ -383,73 +382,5 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
                                      this);
 
     Uintah::parallel_for( range, doDevolSource );
-#else
-
-
-
-    double rcmass_init = rc_mass_init[d_quadNode];
-    double Z=0;
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-
-      IntVector c = *iter;
-      if (weight[c]/_weight_scaling_constant > _weight_small) {
-
-        double rcmassph=rcmass[c];
-        double RHS_sourceph=RHS_source[c];
-        double temperatureph=temperature[c];
-        double charmassph=charmass[c];
-        double weightph=weight[c];
-
-        //VERIFICATION
-        //rcmassph=1;
-        //temperatureph=300;
-        //charmassph=0.0;
-        //weightph=_rc_scaling_constant*_weight_scaling_constant;
-        //rcmass_init = 1;
-
-        // m_init = m_residual_solid + m_h_off_gas + m_vol
-        // m_vol = m_init - m_residual_solid - m_h_off_gas
-        // but m_h_off_gas = - m_char
-        // m_vol = m_init - m_residual_solid + m_char
-
-        double m_vol = rcmass_init - (rcmassph+charmassph);
-
-        double v_inf_local = 0.5*_v_hiT*(1.0 - tanh(_C1*(_Tig-temperatureph)/temperatureph + _C2));
-        v_inf[c] = v_inf_local;
-        double f_drive = max((rcmass_init*v_inf_local - m_vol) , 0.0);
-        double zFact =min(max(f_drive/rcmass_init/_v_hiT,2.5e-5 ),1.0-2.5e-5  );
-
-        double rateMax = 0.0;
-        if ( add_birth ){
-          rateMax = max(f_drive/dt
-              + (  (RHS_sourceph+char_RHS_source[c]) /vol + rawcoal_birth[c] ) / weightph
-              * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
-        } else {
-          rateMax = max(f_drive/dt
-              + (  (RHS_sourceph+char_RHS_source[c]) /vol ) / weightph
-              * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
-        }
-
-        Z = sqrt(2.0) * boost::math::erf_inv(1.0-2.0*zFact );
-
-        double rate = min(_A*exp(-(_Ta + Z *_sigma)/temperatureph)*f_drive , rateMax);
-        devol_rate[c] = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
-        gas_devol_rate[c] = rate*weightph; // rate of creation of coal off gas
-        char_rate[c] = 0; // rate of creation of char
-
-        //additional check to make sure we have positive rates when we have small amounts of rc and char..
-        if( devol_rate[c]>0.0 || ( rc_weighted_scaled[c] + char_weighted_scaled[c] )<1e-16) {
-          devol_rate[c] = 0;
-          gas_devol_rate[c] = 0;
-          char_rate[c] = 0;
-        }
-
-      } else {
-        devol_rate[c] = 0;
-        gas_devol_rate[c] = 0;
-        char_rate[c] = 0;
-      }
-    }//end cell loop
-#endif
   }//end patch loop
 }

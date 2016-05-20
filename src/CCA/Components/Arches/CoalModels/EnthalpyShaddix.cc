@@ -469,7 +469,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
 
 
-#ifdef USE_FUNCTOR
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   computeEnthalpySource doEnthalpySource(dt,
                                          weight,
@@ -497,123 +496,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       Uintah::parallel_for( range, doEnthalpySource );
 
 
-#else
-    double max_Q_convection;
-    double heat_rate_;
-    double gas_heat_rate_;
-    double Q_convection;
-    double Q_radiation;
-    double Q_reaction;
-    double blow;
-    double kappa;
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-
-
-      if (weight[c]/_weight_scaling_constant < _weight_small) {
-        heat_rate_ = 0.0;
-        gas_heat_rate_ = 0.0;
-        Q_convection = 0.0;
-        Q_radiation = 0.0;
-      } else {
-
-        double rawcoal_massph=rawcoal_mass[c];
-        double char_massph=char_mass[c];
-        double temperatureph=temperature[c];
-        double specific_heatph=specific_heat[c];
-        double denph=den[c];
-        double devol_gas_sourceph=devol_gas_source[c];
-        double chargas_sourceph=chargas_source[c];
-        double lengthph=length[c];
-        double weightph=weight[c];
-        double particle_temperatureph=particle_temperature[c];
-        double charoxi_temp_sourceph=charoxi_temp_source[c];
-        double surface_rateph=surface_rate[c];
-
-        // velocities
-        Vector gas_velocity = gasVel[c];
-        Vector particle_velocity = partVel[c];
-
-        //Verification
-        //temperatureph=1206.4;
-        //specific_heatph=18356.4;
-        //radiationVolqINph=0;
-        //denph=0.394622;
-        //devol_gas_sourceph=7.14291e-08;
-        //chargas_sourceph=9.14846e-05;
-        //lengthph=2e-05;
-        //weightph=1.40781e+09;
-        //particle_temperatureph=536.954;
-        //charoxi_temp_sourceph=842.663;
-        //surface_rateph=5.72444e-05;
-        //gas_velocity[0]=7.56321;
-        //gas_velocity[1]=0.663992;
-        //gas_velocity[2]=0.654003;
-        //particle_velocity[0]=6.54863;
-        //particle_velocity[1]=0.339306;
-        //particle_velocity[2]=0.334942;
-
-        double FSum = 0.0;
-
-        // intermediate calculation values
-        double Re;
-        double Nu;
-        double rkg;
-        // Convection part: -----------------------
-        // Reynolds number
-        double delta_V =sqrt(std::pow(gas_velocity.x() - particle_velocity.x(),2.0) + std::pow(gas_velocity.y() - particle_velocity.y(),2.0)+std::pow(gas_velocity.z() - particle_velocity.z(),2.0));
-        Re = delta_V*lengthph*denph/_visc;
-
-        // Nusselt number
-        Nu = 2.0 + 0.65*std::pow(Re,0.50)*std::pow(_Pr,(1.0/3.0));
-
-        // Gas thermal conductivity
-        rkg = props(temperatureph, particle_temperatureph); // [=] J/s/m/K
-
-        // A BLOWING CORRECTION TO THE HEAT TRANSFER MODEL IS EMPLOYED
-        kappa =  -surface_rateph*lengthph*specific_heatph/(2.0*rkg);
-        if(std::abs(exp(kappa)-1.0) < 1e-16){
-          blow = 1.0;
-        } else {
-          blow = kappa/(exp(kappa)-1.0);
-        }
-
-        Q_convection = Nu*_pi*blow*rkg*lengthph*(temperatureph - particle_temperatureph); // J/(#.s)
-        //clip convection term if timesteps are too large
-        double deltaT=temperatureph-particle_temperatureph;
-        double alpha_rc=(rawcoal_massph+char_massph);
-        double alpha_cp=cp_c(particle_temperatureph)*alpha_rc+cp_ash(particle_temperatureph)*_init_ash[d_quadNode];
-        max_Q_convection=alpha_cp*(deltaT/dt);
-        if (std::abs(Q_convection) > std::abs(max_Q_convection)){
-          Q_convection = max_Q_convection;
-        }
-        // Radiation part: -------------------------
-        Q_radiation = 0.0;
-        if ( d_radiation) {
-          double Eb;
-          Eb = 4.0*_sigma*std::pow(rad_particle_temperature[c],4.0);
-          FSum = radiationVolqIN[c];
-          Q_radiation = abskp[c]*(FSum - Eb);
-          double Q_radMax=(std::pow( radiationVolqIN[c] / (4.0 * _sigma )  , 0.25)-rad_particle_temperature[c])/(dt)*alpha_cp;
-          if (std::abs(Q_radMax) < std::abs(Q_radiation)){
-            Q_radiation=Q_radMax;
-          }
-        }
-        double hint = -156.076 + 380/(-1 + exp(380 / particle_temperatureph)) + 3600/(-1 + exp(1800 / particle_temperatureph));
-        double hc = _Hc0 + hint * _RdMW;
-        Q_reaction = charoxi_temp_sourceph;
-                                     // This needs to be made consistant with lagrangian particles!!! - derek 12/14
-        heat_rate_ = (Q_convection*weightph + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
-                     (_enthalpy_scaling_constant*_weight_scaling_constant);
-        gas_heat_rate_ = -weightph*Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
-      }
-      heat_rate[c] = heat_rate_;
-      gas_heat_rate[c] = gas_heat_rate_;
-      qconv[c] = Q_convection;
-      qrad[c] = Q_radiation;
-    }//end cell loop
-
-#endif
   }//end patch loop
 
 }

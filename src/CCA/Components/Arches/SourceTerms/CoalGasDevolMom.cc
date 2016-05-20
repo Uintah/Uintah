@@ -13,8 +13,6 @@
 
 //===========================================================================
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 using namespace std;
 using namespace Uintah;
 

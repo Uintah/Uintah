@@ -10,11 +10,7 @@
 
 
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
-#ifdef USE_FUNCTOR
 #include <boost/math/special_functions/erf.hpp>
-#endif
 
 //===========================================================================
 
@@ -63,7 +59,6 @@ class FOWYDevol: public Devolatilization {
 
 
 
-#ifdef USE_FUNCTOR
 
    struct computeDevolSource{  
      computeDevolSource( double _dt,
@@ -186,7 +181,6 @@ class FOWYDevol: public Devolatilization {
      CCVariable<double> &v_inf;
      FOWYDevol* TCA;
    };
-#endif
 
 public: 
 

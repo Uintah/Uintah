@@ -69,8 +69,6 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/wvelcoef_hybrid_fort.h>
 
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 //****************************************************************************
 // Default constructor for Discretization
 //****************************************************************************
@@ -620,7 +618,6 @@ Discretization::calculateVelDiagonal(const Patch* patch,
                                      ArchesVariables* coeff_vars)
 {
 
-#ifdef USE_FUNCTOR
   Uintah::BlockRange rangex(patch->getSFCXLowIndex(),patch->getSFCXHighIndex());
   Uintah::BlockRange rangey(patch->getSFCYLowIndex(),patch->getSFCYHighIndex());
   Uintah::BlockRange rangez(patch->getSFCZLowIndex(),patch->getSFCZHighIndex());
@@ -652,21 +649,6 @@ Discretization::calculateVelDiagonal(const Patch* patch,
   Uintah::parallel_for( rangex, doADiagonalX);
   Uintah::parallel_for( rangey, doADiagonalY);
   Uintah::parallel_for( rangez, doADiagonalZ);
-#else
-
-
-  CellIterator iter = patch->getSFCXIterator();
-  compute_Ap_stencilMatrix<SFCXVariable<double> >(iter,coeff_vars->uVelocityCoeff,
-                                                       coeff_vars->uVelLinearSrc);
-
-  iter = patch->getSFCYIterator();
-  compute_Ap_stencilMatrix<SFCYVariable<double> >(iter,coeff_vars->vVelocityCoeff,
-                                                       coeff_vars->vVelLinearSrc);
-
-  iter = patch->getSFCZIterator();
-  compute_Ap_stencilMatrix<SFCZVariable<double> >(iter,coeff_vars->wVelocityCoeff,
-                                                       coeff_vars->wVelLinearSrc);
-#endif
 }
 
 //****************************************************************************

@@ -15,8 +15,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 //===========================================================================
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 
 using namespace std;
 using namespace Uintah;
@@ -193,22 +191,12 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       new_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
 
 
-#ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
       sumMomentum doSumMomentum(qn_gas_xdrag,
                                 qn_gas_ydrag,
                                 qn_gas_zdrag,
                                 dragSrc);
       Uintah::parallel_for( range, doSumMomentum );
-#else
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        qn_gas_drag = Vector(qn_gas_xdrag[c],qn_gas_ydrag[c],qn_gas_zdrag[c]);
-
-        dragSrc[c] += qn_gas_drag; // All the work is performed in Drag model
-
-       }
-#endif
     }
   }
 }

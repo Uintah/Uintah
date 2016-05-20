@@ -12,7 +12,6 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 //===========================================================================
-#include <CCA/Components/Arches/FunctorSwitch.h>
 
 using namespace std;
 using namespace Uintah;
@@ -155,20 +154,12 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
 
       new_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
 
-#ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
       sumCharOxyGasSource doSumOxyGas(qn_gas_oxi,
                                       oxiSrc);
 
       Uintah::parallel_for(range, doSumOxyGas);
-#else
-
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-              IntVector c = *iter;
-        oxiSrc[c] += qn_gas_oxi[c]; // All the work is performed in Char Oxidation model
-      }
-#endif
     }
   }
 }

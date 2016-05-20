@@ -12,7 +12,6 @@
 #include <string>
 
 #include <Core/Containers/StaticArray.h>
-#include <CCA/Components/Arches/FunctorSwitch.h>
  
 namespace Uintah{
 
@@ -174,7 +173,7 @@ struct computeCharOxidation{
              char_reaction_rate_ = 0.0;
              char_production_rate_ = 0.0;
              particle_temp_rate_ = 0.0;
-             NIter = 15;
+             NIter = 61;
              delta = PO2_inf/4.0;
              d_tol = 1e-15;
              PO2_surf_old = 0.0;

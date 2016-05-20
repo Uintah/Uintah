@@ -14,8 +14,6 @@
 
 //===========================================================================
 
-#include <CCA/Components/Arches/FunctorSwitch.h>
-
 using namespace std;
 using namespace Uintah;
 
@@ -298,7 +296,6 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
       which_dw->get( a, _abscissa_label, matlIndex, patch, Ghost::None, 0 );
     }
 
-#ifdef USE_FUNCTOR
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   computeBirth doBirth(vol, dt, _small_weight, _a_scale, _is_weight,
                        w,
@@ -307,28 +304,5 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
                        vol_fraction,
                        model);
       Uintah::parallel_for( range, doBirth );
-#else
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-
-      IntVector c = *iter;
-
-      if ( vol_fraction[c] > 0. ){
-
-        double balance = ( _small_weight - w[c] ) / dt - w_rhs[c] / vol;
-
-        balance = std::max(balance, 0.0) * vol_fraction[c];
-
-        if ( _is_weight ){
-
-          model[c] = balance;
-
-        } else {
-
-          model[c] = a[c]/_a_scale * balance;
-
-        }
-      }
-    }
-#endif
   }
 }
