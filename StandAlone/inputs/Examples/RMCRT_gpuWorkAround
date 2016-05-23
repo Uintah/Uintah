@@ -57,16 +57,6 @@ if ($me != $value ) then
   exit(-1)  
 endif
 
-#__________________________________
-#  halo = [0,0,0]
-set xmlpath = 'Uintah_specification/RMCRT/algorithm/halo'
-set value   = "           [0,0,0]      "
-grep -q halo $ups
-
-if ( $status == 0 ) then
-  xmlstarlet ed -u "$xmlpath" -v "$value"  .tmp >& $out
-else
-   mv .tmp $out
-endif
+mv .tmp $out
 
 /bin/rm -rf .tmp >& /dev/null
