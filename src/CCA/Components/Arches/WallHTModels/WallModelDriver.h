@@ -371,7 +371,7 @@ namespace Uintah{
               std::vector<GeometryPieceP> geometry; 
           };
           
-          double newton_solve(WallInfo& wi, HTVariables& vars, double T_old, double rad_q, double net_q, double R_tot );
+          inline void newton_solve(WallInfo& wi, HTVariables& vars, double &TW_new, double &T_old, double &rad_q, double &net_q, double &R_tot );
 
           std::vector<WallInfo> _regions; 
 

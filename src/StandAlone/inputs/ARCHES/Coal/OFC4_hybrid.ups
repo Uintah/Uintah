@@ -1602,7 +1602,10 @@
         <Sources>
           <src label="res_source" type="constant_src">
             <constant>1</constant>
-            <density_weighted/>
+            <multiply_by_variable>
+              <variable_string_name>density</variable_string_name>
+              <NewDW_only>true</NewDW_only>
+            </multiply_by_variable>
           </src>
           <!--<src label="divQ" type="rmcrt_radiation">-->
           <!--<calc_frequency>3</calc_frequency>-->

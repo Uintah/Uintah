@@ -30,15 +30,13 @@ ConstSrcTerm::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("constant",_constant, 0.); 
 
-  //multiply the source term by a density
-  if ( db->findBlock("density_weighted") ){
-
-    _density_weight = true; 
-
+  //multiply the constant source term by a variable
+  if ( db->findBlock("multiply_by_variable") ){
+    db->findBlock("multiply_by_variable")->require("variable_string_name",_mult_var_string);
+    db->findBlock("multiply_by_variable")->getWithDefault("NewDW_only",_NewDW_only,false);
+    _mult_by_variable = true; 
   } else { 
-
-    _density_weight = false; 
-  
+    _mult_by_variable = false; 
   }
 
   _source_grid_type = CC_SRC; 
@@ -61,14 +59,16 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
   }
 
-  if ( _density_weight ){ 
-    tsk->requires( Task::NewDW, VarLabel::find("density"), Ghost::None, 0 ); 
-  }
-
-  for (vector<std::string>::iterator iter = _required_labels.begin(); 
-       iter != _required_labels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
+  if ( _mult_by_variable ){
+    if ( _NewDW_only ){
+      tsk->requires( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+    } else {
+      if (timeSubStep == 0) { 
+        tsk->requires( Task::OldDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+      } else {
+        tsk->requires( Task::NewDW, VarLabel::find(_mult_var_string), Ghost::None, 0 ); 
+      }
+    }
   }
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
@@ -93,7 +93,7 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> constSrc; 
-    constCCVariable<double> density; 
+    constCCVariable<double> mult_variable; 
 
     if ( timeSubStep ==0 ){  // double check this for me jeremy
       new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
@@ -103,22 +103,23 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
       constSrc.initialize(0.0);
     } 
 
-    if ( _density_weight ){ 
-      new_dw->get( density, VarLabel::find("density"), matlIndex, patch, Ghost::None, 0 );
+    if ( _mult_by_variable ){ 
+      if ( _NewDW_only ){
+        new_dw->get( mult_variable, VarLabel::find(_mult_var_string), matlIndex, patch, Ghost::None, 0 );
+      } else {
+        if (timeSubStep == 0) { 
+          old_dw->get( mult_variable, VarLabel::find(_mult_var_string), matlIndex, patch, Ghost::None, 0 );
+        } else {
+          new_dw->get( mult_variable, VarLabel::find(_mult_var_string), matlIndex, patch, Ghost::None, 0 );
+        }
+      }
     }
 
-    for (vector<std::string>::iterator iter = _required_labels.begin(); 
-         iter != _required_labels.end(); iter++) { 
-      //CCVariable<double> temp; 
-      //old_dw->get( *iter.... ); 
-    }
 
-
-
-    if ( _density_weight ) { 
+    if ( _mult_by_variable ) { 
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter; 
-        constSrc[c] += density[c] * _constant; 
+        constSrc[c] += mult_variable[c] * _constant; 
       }
     } else { 
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
