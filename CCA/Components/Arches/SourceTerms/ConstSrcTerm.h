@@ -61,7 +61,9 @@ public:
 private:
 
   double _constant; 
-  bool _density_weight; 
+  bool _mult_by_variable; 
+  bool _NewDW_only; 
+  std::string _mult_var_string; 
 
 
 }; // end ConstSrcTerm

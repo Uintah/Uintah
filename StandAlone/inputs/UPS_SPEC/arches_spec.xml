@@ -1381,8 +1381,11 @@
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
-            <!-- Density weighting for the constant source -->
-            <density_weighted           spec="OPTIONAL NO_DATA" need_applies_to="type constant_src"/>
+            <!-- Spec for using multiply by variable for constant source term model -->
+            <multiply_by_variable       spec="OPTIONAL NO_DATA" need_applies_to="type constant_src">
+              <variable_string_name       spec="REQUIRED STRING"/>
+              <NewDW_only                 spec="OPTIONAL BOOLEAN"/>
+            </multiply_by_variable>
 
             <!-- Spec for the char oxidation source -->
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
