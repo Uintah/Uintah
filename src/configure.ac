@@ -1274,20 +1274,29 @@ AC_SUBST(MALLOC_TRACE_LIB_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
 
-##  --  Check for 64 vs 80 bit floating point number storage in register precision error ------------------------
+#########################################################################
+##
+## Check for 64 vs 80 bit floating point number storage in register precision error...
+## 
 
-# In other words, the processor may use 80 bit floating point number registers, and as long as the
-# data is kept on the processor (in registers) then you get extra precission... however, as soon as
-# the number is stored to memory, it is truncated back to fewer (64?) bits.  At this point, it is possible
-# for the original floating pointloatingpoint number to not compare with itself (ie, if the register data
-# happens to stay around, and the 'old' value is loaded back from memory and then compared to the register).
-# This can cause some very strange and hard to track down errors in the code.  To turn this off, gnu
-# provides the -ffloat-store compiler argument.
+case `hostname` in
+  titan* )
+    AC_MSG_WARN( Skipping 64 vs 80 bit fp number register precision error check on cross compiled machine. )
+    ;;
+  *)
 
-# WARNING: The following test case was created by Justin Luitjens.  It seems to work, and I can't 
-# come up with a better version, but I am not convinced that it will catch the problem in all cases...
+    # In other words, the processor may use 80 bit floating point number registers, and as long as the
+    # data is kept on the processor (in registers) then you get extra precission... however, as soon as
+    # the number is stored to memory, it is truncated back to fewer (64?) bits.  At this point, it is possible
+    # for the original floating pointloatingpoint number to not compare with itself (ie, if the register data
+    # happens to stay around, and the 'old' value is loaded back from memory and then compared to the register).
+    # This can cause some very strange and hard to track down errors in the code.  To turn this off, gnu
+    # provides the -ffloat-store compiler argument.
 
-cat > conftest-fpr.cc <<EOF
+    # WARNING: The following test case was created by Justin Luitjens.  It seems to work, and I can't 
+    # come up with a better version, but I am not convinced that it will catch the problem in all cases...
+
+    cat > conftest-fpr.cc <<EOF
 
 #include <iostream>
 
@@ -1301,27 +1310,34 @@ int main()
 }
 EOF
 
-$CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr
-./conftest-fpr
-if test $? != 0; then
-   AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
-   AC_MSG_WARN( Floating point - usually 64 vs 80 bit - register precission problem detected. )
-   AC_MSG_WARN( Disabling use of floating point registers with '-ffloat-store' compiler flag. )
-   AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
-   add_important_warning "Automatically added -ffloat-store compiler option to C/CXXFLAGS."
-   CFLAGS="$CFLAGS -ffloat-store"
-   CXXFLAGS="$CXXFLAGS -ffloat-store"
-   # Verify that the compiler accepts the -ffloat-store flag:
-   $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr 2>&5
-   if test $? != 0; then
-      rm -f conftest-fpr conftest-fpr.cc
-      AC_MSG_ERROR( Tried to add the -ffloat-store flag but the compiler ($CXX) failed to accept it...\nSee 'WARNING' message above. )
-   fi
-fi
+    $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr
+    ./conftest-fpr
+    if test $? != 0; then
+       AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
+       AC_MSG_WARN( Floating point - usually 64 vs 80 bit - register precission problem detected. )
+       AC_MSG_WARN( Disabling use of floating point registers with '-ffloat-store' compiler flag. )
+       AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
+       add_important_warning "Automatically added -ffloat-store compiler option to C/CXXFLAGS."
+       CFLAGS="$CFLAGS -ffloat-store"
+       CXXFLAGS="$CXXFLAGS -ffloat-store"
+       # Verify that the compiler accepts the -ffloat-store flag:
+       $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr 2>&5
+       if test $? != 0; then
+          rm -f conftest-fpr conftest-fpr.cc
+          AC_MSG_ERROR( Tried to add the -ffloat-store flag but the compiler ($CXX) failed to accept it...\nSee 'WARNING' message above. )
+       fi
+    fi
 
-rm -f conftest-fpr conftest-fpr.cc
+    rm -f conftest-fpr conftest-fpr.cc
 
-##  Add the -fopenmp flag ------------------------
+    ;;
+esac
+
+
+#########################################################################
+##
+##  Add the -fopenmp flag
+##
 
 cat > conftest-openmp.cc <<EOF
 
@@ -1352,9 +1368,10 @@ fi
 
 rm -f conftest-openmp conftest-openmp.cc
 
-
-##  --  search for Zoltan ------------------------
-
+#########################################################################
+##
+## search for Zoltan
+##
 if test "$with_zoltan"; then
   if test "$with_zoltan" = "yes"; then
     AC_MSG_ERROR( --with-zoltan=DIR requires a DIRectory be provided. )
@@ -1902,7 +1919,7 @@ esac
 ##  ----------------------------------------------------------------------
 
 AC_LANG([C++])
-# Each of the HAVE_??? statements for these header files is found
+# Each of the HAVE_* statements for these header files is found
 # in include/sci_defs/config_testedefs.h
 AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.h inttypes.h)
 
