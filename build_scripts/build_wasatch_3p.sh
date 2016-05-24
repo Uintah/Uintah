@@ -27,16 +27,18 @@ else
 fi
 
 if test "$6" = "yes"; then
+  # Building with CUDA
+  THREADS="-DENABLE_THREADS=OFF"
   if [[ `hostname` = titan* ]]; then
-    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" "
+    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" -DCUDA_HOST_COMPILER=/opt/gcc/4.9.0/bin/g++"
   else
-    CUDA="-DENABLE_CUDA=ON"
+    CUDA="-DENABLE_CUDA=ON -DENABLE_THREADS=OFF"
   fi
 else
+  # Building without CUDA
+  THREADS="-DENABLE_THREADS=ON -DNTHREADS=1"
   CUDA=""
 fi
-
-
 
 ###########################################################################
 # GIT Hash Tags for the various libraries
@@ -76,6 +78,7 @@ echo   ""
 echo   "------------------------------------------------------------------"
 echo   "Building Wasatch Thirdparty Libraries..."
 echo   ""
+
 if test -z "$BOOST_INCLUDE"; then
   echo "  Using Boost: Built In"
 else
@@ -83,10 +86,12 @@ else
   echo "               Lib:     $BOOST_LIBRARY"
   BOOST_FLAGS="-DBOOST_INCLUDEDIR=$BOOST_INCLUDE -DBOOST_LIBRARYDIR=$BOOST_LIBRARY"
 fi
+
 echo   ""
 echo   "  Using Cmake: "`which cmake`
 echo   ""
 echo   "------------------------------------------------------------------"
+
 ############################################################################
 # Go to build/install directory
 
@@ -123,9 +128,8 @@ run \
   $DEBUG \
   $STATIC \
   $CUDA \
+  $THREADS \
   -DENABLE_TESTS=OFF \
-  -DENABLE_THREADS=ON \
-  -DNTHREADS=1 \
   -DENABLE_EXAMPLES=OFF \
   $BOOST_FLAGS \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
@@ -133,6 +137,22 @@ run \
   .."
 
 run "make -j4 install"
+
+if test "$6" = "yes"; then
+
+  # Building with CUDA - Hack the SpatialOps installed NeboOperators.h file to cast the 2nd arg of pow to a double.
+  echo ""
+  echo ""
+  echo "WARNING: Hacking NeboOperators.h to cast 2nd parameter of std::pow() to be a double!"
+  echo ""
+  echo ""
+  run "mv $INSTALL_HERE/include/spatialops/NeboOperators.h $INSTALL_HERE/include/spatialops/NeboOperators.h.orig"
+  run "sed -r -e 's,(std::pow.*)operand2_,\1(double)operand2_,' $INSTALL_HERE/include/spatialops/NeboOperators.h.orig > NeboOperators.h.tmp"
+  run "sed -r -e 's,(std::pow.*)exp_,\1(double)exp_,' NeboOperators.h.tmp > $INSTALL_HERE/include/spatialops/NeboOperators.h"
+  run "rm NeboOperators.h.tmp"
+
+fi
+
 run "cd ../../.."  # back to Wasatch3P
 
 ############################################################################
