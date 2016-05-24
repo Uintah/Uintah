@@ -691,7 +691,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
 
     Qvariance[c] = Qmean2[c] - Qmean[c] * Qmean[c];
 
-#if 1
+#if 0
     //__________________________________
     //  debugging
     if ( c == d_monitorCell ){
@@ -803,7 +803,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
 
 
     uv_vw_wu[c] = Qmean[c] - Multiply(vel_mean[c],vel_mean[c]);
-#if 1
+#if 0
     //__________________________________
     //  debugging
     if ( c == d_monitorCell ){
