@@ -44,7 +44,7 @@ endif
 #   cal_frequency -> 1
 set xmlpath = "Uintah_specification/calc_frequency"
 set value   = "     1            "
-xmlstarlet ed -u "$xmlpath" -v "$value"  $ups > .tmp
+xmlstarlet ed --ps --update "$xmlpath" --value "$value"  $ups > .tmp
 
 # bulletproofing:
 set me = `xmlstarlet sel --template --value-of "$xmlpath" .tmp`

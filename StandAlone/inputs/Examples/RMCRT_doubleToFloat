@@ -41,7 +41,7 @@ endif
 #   RMCRT type = "double -> float
 set xmlpath = "Uintah_specification/RMCRT/@type"
 set value   = "float"
-xmlstarlet ed -u "$xmlpath" -v "$value"  $ups > .tmp
+xmlstarlet ed --ps --update "$xmlpath" --value "$value"  $ups > .tmp
 
 # bulletproofing:
 set me = `xmlstarlet sel --template --value-of "$xmlpath" .tmp`
@@ -58,7 +58,7 @@ endif
 #  save label="abskg" ->  "abskgRMCRT"
 set xmlpath = 'Uintah_specification/DataArchiver/save[@label="abskg"]/@label'
 set value   = "abskgRMCRT"
-xmlstarlet ed -u "$xmlpath" -v "$value"  .tmp >& $out
+xmlstarlet ed --ps --update "$xmlpath" --value "$value"  .tmp >& $out
 
 # bulletproofing:
 set me = `xmlstarlet sel --template --value-of "$xmlpath" $ups`
