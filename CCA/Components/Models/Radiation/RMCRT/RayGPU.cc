@@ -50,8 +50,8 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      void* d_oldTaskGpuDW,
-                      void* d_newTaskGpuDW,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
                       void* stream,
                       int deviceID,
                       bool modifies_divQ,
@@ -94,19 +94,19 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
     GPUDataWarehouse* sigmaT4_gdw = NULL;
     GPUDataWarehouse* celltype_gdw = NULL;
     if (which_abskg_dw == Task::OldDW) {
-      abskg_gdw = static_cast<GPUDataWarehouse*>(d_oldTaskGpuDW);
+      abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
     } else {
-      abskg_gdw = static_cast<GPUDataWarehouse*>(d_newTaskGpuDW);
+      abskg_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
     }
     if (which_sigmaT4_dw == Task::OldDW) {
-    	sigmaT4_gdw = static_cast<GPUDataWarehouse*>(d_oldTaskGpuDW);
+      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
     } else {
-      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(d_newTaskGpuDW);
+      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
     }
     if (which_celltype_dw == Task::OldDW) {
-      celltype_gdw = static_cast<GPUDataWarehouse*>(d_oldTaskGpuDW);
+      celltype_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
     } else {
-      celltype_gdw = static_cast<GPUDataWarehouse*>(d_newTaskGpuDW);
+      celltype_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
     }
 
 
@@ -222,8 +222,8 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                               RT_flags, labelNames, abskg_gdw,
                               sigmaT4_gdw,
                               celltype_gdw,
-                              static_cast<GPUDataWarehouse*>(d_oldTaskGpuDW),
-                              static_cast<GPUDataWarehouse*>(d_newTaskGpuDW));
+                              static_cast<GPUDataWarehouse*>(oldTaskGpuDW),
+                              static_cast<GPUDataWarehouse*>(newTaskGpuDW));
 
       //__________________________________
       //
@@ -292,8 +292,6 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     //__________________________________
     //  Grid Parameters
     gridParams gridP;
-//    const Level* fineLevel = getLevel(finePatches);
-//    const int maxLevels   = fineLevel->getGrid()->numLevels();
     gridP.maxLevels = maxLevels;
     LevelP level_0  = new_dw->getGrid()->getLevel(0);
 
@@ -314,8 +312,6 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
 
       Uintah::Vector dx = level->dCell();
       levelP[l].Dx    = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
-      levelP[l].DyDx  = dx.y() / dx.x();
-      levelP[l].DzDx  = dx.z() / dx.x();
       levelP[l].index = level->getIndex();
       Point anchor    = level->getAnchor();
       levelP[l].anchor = GPUPoint( make_double3(anchor.x(), anchor.y(), anchor.z()));
@@ -331,18 +327,18 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     GPUDataWarehouse* celltype_gdw = NULL;
 
     if (which_abskg_dw == Task::OldDW) {
-    	abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+      abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
     } else {
-    	abskg_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+      abskg_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
     }
 
     if (which_sigmaT4_dw == Task::OldDW) {
-        sigmaT4_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
     } else {
       sigmaT4_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
     }
-      if (which_celltype_dw == Task::OldDW) {
-        celltype_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+    if (which_celltype_dw == Task::OldDW) {
+      celltype_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
     } else {
       celltype_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
     }
@@ -371,7 +367,6 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
         
     //______________________________________________________________________
     //
-    // patch loop - not really necessary for now, should be only one patch in the PatchSubset
     int numPatches = finePatches->size();
     for (int p = 0; p < numPatches; ++p) {
 
@@ -511,8 +506,8 @@ void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
                                   const MaterialSubset*,
                                   DataWarehouse*,
                                   DataWarehouse*,
-                                  void*,
-                                  void*,
+                                  void* oldTaskGpuDW,
+                                  void* newTaskGpuDW,
                                   void* stream,
                                   int deviceID,
                                   bool,
@@ -529,8 +524,8 @@ void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
                                           const MaterialSubset*,
                                           DataWarehouse*,
                                           DataWarehouse*,
-                                          void*,
-                                          void*,
+                                          void* oldTaskGpuDW,
+                                          void* newTaskGpuDW,
                                           void* stream,
                                           int deviceID,
                                           bool,

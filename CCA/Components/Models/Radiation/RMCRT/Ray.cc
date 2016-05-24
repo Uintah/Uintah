@@ -2751,9 +2751,9 @@ void Ray::computeCellType( const ProcessorGroup*,
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
     printf( " dir %d ", dir );
 //    printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
-    printf( "tMax [%g,%g,%g] ", tMax[0],tMax[1], tMax[2]);
+    printf( "tMaxV [%g,%g,%g] ", tMaxV[0],tMaxV[1], tMaxV[2]);
     printf( "rayLoc [%4.5f,%4.5f,%4.5f] ",ray_location.x(),ray_location.y(), ray_location.z());
-    printf( "\tdistanceTraveled %4.5f tMax[dir]: %g tMax_prev[dir]: %g , Dx[dir]: %g\n",distanceTraveled, tMax[dir], tMax_prev[dir], Dx[L][dir]);
+    printf( "\tdistanceTraveled %4.5f tMaxV[dir]: %g tMaxV_prev[dir]: %g , Dx[dir]: %g\n",distanceTraveled, tMaxV[dir], tMaxV_prev[dir], Dx[L][dir]);
     printf( "                tDelta [%g,%g,%g] \n",tDelta[L].x(),tDelta[L].y(), tDelta[L].z());
     
 //    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
@@ -2791,7 +2791,7 @@ void Ray::computeCellType( const ProcessorGroup*,
 /*`==========TESTING==========*/
 #if DEBUG == 1
   if( isDbgCell(origin) ){
-    printf( "        C) intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, exp(-optical_thickness), fs, d_allowReflect );
+    printf( "        C) intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, d_allowReflect );
 
   }
 #endif
