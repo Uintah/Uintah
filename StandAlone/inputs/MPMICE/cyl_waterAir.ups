@@ -254,7 +254,7 @@
               <!--  significantly above 1ATM.  The MPMICE:equilbration pressure task          -->
               <!--  will fail to converge to a solution if pressure in the water in the wake region -->
               <!--  falls below 1 atm.  This simulation is run at roughly 20atm.  The pressure-->
-              <!--  in the water is adjusted via the density.
+              <!--  in the water is adjusted via the density.          -->
               <!--_____________________________________________________-->
               
               
