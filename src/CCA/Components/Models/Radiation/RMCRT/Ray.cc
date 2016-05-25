@@ -41,7 +41,7 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG 0     // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9     // 1: divQ, 2: boundFlux, 3: scattering
 #define CUDA_PRINTF   // increase the printf buffer
 
 /*______________________________________________________________________
@@ -490,7 +490,8 @@ Ray::sched_rayTrace( const LevelP& level,
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
 }
-
+//______________________________________________________________________
+//
 #ifdef UINTAH_ENABLE_KOKKOS
 
 namespace {
@@ -1127,10 +1128,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
           int RayFace = *it;
           int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
 
-          double sumI     = 0;
-          double sumProjI = 0;
-          double sumI_prev= 0;
-          double sumCos=0;    // used to force sumCostheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
+          double sumI         = 0;
+          double sumProjI     = 0;
+          double sumI_prev    = 0;
+          double sumCosTheta  = 0;    // used to force sumCosTheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
 
           if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
             randVector(rand_i, mTwister, origin);
@@ -1145,10 +1146,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
             Vector rayOrigin;
             double cosTheta;
 
-            if ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ){    // Latin-Hyper-Cube sampling
+            if ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ){        // Latin-Hyper-Cube sampling
               rayDirectionHyperCube_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
                                               direction_vector, cosTheta, rand_i[iRay],iRay);
-            } else{                                          // Naive Monte-Carlo sampling
+            } else{                                               // Naive Monte-Carlo sampling
               rayDirection_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
                                      direction_vector, cosTheta );
             }
@@ -1157,25 +1158,26 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
             updateSumI<T>( level, direction_vector, rayOrigin, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
-            sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
-            sumCos   += cosTheta;
+            sumProjI    += cosTheta * (sumI - sumI_prev);              // must subtract sumI_prev, since sumI accumulates intensity
+            
+            sumCosTheta += cosTheta;
 
-            sumI_prev = sumI;
+            sumI_prev    = sumI;
 
           } // end of flux ray loop
 
-          sumProjI = sumProjI * d_nFluxRays/sumCos/2.0; // This operation corrects for error in the first moment over a half range of the solid angle (Modest Radiative Heat Transfer page 545 1rst edition)
+          sumProjI = sumProjI * (double) d_nFluxRays/sumCosTheta/2.0; // This operation corrects for error in the first moment over a half range of the solid angle (Modest Radiative Heat Transfer page 545 1rst edition)
 
           //__________________________________
           //  Compute Net Flux to the boundary
           int face = UintahFace[RayFace];
-          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/d_nFluxRays;
+          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/ (double) d_nFluxRays;
 
 /*`==========TESTING==========*/
-#if DEBUG == 2
+#if (DEBUG == 2)
           if( isDbgCell(origin) ) {
-            printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BF: %g\n",
-                    origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
+            printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BoundaryFlux: %g\n",
+                  origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
           }
 #endif
 /*===========TESTING==========`*/
