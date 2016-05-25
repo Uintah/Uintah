@@ -14,7 +14,7 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="f0"/>
-      <GaussianFunction amplitude="10.0" deviation="0.3" mean="0.1" baseline="0.0">
+      <GaussianFunction amplitude="10.0" deviation="0.5" mean="0" baseline="0.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>
@@ -124,14 +124,14 @@
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-6</delt_min>
-    <delt_max>1e-6</delt_max>
-    <max_Timesteps> 1000 </max_Timesteps>
+    <delt_min>1.0e-6</delt_min>
+    <delt_max>1.0e-6</delt_max>
+    <max_Timesteps> 200 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <DataArchiver>
     <filebase>compressible-2d-test-bcs.uda</filebase>
-    <outputTimestepInterval>100</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" timestepInterval="20"/>
     <save label="T"/>
@@ -143,8 +143,8 @@
     <save label="rhoet"/>
   </DataArchiver>
   <Grid>
-		<BoundaryConditions>
-			<DefaultMaterial>all</DefaultMaterial>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
 			<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 			<Face side="x-" type="Wall">
 			  <BCType label="rhoet" var="Neumann" value="0.0"/>        			  
@@ -157,9 +157,8 @@
 			</Face>
 			<Face side="y+" type="Wall">
 			  <BCType label="rhoet" var="Neumann" value="0.0"/>        			  
-			</Face>
-			
-		</BoundaryConditions>
+			</Face>      
+    </BoundaryConditions>
     <Level>
       <Box label="1">
         <lower>[-2,-2,0]</lower>
