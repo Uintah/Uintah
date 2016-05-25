@@ -51,7 +51,9 @@ namespace Uintah {
       const VarLabel* pScratchVecLabel;
       const VarLabel* pScratchLabel;
       const VarLabel* pExternalScalarFluxLabel;
+      const VarLabel* pExternalScalarFluxLabel_preReloc;
       const VarLabel* pFluxLabel;
+      const VarLabel* pFluxLabel_preReloc;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
@@ -309,8 +311,11 @@ namespace Uintah {
 
       // ******* start - for temporary use only, CG
       const VarLabel* pPressureLabel_t1;
+      const VarLabel* pPressureLabel_t1_preReloc;
       const VarLabel* pConcInterpLabel; 
-      const VarLabel* pEquivalentStress_t1; 
+      const VarLabel* pConcInterpLabel_preReloc;
+      const VarLabel* pEquivalentStress_t1;
+      const VarLabel* pEquivalentStress_t1_preReloc;
       // ******* end - for temporary use only, CG
 
     };
