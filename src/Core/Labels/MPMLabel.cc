@@ -58,7 +58,13 @@ MPMLabel::MPMLabel()
   pExternalScalarFluxLabel = VarLabel::create( "p.externalscalarflux",
 			ParticleVariable<double>::getTypeDescription() );
 
+  pExternalScalarFluxLabel_preReloc = VarLabel::create( "p.externalscalarflux+",
+       ParticleVariable<double>::getTypeDescription() );
+
   pFluxLabel = VarLabel::create("p.flux",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pFluxLabel_preReloc = VarLabel::create("p.flux+",
                         ParticleVariable<Vector>::getTypeDescription() );
 
   pDiffusivityLabel = VarLabel::create( "p.diffusivity",
@@ -736,10 +742,16 @@ MPMLabel::MPMLabel()
   // ******* start - for temporary use only, CG
   pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
 			ParticleVariable<double>::getTypeDescription() );
+  pPressureLabel_t1_preReloc  = VarLabel::create( "p.pressure_t1+",
+        ParticleVariable<double>::getTypeDescription() );
   pConcInterpLabel  = VarLabel::create( "p.concentrationInterp",
 			ParticleVariable<double>::getTypeDescription() );
+  pConcInterpLabel_preReloc  = VarLabel::create( "p.concentrationInterp+",
+        ParticleVariable<double>::getTypeDescription() );
   pEquivalentStress_t1  = VarLabel::create( "p.equivalentStress_t1",
 			ParticleVariable<double>::getTypeDescription() );
+  pEquivalentStress_t1_preReloc  = VarLabel::create( "p.equivalentStress_t1+",
+        ParticleVariable<double>::getTypeDescription() );
   // ******* end - for temporary use only, CG
 
 } 
@@ -805,7 +817,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pConcPreviousLabel_preReloc);
   VarLabel::destroy(pScratchLabel);
   VarLabel::destroy(pExternalScalarFluxLabel);
+  VarLabel::destroy(pExternalScalarFluxLabel_preReloc);
   VarLabel::destroy(pFluxLabel);
+  VarLabel::destroy(pFluxLabel_preReloc);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
   VarLabel::destroy(pAreaLabel);
@@ -1008,7 +1022,10 @@ MPMLabel::~MPMLabel()
 
   // ******* start - for temporary use, CG
   VarLabel::destroy(pPressureLabel_t1);
-  VarLabel::destroy(pConcInterpLabel); 
+  VarLabel::destroy(pPressureLabel_t1_preReloc);
+  VarLabel::destroy(pConcInterpLabel);
+  VarLabel::destroy(pConcInterpLabel_preReloc);
   VarLabel::destroy(pEquivalentStress_t1);
+  VarLabel::destroy(pEquivalentStress_t1_preReloc);
   // ******* end - for temporary use, CG
 }
