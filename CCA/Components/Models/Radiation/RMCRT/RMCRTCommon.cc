@@ -34,7 +34,7 @@
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
-#define DEBUG 0             // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9             // 1: divQ, 2: boundFlux, 3: scattering
 #define FIXED_RAY_DIR -9    // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                             //                     4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
 #define SIGN 1              // Multiply the FIXED_RAY_DIRs by value
@@ -682,7 +682,7 @@ RMCRTCommon::updateSumI (const Level* level,
     if(!d_allowReflect) intensity = 0;
 
 /*`==========TESTING==========*/
-#if DEBUG >0
+#if DEBUG  >= 0
 if( isDbgCell( origin)  ){
    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );

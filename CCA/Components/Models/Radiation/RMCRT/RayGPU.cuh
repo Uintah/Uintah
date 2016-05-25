@@ -570,6 +570,19 @@ __device__ void rayDirection_cellFaceDevice(curandState* randNumStates,
                                             double& cosTheta);
 
 //______________________________________________________________________
+//
+__device__ void rayDirectionHyperCube_cellFaceDevice(curandState* randNumStates,
+                                                     const GPUIntVector& origin,
+                                                     const GPUIntVector& indexOrder,
+                                                     const GPUIntVector& signOrder,
+                                                     const int iRay,
+                                                     GPUVector& dirVector,
+                                                     double& cosTheta,
+                                                     const int bin_i,
+                                                     const int bin_j,
+                                                     const int nFluxRays);
+
+//______________________________________________________________________
 // 
 __device__ GPUVector rayOriginDevice( curandState* randNumStates,
                                       const GPUPoint  CC_pos,

@@ -41,17 +41,16 @@
 #include "math_functions.h"               // needed for max()
 #undef __CUDA_INTERNAL_COMPILATION__
 
-#define DEBUG 1                   // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9                   // 1: divQ, 2: boundFlux, 3: scattering
 #define FIXED_RANDOM_NUM          // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 
-#define FIXED_RAY_DIR 1           // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
+#define FIXED_RAY_DIR -9          // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                                   //                      4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
 #define SIGN 1                    // Multiply the FIXED_RAY_DIRs by value
 
 //__________________________________
 //  To Do
-//  - Add rayDirectionHyperCube_cellFace()
-//  - Need to implement transferFrom so use can use calc_frequency > 1
+//  -  Need to implement transferFrom so use can use calc_frequency > 1
 //  - Temporal scheduling
 //  - Investigate using multiple GPUs per node.
 //  - Implement fixed and dynamic ROI.
@@ -151,7 +150,14 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
 
   bool doLatinHyperCube = (RT_flags.rayDirSampleAlgo == LATIN_HYPER_CUBE);
-
+  
+    //int rand_i[ doLatinHyperCube ? nDivQRays : 0 ];                                        // only needed for LHC scheme
+  const int size = 1000;                                         // FIX ME Todd
+  int rand_i[ size ];                                      // FIX ME TODD
+  if (doLatinHyperCube){
+    randVectorDevice(rand_i, size,randNumStates);
+  }
+  
   //______________________________________________________________________
   //           R A D I O M E T E R
   //______________________________________________________________________
@@ -210,42 +216,54 @@ __global__ void rayTraceKernel( dim3 dimGrid,
           int RayFace = boundaryFaces.faceArray[i];
           int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
 
-          double sumI     = 0;
-          double sumProjI = 0;
-          double sumI_prev= 0;
+          double sumI        = 0;
+          double sumProjI    = 0;
+          double sumI_prev   = 0;
+          double sumCosTheta = 0;                                // used to force sumCosTheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
 
           //__________________________________
           // Flux ray loop
           #pragma unroll
-          for (int iRay=0; iRay < RT_flags.nFluxRays; iRay++){
+          
+          const int nFluxRays = RT_flags.nFluxRays;               // for readability
+          for (int iRay=0; iRay < nFluxRays; iRay++){
 
             GPUVector direction_vector;
             GPUVector rayOrigin;
             double cosTheta;
 
-//  Need to add rayDirectionHyperCube_cellFace Call  -Todd                     <<<<<<<<<<<<<<<<<<<<<<<<<,,,
-
-            rayDirection_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
-                                   direction_vector, cosTheta );
+            if ( doLatinHyperCube ){                              // Latin-Hyper-Cube sampling
+              rayDirectionHyperCube_cellFaceDevice( randNumStates, origin,dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
+                                                    direction_vector, cosTheta, rand_i[iRay], iRay, nFluxRays);
+            } else {
+              rayDirection_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
+                                           direction_vector, cosTheta );
+            }
 
             rayLocation_cellFaceDevice( randNumStates, RayFace, patch.dx, CC_pos, rayOrigin);
 
             updateSumIDevice< T >( level, direction_vector, rayOrigin, origin, patch.dx, sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
 
-            sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
+            sumProjI    += cosTheta * (sumI - sumI_prev);             // must subtract sumI_prev, since sumI accumulates intensity
 
-            sumI_prev = sumI;
+            sumCosTheta += cosTheta;
+            
+            sumI_prev    = sumI;
 
           } // end of flux ray loop
 
+          sumProjI = sumProjI * (double) nFluxRays/sumCosTheta/2.0; // This operation corrects for error in the first moment over a 
+                                                                       // half range of the solid angle (Modest Radiative Heat Transfer page 545 1st edition)
           //__________________________________
           //  Compute Net Flux to the boundary
           int face = UintahFace[RayFace];
-          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/RT_flags.nFluxRays;
+          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/(double)nFluxRays;
 
-#if DEBUG == 2
-          printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BF: %g\n",
+#if ( DEBUG == 2 )
+          if( isDbgCellDevice(origin) ) {
+            printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BoundaryFlux: %g\n",
                     origin.x, origin.y, origin.z, face, sumProjI, boundFlux[origin][ face ]);
+          }
 #endif
 
         } // boundary faces loop
@@ -260,10 +278,6 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   if( RT_flags.solveDivQ ){
     const int nDivQRays = RT_flags.nDivQRays;               // for readability
 
-    //int rand_i[ doLatinHyperCube ? nDivQRays : 0 ];                                        // only needed for LHC scheme
-    const int size = 1000;                                         // FIX ME Todd
-    int rand_i[ size ];                                      // FIX ME TODD
-
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
     if ( (tidX >= patch.lo.x) && (tidY >= patch.lo.y) && (tidX < patch.hi.x) && (tidY < patch.hi.y) ) { // patch boundary check
       #pragma unroll
@@ -273,9 +287,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         double sumI = 0;
         GPUPoint CC_pos = level.getCellPosition(origin);
 
-        if (doLatinHyperCube){
-          randVectorDevice(rand_i, size,randNumStates);
-        }
+
 
         //__________________________________
         // ray loop
@@ -302,7 +314,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
         radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
 
-#if DEBUG == 1
+#if ( DEBUG == 1)
         if( isDbgCellDevice( origin ) ){
           printf( "\n      [%d, %d, %d]  sumI: %1.16e  divQ: %1.16e radiationVolq: %1.16e  abskg: %1.16e,    sigmaT4: %1.16e \n",
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
@@ -454,7 +466,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         GPUPoint CC_pos = d_levels[fineL].getCellPosition(origin);
 
-#if DEBUG > 0
+#if( DEBUG == 1 )
         if( isDbgCellDevice( origin ) ){
           printf(" origin[%i,%i,%i] finePatchID: %i \n", origin.x, origin.y, origin.z, finePatch.ID);
         }
@@ -482,9 +494,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         divQ[origin] = -4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
 
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-        radiationVolQ[origin] = 4.0 * M_PI * abskg[fineL][origin] *  (sumI/RT_flags.nDivQRays) ;
+        radiationVolQ[origin] = 4.0 * M_PI * abskg[fineL][origin] * (sumI/RT_flags.nDivQRays);
 
-#if DEBUG > 0
+#if (DEBUG == 1)
         if( isDbgCellDevice(origin) ){
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[fineL][origin], sigmaT4OverPi[fineL][origin]);
@@ -533,6 +545,43 @@ __device__ GPUVector findRayDirectionDevice( curandState* randNumStates )
   return dirVector;
 }
 
+
+//______________________________________________________________________
+//  Uses stochastically selected regions in polar and azimuthal space to
+//  generate the Monte-Carlo directions. Samples Uniformly on a hemisphere
+//  and as hence does not include the cosine in the sample.
+//______________________________________________________________________
+__device__ void rayDirectionHyperCube_cellFaceDevice(curandState* randNumStates,
+                                                     const GPUIntVector& origin,
+                                                     const GPUIntVector& indexOrder,
+                                                     const GPUIntVector& signOrder,
+                                                     const int iRay,
+                                                     GPUVector& dirVector,
+                                                     double& cosTheta,
+                                                     const int bin_i,
+                                                     const int bin_j,
+                                                     const int nFluxRays)
+{
+ // randomly sample within each randomly selected region (may not be needed, alternatively choose center of subregion)
+  cosTheta = (randDblExcDevice(randNumStates) + (double) bin_i)/(double)nFluxRays;
+
+  double theta = acos(cosTheta);      // polar angle for the hemisphere
+  double phi   = 2.0 * M_PI * (randDblExcDevice(randNumStates) + (double) bin_j)/(double)nFluxRays;        // Uniform betwen 0-2Pi
+
+  cosTheta = cos(theta);
+
+  //Convert to Cartesian
+  GPUVector tmp;
+  tmp[0] =  sin(theta) * cos(phi);
+  tmp[1] =  sin(theta) * sin(phi);
+  tmp[2] =  cosTheta;
+
+  //Put direction vector as coming from correct face,
+  dirVector[0] = tmp[indexOrder[0]] * signOrder[0];
+  dirVector[1] = tmp[indexOrder[1]] * signOrder[1];
+  dirVector[2] = tmp[indexOrder[2]] * signOrder[2];
+
+}
 
 //______________________________________________________________________
 //
@@ -939,10 +988,11 @@ __device__ void updateSumIDevice ( levelParams level,
           printf( " dir %d ", dir );
           printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
           printf( "rayLoc [%g,%g,%g] ",ray_location.x,ray_location.y, ray_location.z);
-          printf( "disMin %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, Dx[dir]);
+          printf( "distanceTraveled %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, Dx[dir]);
+          printf( "            tDelta [%g,%g,%g] \n",tDelta.x, tDelta.y, tDelta.z);
 
-          printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
-          printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur] );
+//          printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
+//          printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur] );
           printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
       }
 #endif
