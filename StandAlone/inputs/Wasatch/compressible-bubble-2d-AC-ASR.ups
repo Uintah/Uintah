@@ -105,7 +105,7 @@
   <!-- Momentum transport equations -->
     <!-- Momentum transport equations -->
     <MomentumEquations>
-      <ArtificialCompressibility model="PGS" coef="10.0"/>
+      <ArtificialCompressibility model="ASR" coef="10.0"/>
       <EnergyEquation>
         <SolutionVariable>rhoet</SolutionVariable>
         <PrimitiveVariable>et</PrimitiveVariable>
