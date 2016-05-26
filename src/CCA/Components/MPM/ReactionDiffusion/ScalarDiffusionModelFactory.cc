@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
 #include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
 #include <CCA/Components/MPM/ReactionDiffusion/NonLinearDiff1.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ConstantRate.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -53,6 +54,9 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
 
   else if (diffusion_type == "non_linear1")
     return(scinew NonLinearDiff1(child, ss, flags, diffusion_type));
+
+  else if (diffusion_type == "constant_rate")
+    return(scinew ConstantRate(child, ss, flags, diffusion_type));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);
