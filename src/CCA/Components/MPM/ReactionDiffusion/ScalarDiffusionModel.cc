@@ -352,6 +352,24 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
   }  // End fine patch loop
 }
 
+void ScalarDiffusionModel::addSplitParticlesComputesAndRequires(Task* task,
+                                                                const MPMMaterial* matl,
+                                                                const PatchSet* patches)
+{
+
+}
+
+void ScalarDiffusionModel::splitSDMSpecificParticleData(const Patch* patch, const int dwi,
+                                              const int nDims, ParticleVariable<int> &prefOld,
+                                              ParticleVariable<int> &pref,
+                                              const unsigned int oldNumPar,
+                                              const int numNewPartNeeded,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw)
+{
+	cout << "Fill this in for the model that you are using" << endl;
+}
+
 void ScalarDiffusionModel::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
 {
    cout << "Fill this in for the model that you are using." << endl;
