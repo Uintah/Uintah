@@ -1445,6 +1445,10 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
       cm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
+      if(flags->d_doScalarDiffusion){
+        ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+        sdm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
+      }
     }
 
     sched->addTask(t, patches, matls);
@@ -4416,6 +4420,11 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       cm->splitCMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,
                                       oldNumPar, numNewPartNeeded,
                                       old_dw, new_dw);
+      if(flags->d_doScalarDiffusion){
+        ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+        sdm->splitSDMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,
+                                          oldNumPar, numNewPartNeeded, old_dw, new_dw);
+      }
 
       // put back temporary data
       new_dw->put(pidstmp,  lb->pParticleIDLabel_preReloc,           true);

@@ -31,6 +31,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <string>
 namespace Uintah {
@@ -91,6 +92,17 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
+
+    virtual void addSplitParticlesComputesAndRequires(Task* task, const MPMMaterial* matl,
+                                                      const PatchSet* patches);
+
+    virtual void splitSDMSpecificParticleData(const Patch* patch, const int dwi,
+                                              const int nDims, ParticleVariable<int> &prefOld,
+                                              ParticleVariable<int> &pref,
+                                              const unsigned int oldNumPar,
+                                              const int numNewPartNeeded,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw);
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
     virtual double computeStableTimeStep(double Dif, Vector dx);

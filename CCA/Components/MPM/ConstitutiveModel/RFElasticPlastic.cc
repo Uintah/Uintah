@@ -1448,6 +1448,7 @@ RFElasticPlastic::addSplitParticlesComputesAndRequires(Task* task,
   task->modifies(pPlasticStrainRateLabel_preReloc,  matlset);
   task->modifies(pLocalizedLabel_preReloc,          matlset);
   task->modifies(pEnergyLabel_preReloc,             matlset);
+  task->modifies(lb->pEquivalentStress_t1_preReloc, matlset);
 }
 
 void 
@@ -1465,25 +1466,30 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
 
   ParticleVariable<double>  PlasStrain, PlasStrainRate,Energy;
   ParticleVariable<int> pLocalized;
+  ParticleVariable<double> pEquivStress;
 
   new_dw->getModifiable(PlasStrain,    pPlasticStrainLabel_preReloc,     pset);
   new_dw->getModifiable(PlasStrainRate,pPlasticStrainRateLabel_preReloc, pset);
   new_dw->getModifiable(pLocalized,    pLocalizedLabel_preReloc,         pset);
   new_dw->getModifiable(Energy,        pEnergyLabel_preReloc,            pset);
+  new_dw->getModifiable(pEquivStress, lb->pEquivalentStress_t1_preReloc, pset);
 
   ParticleVariable<double> PlasStrainTmp, PlasStrainRateTmp, EnergyTmp;
   ParticleVariable<int> pLocalizedTmp;
+  ParticleVariable<double> pEquivStressTmp;
 
   new_dw->allocateTemporary(PlasStrainTmp,        pset);
   new_dw->allocateTemporary(PlasStrainRateTmp,    pset);
   new_dw->allocateTemporary(pLocalizedTmp,        pset);
-  new_dw->allocateTemporary(EnergyTmp,           pset);
+  new_dw->allocateTemporary(EnergyTmp,            pset);
+  new_dw->allocateTemporary(pEquivStressTmp,      pset);
   // copy data from old variables for particle IDs and the position vector
   for(unsigned int pp=0; pp<oldNumPar; ++pp ){
     PlasStrainTmp[pp]     = PlasStrain[pp];
     PlasStrainRateTmp[pp] = PlasStrainRate[pp];
     pLocalizedTmp[pp]     = pLocalized[pp];
     EnergyTmp[pp]         = Energy[pp];
+    pEquivStressTmp[pp]   = pEquivStress[pp];
   }
 
   int numRefPar=0;
@@ -1500,6 +1506,7 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
         PlasStrainRateTmp[new_index] = PlasStrainRate[idx];
         pLocalizedTmp[new_index]     = pLocalized[idx];
         EnergyTmp[new_index]         = Energy[idx];
+        pEquivStressTmp[new_index]   = pEquivStress[idx];
       }
       numRefPar++;
     }
@@ -1509,4 +1516,5 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
   new_dw->put(PlasStrainRateTmp,  pPlasticStrainRateLabel_preReloc,   true);
   new_dw->put(pLocalizedTmp,      pLocalizedLabel_preReloc,           true);
   new_dw->put(EnergyTmp,          pEnergyLabel_preReloc,              true);
+  new_dw->put(pEquivStressTmp,    lb->pEquivalentStress_t1_preReloc,  true);
 }

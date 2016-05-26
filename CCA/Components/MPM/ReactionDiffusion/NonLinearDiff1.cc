@@ -310,6 +310,77 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
 
+void NonLinearDiff1::addSplitParticlesComputesAndRequires(Task* task,
+                                                       const MPMMaterial* matl,
+                                                       const PatchSet* patches)
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->modifies(d_lb->pDiffusivityLabel_preReloc, matlset);
+  task->modifies(d_lb->pPressureLabel_t1_preReloc, matlset);
+  task->modifies(d_lb->pConcInterpLabel_preReloc,  matlset);
+  task->modifies(d_lb->pFluxLabel_preReloc,        matlset);
+}
+
+void NonLinearDiff1::splitSDMSpecificParticleData(const Patch* patch, const int dwi,
+                                                  const int fourOrEight,
+                                                  ParticleVariable<int> &prefOld,
+                                                  ParticleVariable<int> &prefNew,
+                                                  const unsigned int oldNumPar,
+                                                  const int numNewPartNeeded,
+                                                  DataWarehouse* old_dw,
+                                                  DataWarehouse* new_dw)
+{
+	ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+	ParticleVariable<double>  pDiffusivity, pPressure, pConcInterp;
+	ParticleVariable<Vector>  pFlux;
+
+  new_dw->getModifiable(pDiffusivity, d_lb->pDiffusivityLabel_preReloc,  pset);
+  new_dw->getModifiable(pPressure,    d_lb->pPressureLabel_t1_preReloc,  pset);
+  new_dw->getModifiable(pConcInterp,  d_lb->pConcInterpLabel_preReloc,   pset);
+  new_dw->getModifiable(pFlux,        d_lb->pFluxLabel_preReloc,         pset);
+
+  ParticleVariable<double>  pDiffusivityTmp, pPressureTmp, pConcInterpTmp;
+  ParticleVariable<Vector>  pFluxTmp;
+
+  new_dw->allocateTemporary(pDiffusivityTmp, pset);
+  new_dw->allocateTemporary(pPressureTmp,    pset);
+  new_dw->allocateTemporary(pConcInterpTmp,  pset);
+  new_dw->allocateTemporary(pFluxTmp,        pset);
+
+	// copy data from old variables for particle IDs and the position vector
+	for(unsigned int pp=0; pp<oldNumPar; ++pp ){
+    pDiffusivityTmp[pp] = pDiffusivity[pp];
+		pPressureTmp[pp]    = pPressure[pp];
+		pConcInterpTmp[pp]  = pConcInterp[pp];
+		pFluxTmp[pp]        = pFlux[pp];
+  }
+
+	  int numRefPar=0;
+	  for(unsigned int idx=0; idx<oldNumPar; ++idx ){
+	    if(prefNew[idx]!=prefOld[idx]){  // do refinement!
+	      for(int i = 0;i<fourOrEight;i++){
+	        int new_index;
+	        if(i==0){
+	          new_index=idx;
+	        } else {
+	          new_index=oldNumPar+(fourOrEight-1)*numRefPar+i;
+	        }
+	        pDiffusivityTmp[new_index] = pDiffusivity[idx];
+	        pPressureTmp[new_index]    = pPressure[idx];
+	        pConcInterpTmp[new_index]  = pConcInterp[idx];
+	        pFluxTmp[new_index]        = pFlux[idx];
+	      }
+	      numRefPar++;
+	    }
+	  }
+
+	  new_dw->put(pDiffusivityTmp, d_lb->pDiffusivityLabel_preReloc, true);
+	  new_dw->put(pPressureTmp,    d_lb->pPressureLabel_t1_preReloc, true);
+	  new_dw->put(pConcInterpTmp,  d_lb->pConcInterpLabel_preReloc,  true);
+	  new_dw->put(pFluxTmp,        d_lb->pFluxLabel_preReloc,        true);
+}
+
 void NonLinearDiff1::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
 {
 
