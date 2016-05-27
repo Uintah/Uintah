@@ -471,6 +471,11 @@ namespace WasatchCore{
           }
 
           fieldInfo.mode = (rkStage==1) ? Expr::COMPUTES : Expr::MODIFIES;
+	  if (rkStage > 1) {
+	    // make sure that state_none fields, that are NOT persistent, are always computes.
+            // state_none fields that are persistent, should be MODIFIES which is set by the above statement
+	    if (fieldTag.context() == Expr::STATE_NONE && !tree.is_persistent(fieldTag) ) fieldInfo.mode = Expr::COMPUTES;
+	  }
         }
         else if( fieldTag.context() == Expr::STATE_N ){
           fieldInfo.mode = Expr::REQUIRES;
