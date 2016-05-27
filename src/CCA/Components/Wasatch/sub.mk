@@ -99,7 +99,8 @@ PSELIBS :=                        \
 LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
         $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                    \
         $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY)                     \
-        $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)
+        $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)          \
+        $(POKITT_LIBRARY) 
 
 INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
             $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE)                 \
