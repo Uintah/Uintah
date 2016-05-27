@@ -224,7 +224,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     Q.matl    = matl;
     Q.Q_Label = label;
     Q.subtype = subtype;
-    Q.isVelocityLabel = false;
+    Q.computeRstess = false;
 
     Q.Qsum_Label      = VarLabel::create( "sum_" + name,      td);
     Q.Qsum2_Label     = VarLabel::create( "sum2_" + name,     td);
@@ -246,7 +246,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     //  computeReynoldsStress with this Var?
     if (attribute["computeReynoldsStress"].empty() == false){
       d_computeReynoldsStress = true;
-      Q.isVelocityLabel    = true;
+      Q.computeRstess    = true;
       d_RS_matl = matl;
       proc0cout << "         Computing uv_prime, uw_prime, vw_prime using ("<< name << ")" << endl;
     }
@@ -309,6 +309,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   d_matlSet->addAll(m);
   d_matlSet->addReference();
   d_matSubSet = d_matlSet->getUnion();
+  proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
 }
 
 //______________________________________________________________________
@@ -635,9 +636,10 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
   }else {
 //    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
 
-    if ( d_startTimeTimestep == 0 ){
-      d_startTimeTimestep = d_sharedState->getCurrentTopLevelTimeStep();
-    }
+
+//    if ( d_startTimeTimestep == 0 ){
+//      d_startTimeTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+//    }
 
     computeStats< T >(old_dw, new_dw, patch, Q);
   }
@@ -673,7 +675,14 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean,     Q.Qmean_Label,     matl, patch );
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
+  
   int timestep = d_sharedState->getCurrentTopLevelTimeStep() - d_startTimeTimestep + 1;
+  
+  if ( Q.computeRstess == true ){  // this routine is used upstream of computeReynoldsStress() 
+                                   // and we need to account for it
+    timestep = d_sharedState->getCurrentTopLevelTimeStep() - d_startTimeTimestepReynoldsStress + 1;
+  }
+  
 
   T nTimesteps(timestep);
 
@@ -703,7 +712,6 @@ void statistics::computeStats( DataWarehouse* old_dw,
            <<"\t Qmean: " << Qmean[c] << endl;
     }
 #endif
-
 
   }
 
@@ -764,7 +772,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
                                         const Patch* patch,
                                         Qstats Q)
 {
-  if ( Q.isVelocityLabel == false ){
+  if ( Q.computeRstess == false ){
     return;
   }
 

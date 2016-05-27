@@ -93,12 +93,12 @@ WARNING
 
   private:
     enum ORDER {lowOrder, highOrder};
-
+    
     //__________________________________
     //  container to hold
     struct Qstats{
       std::string  name;
-      bool isVelocityLabel;
+      bool computeRstess;
       int matl;
       VarLabel* Q_Label;
       VarLabel* Qsum_Label;
@@ -198,9 +198,9 @@ WARNING
 
     //__________________________________
     // global constants
-    double d_startTime;
-    double d_stopTime;
-    int d_startTimeTimestep;   // timestep when stats are turn on.
+    double    d_startTime;
+    double    d_stopTime;
+    int       d_startTimeTimestep;   // timestep when stats are turn on.
     IntVector d_monitorCell;   // Cell to output 
 
     bool d_doHigherOrderStats;

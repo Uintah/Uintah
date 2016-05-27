@@ -25,7 +25,7 @@
 
 
 
-if (1) then
+if (0) then
 /bin/rm -rf advectScalar.uda.*
 mpirun -np 1 sus inputs/ICE/advectScalar.ups
 
@@ -34,7 +34,7 @@ set uda = "advectScalar.uda"
 endif
 
 
-#set uda = "masterUda_123"
+set uda = "masterUda"
 
 timeextract -v scalar-f           -i 10 10 0 -uda $uda > & out-f
 timeextract -v variance_scalar-f  -i 10 10 0 -uda $uda > & out-variance

@@ -16,7 +16,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            10        </maxTime>
+       <maxTime>            20        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -170,7 +170,7 @@
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label="scalar-f"/>
       <save label="scalar-f_dbgVector"/>
-      <!--
+
       <save label="variance_scalar-f"/>
       <save label="skewness_scalar-f"/>
       <save label="kurtosis_scalar-f"/>
@@ -182,7 +182,7 @@
       <save label="uv_vw_wu_prime"/>
       <save label="sum_uv_vw_wu"/>
       <save label="mean_uv_vw_wu"/>
-      -->
+
 
       <checkpoint timestepInterval="3" cycle="2"/>
    </DataArchiver>
