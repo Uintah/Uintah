@@ -54,7 +54,7 @@ namespace WasatchCore {
     /**
      *  \brief Construct a TotalInternalEnergyTransportEquation
      *  \param e0Name the name for the total internal energy
-     *  \param params the block from the input file specifying the transport equation.
+     *  \param energyEqnSpec the block from the input file specifying the transport equation.
      *  \param gc
      *  \param densityTag a tag containing density
      *  \param temperatureTag a tag for the temperature
@@ -66,7 +66,7 @@ namespace WasatchCore {
      *  \param turbulenceParams
      */
     TotalInternalEnergyTransportEquation( const std::string e0Name,
-                                          Uintah::ProblemSpecP params,
+                                          Uintah::ProblemSpecP energyEqnSpec,
                                           GraphCategories& gc,
                                           const Expr::Tag& densityTag,
                                           const Expr::Tag& temperatureTag,

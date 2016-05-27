@@ -301,12 +301,12 @@ namespace WasatchCore{
     const Uintah::MaterialSet* get_wasatch_materials() const{ return materials_; }
     const Uintah::ProblemSpecP get_wasatch_spec(){return wasatchSpec_;}
 
-    static void set_flow_treatment(FlowTreatment treat) { flowTreatment_ = treat;}
-    static void set_flow_treatment(std::string treat)
+    static void set_flow_treatment( const FlowTreatment treat ){ flowTreatment_ = treat; }
+    static void set_flow_treatment( const std::string treat )
     {
       flowTreatment_ = INCOMPRESSIBLE;
-      if (treat == "LOWMACH") flowTreatment_ = LOWMACH;
-      else if (treat == "COMPRESSIBLE") flowTreatment_ = COMPRESSIBLE;
+      if      ( treat == "LOWMACH"      ) flowTreatment_ = LOWMACH;
+      else if ( treat == "COMPRESSIBLE" ) flowTreatment_ = COMPRESSIBLE;
     }
     static FlowTreatment flow_treatment(){return flowTreatment_;}
 

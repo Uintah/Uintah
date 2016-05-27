@@ -81,6 +81,7 @@
 
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Transport/ParseParticleEquations.h>
+#include <CCA/Components/Wasatch/Transport/PreconditioningParser.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/EquationBase.h>
 #include <CCA/Components/Wasatch/Transport/EquationAdaptors.h>
@@ -434,8 +435,8 @@ namespace WasatchCore{
         }
         
         std::string flowTreatment;
-        densityParams->getAttribute("method",flowTreatment);
-        Wasatch::set_flow_treatment(flowTreatment);
+        densityParams->getAttribute( "method", flowTreatment );
+        Wasatch::set_flow_treatment( flowTreatment );
         
         if( densityParams->findBlock("NameTag") ){
           densityTag = parse_nametag( densityParams->findBlock("NameTag") );
@@ -455,7 +456,7 @@ namespace WasatchCore{
 
     // PARSE BC FUNCTORS
     Uintah::ProblemSpecP bcParams = uintahSpec->findBlock("Grid")->findBlock("BoundaryConditions");
-    if (bcParams) {
+    if( bcParams ){
       for( Uintah::ProblemSpecP faceBCParams=bcParams->findBlock("Face");
            faceBCParams != 0;
            faceBCParams=faceBCParams->findNextBlock("Face") )
@@ -534,24 +535,20 @@ namespace WasatchCore{
     timeIntegrator_ = TimeIntegrator(timeIntName);
     nRKStages_ = timeIntegrator_.nStages;
     
-    if (wasatchSpec_->findBlock("DualTime")) {
+    if( wasatchSpec_->findBlock("DualTime") ){
       Uintah::ProblemSpecP dualTimeSpec = wasatchSpec_->findBlock("DualTime");
       timeIntegrator_.has_dual_time(true);
-      if (dualTimeSpec->findAttribute("iterations"))
-      {
+      if (dualTimeSpec->findAttribute("iterations")){
         dualTimeSpec->getAttribute("iterations", timeIntegrator_.dualTimeIterations);
       }
-      if (dualTimeSpec->findAttribute("tolerance"))
-      {
+      if (dualTimeSpec->findAttribute("tolerance")){
         dualTimeSpec->getAttribute("tolerance", timeIntegrator_.dualTimeTolerance);
       }
-      if (dualTimeSpec->findAttribute("ds"))
-      {
+      if (dualTimeSpec->findAttribute("ds")){
         dualTimeSpec->getAttribute("ds", timeIntegrator_.dualTimeds);
       }
       has_dual_time(true);
     }
-
 
     //
     //  Parse geometry pieces. NOTE: This must take place before create_expressions_from_input
@@ -639,8 +636,12 @@ namespace WasatchCore{
       }
     }
 
+    {
+      PreconditioningParser precondParser( wasatchSpec_, graphCategories_ );
+    }
+
     //
-    // get the 2D variable density, osicllating (and periodic) mms params, if any, and parse them.
+    // get the 2D variable density, oscillating (and periodic) mms params, if any, and parse them.
     //
     Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
     if (varDenOscillatingMMSParams) {
@@ -789,10 +790,11 @@ namespace WasatchCore{
     // note - parse_particle_transport_equations returns a vector of equation adaptors
     if( particleEqnSpec ){
       try{
-        if (flow_treatment() == COMPRESSIBLE) {
+        if( flow_treatment() == COMPRESSIBLE ){
           const EquationAdaptors adaptors = parse_particle_transport_equations<SVolField,SVolField,SVolField>( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
           adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
-        } else {
+        }
+        else {
           const EquationAdaptors adaptors = parse_particle_transport_equations<XVolField,YVolField,ZVolField>( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
           adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
         }
