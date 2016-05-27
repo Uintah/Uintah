@@ -38,6 +38,7 @@ CUDA_ENABLED_SRCS :=                        \
      MomentTransportEquation                \
      MomentumTransportEquationBase          \
      ParticleMomentumEquation               \
+     PreconditioningParser					\
      TotalInternalEnergyTransportEquation   
 
 ifeq ($(HAVE_CUDA),yes)

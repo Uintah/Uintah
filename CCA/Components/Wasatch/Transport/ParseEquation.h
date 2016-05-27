@@ -25,7 +25,6 @@
 #ifndef Wasatch_ParseEquations_h
 #define Wasatch_ParseEquations_h
 
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SolverInterface.h>
 
@@ -59,10 +58,10 @@ namespace WasatchCore{
    */
   EqnTimestepAdaptorBase*
   parse_scalar_equation( Uintah::ProblemSpecP params,
-                          TurbulenceParameters turbParams,
-                          const Expr::Tag densityTag,
-                          const bool isConstDensity,
-                          GraphCategories& gc );
+                         TurbulenceParameters turbParams,
+                         const Expr::Tag densityTag,
+                         const bool isConstDensity,
+                         GraphCategories& gc );
 
   /**
    *  \brief Build the momentum equation specified by "params"

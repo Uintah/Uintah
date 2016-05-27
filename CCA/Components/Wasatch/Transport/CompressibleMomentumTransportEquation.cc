@@ -38,83 +38,7 @@
 namespace WasatchCore{
 
   //====================================================================
-  
-  /**
-   *  \class ArtCompPGSPressure
-   *  \author Tony Saad
-   *  \date May, 2016
-   *  \brief When using Artifical Compressibility to scale the acoustic speed, this expression
-             computes the extra term required in the momentum equations. This term will
-             be added as a dependency to the momentum RHS:
-     \f[
-       (1 - \frac{1}{\alpha^2}) \frac{\partial p}{\partial x_i}
-     \f]
-   for the ith momentum equation. When added to the momentum RHS, the net contribution/scaling to the
-   momentum RHS is:
-     \f[
-        - \frac{\partial p}{\partial x_i} + (1 - \frac{1}{\alpha^2}) \frac{\partial p}{\partial x_i} = - \frac{1}{\alpha^2} \frac{\partial p}{\partial x_i} 
-     \f]
-   
-   */
-  template< typename MomDirT >
-  class ArtCompPGSPressure
-  : public Expr::Expression<SVolField>
-  {
-    DECLARE_FIELDS( SVolField, p_ )
-    const double alpha_;
-    
-    typedef typename SpatialOps::OperatorTypeBuilder< typename GradOpSelector<SVolField, MomDirT>::Gradient, SVolField, SVolField >::type GradT;    
-    const GradT* grad_;
-    
-    ArtCompPGSPressure( const Expr::Tag& pTag,
-                        const double alpha)
-    : Expr::Expression<SVolField>(),
-      alpha_(alpha)
-    {
-      this->set_gpu_runnable( true );
-      p_ = this->template create_field_request<SVolField>( pTag );
-    }
-    
-  public:
-    
-    class Builder : public Expr::ExpressionBuilder
-    {
-      const Expr::Tag pTag_;
-      double alpha_;
-    public:
 
-      Builder( const Expr::Tag& resultTag,
-              const Expr::Tag& pTag,
-              const double alpha,
-              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
-      : ExpressionBuilder( resultTag, nghost ),
-      pTag_( pTag ),
-      alpha_(alpha)
-      {}
-      
-      Expr::ExpressionBase* build() const{
-        return new ArtCompPGSPressure<MomDirT>( pTag_, alpha_ );
-      }
-      
-    };  /* end of Builder class */
-    
-    ~ArtCompPGSPressure(){}
-    
-    void bind_operators( const SpatialOps::OperatorDatabase& opDB )
-    {
-      grad_ = opDB.retrieve_operator<GradT>();
-    }
-    
-    void evaluate()
-    {
-      SVolField& result = this->value();
-      const SVolField& p = p_->field_ref();
-      const double a2 = alpha_*alpha_;
-      result <<= (1.0 - 1.0/a2) * ( *grad_ )( p_->field_ref() );
-    }
-  };
-
-  
   
 
   //============================================================================
@@ -158,16 +82,16 @@ namespace WasatchCore{
        *  @param resultTag the tag for the value that this expression computes
        */
       Builder( const Expr::Tag& resultTag,
-              const Expr::Tag& densityTag,
-              const Expr::Tag& temperatureTag,
-              const Expr::Tag& mixMWTag,
-              const double gasConstant,
-              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
+               const Expr::Tag& densityTag,
+               const Expr::Tag& temperatureTag,
+               const Expr::Tag& mixMWTag,
+               const double gasConstant,
+               const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
       : ExpressionBuilder( resultTag, nghost ),
-      densityTag_( densityTag ),
-      temperatureTag_( temperatureTag ),
-      mixMWTag_( mixMWTag ),
-      gasConstant_( gasConstant )
+        densityTag_( densityTag ),
+        temperatureTag_( temperatureTag ),
+        mixMWTag_( mixMWTag ),
+        gasConstant_( gasConstant )
       {}
       
       Expr::ExpressionBase* build() const{
@@ -209,7 +133,7 @@ namespace WasatchCore{
                const Expr::Tag& mixMWTag,
                const double gasConstant )
     : Expr::Expression<FieldT>(),
-    gasConstant_( gasConstant )
+      gasConstant_( gasConstant )
     {
       this->set_gpu_runnable(true);
       temperature_ = this->template create_field_request<FieldT>( temperatureTag );
@@ -235,10 +159,10 @@ namespace WasatchCore{
               const double gasConstant,
               const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
       : ExpressionBuilder( resultTag, nghost ),
-      gasConstant_   ( gasConstant    ),
-      temperatureTag_( temperatureTag ),
-      pressureTag_   ( pressureTag    ),
-      mixMWTag_      ( mixMWTag       )
+        gasConstant_   ( gasConstant    ),
+        temperatureTag_( temperatureTag ),
+        pressureTag_   ( pressureTag    ),
+        mixMWTag_      ( mixMWTag       )
       {}
       
       Expr::ExpressionBase* build() const{
@@ -261,10 +185,10 @@ namespace WasatchCore{
   {
     typedef Density_IC<FieldT>::Builder DensIC;
     return exprFactory.register_expression( scinew DensIC( initial_condition_tag(),
-                                                          temperatureTag_,
-                                                          TagNames::self().pressure,
-                                                          mixMWTag_,
-                                                          gasConstant_) );
+                                                           temperatureTag_,
+                                                           TagNames::self().pressure,
+                                                           mixMWTag_,
+                                                           gasConstant_) );
   }
 
 
@@ -284,16 +208,16 @@ namespace WasatchCore{
                                          GraphCategories& gc,
                                          Uintah::ProblemSpecP params,
                                          TurbulenceParameters turbParams )
-  : MomentumTransportEquationBase<SVolField>(momComponent,
-                                          velName,
-                                          momName,
-                                          densityTag,
-                                          false,
-                                          bodyForceTag,
-                                          srcTermTag,
-                                          gc,
-                                          params,
-                                          turbParams)
+  : MomentumTransportEquationBase<SVolField>( momComponent,
+                                              velName,
+                                              momName,
+                                              densityTag,
+                                              false,
+                                              bodyForceTag,
+                                              srcTermTag,
+                                              gc,
+                                              params,
+                                              turbParams )
   {
     // todo:
     //  - strain tensor       // registered by MomentumTransportEquationBase
@@ -305,11 +229,11 @@ namespace WasatchCore{
 
     typedef IdealGasPressure<FieldT>::Builder Pressure;
     if (!factory.have_entry(TagNames::self().pressure)) {
-      factory.register_expression( scinew Pressure(TagNames::self().pressure,
-                                                   densityTag,
-                                                   temperatureTag,
-                                                   mixMWTag,
-                                                   gasConstant) );
+      factory.register_expression( scinew Pressure( TagNames::self().pressure,
+                                                    densityTag,
+                                                    temperatureTag,
+                                                    mixMWTag,
+                                                    gasConstant ) );
     }
     setup();
   }
@@ -319,7 +243,7 @@ namespace WasatchCore{
   template <typename MomDirT>
   Expr::ExpressionID  CompressibleMomentumTransportEquation<MomDirT>::
   setup_rhs( FieldTagInfo&,
-            const Expr::TagList& srcTags )
+             const Expr::TagList& srcTags )
   {
     
     const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
@@ -332,25 +256,7 @@ namespace WasatchCore{
                                                    this->pressureTag_,
                                                    rhs_part_tag(this->solnVarTag_),
                                                    volFracTag ) );
-  
-    if (this->params_->findBlock("ArtificialCompressibility")) {
-      Uintah::ProblemSpecP ACSpec = this->params_->findBlock("ArtificialCompressibility");
-      std::string model;
-      std::cout << "got here \n";
-      ACSpec->getAttribute("model", model);
-      if (model == "PGS") {
-        double alpha;
-        ACSpec->getAttribute("coef",alpha);
-        const Expr::Tag pgsPressureTag("PGS_pressure_" + this->solnVarTag_.name(), Expr::STATE_NONE);
-        typedef typename ArtCompPGSPressure<MomDirT>::Builder ACPGSPressure;
-        factory.register_expression( scinew ACPGSPressure(pgsPressureTag, TagNames::self().pressure, alpha ) );
-        // attach viscous dissipation expression to the RHS as a source
-        factory.attach_dependency_to_expression(pgsPressureTag, this->rhsTag_);
-      }
-    }
-    
     return rhsID;
-
   }
 
   //----------------------------------------------------------------------------
@@ -371,7 +277,7 @@ namespace WasatchCore{
     const TagNames& tagNames = TagNames::self();
     //
     // Add dummy modifiers on all patches. This is used to inject new dpendencies across all patches.
-    // Those new dependencies, result for example from complicated boundary conditions added in this
+    // Those new dependencies result for example from complicated boundary conditions added in this
     // function. NOTE: whenever you want to add a new complex boundary condition, please use this
     // functionality to inject new dependencies across patches.
     //

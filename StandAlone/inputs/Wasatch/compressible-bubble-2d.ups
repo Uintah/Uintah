@@ -102,28 +102,8 @@
       <Constant>2.181e-5</Constant>
     </BasicExpression>
     
-  <!-- Momentum transport equations -->
     <!-- Momentum transport equations -->
     <MomentumEquations>
-      <EnergyEquation>
-        <SolutionVariable>rhoet</SolutionVariable>
-        <PrimitiveVariable>et</PrimitiveVariable>
-        <Temperature><NameTag name="T"/></Temperature>
-        <MolecularWeight>
-          <NameTag name="MW"/>
-        </MolecularWeight>
-        <DiffusiveFlux direction="XY" coefficient="0.03"/>
-        <ConvectiveFlux direction="X" method="VANLEER">
-          <AdvectiveVelocity>
-            <NameTag name="u"/>
-          </AdvectiveVelocity>
-        </ConvectiveFlux>
-        <ConvectiveFlux direction="Y" method="VANLEER">
-          <AdvectiveVelocity>
-            <NameTag name="v"/>
-          </AdvectiveVelocity>
-        </ConvectiveFlux>
-      </EnergyEquation>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
@@ -135,6 +115,26 @@
         <NameTag name="gravity" />
       </BodyForce>
     </MomentumEquations>
+
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <Temperature><NameTag name="T"/></Temperature>
+      <MolecularWeight>
+        <NameTag name="MW"/>
+      </MolecularWeight>
+      <DiffusiveFlux direction="XY" coefficient="0.03"/>
+      <ConvectiveFlux direction="X" method="VANLEER">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="VANLEER">
+        <AdvectiveVelocity>
+          <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </EnergyEquation>
 
   </Wasatch>
 

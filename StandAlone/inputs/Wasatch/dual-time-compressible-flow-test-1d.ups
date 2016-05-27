@@ -56,23 +56,23 @@
       <Viscosity>
         <NameTag name="viscosity"/>
       </Viscosity>    
-      <EnergyEquation>
-        <SolutionVariable>rhoet</SolutionVariable>
-        <PrimitiveVariable>et</PrimitiveVariable>
-        <Temperature>
-          <NameTag name="T"/>
-        </Temperature>
-        <MolecularWeight>
-          <NameTag name="MW"/>
-        </MolecularWeight>
-        <DiffusiveFlux direction="X" coefficient="0.025"/>
-        <ConvectiveFlux direction="X" method="CENTRAL">
-          <AdvectiveVelocity>
-            <NameTag name="u"/>
-          </AdvectiveVelocity>
-        </ConvectiveFlux>
-      </EnergyEquation>
     </MomentumEquations>
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <Temperature>
+        <NameTag name="T"/>
+      </Temperature>
+      <MolecularWeight>
+        <NameTag name="MW"/>
+      </MolecularWeight>
+      <DiffusiveFlux direction="X" coefficient="0.025"/>
+      <ConvectiveFlux direction="X" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </EnergyEquation>
   </Wasatch>
   <Time>
     <maxTime>0.3</maxTime>
