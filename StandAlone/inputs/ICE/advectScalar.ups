@@ -311,7 +311,7 @@
     <DataAnalysis>   
       <Module name = "statistics">
          <material>BackgroundGas</material>
-         <timeStart>   0.0  </timeStart>
+         <timeStart>   5.0  </timeStart>
          <timeStop>   100  </timeStop>
          <computeHigherOrderStats> true </computeHigherOrderStats>
          
