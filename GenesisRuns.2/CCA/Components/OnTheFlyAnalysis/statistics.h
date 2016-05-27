@@ -93,7 +93,7 @@ WARNING
 
   private:
     enum ORDER {lowOrder, highOrder};
-    
+
     //__________________________________
     //  container to hold
     struct Qstats{
@@ -125,7 +125,7 @@ WARNING
       };
     };
 
-    //__________________________________    
+    //__________________________________
     // For Reynolds Shear Stress computations
     int  d_startTimeTimestepReynoldsStress;
     bool d_isReynoldsStressInitialized; // have the sum label been initialized for the RS terms
@@ -171,6 +171,12 @@ WARNING
                        const Patch*   patch,
                        Qstats Q);
 
+    void computeReynoldsStressWrapper( DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const PatchSubset* patches,
+                                       const Patch*    patch,
+                                       Qstats Q);
+
     void computeReynoldsStress( DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
                                 const Patch*    patch,
@@ -201,7 +207,7 @@ WARNING
     double    d_startTime;
     double    d_stopTime;
     int       d_startTimeTimestep;   // timestep when stats are turn on.
-    IntVector d_monitorCell;   // Cell to output 
+    IntVector d_monitorCell;   // Cell to output
 
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;

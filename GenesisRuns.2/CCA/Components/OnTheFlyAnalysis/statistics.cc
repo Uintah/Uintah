@@ -39,7 +39,7 @@
 //______________________________________________________________________
 //    TO DO:
 //   Each variable needs to keep track of the timestep.  The user can add
-//   a variable in a checkpoint.  
+//   a variable in a checkpoint.
 //______________________________________________________________________
 //
 
@@ -122,7 +122,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   //  Read in timing information
   d_prob_spec->require("timeStart",  d_startTime);
   d_prob_spec->require("timeStop",   d_stopTime);
-  
+
   d_prob_spec->get("monitorCell",    d_monitorCell);
 
   // a backdoor to set when the module was initiated.
@@ -601,7 +601,7 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
         case TypeDescription::Vector: {             // Vector
           computeStatsWrapper< Vector >(old_dw, new_dw, patches,  patch, Q);
 
-          computeReynoldsStress( old_dw, new_dw,patch, Q);
+          computeReynoldsStressWrapper( old_dw, new_dw, patches,  patch, Q);
 
           break;
         }
@@ -636,14 +636,11 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
   }else {
 //    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
 
-
-//    if ( d_startTimeTimestep == 0 ){
-//      d_startTimeTimestep = d_sharedState->getCurrentTopLevelTimeStep();
-//    }
-
     computeStats< T >(old_dw, new_dw, patch, Q);
   }
 }
+
+
 
 //______________________________________________________________________
 //
@@ -675,14 +672,14 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean,     Q.Qmean_Label,     matl, patch );
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
-  
+
   int timestep = d_sharedState->getCurrentTopLevelTimeStep() - d_startTimeTimestep + 1;
-  
-  if ( Q.computeRstess == true ){  // this routine is used upstream of computeReynoldsStress() 
+
+  if ( Q.computeRstess == true ){  // this routine is used upstream of computeReynoldsStress()
                                    // and we need to account for it
     timestep = d_sharedState->getCurrentTopLevelTimeStep() - d_startTimeTimestepReynoldsStress + 1;
   }
-  
+
 
   T nTimesteps(timestep);
 
@@ -707,7 +704,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
       cout << "  stats:  " << d_monitorCell <<  setw(10)<< Q.name << " nTimestep: " << nTimesteps
            <<"\t topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
            << " d_startTimestep: " << d_startTimeTimestep
-           <<"\t Q_var: " << me 
+           <<"\t Q_var: " << me
            <<"\t Qsum: "  << Qsum[c]
            <<"\t Qmean: " << Qmean[c] << endl;
     }
@@ -766,6 +763,37 @@ void statistics::computeStats( DataWarehouse* old_dw,
   }
 }
 //______________________________________________________________________
+//  computeReynoldsStressWrapper:
+void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw,
+                                               const PatchSubset* patches,
+                                               const Patch*    patch,
+                                               Qstats Q)
+{
+  double now = d_dataArchiver->getCurrentTime();
+
+  if(now < d_startTime || now > d_stopTime){
+
+    proc0cout << " IGNORING------------statistics::computeReynoldsStress" << endl;
+    // define the matl subset for this variable
+    MaterialSubset* matSubSet = scinew MaterialSubset();
+    matSubSet->add( Q.matl );
+    matSubSet->addReference();
+
+    new_dw->transferFrom(    old_dw, d_velSum_Label,  patches, matSubSet  );
+    allocateAndZero<Vector>( new_dw, d_velPrimeLabel, d_RS_matl, patch );
+    allocateAndZero<Vector>( new_dw, d_velMean_Label, d_RS_matl, patch );
+
+    if(matSubSet && matSubSet->removeReference()){
+      delete matSubSet;
+    }
+  }else {
+    proc0cout << " Computing------------statistics::computeReynoldsStress" << endl;
+    computeReynoldsStress( old_dw, new_dw,patch, Q);
+  }
+}
+
+//______________________________________________________________________
 //  Computes u'v', u'w', v'w'
 void statistics::computeReynoldsStress( DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
@@ -801,7 +829,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
   // UV_prime(i) = mean(U .* V) - mean(U) .* mean(V);
   // UW_prime(i) = mean(U .* W) - mean(U) .* mean(W);
   // VW_prime(i) = mean(V .* W) - mean(V) .* mean(W)
-  
+
   for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
     IntVector c = *iter;
 
@@ -819,7 +847,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
            <<  " topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
            << " d_startTimeTimestepReynoldsStress: " << d_startTimeTimestepReynoldsStress
            <<"\n \t \t"<<Q.name<< ": " << vel[c]<< " vel_CC_mean: " << vel_mean[c]
-           <<"\n \t \tuv_vw_wu: " << me << ",  uv_vw_wu_sum: " << Qsum[c]<< ",  uv_vw_wu_mean: " << Qmean[c] 
+           <<"\n \t \tuv_vw_wu: " << me << ",  uv_vw_wu_sum: " << Qsum[c]<< ",  uv_vw_wu_mean: " << Qmean[c]
            <<"\n \t \tuv_vw_wu_prime: " <<  uv_vw_wu[c] << endl;
     }
 #endif
@@ -855,13 +883,13 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
   if ( !Q.isInitialized[lowOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
-    proc0cout << "    Statistics: " << Q.name << " initializing low order sums on patch: " << patch->getID()<<endl;
+//    proc0cout << "    Statistics: " << Q.name << " initializing low order sums on patch: " << patch->getID()<<endl;
   }
 
   if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
-    proc0cout << "    Statistics: " << Q.name << " initializing high order sums on patch: " << patch->getID() << endl;
+//    proc0cout << "    Statistics: " << Q.name << " initializing high order sums on patch: " << patch->getID() << endl;
   }
 }
 
