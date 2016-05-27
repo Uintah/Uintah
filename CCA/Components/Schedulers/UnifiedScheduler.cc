@@ -5319,9 +5319,11 @@ void UnifiedScheduler::freeCudaStreamsFromPool() {
     }
   }
 
-  cerrLock.lock();
-    gpu_stats << myRankThread() << " unlocking freeCudaStreams " << std::endl;
-  cerrLock.unlock();
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+      gpu_stats << myRankThread() << " unlocking freeCudaStreams " << std::endl;
+    cerrLock.unlock();
+  }
   idleStreamsLock_.writeUnlock();
 }
 
@@ -5522,14 +5524,16 @@ void UnifiedScheduler::assignDevicesAndStreams(DetailedTask* dtask) {
       if (dtask->getCudaStreamForThisTask(index) == NULL) {
         dtask->assignDevice(index);
         cudaStream_t* stream = getCudaStreamFromPool(index);
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread() << " Assigning for CPU task " << dtask->getName() << " at " << &dtask
-                  << " stream " << std::hex << stream << std::dec
-                  << " for device " << index
-                  << std::endl;
+        if (gpu_stats.active()) {
+          cerrLock.lock();
+          {
+            gpu_stats << myRankThread() << " Assigning for CPU task " << dtask->getName() << " at " << &dtask
+                    << " stream " << std::hex << stream << std::dec
+                    << " for device " << index
+                    << std::endl;
+          }
+          cerrLock.unlock();
         }
-        cerrLock.unlock();
         dtask->setCudaStreamForThisTask(index, stream);
       }
     } else {
