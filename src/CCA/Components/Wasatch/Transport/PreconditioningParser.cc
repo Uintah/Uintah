@@ -130,9 +130,9 @@ namespace WasatchCore {
      const bool doX_, doY_, doZ_;
      const double alpha_;
 
-     typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
-     typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
-     typedef typename SpatialOps::OperatorTypeBuilder< typename SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
+     typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
+     typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
+     typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
      const GradXT* dpdx_;
      const GradYT* dpdy_;
      const GradZT* dpdz_;
@@ -148,11 +148,11 @@ namespace WasatchCore {
      {
        this->set_gpu_runnable( true );
 
-       p_ = this->template create_field_request<SVolField>( pTag );
+       p_ = create_field_request<SVolField>( pTag );
 
-       if( doX_ ) u_ = this->template create_field_request<SVolField>( velTags[0] );
-       if( doY_ ) v_ = this->template create_field_request<SVolField>( velTags[1] );
-       if( doZ_ ) w_ = this->template create_field_request<SVolField>( velTags[2] );
+       if( doX_ ) u_ = create_field_request<SVolField>( velTags[0] );
+       if( doY_ ) v_ = create_field_request<SVolField>( velTags[1] );
+       if( doZ_ ) w_ = create_field_request<SVolField>( velTags[2] );
      }
 
 
