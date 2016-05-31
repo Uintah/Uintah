@@ -188,11 +188,6 @@ namespace WasatchCore{
       delete cellType_;
     }
     if( doParticles_ ) delete particlesHelper_;
-    
-    Uintah::VarLabel::destroy(dtLabel_);
-    Uintah::VarLabel::destroy(tLabel_);
-    Uintah::VarLabel::destroy(tStepLabel_);
-    Uintah::VarLabel::destroy(rkStageLabel_);
   }
 
   //--------------------------------------------------------------------
@@ -866,9 +861,7 @@ namespace WasatchCore{
     timeTags.push_back( TagNames::self().dt       );
     timeTags.push_back( TagNames::self().timestep );
     timeTags.push_back( TagNames::self().rkstage  );
-    
-    typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  PlcHolder;
-    exprFactory.register_expression(scinew PlcHolder::Builder(timeTags));
+    exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     
     //_____________________________________________
     // Build the initial condition expression graph
@@ -1032,7 +1025,7 @@ namespace WasatchCore{
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
-      task->computes( sharedState_->get_delt_label(),
+      	task->computes( sharedState_->get_delt_label(),
                       level.get_rep() );
       //              materials_->getUnion() );
       // jcs why can't we specify a material here?  It doesn't seem to be working if I do.
@@ -1083,9 +1076,9 @@ namespace WasatchCore{
     // set the error norm in the dw for each patch
     for( int ip=0; ip<patches->size(); ++ip ){
       // grab the convergence measure computed by the dual time integrator
-      Uintah::PerPatch<double> val_;
+      Uintah::PerPatch<double*> val_;
       subNewDW->get(val_, convLabel, 0, patches->get(ip));
-      const double val = val_.get();
+      const double val = *val_;
       subNewDW->put(Uintah::max_vartype(val), convMeasureLabel);
     }
   }
@@ -1453,8 +1446,7 @@ namespace WasatchCore{
       timeTags.push_back( TagNames::self().dt     );
       timeTags.push_back( TagNames::self().timestep );
       timeTags.push_back( TagNames::self().rkstage  );
-      typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  PlcHolder;
-      timeID = exprFactory.register_expression(scinew PlcHolder::Builder(timeTags));
+      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     }
     else{
       timeID = exprFactory.get_id(TagNames::self().time);
@@ -1474,17 +1466,6 @@ namespace WasatchCore{
                           &Wasatch::update_current_time,
                           rkStage );
       updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
-      
-      dtLabel_      = Uintah::VarLabel::create( TagNames::self().dt.name(), Uintah::PerPatch<double>::getTypeDescription() );
-      tLabel_       = Uintah::VarLabel::create( TagNames::self().time.name(), Uintah::PerPatch<double>::getTypeDescription() );
-      tStepLabel_   = Uintah::VarLabel::create( TagNames::self().timestep.name(), Uintah::PerPatch<double>::getTypeDescription() );
-      rkStageLabel_ = Uintah::VarLabel::create( TagNames::self().rkstage.name(), Uintah::PerPatch<double>::getTypeDescription() );
-      
-      updateCurrentTimeTask->computes( dtLabel_      );
-      updateCurrentTimeTask->computes( tLabel_       );
-      updateCurrentTimeTask->computes( tStepLabel_   );
-      updateCurrentTimeTask->computes( rkStageLabel_ );
-      
       sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
     }
   }
@@ -1503,23 +1484,18 @@ namespace WasatchCore{
     Uintah::delt_vartype deltat;
     oldDW->get( deltat, sharedState_->get_delt_label() );
     const Expr::Tag timeTag = TagNames::self().time;
-    double rks = (double) rkStage;
-//    Uintah::PerPatch<double*> dt(new double(deltat) );
-//    Uintah::PerPatch<double*> tstep(new double(sharedState_->getCurrentTopLevelTimeStep()) );
-//    Uintah::PerPatch<double*> time(new double (sharedState_->getElapsedTime()) );
-//    Uintah::PerPatch<double*> rkstage(new double( rks ) );
+    //__________________
+    // loop over patches
+    GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
+    Expr::ExpressionFactory& factory = *gh->exprFactory;
 
-    Uintah::PerPatch<double> dt(deltat );
-    Uintah::PerPatch<double> tstep(sharedState_->getCurrentTopLevelTimeStep());
-    Uintah::PerPatch<double> time(sharedState_->getElapsedTime() );
-    Uintah::PerPatch<double> rkstage(rks );
-
-    for (int p=0; p < patches->size(); p++){
-      const Uintah::Patch* patch = patches->get(p);
-      newDW->put( dt, dtLabel_, 0, patch );
-      newDW->put( tstep, tStepLabel_, 0, patch );
-      newDW->put( time, tLabel_, 0, patch );
-      newDW->put( rkstage, rkStageLabel_, 0, patch );
+    for( int ip=0; ip<patches->size(); ++ip ){
+      SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(
+                                                                  factory.retrieve_expression( timeTag, patches->get(ip)->getID(), false ) );
+      settimeexpr.set_integrator_stage( rkStage );
+      settimeexpr.set_deltat  ( deltat );
+      settimeexpr.set_time    ( sharedState_->getElapsedTime() );
+      settimeexpr.set_timestep( sharedState_->getCurrentTopLevelTimeStep() );
     }
   }
 
@@ -1631,9 +1607,9 @@ namespace WasatchCore{
         // loop over patches
         for( int ip=0; ip<patches->size(); ++ip ){
           // grab the stable timestep value calculated by the StableDT expression
-          Uintah::PerPatch<double> tempDtP;
+          Uintah::PerPatch<double*> tempDtP;
           new_dw->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
-          val = std::min( val, tempDtP.get() );
+          val = std::min( val, *tempDtP );
         }
       }
       else {
