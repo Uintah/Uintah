@@ -39,6 +39,33 @@ JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, SimulationS
 JGConcentrationDiffusion::~JGConcentrationDiffusion() {
 
 }
+void JGConcentrationDiffusion::addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
+                                                   const PatchSet* patch) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(d_lb->pFluxLabel,        matlset);
+}
+
+void JGConcentrationDiffusion::initializeSDMData(const Patch* patch, const MPMMaterial* matl,
+                                       DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleVariable<Vector>  pFlux;
+
+  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
+
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+    pFlux[*iter]        = Vector(0,0,0);
+  }
+}
+
+void JGConcentrationDiffusion::addParticleState(std::vector<const VarLabel*>& from,
+                                                std::vector<const VarLabel*>& to)
+{
+  from.push_back(d_lb->pFluxLabel);
+
+  to.push_back(d_lb->pFluxLabel_preReloc);
+}
 
 void JGConcentrationDiffusion::scheduleComputeFlux(Task* task,
                                                    const MPMMaterial* matl,
@@ -49,7 +76,7 @@ void JGConcentrationDiffusion::scheduleComputeFlux(Task* task,
 
   task->requires(Task::OldDW, d_lb->pConcGradientLabel, matlset, gnone);
 
-  task->computes(d_lb->pFluxLabel, matlset);
+  task->computes(d_lb->pFluxLabel_preReloc, matlset);
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 }
 
@@ -69,8 +96,8 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  old_dw->get(pConcGradient,     d_lb->pConcGradientLabel, pset);
-  new_dw->allocateAndPut(pFlux,  d_lb->pFluxLabel,         pset);
+  old_dw->get(pConcGradient,     d_lb->pConcGradientLabel,  pset);
+  new_dw->allocateAndPut(pFlux,  d_lb->pFluxLabel_preReloc, pset);
   
   double timestep = 1.0e99;
   for (ParticleSubset::iterator iter  = pset->begin();iter!=pset->end();iter++){
