@@ -10,9 +10,15 @@ rm -rf ${INSTALL_HERE}/*
 echo "Start time: `date`"
 echo ""
 
+if test "$BUILD_CUDA" = "yes"; then
+  FLAGS="-DENABLE_THREADS=OFF -DENABLE_CUDA=ON"
+else
+  FLAGS="-DENABLE_THREADS=ON"
+fi
+
 cmake \
+  $FLAGS \
   -DENABLE_TESTS=OFF \
-  -DENABLE_THREADS=ON \
   -DNTHREADS=1 \
   -DENABLE_EXAMPLES=OFF \
   -DBOOST_INCLUDEDIR=$BOOST_LOC/include  \
