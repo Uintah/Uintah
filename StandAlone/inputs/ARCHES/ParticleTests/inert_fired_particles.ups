@@ -42,7 +42,6 @@
     <save label = "O2" table_lookup="true"/>
     <save label = "tot_N"/>
     <checkpoint cycle="2" interval="0.005"/>
-    <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
 

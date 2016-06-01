@@ -157,8 +157,9 @@
     <!-- originalOFC -->
     <!-- The original OFC file didn't use interval instead used: walltimeInterval="1600" walltimeStart="0" -->
     <checkpoint cycle="2" interval="0.003"/>
-    <outputDoubleAsFloat/>
     <compression>gzip</compression>
+    <!-- originalOFC -->
+    <!--<outputDoubleAsFloat/>-->
   </DataArchiver>
   <Grid>
     <BoundaryConditions>
