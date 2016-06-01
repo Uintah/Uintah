@@ -15,7 +15,7 @@ echo
 if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
    echo ""
-   echo "  At Utah: Ember, Ash, or Baja"
+   echo "  At Utah: Ember, Ash, Baja, Aurora, or Anasazi"
    echo "  At LLNL: Vulcan, Cab, Surface, or Syrah"
    echo "  At LANL: Mustang, Mapache, or Wolf"
    echo "  At ORNL: titan"
@@ -24,43 +24,31 @@ if test "$MACHINE" = ""; then
 fi
 
 if ! test "$DATE"; then
-  echo "Error, please set env var DATE for install dir suffix!"
+  echo "ERROR: Please set env var DATE for install dir suffix!"
   echo "   Something like: setenv DATE Dec_12_2015"
   exit
 fi
 
 if test "$COMPILER" = ""; then
-   echo "Please set the env var COMPILER to icc, gcc, or xlc!"
+   echo "Make sure that the compiler specified in checkEvn.sh for your machine is set correctly - then setenv COMPILER to 'checked'."
    echo
    exit
 fi
 
-if test "$COMPILER" = "icc"; then
-   echo "  Building with ICC"
-   CC=`which icc`
-   CXX=`which icpc`
-   COMP=icc14.0.4
-else
-   if test "$COMPILER" = "gcc"; then
-      echo "  Building with GCC"
-      CC=`which gcc`
-      CXX=`which g++`
-      COMP=gcc-4.4.7
-   else
-      if test "$COMPILER" = "xlc"; then
-         echo "  Building with xlc"
-         CC=`which xlc`
-         CXX=`which xlC`
-         COMP=xlc-12.1
-      else
-         echo "ERROR: Env var COMPILER was set to '$COMPILER', but must be set to 'icc', 'gcc', or 'xlc'"
-         echo
-         exit
-      fi
-   fi
+TPI=Thirdparty-Install
+
+if test "$BUILD_CUDA" = ""; then
+  echo "ERROR: Please set BUILD_CUDA to 'yes' or 'no'."
+  echo
+  exit
 fi
 
-TPI=Thirdparty-Install
+if test "$BUILD_CUDA" = "yes"; then
+  echo "Building SpatialOps with CUDA."
+else
+  echo "NOT Building SpatialOps with CUDA.  To turn CUDA on, set environment var BUILD_CUDA to 'yes'"
+fi
+sleep 2
 
 echo
 echo "  Building for $MACHINE"
@@ -105,12 +93,15 @@ if test "$MACHINE" = "Ash"; then
      echo "ERROR: hostname did not return ash... Goodbye."
      exit
   fi
-  #COMP=icc-16.0.0
+  #COMP=icc-16.0.2
   COMP=gcc-4.9.2
+  CC=`which mpicc`
+  CXX=`which mpic++`
   NAME="ash.peaks"
   NAME2="Ash"
   TPI=thirdparty-install
   INSTALL_BASE=/uufs/$NAME/sys/pkg/uintah/$TPI$PHOENIXEXT/$NAME2/Wasatch3P
+  #BOOST_LOC=/uufs/ash.peaks/sys/pkg/uintah/thirdparty-install/Boost/v1_60_0/icc16.0.2
   BOOST_LOC=/uufs/chpc.utah.edu/sys/installdir/boost/1.59.0-4.9.2g
 else
 if test "$MACHINE" = "Mapache"; then
@@ -174,6 +165,35 @@ if test "$MACHINE" = "Baja"; then
   INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
   BOOST_LOC=/usr
 else
+if test "$MACHINE" = "Aurora"; then
+  if [[ $host != aurora* ]]; then
+     echo "Error: hostname did not return aurora*... Goodbye."
+     exit
+  fi
+  CC=`which gcc`
+  CXX=`which g++`
+  COMP=gcc5.3.1
+  NAME2="Aurora"
+  INSTALL_BASE=/uufs/chpc.utah.edu/common/home/u0080076/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr
+else
+if test "$MACHINE" = "Anasazi"; then
+  if [[ $host != anasazi* ]]; then
+     echo "Error: hostname did not return anasazi*... Goodbye."
+     exit
+  fi
+  # These don't work, but in order to see the path to boost I had to use them:
+  #
+  #    module load gcc/4.9.2
+  #    module load boost
+  #
+  CC=`which gcc`
+  CXX=`which g++`
+  COMP=gcc4.9.2
+  NAME2="Anasazi"
+  INSTALL_BASE=/uufs/chpc.utah.edu/common/home/u0080076/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/uufs/chpc.utah.edu/sys/installdir/boost/1.59.0-4.9.2g
+else
 if test "$MACHINE" = "Vulcan"; then
   if [[ $host != vulcanlac* ]]; then
      echo "Error: hostname did not return vulcanlac*... Goodbye."
@@ -230,6 +250,8 @@ else
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
+fi
 fi
 fi
 fi
