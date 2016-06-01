@@ -52,7 +52,6 @@
     <!-- <save label="divQ_do"/>  -->
 
     <checkpoint cycle="2" interval="0.01"/>
-    <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
 

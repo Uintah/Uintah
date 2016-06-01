@@ -51,7 +51,6 @@
     <save label="VRFlux"/>
 
     <checkpoint cycle="2" interval="0.01"/>
-    <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
 

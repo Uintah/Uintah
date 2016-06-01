@@ -97,7 +97,6 @@
     <save label = "N2"          table_lookup = "true"/>
     <save label = "mixture_molecular_weight" table_lookup = "true"/>
     <checkpoint cycle="2" interval="0.005"/>
-    <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
 

@@ -85,7 +85,6 @@
     <save label = "mixture_molecular_weight" table_lookup = "true"/>
 
     <checkpoint cycle = "2" walltimeStart = "200" walltimeInterval = "3550"/> <!-- checkpoint every 1 hour -->
-    <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
 
