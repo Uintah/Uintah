@@ -4205,8 +4205,8 @@ case $host in
 
     ##  SCI_CHECK_OS_VERSION
 
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="2.2.17"
     _CUR_1_=""
@@ -4300,18 +4300,17 @@ CFLAGS=$CFLAGS
 
 ##############################################################################
 #
-# As necessary, remind user that they did not set a specific compiler.
+# Determine which compiler we are using.  If necessary, remind the user
+# that they did not specify a specific compiler on the configure line.
 #
 
-if test "$CC" = ""; then
-
-  ac_ext=c
+ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 if test -n "$ac_tool_prefix"; then
-  for ac_prog in cc gcc
+  for ac_prog in $CC cc gcc
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -4355,7 +4354,7 @@ fi
 fi
 if test -z "$CC"; then
   ac_ct_CC=$CC
-  for ac_prog in cc gcc
+  for ac_prog in $CC cc gcc
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -4903,6 +4902,8 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+if test "$CC" = ""; then
+
   # Check to see if cc is actually gcc.
   if test "$CC" = "cc"; then
     $CC --version | grep -iq "Free Software Foundation"
@@ -5198,6 +5199,7 @@ $as_echo "$as_me: WARNING: C++ compiler not specified with 'CXX' environment var
 fi
 
 ##  ----------  determine if this is a 32 or 64 bit machine
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -6731,8 +6733,8 @@ $as_echo "$as_me: WARNING: Running under Snow Leopard or later " >&2;}
 
 
     ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="4.0.0"
     _CUR_1_=""
@@ -6740,8 +6742,8 @@ $as_echo "$as_me: WARNING: Running under Snow Leopard or later " >&2;}
 
     eval _NAME_=`basename $CC`
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ version 4.0.0" >&5
-$as_echo_n "checking for $_NAME_ version 4.0.0... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ with minimum version of 4.0.0" >&5
+$as_echo_n "checking for $_NAME_ with minimum version of 4.0.0... " >&6; }
 
     if test "GCC_VERSION=4.0"; then
       _SCI_CORRECT_='GCC_VERSION=4.0'
@@ -6782,12 +6784,12 @@ $as_echo_n "checking for $_NAME_ version 4.0.0... " >&6; }
     done
 
     if test "$_SCI_BIGGER_" = "yes"; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes ($_SCI_REPORT_)" >&5
-$as_echo "yes ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (found version: $_SCI_REPORT_)" >&5
+$as_echo "yes (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_CORRECT_
     else
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no ($_SCI_REPORT_)" >&5
-$as_echo "no ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no (found version: $_SCI_REPORT_)" >&5
+$as_echo "no (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_NOTCORRECT_
     fi
 
@@ -6904,8 +6906,8 @@ $as_echo "no" >&6; }
     if test "$CC" != "pgcc"; then
 
     ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="2.95.3"
     _CUR_1_=""
@@ -6913,8 +6915,8 @@ $as_echo "no" >&6; }
 
     eval _NAME_=`basename $CC`
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ version 2.95.3" >&5
-$as_echo_n "checking for $_NAME_ version 2.95.3... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ with minimum version of 2.95.3" >&5
+$as_echo_n "checking for $_NAME_ with minimum version of 2.95.3... " >&6; }
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -6955,12 +6957,12 @@ $as_echo_n "checking for $_NAME_ version 2.95.3... " >&6; }
     done
 
     if test "$_SCI_BIGGER_" = "yes"; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes ($_SCI_REPORT_)" >&5
-$as_echo "yes ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (found version: $_SCI_REPORT_)" >&5
+$as_echo "yes (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_CORRECT_
     else
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no ($_SCI_REPORT_)" >&5
-$as_echo "no ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no (found version: $_SCI_REPORT_)" >&5
+$as_echo "no (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_NOTCORRECT_
     fi
 
@@ -6968,8 +6970,8 @@ $as_echo "no ($_SCI_REPORT_)" >&6; }
       if test "$sci_required_fortran" = "yes"; then
 
     ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="0.5.25"
     _CUR_1_=""
@@ -6977,8 +6979,8 @@ $as_echo "no ($_SCI_REPORT_)" >&6; }
 
     eval _NAME_=`basename $F77`
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ version 0.5.25" >&5
-$as_echo_n "checking for $_NAME_ version 0.5.25... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ with minimum version of 0.5.25" >&5
+$as_echo_n "checking for $_NAME_ with minimum version of 0.5.25... " >&6; }
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -7019,20 +7021,20 @@ $as_echo_n "checking for $_NAME_ version 0.5.25... " >&6; }
     done
 
     if test "$_SCI_BIGGER_" = "yes"; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes ($_SCI_REPORT_)" >&5
-$as_echo "yes ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (found version: $_SCI_REPORT_)" >&5
+$as_echo "yes (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_CORRECT_
     else
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no ($_SCI_REPORT_)" >&5
-$as_echo "no ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no (found version: $_SCI_REPORT_)" >&5
+$as_echo "no (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_NOTCORRECT_
     fi
 
       fi
 
     ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="2.95.3"
     _CUR_1_=""
@@ -7040,8 +7042,8 @@ $as_echo "no ($_SCI_REPORT_)" >&6; }
 
     eval _NAME_=`basename $CXX`
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ version 2.95.3" >&5
-$as_echo_n "checking for $_NAME_ version 2.95.3... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ with minimum version of 2.95.3" >&5
+$as_echo_n "checking for $_NAME_ with minimum version of 2.95.3... " >&6; }
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -7082,12 +7084,12 @@ $as_echo_n "checking for $_NAME_ version 2.95.3... " >&6; }
     done
 
     if test "$_SCI_BIGGER_" = "yes"; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes ($_SCI_REPORT_)" >&5
-$as_echo "yes ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (found version: $_SCI_REPORT_)" >&5
+$as_echo "yes (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_CORRECT_
     else
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no ($_SCI_REPORT_)" >&5
-$as_echo "no ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no (found version: $_SCI_REPORT_)" >&5
+$as_echo "no (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_NOTCORRECT_
     fi
 
@@ -7548,8 +7550,9 @@ $as_echo_n "checking 1 - if depend mode flag '$flag' works for '$CXX'... " >&6; 
     else
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: no " >&5
 $as_echo "no " >&6; }
-      echo ""
-#      echo "ac_try: $ac_try"   # <= Turn on to debug DEPEND flag issues...
+# Uncomment the following block of code to debug DEPEND flag issues...
+#      echo ""
+#      echo "ac_try: $ac_try"
 #      echo ""
 #      echo "Test results: "
 #      echo ""
@@ -7772,8 +7775,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/compile_testdefs.h"
 
 
     ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="3.78.1"
     _CUR_1_=""
@@ -7781,8 +7784,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/compile_testdefs.h"
 
     eval _NAME_=`basename $MAKE`
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ version 3.78.1" >&5
-$as_echo_n "checking for $_NAME_ version 3.78.1... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $_NAME_ with minimum version of 3.78.1" >&5
+$as_echo_n "checking for $_NAME_ with minimum version of 3.78.1... " >&6; }
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -7823,12 +7826,12 @@ $as_echo_n "checking for $_NAME_ version 3.78.1... " >&6; }
     done
 
     if test "$_SCI_BIGGER_" = "yes"; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes ($_SCI_REPORT_)" >&5
-$as_echo "yes ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (found version: $_SCI_REPORT_)" >&5
+$as_echo "yes (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_CORRECT_
     else
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no ($_SCI_REPORT_)" >&5
-$as_echo "no ($_SCI_REPORT_)" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no (found version: $_SCI_REPORT_)" >&5
+$as_echo "no (found version: $_SCI_REPORT_)" >&6; }
       eval $_SCI_NOTCORRECT_
     fi
 

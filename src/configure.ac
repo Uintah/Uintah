@@ -804,12 +804,13 @@ CFLAGS=$CFLAGS
 
 ##############################################################################
 #
-# As necessary, remind user that they did not set a specific compiler.
+# Determine which compiler we are using.  If necessary, remind the user
+# that they did not specify a specific compiler on the configure line.
 #
 
-if test "$CC" = ""; then
+AC_PROG_CC([$CC cc gcc])
 
-  AC_PROG_CC(cc gcc)
+if test "$CC" = ""; then
 
   # Check to see if cc is actually gcc.
   if test "$CC" = "cc"; then
@@ -847,6 +848,7 @@ if test "$CXX" = ""; then
 fi
 
 ##  ----------  determine if this is a 32 or 64 bit machine
+
 AC_LANG([C])
 
 AC_CHECK_SIZEOF(void*)
@@ -1733,8 +1735,9 @@ for flag in -MDupdate; do
       CC_DEPEND_EXT=depend.mk
     else 
       AC_MSG_RESULT( no )
-      echo ""
-#      echo "ac_try: $ac_try"   # <= Turn on to debug DEPEND flag issues...
+# Uncomment the following block of code to debug DEPEND flag issues...
+#      echo ""                 
+#      echo "ac_try: $ac_try"   
 #      echo ""
 #      echo "Test results: "
 #      echo ""
