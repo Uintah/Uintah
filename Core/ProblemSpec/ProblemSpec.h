@@ -156,6 +156,14 @@ public:
                                        const std::string & attribute ) const;
 
   //////////
+  // find the first child node with given node name, attribute and value
+  // Finds:  <Block attribute = "value">
+  ProblemSpecP                                     
+  findBlockWithAttributeValue(const std::string& name,
+                              const std::string& attribute,
+                              const std::string& value) const;
+
+  //////////
   // find the first child node with given node name and attribute 
   ProblemSpecP findBlockWithOutAttribute(const std::string& name) const;
 

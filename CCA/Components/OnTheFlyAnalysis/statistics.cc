@@ -59,15 +59,12 @@ statistics::statistics(ProblemSpecP& module_spec,
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
   d_matlSet     = 0;
-  d_startTime   = 0;
   d_stopTime    = DBL_MAX;
   d_monitorCell = IntVector(0,0,0);
   d_doHigherOrderStats = false;
-  d_startTimeTimestep = 0;
 
   // Reynolds Shear Stress related
   d_RS_matl     = -9;
-  d_startTimeTimestepReynoldsStress = 0;
   d_computeReynoldsStress = false;
 
 }
@@ -82,7 +79,7 @@ statistics::~statistics()
 
   // delete each Qstats label
   for (unsigned int i =0 ; i < d_Qstats.size(); i++) {
-    Qstats Q = d_Qstats[i];
+    Qstats& Q = d_Qstats[i];
     VarLabel::destroy( Q.Qsum_Label );
     VarLabel::destroy( Q.Qsum2_Label );
     VarLabel::destroy( Q.Qmean_Label );
@@ -107,7 +104,7 @@ statistics::~statistics()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void statistics::problemSetup(const ProblemSpecP& prob_spec,
-                              const ProblemSpecP& ,
+                              const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP& sharedState)
 {
@@ -122,19 +119,25 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   //  Read in timing information
   d_prob_spec->require("timeStart",  d_startTime);
   d_prob_spec->require("timeStop",   d_stopTime);
-
-  d_prob_spec->get("monitorCell",    d_monitorCell);
-
-  // a backdoor to set when the module was initiated.
-  // this is a quick fix until I find a better way.
-  d_prob_spec->getWithDefault("startTimeTimestep",              d_startTimeTimestep, 0);
-  d_prob_spec->getWithDefault("startTimeTimestepReynoldsStress",d_startTimeTimestepReynoldsStress, 0);
-
+  
   // Start time < stop time
   if(d_startTime > d_stopTime ){
     throw ProblemSetupException("\n ERROR:statistics: startTime > stopTime. \n", __FILE__, __LINE__);
   }
+  
+  // debugging
+  d_prob_spec->get("monitorCell",    d_monitorCell);
 
+
+  //__________________________________
+  //  read in when each variable started 
+  string comment = "__________________________________\n"
+                   "\tIf you want to overide the value of\n \t  startTimeTimestep\n \t  startTimeTimestepReynoldsStress\n"
+                   "\tsee checkpoints/t*****/timestep.xml\n"
+                   "\t__________________________________";
+  d_prob_spec->addComment( comment ) ;
+
+  
   //__________________________________
   // find the material to extract data from.  Default is matl 0.
   // The user can use either
@@ -225,6 +228,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     Q.Q_Label = label;
     Q.subtype = subtype;
     Q.computeRstess = false;
+    Q.initializeTimestep();          // initialize the start timestep = 0;
 
     Q.Qsum_Label      = VarLabel::create( "sum_" + name,      td);
     Q.Qsum2_Label     = VarLabel::create( "sum2_" + name,     td);
@@ -296,6 +300,24 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     d_velMean_Label  = VarLabel::create( "mean_uv_vw_wu",  td);
   }
 
+  //__________________________________
+  //  On restart read the starttimestep for each variable from checkpoing/t***/timestep.xml
+  if(restart_prob_spec){ 
+    ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
+    
+    ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "statistics");
+    ProblemSpecP st_ps   = stat_ps->findBlock("StartTimestep");
+    
+    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
+      Qstats& Q = d_Qstats[i];
+      const string name = Q.name;
+      int timestep;
+      st_ps->require( name.c_str(), timestep  );
+      Q.setStart(timestep);
+      proc0cout <<  "         " << name << "\t\t startTimestep: " << timestep << endl;                   
+      
+    }
+  }
 
   //__________________________________
   //  create the matl set
@@ -310,6 +332,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   d_matlSet->addReference();
   d_matSubSet = d_matlSet->getUnion();
   proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
+  
 }
 
 //______________________________________________________________________
@@ -322,7 +345,7 @@ void statistics::scheduleInitialize(SchedulerP& sched,
                    this,&statistics::initialize);
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
+    const Qstats Q = d_Qstats[i];
 
     t->computes ( Q.Qsum_Label );
     t->computes ( Q.Qsum2_Label );
@@ -355,7 +378,7 @@ void statistics::initialize(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing statistics::initialize");
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats Q = d_Qstats[i];
+      Qstats& Q = d_Qstats[i];
 
       switch(Q.subtype->getType()) {
 
@@ -506,6 +529,28 @@ void statistics::restartInitialize()
 }
 
 //______________________________________________________________________
+//  output the starting timestep for each variable
+//  The user can turn add variables on restarts
+void statistics::outputProblemSpec( ProblemSpecP& root_ps)
+{
+  if( root_ps == 0){
+    throw InternalError("ERROR: DataAnalysis Module:statistics::outputProblemSpec:  ProblemSpecP is NULL", __FILE__, __LINE__);
+  }
+
+  ProblemSpecP da_ps = root_ps->appendChild("DataAnalysisRestart");
+
+  ProblemSpecP m_ps = da_ps->appendChild("Module");
+  m_ps->setAttribute("name","statistics");
+  ProblemSpecP st_ps = m_ps->appendChild("StartTimestep");
+
+  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
+    Qstats Q = d_Qstats[i];
+    const string name = Q.name;
+    st_ps->appendElement( name.c_str(), Q.getStart() );
+  }
+}
+
+//______________________________________________________________________
 void statistics::scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level)
 {
@@ -590,7 +635,7 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
     printTask(patches, patch,cout_doing,"Doing statistics::doAnalysis");
 
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats Q = d_Qstats[i];
+      Qstats& Q = d_Qstats[i];
 
       switch(Q.subtype->getType()) {
 
@@ -623,7 +668,7 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       DataWarehouse* new_dw,
                                       const PatchSubset* patches,
                                       const Patch*    patch,
-                                      Qstats Q)
+                                      Qstats& Q)
 {
   double now = d_dataArchiver->getCurrentTime();
 
@@ -648,7 +693,7 @@ template <class T>
 void statistics::computeStats( DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
                                const Patch*    patch,
-                               Qstats Q)
+                               Qstats& Q)
 {
   const int matl = Q.matl;
 
@@ -673,13 +718,11 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
 
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep() - d_startTimeTimestep + 1;
-
-  if ( Q.computeRstess == true ){  // this routine is used upstream of computeReynoldsStress()
-                                   // and we need to account for it
-    timestep = d_sharedState->getCurrentTopLevelTimeStep() - d_startTimeTimestepReynoldsStress + 1;
-  }
-
+  int ts = d_sharedState->getCurrentTopLevelTimeStep();
+  
+  Q.setStart(ts);
+  int Q_ts = Q.getStart();
+  int timestep = ts - Q_ts + 1;
 
   T nTimesteps(timestep);
 
@@ -768,13 +811,13 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
                                                DataWarehouse* new_dw,
                                                const PatchSubset* patches,
                                                const Patch*    patch,
-                                               Qstats Q)
+                                               Qstats& Q)
 {
   double now = d_dataArchiver->getCurrentTime();
 
   if(now < d_startTime || now > d_stopTime){
 
-    proc0cout << " IGNORING------------statistics::computeReynoldsStress" << endl;
+//    proc0cout << " IGNORING------------statistics::computeReynoldsStress" << endl;
     // define the matl subset for this variable
     MaterialSubset* matSubSet = scinew MaterialSubset();
     matSubSet->add( Q.matl );
@@ -788,7 +831,7 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
       delete matSubSet;
     }
   }else {
-    proc0cout << " Computing------------statistics::computeReynoldsStress" << endl;
+//    proc0cout << " Computing------------statistics::computeReynoldsStress" << endl;
     computeReynoldsStress( old_dw, new_dw,patch, Q);
   }
 }
@@ -798,7 +841,7 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
 void statistics::computeReynoldsStress( DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
                                         const Patch* patch,
-                                        Qstats Q)
+                                        Qstats& Q)
 {
   if ( Q.computeRstess == false ){
     return;
@@ -821,7 +864,12 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qsum,      d_velSum_Label,    matl, patch );
   new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
   new_dw->allocateAndPut( uv_vw_wu,  d_velPrimeLabel,   matl, patch );
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep() - d_startTimeTimestepReynoldsStress ;
+  
+  int ts = d_sharedState->getCurrentTopLevelTimeStep();
+  
+  Q.setStart(ts);
+  int Q_ts = Q.getStart();
+  int timestep = ts - Q_ts + 1;
 
   Vector nTimesteps(timestep);
 
@@ -859,7 +907,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
 template <class T>
 void statistics::allocateAndZeroStats( DataWarehouse* new_dw,
                                       const Patch* patch,
-                                      Qstats Q )
+                                      const Qstats& Q )
 {
   int matl = Q.matl;
   allocateAndZero<T>( new_dw, Q.Qvariance_Label,  matl, patch );
@@ -877,7 +925,7 @@ void statistics::allocateAndZeroStats( DataWarehouse* new_dw,
 template <class T>
 void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
                                       const Patch* patch,
-                                      Qstats Q )
+                                      Qstats& Q )
 {
   int matl = Q.matl;
   if ( !Q.isInitialized[lowOrder] ){
@@ -913,7 +961,7 @@ void statistics::allocateAndZero( DataWarehouse* new_dw,
 void statistics::carryForwardSums( DataWarehouse* old_dw,
                                    DataWarehouse* new_dw,
                                    const PatchSubset* patches,
-                                   Qstats Q )
+                                   const Qstats& Q )
 {
     // define the matl subset for this variable
   MaterialSubset* matSubSet = scinew MaterialSubset();

@@ -260,6 +260,19 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
   // Global flags required by mpmice
   ProblemSpecP mpm_ps = root_ps->findBlock("MPM");
   mpm_ps->appendElement("testForNegTemps_mpm", d_testForNegTemps_mpm);  
+  
+  //__________________________________
+  //  output data analysis modules
+  if( d_analysisModules.size() != 0 ){
+
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+
+      am->outputProblemSpec( root_ps );
+    }
+  } 
 }
 
 //______________________________________________________________________

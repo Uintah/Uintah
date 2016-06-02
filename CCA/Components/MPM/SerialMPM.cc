@@ -141,7 +141,8 @@ SerialMPM::~SerialMPM()
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, 
-                             const ProblemSpecP& restart_prob_spec,GridP& grid,
+                             const ProblemSpecP& restart_prob_spec,
+                             GridP& grid,
                              SimulationStateP& sharedState)
 {
   cout_doing<<"Doing MPM::problemSetup\t\t\t\t\t MPM"<<endl;
@@ -292,6 +293,19 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
   ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
     MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->outputProblemSpec(mpm_ph_bc_ps);
+  }
+  
+  //__________________________________
+  //  output data analysis modules. Mpmice or mpmarches handles this
+  if(!flags->d_with_ice && !flags->d_with_arches && d_analysisModules.size() != 0){
+
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+
+      am->outputProblemSpec( root_ps );
+    }
   }
 
 }

@@ -77,6 +77,7 @@ WARNING
                               GridP& grid,
                               SimulationStateP& sharedState);
 
+    virtual void outputProblemSpec(ProblemSpecP& ps){};
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
