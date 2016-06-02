@@ -803,7 +803,7 @@ if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$c
   AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 3.0, 3.5, 5.0, 5.2] )
 fi  
   
-NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
+NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to the host C++ compiler
 #  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
