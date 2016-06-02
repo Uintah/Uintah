@@ -64,9 +64,13 @@ _____________________________________________________________________*/
                               GridP& grid,
                               SimulationStateP& sharedState);
 
+    virtual void outputProblemSpec(ProblemSpecP& ps){};
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
+                                    
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level){};
 
     virtual void restartInitialize();
 

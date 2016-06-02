@@ -652,6 +652,19 @@ void ICE::outputProblemSpec(ProblemSpecP& root_ps)
   if (modelmaker) {
     modelmaker->outputProblemSpec(models_ps);
   }
+
+  //__________________________________
+  //  output data analysis modules
+  if(!d_with_mpm && d_analysisModules.size() != 0){
+
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+
+      am->outputProblemSpec( root );
+    }
+  }  // mpm
 }
 
 /* _____________________________________________________________________
