@@ -192,7 +192,6 @@ if test -z "$sci_pwd"; then
    sci_pwd=pwd
 fi
 
-
 ##  initialize the recognized argument lists
 sci_arg_with_list="--no-create --no-recursion"
 sci_arg_enable_list=""
@@ -796,12 +795,59 @@ if test -z "$NUM_CPUS"; then
 fi
 AC_MSG_RESULT($NUM_CPUS)
 
-##  ----------  determine if this is a 32 or 64 bit machine
-AC_LANG([C])
-
+##############################################################################
+#
 # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
 # its value first, so... (And AC_CHECK_SIZEOF apparently calls AC_PROG_CC...)
+#
 CFLAGS=$CFLAGS
+
+##############################################################################
+#
+# As necessary, remind user that they did not set a specific compiler.
+#
+
+if test "$CC" = ""; then
+
+  AC_PROG_CC(cc gcc)
+
+  # Check to see if cc is actually gcc.
+  if test "$CC" = "cc"; then
+    $CC --version | grep -iq "Free Software Foundation"
+    is_gcc=$?
+    if test "$is_gcc" = 0; then
+       if test -f "`which gcc`"; then
+          msg="Note, default compiler is 'cc', which is actually 'gcc', so we will use 'gcc' for clarity."
+          AC_MSG_WARN($msg)
+          CC=gcc
+       fi
+    fi
+  fi
+
+  AC_MSG_WARN(C compiler not specified with 'CC' environment variable. Using default... $CC located here:)
+  # Let the reader know exactly which CC is being used:
+  which $CC
+fi
+
+if test "$CXX" = ""; then
+
+  case "$host" in 
+     *-darwin*)
+	CXX=c++
+	;;
+     *)
+	# Apparently AC_PROG_CXX will set CXXFLAGS to "-O2 -g" if you don't specify
+        # its value first, so...
+        CXXFLAGS=$CXXFLAGS
+        AC_PROG_CXX(CC g++ c++)
+        ;;
+  esac
+  AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.  Using default... $CXX located here:)
+  which $CXX
+fi
+
+##  ----------  determine if this is a 32 or 64 bit machine
+AC_LANG([C])
 
 AC_CHECK_SIZEOF(void*)
 
@@ -850,51 +896,6 @@ AC_SUBST(LONG_LONG_SWAP)
 sci_defs_files="$sci_defs_files Core/Util/testEndian.h"
 
 ## --------------
-
-AC_LANG([C++])
-
-if test "$CC" = ""; then
-  # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
-  # its value first, so...
-  CFLAGS=$CFLAGS
-
-  AC_PROG_CC(cc gcc)
-
-  case "$host" in 
-     *)
-        # Check to see if cc is actually gcc
-        is_gcc=`$CC --version | grep -i gcc`
-        if test "$is_gcc"; then
-           if test -f "`which gcc`"; then
-              msg="Note, found 'cc' which is actually 'gcc', so"
-              AC_MSG_WARN($msg)
-              AC_MSG_WARN(we will use 'gcc' for clarity.)
-              CC=gcc
-           fi
-        fi
-
-        ;;
-  esac
-  AC_MSG_WARN(C compiler not specified with 'CC' environment variable.\
-              Using default... $CC)
-fi
-
-if test "$CXX" = ""; then
-
-  case "$host" in 
-     *-darwin*)
-	CXX=c++
-	;;
-     *)
-	# Apparently AC_PROG_CXX will set CXXFLAGS to "-O2 -g" if you don't specify
-        # its value first, so...
-        CXXFLAGS=$CXXFLAGS
-        AC_PROG_CXX(CC g++ c++)
-        AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.  Using default... $CXX)
-        ;;
-  esac
-fi
-
 ## -- Begin Test for Bluegene Q --
 
 cat > conftest-bgq.cc <<EOF
@@ -915,7 +916,7 @@ $CXX $CXXFLAGS conftest-bgq.cc -o conftest-bgq
 
 ./conftest-bgq
 
-if test $? == 0; then
+if test $? = 0; then
   AC_MSG_RESULT(yes)
   IS_BGQ=yes
 else
@@ -2608,7 +2609,7 @@ if test "$with_fortran" != "no"; then
       else
         SCI_TRY_LINK(F,2 - Mac fortran library (gfortran) - gfortran,,$_sci_inc,gfortran,$_sci_lib,,,optional)
         if test "$HAVE_F" = "no"; then
-           if test "$_sci_lib" == ""; then
+           if test "$_sci_lib" = ""; then
               # At least on Jeremy's new desktop Mac, the gcc compiler does not (apparently) look in /usr/local/lib by default
               # any more.  So if the user has not specified a directory, and the above gfortran test fails, then set sci_lib
               # to /usr/local/lib, and test again.
