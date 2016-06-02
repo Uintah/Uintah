@@ -44,6 +44,7 @@ SRCS += \
         $(SRCDIR)/particleExtract.cc         \
         $(SRCDIR)/planeExtract.cc            \
         $(SRCDIR)/radiometer.cc              \
+        $(SRCDIR)/statistics.cc              \
         $(SRCDIR)/vorticity.cc
 
 
