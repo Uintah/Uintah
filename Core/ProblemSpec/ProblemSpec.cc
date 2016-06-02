@@ -139,6 +139,30 @@ ProblemSpec::findBlockWithAttribute(const string& name,
 }
 
 //______________________________________________________________________
+//  Finds:  <Block attribute = "value">
+ProblemSpecP 
+ProblemSpec::findBlockWithAttributeValue(const string& name,
+                                         const string& attribute,
+                                         const string& value) const 
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlockWithAttributeValue(string,string)");
+  
+  for (ProblemSpecP ps = this->findBlock(name); ps != 0; ps = ps->findNextBlock(name) ) {    
+    
+    string attr="";
+    ps->getAttribute(attribute,attr);
+    
+    if (attr == value) {
+      return ps;
+    } else {
+      continue;
+    }
+  }
+
+  return 0;
+}
+
+//______________________________________________________________________
 //
 ProblemSpecP 
 ProblemSpec::findBlockWithOutAttribute(const string& name) const
