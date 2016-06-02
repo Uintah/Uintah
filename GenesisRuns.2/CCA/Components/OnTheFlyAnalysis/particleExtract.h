@@ -79,7 +79,8 @@ WARNING
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP& sharedState);
-                              
+
+    virtual void outputProblemSpec(ProblemSpecP& ps){};                              
     
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);

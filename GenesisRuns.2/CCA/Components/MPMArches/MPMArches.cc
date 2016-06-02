@@ -238,6 +238,19 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
 void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
 {
   d_mpm->outputProblemSpec(root_ps);
+  
+  //__________________________________
+  //  output data analysis modules
+  if( d_analysisModules.size() != 0 ){
+
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+
+      am->outputProblemSpec( root_ps );
+    }
+  }
 }
 
 void

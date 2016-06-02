@@ -170,11 +170,12 @@
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label="scalar-f"/>
       <save label="scalar-f_dbgVector"/>
-
+      <save label="mean_scalar-f"/>
       <save label="variance_scalar-f"/>
       <save label="skewness_scalar-f"/>
       <save label="kurtosis_scalar-f"/>
    
+      <save label="mean_scalar-f_dbgVector"/>
       <save label="variance_scalar-f_dbgVector"/> 
       <save label="skewness_scalar-f_dbgVector"/>
       <save label="kurtosis_scalar-f_dbgVector"/>

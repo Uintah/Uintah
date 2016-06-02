@@ -75,7 +75,8 @@ WARNING
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP& sharedState);
-
+                              
+    virtual void outputProblemSpec( ProblemSpecP& ps);
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
@@ -120,14 +121,37 @@ WARNING
 
       const Uintah::TypeDescription* subtype;
 
-      void print(){
-        std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << "\n";
-      };
-    };
+      // Code for keeping track of which timestep
+      int timestep;
+      bool isSet;
+      
+      void initializeTimestep(){
+        timestep = 0;
+        isSet    = false;
+      }
+      
+      int getStart(){
+        return timestep;
+      }
+      
+      // only set the timestep once
+      void setStart( const int me) {
+        
+        if(isSet == false){
+          timestep = me;
+          isSet   = true;
+        }
+        //std::cout << "  setStart: " << isSet << " timestep: " << timestep << " " << name << std::endl;
+      }
 
+      void print(){
+        std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
+      };
+      
+    };
+    
     //__________________________________
     // For Reynolds Shear Stress computations
-    int  d_startTimeTimestepReynoldsStress;
     bool d_isReynoldsStressInitialized; // have the sum label been initialized for the RS terms
     bool d_computeReynoldsStress;       // on/off switch
     int  d_RS_matl;                     // material index used for Reynolds Shear Stress variables
@@ -164,23 +188,23 @@ WARNING
                               DataWarehouse* new_dw,
                               const PatchSubset* patches,
                               const Patch*   patch,
-                              Qstats Q);
+                              Qstats& Q);
     template <class T>
     void computeStats( DataWarehouse* old_dw,
                        DataWarehouse* new_dw,
                        const Patch*   patch,
-                       Qstats Q);
+                       Qstats& Q);
 
     void computeReynoldsStressWrapper( DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
                                        const PatchSubset* patches,
                                        const Patch*    patch,
-                                       Qstats Q);
+                                       Qstats& Q);
 
     void computeReynoldsStress( DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
                                 const Patch*    patch,
-                                Qstats Q);
+                                Qstats& Q);
 
     template <class T>
     void allocateAndZero( DataWarehouse* new_dw,
@@ -190,24 +214,24 @@ WARNING
     template <class T>
     void allocateAndZeroSums( DataWarehouse* new_dw,
                               const Patch*   patch,
-                              Qstats Q);
+                              Qstats& Q);
 
     template <class T>
     void allocateAndZeroStats( DataWarehouse* new_dw,
                                const Patch*   patch,
-                               Qstats Q);
+                               const Qstats& Q);
 
     void carryForwardSums( DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
                            const PatchSubset* patches,
-                           Qstats Q );
+                           const Qstats& Q );
 
     //__________________________________
     // global constants
     double    d_startTime;
     double    d_stopTime;
-    int       d_startTimeTimestep;   // timestep when stats are turn on.
-    IntVector d_monitorCell;   // Cell to output
+//    int       d_startTimeTimestep;   // timestep when stats are turn on.
+    IntVector d_monitorCell;         // Cell to output
 
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;

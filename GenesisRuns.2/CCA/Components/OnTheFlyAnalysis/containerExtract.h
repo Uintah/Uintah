@@ -69,12 +69,13 @@ namespace Uintah {
                                 const ProblemSpecP& restart_prob_spec,
                                 GridP& grid,
                                 SimulationStateP& sharedState);
-          
+                                
+      virtual void outputProblemSpec(ProblemSpecP& ps){};          
 
       virtual void scheduleInitialize(SchedulerP& sched,
                                       const LevelP& level);
                                       
-    virtual void scheduleRestartInitialize(SchedulerP& sched,
+      virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level){};
 
       virtual void restartInitialize();
