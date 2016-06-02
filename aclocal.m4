@@ -923,8 +923,8 @@ _sci_libs=''
 AC_DEFUN(SCI_CHECK_VERSION,
   [
     ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="$3"
     _CUR_1_=""
@@ -932,7 +932,7 @@ AC_DEFUN(SCI_CHECK_VERSION,
 
     eval _NAME_=`basename $1`
 
-    AC_MSG_CHECKING(for $_NAME_ version $3)
+    AC_MSG_CHECKING(for $_NAME_ with minimum version of $3)
 
     if test "$4"; then
       _SCI_CORRECT_='$4'
@@ -973,10 +973,10 @@ AC_DEFUN(SCI_CHECK_VERSION,
     done
 
     if test "$_SCI_BIGGER_" = "yes"; then
-      AC_MSG_RESULT(yes ($_SCI_REPORT_))
+      AC_MSG_RESULT(yes (found version: $_SCI_REPORT_))
       eval $_SCI_CORRECT_
     else
-      AC_MSG_RESULT(no ($_SCI_REPORT_))
+      AC_MSG_RESULT(no (found version: $_SCI_REPORT_))
       eval $_SCI_NOTCORRECT_
     fi
   ])
@@ -1103,8 +1103,8 @@ AC_DEFUN(SCI_REMOVE_MINUS_L,
 AC_DEFUN(SCI_CHECK_VAR_VERSION,
   [
     ##  SCI_CHECK_VAR_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="$3"
     _CUR_1_=""
@@ -1171,8 +1171,8 @@ AC_DEFUN(SCI_CHECK_OS_VERSION,
   [
     ##  SCI_CHECK_OS_VERSION
 
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_CORRECT_='echo $ECHO_N "$ECHO_C"'
+    _SCI_NOTCORRECT_='echo $ECHO_N "$ECHO_C"'
     _SCI_VER_1_="0"
     _SCI_VER_2_="$1"
     _CUR_1_=""
