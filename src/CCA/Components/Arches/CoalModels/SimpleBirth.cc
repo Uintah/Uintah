@@ -196,51 +196,6 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
 
 }
 
-struct computeBirth{
-       computeBirth(double _vol,
-                    double _dt,
-                    double _small_weight,
-                    double _a_scale,
-                    bool _is_weight,
-                    constCCVariable<double> &_w,
-                    constCCVariable<double> &_w_rhs,
-                    constCCVariable<double> &_a,
-                    constCCVariable<double> &_vol_fraction,
-                    CCVariable<double> &_model) :
-                    vol(_vol),
-                    dt(_dt),
-                    small_weight(_small_weight),
-                    a_scale(_a_scale),
-                    is_weight(_is_weight),
-                    w(_w),
-                    w_rhs(_w_rhs),
-                    a(_a),
-                    vol_fraction(_vol_fraction),
-                    model(_model) {  }
-
-  void operator()(int i , int j, int k ) const {
-
-    if ( vol_fraction(i,j,k) > 0. ){
-
-        model(i,j,k) = std::max(( small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol ,0.0);
-        model(i,j,k)*= vol_fraction(i,j,k);
-        model(i,j,k)*= is_weight ? 1.0 : a(i,j,k)/a_scale;
-
-    }
-  }
-
-  private:
-      double vol;
-      double dt;
-      double small_weight;
-      double a_scale;
-      double is_weight;
-      constCCVariable<double> &w;
-      constCCVariable<double> &w_rhs;
-      constCCVariable<double> &a;
-      constCCVariable<double> &vol_fraction;
-      CCVariable<double> &model;
-};
 
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term
@@ -297,12 +252,10 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
     }
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-  computeBirth doBirth(vol, dt, _small_weight, _a_scale, _is_weight,
-                       w,
-                       w_rhs,
-                       a,
-                       vol_fraction,
-                       model);
-      Uintah::parallel_for( range, doBirth );
+  Uintah::parallel_for(range,  [&](int i, int j, int k) {
+                               model(i,j,k) = std::max(( _small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol ,0.0);
+                               model(i,j,k)*= vol_fraction(i,j,k);
+                               model(i,j,k)*= _is_weight ? 1.0 : a(i,j,k)/_a_scale;
+                               });
   }
 }
