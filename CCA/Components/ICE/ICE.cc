@@ -79,7 +79,7 @@
 
 #define SET_CFI_BC 0
 
-#define SCALAR_F_SINEWAVE
+//#define SCALAR_F_SINEWAVE
 
 using namespace std;
 using namespace Uintah;
