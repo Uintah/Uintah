@@ -491,7 +491,7 @@ private:
   int                d_device_id;
   bool               d_debug;
   size_t             objectSizeInBytes;
-  unsigned int       maxdVarDBItems;            //How many items we can add to d_varDB before we run out of capacity.
+  unsigned int       d_maxdVarDBItems;          //How many items we can add to d_varDB before we run out of capacity.
   void *             placementNewBuffer;        //For task DWs, we want to seraliaze and size this object as small as possible.
                                                 //So we create a buffer, and keep track of the start of that buffer here.
 
