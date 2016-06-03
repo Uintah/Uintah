@@ -1066,6 +1066,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
   double rho_orig = matl->getInitialDensity();    
   double flow     = 0.0;
   double K        = 0.0;
+
+  Ghost::GhostType  gan = Ghost::AroundNodes;
   
   // Normal patch loop
   for(int pp=0;pp<patches->size();pp++){
@@ -1084,7 +1086,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
     // Get particle info and patch info
     int dwi              = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+//    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                     gan, 0, lb->pXLabel);
     Vector dx            = patch->dCell();
     double time = d_sharedState->getElapsedTime();
 
@@ -1165,7 +1169,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      
+      cout << "idx = " << idx << endl;
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
@@ -1173,6 +1177,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       Jinc    = pDefGradInc.Determinant();
       defGrad = pDefGrad_new[idx];
 
+      cout << "idx1 = " << idx << endl;
       // 1) Get the volumetric part of the deformation
       // 2) Compute the deformed volume and new density
       J               = defGrad.Determinant();
@@ -1200,7 +1205,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
       // Compute the trial elastic part of the volume preserving 
       // part of the left Cauchy-Green deformation tensor
+      cout << "idx1a = " << idx << endl;
       bElBarTrial = fBar*bElBar[idx]*fBar.Transpose();
+      cout << "idx1b = " << idx << endl;
       if(!d_usePlasticity){
         double cubeRootJ      = cbrt(J);
         double Jtothetwothirds= cubeRootJ*cubeRootJ;
@@ -1209,6 +1216,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
       IEl   = onethird*bElBarTrial.Trace();
       muBar = IEl*shear;
+
+      cout << "idx2 = " << idx << endl;
       
       // tauDevTrial is equal to the shear modulus times dev(bElBar)
       // Compute ||tauDevTrial||
@@ -1247,6 +1256,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;
 
+      cout << "idx3 = " << idx << endl;
       if( d_useDamage){
         pDamage_new[idx] = pDamage[idx];
         // Modify the stress if particle has failed/damaged
@@ -2851,6 +2861,57 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[23][21] = Kgeo[21][23];
   Kgeo[23][22] = Kgeo[22][23];
   Kgeo[23][23] = t90*Bnl[2][23];
+}
+
+void UCNH::addSplitParticlesComputesAndRequires(Task* task,
+                                                const MPMMaterial* matl,
+                                                const PatchSet* patches)
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  task->modifies(bElBarLabel_preReloc,      matlset);
+}
+
+void UCNH::splitCMSpecificParticleData(const Patch* patch,
+                                       const int dwi,
+                                       const int fourOrEight,
+                                       ParticleVariable<int> &prefOld,
+                                       ParticleVariable<int> &prefNew,
+                                       const unsigned int oldNumPar,
+                                       const int numNewPartNeeded,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
+{
+  // THIS IS NOT DONE, MORE WORK NEEDED FOR INELASTIC CASES!!!
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+  ParticleVariable<Matrix3> bElBar;
+  ParticleVariable<Matrix3> bElBarTmp;
+  new_dw->getModifiable(    bElBar,    bElBarLabel_preReloc,     pset);
+  new_dw->allocateTemporary(bElBarTmp,                           pset);
+
+  // copy data from old variables for particle IDs and the position vector
+  for(unsigned int pp=0; pp<oldNumPar; ++pp ){
+    bElBarTmp[pp]     = bElBar[pp];
+  }
+
+  int numRefPar=0;
+  for(unsigned int idx=0; idx<oldNumPar; ++idx ){
+    if(prefNew[idx]!=prefOld[idx]){  // do refinement!
+      for(int i = 0;i<fourOrEight;i++){
+        int new_index;
+//        if(i==0){
+//          new_index=idx;
+//        } else {
+          new_index=oldNumPar+(fourOrEight-1)*numRefPar+i;
+//        }
+        bElBarTmp[new_index]     = bElBar[idx];
+      }
+      numRefPar++;
+    }
+  }
+
+  new_dw->put(bElBarTmp,          bElBarLabel_preReloc,            true);
 }
 
 
