@@ -949,7 +949,7 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
      gpu_stats << UnifiedScheduler::myRankThread()
          << " GPUDataWarehouse::copyItemIntoTaskDW( " << label << " ) - "
          << " Put into d_varDB at index " << i
-         << " of max index " << maxdVarDBItems - 1
+         << " of max index " << d_maxdVarDBItems - 1
          << " label " << label
          << " patch " << d_varDB[i].domainID
          << " matl " << matlIndx
@@ -1707,23 +1707,23 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
     //only one thread will ever match this.
     //And nobody on the device side should ever access "staging" variables.
     if (strmatch == 0) {
-    	if (patchID ==-99999999                            //Only getLevel calls should hit this
-    	&& d_varDB[i].matlIndx == matlIndx
-		&& d_varDB[i].levelIndx == levelIndx
-		&& d_varDB[i].varItem.staging == false             /* we don't support staging/foregin vars for get() */
-		&& d_varDB[i].ghostItem.dest_varDB_index == -1) {  /*don't let ghost cell copy data mix in with normal variables for get() */
-    		index = i; //we found it.
-    	}
-    	else if(d_varDB[i].domainID == patchID
+        if (patchID ==-99999999                            //Only getLevel calls should hit this
+        && d_varDB[i].matlIndx == matlIndx
+                && d_varDB[i].levelIndx == levelIndx
+                && d_varDB[i].varItem.staging == false             /* we don't support staging/foregin vars for get() */
+                && d_varDB[i].ghostItem.dest_varDB_index == -1) {  /*don't let ghost cell copy data mix in with normal variables for get() */
+                index = i; //we found it.
+        }
+        else if(d_varDB[i].domainID == patchID
         && d_varDB[i].matlIndx == matlIndx
         && d_varDB[i].levelIndx == levelIndx
         && d_varDB[i].varItem.staging == false
         && d_varDB[i].ghostItem.dest_varDB_index == -1) {
-    		index = i; //we found it.
+                index = i; //we found it.
       //printf("I'm thread %d In DW at %p, We found it for var %s patch %d matl %d level %d.  d_varDB has it at index %d var %s patch %d at its item address %p with var pointer %p\n",
       //              threadID, this, label, patchID, matlIndx, levelIndx, index, &(d_varDB[index].label[0]), d_varDB[index].domainID, &d_varDB[index], d_varDB[index].var_ptr);
 
-    	}
+        }
     }
     i = i + numThreads; //Since every thread is involved in searching for the string, have this thread loop to the next possible item to check for.
   }
@@ -1871,7 +1871,7 @@ GPUDataWarehouse::init(int id, std::string internalName)
   //this->_internalName = new std::string(internalName);
   strncpy(_internalName, internalName.c_str(), sizeof(_internalName));
   objectSizeInBytes = 0;
-  maxdVarDBItems = 0;
+  d_maxdVarDBItems = 0;
   //this->placementNewBuffer = placementNewBuffer;
   allocateLock = new Uintah::CrowdMonitor("allocate lock");
   varLock = new Uintah::CrowdMonitor("var lock");
@@ -1909,14 +1909,14 @@ GPUDataWarehouse::cleanup()
 //______________________________________________________________________
 //
 __host__ void
-GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int maxdVarDBItems)
+GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDBItems)
 {
 #ifdef __CUDA_ARCH__
   printf("GPUDataWarehouse::init_device() should only be called by the framework\n");
 #else
 
     this->objectSizeInBytes = objectSizeInBytes;
-    this->maxdVarDBItems = maxdVarDBItems;
+    this->d_maxdVarDBItems = d_maxdVarDBItems;
     OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
     void* temp = NULL;
     //CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
@@ -2399,10 +2399,14 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
   if (numGhostCellCopiesNeeded > 0) {
     //call a kernel which gets the copy process started.
     OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
+    
+#if 0               // compiler warnings
     const int BLOCKSIZE = 1;
     int xblocks = 32;
     int yblocks = 1;
     int zblocks = 1;
+#endif
+
     dim3 dimBlock(32, 32, 1);
     dim3 dimGrid(1, 1, 1);  //Give each ghost copying kernel 32 * 32 = 1024 threads to copy
     //printf("Launching copyGpuGhostCellsToGpuVarsKernel\n");
@@ -2506,9 +2510,9 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   //Add information describing a ghost cell that needs to be copied internally from
   //one chunk of data to the destination.  This covers a GPU -> same GPU copy scenario.
   varLock->writeLock();
-  int i = d_numVarDBItems;
-  if (i > maxdVarDBItems) {
-    printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Exceeded maximum d_varDB entries.  Index is %d and max items is %d\n", i, maxdVarDBItems);
+  unsigned int i = d_numVarDBItems;
+  if (i > d_maxdVarDBItems) {
+    printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Exceeded maximum d_varDB entries.  Index is %d and max items is %d\n", label, i, d_maxdVarDBItems);
     varLock->writeUnlock();
     exit(-1);
   }
@@ -2543,8 +2547,9 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
       index = staging_it->second.varDB_index;
 
     } else {
+      int nStageVars = varPointers->operator[](lpml_source).stagingVars.size();
       printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Number of staging vars for this var: %d, No staging variable found label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d) on DW at %p.\n",
-                    label, varPointers->operator[](lpml_source).stagingVars.size(), label, sourcePatchID, matlIndx, levelIndx,
+                    label, nStageVars, label, sourcePatchID, matlIndx, levelIndx,
                     sv.device_offset.x, sv.device_offset.y, sv.device_offset.z,
                     sv.device_size.x, sv.device_size.y, sv.device_size.z,
                     this);
@@ -2578,7 +2583,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
    {
      gpu_stats << UnifiedScheduler::myRankThread()
          << " GPUDataWarehouse::putGhostCell() - "
-         << " Placed into d_varDB at index " << i << " of max index " << maxdVarDBItems - 1
+         << " Placed into d_varDB at index " << i << " of max index " << d_maxdVarDBItems - 1
          << " from patch " << sourcePatchID << " staging " << sourceStaging << " to patch " << destPatchID << " staging " << destStaging
          << " has shared coordinates (" << sharedLowCoordinates.x << ", " << sharedLowCoordinates.y << ", " << sharedLowCoordinates.z << "),"
          << " (" << sharedHighCoordinates.x << ", " << sharedHighCoordinates.y << ", " << sharedHighCoordinates.z << "), "
