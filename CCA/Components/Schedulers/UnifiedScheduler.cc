@@ -2326,6 +2326,8 @@ void UnifiedScheduler::gpuInitialize(bool reset) {
 
 }
 */
+//______________________________________________________________________
+//
 
 void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
 
@@ -2442,7 +2444,6 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
 
       }
       const IntVector host_size = high - low;
-      const TypeDescription::Type datatype = curDependency->var->typeDescription()->getSubType()->getType();
       const size_t elementDataSize =
           OnDemandDataWarehouse::getTypeDescriptionSize(curDependency->var->typeDescription()->getSubType()->getType());
 
@@ -3140,16 +3141,16 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
               dynamic_cast<GridVariableBase*>(curDependency->var->typeDescription()->createInstance());
 
           //Get variable size. Scratch computes means we need to factor that in when computing the size.
-          Patch::VariableBasis basis = Patch::translateTypeToBasis(
-              curDependency->var->typeDescription()->getType(), false);
           IntVector lowIndex, highIndex;
-          IntVector lowOffset, highOffset;
+          
           if (uses_SHRT_MAX) {
             level->computeVariableExtents(type, lowIndex, highIndex);
           } else {
             Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
             patch->computeVariableExtents(basis, curDependency->var->getBoundaryLayer(), curDependency->gtype, curDependency->numGhostCells, lowIndex, highIndex);
           }
+          
+          //IntVector lowOffset, highOffset;
           //Patch::getGhostOffsets(
           //    gridVar->virtualGetTypeDescription()->getType(),
           //    curDependency->gtype, curDependency->numGhostCells, lowOffset,
@@ -3213,6 +3214,9 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
   prepareGhostCellsIntoTaskDW(dtask);
 
 }
+
+//______________________________________________________________________
+//
 
 void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
 
@@ -3600,7 +3604,8 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
     }
   //}
 }
-
+//______________________________________________________________________
+//
 
 void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask) {
   //Copy all task variables metadata into the Task GPU DW.
@@ -3686,6 +3691,8 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask) {
   }
 
 }
+//______________________________________________________________________
+//
 
 void UnifiedScheduler::prepareGhostCellsIntoTaskDW(DetailedTask* dtask) {
 
@@ -4035,6 +4042,9 @@ bool UnifiedScheduler::allGPUVarsProcessingReady(DetailedTask* dtask) {
   return true;
 }
 
+//______________________________________________________________________
+//
+
 void UnifiedScheduler::markDeviceRequiresDataAsValid(DetailedTask* dtask) {
 
   //This marks any Requires variable as valid that wasn't in the GPU but is now in the GPU.
@@ -4092,6 +4102,8 @@ void UnifiedScheduler::markDeviceRequiresDataAsValid(DetailedTask* dtask) {
   }
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::markDeviceGhostsAsValid(DetailedTask* dtask) {
   //Go through requires vars and mark them as valid on the device.  They are either already
   //valid because they were there previously.  Or they just got copied in and the stream completed.
@@ -4110,7 +4122,8 @@ void UnifiedScheduler::markDeviceGhostsAsValid(DetailedTask* dtask) {
   }
 }
 
-
+//______________________________________________________________________
+//
 void UnifiedScheduler::markDeviceComputesDataAsValid(DetailedTask* dtask) {
   //Go through device computes vars and mark them as valid on the device.
 
@@ -4144,6 +4157,8 @@ void UnifiedScheduler::markDeviceComputesDataAsValid(DetailedTask* dtask) {
   }
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::markHostRequiresDataAsValid(DetailedTask* dtask) {
   //Data has been copied from the device to the host.  The stream has completed.
   //Go through all variables that this CPU task depends on and mark them as valid on the CPU
@@ -4187,6 +4202,8 @@ void UnifiedScheduler::markHostRequiresDataAsValid(DetailedTask* dtask) {
   }
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::initiateD2HForHugeGhostCells(DetailedTask* dtask) {
   //RMCRT problems use 32768 ghost cells as a way to force an "all to all" transmission of ghost cells
   //It is much easier to manage these ghost cells in host memory instead of GPU memory.  So for such
@@ -4209,7 +4226,7 @@ void UnifiedScheduler::initiateD2HForHugeGhostCells(DetailedTask* dtask) {
       void* host_ptr   = NULL;    // host base pointer to raw data
       void* device_ptr = NULL;    // device base pointer to raw data
       size_t host_bytes = 0;      // raw byte count to copy to the device
-      size_t device_bytes = 0;    // raw byte count to copy to the host
+
       IntVector host_low, host_high, host_offset, host_size, host_strides;
 
       int numPatches = patches->size();
@@ -4402,6 +4419,12 @@ void UnifiedScheduler::initiateD2HForHugeGhostCells(DetailedTask* dtask) {
                   }
                   break;
                 }
+                default:
+                  ostringstream warn;
+                  warn << "  ERROR: UnifiedScheduler::initiateD2HForHugeGhostCells (" << dtask->getName() << ") variable: " 
+                       << comp->var->getName() << " not implemented " << endl;
+                  SCI_THROW(InternalError( warn.str() , __FILE__, __LINE__));
+                  
               }
             }
           }
@@ -4410,6 +4433,9 @@ void UnifiedScheduler::initiateD2HForHugeGhostCells(DetailedTask* dtask) {
     }
   }
 }
+
+//______________________________________________________________________
+//
 void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
   //Request that all contiguous device arrays from the device be sent to their contiguous host array counterparts.
   //We only copy back the data needed for an upcoming task.  If data isn't needed, it can stay on the device and
@@ -5274,6 +5300,8 @@ void UnifiedScheduler::processD2HCopies(DetailedTask* dtask) {
 //______________________________________________________________________
 //
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::freeCudaStreamsFromPool() {
   cudaError_t retVal;
 
@@ -5370,6 +5398,9 @@ UnifiedScheduler::getCudaStreamFromPool(int device) {
   return stream;
 }
 
+//______________________________________________________________________
+//
+
 void UnifiedScheduler::reclaimCudaStreamsIntoPool(DetailedTask* dtask) {
 
 
@@ -5425,6 +5456,9 @@ void UnifiedScheduler::reclaimCudaStreamsIntoPool(DetailedTask* dtask) {
 
  return retVal;
  } */
+
+//______________________________________________________________________
+//
 
 void UnifiedScheduler::createTaskGpuDWs(DetailedTask * dtask) {
   //Create GPU datawarehouses for this specific task only.  They will get copied into the GPU.
@@ -5509,6 +5543,9 @@ void UnifiedScheduler::createTaskGpuDWs(DetailedTask * dtask) {
   }
 }
 
+//______________________________________________________________________
+//
+
 void UnifiedScheduler::assignDevicesAndStreams(DetailedTask* dtask) {
 
   // Figure out which device this patch was assigned to.
@@ -5547,6 +5584,8 @@ void UnifiedScheduler::assignDevicesAndStreams(DetailedTask* dtask) {
   }
 }
 
+//______________________________________________________________________
+//
 
 void UnifiedScheduler::assignDevicesAndStreamsFromGhostVars(DetailedTask* dtask) {
   //Go through the ghostVars collection and look at the patch where all ghost cells are going.
@@ -5560,6 +5599,8 @@ void UnifiedScheduler::assignDevicesAndStreamsFromGhostVars(DetailedTask* dtask)
   }
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::findIntAndExtGpuDependencies(DetailedTask* dtask, int iteration, int t_id) {
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::findIntAndExtGpuDependencies");
 
@@ -5774,6 +5815,8 @@ void UnifiedScheduler::performInternalGhostCellCopies(DetailedTask* dtask) {
   }
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::copyAllGpuToGpuDependences(DetailedTask* dtask) {
   //Iterate through the ghostVars, find all whose destination is another GPU same MPI rank
   //Get the destination device, the size
