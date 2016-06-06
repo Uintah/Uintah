@@ -541,12 +541,23 @@ void statistics::outputProblemSpec( ProblemSpecP& root_ps)
 
   ProblemSpecP m_ps = da_ps->appendChild("Module");
   m_ps->setAttribute("name","statistics");
+  
+
+  string comment = "___________________________________________________\n"
+                   "\t Note: -9 indicates statistics are not being collected.\n"
+                   "\t You should never need to touch these values.\n"
+                   "\t_________________________________________________";
+  m_ps->addComment( comment ) ;
+  
+  
   ProblemSpecP st_ps = m_ps->appendChild("StartTimestep");
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
+    Qstats& Q = d_Qstats[i];
     const string name = Q.name;
-    st_ps->appendElement( name.c_str(), Q.getStart() );
+    int timestep      = Q.getStart();
+    st_ps->appendElement( name.c_str(), timestep );
+   // cout << " outputProbSpec: " << name.c_str() << " start: " << timestep << endl;
   }
 }
 
@@ -562,7 +573,7 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
+    Qstats& Q = d_Qstats[i];
 
     // define the matl subset for this variable
     MaterialSubset* matSubSet = scinew MaterialSubset();
