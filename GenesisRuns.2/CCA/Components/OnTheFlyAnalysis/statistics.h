@@ -126,8 +126,9 @@ WARNING
       bool isSet;
       
       void initializeTimestep(){
-        timestep = 0;
+        timestep = -9;
         isSet    = false;
+//        std::cout << "  initializeTimestep: " << isSet << " timestep: " << timestep << " " << name << std::endl;
       }
       
       int getStart(){
@@ -137,11 +138,11 @@ WARNING
       // only set the timestep once
       void setStart( const int me) {
         
-        if(isSet == false){
+        if(isSet == false && me != -9){
           timestep = me;
           isSet   = true;
         }
-        //std::cout << "  setStart: " << isSet << " timestep: " << timestep << " " << name << std::endl;
+//        std::cout << "  setStart: " << isSet << " timestep: " << timestep << " me: " << me << " " << name << std::endl;
       }
 
       void print(){
