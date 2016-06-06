@@ -5522,6 +5522,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
 /*`==========TESTING==========*/
 #ifdef SCALAR_F_SINEWAVE
               double A     = 10;
+              double omega = 1000;       // for the MPMICE test
               double omega = 100;
               double time = d_sharedState->getElapsedTime();
               double amp = A * sin(omega * time);

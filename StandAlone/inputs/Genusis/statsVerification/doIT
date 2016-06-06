@@ -35,21 +35,22 @@ endif
 
 
 set uda = "masterUda"
-#set uda = "advectScalar.uda"
+#set uda = "advectScalar.uda.002"
+set mat = 1
 
-timeextract -v scalar-f           -i 10 10 0 -uda $uda > & out-f
-timeextract -v mean_scalar-f      -i 10 10 0 -uda $uda > & out-mean
-timeextract -v variance_scalar-f  -i 10 10 0 -uda $uda > & out-variance
-timeextract -v skewness_scalar-f  -i 10 10 0 -uda $uda > & out-skewness
-timeextract -v kurtosis_scalar-f  -i 10 10 0 -uda $uda > & out-kurtosis
+timeextract -m $mat -v scalar-f           -i 10 10 0 -uda $uda > & out-f
+timeextract -m $mat -v mean_scalar-f      -i 10 10 0 -uda $uda > & out-mean
+timeextract -m $mat -v variance_scalar-f  -i 10 10 0 -uda $uda > & out-variance
+timeextract -m $mat -v skewness_scalar-f  -i 10 10 0 -uda $uda > & out-skewness
+timeextract -m $mat -v kurtosis_scalar-f  -i 10 10 0 -uda $uda > & out-kurtosis
 
 #set uda = "masterUda_23"
-timeextract -v scalar-f_dbgVector           -i 10 10 0 -uda $uda > & out-V
-timeextract -v mean_scalar-f_dbgVector      -i 10 10 0 -uda $uda > & out-meanV
-timeextract -v variance_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-varianceV
-timeextract -v skewness_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-skewnessV
-timeextract -v kurtosis_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-kurtosisV
-timeextract -v uv_vw_wu_prime               -i 10 10 0 -uda $uda > & out-uv_prime
+timeextract -m $mat -v scalar-f_dbgVector           -i 10 10 0 -uda $uda > & out-V
+timeextract -m $mat -v mean_scalar-f_dbgVector      -i 10 10 0 -uda $uda > & out-meanV
+timeextract -m $mat -v variance_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-varianceV
+timeextract -m $mat -v skewness_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-skewnessV
+timeextract -m $mat -v kurtosis_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-kurtosisV
+timeextract -m $mat -v uv_vw_wu_prime               -i 10 10 0 -uda $uda > & out-uv_prime
 
 
 sed -i '1,3d' out-f
