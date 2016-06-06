@@ -130,7 +130,7 @@ Vector::normal() const
 
 ostream& operator<<( ostream& os, const Vector& v )
 {
-  os << '[' << v.x() << ' ' << v.y() << ' ' << v.z() << ']';
+  os << ' ' << v.x() << ' ' << v.y() << ' ' << v.z() << ' ';
   return os;
 }
 
