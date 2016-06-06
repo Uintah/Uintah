@@ -53,7 +53,6 @@
 
 #include <vector>
 #include <string>
-using namespace std;
 
 namespace Uintah {
 
@@ -121,8 +120,8 @@ namespace Uintah {
     double d_time_point2;
     int d_diff_curve_index;
 
-    vector<double> d_time_points;
-    vector<FluxDirection> d_fd_directions;
+    std::vector<double> d_time_points;
+    std::vector<FluxDirection> d_fd_directions;
 
     NonLinearDiff1(const NonLinearDiff1&);
     NonLinearDiff1& operator=(const NonLinearDiff1&);
