@@ -611,6 +611,12 @@ main( int argc, char *argv[], char *env[] )
     try {
       ups = ProblemSpecReader().readInputFile( filename, validateUps );
     }
+    catch( ProblemSetupException& err ) {
+      proc0cout << "\nERROR caught while parsing UPS file: " << filename << "\nDetails follow.\n"
+                << err.message() << "\n";
+      Uintah::Parallel::finalizeManager();
+      Thread::exitAll( 0 );
+    }
     catch( ... ) {
       // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
       // instead of a UPS file.
