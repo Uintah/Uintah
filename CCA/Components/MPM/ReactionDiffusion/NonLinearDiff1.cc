@@ -35,14 +35,14 @@ using namespace Uintah;
 
 #define USE_PARTICLE_VALUES
 
-NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type):
+NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, std::string diff_type):
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 
   ProblemSpecP diff_curve = 0;
   ProblemSpecP time_point = 0;
 
   double time;
-  string flux_direction;
+  std::string flux_direction;
 
   d_use_pressure = false;
   d_use_diff_curve = false;
@@ -60,8 +60,8 @@ NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
   diff_curve = ps->findBlock("diff_curve");
   if(diff_curve){
     d_use_diff_curve = true;
-    cout << "!!!!!!!!!!!!!!!!!!!using diff curve!!!!!!!!!!!!!!!" << endl;
-    cout << "This is experimental: diff_curve code still needs error checking" << endl;
+    std::cout << "!!!!!!!!!!!!!!!!!!!using diff curve!!!!!!!!!!!!!!!" << std::endl;
+    std::cout << "This is experimental: diff_curve code still needs error checking" << std::endl;
     for (time_point = diff_curve->findBlock("time_point");
          time_point != 0; time_point = time_point->findNextBlock("time_point")) {
 
@@ -77,7 +77,7 @@ NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
       }
     }
     for(unsigned int i =0; i < d_time_points.size(); i++){
-      cout << "Time: " << d_time_points[i] << " Direction: " << d_fd_directions[i] << endl;
+      std::cout << "Time: " << d_time_points[i] << " Direction: " << d_fd_directions[i] << std::endl;
     }
     d_time_point1 = d_time_points[0];
     if(d_time_points.size() >= 1){
@@ -175,8 +175,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
-  vector<IntVector> ni(interpolator->size());
-  vector<double> S(interpolator->size());
+  std::vector<IntVector> ni(interpolator->size());
+  std::vector<double> S(interpolator->size());
 
   double current_time1 = d_sharedState->getElapsedTime();
 
@@ -305,7 +305,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
     pDiffusivity[idx] = D;
     pPressure1[idx] = pressure;
     pConcInterp[idx] = concentration;
-    timestep = min(timestep, computeStableTimeStep(D, dx));
+    timestep = std::min(timestep, computeStableTimeStep(D, dx));
   } //End of Particle Loop
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
