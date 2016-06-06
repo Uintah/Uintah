@@ -14,13 +14,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.01       </maxTime>
+       <maxTime>            0.5        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <timestep_multiplier>0.8         </timestep_multiplier>
-       <max_Timesteps>       20        </max_Timesteps>
+       <max_Timesteps>    100000         </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -44,6 +44,9 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -59,6 +62,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -78,6 +84,9 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -93,6 +102,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -112,6 +124,9 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>                  
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -127,6 +142,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -146,8 +164,8 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>advect_mpmice.uda</filebase>
-      <outputTimestepInterval>5</outputTimestepInterval>
+      <filebase>advectScalar_mpmice.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
@@ -172,25 +190,55 @@
       <save label="skewness_temp_CC"/>
       <save label="kurtosis_temp_CC"/>
       
-      <save label="variance_vel_CC"/>
-      <save label="skewness_vel_CC"/>
-      <save label="kurtosis_vel_CC"/>
+      <save label="scalar-f"/>
+      <save label="scalar-f_dbgVector"/>
+      <save label="mean_scalar-f"/>
+      <save label="variance_scalar-f"/>
+      <save label="skewness_scalar-f"/>
+      <save label="kurtosis_scalar-f"/>
+   
+      <save label="mean_scalar-f_dbgVector"/>
+      <save label="variance_scalar-f_dbgVector"/> 
+      <save label="skewness_scalar-f_dbgVector"/>
+      <save label="kurtosis_scalar-f_dbgVector"/>
       
-      <save label="uv_prime"/>
-      <save label="uw_prime"/>
-      <save label="vw_prime"/>
+      <save label="uv_vw_wu_prime"/>
+      <save label="sum_uv_vw_wu"/>
+      <save label="mean_uv_vw_wu"/>
       
-      <checkpoint interval="0.005" cycle="2"/>
+      <checkpoint timestepInterval="10" cycle="2"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+         <cfl>0.2</cfl>
        <ICE>
         <advection type = "FirstOrder" />
         <ClampSpecificVolume>false</ClampSpecificVolume>
+        
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.1            </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>      20       </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8     </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15   </iters_before_timestep_restart>           
+           <Parameters variable="implicitPressure">
+             <tolerance>    1.e-10     </tolerance>
+             <solver>         cg      </solver>
+             <preconditioner> pfmg    </preconditioner>
+             <maxiterations>  500     </maxiterations>
+             <npre>           1       </npre>
+             <npost>          1       </npost>
+             <skip>           1       </skip>
+             <jump>           0       </jump>
+             <relax_type>     2       </relax_type>
+           </Parameters>
+        </ImplicitSolver>
       </ICE>        
     </CFD>
     <MPM>
@@ -205,7 +253,6 @@
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
-
 
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
@@ -227,7 +274,7 @@
                 <thermal_conductivity>  400.0         </thermal_conductivity>
                 <specific_heat>         386.0         </specific_heat>
                 <geom_object>
-                    <box label="gpmpm">
+                    <box label="block">
                         <min>           [1.0,1.0,1.0]   </min>
                         <max>           [1.5,1.5,1.5]   </max>
                     </box>
@@ -241,7 +288,7 @@
               <type>null</type>
               <materials>              [0]         </materials>
             </contact>
-      </MPM>
+       </MPM>
        <ICE>
          <material   name = "Air">
            <EOS type = "ideal_gas">                     </EOS>
@@ -251,14 +298,11 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
               <difference>
-                <box label="gpice">
+                <box label="wholeDomain">
                     <min>           [-1.0,-1.0,-1.0]    </min>
                     <max>           [4.0,4.0,4.0 ]      </max>
                 </box>
-              <box label="gpicehole">
-                    <min>           [1.0,1.0,1.0]       </min>
-                    <max>           [1.5,1.5,1.5]       </max>
-                </box>
+                <box label="block"/>
               </difference>
                <res>                      [2,2,2]        </res>
                <velocity>           [0.0,0.0,0.0]     </velocity>
@@ -267,15 +311,34 @@
                <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
-      </ICE>       
+       </ICE>       
        
-            <exchange_properties> 
+       <exchange_properties> 
          <exchange_coefficients>
               <momentum>               [1e10]         </momentum>
               <heat>                  [0.0]           </heat>
-        </exchange_coefficients>
-            </exchange_properties> 
+         </exchange_coefficients>
+       </exchange_properties> 
     </MaterialProperties>
+
+    <!--__________________________________-->
+    <Models>
+       <Model type="PassiveScalar">
+        <material>Air</material>
+        <scalar name="f">
+          <test_conservation>       true            </test_conservation>
+          <constants>
+            <diffusivity>              0.0           </diffusivity>
+          </constants>
+          <initialization>
+            <geom_object>
+              <box label="wholeDomain"/>
+              <scalar>    0.00   </scalar>
+            </geom_object>
+          </initialization>
+        </scalar>
+      </Model>
+    </Models>
     
     <!--__________________________________-->
     <DataAnalysis>
@@ -296,14 +359,15 @@
       </Module>    
       
       <Module name = "statistics">
-         <timeStart>   0.001  </timeStart>
+         <timeStart>   0.2  </timeStart>
          <timeStop>   100     </timeStop>
         <material>    Air     </material>
         <computeHigherOrderStats> true </computeHigherOrderStats>
         <Variables>
           <analyze label="press_CC"  matl="0"/>
           <analyze label="temp_CC"   matl="1"/>
-          <analyze label="vel_CC"    matl="1" computeReynoldsStress="true" />
+          <analyze label="scalar-f"  matl="1"/>
+          <analyze label="scalar-f_dbgVector" matl="1" computeReynoldsStress="true" />
         </Variables>
         
       </Module>         
