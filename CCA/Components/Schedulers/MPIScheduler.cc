@@ -516,8 +516,8 @@ MPIScheduler::postMPISends( DetailedTask* task,
       //
       // APH - 01/24/15
       //
-      send_monitor send_lock{ Uintah::CrowdMonitor<send_tag>::WRITER };
       {
+        send_monitor send_lock{ Uintah::CrowdMonitor<send_tag>::WRITER };
         sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
       }
 
@@ -545,8 +545,8 @@ MPIScheduler::postMPISends( DetailedTask* task,
 //
 int MPIScheduler::pendingMPIRecvs()
 {
-  recv_monitor send_lock{ Uintah::CrowdMonitor<recv_tag>::READER };
   {
+    recv_monitor send_lock{ Uintah::CrowdMonitor<recv_tag>::READER };
     return recvs_.numRequests();
   }
 }
@@ -596,8 +596,9 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
     std::vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
 
   // Receive any of the foreign requires
-  recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
   {
+    recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
+
     for (; sorted_iter != sorted_reqs.end(); sorted_iter++) {
       DependencyBatch* batch = *sorted_iter;
 
@@ -783,8 +784,9 @@ void MPIScheduler::processMPIRecvs(int how_much)
 
   double start = Time::currentSeconds();
 
-  recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
   {
+    recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
+
     switch (how_much) {
       case TEST :
         recvs_.testsome(d_myworld);

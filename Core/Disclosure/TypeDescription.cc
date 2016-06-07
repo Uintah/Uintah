@@ -115,8 +115,9 @@ TypeDescription::deleteAll()
 void
 TypeDescription::register_type()
 {
-  register_monitor register_write_lock{ Uintah::CrowdMonitor<TypeDescription::register_tag>::WRITER };
   {
+    register_monitor register_write_lock{ Uintah::CrowdMonitor<TypeDescription::register_tag>::WRITER };
+
     if (!types_g) {
       ASSERT(!killed);
       ASSERT(!typelist_g)
@@ -157,8 +158,9 @@ TypeDescription::getFileName() const
 const TypeDescription *
 TypeDescription::lookupType( const std::string & t )
 {
-  lookup_monitor lookup_read_lock{ Uintah::CrowdMonitor<TypeDescription::lookup_tag>::READER };
   {
+    lookup_monitor lookup_read_lock{ Uintah::CrowdMonitor<TypeDescription::lookup_tag>::READER };
+
     if (!types_g) {
       return 0;
     }

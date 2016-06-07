@@ -63,8 +63,8 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
   //If a task is constantly using different memory sizes, this pool doesn't deallocate memory yet, so it will fail.
 
   void * addr = nullptr;
-  pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
   {
+    pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
     bool claimedAnItem = false;
     cudaError_t err;
     //size_t available, total;
@@ -135,8 +135,9 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
 //
  bool GPUMemoryPool::freeCudaSpaceFromPool(unsigned int device_id, void* addr) {
 
-  pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
   {
+    pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
+
     size_t memSize;
 
     //printf("Freeing data on device %u starting at %p\n", device_id, addr);
