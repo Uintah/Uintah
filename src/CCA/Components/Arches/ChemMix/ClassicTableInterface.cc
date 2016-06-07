@@ -745,8 +745,8 @@ ClassicTableInterface::getIndexInfo()
     int index = findIndex( name );
 
     IndexMap::iterator iter;
-    dep_map_monitor dep_map_read_lock{ Uintah::CrowdMonitor<dep_map_tag>::READER };
     {
+       dep_map_monitor dep_map_read_lock{ Uintah::CrowdMonitor<dep_map_tag>::READER };
        iter = d_depVarIndexMap.find(name);
     }
 
@@ -754,8 +754,8 @@ ClassicTableInterface::getIndexInfo()
     if ( iter == d_depVarIndexMap.end() ) {
       cout_tabledbg << " Inserting " << name << " index information into storage." << endl;
 
-      dep_map_monitor dep_map_write_lock{ Uintah::CrowdMonitor<dep_map_tag>::WRITER };
       {
+        dep_map_monitor dep_map_write_lock{ Uintah::CrowdMonitor<dep_map_tag>::WRITER };
         iter = d_depVarIndexMap.insert(make_pair(name, index)).first;
       }
     }
@@ -768,8 +768,8 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 {
   if ( !d_coldflow){
 
-    enthalpy_map_monitor enthalpy_map_write_lock{ Uintah::CrowdMonitor<enthalpy_map_tag>::WRITER };
     {
+      enthalpy_map_monitor enthalpy_map_write_lock{ Uintah::CrowdMonitor<enthalpy_map_tag>::WRITER };
       cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
       int index = findIndex("sensibleenthalpy");
 

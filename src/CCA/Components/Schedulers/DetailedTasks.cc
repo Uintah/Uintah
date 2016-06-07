@@ -1523,8 +1523,8 @@ DetailedTask::checkExternalDepCount()
   }
 
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
-    external_ready_monitor external_ready_lock { Uintah::CrowdMonitor<external_ready_tag>::WRITER };
     {
+      external_ready_monitor external_ready_lock { Uintah::CrowdMonitor<external_ready_tag>::WRITER };
       if (mpidbg.active()) {
         cerrLock.lock();
         mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
@@ -1963,8 +1963,8 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
     cerrLock.unlock();
   }
 
-  internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
   {
+    internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
     readyTasks_.push(task);
   }
 
@@ -1981,8 +1981,8 @@ DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
   DetailedTask* nextTask = nullptr;
-  internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
   {
+    internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
     if (!readyTasks_.empty()) {
       nextTask = readyTasks_.front();
       readyTasks_.pop();
@@ -1996,8 +1996,8 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::READER };
   {
+    internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::READER };
     return readyTasks_.size();
   }
 }
@@ -2008,8 +2008,8 @@ DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
   DetailedTask* nextTask = nullptr;
-  external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::WRITER };
   {
+    external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::WRITER };
     if (!mpiCompletedTasks_.empty()) {
       nextTask = mpiCompletedTasks_.top();
       mpiCompletedTasks_.pop();
@@ -2023,8 +2023,8 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::READER };
   {
+    external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::READER };
     return mpiCompletedTasks_.size();
   }
 }
@@ -2038,8 +2038,8 @@ DetailedTask*
 DetailedTasks::getNextVerifyDataTransferCompletionTask()
 {
   DetailedTask* nextTask = nullptr;
-  device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
   {
+    device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
     if (!verifyDataTransferCompletionTasks_.empty()) {
       nextTask = verifyDataTransferCompletionTasks_.front();
       verifyDataTransferCompletionTasks_.pop();
@@ -2055,8 +2055,8 @@ DetailedTask*
 DetailedTasks::getNextFinalizeDevicePreparationTask()
 {
   DetailedTask* nextTask = nullptr;
-  device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
   {
+    device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
     if (!finalizeDevicePreparationTasks_.empty()) {
       nextTask = finalizeDevicePreparationTasks_.front();
       finalizeDevicePreparationTasks_.pop();
@@ -2072,8 +2072,8 @@ DetailedTask*
 DetailedTasks::getNextInitiallyReadyDeviceTask()
 {
   DetailedTask* nextTask = nullptr;
-  device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
   {
+    device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
     if (!initiallyReadyDeviceTasks_.empty()) {
       nextTask = initiallyReadyDeviceTasks_.front();
       initiallyReadyDeviceTasks_.pop();
@@ -2089,8 +2089,8 @@ DetailedTask*
 DetailedTasks::getNextCompletionPendingDeviceTask()
 {
   DetailedTask* nextTask = nullptr;
-  device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
   {
+    device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
     if (!completionPendingDeviceTasks_.empty()) {
       nextTask = completionPendingDeviceTasks_.front();
       completionPendingDeviceTasks_.pop();
@@ -2106,8 +2106,8 @@ DetailedTask*
 DetailedTasks::getNextFinalizeHostPreparationTask()
 {
   DetailedTask* nextTask = nullptr;
-  host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
   {
+    host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
     if (!finalizeHostPreparationTasks_.empty()) {
       nextTask = finalizeHostPreparationTasks_.front();
       finalizeHostPreparationTasks_.pop();
@@ -2122,8 +2122,8 @@ DetailedTasks::getNextFinalizeHostPreparationTask()
 DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
 {
   DetailedTask* nextTask = nullptr;
-  host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
   {
+    host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
     if (!initiallyReadyHostTasks_.empty()) {
       nextTask = initiallyReadyHostTasks_.front();
       initiallyReadyHostTasks_.pop();
@@ -2140,8 +2140,8 @@ DetailedTask*
 DetailedTasks::peekNextVerifyDataTransferCompletionTask()
 {
   DetailedTask* dtask = nullptr;
-  device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::READER };
   {
+    device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::READER };
     dtask = verifyDataTransferCompletionTasks_.front();
   }
 
@@ -2154,8 +2154,8 @@ DetailedTask*
 DetailedTasks::peekNextFinalizeDevicePreparationTask()
 {
   DetailedTask* dtask = nullptr;
-  device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::READER };
   {
+    device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::READER };
     dtask = finalizeDevicePreparationTasks_.front();
   }
 
@@ -2168,8 +2168,8 @@ DetailedTask*
 DetailedTasks::peekNextInitiallyReadyDeviceTask()
 {
   DetailedTask* dtask = nullptr;
-  device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::READER };
   {
+    device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::READER };
     dtask = initiallyReadyDeviceTasks_.front();
   }
 
@@ -2182,8 +2182,8 @@ DetailedTask*
 DetailedTasks::peekNextCompletionPendingDeviceTask()
 {
   DetailedTask* dtask = nullptr;
-  device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::READER };
   {
+    device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::READER };
     dtask = completionPendingDeviceTasks_.front();
   }
 
@@ -2196,8 +2196,8 @@ DetailedTask*
 DetailedTasks::peekNextFinalizeHostPreparationTask()
 {
   DetailedTask* dtask = nullptr;
-  host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::READER };
   {
+    host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::READER };
     dtask = finalizeHostPreparationTasks_.front();
   }
 
@@ -2209,8 +2209,8 @@ DetailedTasks::peekNextFinalizeHostPreparationTask()
 DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
 {
   DetailedTask* dtask = nullptr;
-  host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::READER };
   {
+    host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::READER };
     dtask = initiallyReadyHostTasks_.front();
   }
 
@@ -2221,8 +2221,8 @@ DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
 //
 void DetailedTasks::addVerifyDataTransferCompletion(DetailedTask* dtask)
 {
-  device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
   {
+    device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
     verifyDataTransferCompletionTasks_.push(dtask);
   }
 }
@@ -2231,8 +2231,8 @@ void DetailedTasks::addVerifyDataTransferCompletion(DetailedTask* dtask)
 //
 void DetailedTasks::addFinalizeDevicePreparation(DetailedTask* dtask)
 {
-  device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
   {
+    device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
     finalizeDevicePreparationTasks_.push(dtask);
   }
 }
@@ -2242,8 +2242,8 @@ void DetailedTasks::addFinalizeDevicePreparation(DetailedTask* dtask)
 void
 DetailedTasks::addInitiallyReadyDeviceTask( DetailedTask* dtask )
 {
-  device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
   {
+    device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
     initiallyReadyDeviceTasks_.push(dtask);
   }
 }
@@ -2253,8 +2253,8 @@ DetailedTasks::addInitiallyReadyDeviceTask( DetailedTask* dtask )
 void
 DetailedTasks::addCompletionPendingDeviceTask( DetailedTask* dtask )
 {
-  device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
   {
+    device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
     completionPendingDeviceTasks_.push(dtask);
   }
 }
@@ -2263,8 +2263,8 @@ DetailedTasks::addCompletionPendingDeviceTask( DetailedTask* dtask )
 //
 void DetailedTasks::addFinalizeHostPreparation(DetailedTask* dtask)
 {
-  host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
   {
+    host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
     finalizeHostPreparationTasks_.push(dtask);
   }
 }
@@ -2273,8 +2273,8 @@ void DetailedTasks::addFinalizeHostPreparation(DetailedTask* dtask)
 //
 void DetailedTasks::addInitiallyReadyHostTask(DetailedTask* dtask)
 {
-  host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
   {
+    host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
     initiallyReadyHostTasks_.push(dtask);
   }
 }

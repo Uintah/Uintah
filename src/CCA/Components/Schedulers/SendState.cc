@@ -44,8 +44,9 @@ using  send_subsets_monitor = Uintah::CrowdMonitor<send_subsets_tag>;
 
 SendState::~SendState()
 {
-  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
   {
+    send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
+
     for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
       if (iter->second->removeReference()) {
         delete iter->second;
@@ -63,8 +64,9 @@ SendState::find_sendset(       int         dest
                        ,       int         dwid /* =0 */
                        ) const
 {
-  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
   {
+    send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
+
     ParticleSubset* ret;
     maptype::const_iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
 
@@ -87,8 +89,9 @@ SendState::add_sendset(       ParticleSubset * sendset
                       ,       int              dwid /*=0*/
                       )
 {
-  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
   {
+    send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
+
     maptype::iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
     if (iter != sendSubsets.end()) {
       std::cout << "sendSubset already exists for sendset:" << *sendset << " on patch:"
@@ -103,8 +106,9 @@ SendState::add_sendset(       ParticleSubset * sendset
 void
 SendState::reset()
 {
-  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
   {
+    send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
+
     sendSubsets.clear();
   }
 }
@@ -112,8 +116,9 @@ SendState::reset()
 void
 SendState::print() 
 {
-  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
   {
+    send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
+
     for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
       std::cout << Parallel::getMPIRank() << ' ' << *(iter->second) << " src/dest: " << iter->first.second << std::endl;
     }

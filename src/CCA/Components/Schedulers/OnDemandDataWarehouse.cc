@@ -205,8 +205,9 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
 void
 OnDemandDataWarehouse::clear()
 {
-  psetDB_monitor psetDB_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
   {
+    psetDB_monitor psetDB_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
+
     for (auto iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
       if (iter->second->removeReference()) {
         delete iter->second;
@@ -229,8 +230,9 @@ OnDemandDataWarehouse::clear()
   }
 
 
-  data_location_monitor data_location_lock{ Uintah::CrowdMonitor<data_location_tag>::WRITER };
   {
+    data_location_monitor data_location_lock{ Uintah::CrowdMonitor<data_location_tag>::WRITER };
+
     for (auto iter = d_dataLocation.begin(); iter != d_dataLocation.end(); iter++) {
       for (size_t i = 0; i < iter->second->size(); i++) {
         delete &(iter->second[i]);
@@ -405,8 +407,9 @@ OnDemandDataWarehouse::exists( const VarLabel* label,
 bool
 OnDemandDataWarehouse::exists( const VarLabel* label ) const
 {
-  levelDB_monitor levelDB_lock{ Uintah::CrowdMonitor<levelDB_tag>::READER };
   {
+    levelDB_monitor levelDB_lock{ Uintah::CrowdMonitor<levelDB_tag>::READER };
+
     // level-independent reduction vars can be stored with a null level
     if (d_levelDB.exists(label, -1, 0)) {
       return true;
@@ -1212,8 +1215,9 @@ void OnDemandDataWarehouse::insertPSetRecord(       psetDBType&     subsetDB,
   }
 #endif
 
-  psetDB_monitor psetDB_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
   {
+    psetDB_monitor psetDB_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
+
     psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
     subsetDB.insert(std::pair<psetDBType::key_type, ParticleSubset*>(key, psubset));
     psubset->addReference();
@@ -1239,8 +1243,9 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType& subsetDB,
   int best_volume = INT_MAX;
   int target_volume = Region::getVolume(low,high);
 
-  psetDB_monitor psetDB_read_lock{ Uintah::CrowdMonitor<psetDB_tag>::READER };
   {
+    psetDB_monitor psetDB_read_lock{ Uintah::CrowdMonitor<psetDB_tag>::READER };
+
     std::pair<psetDBType::const_iterator, psetDBType::const_iterator> ret = subsetDB.equal_range(key);
 
     //search multimap for best subset
@@ -1294,8 +1299,9 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType& subsetDB,
   }
 
   //save subset for future queries
-  psetDB_monitor psetDB_write_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
   {
+    psetDB_monitor psetDB_write_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
+
     subsetDB.insert(std::pair<psetDBType::key_type, ParticleSubset*>(key, newsubset));
     newsubset->addReference();
   }
@@ -1498,8 +1504,9 @@ OnDemandDataWarehouse::getDeleteSubset( int matlIndex, const Patch* patch )
 std::map<const VarLabel*, ParticleVariableBase*>*
 OnDemandDataWarehouse::getNewParticleState( int matlIndex, const Patch* patch )
 {
-  addsetDB_monitor addset_lock{ Uintah::CrowdMonitor<addsetDB_tag>::READER };
   {
+    addsetDB_monitor addset_lock{ Uintah::CrowdMonitor<addsetDB_tag>::READER };
+
     const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
     psetAddDBType::key_type key(matlIndex, realPatch);
     auto iter = d_addsetDB.find(key);
@@ -1890,8 +1897,9 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
     d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true);
   }
   else {
-    varDB_monitor varDB_lock{ Uintah::CrowdMonitor<varDB_tag>::WRITER };
     {
+      varDB_monitor varDB_lock{ Uintah::CrowdMonitor<varDB_tag>::WRITER };
+
       bool exists = d_varDB.exists(label, matlIndex, patch);
       if (exists) {
         // it had been allocated and put as part of the superpatch of another patch
@@ -2512,8 +2520,9 @@ OnDemandDataWarehouse::getRegion(       GridVariableBase& var,
     }
     std::vector<Variable*> varlist;
 
-    varDB_monitor varDB_lock{ Uintah::CrowdMonitor<varDB_tag>::READER };
     {
+      varDB_monitor varDB_lock{ Uintah::CrowdMonitor<varDB_tag>::READER };
+
       d_varDB.getlist(label, matlIndex, patch, varlist);
     }
 
@@ -2753,8 +2762,9 @@ OnDemandDataWarehouse::deleteParticles( ParticleSubset* delset )
   Patch* patch = (Patch*)delset->getPatch();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
 
-  delsetDB_monitor delset_lock{ Uintah::CrowdMonitor<delsetDB_tag>::WRITER };
   {
+    delsetDB_monitor delset_lock{ Uintah::CrowdMonitor<delsetDB_tag>::WRITER };
+
     psetDBType::key_type key(realPatch, matlIndex, getID());
     auto iter = d_delsetDB.find(key);
     ParticleSubset* currentDelset;
@@ -2784,8 +2794,9 @@ OnDemandDataWarehouse::addParticles( const Patch* patch,
                                            int    matlIndex,
                                            std::map<const VarLabel*, ParticleVariableBase*>* addedState )
 {
-  addsetDB_monitor addset_lock{ Uintah::CrowdMonitor<addsetDB_tag>::WRITER };
   {
+    addsetDB_monitor addset_lock{ Uintah::CrowdMonitor<addsetDB_tag>::WRITER };
+
     psetAddDBType::key_type key(matlIndex, patch);
     auto iter = d_addsetDB.find(key);
     if (iter != d_addsetDB.end()) {
