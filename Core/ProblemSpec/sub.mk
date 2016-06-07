@@ -38,8 +38,7 @@ SRCS     += \
 PSELIBS := \
 	Core/Exceptions \
 	Core/Math       \
-	Core/Util       \
-	Core/Thread
+	Core/Util
 
 LIBS := $(XML2_LIBRARY)
 

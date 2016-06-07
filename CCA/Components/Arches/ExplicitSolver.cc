@@ -127,14 +127,16 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
 #include <CCA/Components/Arches/Filter.h>
+
 #include <cmath>
+#include <mutex>
 
 using namespace std;
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
-extern Uintah::Mutex coutLock;
+extern std::mutex coutLock;
 
 // ****************************************************************************
 // Default constructor for ExplicitSolver

@@ -65,9 +65,10 @@
 #include <spatialops/structured/MemoryWindow.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Thread/Mutex.h>
+
 #include <iostream>
 #include <fstream>
+#include <mutex>
 
 using namespace std;
 using namespace Uintah;
@@ -75,7 +76,7 @@ using namespace Uintah;
 static DebugStream dbg("ARCHES", false);
 
 // Used to sync std::cout when output by multiple threads
-extern Uintah::Mutex coutLock;
+extern std::mutex coutLock;
 
 const int Arches::NDIM = 3;
 

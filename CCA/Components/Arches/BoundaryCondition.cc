@@ -67,6 +67,7 @@
 #include <Core/IO/UintahZlibUtil.h>
 
 #include <iostream>
+#include <mutex>
 #include <sstream>
 #include <stdlib.h>
 
@@ -74,7 +75,7 @@ using namespace std;
 using namespace Uintah;
 
 // Used to sync std::cout when output by multiple threads
-extern Uintah::Mutex coutLock;
+extern std::mutex coutLock;
 
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>

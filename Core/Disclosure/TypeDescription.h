@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_TypeDescription_H
-#define UINTAH_HOMEBREW_TypeDescription_H
+#ifndef CORE_DISCLOSURE_TYPEDESCRIPTION_H
+#define CORE_DISCLOSURE_TYPEDESCRIPTION_H
 
-#include   <string>
+#include <sci_defs/mpi_defs.h>
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+#include <string>
 
 
 namespace Uintah {
@@ -39,7 +39,6 @@ class Variable;
      CLASS
        TypeDescription
       
-       Short Description...
       
      GENERAL INFORMATION
       
@@ -56,60 +55,69 @@ class Variable;
        TypeDescription
       
      DESCRIPTION
-       Long description...
-      
-     WARNING
       
 ****************************************/
     
 class TypeDescription {
+
 public:
-  enum Type {
-    CCVariable,
-    NCVariable,
-    SFCXVariable,
-    SFCYVariable,
-    SFCZVariable,
-    ParticleVariable,
-    PerPatch,
-    Point,
-    Vector,
-    Matrix3,
-    ReductionVariable,
-    SoleVariable,
-    double_type,
-    float_type,
-    bool_type,
-    int_type,
-    short_int_type,
-    long_type,
-    long64_type,
-    Short27,   // for Fracture
-    Stencil4,
-    Stencil7,
-    Unknown,
-    Other
+
+  enum Type
+  {  CCVariable
+  ,  NCVariable
+  ,  SFCXVariable
+  ,  SFCYVariable
+  ,  SFCZVariable
+  ,  ParticleVariable
+  ,  PerPatch
+  ,  Point
+  ,  Vector
+  ,  Matrix3
+  ,  ReductionVariable
+  ,  SoleVariable
+  ,  double_type
+  ,  float_type
+  ,  bool_type
+  ,  int_type
+  ,  short_int_type
+  ,  long_type
+  ,  long64_type
+  ,  Short27   // for Fracture
+  ,  Stencil4
+  ,  Stencil7
+  ,  Unknown
+  ,  Other
   };
 
-  TypeDescription(Type type, const std::string& name,
-                  bool isFlat, MPI_Datatype (*make_mpitype)());
-  TypeDescription(Type type, const std::string& name,
-                  bool isFlat, MPI_Datatype mpitype);
-  TypeDescription(Type type, const std::string& name,
-                  Variable* (*maker)(),
-                  const TypeDescription* subtype);
+  TypeDescription( Type type, const std::string& name, bool isFlat, MPI_Datatype (*make_mpitype)() );
+
+  TypeDescription( Type type, const std::string& name, bool isFlat, MPI_Datatype mpitype );
+
+  TypeDescription( Type type, const std::string& name, Variable* (*maker)(), const TypeDescription* subtype );
+
+  ~TypeDescription(){};
+
+  std::string getName() const;
+
+  std::string getFileName() const;
+
+  static const TypeDescription* lookupType( const std::string& );
+
+  Variable* createInstance() const;
+
+  static void deleteAll();
      
   bool isReductionVariable() const {
     return d_type == ReductionVariable;
   }
+
   Type getType() const {
     return d_type;
   }
+
   const TypeDescription* getSubType() const {
     return d_subtype;
   }
-  std::string getName() const;
-  std::string getFileName() const;
 
   bool isFlat() const {
     return d_isFlat;
@@ -122,35 +130,42 @@ public:
   // with the TypeDescription system when the Variable classes are originally
   // loaded (usually at program start up).
   struct Register {
-    Register( const TypeDescription* );
-    ~Register();
+    Register( const TypeDescription* )
+    {
+      // Actual registration of the Variable Type happens when of the 'td' variable
+      // is originally created.
+    }
+    ~Register(){};
   };
 
-  static const TypeDescription* lookupType(const std::string&);
+  // These are for uniquely identifying the Uintah::CrowdMonitors<Tag>
+  // used to protect multi-threaded access to global data structures
+  struct register_tag{}; // used in register_type()
+  struct lookup_tag{};   // used in lookup_type()
 
-  Variable* createInstance() const;
 
-  ~TypeDescription();
-
-  static void deleteAll();
-     
 private:
-  Type d_type;
-  const TypeDescription* d_subtype;
-  std::string d_name;
-  bool d_isFlat;
-  mutable MPI_Datatype d_mpitype;
-  MPI_Datatype (*d_mpitypemaker)();
-  Variable* (*d_maker)();
 
-  TypeDescription(const TypeDescription&);
-  TypeDescription& operator=(const TypeDescription&);
+  // disable copy, assignment, and move
+  TypeDescription( const TypeDescription & )            = delete;
+  TypeDescription& operator=( const TypeDescription & ) = delete;
+  TypeDescription( TypeDescription && )                 = delete;
+  TypeDescription& operator=( TypeDescription && )      = delete;
+
+  MPI_Datatype (*d_mpitypemaker)(){nullptr};
+
+  Variable* (*d_maker)(){nullptr};
 
   void register_type();
+
+  Type                    d_type{};
+  const TypeDescription * d_subtype{nullptr};
+  std::string             d_name{};
+  bool                    d_isFlat{false};
+  mutable MPI_Datatype    d_mpitype{};
+
 };
 
 } // End namespace Uintah
 
-
-#endif
-
+#endif // CORE_DISCLOSURE_TYPEDESCRIPTION_H

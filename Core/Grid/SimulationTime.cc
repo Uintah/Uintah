@@ -25,7 +25,6 @@
 #include <Core/Grid/SimulationTime.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Util/StringUtil.h>
 
 #include <sci_values.h>
@@ -63,7 +62,7 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
       std::cerr << "\n";
       std::cerr << "The 'max_iterations' flag (in the .ups file) is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
       std::cerr << "\n";
-      Uintah::Thread::exitAll(1);      
+      Uintah::Parallel::exitAll(1);      
     }
   }
 

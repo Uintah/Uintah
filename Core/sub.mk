@@ -33,32 +33,32 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core
 
 SUBDIRS := \
-	$(SRCDIR)/Containers \
-	$(SRCDIR)/DataArchive \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Disclosure \
-	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GeometryPiece \
-	$(SRCDIR)/Grid \
-	$(SRCDIR)/Labels \
-	$(SRCDIR)/IO \
-	$(SRCDIR)/Malloc \
-	$(SRCDIR)/Math \
-	$(SRCDIR)/OS \
-	$(SRCDIR)/Parallel \
-	$(SRCDIR)/ProblemSpec \
-	$(SRCDIR)/Thread \
-	$(SRCDIR)/Util \
-
+	$(SRCDIR)/Containers     \
+	$(SRCDIR)/DataArchive    \
+	$(SRCDIR)/Datatypes      \
+	$(SRCDIR)/Disclosure     \
+	$(SRCDIR)/Exceptions     \
+	$(SRCDIR)/Geometry       \
+	$(SRCDIR)/GeometryPiece  \
+	$(SRCDIR)/Grid           \
+	$(SRCDIR)/Labels         \
+	$(SRCDIR)/IO             \
+	$(SRCDIR)/Malloc         \
+	$(SRCDIR)/Math           \
+	$(SRCDIR)/OS             \
+	$(SRCDIR)/Parallel       \
+	$(SRCDIR)/ProblemSpec    \
+	$(SRCDIR)/Util           \
 
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
-LIBS := $(THREAD_LIBRARY) \
-	$(M_LIBRARY) 
+
+LIBS := $(THREAD_LIBRARY)  \
+        $(M_LIBRARY) 
+
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 

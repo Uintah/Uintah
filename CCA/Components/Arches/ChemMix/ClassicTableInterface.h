@@ -29,7 +29,6 @@
 
 #include <CCA/Components/Arches/ArchesMaterial.h>
 //#include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Core/Thread/ConditionVariable.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/IO/UintahZlibUtil.h>
 #include <sstream>
@@ -126,7 +125,6 @@ public:
     Interp_class( const std::vector<std::vector<double> > & table, const std::vector<int>& IndepVarNo,
                   const std::vector<std::vector<double> > & indepin, const std::vector<std::vector<double> >& ind_1in )
       : table2(table), d_allIndepVarNo(IndepVarNo), indep(indepin), ind_1(ind_1in)
-//       ,d_interpLock("ClassicTable Interp_class lock")
     {}
 
     virtual ~Interp_class() {}
@@ -140,7 +138,7 @@ public:
     const std::vector< std::vector <double> >&  indep;
     const std::vector< std::vector <double > >&  ind_1;
 
-    //Uintah::Mutex d_interpLock; // For synchronization in find_val() functions
+    //std::mutex d_interpLock; // For synchronization in find_val() functions
 
   };
 
@@ -874,8 +872,6 @@ private:
 
   IndexMap d_depVarIndexMap;                      ///< Reference to the integer location of the variable
   IndexMap d_enthalpyVarIndexMap;                 ///< Reference to the integer location of variables for heat loss calculation
-  mutable CrowdMonitor d_depVarIndexMapLock;      ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_depVarIndexMap
-  mutable CrowdMonitor d_enthalpyVarIndexMapLock; ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_enthalpyVarIndexMap
 
   std::vector<int>    d_allIndepVarNum;         ///< Vector storing the grid size for the Independent variables
   std::vector<std::string> d_allDepVarUnits;         ///< Units for the dependent variables

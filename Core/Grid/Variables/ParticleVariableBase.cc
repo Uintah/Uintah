@@ -27,7 +27,6 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Parallel/BufferInfo.h>
 
-#include <Core/Thread/Mutex.h>
 
 #include <iostream>
 

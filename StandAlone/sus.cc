@@ -81,12 +81,10 @@
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
+#include <Core/Util/Time.h>
 
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/malloc_defs.h>
@@ -109,12 +107,14 @@
 #  include <fenv.h>
 #endif
 
+#include <cstdio>
 #include <iomanip>
 #include <iostream>
-#include <cstdio>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <stdexcept>
+
 #include <sys/stat.h>
 #include <time.h>
 
@@ -136,7 +136,7 @@ using namespace std;
 
 
 // Used to sync cerr so it is readable when output by multiple threads
-extern Mutex cerrLock;
+extern std::mutex cerrLock;
 
 static DebugStream stackDebug("ExceptionStack", true);
 static DebugStream dbgwait("WaitForDebugger", false);
@@ -149,7 +149,7 @@ quit(const std::string & msg = "")
     cerr << msg << "\n";
   }
   Uintah::Parallel::finalizeManager();
-  Thread::exitAll(2);
+  Parallel::exitAll(2);
 }
 
 static
@@ -217,19 +217,19 @@ sanityChecks()
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
   if (getenv("MALLOC_TRACE")) {
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
   if (getenv("MALLOC_STRICT")) {
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
 #endif
 }
@@ -252,11 +252,6 @@ main( int argc, char *argv[], char *env[] )
   string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
 
-  // Turn off Thread asking so sus can cleanly exit on abortive behavior.  
-  // Can override this behavior with the environment variable SCI_SIGNALMODE
-  Thread::setDefaultAbortMode("exit");
-  Thread::self()->setCleanupFunction( &abortCleanupFunc );
-  
 #if HAVE_IEEEFP_H
   fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 #endif
@@ -392,10 +387,10 @@ main( int argc, char *argv[], char *env[] )
       } else {
         std::cout << "No GPU detected!" << std::endl;
       }
-      Thread::exitAll(retVal);
+      Parallel::exitAll(retVal);
 #endif
       cout << "No GPU detected!" << endl;
-      Thread::exitAll(2); //If the above didn't exit with a 1, then we didn't have a GPU, so exit with a 2.
+      Parallel::exitAll(2); //If the above didn't exit with a 1, then we didn't have a GPU, so exit with a 2.
       cout << "This doesn't run" << endl;
     }
 #ifdef HAVE_CUDA
@@ -519,7 +514,7 @@ main( int argc, char *argv[], char *env[] )
       cout << "ERROR: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
       cout << "\n";
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 1 );
+      Parallel::exitAll( 1 );
     }
   }
 
@@ -615,7 +610,7 @@ main( int argc, char *argv[], char *env[] )
       proc0cout << "\nERROR caught while parsing UPS file: " << filename << "\nDetails follow.\n"
                 << err.message() << "\n";
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
+      Parallel::exitAll( 0 );
     }
     catch( ... ) {
       // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
@@ -627,14 +622,14 @@ main( int argc, char *argv[], char *env[] )
       }
       proc0cout   << "\n";
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
+      Parallel::exitAll( 0 );
     }
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";
       ups = 0; // This cleans up memory held by the 'ups'.
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
+      Parallel::exitAll( 0 );
     }
 
     // If VisIt is included then the user may be attching into Visit's
@@ -893,7 +888,7 @@ main( int argc, char *argv[], char *env[] )
     if( Uintah::Parallel::getMPIRank() == 0 ) {
       cout << "\n\nAN EXCEPTION WAS THROWN... Goodbye.\n\n";
     }
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
 
   if( Uintah::Parallel::getMPIRank() == 0 ) {
@@ -901,7 +896,7 @@ main( int argc, char *argv[], char *env[] )
   }
 
   // use exitAll(0) since return does not work
-  Thread::exitAll(0);
+  Parallel::exitAll(0);
   return 0;
 
 } // end main()

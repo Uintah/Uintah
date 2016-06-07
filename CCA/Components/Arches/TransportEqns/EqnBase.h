@@ -15,13 +15,13 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/Arches/Directives.h>
 
-extern Uintah::Mutex cerrLock;
+#include <mutex>
+
+extern std::mutex cerrLock;
 
 //========================================================================
 

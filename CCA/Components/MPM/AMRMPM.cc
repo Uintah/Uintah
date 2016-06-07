@@ -77,9 +77,9 @@
 #include <Core/Parallel/UintahParallelPort.h>            // for UintahParallelPort
 #include <Core/ProblemSpec/ProblemSpec.h>                // for Vector, IntVector, etc
 #include <Core/ProblemSpec/ProblemSpecP.h>               // for ProblemSpecP
-#include <Core/Thread/Mutex.h>                           // for Mutex
 #include <Core/Util/DebugStream.h>                       // for DebugStream
 #include <Core/Util/Handle.h>                            // for Handle
+
 #include <algorithm>                                     // for max, min
 #include <cmath>                                         // for cbrt, isinf, isnan
 #include <iostream>                                      // for operator<<, basic_ostream, etc
@@ -116,8 +116,6 @@ static DebugStream amr_doing("AMRMPM", false);
 //
 //  Need to Add gimp interpolation
 
-// From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern Mutex cerrLock;
 
 AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 {

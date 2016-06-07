@@ -49,8 +49,7 @@ PSELIBS := \
         Core/Geometry     \
         Core/Grid         \
         Core/Math         \
-	Core/ProblemSpec  \
-        Core/Thread       \
+        Core/ProblemSpec  \
         Core/Util
 
 LIBS := $(M_LIBRARY) $(F_LIBRARY)           \

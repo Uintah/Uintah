@@ -984,7 +984,6 @@ fi
 ##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
 
-TIME_IMPL=Time_unix.cc
 TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
 case $host in
@@ -1055,7 +1054,6 @@ fi
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
-AC_SUBST(TIME_IMPL)
 
 AC_SUBST(SCI_MALLOC_ON)
 AC_SUBST(DEF_MALLOC)
@@ -2060,9 +2058,6 @@ case $threads in
       ;;
 esac      
 
-THREAD_IMPL="Thread_$threads.cc"
-AC_SUBST(THREAD_IMPL)
-
 AC_SUBST(THREAD_LIB_FLAG)
 AC_SUBST(SOCKET_LIB_FLAG)
 AC_SUBST(DEF_THREAD)
@@ -2077,13 +2072,10 @@ AC_SUBST(CFLAGS)
 SCI_TRY_LINK(GCCSYNC,gcc style atomic operations ,,,,,,[ int x;   __sync_add_and_fetch(&x,1);],optional)
 if test "$HAVE_GCCSYNC" = "yes"; then
   REFCOUNT_IMPL=RefCounted_gcc.cc
-  ATOMIC_IMPL=AtomicCounter_gcc.cc
 else
   REFCOUNT_IMPL=RefCounted.cc
-  ATOMIC_IMPL=AtomicCounter_default.cc
 fi
 AC_SUBST(REFCOUNT_IMPL)
-AC_SUBST(ATOMIC_IMPL)
 
 
 ##  --  Enable Ray Scatter -----------------------------

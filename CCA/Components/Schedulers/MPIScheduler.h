@@ -36,9 +36,10 @@
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/InfoMapper.h>
 
-#include <vector>
-#include <map>
 #include <fstream>
+#include <map>
+#include <mutex>
+#include <vector>
 
 namespace Uintah {
 
@@ -185,15 +186,8 @@ class MPIScheduler : public SchedulerCommon {
     unsigned int                numMessages_;
     double                      messageVolume_;
 
-    //-------------------------------------------------------------------------
-    // The following locks are for multi-threaded schedulers that derive from MPIScheduler
-    //   This eliminates miles of unnecessarily redundant code in threaded schedulers
-    //-------------------------------------------------------------------------
-    // multiple reader, single writer lock (pthread_rwlock_t wrapper)
-    mutable CrowdMonitor        recvLock;               // CommRecMPI recvs lock
-    mutable CrowdMonitor        sendLock;               // CommRecMPI sends lock
-    Mutex                       dlbLock;                // load balancer lock
-    Mutex                       waittimesLock;          // MPI wait times lock
+    std::mutex                  dlbLock;                // load balancer lock
+    std::mutex                  waittimesLock;          // MPI wait times lock
 
   private:
 

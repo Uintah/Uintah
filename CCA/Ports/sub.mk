@@ -58,7 +58,6 @@ PSELIBS := \
         Core/Math        \
         Core/Parallel    \
         Core/ProblemSpec \
-        Core/Thread      \
         Core/Util        
 
 LIBS := $(MPI_LIBRARY)

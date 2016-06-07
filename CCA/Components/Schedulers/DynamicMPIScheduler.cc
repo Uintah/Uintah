@@ -27,20 +27,20 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 #include <cstring>
+#include <mutex>
 
 using namespace Uintah;
 
 // Used to sync cout/cerr so it is readable when output by multiple threads
-extern Uintah::Mutex      coutLock;
-extern Uintah::Mutex      cerrLock;
+extern std::mutex      coutLock;
+extern std::mutex      cerrLock;
 
-extern DebugStream        taskdbg;
-extern DebugStream        taskorder;
-extern DebugStream        execout;
+extern DebugStream     taskdbg;
+extern DebugStream     taskorder;
+extern DebugStream     execout;
 
 static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
 static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);

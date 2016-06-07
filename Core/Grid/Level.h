@@ -25,15 +25,16 @@
 #ifndef UINTAH_GRID_LEVEL_H
 #define UINTAH_GRID_LEVEL_H
 
+#include <CCA/Ports/LoadBalancer.h>
+
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Util/RefCounted.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Util/Handle.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Containers/OffsetArray1.h>
-#include <Core/Thread/CrowdMonitor.h>
+#include <Core/Util/Handle.h>
+#include <Core/Util/RefCounted.h>
 
 #ifdef max
 // some uintah 3p utilities define max, so undefine it before BBox chokes on it.
@@ -43,9 +44,8 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/fixedvector.h>
-#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
 #include <map>
@@ -314,7 +314,6 @@ private:
   typedef std::map<std::pair<IntVector, IntVector>, std::vector<const Patch*>, IntVectorCompare> selectCache;
   mutable selectCache d_selectCache; // we like const Levels in most places :) 
   PatchBVH* d_bvh;
-  mutable CrowdMonitor    d_cachelock;
 };
 
 const Level * getLevel(const PatchSubset* subset);

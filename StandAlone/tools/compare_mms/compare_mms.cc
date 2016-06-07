@@ -54,7 +54,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
-#include <Core/Thread/Thread.h>
 
 #include <sci_values.h>
 

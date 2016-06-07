@@ -80,7 +80,7 @@
   1.7.7).
   --------------------------------------------------------------------------*/
 
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>

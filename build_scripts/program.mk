@@ -41,8 +41,8 @@ ifneq ($(REPOSITORY_FLAGS),)
   REPOSITORIES_$(PROGRAM) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository_$(notdir $(PROGRAM)) $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
 endif
 
-# The libraries are specified like Core/Thread but get
-# name-mangled to Core_Thread
+# The libraries are specified like Core/Grid but get
+# name-mangled to Core_Grid
 PSELIBS := $(subst /,_,$(PSELIBS))
 
 ALLTARGETS := $(ALLTARGETS) $(PROGRAM)
@@ -55,9 +55,9 @@ $(PROGRAM)_LIBS := $(LIBS) ${MALLOC_TRACE_LIBRARY}
 # files are other shared libraries within the PSE.  This allows
 # the dependencies between .so's to be expressed conveiently.
 # There are two complicated substitions here.  The first creates the
-# library depdencies by transforming something like Core_Thread
-# to lib/libCore_Thread.so.  The second transforms it from
-# lib/libCore_Thread.so to -lCore_Thread.  This is so that
+# library depdencies by transforming something like Core_Grid
+# to lib/libCore_Grid.so.  The second transforms it from
+# lib/libCore_Grid.so to -lCore_Grid.  This is so that
 # we can use the -l syntax to link, but still express the dependicies.
 #
 # The prereqs (dependency) is necessary so that if someone types "make

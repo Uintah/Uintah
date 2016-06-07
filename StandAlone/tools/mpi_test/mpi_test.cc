@@ -39,7 +39,7 @@
 #include <string>
 #include <sstream>
 
-#include <Core/Thread/Time.h>    // for currentSeconds()
+#include <Core/Util/Time.h>    // for currentSeconds()
 #include <Core/Util/FileUtils.h> // for testFilesystem()
 
 using std::stringstream;

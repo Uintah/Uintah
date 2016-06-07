@@ -11,7 +11,6 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Exceptions/InvalidValue.h>
 
 #include <typeinfo>

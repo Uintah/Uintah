@@ -48,7 +48,6 @@ PSELIBS := \
         Core/Parallel                      \
         Core/ProblemSpec                   \
         Core/Util                          \
-        Core/Thread                        \
         $(ARCHES)                          \
         $(MPMARCHES)                       \
         $(ICE)                             \

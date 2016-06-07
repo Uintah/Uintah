@@ -22,9 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Thread.h>
+
 
 #include <iostream>
 
@@ -61,7 +61,7 @@ void ProcessorGroup::setgComm( int nComm ) const
   for (int i = curr_size; i < nComm; i++) {
     if (MPI_Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS) {
       std::cerr << "Rank: " << d_rank << " - MPI Error in MPI_Comm_dup\n";
-      Thread::exitAll(1);
+      Parallel::exitAll(1);
     }
   }
 }

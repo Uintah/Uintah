@@ -45,6 +45,7 @@
 #include <Core/Exceptions/InvalidState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
@@ -58,12 +59,21 @@
 using namespace std;
 using namespace Uintah;
 
+namespace {
+
+struct dep_map_tag{};
+struct enthalpy_map_tag{};
+
+using dep_map_monitor        = Uintah::CrowdMonitor<dep_map_tag>;
+using enthalpy_map_monitor   = Uintah::CrowdMonitor<enthalpy_map_tag>;
+
+}
+
 //---------------------------------------------------------------------------
 // Default Constructor
 //---------------------------------------------------------------------------
-ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
-  MixingRxnModel( labels, MAlabels ), d_depVarIndexMapLock("ARCHES d_depVarIndexMap lock"),
-  d_enthalpyVarIndexMapLock("ARCHES d_enthalpyVarIndexMap lock")
+ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels )
+  : MixingRxnModel( labels, MAlabels )
 {
   _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() );
 }
@@ -734,17 +744,20 @@ ClassicTableInterface::getIndexInfo()
     std::string name = i->first;
     int index = findIndex( name );
 
-    d_depVarIndexMapLock.readLock();
-    IndexMap::iterator iter = d_depVarIndexMap.find( name );
-    d_depVarIndexMapLock.readUnlock();
+    IndexMap::iterator iter;
+    dep_map_monitor dep_map_read_lock{ Uintah::CrowdMonitor<dep_map_tag>::READER };
+    {
+       iter = d_depVarIndexMap.find(name);
+    }
 
     // Only insert variable if it isn't already there.
     if ( iter == d_depVarIndexMap.end() ) {
       cout_tabledbg << " Inserting " << name << " index information into storage." << endl;
 
-      d_depVarIndexMapLock.writeLock();
-      iter = d_depVarIndexMap.insert( make_pair( name, index ) ).first;
-      d_depVarIndexMapLock.writeUnlock();
+      dep_map_monitor dep_map_write_lock{ Uintah::CrowdMonitor<dep_map_tag>::WRITER };
+      {
+        iter = d_depVarIndexMap.insert(make_pair(name, index)).first;
+      }
     }
   }
 }
@@ -755,19 +768,20 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 {
   if ( !d_coldflow){
 
-    d_enthalpyVarIndexMapLock.writeLock();
-    cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
-    int index = findIndex( "sensibleenthalpy" );
+    enthalpy_map_monitor enthalpy_map_write_lock{ Uintah::CrowdMonitor<enthalpy_map_tag>::WRITER };
+    {
+      cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
+      int index = findIndex("sensibleenthalpy");
 
-    d_enthalpyVarIndexMap.insert( make_pair( "sensibleenthalpy", index ));
+      d_enthalpyVarIndexMap.insert(make_pair("sensibleenthalpy", index));
 
-    cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up adiabatic enthalpy" << endl;
-    index = findIndex( "adiabaticenthalpy" );
-    d_enthalpyVarIndexMap.insert( make_pair( "adiabaticenthalpy", index ));
+      cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up adiabatic enthalpy" << endl;
+      index = findIndex("adiabaticenthalpy");
+      d_enthalpyVarIndexMap.insert(make_pair("adiabaticenthalpy", index));
 
-    index = findIndex( "density" );
-    d_enthalpyVarIndexMap.insert( make_pair( "density", index ));
-    d_enthalpyVarIndexMapLock.writeUnlock();
+      index = findIndex("density");
+      d_enthalpyVarIndexMap.insert(make_pair("density", index));
+    }
   }
 }
 

@@ -34,18 +34,13 @@
 #include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Thread/CrowdMonitor.h>
-#include <Core/Thread/Thread.h>
 
 #include <iosfwd>
 #include <map>
+#include <mutex>
 #include <vector>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-
-namespace Uintah {
-class Thread;
-}
 
 namespace Uintah {
 
@@ -59,9 +54,7 @@ inline const Level* getRealDomain(const Level* level)
   return level;
 }
 
-using Uintah::CrowdMonitor;
 using Uintah::Max;
-using Uintah::Thread;
 using Uintah::FastHashTable;
 
 class BufferInfo;
@@ -671,12 +664,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
     //  Allows us to look up the DW to which we will send a data request.
     dataLocationDBtype d_dataLocation;
 
-    //////////
-    // Insert Documentation Here:
-    mutable CrowdMonitor d_lock;
-    mutable CrowdMonitor d_lvlock;
-    mutable CrowdMonitor d_plock;
-    mutable CrowdMonitor d_pslock;
     bool                 d_finalized;
     GridP                d_grid;
 
@@ -689,8 +676,11 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     inline RunningTaskInfo* getCurrentTaskInfo();
 
-    //std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
-    std::list<RunningTaskInfo> d_runningTasks[MAX_THREADS];
+    //    std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
+    //    std::list<RunningTaskInfo> d_runningTasks[MAX_THREADS];
+    std::mutex m_running_tasks_lock;
+    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks;
+
     ScrubMode d_scrubMode;
 
     bool aborted;

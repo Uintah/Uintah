@@ -63,14 +63,13 @@ PSELIBS := \
        Core/OS                         \
        Core/Parallel                   \
        Core/ProblemSpec                \
-       Core/Thread                     \
        Core/Util                       
 
 ifeq ($(OS_NAME),Darwin)
   PSELIBS += CCA/Components/MPM
 endif
 
-LIBS       := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

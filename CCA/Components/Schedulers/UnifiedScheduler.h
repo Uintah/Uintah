@@ -26,12 +26,10 @@
 #define CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
-#include <Core/Thread/ConditionVariable.h>
-#include <Core/Thread/Runnable.h>
 
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
-#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+  #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
 #include <sci_defs/cuda_defs.h>
@@ -39,10 +37,10 @@
 #include <string>
 
 #ifdef HAVE_CUDA
-static DebugStream gpu_stats("Unified_GPUStats", false);
-static DebugStream use_single_device("Unified_SingleDevice", false);
-static DebugStream simulate_multiple_gpus("GPUSimulateMultiple", false);
-static DebugStream gpudbg("GPUDataWarehouse", false);
+  static DebugStream gpu_stats(              "Unified_GPUStats"     , false );
+  static DebugStream use_single_device(      "Unified_SingleDevice" , false );
+  static DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
+  static DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
 #endif
 
 namespace Uintah {
@@ -60,7 +58,7 @@ CLASS
 GENERAL INFORMATION
    UnifiedScheduler.h
 
-   Qingyu Meng & Alan Humphrey
+   Qingyu Meng, Alan Humphrey, Brad Peterson
    Scientific Computing and Imaging Institute
    University of Utah
 
@@ -77,7 +75,7 @@ DESCRIPTION
    processes there own MPI send and recvs, with shared access to the DataWarehouse.
 
    Uintah task scheduler to support, schedule and execute solely CPU tasks
-   or some combination of CPU, GPU and MIC tasks when enabled.
+   or some combination of CPU and GPU tasks when enabled.
   
 WARNING
    This scheduler is still EXPERIMENTAL and undergoing extensive
@@ -120,36 +118,32 @@ class UnifiedScheduler : public MPIScheduler  {
 
   private:
 
-    // Disable copy and assignment
-    UnifiedScheduler( const UnifiedScheduler& );
-    UnifiedScheduler& operator=( const UnifiedScheduler& );
+    // eliminate copy, assignment and move
+    UnifiedScheduler( const UnifiedScheduler & )            = delete;
+    UnifiedScheduler& operator=( const UnifiedScheduler & ) = delete;
+    UnifiedScheduler( UnifiedScheduler && )                 = delete;
+    UnifiedScheduler& operator=( UnifiedScheduler && )      = delete;
 
-    int getAvailableThreadNum();
+    void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
 
-    ConditionVariable          d_nextsignal;           // conditional wait mutex
-    Mutex                      d_nextmutex;            // next mutex
-    Mutex                      schedulerLock;          // scheduler lock (acquire and release quickly)
-    UnifiedSchedulerWorker*    t_worker[MAX_THREADS];  // the workers
-    Thread*                    t_thread[MAX_THREADS];  // the threads themselves
+    static void init_threads( UnifiedScheduler * scheduler, int num_threads );
 
     // thread shared data, needs lock protection when accessed
     std::vector<int>           phaseTasks;
     std::vector<int>           phaseTasksDone;
     std::vector<DetailedTask*> phaseSyncTask;
     std::vector<int>           histogram;
-    DetailedTasks*             dts;
+    DetailedTasks*             dts{nullptr};
 
-    QueueAlg taskQueueAlg_;
-    int      currentIteration;
-    int      numTasksDone;
-    int      ntasks;
-    int      currphase;
-    int      numPhases;
-    bool     abort;
-    int      abort_point;
-    int      numThreads_;
-
-    void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
+    QueueAlg taskQueueAlg_{MostMessages};
+    int      currentIteration{0};
+    int      numTasksDone{0};
+    int      ntasks{0};
+    int      currphase{0};
+    int      numPhases{0};
+    bool     abort{false};
+    int      abort_point{0};
+    int      numThreads_{-1};
 
 #ifdef HAVE_CUDA
 
@@ -201,17 +195,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void initiateD2H(DetailedTask* dtask);
 
-    //void copyAllDataD2H(DetailedTask* dtask);
-
-    //void processD2HCopies(DetailedTask* dtask);
-
-    // postD2HCopies( DetailedTask* dtask );
-    
-    //void postH2DCopies(DetailedTask* dtask);
-
-    //void preallocateDeviceMemory( DetailedTask* dtask );
-
-    //void createCudaStreams(int numStreams, int device);
     bool ghostCellsProcessingReady( DetailedTask* dtask );
 
     bool allHostVarsProcessingReady( DetailedTask* dtask );
@@ -262,25 +245,14 @@ class UnifiedScheduler : public MPIScheduler  {
     int  currentDevice_;
 
     /* thread shared data, needs lock protection when accessed */
-    //std::vector<std::queue<cudaStream_t*> >  idleStreams;
     static std::map <unsigned int, queue<cudaStream_t*> > *idleStreams;
     std::vector< std::string >               materialsNames;
 
-    // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
-    static CrowdMonitor idleStreamsLock_;
-    /*mutable CrowdMonitor deviceComputesLock_;
-    mutable CrowdMonitor hostComputesLock_;
-    mutable CrowdMonitor deviceRequiresLock_;
-    mutable CrowdMonitor hostRequiresLock_;
-    mutable CrowdMonitor deviceComputesAllocationLock_;
-    mutable CrowdMonitor hostComputesAllocationLock_;
-    mutable CrowdMonitor deviceComputesTemporaryLock_;*/
-
     struct labelPatchMatlDependency {
       std::string     label;
-      int        patchID;
-      int        matlIndex;
-      Task::DepType    depType;
+      int             patchID;
+      int             matlIndex;
+      Task::DepType   depType;
 
       labelPatchMatlDependency(const char * label, int patchID, int matlIndex, Task::DepType depType) {
         this->label = label;
@@ -311,15 +283,14 @@ class UnifiedScheduler : public MPIScheduler  {
 
 
 
-class UnifiedSchedulerWorker : public Runnable {
+class UnifiedSchedulerWorker {
+
 
 public:
   
-  UnifiedSchedulerWorker( UnifiedScheduler* scheduler, int thread_id );
+  UnifiedSchedulerWorker( UnifiedScheduler * scheduler );
 
   void run();
-
-  void quit() { d_quit = true; };
 
   double getWaittime();
 
@@ -327,21 +298,17 @@ public:
   
   friend class UnifiedScheduler;
 
+
 private:
 
-  UnifiedScheduler*      d_scheduler;
-  ConditionVariable      d_runsignal;
-  Mutex                  d_runmutex;
-  bool                   d_quit;
-  bool                   d_idle;
-  int                    d_thread_id;
-  int                    d_rank;
-  double                 d_waittime;
-  double                 d_waitstart;
+  UnifiedScheduler * d_scheduler;
+  int                d_rank{-1};
+  double             d_waittime{0.0};
+  double             d_waitstart{0.0};
 
 
 };
 
-} // End namespace Uintah
+} // namespace Uintah
    
-#endif // End CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H
+#endif // CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H

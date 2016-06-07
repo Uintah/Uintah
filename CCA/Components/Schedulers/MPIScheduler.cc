@@ -31,12 +31,12 @@
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
@@ -47,21 +47,34 @@
 #include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS
 
-#include <sstream>
+#include <cstring>
 #include <iomanip>
 #include <map>
-#include <cstring>
+#include <mutex>
+#include <sstream>
 
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
 // tasks to modify data that may have a pending send.
 #define USE_PACKING
 
+namespace {
+
+// Tags for each CrowdMonitor
+struct send_tag{};
+struct recv_tag{};
+
+using  send_monitor = Uintah::CrowdMonitor<send_tag>;
+using  recv_monitor = Uintah::CrowdMonitor<recv_tag>;
+
+}
+
 using namespace Uintah;
 
+
 // Used to sync cout/cerr so it is readable when output by multiple threads
-extern Uintah::Mutex coutLock;
-extern Uintah::Mutex cerrLock;
+extern std::mutex coutLock;
+extern std::mutex cerrLock;
 
 static DebugStream dbg(          "MPIScheduler_DBG",        false );
 static DebugStream dbgst(        "SendTiming",              false );
@@ -82,22 +95,23 @@ std::map<std::string, double> exectimes;
 
 //______________________________________________________________________
 //
-MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
-                            const Output*         oport,
-                                  MPIScheduler*   parentScheduler)
-  : SchedulerCommon(myworld, oport),
-    parentScheduler_(parentScheduler),
-    oport_(oport),
-    numMessages_(0),
-    messageVolume_(0),
-    recvLock("MPI receive lock"),
-    sendLock("MPI send lock"),
-    dlbLock("loadbalancer lock"),
-    waittimesLock("waittimes lock")
+MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
+                          , const Output         * oport
+                          ,       MPIScheduler   * parentScheduler
+                          )
+  : SchedulerCommon(myworld, oport)
+  , parentScheduler_{parentScheduler}
+  , oport_{oport}
+  , numMessages_{0}
+  , messageVolume_{0}
+  , dlbLock{}
+  , waittimesLock{}
 {
+
 #ifdef UINTAH_ENABLE_KOKKOS
   Kokkos::initialize();
 #endif //UINTAH_ENABLE_KOKKOS
+
   d_lasttime = Time::currentSeconds();
   reloc_new_posLabel_ = 0;
 
@@ -502,9 +516,10 @@ MPIScheduler::postMPISends( DetailedTask* task,
       //
       // APH - 01/24/15
       //
-      sendLock.writeLock();
-      sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
-      sendLock.writeUnlock();
+      send_monitor send_lock{ Uintah::CrowdMonitor<send_tag>::WRITER };
+      {
+        sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
+      }
 
       mpi_info_[TotalSendMPI] += Time::currentSeconds() - start;
 
@@ -530,11 +545,10 @@ MPIScheduler::postMPISends( DetailedTask* task,
 //
 int MPIScheduler::pendingMPIRecvs()
 {
-  int num = 0;
-  recvLock.readLock();
-  num = recvs_.numRequests();
-  recvLock.readUnlock();
-  return num;
+  recv_monitor send_lock{ Uintah::CrowdMonitor<recv_tag>::READER };
+  {
+    return recvs_.numRequests();
+  }
 }
 
 //______________________________________________________________________
@@ -582,7 +596,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
     std::vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
 
   // Receive any of the foreign requires
-  recvLock.writeLock();
+  recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
   {
     for (; sorted_iter != sorted_reqs.end(); sorted_iter++) {
       DependencyBatch* batch = *sorted_iter;
@@ -749,8 +763,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 #endif
       }
     }  // end for loop over requires
-  }
-  recvLock.writeUnlock();
+  }  // end recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER }
 
   double drecv = Time::currentSeconds() - recvstart;
   mpi_info_[TotalRecv] += drecv;
@@ -770,7 +783,7 @@ void MPIScheduler::processMPIRecvs(int how_much)
 
   double start = Time::currentSeconds();
 
-  recvLock.writeLock();
+  recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
   {
     switch (how_much) {
       case TEST :
@@ -807,7 +820,6 @@ void MPIScheduler::processMPIRecvs(int how_much)
         break;
     } // end switch
   }
-  recvLock.writeUnlock();
 
   mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
   CurrentWaitTime += Time::currentSeconds() - start;

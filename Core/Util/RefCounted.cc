@@ -24,8 +24,6 @@
 
 
 #include <Core/Util/RefCounted.h>
-#include <Core/Thread/AtomicCounter.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>

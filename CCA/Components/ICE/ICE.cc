@@ -21,15 +21,14 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-extern Uintah::Mutex cerrLock;
+
 #ifdef __APPLE__
 // This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
 // make the isnan function not work.  This define makes the cmath header
 // not get included since we do not need it anyway.
 #  define _CPP_CMATH
 #endif
+
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
@@ -68,6 +67,7 @@ extern Uintah::Mutex cerrLock;
 #include <Core/Math/Expon.h>
 #include <Core/Util/DebugStream.h>
 
+#include <mutex>
 #include <vector>
 #include <sstream>
 #include <iostream>
@@ -75,6 +75,8 @@ extern Uintah::Mutex cerrLock;
 #include <cfloat>
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/visit_defs.h>
+
+extern std::mutex cerrLock;
 
 #ifdef HAVE_HYPRE
 #  include <CCA/Components/Solvers/HypreSolver.h>

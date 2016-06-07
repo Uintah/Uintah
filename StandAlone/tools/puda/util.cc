@@ -21,9 +21,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <StandAlone/tools/puda/util.h>
 
-#include <Core/Thread/Thread.h>
+#include <StandAlone/tools/puda/util.h>
+#include <Core/Parallel/Parallel.h>
+
 
 #include <cstdlib>
 #include <iostream>
@@ -44,7 +45,7 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     cerr << "\n";
     cerr << "ERROR: 'timesteplow' must be between 0 and " << times.size()-1 << ".  You had " << time_step_lower << ".\n";
     cerr << "\n";
-    Uintah::Thread::exitAll( 2 );
+    Uintah::Parallel::exitAll( 2 );
   }
   if( !tsup_set ) {
     time_step_upper = times.size() - 1;
@@ -53,6 +54,6 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     cerr << "\n";
     cerr << "Error: 'timestephigh' must be between 0 and " << times.size()-1 << ".  You had " << time_step_upper << ".\n";
     cerr << "\n";
-    Uintah::Thread::exitAll( 2 );
+    Uintah::Parallel::exitAll( 2 );
   }
 }
