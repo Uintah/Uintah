@@ -49,7 +49,6 @@ PSELIBS := \
 	CCA/Ports        \
 	Core/OS       \
 	Core/Geometry \
-	Core/Thread   \
 	Core/Util     \
 	Core/Exceptions \
 	\

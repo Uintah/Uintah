@@ -36,7 +36,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <iostream>
 
 using namespace Uintah;

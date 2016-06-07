@@ -50,7 +50,8 @@ PSELIBS := \
 	Core/Parallel   \
 	Core/Exceptions \
 	Core/Math       \
-	Core/Exceptions Core/Thread Core/Geometry 
+	Core/Exceptions \
+	Core/Geometry 
 
 LIBS	:= 
 

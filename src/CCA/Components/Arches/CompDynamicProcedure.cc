@@ -46,7 +46,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 using namespace std;
 

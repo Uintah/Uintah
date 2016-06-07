@@ -28,12 +28,12 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 #include <cstdlib>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <thread>
 
 using namespace Uintah;
 
@@ -48,17 +48,15 @@ using std::ostringstream;
 #  undef THREADED_MPI_AVAILABLE
 #endif
 
-// bool         Parallel::allowThreads_;
-
-int             Parallel::numThreads_           = -1;
-bool            Parallel::determinedIfUsingMPI_ = false;
-
-bool            Parallel::initialized_          = false;
-bool            Parallel::usingMPI_             = false;
-bool            Parallel::usingDevice_          = false;
-int             Parallel::worldRank_            = -1;
-int             Parallel::worldSize_            = -1;
-ProcessorGroup* Parallel::rootContext_          = 0;
+int              Parallel::numThreads_           = -1;
+std::thread::id  Parallel::m_main_thread_id      = std::this_thread::get_id();
+bool             Parallel::determinedIfUsingMPI_ = false;
+bool             Parallel::initialized_          = false;
+bool             Parallel::usingMPI_             = false;
+bool             Parallel::usingDevice_          = false;
+int              Parallel::worldRank_            = -1;
+int              Parallel::worldSize_            = -1;
+ProcessorGroup*  Parallel::rootContext_          = 0;
 
 namespace Uintah {
 
@@ -112,17 +110,21 @@ Parallel::getNumThreads()
   return numThreads_;
 }
 
+std::thread::id
+Parallel::getMainThreadID()
+{
+  return m_main_thread_id;
+}
+
 void
 Parallel::setNumThreads( int num)
 {
    numThreads_ = num;
-   //allowThreads = true;
 }
 
 void
 Parallel::noThreading()
 {
-  //allowThreads_ = false;
   numThreads_ = 1;
 }
 
@@ -140,7 +142,7 @@ Parallel::forceNoMPI()
   usingMPI_             = false;
 }
 
-bool 
+bool
 Parallel::isInitialized()
 {
   return initialized_;
@@ -155,7 +157,6 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   }
   if( char * max = getenv( "PSE_MAX_THREADS" ) ){
     numThreads_ = atoi( max );
-    // allowThreads_ = true;
     cerr << "PSE_MAX_THREADS set to " << numThreads_ << "\n";
 
     if( numThreads_ <= 0 || numThreads_ > 16 ){
@@ -165,9 +166,9 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
       throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n", __FILE__, __LINE__ );
     }
   }
-  
+
   // Try to automatically determine if we are running under MPI (many MPIs set environment variables
-  // that can be used for this.) 
+  // that can be used for this.)
   if(getenv("MPI_ENVIRONMENT")){                                  // Look for SGI MPI
     usingMPI_ =true;
   }
@@ -227,7 +228,7 @@ Parallel::initializeManager(int& argc, char**& argv)
   int provided = -1;
   int required = MPI_THREAD_SINGLE;
 #endif
-  if( usingMPI_ ){     
+  if( usingMPI_ ){
 #ifdef THREADED_MPI_AVAILABLE
     if( numThreads_ > 0 ) {
       required = MPI_THREAD_MULTIPLE;
@@ -245,7 +246,7 @@ Parallel::initializeManager(int& argc, char**& argv)
 #else
     if( ( status = MPI_Init( &argc, &argv ) ) != MPI_SUCCESS) {
 #endif
-      MpiError(const_cast<char*>("MPI_Init"), status);
+      MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
     }
 
 #ifdef THREADED_MPI_AVAILABLE
@@ -258,11 +259,11 @@ Parallel::initializeManager(int& argc, char**& argv)
 
     Uintah::worldComm_ = MPI_COMM_WORLD;
     if( ( status=MPI_Comm_size( Uintah::worldComm_, &worldSize_ ) ) != MPI_SUCCESS ) {
-      MpiError(const_cast<char*>("MPI_Comm_size"), status);
+      MpiError(const_cast<char*>("Uinath::MPI::Comm_size"), status);
     }
 
     if((status=MPI_Comm_rank( Uintah::worldComm_, &worldRank_ )) != MPI_SUCCESS) {
-      MpiError(const_cast<char*>("MPI_Comm_rank"), status);
+      MpiError(const_cast<char*>("Uinath::MPI::Comm_rank"), status);
     }
 
 #if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
@@ -281,7 +282,7 @@ Parallel::initializeManager(int& argc, char**& argv)
       cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
 #endif
     }
-     //MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+     //MPI::Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
   }
   else {
     worldRank_   = 0;
@@ -299,7 +300,7 @@ Parallel::getMPIRank()
     cout << "ERROR:\n";
     cout << "ERROR: getMPIRank() called before initializeManager()...\n";
     cout << "ERROR:\n";
-    Thread::exitAll(1);
+    exitAll(1);
   }
   return worldRank_;
 }
@@ -373,4 +374,10 @@ Parallel::getRootProcessorGroup()
    }
 
    return rootContext_;
+}
+
+void
+Parallel::exitAll(int code)
+{
+  std::exit(code);
 }

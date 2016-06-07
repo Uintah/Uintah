@@ -26,9 +26,10 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
+
 #include <map>
+#include <mutex>
 #include <iostream>
 #include <sstream>
 
@@ -46,7 +47,7 @@ static map<string, VarLabel*> allLabels;
 string VarLabel::d_particlePositionName = "p.x";
 
 string VarLabel::d_defaultCompressionMode = "none";
-static Mutex lock("VarLabel create/destroy lock");
+static std::mutex lock{};
 
 VarLabel*
 VarLabel::create( const string                  & name,

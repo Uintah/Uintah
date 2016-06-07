@@ -22,26 +22,72 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Util/Assert.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/CrowdMonitor.h>
-#include <map>
-#include <vector>
+
 #include <iostream>
+#include <map>
+#include <mutex>
+#include <vector>
 
 using namespace Uintah;
-using namespace std;
 
-static Mutex tdLock("TypeDescription::getMPIType lock");
-static CrowdMonitor tpLock("TypeDescription type lock"); 
+namespace {
 
-static map<string, const TypeDescription*>* types_g    = NULL;
-static vector<const TypeDescription*>*      typelist_g = NULL;
-static bool killed=false;
+using register_monitor = Uintah::CrowdMonitor<TypeDescription::register_tag>;
+using lookup_monitor   = Uintah::CrowdMonitor<TypeDescription::lookup_tag>;
+
+std::mutex get_mpi_type_lock{};
+std::map<std::string, const TypeDescription*> * types_g     = nullptr;
+std::vector<const TypeDescription*>           * typelist_g  = nullptr;
+bool killed = false;
+
+}
+
+
+TypeDescription::TypeDescription(        Type          type
+                                ,  const std::string & name
+                                ,        bool          isFlat
+                                ,        MPI_Datatype( *mpitypemaker )()
+                                )
+  : d_type{type}
+  , d_name{name}
+  , d_isFlat{isFlat}
+  , d_mpitype{MPI_Datatype(-1)}
+  , d_mpitypemaker{mpitypemaker}
+{
+  register_type();
+}
+
+TypeDescription::TypeDescription(        Type          type
+                                ,  const std::string & name
+                                ,        bool          isFlat
+                                ,        MPI_Datatype  mpitype
+                                )
+  : d_type{type}
+  , d_name{name}
+  , d_isFlat{isFlat}
+  , d_mpitype{mpitype}
+{
+  register_type();
+}
+
+TypeDescription::TypeDescription(        Type              type
+                                ,  const std::string     & name
+                                ,        Variable        * (*maker)()
+                                ,  const TypeDescription * subtype
+                                )
+  : d_type{type}
+  , d_subtype{subtype}
+  , d_name{name}
+  , d_mpitype{MPI_Datatype(-2)}
+  , d_maker{maker}
+{
+  register_type();
+}
 
 void
 TypeDescription::deleteAll()
@@ -53,7 +99,7 @@ TypeDescription::deleteAll()
   }
 
   killed = true;
-  vector<const TypeDescription*>::iterator iter = typelist_g->begin();
+  std::vector<const TypeDescription*>::iterator iter = typelist_g->begin();
 
   for(;iter != typelist_g->end();iter++) {
     delete *iter;
@@ -62,95 +108,48 @@ TypeDescription::deleteAll()
   delete types_g;
   delete typelist_g;
 
-  types_g    = NULL;
-  typelist_g = NULL;
+  types_g    = nullptr;
+  typelist_g = nullptr;
 }
 
 void
 TypeDescription::register_type()
 {
-  tpLock.writeLock(); 
-  if( !types_g ) {
-    ASSERT( !killed );
-    ASSERT( !typelist_g )
+  register_monitor register_write_lock{ Uintah::CrowdMonitor<TypeDescription::register_tag>::WRITER };
+  {
+    if (!types_g) {
+      ASSERT(!killed);
+      ASSERT(!typelist_g)
 
-    types_g    = scinew map<string, const TypeDescription*>;
-    typelist_g = scinew vector<const TypeDescription*>;
+      types_g    = scinew std::map<std::string, const TypeDescription*>;
+      typelist_g = scinew std::vector<const TypeDescription*>;
+    }
+
+    std::map<std::string, const TypeDescription*>::iterator iter = types_g->find(getName());
+
+    if (iter == types_g->end()) {
+      (*types_g)[getName()] = this;
+    }
+    typelist_g->push_back(this);
   }
-  
-  map<string, const TypeDescription*>::iterator iter = types_g->find( getName() );
-
-  if( iter == types_g->end() ){
-    (*types_g)[ getName() ] = this;
-  }
-  typelist_g->push_back( this );
-  tpLock.writeUnlock(); 
 }
 
-TypeDescription::TypeDescription(       Type          type,
-                                  const std::string & name,
-                                        bool          isFlat,
-                                        MPI_Datatype( *mpitypemaker )() ) :
-  d_type(         type ),
-  d_subtype(      0 ),
-  d_name(         name ),
-  d_isFlat(       isFlat),
-  d_mpitype(      MPI_Datatype(-1) ),
-  d_mpitypemaker( mpitypemaker ),
-  d_maker(        0 )
+std::string
+TypeDescription::getName() const
 {
-  register_type();
-}
-
-TypeDescription::TypeDescription(       Type          type,
-				  const std::string & name,
-					bool          isFlat,
-					MPI_Datatype  mpitype ) :
-  d_type(type),
-  d_subtype(0),
-  d_name(name),
-  d_isFlat(isFlat),
-  d_mpitype(mpitype),
-  d_mpitypemaker(0),
-  d_maker(0)
-{
-  register_type();
-}
-
-TypeDescription::TypeDescription(       Type              type, 
-                                  const std::string     & name,
-                                        Variable        * (*maker)(),
-                                  const TypeDescription * subtype ) :
-  d_type(type),
-  d_subtype(subtype),
-  d_name(name),
-  d_isFlat(false),
-  d_mpitype(MPI_Datatype(-2)),
-  d_mpitypemaker(0),
-  d_maker(maker)
-{
-  register_type();
-}
-
-TypeDescription::~TypeDescription()
-{
-}
-
-string TypeDescription::getName() const
-{
-  if( d_subtype ) {
+  if (d_subtype) {
     return d_name + "<" + d_subtype->getName() + ">";
-  }
-  else {
+  } else {
     return d_name;
   }
 }
-string TypeDescription::getFileName() const
+
+std::string
+TypeDescription::getFileName() const
 {
-  if( d_subtype ) {
+  if (d_subtype) {
     return d_name + d_subtype->getFileName();
-  }
-  else {
+  } else {
     return d_name;
   }
 }
@@ -158,44 +157,33 @@ string TypeDescription::getFileName() const
 const TypeDescription *
 TypeDescription::lookupType( const std::string & t )
 {
-  tpLock.readLock(); 
-  if( !types_g ){
-    tpLock.readUnlock();
-    return 0;
+  lookup_monitor lookup_read_lock{ Uintah::CrowdMonitor<TypeDescription::lookup_tag>::READER };
+  {
+    if (!types_g) {
+      return 0;
+    }
+    std::map<std::string, const TypeDescription*>::iterator iter = types_g->find(t);
+    if (iter == types_g->end()) {
+      return 0;
+    }
+    return iter->second;
   }
-  map<string, const TypeDescription*>::iterator iter = types_g->find( t );
-  if( iter == types_g->end() ){
-    tpLock.readUnlock();
-    return 0;
-  }
-  tpLock.readUnlock();
-  return iter->second;
-}
-
-TypeDescription::Register::Register( const TypeDescription * td )
-{
-  // Actual registration of the Variable Type happens when of the 'td' variable 
-  // is originally created.
-}
-
-TypeDescription::Register::~Register()
-{
 }
 
 MPI_Datatype
 TypeDescription::getMPIType() const
 {
-  if(d_mpitype == MPI_Datatype(-1)){
-    tdLock.lock();
-    if (d_mpitype == MPI_Datatype(-1)) {
-      if(d_mpitypemaker){
-        d_mpitype = (*d_mpitypemaker)();
-      } else {
-        tdLock.unlock();
-        throw InternalError("MPI Datatype requested, but do not know how to make it", __FILE__, __LINE__);
+  if (d_mpitype == MPI_Datatype(-1)) {
+    std::lock_guard<std::mutex> guard(get_mpi_type_lock);
+    {
+      if (d_mpitype == MPI_Datatype(-1)) {
+        if (d_mpitypemaker) {
+          d_mpitype = (*d_mpitypemaker)();
+        } else {
+          throw InternalError("MPI Datatype requested, but do not know how to make it", __FILE__, __LINE__);
+        }
       }
     }
-    tdLock.unlock();
   }
   ASSERT(d_mpitype != MPI_Datatype(-2));
   return d_mpitype;
@@ -204,9 +192,8 @@ TypeDescription::getMPIType() const
 Variable *
 TypeDescription::createInstance() const
 {
-  if(!d_maker) {
-    throw InternalError("Do not know how to create instance for type: "+getName(), __FILE__, __LINE__);
+  if (!d_maker) {
+    throw InternalError("Do not know how to create instance for type: " + getName(), __FILE__, __LINE__);
   }
   return (*d_maker)();
 }
-

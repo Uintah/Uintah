@@ -42,7 +42,6 @@ PSELIBS := \
 	Core/Grid        \
 	Core/Disclosure  \
 	Core/Exceptions  \
-	Core/Thread                      \
 	Core/Exceptions                  \
 	Core/Geometry                    \
 	Core/Containers                  \

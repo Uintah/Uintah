@@ -46,7 +46,6 @@ PSELIBS := \
 	Core/OS          \
 	Core/Exceptions  \
 	Core/Containers  \
-	Core/Thread      \
 	Core/Util \
 	\
 	Core/Math

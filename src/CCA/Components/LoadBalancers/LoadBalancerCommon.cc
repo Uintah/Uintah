@@ -35,20 +35,21 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 
 #include <sci_values.h>
+
+
+#include <mutex>
 #include <sstream>
 
 using namespace Uintah;
 using namespace std;
 
-// Debug: Used to sync cerr so it is readable (when output by
-// multiple threads at the same time)  From sus.cc:
-extern Uintah::Mutex cerrLock;
+// Debug: Used to sync cerr so it is readable when output by multiple threads
+extern std::mutex cerrLock;
 
 DebugStream lbDebug( "LoadBalancer", false );
 DebugStream neiDebug("Neighborhood", false );

@@ -38,7 +38,6 @@ SRCS := $(SRCDIR)/TestBoxGrouper.cc \
 PSELIBS := \
 	Core/Exceptions \
 	Core/Geometry \
-	Core/Thread \
 	Core/Containers \
 	testprograms/TestSuite \
 	\

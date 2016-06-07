@@ -35,7 +35,7 @@ SRCDIR   := Core/Containers
 SRCS     += $(SRCDIR)/ConsecutiveRangeSet.cc \
             $(SRCDIR)/templates.cc
 
-PSELIBS := Core/Exceptions Core/Thread
+PSELIBS := Core/Exceptions
 
 LIBS :=
 

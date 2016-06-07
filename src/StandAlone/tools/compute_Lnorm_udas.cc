@@ -52,7 +52,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <dirent.h>
@@ -85,13 +84,13 @@ void usage(const std::string& badarg, const std::string& progname)
        << " [options] <uda1> <uda2>\n\n";
   cout << "Valid options are:\n";
   cout << "  -h[elp]\n";
-  Thread::exitAll(1);
+  Parallel::exitAll(1);
 }
 //__________________________________
 void abort_uncomparable()
 {
   cerr << "\nThe uda directories may not be compared.\n";
-  Thread::exitAll(5);
+  Parallel::exitAll(5);
 }
 
 //__________________________________
@@ -456,7 +455,6 @@ main(int argc, char** argv)
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
-  Thread::setDefaultAbortMode("exit");
   string ignoreVar = "none";
   string filebase1;
   string filebase2;

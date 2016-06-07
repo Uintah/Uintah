@@ -22,13 +22,7 @@
  * IN THE SOFTWARE.
  */
 
+#include <mutex>
 
-
-#include <Core/Thread/Mutex.h>
-#include <Core/Util/DebugStream.h>
-
-using Uintah::Mutex;
-Mutex coutLock( "cout lock" );
-Mutex cerrLock( "cerr lock" );
-
-Uintah::DebugStream dbg_barrier("MPIBarriers",false);
+std::mutex coutLock{};
+std::mutex cerrLock{};

@@ -33,9 +33,9 @@
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
-#include <Core/Thread/CrowdMonitor.h>
 
 #include <map> //for host code only.
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -45,8 +45,8 @@
 #define MAX_LEVELDB_ITEMS     20        //TODO: Is this needed?
 #define MAX_NAME_LENGTH       32        //How big a particular label can be.
 
-#define LEVEL_PATCH_ID = -99999999; //A sentinel value used for a patch ID when we're storing a
-                                    //region of patches for a level instead of a regular patch.
+#define LEVEL_PATCH_ID = -99999999;     //A sentinel value used for a patch ID when we're storing a
+                                        //region of patches for a level instead of a regular patch.
 namespace Uintah {
 
 enum materialType {
@@ -63,15 +63,12 @@ enum materialType {
   KNAUSS_SEA_WATER_EOS = 10,
   KUMARI_DASS_EOS = 11 */
 };
-class OnDemandDataWarehouse;
 
-class GPUDataWarehouse;
+class OnDemandDataWarehouse;
 
 class GPUDataWarehouse {
 
 public:
-
-  //GPUDataWarehouse(int id, void * placementNewBuffer) : allocateLock("allocate lock"), varLock("var lock"){ };
 
 
   virtual ~GPUDataWarehouse() {};
@@ -157,8 +154,8 @@ public:
     size_t copiedOffset;
     //The default constructor
     contiguousArrayInfo() {
-      allocatedDeviceMemory = NULL;
-      allocatedHostMemory = NULL;
+      allocatedDeviceMemory = nullptr;
+      allocatedHostMemory = nullptr;
       sizeOfAllocatedMemory = 0;
       assignedOffset = 0; //To keep up to the point where data has been "put".  Computes data will be assigned
       copiedOffset = 0; //To keep up to the point where data will need to be copied.  Required data will be copied
@@ -282,8 +279,6 @@ public:
                                 //get the rest of the information we need.
     atomicDataStatus      atomicStatusInHostMemory;
     atomicDataStatus      atomicStatusInGpuMemory;
-    //bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
-    //bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
 
     std::map<stagingVar, stagingVarInfo> stagingVars;  //When ghost cells in the GPU need to go to another memory space
                                                        //we will be creating temporary contiguous arrays to hold that
@@ -362,10 +357,9 @@ public:
     getModifiable(var, label, patchID, matlIndx, 0);
   }
 
-  //HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
-  __host__ void put(GPUGridVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, bool staging = false, GhostType gtype = None, int numGhostCells = 0, void* hostPtr = NULL);
-  __host__ void put(GPUReductionVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = NULL);
-  __host__ void put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = NULL);
+  __host__ void put(GPUGridVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, bool staging = false, GhostType gtype = None, int numGhostCells = 0, void* hostPtr = nullptr);
+  __host__ void put(GPUReductionVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = nullptr);
+  __host__ void put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = nullptr);
 
   __host__ void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype = None, int numGhostCells = 0);
   __host__ void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType);
@@ -375,28 +369,22 @@ public:
   __host__ void copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const* label,
                                    int patchID, int matlIndx, int levelIndx, bool staging,
                                    int3 offset, int3 size);
-  //HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
   HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost);
   HOST_DEVICE void allocate(const char* indexID, size_t size);
 
   //______________________________________________________________________
   // GPU DataWarehouse support methods
-  
-  //HOST_DEVICE bool exist(char const* label, int patchID, int matlIndx, int levelIndx);
-  //HOST_DEVICE bool exist(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 host_size, int3 host_offset, bool skipContiguous = false, bool onlyContiguous = false);
   HOST_DEVICE bool existContiguously(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 host_size, int3 host_offset);
   HOST_DEVICE bool existsLevelDB( char const* name, int matlIndx, int levelIndx);       // levelDB
   HOST_DEVICE bool removeLevelDB( char const* name, int matlIndx, int levelIndx);
   HOST_DEVICE bool remove(char const* label, int patchID, int matlIndx, int levelIndx);
-
   HOST_DEVICE void syncto_device(void *cuda_stream);
   HOST_DEVICE void clear();
   HOST_DEVICE void deleteSelfOnDevice();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return d_device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
-  //HOST_DEVICE cudaError_t copyDataHostToDevice(char const* indexID, void *cuda_stream);
-  //HOST_DEVICE cudaError_t copyDataDeviceToHost(char const* indexID, void *cuda_stream);
   HOST_DEVICE void copyHostContiguousToHost(GPUGridVariableBase& device_var, GridVariableBase* host_var, char const* label, int patchID, int matlIndx, int levelIndx);
+
 
   //______________________________________________________________________
   //Additional support methods
@@ -411,14 +399,12 @@ public:
   __host__ bool areAllStagingVarsValid(char const* label, int patchID, int matlIndx, int levelIndx);
 
 
-
   __host__ atomicDataStatus getStatus(atomicDataStatus& status);
   __host__ std::string getDisplayableStatusCodes(atomicDataStatus& status);
   __host__ bool testAndSetAllocating(atomicDataStatus& status);
   __host__ bool testAndSetAllocate(atomicDataStatus& status);
   __host__ bool checkAllocated(atomicDataStatus& status);
   __host__ bool checkValid(atomicDataStatus& status);
-  //__host__ bool testAndSetCopying(atomicDataStatus& status);
 
   __host__ bool isAllocatedOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool isAllocatedOnGPU(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
@@ -443,17 +429,13 @@ public:
   //the correct destination GPU var.  This would be the final step of a GPU ghost cell transfer.
   HOST_DEVICE void copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream);
   HOST_DEVICE void copyGpuGhostCellsToGpuVars();
-
   HOST_DEVICE bool ghostCellCopiesNeeded();
   HOST_DEVICE void getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, int& numGhostCells, char const* label, int patchID, int matlIndx, int levelIndx = 0);
-  //HOST_DEVICE void getTempGhostCells(void * dtask, std::vector<tempGhostCellInfo>& temp);
-
   HOST_DEVICE void* getPlacementNewBuffer();
   
   __host__ void init_device(size_t objectSizeInBytes, unsigned int maxdVarDBItems );
   __host__ void init(int id, std::string internalName);
   __host__ void cleanup();
-
 
   __device__ void print();
 
@@ -461,7 +443,6 @@ private:
 
   HOST_DEVICE dataItem* getItem(char const* label, int patchID, int matlIndx, int levelIndx);
   HOST_DEVICE void resetdVarDB();
- // HOST_DEVICE void copyGpuGhostCellsToGpuVars();
 
 
   HOST_DEVICE void printError(const char* msg, const char* methodName, char const* label, int patchID, int matlIndx, int levelIndx);
@@ -474,10 +455,9 @@ private:
 
   std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers;
 
-  //mutable Uintah::CrowdMonitor allocateLock;
-  //mutable Uintah::CrowdMonitor varLock;
-  mutable Uintah::CrowdMonitor *allocateLock;
-  mutable Uintah::CrowdMonitor *varLock;
+
+  std::mutex * allocateLock;
+  std::mutex * varLock;
 
   char _internalName[80];
 
@@ -498,11 +478,6 @@ private:
   //These STL data structures being here do not pose a problem for the CUDA compiler
 
   std::map<std::string, contiguousArrayInfo> *contiguousArrays;
-
-  //std::vector<tempGhostCellInfo> tempGhostCells; //For the host side.  Holds both ghost cell data and information about prepared ghosts cell.
-                                                 //Data is loaded in here through prepareGPUDependencies, which checks ahead and
-                                                 //loads all ghost cells into contiguous chunks ready for copying to the destination.
-                                                 //See prepareGPUDependencies for more info.
 
   dataItem d_varDB[MAX_VARDB_ITEMS];              //For the device side.  The variable database. It's a very large buffer.
                                                   //Important note:

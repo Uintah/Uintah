@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <Core/Thread/Time.h>
+
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
@@ -33,25 +33,59 @@
 #endif
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
+#include <Core/Util/Time.h>
+
+#include <mutex>
 
 #include <sci_defs/config_defs.h>
 #include <sci_algorithm.h>
 #include <sci_defs/cuda_defs.h>
 
+namespace {
+
+// These are for uniquely identifying the Uintah::CrowdMonitors<Tag>
+// used to protect multi-threaded access to global data structures
+struct external_ready_tag{};
+struct internal_ready_tag{};
+
+using  external_ready_monitor = Uintah::CrowdMonitor<external_ready_tag>;
+using  internal_ready_monitor = Uintah::CrowdMonitor<internal_ready_tag>;
+
+std::mutex dependency_batch_mutex{};
+std::mutex internal_dependency_mutex{};
+
+#ifdef HAVE_CUDA
+  struct device_transfer_complete_queue_tag{};
+  struct device_finalize_prep_queue_tag{};
+  struct device_ready_queue_tag{};
+  struct device_completed_queue_tag{};
+  struct host_finalize_prep_queue_tag{};
+  struct host_ready_queue_tag{};
+
+  using  device_transfer_complete_queue_monitor = Uintah::CrowdMonitor<device_transfer_complete_queue_tag>;
+  using  device_finalize_prep_queue_monitor     = Uintah::CrowdMonitor<device_finalize_prep_queue_tag>;
+  using  device_ready_queue_monitor             = Uintah::CrowdMonitor<device_ready_queue_tag>;
+  using  device_completed_queue_monitor         = Uintah::CrowdMonitor<device_completed_queue_tag>;
+  using  host_finalize_prep_queue_monitor       = Uintah::CrowdMonitor<host_finalize_prep_queue_tag>;
+  using  host_ready_queue_monitor               = Uintah::CrowdMonitor<host_ready_queue_tag>;
+#endif
+
+}
+
 using namespace Uintah;
 using namespace std;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern Uintah::Mutex cerrLock;
-extern Uintah::Mutex coutLock;
+extern std::mutex cerrLock;
+extern std::mutex coutLock;
 
 extern DebugStream mixedDebug;
 extern DebugStream mpidbg;
@@ -83,18 +117,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   taskgraph_(taskgraph),
   mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
   currentDependencyGeneration_(1),
-  extraCommunication_(0),
-  readyQueueLock_("DetailedTasks Ready Queue"),
-  mpiCompletedQueueLock_("DetailedTasks MPI completed Queue")
-#ifdef HAVE_CUDA
-  ,
-  deviceVerifyDataTransferCompletionQueueLock_("DetailedTasks Device Verify Data Transfer Queue"),
-  deviceFinalizePreparationQueueLock_("DetailedTasks Device Finalize Preparation Queue"),
-  deviceReadyQueueLock_("DetailedTasks Device Ready Queue"),
-  deviceCompletedQueueLock_("DetailedTasks Device Completed Queue"),
-  hostFinalizePreparationQueueLock_("DetailedTasks Host Finalize Preparation Queue"),
-  hostReadyQueueLock_("DetailedTasks Host Ready Queue")
-#endif
+  extraCommunication_(0)
 {
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
@@ -146,7 +169,6 @@ DependencyBatch::~DependencyBatch()
     delete dep;
     dep = tmp;
   }
-  delete lock_;
 }
 
 //_____________________________________________________________________________
@@ -274,7 +296,6 @@ DetailedTask::DetailedTask(       Task*           task,
       internal_comp_head(0),
       taskGroup(taskGroup),
       numPendingInternalDependencies(0),
-      internalDependencyLock("DetailedTask Internal Dependencies"),
       resourceIndex(-1),
       staticOrder(-1),
       d_profileType(Normal)
@@ -1480,6 +1501,8 @@ void DetailedTask::addInternalComputes(DependencyBatch* comp)
   internal_comp_head = comp;
 }
 
+//_____________________________________________________________________________
+//
 bool DetailedTask::addInternalRequires(DependencyBatch* req)
 {
   // return true if it is adding a new batch
@@ -1487,6 +1510,7 @@ bool DetailedTask::addInternalRequires(DependencyBatch* req)
 }
 
 
+//_____________________________________________________________________________
 // can be called in one of two places - when the last MPI Recv has completed, or from MPIScheduler
 void
 DetailedTask::checkExternalDepCount()
@@ -1499,19 +1523,20 @@ DetailedTask::checkExternalDepCount()
   }
 
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
-    taskGroup->mpiCompletedQueueLock_.writeLock();
-    if (mpidbg.active()) {
-      cerrLock.lock();
-      mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-             << " MPI requirements satisfied, placing into external ready queue\n";
-      cerrLock.unlock();
-    }
+    external_ready_monitor external_ready_lock { Uintah::CrowdMonitor<external_ready_tag>::WRITER };
+    {
+      if (mpidbg.active()) {
+        cerrLock.lock();
+        mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
+               << " MPI requirements satisfied, placing into external ready queue\n";
+        cerrLock.unlock();
+      }
 
-    if (externallyReady_ == false) {
-      taskGroup->mpiCompletedTasks_.push(this);
-      externallyReady_ = true;
+      if (externallyReady_ == false) {
+        taskGroup->mpiCompletedTasks_.push(this);
+        externallyReady_ = true;
+      }
     }
-    taskGroup->mpiCompletedQueueLock_.writeUnlock();
   }
 }
 
@@ -1810,33 +1835,35 @@ DetailedTask::done( vector<OnDemandDataWarehouseP>& dws )
 void
 DetailedTask::dependencySatisfied( InternalDependency* dep )
 {
-  internalDependencyLock.lock();
-  ASSERT(numPendingInternalDependencies > 0);
-  unsigned long currentGeneration = taskGroup->getCurrentDependencyGeneration();
+  internal_dependency_mutex.lock();
+  {
+    ASSERT(numPendingInternalDependencies > 0);
+    unsigned long currentGeneration = taskGroup->getCurrentDependencyGeneration();
 
-  // if false, then the dependency has already been satisfied
-  ASSERT(dep->satisfiedGeneration < currentGeneration);
+    // if false, then the dependency has already been satisfied
+    ASSERT(dep->satisfiedGeneration < currentGeneration);
 
-  dep->satisfiedGeneration = currentGeneration;
-  numPendingInternalDependencies--;
+    dep->satisfiedGeneration = currentGeneration;
+    numPendingInternalDependencies--;
 
-  if (mixedDebug.active()) {
-    cerrLock.lock();
-    mixedDebug << *(dep->dependentTask->getTask()) << " has " << numPendingInternalDependencies << " left.\n";
-    cerrLock.unlock();
+    if (mixedDebug.active()) {
+      cerrLock.lock();
+      mixedDebug << *(dep->dependentTask->getTask()) << " has " << numPendingInternalDependencies << " left.\n";
+      cerrLock.unlock();
+    }
+
+    if (internaldbg.active()) {
+      internaldbg << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->prerequisiteTask << " dep: "
+                  << *dep->dependentTask << " numPending: " << numPendingInternalDependencies << "\n";
+    }
+
+    if (numPendingInternalDependencies == 0) {
+      taskGroup->internalDependenciesSatisfied(this);
+      // reset for next timestep
+      numPendingInternalDependencies = internalDependencies.size();
+    }
   }
-
-  if (internaldbg.active()) {
-    internaldbg << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->prerequisiteTask << " dep: "
-                << *dep->dependentTask << " numPending: " << numPendingInternalDependencies << "\n";
-  }
-
-  if (numPendingInternalDependencies == 0) {
-    taskGroup->internalDependenciesSatisfied(this);
-    // reset for next timestep
-    numPendingInternalDependencies = internalDependencies.size();
-  }
-  internalDependencyLock.unlock();
+  internal_dependency_mutex.unlock();
 }
 
 namespace Uintah {
@@ -1935,17 +1962,17 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
     mixedDebug << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
-  readyQueueLock_.writeLock();
+
+  internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
   {
     readyTasks_.push(task);
-
-    if (mixedDebug.active()) {
-      cerrLock.lock();
-      mixedDebug << *task << " satisfied.  Now " << readyTasks_.size() << " ready.\n";
-      cerrLock.unlock();
-    }
   }
-  readyQueueLock_.writeUnlock();
+
+  if (mixedDebug.active()) {
+    cerrLock.lock();
+    mixedDebug << *task << " satisfied.  Now " << readyTasks_.size() << " ready.\n";
+    cerrLock.unlock();
+  }
 }
 
 //_____________________________________________________________________________
@@ -1953,15 +1980,14 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
-  DetailedTask* nextTask = NULL;
-  readyQueueLock_.writeLock();
+  DetailedTask* nextTask = nullptr;
+  internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
   {
     if (!readyTasks_.empty()) {
       nextTask = readyTasks_.front();
       readyTasks_.pop();
     }
   }
-  readyQueueLock_.writeUnlock();
   return nextTask;
 }
 
@@ -1970,13 +1996,10 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  int size = 0;
-  readyQueueLock_.readLock();
+  internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::READER };
   {
-    size = readyTasks_.size();
+    return readyTasks_.size();
   }
-  readyQueueLock_.readUnlock();
-  return size;
 }
 
 //_____________________________________________________________________________
@@ -1984,15 +2007,14 @@ DetailedTasks::numInternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
-  DetailedTask* nextTask = NULL;
-  mpiCompletedQueueLock_.writeLock();
+  DetailedTask* nextTask = nullptr;
+  external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::WRITER };
   {
     if (!mpiCompletedTasks_.empty()) {
       nextTask = mpiCompletedTasks_.top();
       mpiCompletedTasks_.pop();
     }
   }
-  mpiCompletedQueueLock_.writeUnlock();
   return nextTask;
 }
 
@@ -2001,13 +2023,10 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  int size = 0;
-  mpiCompletedQueueLock_.readLock();
+  external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::READER };
   {
-    size = mpiCompletedTasks_.size();
+    return mpiCompletedTasks_.size();
   }
-  mpiCompletedQueueLock_.readUnlock();
-  return size;
 }
 
 #ifdef HAVE_CUDA
@@ -2018,15 +2037,14 @@ DetailedTasks::numExternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextVerifyDataTransferCompletionTask()
 {
-  DetailedTask* nextTask = NULL;
-  deviceVerifyDataTransferCompletionQueueLock_.writeLock();
+  DetailedTask* nextTask = nullptr;
+  device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
   {
     if (!verifyDataTransferCompletionTasks_.empty()) {
       nextTask = verifyDataTransferCompletionTasks_.front();
       verifyDataTransferCompletionTasks_.pop();
     }
   }
-  deviceVerifyDataTransferCompletionQueueLock_.writeUnlock();
 
   return nextTask;
 }
@@ -2036,13 +2054,15 @@ DetailedTasks::getNextVerifyDataTransferCompletionTask()
 DetailedTask*
 DetailedTasks::getNextFinalizeDevicePreparationTask()
 {
-  DetailedTask* nextTask = NULL;
-  deviceFinalizePreparationQueueLock_.writeLock();
-  if (!finalizeDevicePreparationTasks_.empty()) {
-    nextTask = finalizeDevicePreparationTasks_.front();
-    finalizeDevicePreparationTasks_.pop();
+  DetailedTask* nextTask = nullptr;
+  device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
+  {
+    if (!finalizeDevicePreparationTasks_.empty()) {
+      nextTask = finalizeDevicePreparationTasks_.front();
+      finalizeDevicePreparationTasks_.pop();
+    }
   }
-  deviceFinalizePreparationQueueLock_.writeUnlock();
+
   return nextTask;
 }
 
@@ -2051,15 +2071,14 @@ DetailedTasks::getNextFinalizeDevicePreparationTask()
 DetailedTask*
 DetailedTasks::getNextInitiallyReadyDeviceTask()
 {
-  DetailedTask* nextTask = NULL;
-  deviceReadyQueueLock_.writeLock();
+  DetailedTask* nextTask = nullptr;
+  device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
   {
     if (!initiallyReadyDeviceTasks_.empty()) {
       nextTask = initiallyReadyDeviceTasks_.front();
       initiallyReadyDeviceTasks_.pop();
     }
   }
-  deviceReadyQueueLock_.writeUnlock();
 
   return nextTask;
 }
@@ -2069,13 +2088,14 @@ DetailedTasks::getNextInitiallyReadyDeviceTask()
 DetailedTask*
 DetailedTasks::getNextCompletionPendingDeviceTask()
 {
-  DetailedTask* nextTask = NULL;
-  deviceCompletedQueueLock_.writeLock();
-  if (!completionPendingDeviceTasks_.empty()) {
-    nextTask = completionPendingDeviceTasks_.front();
-    completionPendingDeviceTasks_.pop();
+  DetailedTask* nextTask = nullptr;
+  device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
+  {
+    if (!completionPendingDeviceTasks_.empty()) {
+      nextTask = completionPendingDeviceTasks_.front();
+      completionPendingDeviceTasks_.pop();
+    }
   }
-  deviceCompletedQueueLock_.writeUnlock();
 
   return nextTask;
 }
@@ -2085,13 +2105,15 @@ DetailedTasks::getNextCompletionPendingDeviceTask()
 DetailedTask*
 DetailedTasks::getNextFinalizeHostPreparationTask()
 {
-  DetailedTask* nextTask = NULL;
-  hostFinalizePreparationQueueLock_.writeLock();
-  if (!finalizeHostPreparationTasks_.empty()) {
-    nextTask = finalizeHostPreparationTasks_.front();
-    finalizeHostPreparationTasks_.pop();
+  DetailedTask* nextTask = nullptr;
+  host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
+  {
+    if (!finalizeHostPreparationTasks_.empty()) {
+      nextTask = finalizeHostPreparationTasks_.front();
+      finalizeHostPreparationTasks_.pop();
+    }
   }
-  hostFinalizePreparationQueueLock_.writeUnlock();
+
   return nextTask;
 }
 
@@ -2099,13 +2121,14 @@ DetailedTasks::getNextFinalizeHostPreparationTask()
 //
 DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
 {
-  DetailedTask* nextTask = NULL;
-  hostReadyQueueLock_.writeLock();
-  if (!initiallyReadyHostTasks_.empty()) {
-    nextTask = initiallyReadyHostTasks_.front();
-    initiallyReadyHostTasks_.pop();
+  DetailedTask* nextTask = nullptr;
+  host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
+  {
+    if (!initiallyReadyHostTasks_.empty()) {
+      nextTask = initiallyReadyHostTasks_.front();
+      initiallyReadyHostTasks_.pop();
+    }
   }
-  hostReadyQueueLock_.writeUnlock();
 
   return nextTask;
 }
@@ -2116,9 +2139,11 @@ DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
 DetailedTask*
 DetailedTasks::peekNextVerifyDataTransferCompletionTask()
 {
-  deviceVerifyDataTransferCompletionQueueLock_.readLock();
-  DetailedTask* dtask = verifyDataTransferCompletionTasks_.front();
-  deviceVerifyDataTransferCompletionQueueLock_.readUnlock();
+  DetailedTask* dtask = nullptr;
+  device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::READER };
+  {
+    dtask = verifyDataTransferCompletionTasks_.front();
+  }
 
   return dtask;
 }
@@ -2128,9 +2153,11 @@ DetailedTasks::peekNextVerifyDataTransferCompletionTask()
 DetailedTask*
 DetailedTasks::peekNextFinalizeDevicePreparationTask()
 {
-  deviceFinalizePreparationQueueLock_.readLock();
-  DetailedTask* dtask = finalizeDevicePreparationTasks_.front();
-  deviceFinalizePreparationQueueLock_.readUnlock();
+  DetailedTask* dtask = nullptr;
+  device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::READER };
+  {
+    dtask = finalizeDevicePreparationTasks_.front();
+  }
 
   return dtask;
 }
@@ -2140,9 +2167,11 @@ DetailedTasks::peekNextFinalizeDevicePreparationTask()
 DetailedTask*
 DetailedTasks::peekNextInitiallyReadyDeviceTask()
 {
-  deviceReadyQueueLock_.readLock();
-  DetailedTask* dtask = initiallyReadyDeviceTasks_.front();
-  deviceReadyQueueLock_.readUnlock();
+  DetailedTask* dtask = nullptr;
+  device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::READER };
+  {
+    dtask = initiallyReadyDeviceTasks_.front();
+  }
 
   return dtask;
 }
@@ -2152,12 +2181,11 @@ DetailedTasks::peekNextInitiallyReadyDeviceTask()
 DetailedTask*
 DetailedTasks::peekNextCompletionPendingDeviceTask()
 {
-  DetailedTask* dtask = NULL;
-  deviceCompletedQueueLock_.readLock();
+  DetailedTask* dtask = nullptr;
+  device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::READER };
   {
     dtask = completionPendingDeviceTasks_.front();
   }
-  deviceCompletedQueueLock_.readUnlock();
 
   return dtask;
 }
@@ -2167,9 +2195,11 @@ DetailedTasks::peekNextCompletionPendingDeviceTask()
 DetailedTask*
 DetailedTasks::peekNextFinalizeHostPreparationTask()
 {
-  hostFinalizePreparationQueueLock_.readLock();
-  DetailedTask* dtask = finalizeHostPreparationTasks_.front();
-  hostFinalizePreparationQueueLock_.readUnlock();
+  DetailedTask* dtask = nullptr;
+  host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::READER };
+  {
+    dtask = finalizeHostPreparationTasks_.front();
+  }
 
   return dtask;
 }
@@ -2178,9 +2208,11 @@ DetailedTasks::peekNextFinalizeHostPreparationTask()
 //
 DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
 {
-  hostReadyQueueLock_.readLock();
-  DetailedTask* dtask = initiallyReadyHostTasks_.front();
-  hostReadyQueueLock_.readUnlock();
+  DetailedTask* dtask = nullptr;
+  host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::READER };
+  {
+    dtask = initiallyReadyHostTasks_.front();
+  }
 
   return dtask;
 }
@@ -2189,18 +2221,20 @@ DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
 //
 void DetailedTasks::addVerifyDataTransferCompletion(DetailedTask* dtask)
 {
-  deviceVerifyDataTransferCompletionQueueLock_.writeLock();
-  verifyDataTransferCompletionTasks_.push(dtask);
-  deviceVerifyDataTransferCompletionQueueLock_.writeUnlock();
+  device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
+  {
+    verifyDataTransferCompletionTasks_.push(dtask);
+  }
 }
 
 //_____________________________________________________________________________
 //
 void DetailedTasks::addFinalizeDevicePreparation(DetailedTask* dtask)
 {
-  deviceFinalizePreparationQueueLock_.writeLock();
-  finalizeDevicePreparationTasks_.push(dtask);
-  deviceFinalizePreparationQueueLock_.writeUnlock();
+  device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
+  {
+    finalizeDevicePreparationTasks_.push(dtask);
+  }
 }
 
 //_____________________________________________________________________________
@@ -2208,11 +2242,10 @@ void DetailedTasks::addFinalizeDevicePreparation(DetailedTask* dtask)
 void
 DetailedTasks::addInitiallyReadyDeviceTask( DetailedTask* dtask )
 {
-  deviceReadyQueueLock_.writeLock();
+  device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
   {
     initiallyReadyDeviceTasks_.push(dtask);
   }
-  deviceReadyQueueLock_.writeUnlock();
 }
 
 //_____________________________________________________________________________
@@ -2220,33 +2253,34 @@ DetailedTasks::addInitiallyReadyDeviceTask( DetailedTask* dtask )
 void
 DetailedTasks::addCompletionPendingDeviceTask( DetailedTask* dtask )
 {
-  deviceCompletedQueueLock_.writeLock();
+  device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
   {
     completionPendingDeviceTasks_.push(dtask);
   }
-  deviceCompletedQueueLock_.writeUnlock();
 }
 
 //_____________________________________________________________________________
 //
 void DetailedTasks::addFinalizeHostPreparation(DetailedTask* dtask)
 {
-  hostFinalizePreparationQueueLock_.writeLock();
-  finalizeHostPreparationTasks_.push(dtask);
-  hostFinalizePreparationQueueLock_.writeUnlock();
+  host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
+  {
+    finalizeHostPreparationTasks_.push(dtask);
+  }
 }
 
 //_____________________________________________________________________________
 //
 void DetailedTasks::addInitiallyReadyHostTask(DetailedTask* dtask)
 {
-  hostReadyQueueLock_.writeLock();
-  initiallyReadyHostTasks_.push(dtask);
-  hostReadyQueueLock_.writeUnlock();
+  host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
+  {
+    initiallyReadyHostTasks_.push(dtask);
+  }
 }
 
-
 #endif
+
 
 //_____________________________________________________________________________
 //
@@ -2284,11 +2318,6 @@ DetailedTasks::initializeBatches()
 void
 DependencyBatch::reset()
 {
-  if (toTasks.size() > 1) {
-    if (lock_ == 0) {
-      lock_ = scinew Mutex("DependencyBatch receive lock");
-    }
-  }
   received_ = false;
   madeMPIRequest_ = false;
 }
@@ -2298,17 +2327,15 @@ DependencyBatch::reset()
 bool
 DependencyBatch::makeMPIRequest()
 {
+  std::lock_guard<std::mutex> lock(dependency_batch_mutex);
+  {
   if (toTasks.size() > 1) {
-    ASSERT(lock_ != 0);
     if (!madeMPIRequest_) {
-      lock_->lock();
       if (!madeMPIRequest_) {
         madeMPIRequest_ = true;
-        lock_->unlock();
         return true;  // first to make the request
       }
       else {
-        lock_->unlock();
         return false;  // got beat out -- request already made
       }
     }
@@ -2320,6 +2347,7 @@ DependencyBatch::makeMPIRequest()
     madeMPIRequest_ = true;
     return true;
   }
+  }
 }
 
 //_____________________________________________________________________________
@@ -2328,12 +2356,11 @@ void
 DependencyBatch::addReceiveListener( int mpiSignal )
 {
   ASSERT(toTasks.size() > 1);  // only needed when multiple tasks need a batch
-  ASSERT(lock_ != 0);
-  lock_->lock();
+
+  std::lock_guard<std::mutex> lock(dependency_batch_mutex);
   {
     receiveListeners_.insert(mpiSignal);
   }
-  lock_->unlock();
 }
 
 //_____________________________________________________________________________

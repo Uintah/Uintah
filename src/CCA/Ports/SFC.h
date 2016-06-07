@@ -35,7 +35,7 @@
 #include <cstring>
 
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 

@@ -32,10 +32,11 @@ SRCDIR := testprograms/SFCTest
 LIBS := $(MPI_LIBRARY) 
 
 PROGRAM := $(SRCDIR)/sfctest
+
 SRCS := $(SRCDIR)/sfctest.cc
-PSELIBS := CCA/Ports \
-           Core/Parallel \
-           Core/Thread
+
+PSELIBS := CCA/Ports       \
+           Core/Parallel
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
 

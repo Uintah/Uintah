@@ -28,6 +28,7 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+
 #include <vector>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
@@ -70,6 +71,7 @@ WARNING
   class MPIScatterRecords; // defined in .cc
 
   class Relocate {
+
   public:
     Relocate();
     virtual ~Relocate();

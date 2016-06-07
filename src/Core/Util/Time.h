@@ -34,22 +34,22 @@
  *
  */
 
-#ifndef Core_Thread_Time_h
-#define Core_Thread_Time_h
+#ifndef CORE_UTIL_TIME_H
+#define CORE_UTIL_TIME_H
 
 namespace Uintah {
+
 /**************************************
 
  CLASS
  Time
 
  KEYWORDS
- Thread, Time
+ Util, Time
 
  DESCRIPTION
  Utility class to manage Time.  This class is implemented using
- high precision counters on the SGI, and standard unix system calls
- on other machines.
+ standard unix system calls.
 
  ****************************************/
 class Time {
@@ -97,9 +97,6 @@ class Time {
   static void initialize();
 };
 
-}
-  // End namespace Uintah
+} // end namespace Uintah
 
-#endif
-
-
+#endif // end CORE_UTIL_TIME_H

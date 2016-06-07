@@ -11,16 +11,16 @@
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-extern Uintah::Mutex coutLock; // Debug: Used to sync cout so it is readable (when output by  multiple threads)
+#include <mutex>
+
+extern std::mutex coutLock; // Debug: Used to sync cout so it is readable (when output by  multiple threads)
 
 using namespace Uintah; 
 using namespace std;
 
 //_________________________________________
 IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL ) : 
-  _lab(lab), _mpmlab(mpmlab), _props(props), _WALL(WALL),_bc_face_iterator_lock("ARCHES bc_face_iterator lock"),
-  _interior_cell_iterator_lock("ARCHES interior_cell_iterator lock"), _bc_cell_iterator_lock("ARCHES bc_cell_iterator lock"),
-  _iterator_initializer_lock("ARCHES inintialize_the_iterators lock")
+  _lab(lab), _mpmlab(mpmlab), _props(props), _WALL(WALL)
 {
   // helper for the intvector direction 
   _dHelp.push_back( IntVector(-1,0,0) ); 

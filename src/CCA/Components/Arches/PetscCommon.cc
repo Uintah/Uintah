@@ -25,7 +25,7 @@
 #include <Core/Exceptions/UintahPetscError.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 using namespace std;
 using namespace Uintah;

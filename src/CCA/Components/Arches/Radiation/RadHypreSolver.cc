@@ -24,7 +24,7 @@
 
 //----- RadHypreSolver.cc ----------------------------------------------
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <_hypre_utilities.h>

@@ -35,7 +35,6 @@ PSELIBS := \
         CCA/Ports     \
         Core/Parallel \
         Core/Util       \
-        Core/Thread     \
         Core/Exceptions \
         Core/Geometry   \
         Core/Containers \

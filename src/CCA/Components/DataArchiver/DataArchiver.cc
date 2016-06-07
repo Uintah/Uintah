@@ -43,7 +43,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/Environment.h>
@@ -95,8 +95,7 @@ bool DataArchiver::d_wereSavesAndCheckpointsInitialized = false;
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   : UintahParallelComponent(myworld),
-    d_udaSuffix(udaSuffix),
-    d_outputLock("DataArchiver output lock")
+    d_udaSuffix(udaSuffix)
 {
   d_isOutputTimestep      = false;
   d_isCheckpointTimestep  = false;

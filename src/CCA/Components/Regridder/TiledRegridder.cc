@@ -32,7 +32,7 @@
 #include <Core/Grid/PatchBVH/PatchBVH.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
 

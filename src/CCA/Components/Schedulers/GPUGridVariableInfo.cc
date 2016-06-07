@@ -22,11 +22,13 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
+
+#include <mutex>
+
 extern DebugStream gpu_stats;
 
-extern Uintah::Mutex cerrLock;
+extern std::mutex cerrLock;
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             GpuUtilities::DeviceVarDestination dest,

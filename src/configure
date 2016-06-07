@@ -785,13 +785,11 @@ INC_VISIT_H
 DEF_VISIT
 HAVE_VISIT
 DEF_RAY_SCATTER
-ATOMIC_IMPL
 REFCOUNT_IMPL
 SEMAPHORE_LIB_FLAG
 DEF_THREAD
 SOCKET_LIB_FLAG
 THREAD_LIB_FLAG
-THREAD_IMPL
 RT_LIB_FLAG
 M_LIB_DIR_FLAG
 M_LIB_FLAG
@@ -859,7 +857,6 @@ ASSERTION_LEVEL
 DEF_MALLOC_LINENUMBERS
 DEF_MALLOC
 SCI_MALLOC_ON
-TIME_IMPL
 LARGESOS
 EXENAME
 NOPRINTDIR
@@ -5890,7 +5887,6 @@ fi
 ##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
 
-TIME_IMPL=Time_unix.cc
 TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
 case $host in
@@ -5957,7 +5953,6 @@ if test "$enable_scinew_line_numbers" = "yes"; then
 else
   DEF_MALLOC_LINENUMBERS=""
 fi
-
 
 
 
@@ -9666,9 +9661,6 @@ as_fn_error $? "unknown thread type for host $host: $threads. exiting." "$LINENO
       ;;
 esac
 
-THREAD_IMPL="Thread_$threads.cc"
-
-
 
 
 
@@ -10085,12 +10077,9 @@ _sci_includes=''
 
 if test "$HAVE_GCCSYNC" = "yes"; then
   REFCOUNT_IMPL=RefCounted_gcc.cc
-  ATOMIC_IMPL=AtomicCounter_gcc.cc
 else
   REFCOUNT_IMPL=RefCounted.cc
-  ATOMIC_IMPL=AtomicCounter_default.cc
 fi
-
 
 
 

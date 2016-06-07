@@ -31,7 +31,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
 
@@ -40,8 +39,6 @@ using namespace std;
 
 static DebugStream cout_doing("ShellMPM", false);
 
-// From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern Mutex cerrLock;
 
 ///////////////////////////////////////////////////////////////////////////
 //

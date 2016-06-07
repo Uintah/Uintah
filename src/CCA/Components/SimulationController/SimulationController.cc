@@ -39,8 +39,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Thread.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 
 #include <CCA/Ports/LoadBalancer.h>
@@ -354,7 +353,7 @@ SimulationController::gridSetup( void )
       cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
       cerr << "in <uda>/checkpoints/ for timestep directories (t#####/) to verify.\n";
       cerr << "\n";
-      Thread::exitAll(1);
+      Parallel::exitAll(1);
     }
 
     // Find the right time to query the grid

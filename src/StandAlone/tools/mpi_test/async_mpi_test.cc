@@ -34,11 +34,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/ConditionVariable.h>
+#include <Core/Util/Time.h>
 
 #define debug_main
 #define debug_main_thread

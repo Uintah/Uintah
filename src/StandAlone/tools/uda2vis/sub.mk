@@ -47,9 +47,7 @@ else
       Core/Math         \
       Core/Malloc       \
       Core/Parallel     \
-      Core/ProblemSpec  \
-      Core/Thread       \
-      Core/Util         
+      Core/ProblemSpec     
 endif
 
 SRCS := \

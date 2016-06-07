@@ -51,7 +51,6 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/ProgressiveWarning.h>
 
@@ -109,7 +108,7 @@ usage(const std::string& badarg, const std::string& progname)
   cerr << "  -dont_sort               (Don't sort the variable names before comparing them)";
   cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
        << "      for a comparison to fail.\n\n";
-  Thread::exitAll(1);
+  Parallel::exitAll(1);
 }
 
 // I don't want to have to pass these parameters all around, so
@@ -125,7 +124,7 @@ void
 abort_uncomparable()
 {
   cerr << "\nThe uda directories may not be compared.\n";
-  Thread::exitAll(5);
+  Parallel::exitAll(5);
 }
 
 void
@@ -136,7 +135,7 @@ tolerance_failure()
     cerr << endl;
   }
   else
-    Thread::exitAll(2);
+    Parallel::exitAll(2);
 }
 
 void
@@ -610,7 +609,7 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
                      time1, time2, abs_tolerance, rel_tolerance);
     default:
       cerr << "MaterialParticleVarData::gather: ParticleVariable of unsupported type: " << pvb1->virtualGetTypeDescription()->getName() << '\n';
-      Thread::exitAll(-1);
+      Parallel::exitAll(-1);
     }
   return 0;
 }
@@ -782,7 +781,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
           default:
             cerr << "addParticleData: ParticleVariable of unsupported type: "
                  << subtype->getName() << '\n';
-            Thread::exitAll(-1);
+            Parallel::exitAll(-1);
           }
           da->query(*pvb, var, matl, patch, timestep);
           data[var].add(pvb, patch); // will add one for each patch
@@ -963,7 +962,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
         SpecificFieldComparator<NCVariable<Matrix3>, NodeIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: NC Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
+      Parallel::exitAll(-1);
     }
   }
 
@@ -993,7 +992,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
         SpecificFieldComparator<CCVariable<Stencil7>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: CC Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
+      Parallel::exitAll(-1);
     }
   }
 
@@ -1020,7 +1019,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
         SpecificFieldComparator<SFCXVariable<Matrix3>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCX Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
+      Parallel::exitAll(-1);
     }
   }
 
@@ -1047,7 +1046,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
         SpecificFieldComparator<SFCYVariable<Matrix3>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCY Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
+      Parallel::exitAll(-1);
     }
   }
 
@@ -1074,12 +1073,12 @@ makeFieldComparator(const Uintah::TypeDescription* td,
         SpecificFieldComparator<SFCZVariable<Matrix3>,  CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCZ Variable of unsupported type: " << subtype->getName() << '\n';
-      Thread::exitAll(-1);
+      Parallel::exitAll(-1);
     }
   }
   default:
     cerr << "FieldComparator::makeFieldComparator: Variable of unsupported type: " << td->getName() << '\n';
-    Thread::exitAll(-1);
+    Parallel::exitAll(-1);
   }
   return 0;
 }
@@ -1239,7 +1238,6 @@ main(int argc, char** argv)
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
-  Thread::setDefaultAbortMode("exit");
   double rel_tolerance  = 1e-6; // Default
   double abs_tolerance  = 1e-9; //   values...
   string ignoreVar      = "none";
@@ -1336,7 +1334,7 @@ main(int argc, char** argv)
 
   if (rel_tolerance < 0) {
     cerr << "Must have a non-negative value rel_tolerance.\n";
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
 
   // default to 16 digits of precision when using exact comparison (i.e. rel_tolerance = 0)
@@ -1605,7 +1603,7 @@ main(int argc, char** argv)
 
             if (d_strict_types) {
               cerr << ".\nQuitting.\n";
-              Thread::exitAll(-1);
+              Parallel::exitAll(-1);
             }
             cerr << "; skipping comparison...\n";
             continue;
@@ -1695,7 +1693,7 @@ main(int argc, char** argv)
                     break;
                   default:
                     cerr << "main: ParticleVariable of unsupported type: " << subtype->getName() << '\n';
-                    Thread::exitAll(-1);
+                    Parallel::exitAll(-1);
                   }
                 }
               }
@@ -1756,7 +1754,7 @@ main(int argc, char** argv)
           cerr << "\t\tParticleVariable of unknown type";
           if (d_strict_types) {
             cerr << ".\nQuitting.\n";
-            Thread::exitAll(-1);
+            Parallel::exitAll(-1);
           }
           cerr << "; skipping comparison...\n";
           continue;
@@ -1855,7 +1853,7 @@ main(int argc, char** argv)
 
   if (d_tolerance_error) {
     cerr << "\nComparison did NOT fully pass.\n";
-    Thread::exitAll(2);
+    Parallel::exitAll(2);
   }
   else
     cerr << "\nComparison fully passed!\n";

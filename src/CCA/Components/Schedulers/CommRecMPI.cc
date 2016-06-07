@@ -24,17 +24,19 @@
 
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
+
+#include <mutex>
 
 using namespace std;
 using namespace Uintah;
 
 // sync cerr so it's readable when output by multiple threads
-extern Uintah::Mutex       cerrLock;
+extern std::mutex          cerrLock;
+
 extern Uintah::DebugStream mixedDebug;
 
 static DebugStream dbg( "RecvTiming", false );

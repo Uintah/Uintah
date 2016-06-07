@@ -26,12 +26,12 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/ProgressiveWarning.h>
 #include <sci_algorithm.h>
 
 #include <map>
+#include <mutex>
 #include <set>
 
 #define RELOCATE_TAG            0x3fff
@@ -40,9 +40,9 @@ using namespace std;
 using namespace Uintah;
 
 
-// Debug: Used to sync cerr so it is readable (when output by
-// multiple threads at the same time)  From sus.cc:
-extern Uintah::Mutex       cerrLock;
+// Debug: Used to sync cerr so it is readable when output by multiple threads
+extern std::mutex  cerrLock;
+
 extern DebugStream mixedDebug;
 extern DebugStream mpidbg;
 static DebugStream coutdbg("RELOCATE_DBG", false);

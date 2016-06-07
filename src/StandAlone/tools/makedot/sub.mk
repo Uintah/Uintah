@@ -41,8 +41,7 @@ PSELIBS := \
 	Core/ProblemSpec \
 	Core/Exceptions \
 	Core/Exceptions  \
-	Core/Geometry \
-	Core/Thread 
+	Core/Geometry
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 

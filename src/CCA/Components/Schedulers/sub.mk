@@ -43,7 +43,6 @@ SRCS += \
         $(SRCDIR)/SendState.cc                \
         $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
-        $(SRCDIR)/ThreadedMPIScheduler.cc     \
         $(SRCDIR)/UnifiedScheduler.cc         \
         $(SRCDIR)/Util.cc                     \
         \
@@ -70,7 +69,6 @@ PSELIBS := \
         Core/OS          \
         Core/Parallel    \
         Core/ProblemSpec \
-        Core/Thread      \
         Core/Util        
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(CUDA_LIBRARY)

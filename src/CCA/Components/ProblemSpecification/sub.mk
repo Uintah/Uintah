@@ -41,7 +41,6 @@ PSELIBS := \
         Core/Grid        \
         Core/Parallel    \
         Core/ProblemSpec \
-        Core/Thread      \
         Core/Util        
 
 LIBS := $(XML2_LIBRARY)

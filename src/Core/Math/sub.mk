@@ -83,7 +83,6 @@ PSELIBS := \
 	Core/Exceptions Core/Containers \
         Core/Util                       \
         Core/Geometry                   \
-        Core/Thread                     \
         Core/Disclosure                 \
 
 

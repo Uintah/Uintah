@@ -56,7 +56,6 @@ PSELIBS :=                 \
         Core/Math          \
         Core/Parallel      \
         Core/ProblemSpec   \
-        Core/Thread        \
         Core/Util          
 
 ifneq ($(BUILD_ICE),no)
