@@ -22,57 +22,57 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <Core/Util/RefCounted.h>
+
+#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+
+#include <atomic>
+#include <mutex>
 
 using namespace Uintah;
 
-static const int    NLOCKS=1024;
-static       Mutex* locks[NLOCKS];
-static       bool   initialized = false;
-static Mutex initlock("RefCounted initialization lock");
+static const int          NLOCKS      = 1024;
+static       bool         initialized = false;
+static       std::mutex * locks[NLOCKS];
+static       std::mutex   initlock{};
 
-static AtomicCounter* nextIndex;
-static AtomicCounter* freeIndex;
+static std::atomic<long long> nextIndex{0};
+static std::atomic<long long> freeIndex{0};
 
 
 RefCounted::RefCounted()
-    : d_refCount(0)
+  : d_refCount(0)
 {
-  if(!initialized){
+  if (!initialized) {
     initlock.lock();
-    if(!initialized){
-      for(int i=0;i<NLOCKS;i++)
-	locks[i] = scinew Mutex("RefCounted Mutex");
-      nextIndex=new AtomicCounter("RefCounted nextIndex count", 0);
-      freeIndex=new AtomicCounter("RefCounted freeIndex count", 0);
-      initialized=true;
+    {
+      for (int i = 0; i < NLOCKS; ++i) {
+        locks[i] = scinew std::mutex();
+      }
+      initialized = true;
     }
     initlock.unlock();
   }
-  d_lockIndex = ((*nextIndex)++)%NLOCKS;
+  d_lockIndex = (nextIndex.fetch_add(1, std::memory_order_seq_cst)) % NLOCKS;
   ASSERT(d_lockIndex >= 0);
 }
 
 RefCounted::~RefCounted()
 {
   ASSERTEQ(d_refCount, 0);
-  int index = ++(*freeIndex);
-  if(index == *nextIndex){
+  int index = freeIndex.load(std::memory_order_seq_cst);
+  if (index == nextIndex.load(std::memory_order_seq_cst)) {
     initlock.lock();
-    if(*freeIndex == *nextIndex){
-      initialized = false;
-      for(int i=0;i<NLOCKS;i++){
-	delete locks[i];
-	locks[i]=0;
+    {
+      if (freeIndex.store(nextIndex.load(std::memory_order_seq_cst)), std::memory_order_seq_cst) {
+        initialized = false;
+        for (int i = 0; i < NLOCKS; ++i) {
+          delete locks[i];
+          locks[i] = nullptr;
+        }
       }
-      delete nextIndex;
-      nextIndex=0;
-      delete freeIndex;
-      freeIndex=0;
     }
     initlock.unlock();
   }
@@ -81,17 +81,23 @@ RefCounted::~RefCounted()
 void
 RefCounted::addReference() const
 {
-    locks[d_lockIndex]->lock();
+  locks[d_lockIndex]->lock();
+  {
     d_refCount++;
-    locks[d_lockIndex]->unlock();
+  }
+  locks[d_lockIndex]->unlock();
 }
 
 bool
 RefCounted::removeReference() const
 {
-    locks[d_lockIndex]->lock();
-    bool status = (--d_refCount == 0);
+  bool status;
+  locks[d_lockIndex]->lock();
+  {
+    status = (--d_refCount == 0);
     ASSERT(d_refCount >= 0);
-    locks[d_lockIndex]->unlock();
-    return status;
+  }
+  locks[d_lockIndex]->unlock();
+
+  return status;
 }

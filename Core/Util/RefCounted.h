@@ -26,12 +26,12 @@
 #define UINTAH_HOMEBREW_REFCOUNTED_H
 
 namespace Uintah {
+
 /**************************************
 
 CLASS
    RefCounted
    
-   Short description...
 
 GENERAL INFORMATION
 
@@ -42,42 +42,39 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Reference_Counted, RefCounted, Handle
 
 DESCRIPTION
-   Long description...
   
-WARNING
   
 ****************************************/
 
-   class RefCounted {
-   public:
-      RefCounted();
-      virtual ~RefCounted();
-      
-      //////////
-      // Insert Documentation Here:
-      void addReference() const;
-      
-      //////////
-      // Insert Documentation Here:
-      bool removeReference() const;
+class RefCounted {
 
-      int getReferenceCount() const {
-	 return d_refCount;
-      }
+  public:
 
-   private:
-      RefCounted& operator=(const RefCounted&);
-      //////////
-      // Insert Documentation Here:
-      mutable int d_refCount;
-      int d_lockIndex;
-   };
-} // End namespace Uintah
+    RefCounted();
 
-#endif
+    virtual ~RefCounted();
+
+    void addReference() const;
+
+    bool removeReference() const;
+
+    int getReferenceCount() const { return d_refCount; }
+
+
+  private:
+
+    RefCounted& operator=(const RefCounted&);
+
+    mutable int d_refCount;
+            int d_lockIndex;
+};
+
+} // namespace Uintah
+
+#endif // UINTAH_HOMEBREW_REFCOUNTED_H
