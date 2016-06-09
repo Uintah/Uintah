@@ -562,26 +562,23 @@ namespace Uintah {
     void addFinalizeHostPreparation(DetailedTask* dtask);
     void addInitiallyReadyHostTask(DetailedTask* dtask);
 
-    DetailedTask* getNextVerifyDataTransferCompletionTask();
-    DetailedTask* getNextFinalizeDevicePreparationTask();
-    DetailedTask* getNextInitiallyReadyDeviceTask();
-    DetailedTask* getNextCompletionPendingDeviceTask();
-    DetailedTask* getNextFinalizeHostPreparationTask();
-    DetailedTask* getNextInitiallyReadyHostTask();
+    //DetailedTask* peekNextVerifyDataTransferCompletionTask();
+    bool getNextVerifyDataTransferCompletionTaskIfAble(DetailedTask* &dtask);
+    //DetailedTask* peekNextFinalizeDevicePreparationTask();
+    bool getNextFinalizeDevicePreparationTaskIfAble(DetailedTask* &dtask);
+    //DetailedTask* peekNextInitiallyReadyDeviceTask();
+    bool getNextInitiallyReadyDeviceTaskIfAble(DetailedTask* &dtask);
+    //DetailedTask* peekNextCompletionPendingDeviceTask();
+    bool getNextCompletionPendingDeviceTaskIfAble(DetailedTask* &dtask);
+    //DetailedTask* peekNextFinalizeHostPreparationTask();
+    bool getNextFinalizeHostPreparationTaskIfAble(DetailedTask* &dtask);
+    //DetailedTask* peekNextInitiallyReadyHostTask();
+    bool getNextInitiallyReadyHostTaskIfAble(DetailedTask* &dtask);
 
-    DetailedTask* peekNextVerifyDataTransferCompletionTask();
-    DetailedTask* peekNextFinalizeDevicePreparationTask();
-    DetailedTask* peekNextInitiallyReadyDeviceTask();
-    DetailedTask* peekNextCompletionPendingDeviceTask();
-    DetailedTask* peekNextFinalizeHostPreparationTask();
-    DetailedTask* peekNextInitiallyReadyHostTask();
-
-    int numVerifyDataTransferCompletion() { return verifyDataTransferCompletionTasks_.size(); }
-    int numFinalizeDevicePreparation() { return finalizeDevicePreparationTasks_.size(); }
-    int numInitiallyReadyDeviceTasks() { return initiallyReadyDeviceTasks_.size(); }
-    int numCompletionPendingDeviceTasks() { return completionPendingDeviceTasks_.size(); }
-    int numFinalizeHostPreparation() { return finalizeHostPreparationTasks_.size(); }
-    int numInitiallyReadyHostTasks() { return initiallyReadyHostTasks_.size(); }
+    //int numInitiallyReadyDeviceTasks() { return initiallyReadyDeviceTasks_.size(); }
+    //int numCompletionPendingDeviceTasks() { return completionPendingDeviceTasks_.size(); }
+    //int numFinalizeHostPreparation() { return finalizeHostPreparationTasks_.size(); }
+    //int numInitiallyReadyHostTasks() { return initiallyReadyHostTasks_.size(); }
 
     void createInternalDependencyBatch(DetailedTask* from,
                                    Task::Dependency* comp,
