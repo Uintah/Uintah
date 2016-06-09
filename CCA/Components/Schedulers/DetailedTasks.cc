@@ -1635,47 +1635,17 @@ void DetailedTask::setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t
 void DetailedTask::clearCudaStreamsForThisTask() {
   d_cudaStreams.clear();
 }
-/*
-bool DetailedTask::checkCudaStreamDoneForThisTask() const
-{
-  //Check all
-  cudaError_t retVal;
-  for (std::map<unsigned int, cudaStream_t*>::const_iterator it = d_cudaStreams.begin(); it != d_cudaStreams.end(); ++it) {
-    OnDemandDataWarehouse::uintahSetCudaDevice(it->first);
-    if (it->second == NULL) {
-      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with NULL address for task %s\n", getName().c_str());
-      SCI_THROW(InternalError("Stream pointer with NULL address for task: " + getName() , __FILE__, __LINE__));
-      return false;
-    }
-    retVal = cudaStreamQuery(*(it->second));
-    if (retVal == cudaSuccess) {
-    //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
-      continue;
-    } else if (retVal == cudaErrorNotReady ) {
 
-      retVal = cudaStreamQuery(*(it->second));
-      return false;
-    }
-    else if (retVal ==  cudaErrorLaunchFailure) {
-      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - CUDA kernel execution failure on Task: %s\n", getName().c_str());
-      SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
-      return false;
-    } else { //other error
-      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - The stream %p had this error code %d.  This could mean that something else in the stream just hit an error.\n",  it->second, retVal);
-      SCI_THROW(InternalError("ERROR! - Invalid stream query", __FILE__, __LINE__));
-      return false;
-    }
-
-  }
-  return true;
-}
-*/
 
 bool DetailedTask::checkCudaStreamDoneForThisTask(unsigned int deviceNum_) const
 {
 
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
+  if (deviceNum_ != 0) {
+    printf("Error, DetailedTask::checkCudaStreamDoneForThisTask is %u\n", deviceNum_);
+    exit(-1);
+  }
   OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum_);
   std::map<unsigned int, cudaStream_t*>::const_iterator it= d_cudaStreams.find(deviceNum_);
   if (it == d_cudaStreams.end()) {
@@ -2031,192 +2001,179 @@ DetailedTasks::numExternalReadyTasks()
 
 #ifdef HAVE_CUDA
 
-
 //_____________________________________________________________________________
 //
-DetailedTask*
-DetailedTasks::getNextVerifyDataTransferCompletionTask()
+bool
+DetailedTasks::getNextVerifyDataTransferCompletionTaskIfAble(DetailedTask* &dtask)
 {
-  DetailedTask* nextTask = nullptr;
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
   {
     device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::WRITER };
     if (!verifyDataTransferCompletionTasks_.empty()) {
-      nextTask = verifyDataTransferCompletionTasks_.front();
-      verifyDataTransferCompletionTasks_.pop();
+      dtask = verifyDataTransferCompletionTasks_.front();
+      if (!dtask) {
+        SCI_THROW(InternalError("DetailedTasks::getNextVerifyDataTransferCompletionIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
+      }
+      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
+        verifyDataTransferCompletionTasks_.pop();
+        retVal = true;
+      }
+    }
+    if (!retVal) {
+      dtask = nullptr;
     }
   }
 
-  return nextTask;
+  return retVal;
 }
 
-//_____________________________________________________________________________
+//______________________________________________________________________
 //
-DetailedTask*
-DetailedTasks::getNextFinalizeDevicePreparationTask()
+bool
+DetailedTasks::getNextFinalizeDevicePreparationTaskIfAble(DetailedTask* &dtask)
 {
-  DetailedTask* nextTask = nullptr;
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
   {
     device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
     if (!finalizeDevicePreparationTasks_.empty()) {
-      nextTask = finalizeDevicePreparationTasks_.front();
-      finalizeDevicePreparationTasks_.pop();
+      dtask = finalizeDevicePreparationTasks_.front();
+      if (!dtask) {
+        SCI_THROW(InternalError("DetailedTasks::getNextFinalizeDevicePreparationTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
+      }
+      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
+        finalizeDevicePreparationTasks_.pop();
+        retVal = true;
+      }
+    }
+    if (!retVal) {
+      dtask = nullptr;
     }
   }
 
-  return nextTask;
+  return retVal;
 }
 
 //_____________________________________________________________________________
 //
-DetailedTask*
-DetailedTasks::getNextInitiallyReadyDeviceTask()
+bool
+DetailedTasks::getNextInitiallyReadyDeviceTaskIfAble(DetailedTask* &dtask)
 {
-  DetailedTask* nextTask = nullptr;
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
   {
     device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::WRITER };
     if (!initiallyReadyDeviceTasks_.empty()) {
-      nextTask = initiallyReadyDeviceTasks_.front();
-      initiallyReadyDeviceTasks_.pop();
+      dtask = initiallyReadyDeviceTasks_.front();
+      if (!dtask) {
+        SCI_THROW(InternalError("DetailedTasks::getNextInitiallyReadyDeviceTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
+      }
+      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
+        initiallyReadyDeviceTasks_.pop();
+        retVal = true;
+      }
+    }
+    if (!retVal) {
+      dtask = nullptr;
     }
   }
 
-  return nextTask;
+  return retVal;
 }
 
 //_____________________________________________________________________________
 //
-DetailedTask*
-DetailedTasks::getNextCompletionPendingDeviceTask()
+bool
+DetailedTasks::getNextCompletionPendingDeviceTaskIfAble(DetailedTask* &dtask)
 {
-  DetailedTask* nextTask = nullptr;
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
   {
     device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::WRITER };
     if (!completionPendingDeviceTasks_.empty()) {
-      nextTask = completionPendingDeviceTasks_.front();
-      completionPendingDeviceTasks_.pop();
+      dtask = completionPendingDeviceTasks_.front();
+      if (!dtask) {
+        SCI_THROW(InternalError("DetailedTasks::getNextCompletionPendingDeviceTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
+      }
+      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
+        completionPendingDeviceTasks_.pop();
+        retVal = true;
+      }
+    }
+    if (!retVal) {
+      dtask = nullptr;
     }
   }
 
-  return nextTask;
+  return retVal;
 }
 
 //_____________________________________________________________________________
 //
-DetailedTask*
-DetailedTasks::getNextFinalizeHostPreparationTask()
+bool
+DetailedTasks::getNextFinalizeHostPreparationTaskIfAble(DetailedTask* &dtask)
 {
-  DetailedTask* nextTask = nullptr;
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
   {
     host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::WRITER };
     if (!finalizeHostPreparationTasks_.empty()) {
-      nextTask = finalizeHostPreparationTasks_.front();
-      finalizeHostPreparationTasks_.pop();
+      dtask = finalizeHostPreparationTasks_.front();
+      if (!dtask) {
+        SCI_THROW(InternalError("DetailedTasks::getNextFinalizeHostPreparationTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
+      }
+      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
+        finalizeHostPreparationTasks_.pop();
+        retVal = true;
+      }
+    }
+    if (!retVal) {
+      dtask = nullptr;
     }
   }
 
-  return nextTask;
+  return retVal;
 }
 
 //_____________________________________________________________________________
 //
-DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
+bool
+DetailedTasks::getNextInitiallyReadyHostTaskIfAble(DetailedTask* &dtask)
 {
-  DetailedTask* nextTask = nullptr;
+  //This function should ONLY be called within runTasks() part 1.
+  //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
+  bool retVal = false;
+  dtask = nullptr;
   {
     host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::WRITER };
     if (!initiallyReadyHostTasks_.empty()) {
-      nextTask = initiallyReadyHostTasks_.front();
-      initiallyReadyHostTasks_.pop();
+      dtask = initiallyReadyHostTasks_.front();
+      if (!dtask) {
+        SCI_THROW(InternalError("DetailedTasks::getNextInitiallyReadyHostTaskIfAble() - The task in this queue was a nullptr.  This shouldn't ever happen.", __FILE__, __LINE__));
+      }
+      if (dtask->checkAllCudaStreamsDoneForThisTask()) {
+        initiallyReadyHostTasks_.pop();
+        retVal = true;
+      }
+    }
+    if (!retVal) {
+      dtask = nullptr;
     }
   }
 
-  return nextTask;
+  return retVal;
 }
-
-
-//_____________________________________________________________________________
-//
-DetailedTask*
-DetailedTasks::peekNextVerifyDataTransferCompletionTask()
-{
-  DetailedTask* dtask = nullptr;
-  {
-    device_transfer_complete_queue_monitor transfer_queue_lock{ Uintah::CrowdMonitor<device_transfer_complete_queue_tag>::READER };
-    dtask = verifyDataTransferCompletionTasks_.front();
-  }
-
-  return dtask;
-}
-
-//_____________________________________________________________________________
-//
-DetailedTask*
-DetailedTasks::peekNextFinalizeDevicePreparationTask()
-{
-  DetailedTask* dtask = nullptr;
-  {
-    device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::READER };
-    dtask = finalizeDevicePreparationTasks_.front();
-  }
-
-  return dtask;
-}
-
-//_____________________________________________________________________________
-//
-DetailedTask*
-DetailedTasks::peekNextInitiallyReadyDeviceTask()
-{
-  DetailedTask* dtask = nullptr;
-  {
-    device_ready_queue_monitor device_ready_queue_lock{ Uintah::CrowdMonitor<device_ready_queue_tag>::READER };
-    dtask = initiallyReadyDeviceTasks_.front();
-  }
-
-  return dtask;
-}
-
-//_____________________________________________________________________________
-//
-DetailedTask*
-DetailedTasks::peekNextCompletionPendingDeviceTask()
-{
-  DetailedTask* dtask = nullptr;
-  {
-    device_completed_queue_monitor device_completed_queue_lock{ Uintah::CrowdMonitor<device_completed_queue_tag>::READER };
-    dtask = completionPendingDeviceTasks_.front();
-  }
-
-  return dtask;
-}
-
-//_____________________________________________________________________________
-//
-DetailedTask*
-DetailedTasks::peekNextFinalizeHostPreparationTask()
-{
-  DetailedTask* dtask = nullptr;
-  {
-    host_finalize_prep_queue_monitor host_finalize_queue_lock{ Uintah::CrowdMonitor<host_finalize_prep_queue_tag>::READER };
-    dtask = finalizeHostPreparationTasks_.front();
-  }
-
-  return dtask;
-}
-
-//_____________________________________________________________________________
-//
-DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
-{
-  DetailedTask* dtask = nullptr;
-  {
-    host_ready_queue_monitor host_ready_queue_lock{ Uintah::CrowdMonitor<host_ready_queue_tag>::READER };
-    dtask = initiallyReadyHostTasks_.front();
-  }
-
-  return dtask;
-}
-
 //_____________________________________________________________________________
 //
 void DetailedTasks::addVerifyDataTransferCompletion(DetailedTask* dtask)
@@ -2233,6 +2190,9 @@ void DetailedTasks::addFinalizeDevicePreparation(DetailedTask* dtask)
 {
   {
     device_finalize_prep_queue_monitor device_finalize_queue_lock{ Uintah::CrowdMonitor<device_finalize_prep_queue_tag>::WRITER };
+    if (!dtask) {
+      SCI_THROW(InternalError("DetailedTasks::addFinalizeDevicePreparation() - Cannot add a nullptr to the queue.", __FILE__, __LINE__));
+    }
     finalizeDevicePreparationTasks_.push(dtask);
   }
 }

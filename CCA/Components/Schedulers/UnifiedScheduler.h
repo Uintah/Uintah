@@ -126,6 +126,9 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
 
+    bool checkFinalizeDevicePreparationTasks(DetailedTask* &dtask);
+    void addFinalizeDevicePreparation(DetailedTask* dtask);
+
     static void init_threads( UnifiedScheduler * scheduler, int num_threads );
 
     // thread shared data, needs lock protection when accessed

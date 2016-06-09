@@ -853,7 +853,6 @@ void UnifiedScheduler::markTaskConsumed(int& numTasksDone, int& currphase, int n
   }
 }
 
-
 //______________________________________________________________________
 //
 void
@@ -1000,9 +999,8 @@ UnifiedScheduler::runTasks( int thread_id )
        * gpuVerifyDataTransferCompletion = true
        */
       else if (usingDevice == true
-          && dts->numVerifyDataTransferCompletion() > 0
-          && dts->peekNextVerifyDataTransferCompletionTask()->checkAllCudaStreamsDoneForThisTask()) {
-          readyTask = dts->getNextVerifyDataTransferCompletionTask();
+          && dts->getNextVerifyDataTransferCompletionTaskIfAble(readyTask)) {
+
           gpuVerifyDataTransferCompletion = true;
           havework = true;
           break;
@@ -1020,9 +1018,8 @@ UnifiedScheduler::runTasks( int thread_id )
        * gpuFinalizeDevicePreparation = true
        */
       else if (usingDevice == true
-          && dts->numFinalizeDevicePreparation() > 0
-          && dts->peekNextFinalizeDevicePreparationTask()->checkAllCudaStreamsDoneForThisTask()) {
-          readyTask = dts->getNextFinalizeDevicePreparationTask();
+          && dts->getNextFinalizeDevicePreparationTaskIfAble(readyTask)) {
+
           gpuFinalizeDevicePreparation = true;
           havework = true;
           break;
@@ -1037,13 +1034,8 @@ UnifiedScheduler::runTasks( int thread_id )
        * gpuRunReady = true
        */
       else if (usingDevice == true
-          && dts->numInitiallyReadyDeviceTasks() > 0
-          && dts->peekNextInitiallyReadyDeviceTask()->checkAllCudaStreamsDoneForThisTask()) {
+          && dts->getNextInitiallyReadyDeviceTaskIfAble(readyTask)) {
 
-        // printf("Ghost cell copies done...\n");
-        // All of this task's h2d copies is complete, so add it to the completion
-        // pending GPU task queue and prepare to run.
-        readyTask = dts->getNextInitiallyReadyDeviceTask();
         gpuRunReady = true;
         havework = true;
 
@@ -1059,9 +1051,8 @@ UnifiedScheduler::runTasks( int thread_id )
        * cpuFinalizeHostPreparation = true
        */
       else if (usingDevice == true
-          && dts->numFinalizeHostPreparation() > 0
-          && dts->peekNextFinalizeHostPreparationTask()->checkAllCudaStreamsDoneForThisTask()) {
-          readyTask = dts->getNextFinalizeHostPreparationTask();
+          && dts->getNextFinalizeHostPreparationTaskIfAble(readyTask)) {
+
           cpuFinalizeHostPreparation = true;
           havework = true;
           break;
@@ -1076,10 +1067,7 @@ UnifiedScheduler::runTasks( int thread_id )
        * cpuRunReady = true
        */
       else if (usingDevice == true
-               && dts->numInitiallyReadyHostTasks() > 0
-               && dts->peekNextInitiallyReadyHostTask()->checkAllCudaStreamsDoneForThisTask()) {
-
-        readyTask = dts->getNextInitiallyReadyHostTask();
+          && dts->getNextInitiallyReadyHostTaskIfAble(readyTask)) {
 
         markTaskConsumed(numTasksDone, currphase, numPhases, readyTask);
 
@@ -1100,10 +1088,8 @@ UnifiedScheduler::runTasks( int thread_id )
        * gpuPending = true
        */
       else if (usingDevice == true
-          && dts->numCompletionPendingDeviceTasks() > 0
-          && dts->peekNextCompletionPendingDeviceTask()->checkAllCudaStreamsDoneForThisTask()) {
+          && dts->getNextCompletionPendingDeviceTaskIfAble(readyTask)) {
 
-        readyTask = dts->getNextCompletionPendingDeviceTask();
         havework = true;
         gpuPending = true;
         markTaskConsumed(numTasksDone, currphase, numPhases, readyTask);
