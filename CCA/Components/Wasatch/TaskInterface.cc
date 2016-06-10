@@ -463,7 +463,6 @@ namespace WasatchCore{
         fieldInfo.useParentOldDataWarehouse = false;
         const bool hasDualTime = WasatchCore::Wasatch::has_dual_time();
         if( tree.computes_field( fieldTag ) ){
-
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
           if( ! tree.is_persistent(fieldTag) ){
             dbg_fields << " - field is not persistent -> hiding from Uintah." << std::endl;
@@ -471,11 +470,6 @@ namespace WasatchCore{
           }
 
           fieldInfo.mode = (rkStage==1) ? Expr::COMPUTES : Expr::MODIFIES;
-	  if (rkStage > 1) {
-	    // make sure that state_none fields, that are NOT persistent, are always computes.
-            // state_none fields that are persistent, should be MODIFIES which is set by the above statement
-	    if (fieldTag.context() == Expr::STATE_NONE && !tree.is_persistent(fieldTag) ) fieldInfo.mode = Expr::COMPUTES;
-	  }
         }
         else if( fieldTag.context() == Expr::STATE_N ){
           fieldInfo.mode = Expr::REQUIRES;
@@ -533,6 +527,11 @@ namespace WasatchCore{
         case Expr::MODIFIES:
           dbg_fields << std::setw(10) << "MODIFIES";
           ASSERT( dw == Uintah::Task::NewDW );
+          // tsaad: To be able to modify ghost cells, we will need:
+          //  1. requires with ghost cells
+          //  2. a modifies
+          // To avoid pitfalls of misusing modifies in Wasatch, we use modifiesWithScratchGhost
+          // which calls both a requires and a modifies.
           task.modifiesWithScratchGhost( fieldInfo.varlabel,
                                          patches, Uintah::Task::ThisLevel,
                                          materials, Uintah::Task::NormalDomain,
