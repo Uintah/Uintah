@@ -58,7 +58,7 @@ usage( const string & prog, const string & badArg )
     cout << "Usage: mpirun -np <number> mpi_hang [options]\n";
     cout << "\n";
   }
-  Uintah::MPI::Finalize();
+  MPI_Finalize();
   exit(1);
 }
 
@@ -79,27 +79,27 @@ parseArgs( int argc, char *argv[] )
 int
 main( int argc, char* argv[] )
 {
-  Uintah::MPI::Init( &argc, &argv );
+  MPI_Init( &argc, &argv );
 
-  Uintah::MPI::Comm_rank( MPI_COMM_WORLD, &rank_g );
-  Uintah::MPI::Comm_size( MPI_COMM_WORLD, &procs_g );
+  MPI_Comm_rank( MPI_COMM_WORLD, &rank_g );
+  MPI_Comm_size( MPI_COMM_WORLD, &procs_g );
 
   parseArgs( argc, argv ); // Should occur after variables 'rank' and 'procs' set...
 
   if( rank_g == 0 ) {
     cout << "Testing to see if mpi hangs on a single processor abort.  (Running with " << procs_g << " processors.)\n";
-    Uintah::MPI::Abort( MPI_COMM_WORLD, 1 );
+    MPI_Abort( MPI_COMM_WORLD, 1 );
   }
 
-  cout << rank_g << ": Calling Uintah::MPI::Allgather.\n";
+  cout << rank_g << ": Calling MPI_Allgather.\n";
 
   vector<int> message( procs_g, 0 );
 
-  Uintah::MPI::Allgather( &rank_g, 1, MPI_INT, &message[0], 1, MPI_INT, MPI_COMM_WORLD );
+  MPI_Allgather( &rank_g, 1, MPI_INT, &message[0], 1, MPI_INT, MPI_COMM_WORLD );
 
   cout << rank_g << ": All done.\n";
   
-  Uintah::MPI::Finalize();
+  MPI_Finalize();
   return 0;
 }
 

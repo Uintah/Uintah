@@ -74,8 +74,8 @@ MPI_Datatype makeMPI_Short27()
    ASSERTEQ(sizeof(Short27), sizeof(short)*27);
 
    MPI_Datatype mpitype;
-   Uintah::MPI::Type_vector(1, 27, 27, MPI_SHORT, &mpitype);
-   Uintah::MPI::Type_commit(&mpitype);
+   MPI_Type_vector(1, 27, 27, MPI_SHORT, &mpitype);
+   MPI_Type_commit(&mpitype);
 
    return mpitype;
 }

@@ -18,16 +18,16 @@ using namespace Uintah;
 int
 main(int argc, char **argv)
 {
-  Uintah::MPI::Init(&argc, &argv);
+  MPI_Init(&argc, &argv);
 
-  Uintah::MPI::Comm_size(MPI_COMM_WORLD, &num_procs);
-  Uintah::MPI::Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (argc != 5) {
     if (rank == 0) {
       std::cout << "Usage: benchmark patch_size max_patches flag_inner_rad(0-1) flag_outter_rad(0-1)\n";
     }
-    Uintah::MPI::Finalize();
+    MPI_Finalize();
     return 1;
   }
 
@@ -162,12 +162,12 @@ main(int argc, char **argv)
                 << global_patches.size() << " " << vol << " " << fflags << std::endl;
       if (vol < fflags) {
         std::cout << "Error\n";
-        Uintah::MPI::Abort(MPI_COMM_WORLD, 0);
+        MPI_Abort(MPI_COMM_WORLD, 0);
       }
     }
 #endif
 
   }
-  Uintah::MPI::Finalize();
+  MPI_Finalize();
 }
 
