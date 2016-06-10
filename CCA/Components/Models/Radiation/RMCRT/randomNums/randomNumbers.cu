@@ -28,6 +28,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <random>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <curand.h>
@@ -61,24 +62,65 @@ inline int RoundUp(double d)
 }
 //______________________________________________________________________
 //
-void stopwatch( char message[], time_t start)
+void stopwatch( std::string message, time_t start)
 {    
   double secs;
   time_t stop;                 /* timing variables             */
 
   stop = time(NULL);
   secs = difftime(stop, start);               
-  fprintf(stdout,"    %.f [s] %s  \n",secs, message);       
+  fprintf(stdout,"    %.f [s] %s  \n",secs, message.c_str());       
 }
 //______________________________________________________________________
 //  CPU based random number generations
 void randCPU( double *M, int nRandNums)
 {
+  unsigned int size = nRandNums;
+  unsigned int Imem_size = sizeof(unsigned int) * size;
+  unsigned int Dmem_size = sizeof(double) * size;
+  
+  int* org_randInt = (int*)malloc(Imem_size);
+  int* new_randInt = (int*)malloc(Imem_size);
+ 
+  double* org_randDbl = (double*)malloc(Dmem_size);
+  double* new_randDbl = (double*)malloc(Dmem_size); 
+  
+  //__________________________________
+  //  Orginal implementation
   MTRand mTwister;
   for (int i = 0; i< nRandNums; i++){
-    M[i] = mTwister.rand();
-    // printf( "%i rand: %g \n",i, M[i]);
+    mTwister.seed(i);
+    org_randDbl[i] = mTwister.rand();
+    org_randInt[i] = mTwister.randInt();
   }
+
+  //__________________________________
+  //  C++11 
+  std::mt19937 mTwist;
+  std::uniform_real_distribution<double> D_dist(0.0,1.0);
+  std::uniform_int_distribution<int>     I_dist;  // 
+  mTwist.seed(1234ULL);
+  
+  
+  for (int i = 0; i< nRandNums; i++){  
+    new_randDbl[i] = D_dist( mTwist );
+    new_randInt[i] = I_dist( mTwist );
+  }
+
+
+  for (int i = 0; i< nRandNums; i++){
+    M[i] = new_randDbl[i];
+  }
+
+
+  for (int i = 0; i< nRandNums; i++){
+    printf( "%i org_randDbl: %g  new_randDbl: %g org_randInt: %i, new_randInt: %i\n",i, org_randDbl[i],  new_randDbl[i], org_randInt[i], new_randInt[i]);
+  }
+  
+  free( org_randInt );
+  free( new_randInt );
+  free( org_randDbl );
+  free( new_randDbl );
 }
 
 
@@ -102,7 +144,7 @@ void deviceProperties( int &maxThreadsPerBlock )
 
 //______________________________________________________________________
 //  This is the host side random number generation using cuda
-void randHostGPU( double *M, int nRandNums)
+void randGPU_V1( double *M, int nRandNums)
 {
   int size = nRandNums* sizeof(double);
   double* Md;
@@ -119,13 +161,14 @@ void randHostGPU( double *M, int nRandNums)
   // generate the numbers
   curandGenerator_t randGen;
   
-  curandCreateGenerator(&randGen, CURAND_RNG_PSEUDO_DEFAULT);
+//  curandCreateGenerator(&randGen, CURAND_RNG_PSEUDO_DEFAULT);
+
+  curandCreateGenerator(&randGen, CURAND_RNG_PSEUDO_MT19937);
 
   curandSetPseudoRandomGeneratorSeed(randGen, 1234ULL);
 
   curandGenerateUniformDouble(randGen, Md, nRandNums);
  
-  
   //__________________________________
   //   copy from device memory and free device matrices
   cudaMemcpy( M, Md, size, cudaMemcpyDeviceToHost );
@@ -176,7 +219,7 @@ __global__ void randNumKernel( curandState* randNumStates, double* M, double* N,
 
 //______________________________________________________________________
 //  Device side random number generator
-void randDeviceGPU( double *M, double *N,int nRandNums)
+void randGPU_V2( double *M, double *N,int nRandNums)
 {
   int size = nRandNums* sizeof(double);
   double* Md;
@@ -258,9 +301,11 @@ void randDeviceGPU( double *M, double *N,int nRandNums)
 int main( int argc, char** argv)
 {  
 
-//  for(int power = 4; power<8; ++power) { 
-//    int nRandNums = pow(10,power);
-    int nRandNums = 512;   
+  FILE *fp;
+  fp = fopen("randomNumbers.dat", "w");
+  for(int power = 0; power<2; ++power) { 
+    //int nRandNums = pow(10,power);
+    int nRandNums = 8;   
     fprintf(stdout,"__________________________________\n");
     fprintf(stdout," nRand %d  \n", nRandNums);
     
@@ -269,9 +314,9 @@ int main( int argc, char** argv)
     unsigned int size = nRandNums;
     unsigned int mem_size = sizeof(double) * size;
     double* rand_CPU       = (double*)malloc(mem_size); 
-    double* rand_hostGPU   = (double*)malloc(mem_size);
-    double* rand_devGPU_M  = (double*)malloc(mem_size);
-    double* rand_devGPU_N  = (double*)malloc(mem_size); 
+    double* rand_GPU_L   = (double*)malloc(mem_size);
+    double* rand_GPU_M  = (double*)malloc(mem_size);
+    double* rand_GPU_N  = (double*)malloc(mem_size); 
        
     time_t start;
     start = time(NULL);
@@ -281,31 +326,31 @@ int main( int argc, char** argv)
     stopwatch(" randCPU: ", start);
     
     start = time(NULL);
-    randHostGPU( rand_hostGPU, nRandNums);
-    stopwatch(" randHostGPU: ", start);
+    randGPU_V1( rand_GPU_L, nRandNums);
+    stopwatch(" randGPU_V1: ", start);
      
     start = time(NULL);    
-    randDeviceGPU( rand_devGPU_M, rand_devGPU_N, nRandNums);
-    stopwatch(" randDeviceGPU: ", start);
+    randGPU_V2( rand_GPU_M, rand_GPU_N, nRandNums);
+    stopwatch(" randGPU_V2: ", start);
     
     //__________________________________
     //  Output data
-    FILE *fp;
-    fp = fopen("randomNumbers.dat", "w");
-    fprintf( fp, "#CPU, hostCPU, GPU_dblExc, GPU_dblInc\n");
+
+    fprintf( fp, "           #CPU,                 GPU_V1,               GPU_dblExc,            GPU_dblInc\n");
     for (int i = 0; i< nRandNums; i++){
-      fprintf( fp, "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );
-      //printf(      "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );
+      fprintf( fp, "%i:%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",power,i, rand_CPU[i], rand_GPU_L[i], rand_GPU_M[i], rand_GPU_N[i] );
+      //printf(      "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_GPU_L[i], rand_GPU_M[i], rand_GPU_N[i] );
     }
-    fclose(fp);
+
     
     //__________________________________
     //Free memory
     free( rand_CPU );
-    free( rand_hostGPU );
-    free( rand_devGPU_M );
-    free( rand_devGPU_N );
-//  }   // loop 
+    free( rand_GPU_L );
+    free( rand_GPU_M );
+    free( rand_GPU_N );
+  }   // loop 
+  fclose(fp);
 }
 
 
