@@ -106,8 +106,8 @@ namespace Uintah { namespace Impl {
 
 namespace {
 
-__thread int         t_tid = 0;            // unique ID assigned in thread_driver()
-__thread std::mutex  t_worker_io_mutex{};  // one for each thread
+__thread     int         t_tid = 0;            // unique ID assigned in thread_driver()
+thread_local std::mutex  t_worker_io_mutex{};  // one for each thread
 
 }
 
@@ -758,7 +758,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
-    MPI_Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
+    Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
@@ -796,7 +796,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();
