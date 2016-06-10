@@ -10,10 +10,10 @@ using namespace std;
 
 int main(int argc,char *argv[])
 {
-  Uintah::MPI::Init(&argc,&argv);
+  MPI_Init(&argc,&argv);
   int rank,processors;
-  Uintah::MPI::Comm_rank(MPI_COMM_WORLD,&rank);
-  Uintah::MPI::Comm_size(MPI_COMM_WORLD,&processors);
+  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+  MPI_Comm_size(MPI_COMM_WORLD,&processors);
 
   if(argc!=2)
   {
@@ -22,7 +22,7 @@ int main(int argc,char *argv[])
       cout << "Command Line Example: mpirun -np X fsspeed 16GB\n";
       cout << "acceptable file sizes include B (bytes), MB (megabytes), GB (gigabytes)\n";
     }
-    Uintah::MPI::Finalize();
+    MPI_Finalize();
     return 1;
   }
   stringstream str;
@@ -55,7 +55,7 @@ int main(int argc,char *argv[])
       cout << "Command Line Example: mpirun -np X fsspeed 16GB\n";
       cout << "acceptable file sizes include bytes (B), megabytes (MB), gigabytes (GB)\n";
     }
-    Uintah::MPI::Finalize();
+    MPI_Finalize();
     return 1;
   }
   
@@ -78,8 +78,8 @@ int main(int argc,char *argv[])
   {
     cout << "Writing " << isize*processors/1048576.0 << " MB" << endl;
   }
-  Uintah::MPI::Barrier(MPI_COMM_WORLD);
-  start=Uintah::MPI::Wtime();
+  MPI_Barrier(MPI_COMM_WORLD);
+  start=MPI_Wtime();
 #ifdef CSTYLE
   fwrite(buff,sizeof(char),isize,fout);
   fflush(fout);
@@ -89,8 +89,8 @@ int main(int argc,char *argv[])
   fout.flush();
   fout.close();
 #endif
-  Uintah::MPI::Barrier(MPI_COMM_WORLD);
-  finish=Uintah::MPI::Wtime();
+  MPI_Barrier(MPI_COMM_WORLD);
+  finish=MPI_Wtime();
   
   char command[100];
   sprintf(command,"rm -f %s",filename);
@@ -103,17 +103,17 @@ int main(int argc,char *argv[])
   
     cout << "Cleaning up datafiles\n";
   }
-  Uintah::MPI::Barrier(MPI_COMM_WORLD);
-  start=Uintah::MPI::Wtime();
+  MPI_Barrier(MPI_COMM_WORLD);
+  start=MPI_Wtime();
   system(command);
-  Uintah::MPI::Barrier(MPI_COMM_WORLD);
-  finish=Uintah::MPI::Wtime();
+  MPI_Barrier(MPI_COMM_WORLD);
+  finish=MPI_Wtime();
   if(rank==0)
   {
     cout << "Deleting Total Time: " << finish-start << " seconds" << endl;
     cout << "Deleting Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
   }
-  Uintah::MPI::Finalize();
+  MPI_Finalize();
 
   return 0;
 }
