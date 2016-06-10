@@ -52,7 +52,7 @@ std::condition_variable   g_next_signal{};
 std::mutex                g_next_mutex{};  // conditional wait mutex
 std::mutex                g_io_mutex{};
 
-Dout g_output_mpi_info( "MPI_Reporting"  , false );
+Dout g_output_mpi_info( "Uintah::MPI::Reporting"  , false );
 
 } // namespace
 
