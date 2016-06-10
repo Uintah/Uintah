@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 from sys import argv, exit
-from os import environ, system
-from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
+from os import environ, system, path
+from commands import getoutput
+from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards, boot_root
 from helpers.modUPS import modUPS
 
 the_dir = generatingGoldStandards()
@@ -449,6 +450,24 @@ PARTICLETESTS=[
 ]
 
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
+
+
+# print( " --------------------" )
+# wasatchDefs = path.normpath(path.join(build_root(), "include/sci_defs/wasatch_defs.h"))
+# print( "WasatchDefs: %s " % wasatchDefs )
+# 
+# pattern = "HAVE_POKITT"
+# cmd = "grep -c %s %s" % (pattern, wasatchDefs)
+
+# HAVE_POKITT = getoutput(cmd)
+# print( "Cmd: %s"      % cmd )
+# print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
+# print( " --------------------" )
+
+# if HAVE_POKITT > 0:
+#   NIGHTLYTESTS = NIGHTLYTESTS 
+
+
 
 #__________________________________
 # The following list is parsed by the local RT script
