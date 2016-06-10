@@ -203,6 +203,7 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "-visit_dir <directory>   : Top level directory for the VisIt installation\n";
     cerr << "-visit_option <string>   : Optional args for the VisIt launch script\n";
     cerr << "-visit_trace <file>      : Trace file for VisIt's Sim V2 function calls\n";
+    cerr << "-visit_ui <file>         : Use the named Qt GUI file instead of the default\n";
 #endif
     cerr << "\n\n";
   }
@@ -472,6 +473,13 @@ main( int argc, char *argv[], char *env[] )
       else
 	do_VisIt = true;
     }
+    else if (arg == "-visit_ui" ) {
+      if (++i == argc) {
+        usage("You must provide a file name for -visit_ui", arg, argv[0]);
+      }
+      else
+	do_VisIt = true;
+    }
 #endif
     else {
       if (filename != "") {
@@ -650,7 +658,8 @@ main( int argc, char *argv[], char *env[] )
 	}
       }
 
-      // No user defined comment so use the ups sim meta data title.
+      // No user defined comment so use the ups simulation meta data
+      // title.
       if( !have_comment )
       {
 	// Find the meta data and the title. 
