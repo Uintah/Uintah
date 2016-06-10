@@ -308,7 +308,7 @@ public:
   int    overheadIndex;
   double overheadAvg;
 
-  // Timing statistics to test load balance
+  // Analysis variable for on the fly analysis
   enum AnalysisType
   {
     MinMax = 0,
