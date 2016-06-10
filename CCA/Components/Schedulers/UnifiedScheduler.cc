@@ -34,6 +34,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Util/Time.h>
+#include <Core/Util/DOUT.hpp>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -107,7 +108,6 @@ namespace Uintah { namespace Impl {
 namespace {
 
 __thread     int         t_tid = 0;            // unique ID assigned in thread_driver()
-thread_local std::mutex  t_worker_io_mutex{};  // one for each thread
 
 }
 
@@ -758,7 +758,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
-    Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
+    MPI_Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
@@ -796,7 +796,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();
@@ -4694,15 +4694,10 @@ UnifiedSchedulerWorker::run()
       m_scheduler->runTasks(Impl::t_tid);
     }
     catch (Exception& e) {
-      // scope the lock_guard
-      {
-        std::lock_guard<std::mutex> lock(Impl::t_worker_io_mutex);
-        std::cerr << "Worker " << m_rank << "-" << Impl::t_tid << ": Caught exception: " << e.message() << "\n";
-        if (e.stackTrace()) {
-          std::cerr << "Stack trace: " << e.stackTrace() << '\n';
-        }
+      DOUT(true, "Worker " << m_rank << "-" << Impl::t_tid << ": Caught exception: " << e.message());
+      if (e.stackTrace()) {
+        DOUT(true, "Stack trace: " << e.stackTrace());
       }
-
     }
   }
 }
