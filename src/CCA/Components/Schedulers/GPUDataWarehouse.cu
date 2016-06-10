@@ -368,7 +368,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
         << " with description " << _internalName
         << " current varPointers size is: " << varPointers->size()
         << " low (" << var_offset.x << ", " << var_offset.y << ", " << var_offset.z << ") "
-        << endl;
+        << std::endl;
     }
     cerrLock.unlock();
   }
@@ -401,7 +401,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
             << " into GPUDW at " << std::hex << this << std::dec
             << " with description " << _internalName
             << " current varPointers size is: " << varPointers->size()
-            << endl;
+            << std::endl;
       }
       cerrLock.unlock();
     }
@@ -437,7 +437,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
             << " on device " << d_device_id
 
             << " into GPUDW at " << std::hex << this << std::dec
-            << endl;
+            << std::endl;
       }
       cerrLock.unlock();
     }
@@ -495,7 +495,7 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
             << " on device " << d_device_id
             << " into GPUDW at " << std::hex << this << std::dec
             << " with description " << _internalName
-            << endl;
+            << std::endl;
       }
       cerrLock.unlock();
     }
@@ -517,7 +517,7 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
       svi.atomicStatusInHostMemory = UNKNOWN;
       svi.atomicStatusInGpuMemory = UNALLOCATED;
 
-      std::pair<stagingVar, stagingVarInfo> p = make_pair( sv, svi );
+      std::pair<stagingVar, stagingVarInfo> p = std::make_pair( sv, svi );
 
       it->second.stagingVars.insert( p );
 
@@ -535,7 +535,7 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
               << " on device " << d_device_id
               << " into GPUDW at " << std::hex << this << std::dec
               << " with description " << _internalName
-              << endl;
+              << std::endl;
         }
         cerrLock.unlock();
       }
@@ -573,7 +573,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
           << " and size (" << size.x << ", " << size.y << ", " << size.z << ")"
           << " on device " << d_device_id
           << " into GPUDW at " << std::hex << this << std::dec
-          << " with description " << _internalName << endl;
+          << " with description " << _internalName << std::endl;
     }
     cerrLock.unlock();
   }
@@ -620,7 +620,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
            << " level " << levelIndx
            << " with offset (" << offset.x << ", " << offset.y << ", " << offset.z << ")"
            << " and size (" << size.x << ", " << size.y << ", " << size.z << ")"
-           << endl;
+           << std::endl;
       }
       cerrLock.unlock();
     }
@@ -659,7 +659,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
                 << " with data pointer " << it->second.device_ptr
                 << " with status codes " << getDisplayableStatusCodes(it->second.atomicStatusInGpuMemory)
                 << " into GPUDW at " << std::hex << this << std::dec
-                << endl;
+                << std::endl;
            }
            cerrLock.unlock();
          }
@@ -699,7 +699,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
                 << " with data pointer " << staging_it->second.device_ptr
                 << " with status codes " << getDisplayableStatusCodes(staging_it->second.atomicStatusInGpuMemory)
                 << " into GPUDW at " << std::hex << this << std::dec
-                << endl;
+                << std::endl;
           }
           cerrLock.unlock();
         }
@@ -743,7 +743,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
           gpu_stats << getDisplayableStatusCodes(staging_it->second.atomicStatusInGpuMemory);
         }
         gpu_stats << " on device " << d_device_id
-           << " into GPUDW at " << std::hex << this << std::dec << endl;
+           << " into GPUDW at " << std::hex << this << std::dec << std::endl;
       }
       cerrLock.unlock();
     }
@@ -892,7 +892,7 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
     if (staging_iter != iter->second.stagingVars.end()) {
       printf("ERROR:\nGPUDataWarehouse::copyItemIntoTaskDW( ) This staging var already exists in this task DW\n");
     }
-    std::pair<stagingVar, stagingVarInfo> p = make_pair( sv, svi );
+    std::pair<stagingVar, stagingVarInfo> p = std::make_pair( sv, svi );
     iter->second.stagingVars.insert( p );
 
     strncpy(d_varDB[i].label, label, MAX_NAME_LENGTH);
@@ -929,7 +929,7 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
          << " into GPUDW at " << std::hex << this << std::dec
          << " size [" << d_varDB[i].var_size.x << ", " << d_varDB[i].var_size.y << ", " << d_varDB[i].var_size.z << "]"
          << " offset [" << d_varDB[i].var_offset.x << ", " << d_varDB[i].var_offset.y << ", " << d_varDB[i].var_offset.z << "]"
-         << endl;
+         << std::endl;
     }
     cerrLock.unlock();
 
@@ -1172,7 +1172,7 @@ GPUDataWarehouse::put(GPUReductionVariableBase &var, size_t sizeOfDataType, char
           << " into GPUDW at " << std::hex << this << std::dec
           << " with description " << _internalName
           << " current varPointers size is: " << varPointers->size()
-          << endl;
+          << std::endl;
     }
     cerrLock.unlock();
   }
@@ -1234,7 +1234,7 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* l
           << " into GPUDW at " << std::hex << this << std::dec
           << " with description " << _internalName
           << " current varPointers size is: " << varPointers->size()
-          << endl;
+          << std::endl;
     }
     cerrLock.unlock();
   }
@@ -1269,7 +1269,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
           << " level " << levelIndx
           << " on device " << d_device_id
           << " into GPUDW at " << std::hex << this << std::dec
-          << " with description " << _internalName << endl;
+          << " with description " << _internalName << std::endl;
     }
     cerrLock.unlock();
   }
@@ -1304,7 +1304,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
             << " with data pointer " << it->second.device_ptr
             << " with status codes " << getDisplayableStatusCodes(it->second.atomicStatusInGpuMemory)
             << " into GPUDW at " << std::hex << this << std::dec
-            << endl;
+            << std::endl;
        }
        cerrLock.unlock();
      }
@@ -1336,7 +1336,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
             << " at " << addr
             << " with status codes " << getDisplayableStatusCodes(it->second.atomicStatusInGpuMemory)
             << " on device " << d_device_id
-            << " into GPUDW at " << std::hex << this << std::dec << endl;
+            << " into GPUDW at " << std::hex << this << std::dec << std::endl;
       }
       cerrLock.unlock();
     }
@@ -1381,7 +1381,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
           << " level " << levelIndx
           << " on device " << d_device_id
           << " into GPUDW at " << std::hex << this << std::dec
-          << " with description " << _internalName << endl;
+          << " with description " << _internalName << std::endl;
     }
     cerrLock.unlock();
   }
@@ -1417,7 +1417,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
             << " with data pointer " << it->second.device_ptr
             << " with status codes " << getDisplayableStatusCodes(it->second.atomicStatusInGpuMemory)
             << " into GPUDW at " << std::hex << this << std::dec
-            << endl;
+            << std::endl;
        }
        cerrLock.unlock();
      }
@@ -1448,7 +1448,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
             << " at " << addr
             << " with status codes " << getDisplayableStatusCodes(it->second.atomicStatusInGpuMemory)
             << " on device " << d_device_id
-            << " into GPUDW at " << std::hex << this << std::dec << endl;
+            << " into GPUDW at " << std::hex << this << std::dec << std::endl;
       }
       cerrLock.unlock();
     }
@@ -1660,7 +1660,7 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
            << " bytes at " << temp
            << " on device " << d_device_id
            << " the host GPUDW is at " << this
-           << endl;
+           << std::endl;
       }
       cerrLock.unlock();
     //}
@@ -1711,7 +1711,7 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
             << " with description " << _internalName
             << " to device " << d_device_id
             << " on stream " << stream
-            << endl;
+            << std::endl;
       }
       cerrLock.unlock();
     }
@@ -1754,14 +1754,11 @@ GPUDataWarehouse::clear()
                 << " calling GPUMemoryPool::freeCudaSpaceFromPool() for staging var for " << varIter->first.label
                 << " at device ptr " <<  stagingIter->second.device_ptr
                 << " on device " << d_device_id
-                << endl;
+                << std::endl;
           }
           cerrLock.unlock();
         }
 
-
-        //CUDA_RT_SAFE_CALL(cudaFree(stagingIter->second.device_ptr));
-        //stagingIter->second.device_ptr == nullptr;
         size_t memSize = stagingIter->first.device_size.x *
                           stagingIter->first.device_size.y *
                           stagingIter->first.device_size.z *
@@ -1791,7 +1788,7 @@ GPUDataWarehouse::clear()
                 << " calling GPUMemoryPool::freeCudaSpaceFromPool() for non-staging var for " << varIter->first.label
                 << " at device ptr " <<  varIter->second.device_ptr
                 << " on device " << d_device_id
-                << endl;
+                << std::endl;
           }
           cerrLock.unlock();
         }
@@ -1826,7 +1823,7 @@ GPUDataWarehouse::clear()
             << " at device ptr " << iter->second.allocatedDeviceMemory
             << " and host free at host ptr " << iter->second.allocatedHostMemory
             << " on device " << d_device_id
-            << endl;
+            << std::endl;
       }
       cerrLock.unlock();
     }
@@ -2151,7 +2148,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
            << " on device " << d_device_id
            << " at GPUDW at " << std::hex << this << std::dec
            << " with description " << _internalName
-           << endl;
+           << std::endl;
      }
      cerrLock.unlock();
     }
@@ -2248,7 +2245,6 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
     exit(-1);
   }
 
-
   d_varDB[i].var_offset = d_varDB[index].var_offset;
   d_varDB[i].var_size = d_varDB[index].var_size;
   d_varDB[i].var_ptr = d_varDB[index].var_ptr;
@@ -2268,7 +2264,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
          << " datatype size " << d_varDB[i].sizeOfDataType
          << " on device " << d_device_id
          << " at GPUDW at " << std::hex << this<< std::dec
-         << endl;
+         << std::endl;
    }
    cerrLock.unlock();
   }
@@ -2365,7 +2361,7 @@ GPUDataWarehouse::areAllStagingVarsValid(char const* label, int patchID, int mat
                << ") and size (" << staging_it->first.device_size.x
                << ", " << staging_it->first.device_size.y
                << ", " << staging_it->first.device_size.z
-               << ") with status codes " << getDisplayableStatusCodes(staging_it->second.atomicStatusInGpuMemory) <<endl;
+               << ") with status codes " << getDisplayableStatusCodes(staging_it->second.atomicStatusInGpuMemory) << std::endl;
          }
          cerrLock.unlock();
        }
@@ -2387,10 +2383,10 @@ GPUDataWarehouse::getStatus(atomicDataStatus& status) {
 
 //______________________________________________________________________
 //
-__host__ string
+__host__ std::string
 GPUDataWarehouse::getDisplayableStatusCodes(atomicDataStatus& status) {
   atomicDataStatus varStatus  = __sync_or_and_fetch(&(status), 0);
-  string retval = "";
+  std::string retval = "";
   if (varStatus == 0) {
     retval += "Unallocated ";
   } else {

@@ -28,13 +28,15 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
 #ifdef HAVE_CUDA
-  #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+  #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
 #endif
 
 #include <sci_defs/cuda_defs.h>
 
+#include <map>
 #include <string>
+#include <vector>
 
 #ifdef HAVE_CUDA
   static DebugStream gpu_stats(              "Unified_GPUStats"     , false );
@@ -64,38 +66,39 @@ GENERAL INFORMATION
 
    
 KEYWORDS
-   Task Scheduler, Multi-threaded MPI, CPU, GPU, MIC
+   Task Scheduler, Multi-threaded MPI, CPU, GPU
 
 DESCRIPTION
    A multi-threaded scheduler that uses a combination of MPI + Pthreads
    and offers support for GPU tasks. Dynamic scheduling with non-deterministic,
    out-of-order execution of tasks at runtime. One MPI rank per multi-core node.
-   Pthreads are pinned to individual CPU cores where these tasks are executed.
+   threads (std::thread) are pinned to individual CPU cores where these tasks are executed.
    Uses a decentralized model wherein all threads can access task queues,
-   processes there own MPI send and recvs, with shared access to the DataWarehouse.
+   processes there own MPI sends and recvs, with shared access to the DataWarehouse.
 
    Uintah task scheduler to support, schedule and execute solely CPU tasks
    or some combination of CPU and GPU tasks when enabled.
   
 WARNING
    This scheduler is still EXPERIMENTAL and undergoing extensive
-   development, not all tasks/components are GPU/MIC-enabled and/or thread-safe yet.
+   development, not all tasks/components are GPU-enabled and/or thread-safe yet.
    
    Requires MPI_THREAD_MULTIPLE support.
   
 ****************************************/
 
+
 class UnifiedScheduler : public MPIScheduler  {
 
   public:
 
-    UnifiedScheduler( const ProcessorGroup* myworld, const Output* oport, UnifiedScheduler* parentScheduler = 0 );
+    UnifiedScheduler( const ProcessorGroup * myworld, const Output * oport, UnifiedScheduler * parentScheduler = 0 );
 
     virtual ~UnifiedScheduler();
     
-    static int verifyAnyGpuActive();  //Used only to check if this Uintah build can communicate with a GPU.  This function exits the program.
+    static int verifyAnyGpuActive();  // used only to check if this Uintah build can communicate with a GPU.  This function exits the program
     
-    virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
+    virtual void problemSetup( const ProblemSpecP & prob_spec, SimulationStateP & state );
       
     virtual SchedulerP createSubScheduler();
     
@@ -103,18 +106,19 @@ class UnifiedScheduler : public MPIScheduler  {
     
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
     
-    virtual void runTask( DetailedTask* task, int iteration, int thread_id, Task::CallBackEvent event );
+    void runTask( DetailedTask * task , int iteration , int thread_id , Task::CallBackEvent event );
 
     void runTasks( int thread_id );
 
-    friend class UnifiedSchedulerWorker;
-
-    static const int bufferPadding = 128;  //32 threads can write floats out in one coalesced access.  (32 * 4 bytes = 128 bytes).
-                                           //TODO: Ideally, this number should be determined from the cuda arch during the
-                                           //CMAKE/configure step so that future programmers don't have to manually remember to
-                                           //update this value if it ever changes.
+    static const int bufferPadding = 128;  // 32 threads can write floats out in one coalesced access.  (32 * 4 bytes = 128 bytes).
+                                           // TODO: Ideally, this number should be determined from the cuda arch during the
+                                           // CMAKE/configure step so that future programmers don't have to manually remember to
+                                           // update this value if it ever changes.
 
     static std::string myRankThread();
+
+    friend class UnifiedSchedulerWorker;
+
 
   private:
 
@@ -124,93 +128,96 @@ class UnifiedScheduler : public MPIScheduler  {
     UnifiedScheduler( UnifiedScheduler && )                 = delete;
     UnifiedScheduler& operator=( UnifiedScheduler && )      = delete;
 
-    void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
+    void markTaskConsumed( int & numTasksDone, int & currphase, int numPhases, DetailedTask * dtask );
 
-    bool checkFinalizeDevicePreparationTasks(DetailedTask* &dtask);
-    void addFinalizeDevicePreparation(DetailedTask* dtask);
+    bool checkFinalizeDevicePreparationTasks( DetailedTask *& dtask );
+
+    void addFinalizeDevicePreparation( DetailedTask * dtask );
 
     static void init_threads( UnifiedScheduler * scheduler, int num_threads );
 
     // thread shared data, needs lock protection when accessed
-    std::vector<int>           phaseTasks;
-    std::vector<int>           phaseTasksDone;
-    std::vector<DetailedTask*> phaseSyncTask;
-    std::vector<int>           histogram;
-    DetailedTasks*             dts{nullptr};
+    std::vector<int>             m_phase_tasks;
+    std::vector<int>             m_phase_tasks_done;
+    std::vector<DetailedTask*>   m_phase_sync_task;
+    std::vector<int>             m_histogram;
+    DetailedTasks              * m_detailed_tasks{nullptr};
 
-    QueueAlg taskQueueAlg_{MostMessages};
-    int      currentIteration{0};
-    int      numTasksDone{0};
-    int      ntasks{0};
-    int      currphase{0};
-    int      numPhases{0};
-    bool     abort{false};
-    int      abort_point{0};
-    int      numThreads_{-1};
+    QueueAlg m_task_queue_alg{MostMessages};
+    int      m_curr_iteration{0};
+    int      m_num_tasks_done{0};
+    int      m_num_tasks{0};
+    int      m_curr_phase{0};
+    int      m_num_phases{0};
+    bool     m_abort{false};
+    int      m_abort_point{0};
+    int      m_num_threads{-1};
 
 #ifdef HAVE_CUDA
 
-    void assignDevicesAndStreams(DetailedTask* dtask);
-    void assignDevicesAndStreamsFromGhostVars(DetailedTask* dtask);
+    using DeviceVarDest = GpuUtilities::DeviceVarDestination;
 
-    void findIntAndExtGpuDependencies(DetailedTask* dtask,
-        int iteration,
-        int t_id);
+    void assignDevicesAndStreams( DetailedTask* dtask );
 
-    void prepareGpuDependencies(DetailedTask* dtask,
-        DependencyBatch* batch,
-        const VarLabel* pos_var,
-        OnDemandDataWarehouse* dw,
-        OnDemandDataWarehouse* old_dw,
-        const DetailedDep* dep,
-        LoadBalancer* lb,
-        GpuUtilities::DeviceVarDestination dest);
+    void assignDevicesAndStreamsFromGhostVars( DetailedTask* dtask );
 
-    void createTaskGpuDWs(DetailedTask * dtask);
+    void findIntAndExtGpuDependencies( DetailedTask* dtask, int iteration, int t_id );
 
+    void prepareGpuDependencies( DetailedTask                * dtask
+                               , DependencyBatch             * batch
+                               , const VarLabel              * pos_var
+                               ,       OnDemandDataWarehouse * dw
+                               ,       OnDemandDataWarehouse * old_dw
+                               , const DetailedDep           * dep
+                               ,       LoadBalancer          * lb
+                               ,       DeviceVarDest           des
+                               );
 
-    void gpuInitialize( bool reset=false );
+    void createTaskGpuDWs( DetailedTask * dtask );
 
-    void syncTaskGpuDWs(DetailedTask* dtask);
+    void gpuInitialize( bool reset = false );
 
-    void performInternalGhostCellCopies(DetailedTask* dtask);
-    void copyAllGpuToGpuDependences(DetailedTask* dtask);
+    void syncTaskGpuDWs( DetailedTask * dtask );
 
-    void copyAllExtGpuDependenciesToHost(DetailedTask* dtask);
+    void performInternalGhostCellCopies( DetailedTask * dtask );
 
-    void initiateH2DCopies(DetailedTask* dtask);
+    void copyAllGpuToGpuDependences( DetailedTask * dtask );
 
-    void prepareDeviceVars(DetailedTask* dtask);
+    void copyAllExtGpuDependenciesToHost( DetailedTask * dtask );
 
-    void prepareTaskVarsIntoTaskDW(DetailedTask* dtask);
+    void initiateH2DCopies( DetailedTask * dtask );
 
-    void prepareGhostCellsIntoTaskDW(DetailedTask* dtask);
+    void prepareDeviceVars( DetailedTask * dtask );
 
-    void markDeviceRequiresDataAsValid(DetailedTask* dtask);
+    void prepareTaskVarsIntoTaskDW( DetailedTask * dtask );
 
-    void markDeviceGhostsAsValid(DetailedTask* dtask);
+    void prepareGhostCellsIntoTaskDW( DetailedTask * dtask );
 
-    void markDeviceComputesDataAsValid(DetailedTask* dtask);
+    void markDeviceRequiresDataAsValid( DetailedTask * dtask );
 
-    void markHostRequiresDataAsValid(DetailedTask* dtask);
+    void markDeviceGhostsAsValid( DetailedTask * dtask );
 
-    void initiateD2HForHugeGhostCells(DetailedTask* dtask);
+    void markDeviceComputesDataAsValid( DetailedTask * dtask );
 
-    void initiateD2H(DetailedTask* dtask);
+    void markHostRequiresDataAsValid( DetailedTask * dtask );
 
-    bool ghostCellsProcessingReady( DetailedTask* dtask );
+    void initiateD2HForHugeGhostCells( DetailedTask * dtask );
 
-    bool allHostVarsProcessingReady( DetailedTask* dtask );
+    void initiateD2H( DetailedTask * dtask);
 
-    bool allGPUVarsProcessingReady( DetailedTask* dtask );
+    bool ghostCellsProcessingReady( DetailedTask * dtask );
 
-    void reclaimCudaStreamsIntoPool( DetailedTask* dtask );
+    bool allHostVarsProcessingReady( DetailedTask * dtask );
+
+    bool allGPUVarsProcessingReady( DetailedTask * dtask );
+
+    void reclaimCudaStreamsIntoPool( DetailedTask * dtask );
 
     void freeCudaStreamsFromPool();
 
-    cudaStream_t* getCudaStreamFromPool(int device);
+    cudaStream_t* getCudaStreamFromPool( int device );
 
-    void addCudaEvent(cudaEvent_t* event, int device);
+    void addCudaEvent( cudaEvent_t * event, int device );
 
     cudaError_t freeDeviceRequiresMem();
 
@@ -220,65 +227,85 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void clearGpuDBMaps();
 
-    void assignDevice(DetailedTask* task);
+    void assignDevice( DetailedTask * task );
 
     struct GPUGridVariableInfo {
-      DetailedTask* dtask;
-      double*       ptr;
-      IntVector     size;
-      int           device;
-      GPUGridVariableInfo(DetailedTask* _dtask, double* _ptr, IntVector _size, int _device)
-        : dtask(_dtask), ptr(_ptr), size(_size), device(_device) {
-      }
+
+      GPUGridVariableInfo( DetailedTask * dtask
+                         , double       * ptr
+                         , IntVector      size
+                         , int            device
+                         )
+        : m_dtask{dtask}
+        , m_ptr{ptr}
+        , m_size{size}
+        , m_device{device}
+      {}
+
+      DetailedTask * m_dtask;
+      double       * m_ptr;
+      IntVector      m_size;
+      int            m_device;
     };
 
-    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo> deviceRequiresPtrs;
-    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo> deviceComputesPtrs;
-    std::map<std::string, GPUGridVariableInfo> deviceComputesTemporaryPtrs;
-    std::vector<VarLabel*> temporaryVarLabels;
+    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo>  m_device_requires_ptrs;
+    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo>  m_device_computes_ptrs;
+    std::map<std::string, GPUGridVariableInfo>          m_device_computes_temp_ptrs;
+    std::vector<VarLabel*>                              m_tmp_var_labels;
 
-    std::vector<GPUGridVariableInfo> deviceRequiresAllocationPtrs;
-    std::vector<GPUGridVariableInfo> deviceComputesAllocationPtrs;
-    std::vector<double*> hostComputesAllocationPtrs;
+    std::vector<GPUGridVariableInfo>                    m_device_requires_allocation_ptrs;
+    std::vector<GPUGridVariableInfo>                    m_device_computes_allocation_ptrs;
+    std::vector<double*>                                m_host_computes_allocation_ptrs;
 
-    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo> hostRequiresPtrs;
-    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo> hostComputesPtrs;
-    std::vector<std::queue<cudaEvent_t*> >   idleEvents;
-    int  numDevices_;
-    int  currentDevice_;
+    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo>  m_host_requires_ptrs;
+    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo>  m_host_computes_ptrs;
+    std::vector<std::queue<cudaEvent_t*> >              m_idle_events;
 
-    /* thread shared data, needs lock protection when accessed */
-    static std::map <unsigned int, queue<cudaStream_t*> > *idleStreams;
-    std::vector< std::string >               materialsNames;
+    int  m_num_devices;
+    int  m_current_device;
+
+    // thread shared data, needs lock protection when accessed
+    static std::map <unsigned int, std::queue<cudaStream_t*> > * s_idle_streams;
+
+    std::vector< std::string > m_material_names;
 
     struct labelPatchMatlDependency {
-      std::string     label;
-      int             patchID;
-      int             matlIndex;
-      Task::DepType   depType;
 
-      labelPatchMatlDependency(const char * label, int patchID, int matlIndex, Task::DepType depType) {
-        this->label = label;
-        this->patchID = patchID;
-        this->matlIndex = matlIndex;
-        this->depType = depType;
-      }
-      //This so it can be used in an STL map
-      bool operator<(const labelPatchMatlDependency& right) const {
-        if (this->label < right.label) {
-          return true;
-        } else if (this->label == right.label && (this->patchID < right.patchID)) {
-          return true;
-        } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndex < right.matlIndex)) {
-          return true;
-        } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndex == right.matlIndex) && (this->depType < right.depType)) {
-          return true;
-        } else {
-          return false;
+        labelPatchMatlDependency( const char          * label
+                                ,       int             patchID
+                                ,       int             matlIndex
+                                ,       Task::DepType   depType
+                                )
+          : m_label{label}
+          , m_patchID{patchID}
+          , m_matlIndex{matlIndex}
+          , m_depType{depType}
+        {}
+
+        // this so it can be used in an STL map
+        bool operator<(const labelPatchMatlDependency& right) const
+        {
+          if (m_label < right.m_label) {
+            return true;
+          }
+          else if (m_label == right.m_label && (m_patchID < right.m_patchID)) {
+            return true;
+          }
+          else if (m_label == right.m_label && (m_patchID == right.m_patchID) && (m_matlIndex < right.m_matlIndex)) {
+            return true;
+          }
+          else if (m_label == right.m_label && (m_patchID == right.m_patchID) && (m_matlIndex == right.m_matlIndex) && (m_depType < right.m_depType)) {
+            return true;
+          }
+          else {
+            return false;
+          }
         }
 
-      }
-
+        std::string   m_label;
+        int           m_patchID;
+        int           m_matlIndex;
+        Task::DepType m_depType;
     };
 
 #endif
@@ -304,10 +331,10 @@ public:
 
 private:
 
-  UnifiedScheduler * d_scheduler;
-  int                d_rank{-1};
-  double             d_waittime{0.0};
-  double             d_waitstart{0.0};
+  UnifiedScheduler * m_scheduler{nullptr};
+  int                m_rank{-1};
+  double             m_waittime{0.0};
+  double             m_waitstart{0.0};
 
 
 };

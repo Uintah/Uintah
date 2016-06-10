@@ -99,9 +99,8 @@ TypeDescription::deleteAll()
   }
 
   killed = true;
-  std::vector<const TypeDescription*>::iterator iter = typelist_g->begin();
 
-  for(;iter != typelist_g->end();iter++) {
+  for(auto iter = typelist_g->begin(); iter != typelist_g->end();iter++) {
     delete *iter;
   }
 
@@ -126,8 +125,7 @@ TypeDescription::register_type()
       typelist_g = scinew std::vector<const TypeDescription*>;
     }
 
-    std::map<std::string, const TypeDescription*>::iterator iter = types_g->find(getName());
-
+    auto iter = types_g->find(getName());
     if (iter == types_g->end()) {
       (*types_g)[getName()] = this;
     }
@@ -164,10 +162,12 @@ TypeDescription::lookupType( const std::string & t )
     if (!types_g) {
       return 0;
     }
-    std::map<std::string, const TypeDescription*>::iterator iter = types_g->find(t);
+
+    auto iter = types_g->find(t);
     if (iter == types_g->end()) {
       return 0;
     }
+
     return iter->second;
   }
 }
@@ -176,8 +176,9 @@ MPI_Datatype
 TypeDescription::getMPIType() const
 {
   if (d_mpitype == MPI_Datatype(-1)) {
-    std::lock_guard<std::mutex> guard(get_mpi_type_lock);
+		// scope the lock_guard
     {
+      std::lock_guard<std::mutex> guard(get_mpi_type_lock);
       if (d_mpitype == MPI_Datatype(-1)) {
         if (d_mpitypemaker) {
           d_mpitype = (*d_mpitypemaker)();
@@ -186,8 +187,11 @@ TypeDescription::getMPIType() const
         }
       }
     }
+
   }
+
   ASSERT(d_mpitype != MPI_Datatype(-2));
+
   return d_mpitype;
 }
 
@@ -197,5 +201,6 @@ TypeDescription::createInstance() const
   if (!d_maker) {
     throw InternalError("Do not know how to create instance for type: " + getName(), __FILE__, __LINE__);
   }
+
   return (*d_maker)();
 }

@@ -50,18 +50,18 @@
 namespace Uintah {
 
 enum materialType {
-  IDEAL_GAS = 0/*,
-  HARD_SPHERE_GAS_EOS = 1,
-  TST_EOS = 2,
-  JWL_EOS = 3,
-  JWLC_EOS = 4,
-  MURNAGHAN_EOS = 5,
-  BIRCH_MURNAGHAN_EOS = 6,
-  GRUNEISEN_EOS = 7,
-  TILLOTSON_EOS = 8,
-  THOMSEN_HARTKA_WATER_EOS = 9,
-  KNAUSS_SEA_WATER_EOS = 10,
-  KUMARI_DASS_EOS = 11 */
+    IDEAL_GAS = 0
+//  , HARD_SPHERE_GAS_EOS = 1
+//  , TST_EOS = 2
+//  , JWL_EOS = 3
+//  , JWLC_EOS = 4
+//  , MURNAGHAN_EOS = 5
+//  , BIRCH_MURNAGHAN_EOS = 6
+//  , GRUNEISEN_EOS = 7
+//  , TILLOTSON_EOS = 8
+//  , THOMSEN_HARTKA_WATER_EOS = 9
+//  , KNAUSS_SEA_WATER_EOS = 10
+//  , KUMARI_DASS_EOS = 11
 };
 
 class OnDemandDataWarehouse;

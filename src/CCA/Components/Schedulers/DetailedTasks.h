@@ -37,8 +37,8 @@
 #include <Core/Grid/Variables/ScrubItem.h>
 
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
-#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+  #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
 #include <list>
@@ -278,8 +278,10 @@ namespace Uintah {
     
     void findRequiringTasks( const VarLabel* var, std::list<DetailedTask*>& requiringTasks );
 
-    void emitEdges( ProblemSpecP edgesElement ) ;
+    void emitEdges( ProblemSpecP edgesElement );
+
     bool addInternalRequires(DependencyBatch*);
+
     void addInternalComputes(DependencyBatch*);
 
     bool addRequires( DependencyBatch* );
@@ -309,25 +311,17 @@ namespace Uintah {
 
     void assignDevice (unsigned int device);
 
-    //unsigned int getDeviceNum() const;
-
-    //Most tasks will only run on one device.
-    //But some, such as the data archiver task or send old data could run on multiple devices.
-    //This is not a good idea.  A task should only run on one device.  But the capability for a task
-    //to run on multiple nodes exists.
+    // Most tasks will only run on one device.
+    // But some, such as the data archiver task or send old data could run on multiple devices.
+    // This is not a good idea.  A task should only run on one device.  But the capability for a task
+    // to run on multiple nodes exists.
     std::set<unsigned int> getDeviceNums() const;
+
     std::map<unsigned int, TaskGpuDataWarehouses> TaskGpuDWs;
-
-
-    //bool queryCudaStreamCompletionForThisTask();
-
-    //void setCudaStreamForThisTask(cudaStream_t* s);
 
     void setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t* s);
 
     void clearCudaStreamsForThisTask();
-
-    //bool checkCudaStreamDoneForThisTask() const;
 
     bool checkCudaStreamDoneForThisTask(unsigned int deviceNum) const;
 
@@ -342,10 +336,15 @@ namespace Uintah {
     cudaStream_t* getCudaStreamForThisTask(unsigned int deviceNum) const;
 
     DeviceGridVariables& getDeviceVars() { return deviceVars; }
+
     DeviceGridVariables& getTaskVars() { return taskVars; }
+
     DeviceGhostCells& getGhostVars() { return ghostVars; }
+
     DeviceGridVariables& getVarsToBeGhostReady() { return varsToBeGhostReady; }
+
     DeviceGridVariables& getVarsBeingCopiedByTask() { return varsBeingCopiedByTask; }
+
     void clearPreparationCollections();
 
     void clearTempCudaMemory();
@@ -555,30 +554,30 @@ namespace Uintah {
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
 
 #ifdef HAVE_CUDA
+
     void addVerifyDataTransferCompletion(DetailedTask* dtask);
+
     void addFinalizeDevicePreparation(DetailedTask* dtask);
+
     void addInitiallyReadyDeviceTask( DetailedTask* dtask );
+
     void addCompletionPendingDeviceTask( DetailedTask* dtask );
+
     void addFinalizeHostPreparation(DetailedTask* dtask);
+
     void addInitiallyReadyHostTask(DetailedTask* dtask);
 
-    //DetailedTask* peekNextVerifyDataTransferCompletionTask();
     bool getNextVerifyDataTransferCompletionTaskIfAble(DetailedTask* &dtask);
-    //DetailedTask* peekNextFinalizeDevicePreparationTask();
-    bool getNextFinalizeDevicePreparationTaskIfAble(DetailedTask* &dtask);
-    //DetailedTask* peekNextInitiallyReadyDeviceTask();
-    bool getNextInitiallyReadyDeviceTaskIfAble(DetailedTask* &dtask);
-    //DetailedTask* peekNextCompletionPendingDeviceTask();
-    bool getNextCompletionPendingDeviceTaskIfAble(DetailedTask* &dtask);
-    //DetailedTask* peekNextFinalizeHostPreparationTask();
-    bool getNextFinalizeHostPreparationTaskIfAble(DetailedTask* &dtask);
-    //DetailedTask* peekNextInitiallyReadyHostTask();
-    bool getNextInitiallyReadyHostTaskIfAble(DetailedTask* &dtask);
 
-    //int numInitiallyReadyDeviceTasks() { return initiallyReadyDeviceTasks_.size(); }
-    //int numCompletionPendingDeviceTasks() { return completionPendingDeviceTasks_.size(); }
-    //int numFinalizeHostPreparation() { return finalizeHostPreparationTasks_.size(); }
-    //int numInitiallyReadyHostTasks() { return initiallyReadyHostTasks_.size(); }
+    bool getNextFinalizeDevicePreparationTaskIfAble(DetailedTask* &dtask);
+
+    bool getNextInitiallyReadyDeviceTaskIfAble(DetailedTask* &dtask);
+
+    bool getNextCompletionPendingDeviceTaskIfAble(DetailedTask* &dtask);
+
+    bool getNextFinalizeHostPreparationTaskIfAble(DetailedTask* &dtask);
+
+    bool getNextInitiallyReadyHostTaskIfAble(DetailedTask* &dtask);
 
     void createInternalDependencyBatch(DetailedTask* from,
                                    Task::Dependency* comp,
@@ -590,6 +589,7 @@ namespace Uintah {
                                    const IntVector& low,
                                    const IntVector& high,
                                    DetailedDep::CommCondition cond);
+
     // helper of possiblyCreateDependency
     DetailedDep* findMatchingInternalDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req,
                                          const Patch* fromPatch, int matl, IntVector low, IntVector high,
@@ -645,9 +645,11 @@ namespace Uintah {
     std::vector<DetailedTask*>    tasks_;
     KeyDatabase<Patch>            varKeyDB;
     KeyDatabase<Level>            levelKeyDB;
+
 #if 0
     std::vector<DetailedReq*> initreqs_;
 #endif
+
     const TaskGraph*              taskgraph_;
     Task*                         stask_;
     std::vector<DetailedTask*>    localtasks_;

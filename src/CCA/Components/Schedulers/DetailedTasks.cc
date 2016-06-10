@@ -28,8 +28,9 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
+
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUMemoryPool.h>
+  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
@@ -135,6 +136,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
     DetailedTask* newtask = scinew DetailedTask( stask_, 0, 0, this );
     newtask->assignResource(*iter);
+
     //use a map because the processors in this map are likely to be sparse
     sendoldmap_[*iter] = tasks_.size();
     tasks_.push_back(newtask);
@@ -367,12 +369,12 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
       const unsigned int currentDevice = *deviceNums_it;
       OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
       GPUDataWarehouse* host_oldtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
-      GPUDataWarehouse* device_oldtaskdw = NULL;
+      GPUDataWarehouse* device_oldtaskdw = nullptr;
       if (host_oldtaskdw) {
         device_oldtaskdw = host_oldtaskdw->getdevice_ptr();
       }
       GPUDataWarehouse* host_newtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::NewDW);
-      GPUDataWarehouse* device_newtaskdw = NULL;
+      GPUDataWarehouse* device_newtaskdw = nullptr;
       if (host_newtaskdw) {
         device_newtaskdw = host_newtaskdw->getdevice_ptr();
       }
@@ -383,10 +385,10 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
     }
   }
   else {
-    task->doit(this, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+    task->doit(this, event, pg, patches, matls, dws, nullptr, nullptr, nullptr, -1);
   }
 #else
-  task->doit(this, event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+  task->doit(this, event, pg, patches, matls, dws, nullptr, nullptr, nullptr, -1);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
@@ -413,7 +415,7 @@ DetailedTasks::initializeScrubs( vector<OnDemandDataWarehouseP>& dws,
       continue;
     }
     OnDemandDataWarehouse* dw = dws[dwmap[i]].get_rep();
-    // TODO APH - clean this up (01/31/15)
+    // TODO APH - clean this up (06/09/16)
 //    if (dw != 0) dw->copyKeyDB(varKeyDB, levelKeyDB);
     if (dw != 0 && dw->getScrubMode() == DataWarehouse::ScrubComplete) {
       // only a OldDW or a CoarseOldDW will have scrubComplete 
@@ -844,7 +846,7 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch*  batch,
             dbg << fromPatch->getID() << '\n';
           }
           else {
-            dbg << "NULL\n";
+            dbg << "nullptr\n";
           }
           dbg << d_myworld->myrank() << " TP: " << totalLow << " " << totalHigh << std::endl;
         }
@@ -1030,7 +1032,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
     new_dep->low = Min(new_dep->low, matching_dep->low);
     new_dep->high = Max(new_dep->high, matching_dep->high);
 
-    // TODO APH - figure this out and clean up (01/31/15)
+    // TODO APH - figure this out and clean up (01/31/16)
     /*
      //if the same dependency already exists then short circuit out of this function.
     if (matching_dep->low == new_dep->low && matching_dep->high == new_dep->high) {
@@ -1056,12 +1058,13 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
       if (fromresource == d_myworld->myrank()) {
         set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
         ASSERT(iter != particleSends_[toresource].end());
+
         //subtract one from the count
         iter->count_--;
+
         //if the count is zero erase it from the sends list
         if (iter->count_ == 0) {
           particleSends_[toresource].erase(iter);
-//          particleSends_[toresource].erase(pmg);
         }
       }
       else if (toresource == d_myworld->myrank()) {
@@ -1072,13 +1075,12 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
         //if the count is zero erase it from the recvs list
         if (iter->count_ == 0) {
           particleRecvs_[fromresource].erase(iter);
-//          particleRecvs_[fromresource].erase(pmg);
         }
       }
     }
 
     //remove the matching_dep from the batch list
-    if (parent_dep == NULL) {
+    if (parent_dep == nullptr) {
       batch->head = matching_dep->next;
     }
     else {
@@ -1103,10 +1105,10 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   new_dep->patchLow = varRangeLow;
   new_dep->patchHigh = varRangeHigh;
 
-  if (insert_dep == NULL) {
+  if (insert_dep == nullptr) {
     //no dependencies are in the list so add it to the head
     batch->head = new_dep;
-    new_dep->next = NULL;
+    new_dep->next = nullptr;
   }
   else {
     //dependencies already exist so add it at the insert location.
@@ -1155,7 +1157,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
       dbg << fromPatch->getID() << '\n';
     }
     else {
-      dbg << "NULL\n";
+      dbg << "nullptr\n";
     }
   }
 }
@@ -1249,7 +1251,6 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
     new_dep->low = Min(new_dep->low, matching_dep->low);
     new_dep->high = Max(new_dep->high, matching_dep->high);
 
-
     //copy matching dependencies toTasks to the new dependency
     new_dep->toTasks.splice(new_dep->toTasks.begin(), matching_dep->toTasks);
 
@@ -1265,12 +1266,13 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
       if (fromresource == d_myworld->myrank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
         ASSERT(iter!=particleSends_[toresource].end());
+
         //subtract one from the count
         iter->count_--;
+
         //if the count is zero erase it from the sends list
         if (iter->count_ == 0) {
           particleSends_[toresource].erase(iter);
-          //particleSends_[toresource].erase(pmg);
         }
       } else if (toresource == d_myworld->myrank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = particleRecvs_[fromresource].find(pmg);
@@ -1280,13 +1282,12 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
         //if the count is zero erase it from the recvs list
         if (iter->count_ == 0) {
           particleRecvs_[fromresource].erase(iter);
-          //particleRecvs_[fromresource].erase(pmg);
         }
       }
     }
 
     //remove the matching_dep from the batch list
-    if (parent_dep == NULL) {
+    if (parent_dep == nullptr) {
       batch->head = matching_dep->next;
     } else {
       parent_dep->next = matching_dep->next;
@@ -1312,10 +1313,10 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
   new_dep->patchHigh = varRangeHigh;
 
 
-  if (insert_dep == NULL) {
+  if (insert_dep == nullptr) {
     //no dependencies are in the list so add it to the head
     batch->head = new_dep;
-    new_dep->next = NULL;
+    new_dep->next = nullptr;
   } else {
     //depedencies already exist so add it at the insert location.
     new_dep->next = insert_dep->next;
@@ -1359,7 +1360,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
     if (fromPatch)
       dbg << fromPatch->getID() << '\n';
     else
-      dbg << "NULL\n";
+      dbg << "nullptr\n";
   }
 
 }
@@ -1606,7 +1607,7 @@ cudaStream_t* DetailedTask::getCudaStreamForThisTask(unsigned int deviceNum) con
   if (it != d_cudaStreams.end()) {
     return it->second;
   }
-  return NULL;
+  return nullptr;
 }
 
 
@@ -1618,9 +1619,9 @@ cudaStream_t* DetailedTask::getCudaStreamForThisTask(unsigned int deviceNum) con
 
 void DetailedTask::setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t* s)
 {
-  if (s == NULL) {
-    printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - A request was made to assign a stream at address NULL into this task %s\n", getName().c_str());
-    SCI_THROW(InternalError("A request was made to assign a stream at address NULL into this task :"+ getName() , __FILE__, __LINE__));
+  if (s == nullptr) {
+    printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - A request was made to assign a stream at address nullptr into this task %s\n", getName().c_str());
+    SCI_THROW(InternalError("A request was made to assign a stream at address nullptr into this task :"+ getName() , __FILE__, __LINE__));
   } else {
     if (d_cudaStreams.find(deviceNum) == d_cudaStreams.end()) {
       d_cudaStreams.insert(std::pair<unsigned int, cudaStream_t*>(deviceNum,s));
@@ -1653,9 +1654,9 @@ bool DetailedTask::checkCudaStreamDoneForThisTask(unsigned int deviceNum_) const
     SCI_THROW(InternalError("Request for stream information for a device, but it wasn't assigned any streams for that device.  For task: " + getName() , __FILE__, __LINE__));
     return false;
   }
-  if (it->second == NULL) {
-    printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with NULL address for task %s\n", getName().c_str());
-    SCI_THROW(InternalError("Stream pointer with NULL address for task: " + getName() , __FILE__, __LINE__));
+  if (it->second == nullptr) {
+    printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with nullptr address for task %s\n", getName().c_str());
+    SCI_THROW(InternalError("Stream pointer with nullptr address for task: " + getName() , __FILE__, __LINE__));
     return false;
   }
 
@@ -1703,8 +1704,8 @@ void DetailedTask::setTaskGpuDataWarehouse(const unsigned int whichDevice, Task:
 
   } else {
     TaskGpuDataWarehouses temp;
-    temp.TaskGpuDW[0] = NULL;
-    temp.TaskGpuDW[1] = NULL;
+    temp.TaskGpuDW[0] = nullptr;
+    temp.TaskGpuDW[1] = nullptr;
     temp.TaskGpuDW[DW] = TaskDW;
     TaskGpuDWs.insert(std::pair<unsigned int, TaskGpuDataWarehouses>(whichDevice, temp));
   }
@@ -1716,28 +1717,23 @@ GPUDataWarehouse* DetailedTask::getTaskGpuDataWarehouse(const unsigned int which
   if (it != TaskGpuDWs.end()) {
     return it->second.TaskGpuDW[DW];
   }
-  return NULL;
+  return nullptr;
 
 }
 
 void DetailedTask::deleteTaskGpuDataWarehouses() {
   for (std::map<unsigned int, TaskGpuDataWarehouses>::iterator it = TaskGpuDWs.begin(); it != TaskGpuDWs.end(); ++it) {
     for (int i = 0; i < 2; i++) {
-        if (it->second.TaskGpuDW[i] != NULL) {
+        if (it->second.TaskGpuDW[i] != nullptr) {
           //Note: Do not call the clear() method.  The Task GPU DWs only contains a "snapshot"
           //of the things in the GPU.  The host side GPU DWs is responsible for
           //deallocating all the GPU resources.  The only thing we do want to clean
           //up is that this GPUDW lives on the GPU.
           it->second.TaskGpuDW[i]->deleteSelfOnDevice();
-
-          //void * getPlacementNewBuffer = it->second.TaskGpuDW[i]->getPlacementNewBuffer();
-
-          //it->second.TaskGpuDW[i]->~GPUDataWarehouse();
-          //free(getPlacementNewBuffer);
-
           it->second.TaskGpuDW[i]->cleanup();
+
           free(it->second.TaskGpuDW[i]);
-          it->second.TaskGpuDW[i] = NULL;
+          it->second.TaskGpuDW[i] = nullptr;
         }
       }
   }
@@ -1888,12 +1884,6 @@ operator<<(       std::ostream& out,
     else {
       out << task.getAssignedResourceIndex();
     }
-//#ifdef HAVE_CUDA
-//    if( task.getCudaStreamForThisTask() ){
-//      out << std::hex << " using CUDA stream " << task.getCudaStreamForThisTask() << std::dec;
-//    }
-//#endif
-    
   }
   coutLock.unlock();
 
