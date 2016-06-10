@@ -45,12 +45,14 @@
 #include <Core/Exceptions/InvalidState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
-#include <cstdio>
+
 #include <zlib.h>
+
+#include <cstdio>
+#include <mutex>
 #include <sstream>
 
 #define OLD_TABLE 1
@@ -61,11 +63,8 @@ using namespace Uintah;
 
 namespace {
 
-struct dep_map_tag{};
-struct enthalpy_map_tag{};
-
-using dep_map_monitor        = Uintah::CrowdMonitor<dep_map_tag>;
-using enthalpy_map_monitor   = Uintah::CrowdMonitor<enthalpy_map_tag>;
+std::mutex dependency_map_mutex{};
+std::mutex enthalpy_map_mutex{};
 
 }
 
@@ -745,19 +744,22 @@ ClassicTableInterface::getIndexInfo()
     int index = findIndex( name );
 
     IndexMap::iterator iter;
+
+    dependency_map_mutex.lock();
     {
-       dep_map_monitor dep_map_read_lock{ Uintah::CrowdMonitor<dep_map_tag>::READER };
        iter = d_depVarIndexMap.find(name);
     }
+    dependency_map_mutex.unlock();
 
     // Only insert variable if it isn't already there.
     if ( iter == d_depVarIndexMap.end() ) {
       cout_tabledbg << " Inserting " << name << " index information into storage." << endl;
 
+      dependency_map_mutex.lock();
       {
-        dep_map_monitor dep_map_write_lock{ Uintah::CrowdMonitor<dep_map_tag>::WRITER };
         iter = d_depVarIndexMap.insert(make_pair(name, index)).first;
       }
+      dependency_map_mutex.unlock();
     }
   }
 }
@@ -768,8 +770,8 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 {
   if ( !d_coldflow){
 
+    enthalpy_map_mutex.lock();
     {
-      enthalpy_map_monitor enthalpy_map_write_lock{ Uintah::CrowdMonitor<enthalpy_map_tag>::WRITER };
       cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
       int index = findIndex("sensibleenthalpy");
 
@@ -782,6 +784,7 @@ ClassicTableInterface::getEnthalpyIndexInfo()
       index = findIndex("density");
       d_enthalpyVarIndexMap.insert(make_pair("density", index));
     }
+    enthalpy_map_mutex.unlock();
   }
 }
 

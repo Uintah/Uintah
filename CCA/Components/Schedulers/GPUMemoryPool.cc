@@ -65,11 +65,7 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
   void * addr = nullptr;
   {
     pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
-    bool claimedAnItem = false;
     cudaError_t err;
-    //size_t available, total;
-    //err = cudaMemGetInfo(&available, &total);
-    //printf("There is %u bytes available of %u bytes total, %1.1lf\%% used\n", available, total, 100 - (double)available/total * 100.0);
 
     gpuMemoryPoolDeviceSizeItem item(device_id, memSize);
 
@@ -87,7 +83,7 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
             << " on device " << device_id
             << " with size " << memSize
             << " from the GPU memory pool"
-            << endl;
+            << std::endl;
       }
       cerrLock.unlock();
       }
@@ -115,7 +111,7 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
               << " allocated GPU space starting at " << addr
               << " on device " << device_id
               << " with size " << memSize
-              << endl;
+              << std::endl;
         }
         cerrLock.unlock();
       }
@@ -139,24 +135,7 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
     pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
 
     size_t memSize;
-
-    //printf("Freeing data on device %u starting at %p\n", device_id, addr);
-    /*//For debugging, shows everything in the pool
-    std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator end;
-    for (std::multimap<gpuMemoryPoolItem, gpuMemoryData>::iterator it = gpuMemoryPool->begin();
-         it !=  gpuMemoryPool->end();
-         ++it) {
-      gpu_stats << "device: " << it->first.device_id
-                << " deviceSize: " << it->first.deviceSize << " - "
-                << " status: " << it->second.status
-                << " timestep: " << it->second.timestep
-                << " ptr: " << it->second.ptr
-                << endl;
-    }
-    gpu_stats << endl;
-    */
     gpuMemoryPoolDevicePtrItem item(device_id, addr);
-    //gpuMemoryPoolItem gpuItem(device_id, memSize);
 
     std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue>::iterator ret = gpuMemoryPoolInUse->find(item);
 
@@ -173,7 +152,7 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
               << " on device " << device_id
               << " with size " << memSize
               << " marked for reuse in the GPU memory pool"
-              << endl;
+              << std::endl;
         }
         cerrLock.unlock();
       }

@@ -132,8 +132,7 @@ public:
   struct Register {
     Register( const TypeDescription* )
     {
-      // Actual registration of the Variable Type happens when of the 'td' variable
-      // is originally created.
+      // Actual registration of Variable Type happens when the 'td' variable is originally created.
     }
     ~Register(){};
   };
@@ -152,10 +151,6 @@ private:
   TypeDescription( TypeDescription && )                 = delete;
   TypeDescription& operator=( TypeDescription && )      = delete;
 
-  MPI_Datatype (*d_mpitypemaker)(){nullptr};
-
-  Variable* (*d_maker)(){nullptr};
-
   void register_type();
 
   Type                    d_type{};
@@ -163,6 +158,9 @@ private:
   std::string             d_name{};
   bool                    d_isFlat{false};
   mutable MPI_Datatype    d_mpitype{};
+
+  MPI_Datatype (*d_mpitypemaker)(){nullptr};
+  Variable* (*d_maker)(){nullptr};
 
 };
 
