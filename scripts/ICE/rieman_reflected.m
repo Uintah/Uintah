@@ -60,7 +60,7 @@ for(ts = 1:nDumps )
     matl = matls{i}
     %use line extract to pull out the data
     c1 = sprintf('lineextract -v rho_CC   -timestep %i %s -o rho     -m %s -uda %s',ts,startEnd,matl,uda);
-    c2 = sprintf('lineextract -v vel_CC   -timestep %i %s -o vel_tmp -m %s -uda %s',ts,startEnd,matl,uda);
+    c2 = sprintf('lineextract -v vel_CC   -timestep %i %s -o vel     -m %s -uda %s',ts,startEnd,matl,uda);
     c3 = sprintf('lineextract -v temp_CC  -timestep %i %s -o temp    -m %s -uda %s',ts,startEnd,matl,uda);
     c4 = sprintf('lineextract -v press_CC -timestep %i %s -o press   -m 0 -uda %s',ts,startEnd,uda);
     
@@ -68,10 +68,6 @@ for(ts = 1:nDumps )
     [status2, result2]=unix(c2);
     [status3, result3]=unix(c3);
     [status4, result4]=unix(c4);
-
-    % rip out [ ] from velocity data
-    c7 = sprintf('sed ''s/\\[//g'' vel_tmp | sed ''s/\\]//g'' >vel');
-    [status7, result7]=unix(c7);
 
     % import the data into arrays
     press1{1,i}  = importdata('press');

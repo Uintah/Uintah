@@ -255,11 +255,9 @@ for(ts = 0:nDumps )
       %____________________________
       %  velocity
       if plotVel
-        c5 = sprintf('lineextract -v vel_CC      -l %i -cellCoords -timestep %i %s -o vel_tmp.dat  -m %i  -uda %s',level,ts,S_E,mat,uda);
+        c5 = sprintf('lineextract -v vel_CC      -l %i -cellCoords -timestep %i %s -o vel.dat  -m %i  -uda %s',level,ts,S_E,mat,uda);
         [s5, r5]=unix(c5);
-        % rip out [ ] from velocity data
-        c6 = sprintf('sed ''s/\\[//g'' vel_tmp.dat | sed ''s/\\]//g'' >vel.dat');
-        [s6, r6]  = unix(c6);
+
         vel1{1,L} = importdata('vel.dat');
         
         subplot(numPlotRows,numPlotCols,plotNum), plot(x, vel1{1,L}(:,4),symbol{L})

@@ -130,12 +130,8 @@ elseif(pDir == 3)
   startEnd = sprintf('-istart 0 0 %i -iend %i 0 %i',xHalf,resolution(yDir)-1,xHalf);
 end
 
-c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s','vel_CC > /dev/null 2>&1',L,ts-1,startEnd,mat,uda);
+c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o vel.dat -m %i  -uda %s','vel_CC > /dev/null 2>&1',L,ts-1,startEnd,mat,uda);
 [s1, r1] = unix(c1);
-
-% rip out [] from velocity data
-c2 = sprintf('sed ''s/\\[//g'' sim.dat | sed ''s/\\]//g'' >vel.dat');
-[status2, result2]=unix(c2);
 
 % import the data into arrays
 vel  = load('vel.dat'); 

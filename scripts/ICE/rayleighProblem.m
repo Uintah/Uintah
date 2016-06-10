@@ -43,12 +43,8 @@ for( t = 1:nDumps )
   %t = input('input timestep')
   time =physicalTime(t)
   %use line extract to pull out the data
-  c1 = sprintf('lineextract -v vel_CC -timestep %i %s -o vel_tmp -uda %s',t,options,uda)
+  c1 = sprintf('lineextract -v vel_CC -timestep %i %s -o vel -uda %s',t,options,uda)
   [status1, result1]=unix(c1)
-  
-  % rip out [] from velocity data
-  c2 = sprintf('sed ''s/\\[//g'' vel_tmp | sed ''s/\\]//g'' >vel');
-  [status2, result2]=unix(c2);
 
   % import the data into arrays
   vel1    = importdata('vel'); 
