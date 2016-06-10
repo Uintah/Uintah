@@ -77,7 +77,7 @@ end
 %________________________________
 % do the Uintah utilities exist
 [s0, r0]=unix('puda > /dev/null 2>&1');
-[s1, r1]=unix('lineextract > /dev/null2>&1');
+[s1, r1]=unix('lineextract > /dev/null 2>&1');
 
 if( s0 ~=0 || s1 ~= 0 )
   disp('Cannot execute uintah utilites puda, lineextract');
@@ -126,12 +126,8 @@ elseif(pDir == 3)
 %  to be filled in
 end
 
-c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s','vel_CC > /dev/null 2>&1',L,ts-1,startEnd,mat,uda);
+c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o vel.dat -m %i  -uda %s','vel_CC > /dev/null 2>&1',L,ts-1,startEnd,mat,uda);
 [s1, r1] = unix(c1);
-
-% remove [] from velocity data
-c2 = sprintf('sed ''s/\\[//g'' sim.dat | sed ''s/\\]//g'' >vel.dat');
-[status2, result2]=unix(c2);
 
 % import the velocity into array
 vel     = load('vel.dat'); 

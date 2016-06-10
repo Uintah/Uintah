@@ -91,12 +91,6 @@ lineextract -cellCoords -istart $start -iend $end -v g.acceleration  -l 1 -times
 lineextract -cellCoords -istart $start -iend $end -v g.velocity_star -l 1 -timestep $timeStep -uda $uda_2L -o gVelStar.2L.1.dat
 lineextract -cellCoords -istart $start -iend $end -v g.internalforce -l 1 -timestep $timeStep -uda $uda_2L -o gIntF.2L.1.dat
 
-scripts/removeBraces gEF.1L.dat       gEF.2L.0.dat      gEF.2L.1.dat
-scripts/removeBraces gVel.1L.dat      gVel.2L.0.dat     gVel.2L.1.dat
-scripts/removeBraces gAcc.1L.dat      gAcc.2L.0.dat     gAcc.2L.1.dat
-scripts/removeBraces gVelStar.1L.dat  gVelStar.2L.0.dat gVelStar.2L.1.dat
-scripts/removeBraces gIntF.1L.dat     gIntF.2L.0.dat    gIntF.2L.1.dat
-
 /bin/rm -f gp
 
 #__________________________________
