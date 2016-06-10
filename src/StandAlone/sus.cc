@@ -329,7 +329,7 @@ main( int argc, char *argv[], char *env[] )
       }
       else if( numThreads > MAX_THREADS ) {
         usage( "Number of threads is out of range. Specify fewer threads, "
-               "or increase MAX_THREADS (.../src/Core/Thread/Threads.h) and recompile.", arg, argv[0] );
+               "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumThreads( numThreads );
     }
