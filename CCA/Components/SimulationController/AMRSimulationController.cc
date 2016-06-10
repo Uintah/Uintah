@@ -773,6 +773,24 @@ AMRSimulationController::needRecompile( double        time,
   if (d_doAMR){
     recompile |= ( d_regridder && d_regridder->needRecompile(time, delt, grid) );
   }
+
+#ifdef HAVE_VISIT
+  // Check all of the component variables that might require the task
+  // graph to be recompiled.
+
+  // ARS - Should this check be on the component level?
+  for( unsigned int i=0; i<d_sharedState->d_interactiveVars.size(); ++i )
+  {
+    SimulationState::interactiveVar &var =
+      d_sharedState->d_interactiveVars[i];
+
+    if( var.modified && var.recompile )
+    {
+      recompile = true;
+    }
+  }
+#endif
+  
   return recompile;
 }
 //______________________________________________________________________
