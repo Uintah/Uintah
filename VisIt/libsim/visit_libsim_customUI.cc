@@ -44,10 +44,10 @@ static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 namespace Uintah {
 
 //---------------------------------------------------------------------
-// GetTimeVars
-//    Get the output checkpoints so they can be displayed in the Custon UI
+// SetTimeVars
+//    Set the output checkpoints so they can be displayed in the Custon UI
 //---------------------------------------------------------------------
-void visit_GetTimeVars( visit_simulation_data *sim )
+void visit_SetTimeVars( visit_simulation_data *sim )
 {
   VisItUI_setValueI("TimeStep",
                     sim->cycle, 0);
@@ -75,19 +75,21 @@ void visit_GetTimeVars( visit_simulation_data *sim )
                     sim->simController->getSimulationTime()->max_wall_time, 1);
 
   visit_SetStripChartValue( sim, "DeltaT", sim->delt );
+  visit_SetStripChartValue( sim, "DeltaTNext", sim->delt_next );
   visit_SetStripChartValue( sim, "TimeStep", (double) sim->cycle );
 }
   
 //---------------------------------------------------------------------
-// GetOutputIntervals
-//    Get the output checkpoints so they can be displayed in the Custon UI
+// SetOutputIntervals
+//    Set the output checkpoints so they can be displayed in the Custon UI
 //---------------------------------------------------------------------
-void visit_GetOutputIntervals( visit_simulation_data *sim )
+void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
   SimulationStateP simStateP  = sim->simController->getSimulationStateP();
   Output          *output     = sim->simController->getOutput();
 
-  VisItUI_setTableValueS("OutputIntervalVariableTable", -1, -1, "CLEAR_TABLE", 0);
+  VisItUI_setTableValueS("OutputIntervalVariableTable",
+			 -1, -1, "CLEAR_TABLE", 0);
 
   if( output )
   {
@@ -143,10 +145,10 @@ void visit_GetOutputIntervals( visit_simulation_data *sim )
 
 
 //---------------------------------------------------------------------
-// GetAnalysisVars
-//    Get the min/max analysis vars so they can be displayed in the Custon UI
+// SetAnalysisVars
+//    Set the min/max analysis vars so they can be displayed in the Custon UI
 //---------------------------------------------------------------------
-void visit_GetAnalysisVars( visit_simulation_data *sim )
+void visit_SetAnalysisVars( visit_simulation_data *sim )
 {
   GridP           gridP      = sim->gridP;
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
@@ -170,7 +172,7 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
       
       double varMin = 0, varMax = 0;
       
-      // Get level info
+      // Set level info
       for (int l=0; l<numLevels; ++l)
       {
         if( minMaxVar.level != ALL_LEVELS &&
@@ -185,7 +187,8 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
              << minMaxVar.label->getName()
              << "/" << minMaxVar.matl;
         
-        VisItUI_setTableValueS("MinMaxVariableTable", i, 0, name.str().c_str(), 0);
+        VisItUI_setTableValueS("MinMaxVariableTable",
+			       i, 0, name.str().c_str(), 0);
         // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
         // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
 
@@ -240,10 +243,10 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
 }
 
 //---------------------------------------------------------------------
-// GetUPSVars
-//    Get the UPS vars that the user can interact with in the Custon UI
+// SetUPSVars
+//    Set the UPS vars that the user can interact with in the Custon UI
 //---------------------------------------------------------------------
-void visit_GetUPSVars( visit_simulation_data *sim )
+void visit_SetUPSVars( visit_simulation_data *sim )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
@@ -288,10 +291,10 @@ void visit_GetUPSVars( visit_simulation_data *sim )
 
 
 //---------------------------------------------------------------------
-// GetGridStats
-//    Get the Grid stats
+// SetGridStats
+//    Set the Grid stats
 //---------------------------------------------------------------------
-void visit_GetGridInfo( visit_simulation_data *sim )
+void visit_SetGridInfo( visit_simulation_data *sim )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
   GridP           gridP      = sim->gridP;
@@ -346,10 +349,10 @@ void visit_GetGridInfo( visit_simulation_data *sim )
 }
 
 //---------------------------------------------------------------------
-// GetRuntimeStats
-//    Get the Runtime stats
+// SetRuntimeStats
+//    Set the Runtime stats
 //---------------------------------------------------------------------
-void visit_GetRuntimeStats( visit_simulation_data *sim )
+void visit_SetRuntimeStats( visit_simulation_data *sim )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
@@ -376,10 +379,13 @@ void visit_GetRuntimeStats( visit_simulation_data *sim )
     {
       VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, name.c_str(), 0);
       VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, units.c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 2, ProcessInfo::toHumanUnits(average).c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 3, ProcessInfo::toHumanUnits(maximum).c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 2,
+			     ProcessInfo::toHumanUnits(average).c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 3,
+			     ProcessInfo::toHumanUnits(maximum).c_str(), 0);
       VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 100*(1-(average/maximum)), 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
+			     100*(1-(average/maximum)), 0);
     
       ++cc;
     }
@@ -391,7 +397,8 @@ void visit_GetRuntimeStats( visit_simulation_data *sim )
       VisItUI_setTableValueD("RuntimeStatsTable", cc, 2, average, 0);
       VisItUI_setTableValueD("RuntimeStatsTable", cc, 3, maximum, 0);
       VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 100*(1-(average/maximum)), 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
+			     100*(1-(average/maximum)), 0);
 
       ++cc;
     }
@@ -403,10 +410,10 @@ void visit_GetRuntimeStats( visit_simulation_data *sim )
 }
 
 //---------------------------------------------------------------------
-// GetMPIStats
-//    Get the MPI stats
+// SetMPIStats
+//    Set the MPI stats
 //---------------------------------------------------------------------
-void visit_GetMPIStats( visit_simulation_data *sim )
+void visit_SetMPIStats( visit_simulation_data *sim )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
@@ -438,7 +445,8 @@ void visit_GetMPIStats( visit_simulation_data *sim )
       VisItUI_setTableValueD("MPIStatsTable", i, 2, average, 0);
       VisItUI_setTableValueD("MPIStatsTable", i, 3, maximum, 0);
       VisItUI_setTableValueI("MPIStatsTable", i, 4, rank, 0);
-      VisItUI_setTableValueD("MPIStatsTable", i, 5, 100*(1-(average/maximum)), 0);
+      VisItUI_setTableValueD("MPIStatsTable", i, 5,
+			     100*(1-(average/maximum)), 0);
       visit_SetStripChartValue( sim, name, average );
       visit_SetStripChartValue( sim, name+"_Ave", average );
       visit_SetStripChartValue( sim, name+"_Max", maximum );
@@ -452,10 +460,10 @@ void visit_GetMPIStats( visit_simulation_data *sim )
 }
 
 //---------------------------------------------------------------------
-// GetImageVars
+// SetImageVars
 //    
 //---------------------------------------------------------------------
-void visit_GetImageVars( visit_simulation_data *sim )
+void visit_SetImageVars( visit_simulation_data *sim )
 {
   VisItUI_setValueI("ImageGroupBox", sim->imageGenerate, 1);
   VisItUI_setValueS("ImageFilename", sim->imageFilename.c_str(), 1);
@@ -468,19 +476,50 @@ void visit_GetImageVars( visit_simulation_data *sim )
 // SetStripChartValue
 //    
 //---------------------------------------------------------------------
+void visit_SetStripChartNames( visit_simulation_data *sim )
+{
+  for( unsigned int chart=0; chart<5; ++chart ) // Five Charts
+  {
+    for( unsigned int i=0; i<5; ++i ) // Chart name plus four curves
+    {
+//      if( sim->stripChartNames[chart][i].size() )
+      {
+	char cmd[128];
+      
+	sprintf( cmd, "%d | %d | %s",
+		 chart, i, sim->stripChartNames[chart][i].c_str() );
+	
+	VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
+
+	// Restore the table values.
+	VisItUI_setTableValueS("StripChartTable", i, chart,
+			       sim->stripChartNames[chart][i].c_str(), 1);
+      }
+    }
+  }
+}
+
+//---------------------------------------------------------------------
+// SetStripChartValue
+//    
+//---------------------------------------------------------------------
 void visit_SetStripChartValue( visit_simulation_data *sim,
 			       std::string name,
 			       double value )
 {
-  for( int i=0; i<5; ++i )
+  for( unsigned int chart=0; chart<5; ++chart ) // Five Charts
   {
-    if( name == sim->stripChartNames[i] )
+    for( unsigned int i=1, curve=0; i<5; ++i, ++curve) // Four curves
     {
-      char cmd[128];
-      sprintf( cmd, "%s | %lf | %lf",
-	       name.c_str(), (double) sim->cycle, value );
-
-      VisItUI_setValueS("STRIP_CHART_ADD_POINT", cmd, 1);
+      if( name == sim->stripChartNames[chart][i] )
+      {
+	char cmd[128];
+      
+	sprintf( cmd, "%d | %d | %lf | %lf",
+		 chart, curve, (double) sim->cycle, value );
+	
+	VisItUI_setValueS("STRIP_CHART_ADD_POINT", cmd, 1);
+      }
     }
   }
 }

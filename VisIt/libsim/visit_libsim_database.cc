@@ -599,33 +599,37 @@ visit_handle visit_ReadMetaData(void *cbdata)
       }
     }
 
-    // Setup the custom UI time values.
-    visit_GetTimeVars( sim );
+    // Setup the Stripchart naems - this should be first so that when
+    // values are added to the charts teh names are already set.
+    visit_SetStripChartNames( sim );
+
+    // Set the custom UI time values.
+    visit_SetTimeVars( sim );
     
-    // Setup the custom UI optional UPS variable table
-    visit_GetUPSVars( sim );
+    // Set the custom UI optional UPS variable table
+    visit_SetUPSVars( sim );
 
-    // Setup the custom UI output variable table
-    visit_GetOutputIntervals( sim );
+    // Set the custom UI output variable table
+    visit_SetOutputIntervals( sim );
 
-    // Setup the custom UI optional min/max variable table
-    visit_GetAnalysisVars( sim );
+    // Set the custom UI optional min/max variable table
+    visit_SetAnalysisVars( sim );
 
-    // Setup the custom UI Grid Info
-    visit_GetGridInfo( sim );
+    // Set the custom UI Grid Info
+    visit_SetGridInfo( sim );
 
-    // Setup the custom UI Runtime Stats
-    visit_GetRuntimeStats( sim );
+    // Set the custom UI Runtime Stats
+    visit_SetRuntimeStats( sim );
 
-    // Setup the custom UI MPI Stats
-    visit_GetMPIStats( sim );
+    // Set the custom UI MPI Stats
+    visit_SetMPIStats( sim );
+
+    // Setup the custom UI Image variables
+    visit_SetImageVars( sim );
 
     // These are one time initializations.
     VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);	
     VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);	
-
-    // Setup the custom UI Image variables
-    visit_GetImageVars( sim );
 
     // if( sim->message.size() )
     // {

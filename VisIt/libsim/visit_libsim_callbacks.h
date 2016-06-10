@@ -81,13 +81,11 @@ namespace Uintah {
   void visit_StopAtTimeStepCallback(char *val, void *cbdata);
   void visit_StopAtLastTimeStepCallback(int val, void *cbdata);
 
-  void visit_StripChart0Callback (char *val, void *cbdata);
-  void visit_StripChart1Callback (char *val, void *cbdata);
-  void visit_StripChart2Callback (char *val, void *cbdata);
-  void visit_StripChart3Callback (char *val, void *cbdata);
-  void visit_StripChart4Callback (char *val, void *cbdata);
+  void visit_StripChartCallback (char *val, void *cbdata);
 
-  void visit_VarModifiedMessage( visit_simulation_data *sim, std::string name );
+  void visit_VarModifiedMessage( visit_simulation_data *sim,
+				 std::string name,
+				 std::string value );
 
 } // End namespace Uintah
 

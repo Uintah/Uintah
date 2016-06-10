@@ -115,7 +115,8 @@ typedef struct
   int  stopAtTimeStep;
   bool stopAtLastTimeStep;
 
-  std::string stripChartNames[5];
+  // The first row is the strip chart name.
+  std::string stripChartNames[5][5];
   
 } visit_simulation_data;
 

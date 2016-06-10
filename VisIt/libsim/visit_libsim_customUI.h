@@ -58,16 +58,17 @@ class visit_simulation_data;
 
 namespace Uintah {
   
-void visit_GetTimeVars       ( visit_simulation_data *sim );
-void visit_GetOutputIntervals( visit_simulation_data *sim );
-void visit_GetAnalysisVars   ( visit_simulation_data *sim );
-void visit_GetUPSVars        ( visit_simulation_data *sim );
-void visit_GetImageVars      ( visit_simulation_data *sim );
+void visit_SetTimeVars       ( visit_simulation_data *sim );
+void visit_SetOutputIntervals( visit_simulation_data *sim );
+void visit_SetAnalysisVars   ( visit_simulation_data *sim );
+void visit_SetUPSVars        ( visit_simulation_data *sim );
+void visit_SetImageVars      ( visit_simulation_data *sim );
 
-void visit_GetGridInfo       ( visit_simulation_data *sim );
-void visit_GetRuntimeStats   ( visit_simulation_data *sim );
-void visit_GetMPIStats       ( visit_simulation_data *sim );
+void visit_SetGridInfo       ( visit_simulation_data *sim );
+void visit_SetRuntimeStats   ( visit_simulation_data *sim );
+void visit_SetMPIStats       ( visit_simulation_data *sim );
 
+void visit_SetStripChartNames( visit_simulation_data *sim );
 void visit_SetStripChartValue( visit_simulation_data *sim,
 			       std::string name,
 			       double value );
