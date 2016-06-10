@@ -54,6 +54,7 @@ static std::string simFileName( "Uintah" );
 static std::string simExecName;
 static std::string simArgs;
 static std::string simComment("Uintah Simulation");
+static std::string simUI("uintah.ui");
 
 namespace Uintah {
 
@@ -93,6 +94,10 @@ void visit_LibSimArguments(int argc, char **argv)
     else if( strcmp( argv[i], "-visit_trace" ) == 0 )
     {
       VisItOpenTraceFile(argv[++i]);
+    }
+    else if( strcmp( argv[i], "-visit_ui" ) == 0 )
+    {
+      simUI = std::string( argv[++i] );
     }
     // Save off the Uintah args.
     else
@@ -141,7 +146,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->stopAtLastTimeStep = 0;
 
   for( int i=0; i<5; ++i )
-    sim->stripChartNames[i] = std::string("");
+    for( int j=0; j<5; ++j )
+      sim->stripChartNames[i][j] = std::string("");
   
 #ifdef HAVE_MPICH
   if( Parallel::usingMPI() )
@@ -213,7 +219,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
         }
       }
     }
-    else 
+    else
       exeCommand = simExecName;
 
     exeCommand += std::string( " " ) + simArgs;
@@ -221,7 +227,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
     VisItInitializeSocketAndDumpSimFile(simFileName.c_str(),
                                         simComment.c_str(),
                                         exeCommand.c_str(),
-                                        NULL, "uintah.ui", NULL);
+                                        NULL, simUI.c_str(), NULL);
   }
 }
 
@@ -307,6 +313,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       {
         // Tell VisIt to update its plots
         VisItUpdatePlots();
+      
         // Tell VisIt to save the window.
         if( sim->imageGenerate )
         {
@@ -486,7 +493,6 @@ bool visit_CheckState( visit_simulation_data *sim )
     }
   } while(err == 0);
 
-
   return (sim->simMode == VISIT_SIMMODE_TERMINATED);  
 }
 
@@ -584,36 +590,34 @@ void visit_Initialize( visit_simulation_data *sim )
   if( Parallel::usingMPI() )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
-  VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
-  VisItUI_textChanged("MaxTime", visit_MaxTimeCallback, (void*) sim);
-  //      VisItUI_textChanged("DeltaT", visit_DeltaTCallback, (void*) sim);
-  VisItUI_textChanged("DeltaTNext", visit_DeltaTCallback, (void*) sim);
+  VisItUI_textChanged("MaxTimeStep",  visit_MaxTimeStepCallback,  (void*) sim);
+  VisItUI_textChanged("MaxTime",      visit_MaxTimeCallback,      (void*) sim);
+//VisItUI_textChanged("DeltaT",       visit_DeltaTCallback,       (void*) sim);
+  VisItUI_textChanged("DeltaTNext",   visit_DeltaTCallback,       (void*) sim);
   VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
-  VisItUI_textChanged("DeltaTMin", visit_DeltaTMinCallback, (void*) sim);
-
-
-  VisItUI_textChanged("DeltaTMax", visit_DeltaTMaxCallback, (void*) sim);
-  VisItUI_textChanged("MaxWallTime", visit_MaxWallTimeCallback, (void*) sim);
+  VisItUI_textChanged("DeltaTMin",    visit_DeltaTMinCallback,    (void*) sim);
+  VisItUI_textChanged("DeltaTMax",    visit_DeltaTMaxCallback,    (void*) sim);
+  VisItUI_textChanged("MaxWallTime",  visit_MaxWallTimeCallback,  (void*) sim);
   VisItUI_cellChanged("UPSVariableTable",
 		      visit_UPSVariableTableCallback, (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
-		      visit_OutputIntervalVariableTableCallback,
-		      (void*) sim);
+		      visit_OutputIntervalVariableTableCallback,  (void*) sim);
         
-  VisItUI_valueChanged("ImageGroupBox", visit_ImageGenerateCallback, (void*) sim);
-  VisItUI_textChanged("ImageFilename", visit_ImageFilenameCallback, (void*) sim);
-  VisItUI_textChanged("ImageHeight", visit_ImageHeightCallback, (void*) sim);
-  VisItUI_textChanged("ImageWidth", visit_ImageWidthCallback, (void*) sim);
-  VisItUI_valueChanged("ImageFormat", visit_ImageFormatCallback, (void*) sim);
+  VisItUI_valueChanged("ImageGroupBox",
+		       visit_ImageGenerateCallback, (void*) sim);
+  VisItUI_textChanged ("ImageFilename",
+		       visit_ImageFilenameCallback, (void*) sim);
+  VisItUI_textChanged("ImageHeight",    visit_ImageHeightCallback, (void*) sim);
+  VisItUI_textChanged("ImageWidth",     visit_ImageWidthCallback,  (void*) sim);
+  VisItUI_valueChanged("ImageFormat",   visit_ImageFormatCallback, (void*) sim);
 
-  VisItUI_textChanged("StopAtTimeStep", visit_StopAtTimeStepCallback, (void*) sim);
-  VisItUI_valueChanged("StopAtLastTimeStep", visit_StopAtLastTimeStepCallback, (void*) sim);
+  VisItUI_textChanged("StopAtTimeStep",
+		      visit_StopAtTimeStepCallback,      (void*) sim);
+  VisItUI_valueChanged("StopAtLastTimeStep",
+		       visit_StopAtLastTimeStepCallback, (void*) sim);
 
-  VisItUI_textChanged("StripChartVar0", visit_StripChart0Callback, (void*) sim);
-  VisItUI_textChanged("StripChartVar1", visit_StripChart1Callback, (void*) sim);
-  VisItUI_textChanged("StripChartVar2", visit_StripChart2Callback, (void*) sim);
-  VisItUI_textChanged("StripChartVar3", visit_StripChart3Callback, (void*) sim);
-  VisItUI_textChanged("StripChartVar4", visit_StripChart4Callback, (void*) sim);
+  VisItUI_cellChanged("StripChartTable",
+		      visit_StripChartCallback, (void*) sim);
 }
   
 } // End namespace Uintah
