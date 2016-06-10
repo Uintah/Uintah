@@ -47,6 +47,11 @@ def setGeneratingGoldStandards( inputs ) :
 def generatingGoldStandards() :
     global inputs_dir
     return inputs_dir
+
+# returns the path of either opt/dbg
+def build_root():
+    opt_dbg = path.normpath(path.join(getcwd(), "../"))
+    return opt_dbg
     
 #______________________________________________________________________
 # if a callback is given, it is executed before running each test and given
