@@ -1748,21 +1748,31 @@ void DetailedTask::clearPreparationCollections(){
   varsBeingCopiedByTask.clear();
 }
 
-void DetailedTask::clearTempCudaMemory() {
+void DetailedTask::addTempHostMemoryToBeFreedOnCompletion(void *ptr) {
 
+  taskHostMemoryPoolItems.push(ptr);
 }
 
 void DetailedTask::addTempCudaMemoryToBeFreedOnCompletion(unsigned int device_id, void *ptr) {
-
   gpuMemoryPoolDevicePtrItem gpuItem(device_id, ptr);
   taskCudaMemoryPoolItems.push_back(gpuItem);
 }
 
 void DetailedTask::deleteTemporaryTaskVars() {
+
+  //clean out the host list
+  while (!taskHostMemoryPoolItems.empty()) {
+    delete[] taskHostMemoryPoolItems.front();
+    taskHostMemoryPoolItems.pop();
+  }
+
+
+  //and the device
   for (auto p : taskCudaMemoryPoolItems) {
     GPUMemoryPool::freeCudaSpaceFromPool(p.device_id, p.ptr);
   }
   taskCudaMemoryPoolItems.clear();
+
 }
 
 #endif // HAVE_CUDA

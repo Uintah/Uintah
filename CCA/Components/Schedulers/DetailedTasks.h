@@ -347,8 +347,7 @@ namespace Uintah {
 
     void clearPreparationCollections();
 
-    void clearTempCudaMemory();
-
+    void addTempHostMemoryToBeFreedOnCompletion(void *ptr);
     void addTempCudaMemoryToBeFreedOnCompletion(unsigned int device_ptr, void *ptr);
 
     void deleteTemporaryTaskVars();
@@ -454,6 +453,8 @@ namespace Uintah {
     };
 
     std::vector<gpuMemoryPoolDevicePtrItem> taskCudaMemoryPoolItems;
+    std::queue<void*> taskHostMemoryPoolItems;
+
 #endif
 
 

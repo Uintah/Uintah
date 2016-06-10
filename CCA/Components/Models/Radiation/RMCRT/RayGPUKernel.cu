@@ -1540,7 +1540,24 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
 
+  //Create a host array, load it with data, and send it over to the GPU
+  int nRandNums = 512;
+  double* d_debugRandNums;
+  size_t randNumsByteSize = nRandNums * sizeof(double);
+  d_debugRandNums = (double*)GPUMemoryPool::allocateCudaSpaceFromPool(0, randNumsByteSize);
+  dtask->addTempCudaMemoryToBeFreedOnCompletion(0, d_debugRandNums);
+  double* h_debugRandNums = new double[randNumsByteSize];
+  //perform computations here on h_debugRandNums
+  for (int i = 0; i < nRandNums; i++) {
+    h_debugRandNums[i] = i;
+  }
+  dtask->addTempHostMemoryToBeFreedOnCompletion(h_debugRandNums);
+  cudaMemcpyAsync(d_debugRandNums, h_debugRandNums, randNumsByteSize, cudaMemcpyHostToDevice, *stream );
+
+
   setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
+
+
 
   rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                             dimBlock,
@@ -1592,7 +1609,6 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
   dev_regionLo = (int3*)GPUMemoryPool::allocateCudaSpaceFromPool(0, size);
   dev_regionHi = (int3*)GPUMemoryPool::allocateCudaSpaceFromPool(0, size);
 
-  dtask->clearTempCudaMemory();
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, dev_regionLo);
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, dev_regionHi);
 
