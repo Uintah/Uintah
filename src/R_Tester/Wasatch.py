@@ -3,7 +3,7 @@
 from sys import argv, exit
 from os import environ, system, path
 from commands import getoutput
-from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards, boot_root
+from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards, build_root
 from helpers.modUPS import modUPS
 
 the_dir = generatingGoldStandards()
