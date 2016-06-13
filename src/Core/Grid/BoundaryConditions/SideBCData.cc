@@ -57,7 +57,7 @@ bool SideBCData::operator==(const BCGeomBase& rhs) const
   const SideBCData* p_rhs = 
     dynamic_cast<const SideBCData*>(&rhs);
 
-  if (p_rhs == NULL)
+  if (p_rhs == nullptr)
     return false;
   else
     return true;

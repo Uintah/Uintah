@@ -273,7 +273,7 @@ ColumnMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
 {
   size = 1;
   stride = 1;
-  cols = NULL;
+  cols = nullptr;
   vals = data + r;
 }
 

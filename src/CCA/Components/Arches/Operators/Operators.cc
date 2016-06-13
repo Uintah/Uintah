@@ -187,6 +187,6 @@ Operators::get_patchset( const PatchsetSelector pss,
 
     }
   }
-  return NULL;
+  return nullptr;
 }
 

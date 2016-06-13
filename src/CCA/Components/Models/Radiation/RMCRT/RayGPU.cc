@@ -80,19 +80,19 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
 
     //__________________________________
     //
-    //GPUDataWarehouse* old_taskgdw = NULL;
+    //GPUDataWarehouse* old_taskgdw = nullptr;
     //if (oldTaskGpuDW) {
     //	old_taskgdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW)->getdevice_ptr();
     //}
 
-    //GPUDataWarehouse* new_taskgdw = NULL;
+    //GPUDataWarehouse* new_taskgdw = nullptr;
     //if (newTaskGpuDW) {
     //	new_taskgdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW)->getdevice_ptr();
     //}
 
-    GPUDataWarehouse* abskg_gdw = NULL;
-    GPUDataWarehouse* sigmaT4_gdw = NULL;
-    GPUDataWarehouse* celltype_gdw = NULL;
+    GPUDataWarehouse* abskg_gdw = nullptr;
+    GPUDataWarehouse* sigmaT4_gdw = nullptr;
+    GPUDataWarehouse* celltype_gdw = nullptr;
     if (which_abskg_dw == Task::OldDW) {
       abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
     } else {
@@ -322,9 +322,9 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     //__________________________________
     //   Assign dataWarehouses
 
-    GPUDataWarehouse* abskg_gdw = NULL;
-    GPUDataWarehouse* sigmaT4_gdw = NULL;
-    GPUDataWarehouse* celltype_gdw = NULL;
+    GPUDataWarehouse* abskg_gdw = nullptr;
+    GPUDataWarehouse* sigmaT4_gdw = nullptr;
+    GPUDataWarehouse* celltype_gdw = nullptr;
 
     if (which_abskg_dw == Task::OldDW) {
       abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);

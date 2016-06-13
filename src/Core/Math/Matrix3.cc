@@ -170,7 +170,7 @@ inline void swap(double& v1, double& v2)
 // column of a row is to the right (greater) of the first non-zero
 // column in the row above it and the first non-zero column of
 // any row has zeroes in every other row and a one in that row.
-// If rhs == NULL, then the rhs is assumed to be
+// If rhs == nullptr, then the rhs is assumed to be
 // the zero vector and thus will not need to change.
 void Matrix3::triangularReduce(Matrix3& A, Uintah::Vector* rhs, int& num_zero_rows,
                                double relative_scale)
@@ -213,7 +213,7 @@ void Matrix3::triangularReduce(Matrix3& A, Uintah::Vector* rhs, int& num_zero_ro
         A.mat3[pivoting_row][j] = tmp * norm_multiplier; // normalize
       }
       
-      if (rhs != NULL) {
+      if (rhs != nullptr) {
         // swap and normalize rhs in the same manner
         tmp = (*rhs)[pivot];
         (*rhs)[pivot] = (*rhs)[pivoting_row];
@@ -225,7 +225,7 @@ void Matrix3::triangularReduce(Matrix3& A, Uintah::Vector* rhs, int& num_zero_ro
       A.mat3[pivoting_row][i] = 1; 
       for (j = i+1 /* zeroes don't need to be normalized */; j < 3; j++)
         A.mat3[pivoting_row][j] *= norm_multiplier;
-      if (rhs != NULL)
+      if (rhs != nullptr)
         (*rhs)[pivoting_row] *= norm_multiplier; // normalizing
     }
 
@@ -237,7 +237,7 @@ void Matrix3::triangularReduce(Matrix3& A, Uintah::Vector* rhs, int& num_zero_ro
       double mult = A.mat3[k][i]; // remember that pivoting_row is normalized
       for (j = i + 1; j < 3; j++)
         A.mat3[k][j] -= mult * A.mat3[pivoting_row][j]; 
-      if (rhs != NULL)
+      if (rhs != nullptr)
         (*rhs)[k] -= mult * (*rhs)[pivoting_row];
       A.mat3[k][i] = 0;
     }
@@ -245,7 +245,7 @@ void Matrix3::triangularReduce(Matrix3& A, Uintah::Vector* rhs, int& num_zero_ro
     pivoting_row++;
   }
 
-  if (rhs != NULL) {
+  if (rhs != nullptr) {
     for (i = 0; i < 3; i++)
       if (fabs((*rhs)[i]) <= relNearZero)
         (*rhs)[i] = 0; // set near zero's to zero to compensate for round-off

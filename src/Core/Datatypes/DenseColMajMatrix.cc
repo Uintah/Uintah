@@ -228,7 +228,7 @@ DenseColMajMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
 {
   size = ncols_;
   stride = nrows_;
-  cols = NULL;
+  cols = nullptr;
   vals = dataptr_ + r;
 }
 

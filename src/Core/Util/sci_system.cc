@@ -132,7 +132,7 @@ sci_system_linuxthreads(const char *line)
   sigset_t block, omask;
 #endif
 
-  if (line == NULL)
+  if (line == nullptr)
     /* Check that we have a command processor available.  It might
        not be available after a chroot(), for example.  */
     return sci_system_linuxthreads ("exit 0") == 0;
@@ -146,7 +146,7 @@ sci_system_linuxthreads(const char *line)
   if (sigaction (SIGQUIT, &sa, &quit) < 0)
     {
       save = errno;
-      (void) sigaction (SIGINT, &intr, (struct sigaction *) NULL);
+      (void) sigaction (SIGINT, &intr, (struct sigaction *) nullptr);
       /* - cm modified
         __set_errno (save); */
       errno = save;
@@ -177,8 +177,8 @@ sci_system_linuxthreads(const char *line)
       else
 	{
 	  save = errno;
-	  (void) sigaction (SIGINT, &intr, (struct sigaction *) NULL);
-	  (void) sigaction (SIGQUIT, &quit, (struct sigaction *) NULL);
+	  (void) sigaction (SIGINT, &intr, (struct sigaction *) nullptr);
+	  (void) sigaction (SIGQUIT, &quit, (struct sigaction *) nullptr);
 	  /* - cm modified
 	     __set_errno (save); */
 	  errno = save;
@@ -187,8 +187,8 @@ sci_system_linuxthreads(const char *line)
 	}
     }
 /* - cm modified
-   # define UNBLOCK __sigprocmask (SIG_SETMASK, &omask, (sigset_t *) NULL) */
-#define UNBLOCK sigprocmask (SIG_SETMASK, &omask, (sigset_t *) NULL)
+   # define UNBLOCK __sigprocmask (SIG_SETMASK, &omask, (sigset_t *) nullptr) */
+#define UNBLOCK sigprocmask (SIG_SETMASK, &omask, (sigset_t *) nullptr)
 /* - cm */
 #else
 # define UNBLOCK 0
@@ -251,11 +251,11 @@ sci_system_linuxthreads(const char *line)
       new_argv[0] = SHELL_NAME;
       new_argv[1] = "-c";
       new_argv[2] = line;
-      new_argv[3] = NULL;
+      new_argv[3] = nullptr;
 
       /* Restore the signals.  */
-      (void) sigaction (SIGINT, &intr, (struct sigaction *) NULL);
-      (void) sigaction (SIGQUIT, &quit, (struct sigaction *) NULL);
+      (void) sigaction (SIGINT, &intr, (struct sigaction *) nullptr);
+      (void) sigaction (SIGQUIT, &quit, (struct sigaction *) nullptr);
       (void) UNBLOCK;
 
       /* Exec the shell.  */
@@ -333,8 +333,8 @@ sci_system_linuxthreads(const char *line)
     }
 
   save = errno;
-  if ((sigaction (SIGINT, &intr, (struct sigaction *) NULL) |
-       sigaction (SIGQUIT, &quit, (struct sigaction *) NULL) |
+  if ((sigaction (SIGINT, &intr, (struct sigaction *) nullptr) |
+       sigaction (SIGQUIT, &quit, (struct sigaction *) nullptr) |
        UNBLOCK) != 0)
     {
       if (errno == ENOSYS)
@@ -358,7 +358,7 @@ sci_system(const char *line)
   // We only need to wrap system on linux builds with linuxthreads
   // enabled and not nptl.
 #ifdef _CS_GNU_LIBPTHREAD_VERSION
-  const size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, (size_t) 0);
+  const size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, nullptr, (size_t) 0);
   if (n > 0)
   {
     char *buf = scinew char[n];

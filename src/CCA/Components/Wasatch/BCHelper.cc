@@ -221,7 +221,7 @@ namespace WasatchCore {
     if (it != bcSpecVec.end()) {
       return &(*it);
     } else {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -232,7 +232,7 @@ namespace WasatchCore {
     if (it != bcSpecVec.end()) {
       return &(*it);
     } else {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -400,7 +400,7 @@ namespace WasatchCore {
     msg << "ERROR: It looks like you were trying to retrieve a spatial mask of an unsupported field type. "
     << " Supported types are: SVol, XVol, YVol, and ZVol." << std::endl;
     throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    return NULL;
+    return nullptr;
   }
 
   template<>
@@ -435,7 +435,7 @@ namespace WasatchCore {
   SpatialOps::SpatialMask<ParticleField>*
   BoundaryIterators::get_spatial_mask() const
   {
-    return NULL;
+    return nullptr;
   }
 
   //============================================================================
@@ -595,7 +595,7 @@ namespace WasatchCore {
         return &(myIters.interiorEdgeCells);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -612,7 +612,7 @@ namespace WasatchCore {
         return myIters.particleIdx;
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -636,7 +636,7 @@ namespace WasatchCore {
         }
       }
     }
-    return NULL;
+    return nullptr;
   }
   
   //------------------------------------------------------------------------------------------------
@@ -646,7 +646,7 @@ namespace WasatchCore {
   BCHelper::get_extra_bnd_mask<ParticleField>( const BndSpec& myBndSpec,
                                const int& patchID ) const
   {
-    return NULL;
+    return nullptr;
   }
 
   
@@ -672,7 +672,7 @@ namespace WasatchCore {
         }
       }
     }
-    return NULL;
+    return nullptr;
   }
   
   //------------------------------------------------------------------------------------------------
@@ -682,7 +682,7 @@ namespace WasatchCore {
   BCHelper::get_interior_bnd_mask<ParticleField>( const BndSpec& myBndSpec,
                                   const int& patchID ) const
   {
-    return NULL;
+    return nullptr;
   }
 
   
@@ -740,7 +740,7 @@ namespace WasatchCore {
   BCHelper::get_spatial_mask( const BndSpec& myBndSpec,
                              const int& patchID ) const
   {
-    return NULL;
+    return nullptr;
   }
 
 

@@ -56,7 +56,7 @@ namespace Uintah {
     WARNING
 
    ****************************************/
-  PatchBVH::PatchBVH(const std::vector<const Patch*>& patches) : root_(NULL)
+  PatchBVH::PatchBVH(const std::vector<const Patch*>& patches) : root_(nullptr)
   {
     if(patches.size()==0)
       return;
@@ -84,7 +84,7 @@ namespace Uintah {
     }
   }
   
-  PatchBVH::PatchBVH(const std::vector<Patch*>& patches) : root_(NULL)
+  PatchBVH::PatchBVH(const std::vector<Patch*>& patches) : root_(nullptr)
   {
     if(patches.size()==0)
       return;
@@ -114,7 +114,7 @@ namespace Uintah {
 
   PatchBVH::~PatchBVH()
   {
-    if(root_!=NULL)
+    if(root_!=nullptr)
       delete root_;
 
     patches_.clear();
@@ -126,7 +126,7 @@ namespace Uintah {
     if(high.x()<=low.x() || high.y()<=low.y() || high.z()<=low.z())
       return;
 
-    if(root_==NULL)
+    if(root_==nullptr)
       return;
     
     root_->query(low,high,patches,includeExtraCells);

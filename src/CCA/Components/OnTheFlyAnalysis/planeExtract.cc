@@ -123,7 +123,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
 
-  const Material* matl = NULL;
+  const Material* matl = nullptr;
 
   if(d_prob_spec->findBlock("material") ){
     matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
@@ -183,7 +183,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
     
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
-    if(label == NULL){
+    if(label == nullptr){
       throw ProblemSetupException("planeExtract: analyze label not found: "
                            + name , __FILE__, __LINE__);
     }
@@ -374,7 +374,7 @@ void planeExtract::initialize(const ProcessorGroup*,
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
-      if ( check == NULL){
+      if ( check == nullptr){
         ostringstream warn;
         warn << "ERROR:planeExtract  The main uda directory does not exist. ";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -403,7 +403,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
   
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
-    if(d_varLabels[i] == NULL){
+    if(d_varLabels[i] == nullptr){
       string name = d_varLabels[i]->getName();
       throw InternalError("planeExtract: scheduleDoAnalysis label not found: " 
                           + name , __FILE__, __LINE__);
@@ -541,7 +541,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             string labelName = varLabel->getName();
 
             // bulletproofing
-            if(varLabel == NULL){
+            if(varLabel == nullptr){
               throw InternalError("planeExtract: analyze label not found: " 
                               + labelName , __FILE__, __LINE__);
             }
@@ -752,7 +752,7 @@ void
 planeExtract::createDirectory(string& planeName, string& timestep, const double now, string& levelIndex)
 {
   DIR *check = opendir(planeName.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << Parallel::getMPIRank() << " planeExtract:Making directory " << planeName << endl;
     MKDIR( planeName.c_str(), 0777 );
   } else {
@@ -763,7 +763,7 @@ planeExtract::createDirectory(string& planeName, string& timestep, const double 
   string path = planeName + "/" + timestep;
   check = opendir( path.c_str() );
   
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << Parallel::getMPIRank() << " planeExtract:Making directory " << path << endl;
     MKDIR( path.c_str(), 0777 );
     
@@ -780,7 +780,7 @@ planeExtract::createDirectory(string& planeName, string& timestep, const double 
 
       fp = fopen(filename.c_str(), "w");
 
-      if (fp != NULL ){
+      if (fp != nullptr ){
         done = true;
       }
       if ( tries > 100){
@@ -799,7 +799,7 @@ planeExtract::createDirectory(string& planeName, string& timestep, const double 
   path = planeName + "/" + timestep + "/" + levelIndex;
   check = opendir( path.c_str() );
   
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     MKDIR( path.c_str(), 0777 );
   } else {
     closedir(check);

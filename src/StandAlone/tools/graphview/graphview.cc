@@ -138,7 +138,7 @@ main(int argc, char* argv[])
   gDavinci->setOrientation(DaVinci::BOTTOM_UP);
   DaVinci::doExclusion = do_exclusion;
 
-  gGraph = NULL;
+  gGraph = nullptr;
 
   bool loaded = load_timestep(timestep, prune_percent);
   if (!loaded) {
@@ -206,7 +206,7 @@ handle_event(const Event& event)
       if (selected_nodes.size() == 1) {
 	cout << selected_nodes.front() << endl;
 	GV_Task* pTask = gGraph->findTask(selected_nodes.front());
-	if (pTask != NULL) {
+	if (pTask != nullptr) {
 	  cout << "\tCost (duration): " << pTask->getDuration() << endl;
 	  cout << "\tMax Path Cost: " << pTask->getMaxInclusivePathCost()
 	       << endl;
@@ -223,7 +223,7 @@ handle_event(const Event& event)
 	     iter != selected_nodes.end(); iter++) {
 	  cout << *iter;
 	  GV_Task* pTask = gGraph->findTask(*iter);
-	  if (pTask == NULL) {
+	  if (pTask == nullptr) {
 	    cout << "\n\tError, task not found\n";
 	    return;
 	  }
@@ -239,7 +239,7 @@ handle_event(const Event& event)
   case DaVinci::EVT_DV_SELECT_EDGE:
     cout << gDavinci->getSelectedEdge() << endl;
     Edge* pEdge = gGraph->findEdge(gDavinci->getSelectedEdge());
-    if (pEdge != NULL) {
+    if (pEdge != nullptr) {
       cout << "\tMax Path: " << pEdge->getMaxInclusivePathCost() << endl;
       cout << "\tMax Path Percent: " << pEdge->getMaxPathPercent()
 	   << endl;
@@ -259,7 +259,7 @@ bool load_timestep(int timestep, float prune_percent)
   GV_TaskGraph* oldGraph = gGraph;
   gGraph = GV_TaskGraph::inflate(udaDir + timedir.str());
 
-  if (gGraph != NULL) {
+  if (gGraph != nullptr) {
     gGraph->setThresholdPercent(prune_percent);
     cout << "Sending graph to daVinci...\n";
     gDavinci->setGraph(gGraph);
@@ -288,7 +288,7 @@ static void handle_console_input()
     cin >> percent;
     if (percent < 0) percent = 0;
     if (percent > 1) percent = 1;
-    if (gGraph != NULL && gDavinci != NULL) {
+    if (gGraph != nullptr && gDavinci != nullptr) {
       cout << "\nSetting threshold... " << percent << endl << endl;
       gGraph->setThresholdPercent(percent);
       gDavinci->setGraph(gGraph); // refresh graph

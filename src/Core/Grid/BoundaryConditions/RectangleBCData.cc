@@ -60,7 +60,7 @@ bool RectangleBCData::operator==(const BCGeomBase& rhs) const
   const RectangleBCData* p_rhs =
     dynamic_cast<const RectangleBCData*>(&rhs);
 
-  if (p_rhs == NULL)
+  if (p_rhs == nullptr)
     return false;
   else
     return (this->d_min == p_rhs->d_min) && (this->d_max == p_rhs->d_max);

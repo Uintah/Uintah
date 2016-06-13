@@ -149,7 +149,7 @@ DaVinci::~DaVinci()
 void
 DaVinci::setGraph(const GV_TaskGraph* graph)
 {
-  if (graph == NULL)
+  if (graph == nullptr)
     return;
   
   ostringstream graph_str;    
@@ -277,7 +277,7 @@ void DaVinci::parseAnswer(char* cmd, std::list<char*>& args)
     p++;
 
   if (*p == '\0') return;
-  *p = '\0'; // NULL terminate cmd
+  *p = '\0'; // nullptr terminate cmd
   p++;
 
   // separate arguments

@@ -482,7 +482,7 @@ TabPropsInterface::getSplineInfo()
 
     const InterpT* spline = d_statetbl.find_entry( i->first ); 
 
-    if ( spline == NULL ) {
+    if ( spline == nullptr ) {
       ostringstream exception; 
       exception << "Error: could not find spline information for variable " << i->first << " \n" << 
         "Please check your dependent variable list and match it to your requested variables. " << endl;

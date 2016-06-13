@@ -436,7 +436,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 #if 1
       // Level argument is not really used in this version of scheduleSolve(),
       // so just pass in the coarsest level as it always exists.
-      const VarLabel* whichInitialGuess = NULL; 
+      const VarLabel* whichInitialGuess = nullptr; 
       
       d_solver->scheduleSolve(grid->getLevel(0), d_subsched, d_press_matlSet,
                               lb->matrixLabel,   Task::NewDW,

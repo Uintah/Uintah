@@ -93,7 +93,7 @@ Uintah::UintahXML::getLine( FILE * fp )
 
     char      * result = fgets( line_buffer, LINE_LENGTH, fp );
 
-    if( result == NULL ) {
+    if( result == nullptr ) {
       return "";
     }
 

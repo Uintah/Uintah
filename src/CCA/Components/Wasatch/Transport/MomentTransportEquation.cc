@@ -74,7 +74,7 @@ namespace WasatchCore {
                                Expr::ExpressionFactory& factory)
   {
     Expr::Tag growthTag; // this tag will be populated
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
 
     Expr::Tag growthCoefTag;
     if( growthParams->findBlock("GrowthCoefficientExpression") ){
@@ -147,7 +147,7 @@ namespace WasatchCore {
                                  Expr::ExpressionFactory& factory)
   {
     Expr::Tag ostwaldTag, m0Tag; // this tag will be populated
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
     ostwaldTag = Expr::Tag( "SBar_" + PopulationName , Expr::STATE_NONE );
     //need to m0 to normalize wieghts to add to 1, otherwise there are counted twice when the actually growht term is computed
     m0Tag = Expr::Tag( "m_" + PopulationName + "_0", Expr::STATE_DYNAMIC);
@@ -186,7 +186,7 @@ namespace WasatchCore {
     //birth expr is of the form $\f J * B_0(S) * B(r^*) $\f
     //where r* can be an expression or constant
     Expr::Tag birthTag; // this tag will be populated
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
 
     std::string birthModel;
     birthParams->get("BirthModel",birthModel);
@@ -248,7 +248,7 @@ namespace WasatchCore {
                                Expr::ExpressionFactory& factory)
   {
     Expr::Tag ostwaldTag, deathTag, superSatTag;
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
     ostwaldTag = Expr::Tag( "SBar_" + PopulationName , Expr::STATE_NONE );
     deathTag = Expr::Tag(thisPhiName + "_death", Expr::STATE_NONE ); 
     
@@ -280,7 +280,7 @@ namespace WasatchCore {
     std::string aggModel;
     double efficiencyCoef;
     Expr::Tag aggTag;
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
     
     Expr::Tag aggCoefTag;
     if( aggParams->findBlock("AggregationCoefficientExpression") ){

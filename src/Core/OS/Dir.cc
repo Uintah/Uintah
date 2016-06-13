@@ -109,7 +109,7 @@ Dir::removeDir( const char * dirName )
   DIR *    dir = opendir( dirName );
   dirent * file = 0;
 
-  if( dir == NULL ) {
+  if( dir == nullptr ) {
     cout << "Error in Dir::removeDir():\n";
     cout << "  opendir failed for " << dirName << "\n";
     cout << "  - errno is " << errno << "\n";

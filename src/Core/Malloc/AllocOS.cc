@@ -135,7 +135,7 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
     hunk->returnable=returnable;
     return hunk;
 #else
-    return NULL;
+    return nullptr;
 #endif // DISABLE_SCI_MALLOC
 }
 

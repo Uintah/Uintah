@@ -87,7 +87,7 @@ Level::Level(       Grid      * grid
   d_stretched   = false;
   d_each_patch  = 0;
   d_all_patches = 0;
-  d_bvh         = NULL;
+  d_bvh         = nullptr;
   d_finalized   = false;
   d_extraCells  = IntVector(0,0,0);
   d_totalCells  = 0;
@@ -789,7 +789,7 @@ void Level::setBCTypes()
 
   MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
 
-  if (d_bvh != NULL){
+  if (d_bvh != nullptr){
     delete d_bvh;
   }
 
@@ -799,7 +799,7 @@ void Level::setBCTypes()
   start=Time::currentSeconds();
   patchIterator iter;
 
-  ProcessorGroup *myworld=NULL;
+  ProcessorGroup *myworld=nullptr;
   int numProcs=1;
   int rank=0;
 
@@ -994,7 +994,7 @@ void Level::setBCTypes()
   }
 
   //recreate BVH with extracells
-  if (d_bvh != NULL){
+  if (d_bvh != nullptr){
     delete d_bvh;
   }
   d_bvh = scinew PatchBVH(d_virtualAndRealPatches);

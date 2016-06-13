@@ -38,7 +38,7 @@ template< typename SrcT, typename DestT >
 UpwindInterpolant<SrcT,DestT>::
 UpwindInterpolant()
 {
-  advectiveVelocity_ = NULL;
+  advectiveVelocity_ = nullptr;
 }
 
 //--------------------------------------------------------------------
@@ -134,7 +134,7 @@ apply_to_field( const SrcT& src, DestT& dest )
             ( aVel < 0.0, s2  )
             ( 0.5 * (s1 + s2) );
 
-  advectiveVelocity_ = NULL;
+  advectiveVelocity_ = nullptr;
 
 # ifdef ENABLE_THREADS
   mutex_.unlock();

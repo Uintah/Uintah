@@ -144,7 +144,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
 
-  Material* matl = NULL;
+  Material* matl = nullptr;
 
   if(d_prob_spec->findBlock("material") ){
     matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
@@ -202,7 +202,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     // What is the label name and does it exist?
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
-    if(label == NULL){
+    if(label == nullptr){
       throw ProblemSetupException("statistics label not found: " + name , __FILE__, __LINE__);
     }
 
@@ -534,7 +534,7 @@ void statistics::restartInitialize()
 void statistics::outputProblemSpec( ProblemSpecP& root_ps)
 {
   if( root_ps == 0){
-    throw InternalError("ERROR: DataAnalysis Module:statistics::outputProblemSpec:  ProblemSpecP is NULL", __FILE__, __LINE__);
+    throw InternalError("ERROR: DataAnalysis Module:statistics::outputProblemSpec:  ProblemSpecP is nullptr", __FILE__, __LINE__);
   }
 
   ProblemSpecP da_ps = root_ps->appendChild("DataAnalysisRestart");

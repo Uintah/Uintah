@@ -69,17 +69,17 @@ public:
   virtual DenseColMajMatrix *dense_col_maj() = 0;
 
   // No conversion is done.
-  // NULL is returned if the matrix is not of the appropriate type.
+  // nullptr is returned if the matrix is not of the appropriate type.
   DenseMatrix *as_dense();
   SparseRowMatrix *as_sparse();
   ColumnMatrix *as_column();
   DenseColMajMatrix *as_dense_col_maj();
 
   // Test to see if the matrix is this subtype.
-  inline bool is_dense() { return as_dense() != NULL; }
-  inline bool is_sparse() { return as_sparse() != NULL; }
-  inline bool is_column() { return as_column() != NULL; }
-  inline bool is_dense_col_maj() { return as_dense_col_maj() != NULL; }
+  inline bool is_dense() { return as_dense() != nullptr; }
+  inline bool is_sparse() { return as_sparse() != nullptr; }
+  inline bool is_column() { return as_column() != nullptr; }
+  inline bool is_dense_col_maj() { return as_dense_col_maj() != nullptr; }
 
   inline int nrows() const { return nrows_; }
   inline int ncols() const { return ncols_; }
@@ -99,7 +99,7 @@ public:
   // getRowNonzerosNocopy returns:
   //   vals = The values.  They are not guaranteed 
   //     to be nonzero, but some of the zeros may be missing.
-  //   cols = The columns associated with the vals.  This may be NULL, in
+  //   cols = The columns associated with the vals.  This may be nullptr, in
   //     which case the cols are 0-(size-1) (a full row).
   //   size = The number of entries in vals.
   //   stride = The matrix may not be in row order, so this is how far

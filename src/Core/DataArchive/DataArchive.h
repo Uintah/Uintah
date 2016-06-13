@@ -156,7 +156,7 @@ public:
 
   //! The ups is for the assignBCS that needs to happen if we are reading the simulation grid from the uda,
   //! and thus is only necessary on a true restart.
-  GridP queryGrid( int index, const ProblemSpecP & ups = NULL, bool assignBCs = true );
+  GridP queryGrid( int index, const ProblemSpecP & ups = nullptr, bool assignBCs = true );
 
   //////////
   // Does a variable exist on a patch at this timestep?
@@ -507,15 +507,15 @@ private:
     // every time queryVariables() is called, so if this happens a lot, we might need to rethink it...
 
     queryVariables( type_names, type_descriptions );
-    const TypeDescription* type = NULL;
+    const TypeDescription* type = nullptr;
     std::vector<std::string>::iterator name_iter = type_names.begin();
     std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
-    for ( ; name_iter != type_names.end() && type == NULL; name_iter++, type_iter++ ) {
+    for ( ; name_iter != type_names.end() && type == nullptr; name_iter++, type_iter++ ) {
       if (*name_iter == name) {
         type = *type_iter;
       }
     }
-    if (type == NULL) {
+    if (type == nullptr) {
       throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
     }
     if (type->getType() != TypeDescription::ParticleVariable) {
@@ -534,11 +534,11 @@ private:
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
-      Patch* patch = NULL;
+      Patch* patch = nullptr;
       GridP grid = queryGrid( ts);
       findPatchAndIndex(grid, patch, idx, particleID, matlIndex, levelIndex, ts);
       //    std::cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
-      if (patch == NULL) {
+      if (patch == nullptr) {
         throw VariableNotFoundInGrid( name, particleID, matlIndex, "DataArchive::query", __FILE__, __LINE__ );
       }
 
@@ -572,15 +572,15 @@ private:
     std::vector<std::string> type_names;
     std::vector<const TypeDescription*> type_descriptions;
     queryVariables(type_names, type_descriptions);
-    const TypeDescription* type = NULL;
+    const TypeDescription* type = nullptr;
     std::vector<std::string>::iterator name_iter = type_names.begin();
     std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
-    for ( ; name_iter != type_names.end() && type == NULL; name_iter++, type_iter++) {
+    for ( ; name_iter != type_names.end() && type == nullptr; name_iter++, type_iter++) {
       if (*name_iter == name) {
         type = *type_iter;
       }
     }
-    if (type == NULL) {
+    if (type == nullptr) {
       throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
     }
 
@@ -595,7 +595,7 @@ private:
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
-      Patch* patch = NULL;
+      Patch* patch = nullptr;
       GridP grid = queryGrid(ts);
 
       // which levels to query between.
@@ -609,13 +609,13 @@ private:
         endLevel = levelIndex+1;
       }
 
-      for (int level_nr = startLevel; (level_nr < endLevel) && (patch == NULL); level_nr++) {
+      for (int level_nr = startLevel; (level_nr < endLevel) && (patch == nullptr); level_nr++) {
         const LevelP level = grid->getLevel(level_nr);
 
         switch (type->getType()) {
         case TypeDescription::CCVariable:
           for (Level::const_patchIterator iter = level->patchesBegin();
-               (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+               (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsCell(loc)) {
               patch = *iter;
               // We found our patch, quit looking.
@@ -626,7 +626,7 @@ private:
 
         case TypeDescription::NCVariable:
           for (Level::const_patchIterator iter = level->patchesBegin();
-               (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+               (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsNode(loc)) {
               patch = *iter;
               break;
@@ -635,7 +635,7 @@ private:
           break;
         case TypeDescription::SFCXVariable:
           for (Level::const_patchIterator iter = level->patchesBegin();
-               (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+               (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCX(loc)) {
               patch = *iter;
               break;
@@ -644,7 +644,7 @@ private:
           break;
         case TypeDescription::SFCYVariable:
           for (Level::const_patchIterator iter = level->patchesBegin();
-               (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+               (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCY(loc)) {
               patch = *iter;
               break;
@@ -653,7 +653,7 @@ private:
           break;
         case TypeDescription::SFCZVariable:
           for (Level::const_patchIterator iter = level->patchesBegin();
-               (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+               (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCZ(loc)) {
               patch = *iter;
               break;
@@ -666,7 +666,7 @@ private:
           break;
         }
       }
-      if (patch == NULL) {
+      if (patch == nullptr) {
         throw VariableNotFoundInGrid(name,loc,matlIndex,"DataArchive::query", __FILE__, __LINE__);
       }
 

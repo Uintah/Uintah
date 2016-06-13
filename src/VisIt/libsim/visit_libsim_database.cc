@@ -707,7 +707,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
 {
   // ARS - FIX ME - NOT NEEDED
   //lookup mesh in our cache and if it's not there, compute it
-  // if (mesh_domains[meshname] == NULL || forceMeshReload == true)
+  // if (mesh_domains[meshname] == nullptr || forceMeshReload == true)
   {
     //
     // Calculate some info we will need in the rest of the routine.
@@ -923,13 +923,13 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
   //   cache->GetVoidRef("any_mesh", // MUST be called any_mesh
   //                  AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
   //                  timestate, -1);
-  // if (*vrTmp == NULL || *vrTmp != mesh_boundaries[meshname])
+  // if (*vrTmp == nullptr || *vrTmp != mesh_boundaries[meshname])
   //   throw InvalidFilesException("uda boundary mesh not registered");
 
   // vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
   //                           AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
   //                           timestate, -1);
-  // if (*vrTmp == NULL || *vrTmp != mesh_domains[meshname])
+  // if (*vrTmp == nullptr || *vrTmp != mesh_domains[meshname])
   //   throw InvalidFilesException("uda domain mesh not registered");
 }
 
@@ -1022,9 +1022,9 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       cache->GetVoidRef(meshname, AUXILIARY_DATA_GLOBAL_NODE_IDS,
                         timestate, domain);
 
-    vtkDataArray *pID = NULL;
+    vtkDataArray *pID = nullptr;
 
-    if (*vrTmp == NULL)
+    if (*vrTmp == nullptr)
     {
       //
       // add globel node ids to facilitate point cloud usage
@@ -1038,7 +1038,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       if (matl.compare("*") != 0)
         matlNo = atoi(matl.c_str());
 
-      ParticleDataRaw *pd = NULL;
+      ParticleDataRaw *pd = nullptr;
 
       //debug5<<"\t(*getParticleData)...\n";
       //todo: this returns an array of doubles. Need to return
@@ -1072,7 +1072,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       }
 
       //debug5<<"read particleID ("<<pID<<")\n";
-      if(pID != NULL)
+      if(pID != nullptr)
       {
         //debug5<<"adding global node ids from particleID\n";
         pID->SetName("avtGlobalNodeId");
@@ -1087,7 +1087,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
           cache->GetVoidRef(meshname, AUXILIARY_DATA_GLOBAL_NODE_IDS,
                             timestate, domain);
 
-        if (*vrTmp == NULL || *vrTmp != *vr)
+        if (*vrTmp == nullptr || *vrTmp != *vr)
           throw InvalidFilesException("failed to register uda particle global node");
       }
     }
@@ -1292,7 +1292,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
       
-    ParticleDataRaw *pd = NULL;
+    ParticleDataRaw *pd = nullptr;
       
 #ifdef SERIALIZED_READS
     int numProcs, rank;
@@ -1362,7 +1362,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     int qlow[3], qhigh[3];
     patchInfo.getBounds(qlow,qhigh,varType);
       
-    GridDataRaw *gd = NULL;
+    GridDataRaw *gd = nullptr;
 
     if( varName == "processor" )
     {

@@ -181,14 +181,14 @@ void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
       enum EXTRACT_MODE fxmode;
       string var = attribute["var"];
       VarLabel* label = VarLabel::find(var);
-      if(label == NULL && (mode == "interior" || mode == "surface") ){
+      if(label == nullptr && (mode == "interior" || mode == "surface") ){
         throw ProblemSetupException("containerExtract: var label not found: "
             + var + " mode: " + mode , __FILE__, __LINE__);
       }
 
       /* For normal interior and surface modes: check and verify the analyze label */
       /* (for incident net veolicty modes: this is done automatically) */
-      if (label != NULL && (mode == "interior" || mode == "surface") ) {
+      if (label != nullptr && (mode == "interior" || mode == "surface") ) {
 
         const Uintah::TypeDescription* td = label->typeDescription();
         const Uintah::TypeDescription* subtype = td->getSubType();
@@ -388,7 +388,7 @@ void containerExtract::initialize(const ProcessorGroup*,
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
-      if ( check == NULL){
+      if ( check == nullptr){
         ostringstream warn;
         warn << "ERROR:containerExtract  The main uda directory does not exist. ";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -606,7 +606,7 @@ void containerExtract::scheduleDoAnalysis(SchedulerP& sched,
   Ghost::GhostType gac = Ghost::AroundCells;
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
-    if(d_varLabels[i] == NULL){
+    if(d_varLabels[i] == nullptr){
       string name = d_varLabels[i]->getName();
       throw InternalError("containerExtract: scheduleDoAnalysis label not found: " 
                           + name , __FILE__, __LINE__);
@@ -699,7 +699,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
 
         // bulletproofing
-        if(d_varLabels[i] == NULL){
+        if(d_varLabels[i] == nullptr){
           string name = d_varLabels[i]->getName();
           throw InternalError("containerExtract: analyze label not found: " 
               + name , __FILE__, __LINE__);
@@ -879,7 +879,7 @@ void
 containerExtract::createDirectory(string& lineName, string& levelIndex)
 {
   DIR *check = opendir(lineName.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << Parallel::getMPIRank() << "containerExtract:Making directory " << lineName << endl;
     MKDIR( lineName.c_str(), 0777 );
   } else {
@@ -889,7 +889,7 @@ containerExtract::createDirectory(string& lineName, string& levelIndex)
   // level index
   string path = lineName + "/" + levelIndex;
   check = opendir(path.c_str());
-  if ( check == NULL ) {
+  if ( check == nullptr ) {
     cout << "containerExtract:Making directory " << path << endl;
     MKDIR( path.c_str(), 0777 );
   } else {
