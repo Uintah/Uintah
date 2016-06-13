@@ -174,7 +174,7 @@ namespace Uintah{
         } else { 
           throw InvalidValue("Error: Not yet implemented for this particle method.",__FILE__,__LINE__); 
         }
-        return "NULL"; 
+        return "nullptr"; 
       }
 
       inline static double getScalingConstant(ProblemSpecP& db, const std::string labelName, const int qn){ 

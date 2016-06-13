@@ -88,7 +88,7 @@ bool UnionBCData::operator==(const BCGeomBase& rhs) const
   const UnionBCData* p_rhs = 
     dynamic_cast<const UnionBCData*>(&rhs);
 
-  if (p_rhs == NULL)
+  if (p_rhs == nullptr)
     return false;
   else {
     if (this->child.size() != p_rhs->child.size())

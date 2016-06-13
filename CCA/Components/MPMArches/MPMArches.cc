@@ -138,7 +138,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP db = prob_spec->findBlock("Multimaterial");
 
-  if( db.get_rep() == NULL ) { // Make sure the Multimaterial block exists...
+  if( db.get_rep() == nullptr ) { // Make sure the Multimaterial block exists...
     printf("\n");
     printf("ERROR: It appears that the <Multimaterial> tag is missing from the problem specification (.ups file)...\n");
     printf("\n");

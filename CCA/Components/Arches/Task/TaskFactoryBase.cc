@@ -22,7 +22,7 @@ void
 TaskFactoryBase::register_task(std::string task_name,
                                TaskInterface::TaskBuilder* builder ){
 
-  ASSERT(builder != NULL);
+  ASSERT(builder != nullptr);
 
   BuildMap::iterator i = _builders.find(task_name);
   if ( i == _builders.end() ){

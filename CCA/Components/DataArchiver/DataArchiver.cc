@@ -107,8 +107,8 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   //d_currentTime=-1;
   //d_currentTimestep=-1;
 
-  d_XMLIndexDoc = NULL;
-  d_CheckpointXMLIndexDoc = NULL;
+  d_XMLIndexDoc = nullptr;
+  d_CheckpointXMLIndexDoc = nullptr;
 
   d_outputDoubleAsFloat = false;
 
@@ -848,7 +848,7 @@ DataArchiver::createIndexXML(Dir& dir)
    const char * logname = getenv("LOGNAME");
    if(logname) metaElem->appendElement("username", logname);
 
-   time_t t = time(NULL) ;
+   time_t t = time(nullptr) ;
    
    // Chop the newline character off the time string so that the Date
    // field will appear properly in the XML
@@ -1400,7 +1400,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       xmlTextWriterSetIndent(writer_grid,1);
 
       #define MY_ENCODING "UTF-8"
-      xmlTextWriterStartDocument(writer_grid, NULL, MY_ENCODING, NULL);
+      xmlTextWriterStartDocument(writer_grid, nullptr, MY_ENCODING, nullptr);
 
       xmlTextWriterStartElement(writer_grid, BAD_CAST "Grid_Data");
       xmlTextWriterStartElement(writer_grid, BAD_CAST "Grid");
@@ -1797,7 +1797,7 @@ DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
     
       const MaterialSubset* matls = saveIter->getMaterialSubset(level.get_rep());
       
-      if ( matls != NULL ){
+      if ( matls != nullptr ){
         t->requires(Task::NewDW, (*saveIter).label, matls, Task::OutOfDomain, Ghost::None, 0, true);
         n++;
       }
@@ -2001,7 +2001,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   string xmlFilename;
   string dataFilebase;
   string dataFilename;
-  const Level* level = NULL;
+  const Level* level = nullptr;
 
   // find the xml filename and data filename that we will write to
   // Normal reductions will be handled by outputReduction, but checkpoint
@@ -2333,7 +2333,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
 
     const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
-    if (var_matls == NULL){
+    if (var_matls == nullptr){
       continue;
     }
     nSaveItemMatls[count] = var_matls->size();
@@ -2402,7 +2402,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     const VarLabel* label = saveIter->label;
 
     const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
-    if (var_matls == NULL){
+    if (var_matls == nullptr){
       continue;
     }
 
@@ -2828,7 +2828,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     //   to be computed.  Then save it to saveItems.
     VarLabel* var = VarLabel::find((*it).labelName);    
     
-    if (var == NULL) {
+    if (var == nullptr) {
       if (initTimestep) {
         continue;
       }else{
@@ -2934,7 +2934,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
    for (mapIter = label_map.begin(); mapIter != label_map.end(); mapIter++) {
      VarLabel* var = VarLabel::find(mapIter->first);
      
-     if (var == NULL) {
+     if (var == nullptr) {
        throw ProblemSetupException(mapIter->first + " variable not found to checkpoint.", __FILE__, __LINE__);
      }
      
@@ -2966,7 +2966,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
 
    if (!hasDelT) {
      VarLabel* var = VarLabel::find("delT");
-     if (var == NULL) {
+     if (var == nullptr) {
        throw ProblemSetupException("delT variable not found to checkpoint.", __FILE__, __LINE__);
      }
      
@@ -3016,7 +3016,7 @@ DataArchiver::SaveItem::getMaterialSubset(const Level* level)
   // search done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
   // 
   map<int, MaterialSetP>::iterator iter = matlSet.end();
-  const MaterialSubset* var_matls = NULL;
+  const MaterialSubset* var_matls = nullptr;
   
   if (level) {
     int L_index = level->getIndex();
@@ -3295,8 +3295,8 @@ DataArchiver::outputTimestep( double time,
 
     const PatchSet* patches = lb->getOutputPerProcessorPatchSet(level);
 
-    outputVariables(NULL, patches->getSubset(proc), NULL, NULL, newDW, OUTPUT);
-    outputVariables(NULL, patches->getSubset(proc), NULL, NULL, newDW, CHECKPOINT);
+    outputVariables(nullptr, patches->getSubset(proc), nullptr, nullptr, newDW, OUTPUT);
+    outputVariables(nullptr, patches->getSubset(proc), nullptr, nullptr, newDW, CHECKPOINT);
   }
 
   // Restore the timestep vars so to return to the normal output
@@ -3358,7 +3358,7 @@ DataArchiver::checkpointTimestep( double time,
 
     const PatchSet* patches = lb->getOutputPerProcessorPatchSet(level);
 
-    outputVariables(NULL, patches->getSubset(proc), NULL, NULL, newDW, CHECKPOINT);
+    outputVariables(nullptr, patches->getSubset(proc), nullptr, nullptr, newDW, CHECKPOINT);
   }
 
   // Restore the vars so to return to the normal output schedule.

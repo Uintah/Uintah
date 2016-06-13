@@ -35,7 +35,7 @@ namespace Uintah {
   {
   public:
     // This function has a switch for all shell go_types It returns a
-    // pointer to the piece that it creates, NULL if does not know how
+    // pointer to the piece that it creates, nullptr if does not know how
     // to create the piece.
     static GeometryPiece * create( ProblemSpecP& ps );
   };

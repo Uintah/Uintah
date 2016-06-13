@@ -335,7 +335,7 @@ private:
 
         gzFile file = gzopen( _input_file.c_str(), "r" );
 
-        if ( file == NULL ) { 
+        if ( file == nullptr ) { 
           proc0cout << "Error opening file: " << _input_file << " for velocity initialization." << std::endl;
           throw ProblemSetupException("Unable to open the given input file: " + _input_file, __FILE__, __LINE__);
         }
@@ -386,7 +386,7 @@ private:
 
         gzFile file = gzopen( _input_file.c_str(), "r" );
 
-        if ( file == NULL ) { 
+        if ( file == nullptr ) { 
           proc0cout << "Error opening file: " << _input_file << " for velocity initialization." << std::endl;
           throw ProblemSetupException("Unable to open the given input file: " + _input_file, __FILE__, __LINE__);
         }
@@ -438,7 +438,7 @@ private:
 
         gzFile file = gzopen( _input_file.c_str(), "r" );
 
-        if ( file == NULL ) { 
+        if ( file == nullptr ) { 
           proc0cout << "Error opening file: " << _input_file << " for velocity initialization." << std::endl;
           throw ProblemSetupException("Unable to open the given input file: " + _input_file, __FILE__, __LINE__);
         }

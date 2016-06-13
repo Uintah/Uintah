@@ -358,7 +358,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
 
   gzFile gzFp = gzopen( inputfile.c_str(), "r" );
 
-  if( gzFp == NULL ) {
+  if( gzFp == nullptr ) {
     // If errno is 0, then not enough memory to uncompress file.
     cout << "Error gz opening file " << inputfile << ".  Errno: " << errno << "\n";
     throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);

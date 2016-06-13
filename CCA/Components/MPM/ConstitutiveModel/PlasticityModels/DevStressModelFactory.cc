@@ -38,7 +38,7 @@ DevStressModel* DevStressModelFactory::create(ProblemSpecP& ps)
 
   if(dsm_ps){
 
-    string type="NULL";
+    string type="nullptr";
 
     if( !dsm_ps->getAttribute("type", type) ){
       throw ProblemSetupException("No type specified for DeviatoricStress", __FILE__, __LINE__);

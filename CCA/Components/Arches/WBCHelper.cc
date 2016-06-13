@@ -269,7 +269,7 @@ const BndCondSpec* BndSpec::find(const std::string& varName) const
   if (it != bcSpecVec.end()) {
     return &(*it);
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -280,7 +280,7 @@ const BndCondSpec* BndSpec::find(const std::string& varName)
   if (it != bcSpecVec.end()) {
     return &(*it);
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 

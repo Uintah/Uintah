@@ -232,8 +232,8 @@ printMinMax( CommandLineFlags & clf,
              const Uintah::TypeDescription * td,
              Type             * min,
              Type             * max,
-             IntVector        * c_min = NULL,
-             IntVector        * c_max = NULL,
+             IntVector        * c_min = nullptr,
+             IntVector        * c_max = nullptr,
              int                minCnt = -1, 
              int                maxCnt = -1 )
 {
@@ -242,7 +242,7 @@ printMinMax( CommandLineFlags & clf,
 
   MinMaxInfoBase   * mmBase = globalMinMax[ ss.str() ];
   MinMaxInfo<Type> * mmInfo = dynamic_cast< MinMaxInfo<Type> *>( mmBase );
-  if( mmInfo == NULL ) {
+  if( mmInfo == nullptr ) {
     // cout << "Creating new data store for " << var << ", malt: " << matl << " for Type: " << td->getName() << "\n";
     mmInfo = new MinMaxInfo<Type>();
     globalMinMax[ ss.str() ] = mmInfo;
@@ -261,10 +261,10 @@ printMinMax( CommandLineFlags & clf,
     cout << "\t\t\t\tmax value: " << *max << "\n";
   }
   mmInfo->updateMinMax( patch->getLevel()->getIndex(), *min, *max );
-  if( c_min != NULL && !clf.be_brief ) {
+  if( c_min != nullptr && !clf.be_brief ) {
     cout << "\t\t\t\tmin location: " << *c_min << " (Occurrences: ~" << minCnt << ")\n";
   }
-  if( c_max != NULL && !clf.be_brief ) {
+  if( c_max != nullptr && !clf.be_brief ) {
     cout << "\t\t\t\tmax location: " << *c_max << " (Occurrences: ~" << maxCnt << ")\n";
   }
 
@@ -289,7 +289,7 @@ printMinMax<Matrix3>( CommandLineFlags & clf,
 
   MinMaxInfoBase   * mmBase = globalMinMax[ ss.str() ];
   MinMaxInfo<Matrix3> * mmInfo = dynamic_cast< MinMaxInfo<Matrix3> *>( mmBase );
-  if( mmInfo == NULL ) {
+  if( mmInfo == nullptr ) {
     // cout << "Creating new data store for " << var << ", malt: " << matl << " for Type: " << td->getName() << "\n";
     mmInfo = new MinMaxInfo<Matrix3>();
     globalMinMax[ ss.str() ] = mmInfo;
@@ -339,7 +339,7 @@ printMinMax<Vector>( CommandLineFlags & clf,
 
   MinMaxInfoBase   * mmBase = globalMinMax[ ss.str() ];
   MinMaxInfo<Vector> * mmInfo = dynamic_cast< MinMaxInfo<Vector> *>( mmBase );
-  if( mmInfo == NULL ) {
+  if( mmInfo == nullptr ) {
     // cout << "Creating new data store for " << var << ", malt: " << matl << " for Type: " << td->getName() << "\n";
     mmInfo = new MinMaxInfo<Vector>();
     globalMinMax[ ss.str() ] = mmInfo;

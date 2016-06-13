@@ -726,11 +726,11 @@ main( int argc, char** argv )
     } else if (s == "-pad" || s == "--pad") {
       pad = true;
     } else if (s == "-tlow" || s == "--timesteplow") {
-      time_start = strtoul(argv[++i],(char**)NULL,10);
+      time_start = strtoul(argv[++i],(char**)nullptr,10);
     } else if (s == "-thigh" || s == "--timestephigh") {
-      time_end = strtoul(argv[++i],(char**)NULL,10);
+      time_end = strtoul(argv[++i],(char**)nullptr,10);
     } else if (s == "-pr" || s == "--precision") {
-      output_precision = strtoul(argv[++i],(char**)NULL,10);
+      output_precision = strtoul(argv[++i],(char**)nullptr,10);
       if (output_precision > 32) {
         std::cout << "Output precision cannot be larger than 32. Setting precision to 32 \n";        
         output_precision = 32;
@@ -740,7 +740,7 @@ main( int argc, char** argv )
         output_precision = 16;
       }
     } else if (s == "-timestep" || s == "--timestep") {
-      int val = strtoul(argv[++i],(char**)NULL,10);
+      int val = strtoul(argv[++i],(char**)nullptr,10);
       time_start = val;
       time_end = val;
     } else if (s == "-istart" || s == "--indexs") {
@@ -842,9 +842,9 @@ main( int argc, char** argv )
     const Uintah::TypeDescription * td      = types[var_index];
     const Uintah::TypeDescription * subtype = td->getSubType();
      
-    if( subtype == NULL ) {
+    if( subtype == nullptr ) {
       cout << "\n";
-      cout << "An ERROR occurred.  Subtype is NULL.  Most likely this means that the automatic\n";
+      cout << "An ERROR occurred.  Subtype is nullptr.  Most likely this means that the automatic\n";
       cout << "type instantiation is not working... Are you running on a strange architecture?\n";
       cout << "Types should be constructed when global static variables of each type are instantiated\n";
       cout << "automatically when the program loads.  The registering of the types occurs in:\n";

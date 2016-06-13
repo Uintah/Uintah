@@ -321,7 +321,7 @@ void AMRICE::refluxOperator_applyCorrectionFluxes(
   VarLabel* ylabel = VarLabel::find(y_name);
   VarLabel* zlabel = VarLabel::find(z_name);  
 
-  if(xlabel == NULL || ylabel == NULL || zlabel == NULL){
+  if(xlabel == nullptr || ylabel == nullptr || zlabel == nullptr){
     throw InternalError( "refluxOperator_applyCorrectionFluxes: variable label not found: " 
                           + x_name + " or " + y_name + " or " + z_name, __FILE__, __LINE__);
   }
@@ -641,7 +641,7 @@ void AMRICE::refluxOperator_computeCorrectionFluxes(
   const VarLabel* yCorrLabel = VarLabel::find(y_name + "corr");
   const VarLabel* zCorrLabel = VarLabel::find(z_name + "corr"); 
 
-  if(xFluxLabel == NULL || yFluxLabel == NULL || zFluxLabel == NULL){
+  if(xFluxLabel == nullptr || yFluxLabel == nullptr || zFluxLabel == nullptr){
     throw InternalError( "refluxOperator_computeCorrectionFluxes: variable label not found: " 
                           + x_name + " or " + y_name + " or " + z_name, __FILE__, __LINE__);
   }

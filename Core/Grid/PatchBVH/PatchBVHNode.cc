@@ -55,7 +55,7 @@ namespace Uintah {
 
    ****************************************/
 
-  PatchBVHNode::PatchBVHNode(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end) : left_(NULL), right_(NULL)
+  PatchBVHNode::PatchBVHNode(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end) : left_(nullptr), right_(nullptr)
   {
     //set bounding box
     low_=begin->patch->getExtraCellLowIndex();
@@ -125,10 +125,10 @@ namespace Uintah {
   PatchBVHNode::~PatchBVHNode()
   {
     //this class should only be made if there are more than 2 objects in the list thus both sides should exist
-    ASSERT(left_!=NULL);
+    ASSERT(left_!=nullptr);
     delete left_;
     
-    ASSERT(right_!=NULL);
+    ASSERT(right_!=nullptr);
     delete right_;
   }
 
@@ -139,9 +139,9 @@ namespace Uintah {
       return;
     }
     //intersect with left and right trees
-    ASSERT(left_!=NULL);
+    ASSERT(left_!=nullptr);
     left_->query(low,high,patches,includeExtraCells);
-    ASSERT(right_!=NULL);
+    ASSERT(right_!=nullptr);
     right_->query(low,high,patches,includeExtraCells);
   }
 

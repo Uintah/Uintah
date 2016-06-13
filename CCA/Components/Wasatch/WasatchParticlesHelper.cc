@@ -47,7 +47,7 @@ namespace WasatchCore {
   WasatchParticlesHelper::WasatchParticlesHelper() :
   Uintah::ParticlesHelper()
   {
-    wasatch_ = NULL;
+    wasatch_ = nullptr;
     wasatchSync_ = false;
   }
   
@@ -80,7 +80,7 @@ namespace WasatchCore {
                                            Uintah::DataWarehouse* new_dw)
   {
     assert( wasatchSync_     );
-    assert( wasatch_ != NULL );
+    assert( wasatch_ != nullptr );
 
     using namespace Uintah;
     initialize_internal(matls->size());

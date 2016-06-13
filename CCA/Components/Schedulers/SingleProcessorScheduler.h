@@ -67,7 +67,7 @@ class SingleProcessorScheduler : public SchedulerCommon {
 
   public:
 
-    SingleProcessorScheduler( const ProcessorGroup * myworld, const Output * oport, SingleProcessorScheduler * parent = NULL );
+    SingleProcessorScheduler( const ProcessorGroup * myworld, const Output * oport, SingleProcessorScheduler * parent = nullptr );
 
     virtual ~SingleProcessorScheduler();
 

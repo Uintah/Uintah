@@ -402,12 +402,12 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
   case Uintah::TypeDescription::long64_type:
     std::cerr << "Subtype " << subtype->getName() << " is not implemented..."
               << std::endl;
-    return NULL;
+    return nullptr;
   default:
     std::cerr << "Unknown subtype: "
           << subtype->getType() << "  "
           << subtype->getName() << std::endl;
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -431,8 +431,8 @@ GridDataRaw* getGridData(DataArchive *archive,
   std::vector<const Uintah::TypeDescription*> types;
   archive->queryVariables(vars, types);
 
-  const Uintah::TypeDescription* maintype = NULL;
-  const Uintah::TypeDescription* subtype = NULL;
+  const Uintah::TypeDescription* maintype = nullptr;
+  const Uintah::TypeDescription* subtype = nullptr;
 
   for (unsigned int i=0; i<vars.size(); i++)
   {
@@ -445,7 +445,7 @@ GridDataRaw* getGridData(DataArchive *archive,
   if (!maintype || !subtype)
   {
     std::cerr << "couldn't find variable " << variable_name <<  std::endl;
-    return NULL;
+    return nullptr;
   }
 
   switch(maintype->getType())
@@ -472,7 +472,7 @@ GridDataRaw* getGridData(DataArchive *archive,
                                              low, high, subtype);
   default:
     std::cerr << "Type is unknown." << std::endl;
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -488,8 +488,8 @@ bool variableExists(DataArchive *archive,
   std::vector<const Uintah::TypeDescription*> types;
   archive->queryVariables(vars, types);
 
-  const Uintah::TypeDescription* maintype = NULL;
-  const Uintah::TypeDescription* subtype = NULL;
+  const Uintah::TypeDescription* maintype = nullptr;
+  const Uintah::TypeDescription* subtype = nullptr;
 
   for (unsigned int i=0; i<vars.size(); i++) {
     if (vars[i] == variable_name) {
@@ -588,8 +588,8 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   std::vector<const Uintah::TypeDescription*> types;
   archive->queryVariables(vars, types);
 
-  const Uintah::TypeDescription* maintype = NULL;
-  const Uintah::TypeDescription* subtype = NULL;
+  const Uintah::TypeDescription* maintype = nullptr;
+  const Uintah::TypeDescription* subtype = nullptr;
 
   for (unsigned int i=0; i<vars.size(); i++) {
     if (vars[i] == variable_name) {
@@ -600,7 +600,7 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
 
   if (!maintype || !subtype) {
     std::cerr << "couldn't find variable " << variable_name <<  std::endl;
-    return NULL;
+    return nullptr;
   }
 
   switch (subtype->getType()) {
@@ -634,7 +634,7 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   default:
     std::cerr << "Unknown subtype for particle data: "
               << subtype->getName() << std::endl;
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -956,13 +956,13 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
   if( dw->exists( varLabel, material, patch ) )
     dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
   else
-    return NULL;
+    return nullptr;
 
   // IntVector low = var.getLowIndex();
   // IntVector high = var.getHighIndex();
 
   if( numComponents<T>() == 0 )
-    return NULL;
+    return nullptr;
 
   GridDataRaw *gd = new GridDataRaw;
   gd->components = numComponents<T>();
@@ -1027,12 +1027,12 @@ GridDataRaw* getGridDataMainType(SchedulerP schedulerP,
     std::cerr << "Uintah/VisIt Libsim Error: "
               << "Subtype " << subtype->getName() << " is not implemented..."
               << std::endl;
-    return NULL;
+    return nullptr;
   default:
     std::cerr << "Uintah/VisIt Libsim Error: unknown subtype: "
               << subtype->getType() << "  for variable: "
               << subtype->getName() << std::endl;
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -1059,8 +1059,8 @@ GridDataRaw* getGridData2(SchedulerP schedulerP,
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
 
   const VarLabel *varLabel;
-  const Uintah::TypeDescription* maintype = NULL;
-  const Uintah::TypeDescription* subtype = NULL;
+  const Uintah::TypeDescription* maintype = nullptr;
+  const Uintah::TypeDescription* subtype = nullptr;
 
   for (varIter = varLabels.begin(); varIter != varLabels.end(); varIter++)
   {
@@ -1077,7 +1077,7 @@ GridDataRaw* getGridData2(SchedulerP schedulerP,
   if (!maintype || !subtype) {
     std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable "
               << variable_name <<  std::endl;
-    return NULL;
+    return nullptr;
   }
 
   switch(maintype->getType()) {
@@ -1105,7 +1105,7 @@ GridDataRaw* getGridData2(SchedulerP schedulerP,
     std::cerr << "Uintah/VisIt Libsim Error: unknown type: "
               << maintype->getName() << " for variable: "
               << variable_name << std::endl;
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -1260,8 +1260,8 @@ ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
 
   const VarLabel *varLabel;
-  const Uintah::TypeDescription* maintype = NULL;
-  const Uintah::TypeDescription* subtype = NULL;
+  const Uintah::TypeDescription* maintype = nullptr;
+  const Uintah::TypeDescription* subtype = nullptr;
   
 
   for (varIter = varLabels.begin(); varIter != varLabels.end(); varIter++)
@@ -1279,7 +1279,7 @@ ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
   if (!maintype || !subtype) {
     std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable "
               << variable_name << std::endl;
-    return NULL;
+    return nullptr;
   }
 
   switch (subtype->getType()) {
@@ -1314,7 +1314,7 @@ ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
     std::cerr << "Uintah/VisIt Libsim Error: " 
               << "unknown subtype for particle data: " << subtype->getName()
               << " for vairable: " << variable_name << std::endl;
-    return NULL;
+    return nullptr;
   }
 }
 

@@ -71,7 +71,7 @@ namespace WasatchCore {
                    Uintah::Ghost::GhostType ghostType)
     : name_( var ),
       oldName_( create_old_var_tag(name_,retainName) ),
-      needsNewVarLabel_ ( Uintah::VarLabel::find( name_.name() ) == NULL ),
+      needsNewVarLabel_ ( Uintah::VarLabel::find( name_.name() ) == nullptr ),
       oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc ) ),
       varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc ) : Uintah::VarLabel::find( name_.name() ) ),
       ghostType_  ( ghostType )
@@ -148,7 +148,7 @@ namespace WasatchCore {
   {
     wasatchSync_  = false;
     hasDoneSetup_ = false;
-    wasatch_ = NULL;
+    wasatch_ = nullptr;
   }
 
   //------------------------------------------------------------------
@@ -187,7 +187,7 @@ namespace WasatchCore {
       msg << "OldVariable error: must call sync_with_wasatch() prior to adding variables!" << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-    assert( wasatch_ != NULL );
+    assert( wasatch_ != nullptr );
     
     // if this expression has already been registered, then return
     Expr::ExpressionFactory& factory = *(wasatch_->graph_categories()[category]->exprFactory);

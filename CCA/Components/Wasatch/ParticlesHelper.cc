@@ -127,10 +127,10 @@ namespace Uintah {
       pPerCell_(0.0),
       maxParticles_(0x10000u) // 2^32 ~ 4.3 billion particles per patch - maximum
   {
-    pXLabel_ = NULL;
-    pYLabel_ = NULL;
-    pZLabel_ = NULL;
-    materials_ = NULL;
+    pXLabel_ = nullptr;
+    pYLabel_ = nullptr;
+    pZLabel_ = nullptr;
+    materials_ = nullptr;
   }
   
   //------------------------------------------------------------------
@@ -669,7 +669,7 @@ namespace Uintah {
       std::map<int, std::vector<int> >& temp = (*bndParticlesMap_.find(bndName)).second;
       return &(temp.find(patchID)->second);
     }
-    return NULL;
+    return nullptr;
   }
   
   //--------------------------------------------------------------------

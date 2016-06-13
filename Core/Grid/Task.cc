@@ -501,7 +501,7 @@ Task::computesWithScratchGhost(const VarLabel* var,
     SCI_THROW(InternalError("ComputeswithScratchGhost should not be used for reduction variable", __FILE__, __LINE__));
   }
   
-  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, oldTG, NULL, matls,
+  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, oldTG, nullptr, matls,
                                       ThisLevel, matls_dom, gtype, numGhostCells);
   dep->next=0;
   
@@ -924,11 +924,11 @@ Task::display( ostream & out ) const
   
   out << " (" << d_tasktype << ")";
 
-  if( d_tasktype ==  Task::Normal && patch_set != NULL ) {
+  if( d_tasktype ==  Task::Normal && patch_set != nullptr ) {
     out << ", Level " << getLevel(patch_set)->getIndex();
   }
 
-  if( matl_set == NULL ) {
+  if( matl_set == nullptr ) {
     out << ", No-Matl-Set";
   }
   else {
@@ -940,7 +940,7 @@ Task::display( ostream & out ) const
       out << ", ";
     out << dwmap[i];
   }
-  if( patch_set == NULL ) {
+  if( patch_set == nullptr ) {
     out << ", No-Patch-Set";
   }
   else {

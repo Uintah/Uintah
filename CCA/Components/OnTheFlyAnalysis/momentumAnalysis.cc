@@ -299,7 +299,7 @@ void momentumAnalysis::initialize( const ProcessorGroup*,
 
       //  Bulletproofing
       DIR *check = opendir(udaDir.c_str());
-      if ( check == NULL){
+      if ( check == nullptr){
         ostringstream warn;
         warn << "ERROR:momentumAnalysis  The main uda directory does not exist. ";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -600,7 +600,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
 
       string udaDir = d_dataArchiver->getOutputLocation();
       string filename = udaDir + "/" + "momentumAnalysis.dat";
-      FILE *fp=NULL;
+      FILE *fp=nullptr;
 
 
       if( myFiles.count(filename) == 0 ){
@@ -884,7 +884,7 @@ VarLabel* momentumAnalysis::assignLabel( const std::string& varName )
 {
   VarLabel* myLabel  = VarLabel::find( varName );
 
-  if( myLabel == NULL ){
+  if( myLabel == nullptr ){
     ostringstream warn;
     warn << "ERROR momentumAnalysis One of the VarLabels for the analysis does not exist or could not be found\n"
          << varName << "  address: " << myLabel << "\n";

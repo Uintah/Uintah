@@ -591,7 +591,7 @@ Allocator* MakeAllocator()
   a->dieing = false;
   return a;
 #  else
-  return NULL;
+  return nullptr;
 #  endif // DISABLE_SCI_MALLOC
 }
 
@@ -1447,13 +1447,13 @@ void DumpAllocator(Allocator* a, const char* filename)
 {
   FILE* fp=fopen(filename, "w");
 
-  if( a == NULL )
+  if( a == nullptr )
     {
-      printf( "WARNING: In DumpAllocator: Allocator is NULL.\n");
+      printf( "WARNING: In DumpAllocator: Allocator is nullptr.\n");
       printf( "         Therefore no information to dump.");
       return;
     }
-  if( fp == NULL )
+  if( fp == nullptr )
     {
       perror("DumpAllocator fopen");
       exit( 1 );

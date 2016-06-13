@@ -337,7 +337,7 @@ namespace WasatchCore{
       proc0cout << "Constructing property evaluator for '" << dvarTag
                 << "' from file '" << fileName << "'." << std::endl;
       const InterpT* const interp = table.find_entry( dvarTableName );
-      assert( interp != NULL );
+      assert( interp != nullptr );
 
       //____________________________________________
       // get the type of field that we will evaluate

@@ -870,7 +870,7 @@ int main( int argc, const char* argv[] )
   
   gzFile gzFp = gzopen( inputfile.c_str(), "r" );
   
-  if( gzFp == NULL ) {
+  if( gzFp == nullptr ) {
     cout << "Error with gz in opening file: " << inputfile << endl; 
     exit(1);
   }
@@ -1363,7 +1363,7 @@ int main( int argc, const char* argv[] )
   vector < vector <vector<double> > > randomFieldx( randomSize[0], vector< vector<double> > (randomSize[1], vector<double> (randomSize[2])));
   vector < vector <vector<double> > > randomFieldy( randomSize[0], vector< vector<double> > (randomSize[1], vector<double> (randomSize[2])));
   vector < vector <vector<double> > > randomFieldz( randomSize[0], vector< vector<double> > (randomSize[1], vector<double> (randomSize[2])));
-  srand( time(NULL) ); //seed generator
+  srand( time(nullptr) ); //seed generator
   
   if ( faceSide == "x-" || faceSide == "x+" ) {
     for (int i=0; i<NT; i++) {

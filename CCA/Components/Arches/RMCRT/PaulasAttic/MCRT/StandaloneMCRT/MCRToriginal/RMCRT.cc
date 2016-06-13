@@ -696,7 +696,7 @@ main(int argc, char *argv[]){
 
    IntenFrac = 1e-10; //1e-20; // the percentage of Intensity left
    
-   //   srand48 ( time ( NULL )); // Set the random number seed for drand48
+   //   srand48 ( time ( nullptr )); // Set the random number seed for drand48
 
    ray obRay(VolElementNo,Ncx, Ncy, Ncz);
    

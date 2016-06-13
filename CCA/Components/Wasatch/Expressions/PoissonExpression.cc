@@ -213,7 +213,7 @@ namespace WasatchCore {
     }
 
     // When boundary conditions are present, modify the coefficient matrix coefficients at the boundary
-    if ( patch_->hasBoundaryFaces() && bcHelper_) bcHelper_->update_pressure_matrix( matrix_, NULL, patch_ );
+    if ( patch_->hasBoundaryFaces() && bcHelper_) bcHelper_->update_pressure_matrix( matrix_, nullptr, patch_ );
   }
 
   //--------------------------------------------------------------------

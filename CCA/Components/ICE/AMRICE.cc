@@ -157,7 +157,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     //  bulletproofing    
     VarLabel* label = VarLabel::find(name);
     
-    if(label == NULL){
+    if(label == nullptr){
       throw ProblemSetupException("The threshold variable name("+name+") could not be found",
                                    __FILE__, __LINE__);
     }
@@ -1945,7 +1945,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
       double thresholdValue = data.value;
       VarLabel* mag_grad_qLabel = VarLabel::find("mag_grad_"+name);
       
-      if(mag_grad_qLabel==NULL){  // bulletproofing
+      if(mag_grad_qLabel==nullptr){  // bulletproofing
         throw InternalError("AMRICE::errorEstimate: label(mag_grad_"+name+") not found.",
                             __FILE__, __LINE__);
       }

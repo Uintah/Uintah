@@ -247,7 +247,7 @@ BoundaryCondition_new::readInputFile( std::string file_name, BoundaryCondition_n
 {
 
   gzFile file = gzopen( file_name.c_str(), "r" );
-  if ( file == NULL ) {
+  if ( file == nullptr ) {
     proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
     throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
   }
@@ -619,7 +619,7 @@ void BoundaryCondition_new::FromFile::setupBC( ProblemSpecP& db, const std::stri
       gzFile file = gzopen( file_name.c_str(), "r" );
       int total_variables;
 
-      if ( file == NULL ) {
+      if ( file == nullptr ) {
         proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
         throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
       }
@@ -689,7 +689,7 @@ BoundaryCondition_new::FromFile::readInputFile( std::string file_name )
 {
 
   gzFile file = gzopen( file_name.c_str(), "r" );
-  if ( file == NULL ) {
+  if ( file == nullptr ) {
     proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
     throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
   }

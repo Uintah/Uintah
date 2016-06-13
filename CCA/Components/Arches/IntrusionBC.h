@@ -401,7 +401,7 @@ namespace Uintah{
 
             gzFile file = gzopen( inputfile.c_str(), "r" );
 
-            if ( file == NULL ) { 
+            if ( file == nullptr ) { 
               proc0cout << "Error opening file: " << inputfile << " for intrusion boundary conditions. Errno: " << errno << std::endl;
               throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
             }
@@ -469,7 +469,7 @@ namespace Uintah{
           {
           
             gzFile file = gzopen( file_name.c_str(), "r" ); 
-            if ( file == NULL ) { 
+            if ( file == nullptr ) { 
               proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
               throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
             }
@@ -720,7 +720,7 @@ namespace Uintah{
 
             int total_variables; 
 
-            if ( file == NULL ) { 
+            if ( file == nullptr ) { 
               proc0cout << "Error opening file: " << _file_reference << " for intrusion boundary conditions. Errno: " << errno << std::endl;
               throw ProblemSetupException("Unable to open the given input file: " + _file_reference, __FILE__, __LINE__);
             }
@@ -886,7 +886,7 @@ namespace Uintah{
           {
           
             gzFile file = gzopen( file_name.c_str(), "r" ); 
-            if ( file == NULL ) { 
+            if ( file == nullptr ) { 
               proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
               throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
             }

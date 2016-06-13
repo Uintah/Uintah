@@ -43,7 +43,7 @@ Suite::~Suite()
   }
 }
 
-// if the given testName has been used, return NULL;
+// if the given testName has been used, return nullptr;
 // otherwise, create a test with the given name,
 // add it to the suite, and return a pointer to it.
 Test* Suite::addTest(const std::string& testName)
@@ -56,7 +56,7 @@ Test* Suite::addTest(const std::string& testName)
     // test name is already used, so cannot add
     std::cerr << "**ERROR**  Test name " << testName << " already used.";
     delete newTest;
-    return NULL; 
+    return nullptr; 
   }
 
   myOrderedTests.push_back(newTest);
@@ -66,8 +66,8 @@ Test* Suite::addTest(const std::string& testName)
 Test* Suite::addTest(const std::string& testName, bool result)
 {
   Test* tst = addTest(testName);
-  if (tst == NULL)
-    return NULL;
+  if (tst == nullptr)
+    return nullptr;
   else {
     tst->setResults(result);
     return tst;
@@ -77,7 +77,7 @@ Test* Suite::addTest(const std::string& testName, bool result)
 Test* Suite::findOrAddTest(const std::string& testName)
 {
   Test* foundTest = findTest(testName);
-  if (foundTest != NULL)
+  if (foundTest != nullptr)
     return foundTest;
   else {
     Test* newTest = new Test(testName);
@@ -96,14 +96,14 @@ Test* Suite::findOrAddTest(const std::string& testName, bool results)
 }
 
 // if there is a test in this suite with the given
-// name, return a pointer to it; otherwise return NULL.
+// name, return a pointer to it; otherwise return nullptr.
 Test* Suite::findTest(const std::string& testName)
 {
 	// try to locate the test
   testMapIterator it = myTests.find(testName);
 
   if (it == myTests.end())
-    return NULL; // test with given name doesn't exist
+    return nullptr; // test with given name doesn't exist
   else
     return (*it).second; // test found
 }
@@ -115,7 +115,7 @@ void Suite::report()
   int num_passed = 0;
   int num_failed = 0;
   int num_not_run = 0;
-  Test* test = NULL;
+  Test* test = nullptr;
 
   std::cout << "=============================\n";
   std::cout << "Suite: " << myName << std::endl;

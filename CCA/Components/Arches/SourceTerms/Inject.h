@@ -173,7 +173,7 @@ private:
 
       gzFile file = gzopen( file_name.c_str(), "r" ); 
 
-      if ( file == NULL ) { 
+      if ( file == nullptr ) { 
         proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
         throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
       }
@@ -373,7 +373,7 @@ private:
   {
   
     gzFile file = gzopen( file_name.c_str(), "r" ); 
-    if ( file == NULL ) { 
+    if ( file == nullptr ) { 
       proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
       throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
     }

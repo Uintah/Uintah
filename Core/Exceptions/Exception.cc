@@ -227,7 +227,7 @@ string getStackTrace(void* context /*=0*/)
     char **names = backtrace_symbols( addresses, n );
     for ( int i = 2; i < n; i++ ) {
      Dl_info info;
-     char *demangled = NULL;
+     char *demangled = nullptr;
 
      //Attempt to demangle this if possible
      //Get the nearest symbol to feed to demangler
@@ -238,10 +238,10 @@ string getStackTrace(void* context /*=0*/)
       // However it is a convenient glibc way to demangle syms.
       demangled = abi::__cxa_demangle(info.dli_sname,0,0,&stat);
      }
-     if (demangled != NULL) {
+     if (demangled != nullptr) {
       //Chop off the garbage from the raw symbol
       char *loc = strchr(names[i], '(');
-      if (loc != NULL) *loc = '\0';
+      if (loc != nullptr) *loc = '\0';
      
       stacktrace << "**" << getpid() << "** ";
       stacktrace << i - 1 << ". " << names[i] << '\n';

@@ -46,7 +46,7 @@ namespace Uintah {
     strRKStage << rkStage;
     const std::string varName = "poisson_rhs_integral" + strRKStage.str();
     VarLabel* rhsIntegralLabel = VarLabel::find(varName);
-    if (rhsIntegralLabel == NULL) {
+    if (rhsIntegralLabel == nullptr) {
       rhsIntegralLabel = VarLabel::create(varName, sum_vartype::getTypeDescription());
       varLabels_.push_back(rhsIntegralLabel);
     }
@@ -80,7 +80,7 @@ namespace Uintah {
     strRKStage << rkStage;
     const std::string varName = "poisson_ref_value_offset" + strRKStage.str();
     VarLabel* refValueLabel = VarLabel::find(varName);
-    if (refValueLabel == NULL) {
+    if (refValueLabel == nullptr) {
       refValueLabel = VarLabel::create(varName, sum_vartype::getTypeDescription());
       varLabels_.push_back(refValueLabel);
     }

@@ -276,7 +276,7 @@ inline void MTRand::seed()
   }
   
   // Was not successful, so use time() and clock() instead
-  seed( hash( time(NULL), clock() ) );
+  seed( hash( time(nullptr), clock() ) );
 }
 
 

@@ -55,23 +55,23 @@ public:
   const std::string getName() // get the Suite name
   { return myName; }
 
-  // if the given testName has been used, return NULL;
+  // if the given testName has been used, return nullptr;
   // otherwise, create a test with the given name,
   // add it to the suite, and return a pointer to it.
   Test* addTest(const std::string& testName);
 
   // Add the test and set its result.  If a test with
-  // that name already exists, then simply return NULL.
+  // that name already exists, then simply return nullptr.
   Test* addTest(const std::string& testName, bool result);
 
   // Same as addTest methods except that if the test name
   // already exists, that is what is used/returned instead of
-  // NULL.
+  // nullptr.
   Test* findOrAddTest(const std::string& testName);
   Test* findOrAddTest(const std::string& testName, bool results);
   
   // if there is a test in this suite with the given
-  // name, return a pointer to it; otherwise return NULL.
+  // name, return a pointer to it; otherwise return nullptr.
   Test* findTest(const std::string& testName);
 
   bool hasAllPassed();

@@ -83,7 +83,7 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
   
   gzFile gzFp = gzopen( fileName.c_str(), "r" );
   
-  if( gzFp == NULL ) {
+  if( gzFp == nullptr ) {
     proc0cout << "Error opening file for Turbulent Inlet: " << fileName << endl;
     throw ProblemSetupException("Unable to open the given input file: " + fileName, __FILE__, __LINE__);
   }

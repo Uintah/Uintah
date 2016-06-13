@@ -107,16 +107,16 @@ namespace Uintah {
     //__________________________________
     //  initialize all the variabless
     void initializeVars(){
-      densityLag               =  NULL;
+      densityLag               =  nullptr;
       factor_divide            = -9;                 
       factor_new               = -9;                 
       factor_old               = -9;                 
       integrator_step_name     = "-9";
       integrator_step_number   =  -9;
-      negativeDensityGuess     =  NULL;
-      pressure_guess           =  NULL;
-      pressure_out             =  NULL;
-      ref_density              =  NULL;
+      negativeDensityGuess     =  nullptr;
+      pressure_guess           =  nullptr;
+      pressure_out             =  nullptr;
+      ref_density              =  nullptr;
       time_multiplier          = -9;
       time_position_multiplier_after_average    = -9;
       time_position_multiplier_before_average   = -9;
@@ -125,16 +125,16 @@ namespace Uintah {
     //__________________________________
     //  Test for uninitialized Variables
     void catchUninitializedVars(){
-      bool test =( ( densityLag               ==  NULL ) ||
+      bool test =( ( densityLag               ==  nullptr ) ||
       ( factor_divide            == -9 )    ||              
       ( factor_new               == -9 )    ||              
       ( factor_old               == -9 )    ||              
       ( integrator_step_name     == "-9" )  ||
       ( integrator_step_number   ==  -9 )   ||
-      ( negativeDensityGuess     ==  NULL ) ||
-      ( pressure_guess           ==  NULL ) ||
-      ( pressure_out             ==  NULL ) ||
-      ( ref_density              ==  NULL ) ||
+      ( negativeDensityGuess     ==  nullptr ) ||
+      ( pressure_guess           ==  nullptr ) ||
+      ( pressure_out             ==  nullptr ) ||
+      ( ref_density              ==  nullptr ) ||
       ( time_multiplier          == -9 )    ||
       ( time_position_multiplier_after_average    == -9 ) ||
       ( time_position_multiplier_before_average   == -9 ) );

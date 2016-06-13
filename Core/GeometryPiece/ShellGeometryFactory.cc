@@ -56,5 +56,5 @@ ShellGeometryFactory::create( ProblemSpecP & ps )
 //  else if (go_type == GUVSphereShellPiece::TYPE_NAME ) {
 //    return scinew GUVSphereShellPiece(ps);
 //  }
-  return NULL;
+  return nullptr;
 }

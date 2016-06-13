@@ -290,9 +290,9 @@ main(int argc, char** argv)
          return 0;
       } 
 
-      cellx = strtoul(argv[++i],(char**)NULL,10);
-      celly = strtoul(argv[++i],(char**)NULL,10);
-      cellz = strtoul(argv[++i],(char**)NULL,10);
+      cellx = strtoul(argv[++i],(char**)nullptr,10);
+      celly = strtoul(argv[++i],(char**)nullptr,10);
+      cellz = strtoul(argv[++i],(char**)nullptr,10);
     } else if(s == "-pol") {
       if(i+3 >= argc)
       {
@@ -302,8 +302,8 @@ main(int argc, char** argv)
 
 
       axis = *argv[++i];
-      ortho1 = strtoul(argv[++i],(char**)NULL,10);
-      ortho2 = strtoul(argv[++i],(char**)NULL,10);
+      ortho1 = strtoul(argv[++i],(char**)nullptr,10);
+      ortho2 = strtoul(argv[++i],(char**)nullptr,10);
  
 
       clf.do_POL = true;
@@ -406,7 +406,7 @@ main(int argc, char** argv)
          usage("-mat", argv[0]);
          return 0;
       }
-      clf.matl = strtoul(argv[++i],(char**)NULL,10);
+      clf.matl = strtoul(argv[++i],(char**)nullptr,10);
       clf.do_material = true;
       mat = clf.matl;
 
@@ -420,7 +420,7 @@ main(int argc, char** argv)
          usage("-timesteplow", argv[0]);
          return 0;
       }
-      clf.time_step_lower = strtoul(argv[++i],(char**)NULL,10);
+      clf.time_step_lower = strtoul(argv[++i],(char**)nullptr,10);
       clf.tslow_set = true;
     } else if (s == "-timestephigh" ||
                s == "-timeStepHigh" ||
@@ -430,7 +430,7 @@ main(int argc, char** argv)
          usage("-timestephigh", argv[0]);
          return 0;
       }
-      clf.time_step_upper = strtoul(argv[++i],(char**)NULL,10);
+      clf.time_step_upper = strtoul(argv[++i],(char**)nullptr,10);
       clf.tsup_set = true;
     } else if (s == "-timestepinc" ||
                s == "-timestepInc" ||
@@ -440,7 +440,7 @@ main(int argc, char** argv)
          usage("-timestepinc", argv[0]);
          return 0;
       }
-      clf.time_step_inc = strtoul(argv[++i],(char**)NULL,10);
+      clf.time_step_inc = strtoul(argv[++i],(char**)nullptr,10);
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     } else if( clf.filebase == "") {

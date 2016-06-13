@@ -109,7 +109,7 @@ DataArchive::DataArchive( const string & filebase,
   //}
 
   d_indexFile = fopen( index.c_str(), "r" ); // Was: ProblemSpecReader().readInputFile( index );
-  if( d_indexFile == NULL ) {
+  if( d_indexFile == nullptr ) {
     throw InternalError( "DataArchive::DataArchive() failed to open index xml file.", __FILE__, __LINE__ );
   }
 
@@ -350,7 +350,7 @@ DataArchive::queryPatchwiseProcessor( const Patch * patch, const int index )
 //______________________________________________________________________
 //
 GridP
-DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool assignBCs )
+DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, bool assignBCs )
 {
   // The following variable along with d_cell_scale is necessary to allow the
   // UdaScale module work.  Small domains are a problem for the SCIRun widgets
@@ -370,14 +370,14 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
   // Check if the grid.xml is present, and use that, if it isn't, then use the grid information
   // that is stored in timestep.xml.
 
-  if (fp_grid == NULL) {
+  if (fp_grid == nullptr) {
     fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
   } else {
 
     fp = fp_grid;
   }
 
-  if( fp == NULL ) {
+  if( fp == nullptr ) {
     throw InternalError("DataArchive::queryGrid() failed to open input file.\n", __FILE__, __LINE__);
   }
 
@@ -406,7 +406,7 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
   if( ups && assignBCs) { // 'ups' is non-null only for restarts.
 
     ProblemSpecP grid_ps = ups->findBlock( "Grid" );
-    grid->assignBCS( grid_ps, NULL );
+    grid->assignBCS( grid_ps, nullptr );
   }
 
   timedata.d_patchInfo.clear();
@@ -959,7 +959,7 @@ DataArchive::findPatchAndIndex( const GridP            grid,
                                 const int              index)
 {
   Patch *local = patch;
-  if( patch != NULL ){
+  if( patch != nullptr ){
     ParticleVariable<long64> var;
     query( var, "p.particleID", matlIndex, patch, index );
     //  cerr<<"var["<<idx<<"] = "<<var[idx]<<endl;
@@ -977,15 +977,15 @@ DataArchive::findPatchAndIndex( const GridP            grid,
       }
     }
   }
-  patch = NULL;
+  patch = nullptr;
 //   for (int level_nr = 0;
-//        (level_nr < grid->numLevels()) && (patch == NULL); level_nr++) {
+//        (level_nr < grid->numLevels()) && (patch == nullptr); level_nr++) {
 
 //     const LevelP level = grid->getLevel(level_nr);
     const LevelP level = grid->getLevel(levelIndex);
 
     for (Level::const_patchIterator iter = level->patchesBegin();
-         (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+         (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
       if( *iter == local ) continue;
       ParticleVariable<long64> var;
       query( var, "p.particleID", matlIndex, *iter, index );
@@ -1000,7 +1000,7 @@ DataArchive::findPatchAndIndex( const GridP            grid,
         }
       }
 
-      if( patch != NULL )
+      if( patch != nullptr )
         break;
     }
 //  }
@@ -1027,7 +1027,7 @@ DataArchive::restartInitialize( const int             index,
 
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find(names[i]);
-    if( vl == NULL ) {
+    if( vl == nullptr ) {
       // proc0cout << "Warning, VarLabel for " << names[i] << " was not found... attempting to create.\n"
       //           << "However, it is possible that this may cause problems down the road...\n";
       // ***** THIS ASSUMES A SINGLE GHOST CELL ***** BE CAREFUL ********
@@ -1076,8 +1076,8 @@ DataArchive::restartInitialize( const int             index,
     VarnameMatlPatch & key  = iter.get_key();
     DataFileInfo     & data = iter.get_data();
 
-    // get the Patch from the Patch ID (ID of -1 = NULL - for reduction vars)
-    const Patch* patch = key.patchid_ == -1 ? NULL : grid->getPatchByID( key.patchid_, 0 );
+    // get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
+    const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID( key.patchid_, 0 );
     int matl = key.matlIndex_;
 
     VarLabel* label = varMap[key.name_];
@@ -1133,7 +1133,7 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find(names[i]);
 
-    if( vl == NULL ) {
+    if( vl == nullptr ) {
       vl = VarLabel::create( names[i], typeDescriptions[i], IntVector(0,0,0) );
       d_createdVarLabels[names[i]] = vl;
     }
@@ -1160,8 +1160,8 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
     VarnameMatlPatch& key = iter.get_key();
     DataFileInfo& data    = iter.get_data();
 
-    // get the Patch from the Patch ID (ID of -1 = NULL - for reduction vars)
-    const Patch* patch = key.patchid_ == -1 ? NULL : grid->getPatchByID(key.patchid_, 0);
+    // get the Patch from the Patch ID (ID of -1 = nullptr - for reduction vars)
+    const Patch* patch = key.patchid_ == -1 ? nullptr : grid->getPatchByID(key.patchid_, 0);
     int matl = key.matlIndex_;
 
     VarLabel* label = varMap[ key.name_ ];
@@ -1216,7 +1216,7 @@ DataArchive::queryRestartTimestep( int & timestep )
   // create and define this file, so there would never be another "<restart ...>"
   // anywhere else... I hope.
 
-  ProblemSpec * restart_ps = NULL;
+  ProblemSpec * restart_ps = nullptr;
 
   rewind( d_indexFile ); // Start parsing from top of file.
   while( true ) {
@@ -1234,7 +1234,7 @@ DataArchive::queryRestartTimestep( int & timestep )
     }
   }
 
-  if( restart_ps != NULL ) {
+  if( restart_ps != nullptr ) {
 
     // Found (the last) "<restart " node.
 
@@ -1322,7 +1322,7 @@ DataArchive::TimeData::init()
   FILE * ts_file = fopen( d_ts_path_and_filename.c_str(), "r" );
   FILE * grid_file = fopen( d_grid_path_and_filename.c_str(), "r" );
 
-  if( ts_file == NULL ) {
+  if( ts_file == nullptr ) {
     // FIXME: add more info to exception.
     throw ProblemSetupException( "Failed to open timestep file.", __FILE__, __LINE__ );
   }
@@ -1351,11 +1351,11 @@ DataArchive::TimeData::init()
   reader = xmlNewTextReaderFilename(d_grid_path_and_filename.c_str());
 
   // If the grid.xml file is not found, then use the timestep.xml file
-  if (reader == NULL)
+  if (reader == nullptr)
     reader = xmlNewTextReaderFilename(d_ts_path_and_filename.c_str());
 
   int ret;
-  if (reader != NULL) {
+  if (reader != nullptr) {
     while (xmlTextReaderRead(reader)) {
       string node_name((char *)xmlTextReaderName(reader));
 
@@ -1421,7 +1421,7 @@ DataArchive::TimeData::init()
 #if 1
   bool found = false;
   string data_file_name = "";
-  if (grid_file != NULL) {
+  if (grid_file != nullptr) {
     found = ProblemSpec::findBlock( "<Data>", grid_file );
     data_file_name = d_grid_path_and_filename;
   } else {
@@ -1437,7 +1437,7 @@ DataArchive::TimeData::init()
   while( !done ) {
 
     string line = "";
-    if (grid_file != NULL) {
+    if (grid_file != nullptr) {
       line = UintahXML::getLine( grid_file );
     } else {
       line = UintahXML::getLine( ts_file );
@@ -1693,7 +1693,7 @@ DataArchive::getOldDelt( int restart_index )
 {
   TimeData& timedata = getTimeData( restart_index );
   FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
-  if( fp == NULL ) {
+  if( fp == nullptr ) {
     throw InternalError("DataArchive::setOldDelt() failed open datafile.", __FILE__, __LINE__);
   }
   // Note, old UDAs had a <delt> flag, but that was deprecated long ago in favor of the <oldDelt>
@@ -1730,7 +1730,7 @@ DataArchive::getTimestepDocForComponent( int restart_index )
   TimeData& timedata = getTimeData( restart_index );
   FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
 
-  if( fp == NULL ) {
+  if( fp == nullptr ) {
     throw InternalError("DataArchive::getTimespecDocForComponent() failed open datafile.", __FILE__, __LINE__);
   }
 

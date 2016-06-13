@@ -60,7 +60,7 @@ DragModel::DragModel( std::string modelName,
   _pi = acos(-1.0);
 
   //initialize
-  _birth_label = NULL;
+  _birth_label = nullptr;
 
 }
 
@@ -244,7 +244,7 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0 );
   tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 );
   tsk->requires( Task::NewDW, _RHS_weight_varlabel, gn, 0 );
-  if ( _birth_label != NULL )
+  if ( _birth_label != nullptr )
     tsk->requires( Task::NewDW, _birth_label, gn, 0 );
 
   // require particle velocity
@@ -331,7 +331,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
     new_dw->get( RHS_weight , _RHS_weight_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> birth;
     bool add_birth = false;
-    if ( _birth_label != NULL ){
+    if ( _birth_label != nullptr ){
       new_dw->get( birth, _birth_label, matlIndex, patch, gn, 0 );
       add_birth = true;
     }
