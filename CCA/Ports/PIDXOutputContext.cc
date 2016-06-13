@@ -220,15 +220,14 @@ PIDXOutputContext::initialize( string filename,
 {
   this->filename = filename;
   this->timestep = timeStep;
-  this->comm = comm; 
   string desc = "PIDXOutputContext::initialize";
   //__________________________________
   //
   int rc = PIDX_create_access(&(this->access));
   checkReturnCode( rc, desc+" - PIDX_create_access", __FILE__, __LINE__);
   
-  if(comm != NULL){
-    PIDX_set_mpi_access( this->access, this->comm );
+  if(comm != MPI_COMM_NULL){
+    PIDX_set_mpi_access( this->access, comm );
     checkReturnCode( rc, desc+" - PIDX_set_mpi_access", __FILE__, __LINE__);
   }
   
