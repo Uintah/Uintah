@@ -199,7 +199,6 @@ class PIDXOutputContext {
     std::string filename;
     unsigned int timestep;
     PIDX_file file;
-    MPI_Comm comm;
     PIDX_variable **varDesc;    // variable descriptor array
     PIDX_access access;
     
