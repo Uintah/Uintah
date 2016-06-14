@@ -52,7 +52,7 @@ std::condition_variable   g_next_signal{};
 std::mutex                g_next_mutex{};  // conditional wait mutex
 std::mutex                g_io_mutex{};
 
-Dout g_output_mpi_info( "MPI_Reporting"  , false );
+Dout g_output_mpi_info( "Uintah::MPI::Reporting"  , false );
 
 } // namespace
 
@@ -472,7 +472,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();
