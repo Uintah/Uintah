@@ -96,7 +96,7 @@ inline int mpi_check_err( const int err )
 inline int tid()
 {
   static std::atomic<int> count{0};
-  const static thread_local int id = count.fetch_add( 1, std::memory_order_relaxed );
+  const static __thread int id = count.fetch_add( 1, std::memory_order_relaxed );
   return id;
 }
 // simple RAII timer
