@@ -687,7 +687,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
       // particles << d_myworld->myrank() << " Posting PARTICLES receives for " << r.size()
       //           << " subsets from proc " << iter->first << " index " << data_index <<  endl;
       MPI_Request req;
-      Uintah::MPI::Irecv(&(recvdata[data_index][0]), r.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req);
+      MPI_Irecv(&(recvdata[data_index][0]), r.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req);
       recvrequests.push_back( req );
       data_index++;
     }
@@ -743,15 +743,15 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
       //           << iter->first << " index " << data_index << endl;
 
       MPI_Request req;
-      Uintah::MPI::Isend( &(senddata[data_index][0]), s.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req );
+      MPI_Isend( &(senddata[data_index][0]), s.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req );
 
       sendrequests.push_back( req );
       data_index++;
     }
   }
 
-  Uintah::MPI::Waitall( recvrequests.size(), &recvrequests[0], MPI_STATUSES_IGNORE );
-  Uintah::MPI::Waitall( sendrequests.size(), &sendrequests[0], MPI_STATUSES_IGNORE );
+  MPI_Waitall( recvrequests.size(), &recvrequests[0], MPI_STATUSES_IGNORE );
+  MPI_Waitall( sendrequests.size(), &sendrequests[0], MPI_STATUSES_IGNORE );
 
   // create particle subsets from recvs
   data_index = 0;
@@ -969,7 +969,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   }
   int packsize;
-  Uintah::MPI::Pack_size( count, datatype, d_myworld->getgComm( nComm ), &packsize );
+  MPI_Pack_size( count, datatype, d_myworld->getgComm( nComm ), &packsize );
   std::vector<char> sendbuf( packsize );
 
   int packindex = 0;
@@ -991,7 +991,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   if( mixedDebug.active() ) {
     coutLock.lock();
-    mixedDebug << "calling Uintah::MPI::Allreduce\n";
+    mixedDebug << "calling MPI_Allreduce\n";
     coutLock.unlock();
   }
 
@@ -1000,7 +1000,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
            << (level ? level->getID() : -1) << std::endl;
   }
 
-  int error = Uintah::MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
+  int error = MPI_Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
 
   if( mpidbg.active() ) {
     mpidbg << "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level "
@@ -1009,13 +1009,13 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   if( mixedDebug.active() ) {
     coutLock.lock();
-    mixedDebug << "done with Uintah::MPI::Allreduce (" << label->getName() << ")\n";
+    mixedDebug << "done with MPI_Allreduce (" << label->getName() << ")\n";
     coutLock.unlock();
   }
 
   if( error ) {
     cerrLock.lock();
-    std::cerr << "reduceMPI: Uintah::MPI::Allreduce error: " << error << "\n";
+    std::cerr << "reduceMPI: MPI_Allreduce error: " << error << "\n";
     cerrLock.unlock();
     SCI_THROW( InternalError("reduceMPI: MPI error", __FILE__, __LINE__) );
   }

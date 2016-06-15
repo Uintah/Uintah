@@ -4699,8 +4699,8 @@ namespace Uintah {
   {
     ASSERTEQ(sizeof(cutcell), sizeof(double)*13);
     MPI_Datatype mpitype;
-    Uintah::MPI::Type_vector(1, 13, 13, MPI_DOUBLE, &mpitype);
-    Uintah::MPI::Type_commit(&mpitype);
+    MPI_Type_vector(1, 13, 13, MPI_DOUBLE, &mpitype);
+    MPI_Type_commit(&mpitype);
     return mpitype;
   }
 

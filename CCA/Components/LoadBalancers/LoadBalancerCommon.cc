@@ -321,7 +321,7 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
     vector<DistributedIndex> rbuf(level->numPatches());
 
     // Gather curve
-    Uintah::MPI::Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, &rbuf[0], &recvcounts[0], 
+    MPI_Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, &rbuf[0], &recvcounts[0], 
                    &displs[0], MPI_BYTE, d_myworld->getComm());
 
     indices.swap(rbuf);
