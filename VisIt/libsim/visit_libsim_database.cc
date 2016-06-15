@@ -51,13 +51,13 @@
 namespace Uintah {
 
 // ****************************************************************************
-//  Method: ReadMetaData
+//  Method: visit_SimGetMetaData
 //
 //  Purpose:
-//      Does the actual work for visit_SimGetMetaData()
+//      Callback for processing meta data
 //
 // ****************************************************************************
-visit_handle visit_ReadMetaData(void *cbdata)
+visit_handle visit_SimGetMetaData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
@@ -647,39 +647,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
 }
 
 
-//---------------------------------------------------------------------
-// visit_SimGetMetaData
-//     Callback for processing meta data
-//---------------------------------------------------------------------
-visit_handle visit_SimGetMetaData(void *cbdata)
-{
-#ifdef SERIALIZED_READS
-  int numProcs, rank;
-  int msg = 128, tag = 256;
-  MPI_Status status;
-
-  MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
-  MPI_Comm_rank(VISIT_MPI_COMM, &rank);
-  //debug5 << "Proc: " << rank << " sent to mdserver" << std::endl;  
-
-  if (rank == 0) {
-    ReadMetaData(md, timeState);
-    MPI_Send(&msg, 1, MPI_INT, 1, tag, VISIT_MPI_COMM);
-  }
-  else {
-    MPI_Recv(&msg, 1, MPI_INT, rank - 1, tag, VISIT_MPI_COMM, &status);
-    if (msg == 128 && tag == 256) {
-      return visit_ReadMetaData(cbdata);
-      if (rank < (numProcs - 1))
-        MPI_Send(&msg, 1, MPI_INT, rank + 1, tag, VISIT_MPI_COMM);
-    }
-  }
-#else      
-  return visit_ReadMetaData(cbdata);
-#endif
-}
-
-
 // ****************************************************************************
 //  Method: visit_CalculateDomainNesting
 //
@@ -934,10 +901,13 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
 }
 
 
-//---------------------------------------------------------------------
-// visit_SimGetMesh
-//     Callback for processing a mesh
-//---------------------------------------------------------------------
+// ****************************************************************************
+//  Method: visit_SimGetMesh
+//
+//  Purpose:
+//      Callback for processing a mesh
+//
+// ****************************************************************************
 visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
@@ -1232,10 +1202,13 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 }
 
 
-//---------------------------------------------------------------------
-// visit_SimGetVariable
-//     Callback for processing a variable
-//---------------------------------------------------------------------
+// ****************************************************************************
+//  Method: visit_SimGetVariable
+//
+//  Purpose:
+//      Callback for processing a variable
+//
+// ****************************************************************************
 visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 {
   visit_handle varH = VISIT_INVALID_HANDLE;
@@ -1292,45 +1265,10 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
       
-    ParticleDataRaw *pd = nullptr;
-      
-#ifdef SERIALIZED_READS
-    int numProcs, rank;
-    int msg = 128, tag = 256;
-    MPI_Status status;
-      
-    MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
-    MPI_Comm_rank(VISIT_MPI_COMM, &rank);
-      
-    int totalPatches = 0;
+    ParticleDataRaw *pd = 
+      getParticleData2(schedulerP, gridP, level, local_patch, varName,
+		       matlNo, timestate);
 
-    for (int i=0; i<stepInfo->levelInfo.size(); ++i)
-      totalPatches += stepInfo->levelInfo[i].patchInfo.size();
-
-    // calculate which process we should wait for a message from
-    // if we're processing doiman 0 don't wait for anyone else
-    int prev = (rank+numProcs-1) % numProcs;
-    int next = (rank+1)%numProcs;
-      
-    // domain 0 always reads right away
-    if (domain==0)
-      prev = -1;
-    //debug5 << "Proc: " << rank << " sent to GetVar" << std::endl;
-      
-    // wait for previous read to finish
-    if (prev>=0)
-      MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
-      
-    pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
-                          matlNo, timestate);
-
-    // let the next read go
-    if (next>=0)
-      MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM); 
-#else
-    pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
-                          matlNo, timestate);
-#endif
     CheckNaNs(pd->num*pd->components,pd->data,level,local_patch);
 
     if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
@@ -1395,6 +1333,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       
       // Create at new grid data for the values.
       gd = new GridDataRaw;
+      gd->components = 1;
 
       for (int i=0; i<3; ++i)
       {
@@ -1402,12 +1341,10 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         gd->high[i] = qhigh[i];
       }
 
-      gd->components = 1;
+      gd->num = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      gd->data = new double[gd->num*gd->components];
 
-      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
-      gd->data = new double[ncells];
-
-      for (int i=0; i<ncells; ++i)
+      for (int i=0; i<gd->num*gd->components; ++i)
         gd->data[i] = val;
     }
     else
@@ -1427,92 +1364,37 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         }
       }
       
-#ifdef SERIALIZED_READS
-      int numProcs, rank;
-      int msg = 128, tag = 256;
-      MPI_Status status;
-        
-      MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
-      MPI_Comm_rank(VISIT_MPI_COMM, &rank);
-        
-      int totalPatches = 0;
-      for (int i=0; i<stepInfo->levelInfo.size(); ++i)
-        totalPatches += stepInfo->levelInfo[i].patchInfo.size();
-        
-      // calculate which process we should wait for a message from
-      // if we're processing doiman 0 don't wait for anyone else
-      int prev = (rank+numProcs-1)%numProcs;
-      int next = (rank+1)%numProcs;
-        
-      // domain 0 always reads right away
-      if (domain==0)
-        prev = -1;
-      //debug5 << "Proc: " << rank << " sent to GetVar" << std::endl;
-        
-      // wait for previous read to finish
-      if (prev>=0)
-        MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
-
       gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
                         atoi(matl.c_str()), timestate, qlow, qhigh);
 
-      // let the next read go
-      if (next>=0)
-        MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
-#else
-      gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
-                        atoi(matl.c_str()), timestate, qlow, qhigh);
-#endif
+      CheckNaNs(gd->num*gd->components, gd->data, level, local_patch);
     }
 
-    if( gd )
+    if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
     {
-      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
+				  gd->num*gd->components, gd->data);
       
-      CheckNaNs(ncells*gd->components, gd->data, level, local_patch);
+      // vtkDoubleArray *rv = vtkDoubleArray::New();
+      // rv->SetNumberOfComponents(gd->components);
+      // rv->SetArray(gd->data, ncells*gd->components, 0);
       
-      if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
-      {
-        VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
-                                    ncells * gd->components, gd->data);
-        
-        // vtkDoubleArray *rv = vtkDoubleArray::New();
-        // rv->SetNumberOfComponents(gd->components);
-        // rv->SetArray(gd->data, ncells*gd->components, 0);
-          
-        // ARS - FIX ME - CHECK FOR LEAKS
-        // don't delete gd->data - vtk owns it now!
-          // delete gd;
-      }
-    }
-    else
-    {
-      // Create at new grid data for the values.
-      gd = new GridDataRaw;
-
-      for (int i=0; i<3; ++i)
-      {
-        gd->low[i ] = qlow[i];
-        gd->high[i] = qhigh[i];
-      }
-
-      gd->components = 1;
-
-      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
-      gd->data = new double[ncells];
-
-      for (int i=0; i<ncells; ++i)
-        gd->data[i] = 0;
+      // ARS - FIX ME - CHECK FOR LEAKS
+      // don't delete gd->data - vtk owns it now!
+      // delete gd;
     }
   }
 
   return varH;
 }
 
-//---------------------------------------------------------------------
-// visit_SimGetDomainList
-//     Callback for processing a domain list
-//---------------------------------------------------------------------
+// ****************************************************************************
+//  Method: visit_SimGetDomainList
+//
+//  Purpose:
+//      Callback for processing a domain list
+//
+// ****************************************************************************
 visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
 {
   if( Parallel::usingMPI() )

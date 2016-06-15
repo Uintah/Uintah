@@ -317,10 +317,10 @@ public:
   // Low and high indexes of the data that was read.
   // They SHOULD match what we're expecting, but may not 
   // if there is a boundary layer for the variable.
+  int num;
   int low[3];
   int high[3];
   int components;
-
   double *data;
 };
 

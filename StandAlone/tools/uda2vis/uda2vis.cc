@@ -347,16 +347,17 @@ static GridDataRaw* readGridData(DataArchive *archive,
 
   GridDataRaw *gd = new GridDataRaw;
   gd->components = numComponents<T>();
+
   for (int i=0; i<3; i++) {
     gd->low[i] = low[i];
     gd->high[i] = high[i];
   }
 
-  int n = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
-  gd->data = new double[n*gd->components];
+  gd->num = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
+  gd->data = new double[gd->num*gd->components];
 
   T *p=var.getPointer();
-  for (int i=0; i<n; i++)
+  for (int i=0; i<gd->num; i++)
     copyComponents<T>(&gd->data[i*gd->components], p[i]);
   
   return gd;
@@ -950,35 +951,36 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
 
   // this queries the entire patch, including extra cells and boundary cells
   VAR<T> var;
-
   schedulerP->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
 
-  if( dw->exists( varLabel, material, patch ) )
-    dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
-  else
-    return nullptr;
-
-  // IntVector low = var.getLowIndex();
-  // IntVector high = var.getHighIndex();
-
-  if( numComponents<T>() == 0 )
-    return nullptr;
+  //  IntVector low = var.getLowIndex();
+  //  IntVector high = var.getHighIndex();
 
   GridDataRaw *gd = new GridDataRaw;
   gd->components = numComponents<T>();
 
-  for (int i=0; i<3; ++i)
-  {
+  for (int i=0; i<3; i++) {
     gd->low[i] = low[i];
     gd->high[i] = high[i];
   }
 
-  int n = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
-  gd->data = new double[n*gd->components];
+  gd->num = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
+  gd->data = new double[gd->num*gd->components];
 
-  const T *p=var.getPointer();
-  for (int i=0; i<n; ++i)
-    copyComponents<T>(&gd->data[i*gd->components], p[i]);
+  if( dw->exists( varLabel, material, patch ) )
+  {
+    dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
+  
+    const T *p=var.getPointer();
+
+    for (int i=0; i<gd->num; ++i)
+      copyComponents<T>(&gd->data[i*gd->components], p[i]);
+  }
+  else
+  {
+    for (int i=0; i<gd->num*gd->components; ++i)
+      gd->data[i] = 0;
+  }
   
   return gd;
 }
