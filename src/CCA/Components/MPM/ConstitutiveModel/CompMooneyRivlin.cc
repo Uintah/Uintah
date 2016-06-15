@@ -366,8 +366,8 @@ static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*3);
    MPI_Datatype mpitype;
-   Uintah::MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
-   Uintah::MPI::Type_commit(&mpitype);
+   MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
