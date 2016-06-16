@@ -35,7 +35,8 @@ DensityCalculatorBase( const int neq,
 DensityCalculatorBase::~DensityCalculatorBase(){}
 
 bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
-                                   DoubleVec& soln )
+                                   DoubleVec& soln,
+                                   double& relError)
 {
   unsigned niter = 0;
   double relErr = 0.0;
@@ -67,6 +68,7 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
     }
     ++niter;
   } while( relErr > rtol_ && niter < maxIter_ );
+  relError = relErr;
   return niter < maxIter_;
 }
 
@@ -125,6 +127,7 @@ evaluate()
   const typename FieldT::iterator irhoe = rho.end();
   size_t nbad = 0;
   DoubleVec soln(1), vals(1);
+  double relError = 0.0;
   for( ; irho!=irhoe; ++irho, ++irhoF, ++ibad, ++idrhodf){
     vals[0] = *irhoF;
     soln[0] = *irhoF / *irho;   // initial guess for the mixture fraction
@@ -133,15 +136,21 @@ evaluate()
       *irho = rhoEval_.value(&f);
       *idrhodf = rhoEval_.derivative(&f, 0);
     } else {
-      const bool converged = this->solve( vals, soln );  // soln contains the mixture fraction
+      const bool converged = this->solve( vals, soln, relError );  // soln contains the mixture fraction
       if( !converged ) {
         ++nbad;
-        *ibad = 1.0;
+        *ibad = relError;
       }
+      
       *irho = *irhoF / soln[0];
       
       const double& f = soln[0];
+      if (f == 0) {
+        *irho = rhoEval_.value(&soln[0]);
+      }
+      
       *idrhodf = rhoEval_.derivative(&f, 0);
+      
     }
   }
   if( nbad>0 && maxIter_ != 0){
@@ -240,12 +249,13 @@ evaluate()
 
   size_t nbad=0;
   DoubleVec soln(2), vals(2);
+  double relError = 0.0;
   for( ; irho!=irhoe; ++irho, ++igam, ++irhof, ++irhoh ){
     vals[0] = *irhof;
     vals[1] = *irhoh;
     soln[0] = *irhof / *irho; // mixture fraction
     soln[1] = *igam;          // heat loss
-    const bool converged = this->solve( vals, soln );
+    const bool converged = this->solve( vals, soln, relError );
     if( !converged ) ++nbad;
     *irho = *irhof / soln[0]; // set solution for density
     *igam = soln[1];          // heat loss

@@ -56,7 +56,7 @@ protected:
    * @param soln the initial guess.  Returns as the solution
    * @return true if converged, false otherwise
    */
-  bool solve( const DoubleVec& passThroughVals, DoubleVec& soln );
+  bool solve( const DoubleVec& passThroughVals, DoubleVec& soln, double& relError );
 
   /**
    * @return the value for each variable that should be used in normalizing the error for that equation.
