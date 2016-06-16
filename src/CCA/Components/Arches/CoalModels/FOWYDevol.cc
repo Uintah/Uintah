@@ -14,6 +14,8 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <boost/math/special_functions/erf.hpp>
 
 //===========================================================================
@@ -192,6 +194,27 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( d_sharedState->getVisIt() & !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    SimulationState::interactiveVar var;
+    var.name     = "Arches-Devol-Ultimate-Yield";
+    var.type     = Uintah::TypeDescription::double_type;
+    var.Dvalue   = &( _v_hiT);
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_interactiveVars.push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 //---------------------------------------------------------------------------
