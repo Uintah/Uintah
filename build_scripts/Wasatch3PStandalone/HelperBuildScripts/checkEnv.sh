@@ -225,13 +225,13 @@ if test "$MACHINE" = "Syrah"; then
      echo "Error: hostname did not return syrah*... Goodbye."
      exit
   fi
-  CC=`which mpigcc`
-  CXX=`which mpig++`
-  COMP=gcc-4.4.7
+  CC=`which mpicc`
+  CXX=`which mpic++`
+  COMP=icc-16.0.1
 
   NAME2="Syrah"
   INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/syrah/Wasatch3P
-  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/syrah/Boost/v1_55_0/mpigcc4.7.7-mvapich2.gnu.1.7
+  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/syrah/Boost/v1_60_0/intel16
 else
 if test "$MACHINE" = "titan"; then
   

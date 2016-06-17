@@ -11,7 +11,7 @@ cmake                                             \
   -DENABLE_TESTS=OFF                              \
   -DBUILD_GUI=OFF                                 \
                                                   \
-  -DSpatialOps_DIR=$INSTALL_BASE/SpatialOps/$COMP/share \
+  -DSpatialOps_DIR=$INSTALL_BASE/$COMP/SpatialOps/share \
                                                   \
   -DENABLE_UINTAH=ON                              \
                                                   \
