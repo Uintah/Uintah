@@ -54,9 +54,6 @@ inline const Level* getRealDomain(const Level* level)
   return level;
 }
 
-using Uintah::Max;
-using Uintah::FastHashTable;
-
 class BufferInfo;
 class DependencyBatch;
 class DetailedTasks;
@@ -518,8 +515,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
         void encompassOffsets(IntVector low,
                               IntVector high)
         {
-          lowOffset = Max(low, lowOffset);
-          highOffset = Max(high, highOffset);
+          lowOffset = Uintah::Max(low, lowOffset);
+          highOffset = Uintah::Max(high, highOffset);
         }
 
         AccessType accessType;
