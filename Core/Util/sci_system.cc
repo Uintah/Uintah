@@ -132,10 +132,11 @@ sci_system_linuxthreads(const char *line)
   sigset_t block, omask;
 #endif
 
-  if (line == nullptr)
+  if (line == nullptr) {
     /* Check that we have a command processor available.  It might
        not be available after a chroot(), for example.  */
     return sci_system_linuxthreads ("exit 0") == 0;
+  }
 
   sa.sa_handler = SIG_IGN;
   sa.sa_flags = 0;

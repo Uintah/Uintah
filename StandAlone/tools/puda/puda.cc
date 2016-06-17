@@ -148,7 +148,7 @@ usage( const std::string& badarg, const std::string& progname )
        << "are used in conjuntion with -PTvar.\n\n";
     
   cerr << "USAGE IS NOT FINISHED\n\n";
-  exit(1);
+  exit( 1 );
 }
 
 void
@@ -287,7 +287,6 @@ main(int argc, char** argv)
       if(i+3 >= argc)
       {
          usage("-pic", argv[0]);
-         return 0;
       } 
 
       cellx = strtoul(argv[++i],(char**)nullptr,10);
@@ -297,7 +296,6 @@ main(int argc, char** argv)
       if(i+3 >= argc)
       {
          usage("-pol", argv[0]);
-         return 0;
       } 
 
 
@@ -347,7 +345,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
         usage("-partvar",argv[0]);
-        return 0;
       }
       clf.particleVariable = argv[++i]; 
       if (clf.particleVariable[0] == '-') {
@@ -404,7 +401,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
          usage("-mat", argv[0]);
-         return 0;
       }
       clf.matl = strtoul(argv[++i],(char**)nullptr,10);
       clf.do_material = true;
@@ -418,7 +414,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
          usage("-timesteplow", argv[0]);
-         return 0;
       }
       clf.time_step_lower = strtoul(argv[++i],(char**)nullptr,10);
       clf.tslow_set = true;
@@ -428,7 +423,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
          usage("-timestephigh", argv[0]);
-         return 0;
       }
       clf.time_step_upper = strtoul(argv[++i],(char**)nullptr,10);
       clf.tsup_set = true;
@@ -438,7 +432,6 @@ main(int argc, char** argv)
       if(i+1 >= argc)
       {
          usage("-timestepinc", argv[0]);
-         return 0;
       }
       clf.time_step_inc = strtoul(argv[++i],(char**)nullptr,10);
     } else if( (s == "-help") || (s == "-h") ) {
@@ -449,7 +442,8 @@ main(int argc, char** argv)
         usage( s, argv[0]);
       }
       clf.filebase = argv[i];
-    } else {
+    } 
+    else {
       usage( s, argv[0]);
     }
   }
@@ -719,6 +713,9 @@ main(int argc, char** argv)
     cerr << "Caught unknown exception\n";
     abort();
   }
+
+  return 0;
+
 } // end main()
 
 ////////////////////////////////////////////////////////////////////////////
