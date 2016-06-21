@@ -118,8 +118,9 @@ namespace Uintah {
            which_guess_dw, params, perProcPatches, interface);
       }
     default:
-      throw InternalError("Unsupported Hypre Interface: "+interface,
-                          __FILE__, __LINE__);
+      ostringstream msg;
+      msg << "Unsupported Hypre Interface: " << interface;
+      throw InternalError( msg.str(), __FILE__, __LINE__ );
     } // end switch (interface)
   }
 
@@ -130,19 +131,20 @@ namespace Uintah {
   patchFaceSide(const Patch::FaceType& patchFace)
 
   {
-    if (patchFace == Patch::xminus || 
-        patchFace == Patch::yminus || 
-        patchFace == Patch::zminus) {
+    if ( patchFace == Patch::xminus || 
+         patchFace == Patch::yminus || 
+         patchFace == Patch::zminus ) {
       return LeftSide;
-    } else if (patchFace == Patch::xplus || 
-               patchFace == Patch::yplus || 
-               patchFace == Patch::zplus){
+    }
+    else if ( patchFace == Patch::xplus || 
+              patchFace == Patch::yplus || 
+              patchFace == Patch::zplus ) {
       return RightSide;
-    } else {
+    }
+    else {
       ostringstream msg;
-      msg << "patchFaceSide() called with invalid Patch::FaceType "
-          << patchFace;
-      throw InternalError(msg.str(),__FILE__, __LINE__);
+      msg << "patchFaceSide() called with invalid Patch::FaceType " << patchFace;
+      throw InternalError( msg.str(), __FILE__, __LINE__ );
     }
   }
 
