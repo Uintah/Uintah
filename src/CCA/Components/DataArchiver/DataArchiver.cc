@@ -2903,8 +2903,8 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
      const Task::Dependency* dep = *iter;
      
      ConsecutiveRangeSet levels;
-     const PatchSubset* patchSubset = (dep->patches != 0)?
-       dep->patches : dep->task->getPatchSet()->getUnion();
+     const PatchSubset* patchSubset = (dep->m_patches != 0)?
+       dep->m_patches : dep->m_task->getPatchSet()->getUnion();
      
      for(int i=0;i<patchSubset->size();i++) {
        const Patch* patch = patchSubset->get(i);
@@ -2912,8 +2912,8 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
      }
 
      ConsecutiveRangeSet matls;
-     const MaterialSubset* matSubset = (dep->matls != 0) ?
-       dep->matls : dep->task->getMaterialSet()->getUnion();
+     const MaterialSubset* matSubset = (dep->m_matls != 0) ?
+       dep->m_matls : dep->m_task->getMaterialSet()->getUnion();
      
      // The matSubset is assumed to be in ascending order or
      // addInOrder will throw an exception.
@@ -2921,7 +2921,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
                       matSubset->getVector().end());
 
      for(ConsecutiveRangeSet::iterator liter = levels.begin(); liter != levels.end(); liter++) {
-       ConsecutiveRangeSet& unionedVarMatls = label_map[dep->var->getName()][*liter];
+       ConsecutiveRangeSet& unionedVarMatls = label_map[dep->m_var->getName()][*liter];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
      
