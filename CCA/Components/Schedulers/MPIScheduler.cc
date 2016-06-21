@@ -353,11 +353,11 @@ void
 MPIScheduler::runReductionTask( DetailedTask* task )
 {
   const Task::Dependency* mod = task->getTask()->getModifies();
-  ASSERT(!mod->next);
+  ASSERT(!mod->m_next);
 
   OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
-  ASSERT(task->getTask()->d_comm>=0);
-  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_comm);
+  ASSERT(task->getTask()->m_comm>=0);
+  dw->reduceMPI(mod->m_var, mod->m_reduction_level, mod->m_matls, task->getTask()->m_comm);
   task->done(dws);
 }
 
@@ -402,7 +402,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
       ostr << *req << ' '; // for CommRecMPI::add()
 
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-          && iteration == 0) || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
+          && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
         // See comment in DetailedDep about CommCondition
         if (dbg_active) {
           cerrLock.lock();
@@ -428,9 +428,9 @@ MPIScheduler::postMPISends( DetailedTask* task,
         cerrLock.lock();
         {
           dbg << "Rank-" << me << " --> sending " << *req << ", ghost type: " << "\""
-              << Ghost::getGhostTypeName(req->req->gtype) << "\", " << "num req ghost "
-              << Ghost::getGhostTypeName(req->req->gtype) << ": " << req->req->numGhostCells
-              << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->gtype)
+              << Ghost::getGhostTypeName(req->req->m_gtype) << "\", " << "num req ghost "
+              << Ghost::getGhostTypeName(req->req->m_gtype) << ": " << req->req->m_num_ghost_cells
+              << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->m_gtype)
               << ", from dw " << dw->getID() << '\n';
         }
         cerrLock.unlock();
@@ -443,16 +443,16 @@ MPIScheduler::postMPISends( DetailedTask* task,
       LoadBalancer* lb = 0;
 
       if( !reloc_new_posLabel_ && parentScheduler_ ) {
-        posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posDW = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         posLabel = parentScheduler_->reloc_new_posLabel_;
       }
       else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+          posDW = dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
         }
         else {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+          posDW = dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
         posLabel = reloc_new_posLabel_;
@@ -649,7 +649,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
         OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
         if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-            && iteration == 0) || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
+            && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
 
           // See comment in DetailedDep about CommCondition
           if (dbg_active) {
@@ -670,9 +670,9 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
           cerrLock.lock();
           {
             dbg << "Rank-" << d_myworld->myrank() << " <-- receiving " << *req << ", ghost type: " << "\""
-                << Ghost::getGhostTypeName(req->req->gtype) << "\", " << "num req ghost "
-                << Ghost::getGhostTypeName(req->req->gtype) << ": " << req->req->numGhostCells
-                << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->gtype)
+                << Ghost::getGhostTypeName(req->req->m_gtype) << "\", " << "num req ghost "
+                << Ghost::getGhostTypeName(req->req->m_gtype) << ": " << req->req->m_num_ghost_cells
+                << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->m_gtype)
                 << ", into dw " << dw->getID() << '\n';
           }
           cerrLock.unlock();
@@ -684,15 +684,15 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         // pass it in if the particle data is on the old dw
         LoadBalancer* lb = 0;
         if (!reloc_new_posLabel_ && parentScheduler_) {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+          posDW = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         }
         else {
           // on an output task (and only on one) we require particle variables from the NewDW
           if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-            posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+            posDW = dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
           }
           else {
-            posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+            posDW = dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
             lb = getLoadBalancer();
           }
         }

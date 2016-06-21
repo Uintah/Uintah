@@ -112,7 +112,8 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
 
     //__________________________________
     //  varLabel name struct
-    varLabelNames*  labelNames;
+    varLabelNames*  labelNames = nullptr;
+
 #if 0
     varLabelNames*  labelNames = new varLabelNames;
 
@@ -125,6 +126,7 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
     
     labelNames->print();
 #endif
+
     //__________________________________
     //  RMCRT_flags
     RMCRT_flags RT_flags;
@@ -219,7 +221,9 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                               levelP,
                               patchP,
                               (cudaStream_t*)stream,
-                              RT_flags, labelNames, abskg_gdw,
+                              RT_flags,
+                              labelNames,
+                              abskg_gdw,
                               sigmaT4_gdw,
                               celltype_gdw,
                               static_cast<GPUDataWarehouse*>(oldTaskGpuDW),

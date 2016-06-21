@@ -574,7 +574,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
     return;
   }
 
-  const VarLabel* label = dep->req->var;
+  const VarLabel* label = dep->req->m_var;
   const Patch* patch = dep->fromPatch;
   int matlIndex = dep->matl;
 
@@ -813,7 +813,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
     return;
   }
 
-  const VarLabel* label = dep->req->var;
+  const VarLabel* label = dep->req->m_var;
   const Patch* patch = dep->fromPatch;
   int matlIndex = dep->matl;
 
@@ -2662,7 +2662,7 @@ OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
 {
   checkGetAccess( label, matlIndex, patch );
 
-  Variable* var = nullptr;
+  Variable* m_var = nullptr;
   IntVector l, h;
 
   if( patch ) {
@@ -2695,14 +2695,14 @@ OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
             break;
           }
         }
-        var = v;
+        m_var = v;
       }
       break;
     case TypeDescription::ParticleVariable :
-      var = d_varDB.get( label, matlIndex, patch );
+      m_var = d_varDB.get( label, matlIndex, patch );
       break;
     default :
-      var = d_varDB.get( label, matlIndex, patch );
+      m_var = d_varDB.get( label, matlIndex, patch );
     }
   }
   else {    // reduction variables
@@ -2710,15 +2710,15 @@ OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
 
     const Level* level = patch ? patch->getLevel() : 0;
     if( d_levelDB.exists( label, matlIndex, level ) ){
-      var = d_levelDB.get( label, matlIndex, level );
+      m_var = d_levelDB.get( label, matlIndex, level );
     }
   }
 
-  if( var == nullptr ) {
+  if( m_var == nullptr ) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "OnDemandDataWarehouse::emit ", __FILE__, __LINE__) );
   }
 
-  var->emitPIDX( pc, buffer, l, h, bufferSize);
+  m_var->emitPIDX( pc, buffer, l, h, bufferSize);
 }
 
 #endif
@@ -3252,7 +3252,7 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
       }
 
       IntVector lowOffset, highOffset;
-      Patch::getGhostOffsets(label->typeDescription()->getType(), gtype, numGhostCells, lowOffset, highOffset);
+      Patch::getGhostOffsets(label->typeDescription()->getType(), m_gtype, m_num_ghost_cells, lowOffset, highOffset);
 
       VarAccessMap& runningTaskAccesses = runningTaskInfo.d_accesses;
 
@@ -3295,14 +3295,14 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
           }
           has += " datawarehouse get";
 
-          if (numGhostCells > 0) {
+          if (m_num_ghost_cells > 0) {
             std::ostringstream ghost_str;
-            ghost_str << " for " << numGhostCells << " layer";
+            ghost_str << " for " << m_num_ghost_cells << " layer";
 
-            if (numGhostCells > 1) {
+            if (m_num_ghost_cells > 1) {
               ghost_str << "s";
             }
-            ghost_str << " of ghosts around " << Ghost::getGhostTypeName(gtype);
+            ghost_str << " of ghosts around " << Ghost::getGhostTypeName(m_gtype);
             has += ghost_str.str();
           }
           std::string needs = "task requires";
@@ -3624,16 +3624,16 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
   default_patches->add(0);
   default_matls->add(-1);
 
-  for (; dep != 0; dep = dep->next) {
+  for (; dep != 0; dep = dep->m_next) {
 #if 0
     if ((isFinalized() && dep->dw == Task::NewDW) || (!isFinalized() && dep->dw == Task::OldDW)) {
       continue;
     }
 #endif
 
-    const VarLabel* label = dep->var;
+    const VarLabel* label = dep->m_var;
     IntVector lowOffset, highOffset;
-    Patch::getGhostOffsets(label->typeDescription()->getType(), dep->gtype, dep->numGhostCells, lowOffset, highOffset);
+    Patch::getGhostOffsets(label->typeDescription()->getType(), dep->m_gtype, dep->m_num_ghost_cells, lowOffset, highOffset);
 
     constHandle<PatchSubset> patches = dep->getPatchesUnderDomain(domainPatches);
     constHandle<MaterialSubset> matls = dep->getMaterialsUnderDomain(domainMatls);
@@ -3722,11 +3722,11 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
           std::string has, needs;
           has = "task requires";
           std::ostringstream ghost_str;
-          ghost_str << " requesting " << dep->numGhostCells << " layer";
-          if (dep->numGhostCells > 1) {
+          ghost_str << " requesting " << dep->m_num_ghost_cells << " layer";
+          if (dep->m_num_ghost_cells > 1) {
             ghost_str << "s";
           }
-          ghost_str << " of ghosts around " << Ghost::getGhostTypeName(dep->gtype);
+          ghost_str << " of ghosts around " << Ghost::getGhostTypeName(dep->m_gtype);
           has += ghost_str.str();
 
           if (isFinalized()) {

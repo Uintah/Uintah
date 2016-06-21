@@ -103,13 +103,13 @@ namespace Uintah {
     {
       ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
 
-      USE_IF_ASSERTS_ON( Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(), true); )
+      USE_IF_ASSERTS_ON( Patch::VariableBasis basis = Patch::translateTypeToBasis(req->m_var->typeDescription()->getType(), true); )
 
-      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())) ==
-				fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())));
+      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getExtraLowIndex(basis, req->m_var->getBoundaryLayer())) ==
+				fromPatch->getExtraLowIndex(basis, req->m_var->getBoundaryLayer())));
 
-      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())) ==
-				fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())));
+      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getExtraHighIndex(basis, req->m_var->getBoundaryLayer())) ==
+				fromPatch->getExtraHighIndex(basis, req->m_var->getBoundaryLayer())));
 
       toTasks.push_back(toTask);
     }
@@ -642,7 +642,7 @@ namespace Uintah {
     SchedulerCommon*              sc_;
     const ProcessorGroup*         d_myworld;
     // store the first so we can share the scrubCountTable
-    DetailedTasks*               first;
+    DetailedTasks*                first;
     std::vector<DetailedTask*>    tasks_;
     KeyDatabase<Patch>            varKeyDB;
     KeyDatabase<Level>            levelKeyDB;
@@ -664,7 +664,6 @@ namespace Uintah {
     // to run.  I implemented this using topological sort order as the priority
     // but that probably isn't a good way to do unless you make it a breadth
     // first topological order.
-    //typedef priority_queue<DetailedTask*, std::vector<DetailedTask*>, TaskNumberCompare> TaskQueue;
     QueueAlg taskPriorityAlg_;
     typedef std::queue<DetailedTask*> TaskQueue;
     typedef std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;

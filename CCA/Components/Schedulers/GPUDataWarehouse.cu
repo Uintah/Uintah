@@ -1737,12 +1737,12 @@ GPUDataWarehouse::clear()
 
   OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
 
-  //delete any grid var that isn't part of a contiguous array
+  // delete any grid var that isn't part of a contiguous array
   varLock->lock();
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator varIter;
   for (varIter = varPointers->begin(); varIter != varPointers->end(); ++varIter) {
     if (varIter->second.host_contiguousArrayPtr == nullptr) {
-      //clear out all the staging vars, if any
+      // clear out all the staging vars, if any
       std::map<stagingVar, stagingVarInfo>::iterator stagingIter;
       for (stagingIter = varIter->second.stagingVars.begin(); stagingIter != varIter->second.stagingVars.end(); ++stagingIter) {
 
@@ -1759,14 +1759,15 @@ GPUDataWarehouse::clear()
           cerrLock.unlock();
         }
 
-        size_t memSize = stagingIter->first.device_size.x *
+        size_t memSize = stagingIter->first.device_size.x  *
                           stagingIter->first.device_size.y *
                           stagingIter->first.device_size.z *
                           varIter->second.sizeOfDataType;
+
         if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, stagingIter->second.device_ptr) ) {
-          stagingIter->second.device_ptr == nullptr;
+          stagingIter->second.device_ptr = nullptr;
         } else {
-          //No open spot in the pool, go ahead and allocate it.
+          // No open spot in the pool, go ahead and allocate it.
           printf("ERROR:\nGPUDataWarehouse::clear(), for a staging variable, couldn't find in the GPU memory pool the space starting at address %p\n", stagingIter->second.device_ptr);
           varLock->unlock();
           exit(-1);
@@ -1775,10 +1776,10 @@ GPUDataWarehouse::clear()
       }
       varIter->second.stagingVars.clear();
 
-      //clear out the regular vars
+      // clear out the regular vars
 
-      //See if it's a placeholder var for staging vars.  This happens if the non-staging var
-      //had a device_ptr of nullptr, and it was only in the varPointers map to only hold staging vars
+      // See if it's a placeholder var for staging vars.  This happens if the non-staging var
+      // had a device_ptr of nullptr, and it was only in the varPointers map to only hold staging vars
       if (varIter->second.device_ptr) {
         if (gpu_stats.active()) {
           cerrLock.lock();
@@ -1800,7 +1801,7 @@ GPUDataWarehouse::clear()
                     varIter->second.device_size.z;
         }
         if (GPUMemoryPool::freeCudaSpaceFromPool(d_device_id, varIter->second.device_ptr)) {
-          varIter->second.device_ptr == nullptr;
+          varIter->second.device_ptr = nullptr;
         } else {
           printf("ERROR:\nGPUDataWarehouse::clear(), for a non-staging variable, couldn't find in the GPU memory pool the space starting at address %p\n", varIter->second.device_ptr);
           varLock->unlock();

@@ -42,6 +42,9 @@
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
+using Uintah::Max;
+using Uintah::FastHashTable;
+
 namespace Uintah {
 
 inline const Patch* getRealDomain(const Patch* patch)

@@ -240,7 +240,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   dts->setTaskPriorityAlg(taskQueueAlg_ );
 
   for (int i = 0; i < ntasks; i++) {
-    phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
+    phaseTasks[dts->localTask(i)->getTask()->m_phase]++;
   }
   
   if (dynamicmpi_dbg.active()) {
@@ -283,7 +283,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {  //save the reduction task for later
-        phaseSyncTask[task->getTask()->d_phase] = task;
+        phaseSyncTask[task->getTask()->m_phase] = task;
         taskdbg << d_myworld->myrank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount() << std::endl;
       } else {
         initiateTask(task, abort, abort_point, iteration);
@@ -328,7 +328,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
           cerrLock.unlock();
         }
       }
-      phaseTasksDone[task->getTask()->d_phase]++;
+      phaseTasksDone[task->getTask()->m_phase]++;
     } 
 
     if ((phaseSyncTask.find(currphase) != phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {  //if it is time to run the reduction task
@@ -355,14 +355,14 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
+          taskdbg << d_myworld->myrank() << " Running OPP task:  \t";
           printTask(taskdbg, reducetask);
           taskdbg << '\n';
           cerrLock.unlock();
         }
 
       }
-      ASSERT(reducetask->getTask()->d_phase == currphase);
+      ASSERT(reducetask->getTask()->m_phase == currphase);
 
       numTasksDone++;
       if (taskorder.active()) {
@@ -371,7 +371,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
                     << " , scheduled order: " << numTasksDone << std::endl;
         }
       }
-      phaseTasksDone[reducetask->getTask()->d_phase]++;
+      phaseTasksDone[reducetask->getTask()->m_phase]++;
     }
 
     if (numTasksDone < ntasks) {

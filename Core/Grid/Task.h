@@ -22,19 +22,19 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_Task_H
-#define UINTAH_HOMEBREW_Task_H
+#ifndef CORE_GRID_TASK_H
+#define CORE_GRID_TASK_H
 
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Ghost.h>
-#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/Parallel.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Parallel/Parallel.h>
+#include <Core/Util/TupleHelpers.hpp>
 
-#include <map>
 #include <set>
 #include <vector>
 #include <string>
@@ -47,16 +47,14 @@ class DataWarehouse;
 class ProcessorGroup;
 class Task;
 class DetailedTask;
+
 /**************************************
 
  CLASS
- Task
-
- Short description...
+   Task
 
  GENERAL INFORMATION
-
- Task.h
+   Task.h
 
  Steven G. Parker
  Department of Computer Science
@@ -64,1607 +62,825 @@ class DetailedTask;
 
  Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 
-
  KEYWORDS
- Task
+   Task
 
  DESCRIPTION
- Long description...
-
- WARNING
 
  ****************************************/
 
 class Task {
  
-  public: 
-  enum CallBackEvent {
-      CPU,    // <- normal CPU task, happens when a GPU enabled task runs on CPU
-      preGPU, // <- pre GPU kernel callback, happens before CPU->GPU copy (reserved, not implemented yet... )
-      GPU,    // <- GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
-      postGPU // <- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
-    };
+public:
+
+  enum CallBackEvent
+  {
+      CPU      // <- normal CPU task, happens when a GPU enabled task runs on CPU
+    , preGPU   // <- pre GPU kernel callback, happens before CPU->GPU copy (reserved, not implemented yet... )
+    , GPU      // <- GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
+    , postGPU  // <- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
+  };
  
-  protected:
 
-    // base Action class
-    class ActionBase {
-      public:
-        virtual ~ActionBase();
-        virtual void doit(DetailedTask *task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID) = 0;
-    };
+protected: // class Task
 
-  private:
+  // base Action class
+  class ActionBase {
 
-    // begin old CPU only Action constructors
-    template<class T>
-    class Action : public ActionBase {
+    public:
 
-        T* ptr;
-        void (T::*pmf)(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW);
-      public:
-        // class Action
-        Action(T* ptr,
-               void (T::*pmf)(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* fromDW,
-                              DataWarehouse*toDW))
-            : ptr(ptr), pmf(pmf)
-        {
-        }
-        virtual ~Action()
-        {
-        }
+      virtual ~ActionBase(){};
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(pg, patches, matls, fromDW, toDW);
-        }
-    };  // end class Action
+      virtual void doit(       DetailedTask   * task
+                       ,       CallBackEvent    event
+                       , const ProcessorGroup * pg
+                       , const PatchSubset    * patches
+                       , const MaterialSubset * matls
+                       ,       DataWarehouse  * fromDW
+                       ,       DataWarehouse  * toDW
+                       ,       void           * oldTaskGpuDW
+                       ,       void           * newTaskGpuDW
+                       ,       void           * stream
+                       ,       int              deviceID
+                       ) = 0;
+  };
 
-    template<class T, class Arg1>
-    class Action1 : public ActionBase {
 
-        T* ptr;
-        void (T::*pmf)(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       Arg1 arg1);
-        Arg1 arg1;
-      public:
-        // class Action1
-        Action1(T* ptr,
-                void (T::*pmf)(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* fromDW,
-                               DataWarehouse* toDW,
-                               Arg1 arg1),
-                Arg1 arg1)
-            : ptr(ptr), pmf(pmf), arg1(arg1)
-        {
-        }
-        virtual ~Action1()
-        {
-        }
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1);
-        }
-    };  // end class Action1
+private: // class Task
 
-    template<class T, class Arg1, class Arg2>
-    class Action2 : public ActionBase {
+  // CPU Action constructor
+  template<typename T, typename... Args>
+  class Action : public ActionBase {
 
-        T* ptr;
-        void (T::*pmf)(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       Arg1 arg1,
-                       Arg2 arg2);
-        Arg1 arg1;
-        Arg2 arg2;
-      public:
-        // class Action2
-        Action2(T* ptr,
-                void (T::*pmf)(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse*,
-                               DataWarehouse*,
-                               Arg1,
-                               Arg2),
-                Arg1 arg1,
-                Arg2 arg2)
-            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2)
-        {
-        }
-        virtual ~Action2()
-        {
-        }
+      T * ptr;
+      void (T::*pmf)( const ProcessorGroup * pg
+                    , const PatchSubset    * patches
+                    , const MaterialSubset * m_matls
+                    ,       DataWarehouse  * fromDW
+                    ,       DataWarehouse  * toDW
+                    ,       Args...          args
+                    );
+      std::tuple<Args...> m_args;
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2);
-        }
-    };  // end class Action2
 
-    template<class T, class Arg1, class Arg2, class Arg3>
-    class Action3 : public ActionBase {
+public: // class Task
 
-        T* ptr;
-        void (T::*pmf)(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       Arg1 arg1,
-                       Arg2 arg2,
-                       Arg3 arg3);
-        Arg1 arg1;
-        Arg2 arg2;
-        Arg3 arg3;
-      public:
-        // class Action3
-        Action3(T* ptr,
-                void (T::*pmf)(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* fromDW,
-                               DataWarehouse* toDW,
-                               Arg1,
-                               Arg2,
-                               Arg3),
-                Arg1 arg1,
-                Arg2 arg2,
-                Arg3 arg3)
-            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3)
-        {
-        }
-        virtual ~Action3()
-        {
-        }
+    Action( T * ptr
+          , void (T::*pmf)( const ProcessorGroup * pg
+                          , const PatchSubset    * patches
+                          , const MaterialSubset * m_matls
+                          ,       DataWarehouse  * fromDW
+                          ,       DataWarehouse  * toDW
+                          ,       Args...       args
+                          )
+          , Args... args
+          )
+      : ptr(ptr)
+      , pmf(pmf)
+      , m_args(std::forward<Args>(args)...)
+    {}
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3);
-        }
-    };  // end Action3
+    virtual ~Action() {}
 
-    template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-    class Action4 : public ActionBase {
+    //////////
+    //
+    virtual void doit(       DetailedTask   * task
+                     ,       CallBackEvent    event
+                     , const ProcessorGroup * pg
+                     , const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       void           * oldTaskGpuDW
+                     ,       void           * newTaskGpuDW
+                     ,       void           * stream
+                     ,       int              deviceID
+                     )
+    {
+      doit_impl(pg, patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
+    }
 
-        T* ptr;
-        void (T::*pmf)(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       Arg1 arg1,
-                       Arg2 arg2,
-                       Arg3 arg3,
-                       Arg4 arg4);
-        Arg1 arg1;
-        Arg2 arg2;
-        Arg3 arg3;
-        Arg4 arg4;
-      public:
-        // class Action4
-        Action4(T* ptr,
-                void (T::*pmf)(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* fromDW,
-                               DataWarehouse* toDW,
-                               Arg1,
-                               Arg2,
-                               Arg3,
-                               Arg4),
-                Arg1 arg1,
-                Arg2 arg2,
-                Arg3 arg3,
-                Arg4 arg4)
-            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4)
-        {
-        }
-        virtual ~Action4()
-        {
-        }
+private: // class Task
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
-        }
-    };  // end Action4
+    template<int... S>
+    void doit_impl( const ProcessorGroup * pg
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       DataWarehouse  * fromDW
+                  ,       DataWarehouse  * toDW
+                  ,       Tuple::seq<S...>
+                  )
+    {
+      (ptr->*pmf)(pg, patches, matls, fromDW, toDW, std::get<S>(m_args)...);
+    }
 
-    template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-    class Action5 : public ActionBase {
+  };  // end CPU Action class
 
-        T* ptr;
-        void (T::*pmf)(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       Arg1 arg1,
-                       Arg2 arg2,
-                       Arg3 arg3,
-                       Arg4 arg4,
-                       Arg5 arg5);
-        Arg1 arg1;
-        Arg2 arg2;
-        Arg3 arg3;
-        Arg4 arg4;
-        Arg5 arg5;
-      public:
-        // class Action5
-        Action5(T* ptr,
-                void (T::*pmf)(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* fromDW,
-                               DataWarehouse* toDW,
-                               Arg1,
-                               Arg2,
-                               Arg3,
-                               Arg4,
-                               Arg5),
-                Arg1 arg1,
-                Arg2 arg2,
-                Arg3 arg3,
-                Arg4 arg4,
-                Arg5 arg5)
-            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5)
-        {
-        }
-        virtual ~Action5()
-        {
-        }
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
-        }
-    };  // end Action5
-    // end old CPU only Action constructors
 
-    // ------------------------------------------------------------------------
+  // GPU (device) Action constructor
+  template<typename T, typename... Args>
+  class ActionDevice : public ActionBase {
 
-    // begin Device Action constructors
-    template<class T>
-    class ActionDevice : public ActionBase {
-        T* ptr;
-        void (T::*pmf)(DetailedTask* task,
-                       CallBackEvent event,
-                       const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       void* oldTaskGpuDW,
-                       void* newTaskGpuDW,
-                       void* stream,
-                       int deviceID);
-      public:
-        // class ActionDevice
-        ActionDevice( T * ptr,
-                      void (T::*pmf)(DetailedTask* task,
-                                     CallBackEvent event,
-                                     const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* fromDW,
-                                     DataWarehouse* toDW,
-                                     void* oldTaskGpuDW,
-                                     void* newTaskGpuDW,
-                                     void* stream,
-                                     int deviceID) ) :
-          ptr(ptr), pmf(pmf)
-        {
-        }
-        virtual ~ActionDevice()
-        {
-        }
+    T * ptr;
+    void (T::*pmf)(       DetailedTask   * dtask
+                  ,       CallBackEvent    event
+                  , const ProcessorGroup * pg
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * m_matls
+                  ,       DataWarehouse  * fromDW
+                  ,       DataWarehouse  * toDW
+                  ,       void           * oldTaskGpuDW
+                  ,       void           * newTaskGpuDW
+                  ,       void           * stream
+                  ,       int              deviceID
+                  ,       Args...          args
+                  );
+    std::tuple<Args...> m_args;
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
-        }
-    };  // end class ActionDevice
 
-    template<class T, class Arg1>
-    class ActionDevice1 : public ActionBase {
-        T* ptr;
-        void (T::*pmf)(DetailedTask* task,
-                        CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                              DataWarehouse* fromDW,
-                              DataWarehouse* toDW,
-                              void* oldTaskGpuDW,
-                              void* newTaskGpuDW,
-                              void* stream,
-                              int deviceID,
-                              Arg1 arg1);
-        Arg1 arg1;
-      public:
-        // class ActionDevice1
-        ActionDevice1(T* ptr,
-                      void (T::*pmf)(DetailedTask* task,
-                                     CallBackEvent event,
-                                     const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* fromDW,
-                                     DataWarehouse* toDW,
-                                     void* oldTaskGpuDW,
-                                     void* newTaskGpuDW,
-                                     void* stream,
-                                     int deviceID,
-                                     Arg1 arg1),
-                      Arg1 arg1)
-            : ptr(ptr), pmf(pmf), arg1(arg1)
-        {
-        }
-        virtual ~ActionDevice1()
-        {
-        }
+public: // class Task
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1);
-        }
-    };  // end class ActionDevice1
+    ActionDevice( T * ptr
+                , void (T::*pmf)(       DetailedTask   * dtask
+                                ,       CallBackEvent    event
+                                , const ProcessorGroup * pg
+                                , const PatchSubset    * patches
+                                , const MaterialSubset * m_matls
+                                ,       DataWarehouse  * fromDW
+                                ,       DataWarehouse  * toDW
+                                ,       void           * oldTaskGpuDW
+                                ,       void           * newTaskGpuDW
+                                ,       void           * stream
+                                ,       int              deviceID
+                                ,       Args...          args
+                                )
+               , Args... args
+               )
+      : ptr(ptr)
+      , pmf(pmf)
+      , m_args(std::forward<Args>(args)...)
+    {}
 
-    template<class T, class Arg1, class Arg2>
-    class ActionDevice2 : public ActionBase {
-        T* ptr;
-        void (T::*pmf)(DetailedTask* task,
-                       CallBackEvent event,
-                       const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       void* oldTaskGpuDW,
-                       void* newTaskGpuDW,
-                       void* stream,
-                       int deviceID,
-                       Arg1 arg1,
-                       Arg2 arg2);
-        Arg1 arg1;
-        Arg2 arg2;
-      public:
-        // class ActionDevice2
-        ActionDevice2(T* ptr,
-                      void (T::*pmf)(DetailedTask* task,
-                                     CallBackEvent event,
-                                     const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* fromDW,
-                                     DataWarehouse* toDW,
-                                     void* oldTaskGpuDW,
-                                     void* newTaskGpuDW,
-                                     void* stream,
-                                     int deviceID,
-                                     Arg1 arg1,
-                                     Arg2 arg2),
-                      Arg1 arg1,
-                      Arg2 arg2)
-            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2)
-        {
-        }
-        virtual ~ActionDevice2()
-        {
-        }
+    virtual ~ActionDevice() {}
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2);
-        }
-    };  // end class ActionDevice2
+    virtual void doit(       DetailedTask   * dtask
+                     ,       CallBackEvent    event
+                     , const ProcessorGroup * pg
+                     , const PatchSubset    * patches
+                     , const MaterialSubset * matls
+                     ,       DataWarehouse  * fromDW
+                     ,       DataWarehouse  * toDW
+                     ,       void           * oldTaskGpuDW
+                     ,       void           * newTaskGpuDW
+                     ,       void           * stream
+                     ,       int              deviceID
+                     )
+    {
+      doit_impl(dtask, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, typename Tuple::gens<sizeof...(Args)>::type());
+    }
 
-    template<class T, class Arg1, class Arg2, class Arg3>
-    class ActionDevice3 : public ActionBase {
-        T* ptr;
-        void (T::*pmf)(DetailedTask* task,
-                       CallBackEvent event,
-                       const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       void* oldTaskGpuDW,
-                       void* newTaskGpuDW,
-                       void* stream,
-                       int deviceID,
-                       Arg1 arg1,
-                       Arg2 arg2,
-                       Arg3 arg3);
-        Arg1 arg1;
-        Arg2 arg2;
-        Arg3 arg3;
+private : // class Task
 
-      public:
-        // class ActionDevice3
-        ActionDevice3(T* ptr,
-                      void (T::*pmf)(DetailedTask* task,
-                                     CallBackEvent event,
-                                     const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* fromDW,
-                                     DataWarehouse* toDW,
-                                     void* oldTaskGpuDW,
-                                     void* newTaskGpuDW,
-                                     void* stream,
-                                     int deviceID,
-                                     Arg1 arg1,
-                                     Arg2 arg2,
-                                     Arg3 arg3),
-                      Arg1 arg1,
-                      Arg2 arg2,
-                      Arg3 arg3)
-            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3)
-        {
-        }
-        virtual ~ActionDevice3()
-        {
-        }
+    template<int... S>
+    void doit_impl(       DetailedTask   * dtask
+                  ,       CallBackEvent    event
+                  , const ProcessorGroup * pg
+                  , const PatchSubset    * patches
+                  , const MaterialSubset * matls
+                  ,       DataWarehouse  * fromDW
+                  ,       DataWarehouse  * toDW
+                  ,       void           * oldTaskGpuDW
+                  ,       void           * newTaskGpuDW
+                  ,       void           * stream
+                  ,       int              deviceID
+                  ,       Tuple::seq<S...>
+                  )
+      {
+        (ptr->*pmf)(dtask, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, std::get<S>(m_args)...);
+      }
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(       Task *task,
-                                 CallBackEvent    event,
-                           const ProcessorGroup * pg,
-                           const PatchSubset    * patches,
-                           const MaterialSubset * matls,
-                                 DataWarehouse  * fromDW,
-                                 DataWarehouse  * toDW,
-                                 void* oldTaskGpuDW,
-                                 void* newTaskGpuDW,
-                                 void           * stream,
-                                 int              deviceID)
-        {
-          (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3);
-        }
-    };  // end class ActionDevice3
+  };  // end GPU (device) Action constructor
 
-    template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-    class ActionDevice4 : public ActionBase {
-        T* ptr;
-        void (T::*pmf)(DetailedTask* task,
-                       CallBackEvent event,
-                       const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       void* oldTaskGpuDW,
-                       void* newTaskGpuDW,
-                       void* stream,
-                       int deviceID,
-                       Arg1 arg1,
-                       Arg2 arg2,
-                       Arg3 arg3,
-                       Arg4 arg4);
-        Arg1 arg1;
-        Arg2 arg2;
-        Arg3 arg3;
-        Arg4 arg4;
-      public:
-        // class ActionDevice4
-        ActionDevice4(T* ptr,
-                      void (T::*pmf)(DetailedTask* task,
-                                     CallBackEvent event,
-                                     const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* fromDW,
-                                     DataWarehouse* toDW,
-                                     void* oldTaskGpuDW,
-                                     void* newTaskGpuDW,
-                                     void * stream,
-                                     int deviceID,
-                                     Arg1 arg1,
-                                     Arg2 arg2,
-                                     Arg3 arg3,
-                                     Arg4 arg4),
-                      Arg1 arg1,
-                      Arg2 arg2,
-                      Arg3 arg3,
-                      Arg4 arg4)
-            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4)
-        {
-        }
-        virtual ~ActionDevice4()
-        {
-        }
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3, arg4);
-        }
-    };  // end class ActionDevice4
 
-    template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-    class ActionDevice5 : public ActionBase {
-        T* ptr;
-        void (T::*pmf)(DetailedTask* task,
-                       CallBackEvent event,
-                       const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* fromDW,
-                       DataWarehouse* toDW,
-                       void* oldTaskGpuDW,
-                       void* newTaskGpuDW,
-                       void* stream,
-                       int deviceID,
-                       Arg1 arg1,
-                       Arg2 arg2,
-                       Arg3 arg3,
-                       Arg4 arg4,
-                       Arg5 arg5);
-        Arg1 arg1;
-        Arg2 arg2;
-        Arg3 arg3;
-        Arg4 arg4;
-        Arg5 arg5;
-      public:
-        // class ActionDevice5
-        ActionDevice5( T* ptr,
-                       void (T::*pmf)(DetailedTask* task,
-                                      CallBackEvent event,
-                                      const ProcessorGroup* pg,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* matls,
-                                      DataWarehouse * fromDW,
-                                      DataWarehouse * toDW,
-                                      void* oldTaskGpuDW,
-                                      void* newTaskGpuDW,
-                                      void* stream,
-                                      int deviceID,
-                                      Arg1 arg1,
-                                      Arg2 arg2,
-                                      Arg3 arg3,
-                                      Arg4 arg4,
-                                      Arg5 arg5),
-                      Arg1 arg1,
-                      Arg2 arg2,
-                      Arg3 arg3,
-                      Arg4 arg4,
-                      Arg5 arg5)
-            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5)
-        {
-        }
-        virtual ~ActionDevice5()
-        {
-        }
+public: // class Task
 
-        //////////
-        // Insert Documentation Here:
-        virtual void doit(DetailedTask* task,
-                          CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* fromDW,
-                          DataWarehouse* toDW,
-                          void* oldTaskGpuDW,
-                          void* newTaskGpuDW,
-                          void* stream,
-                          int deviceID)
-        {
-          (ptr->*pmf)(task, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3, arg4, arg5);
-        }
-    };  // end class ActionDevice5
-    // end Device Action constructors
+  enum WhichDW {
+     OldDW       = 0
+  ,  NewDW       = 1
+  ,  CoarseOldDW = 2
+  ,  CoarseNewDW = 3
+  ,  ParentOldDW = 4
+  ,  ParentNewDW = 5
+  ,  TotalDWs    = 6
+  };
 
-  public:
-    // class Task
+  enum {
+      NoDW      = -1
+    , InvalidDW = -2
+  };
 
-    enum WhichDW {
-      OldDW = 0,
-      NewDW = 1,
-      CoarseOldDW = 2,
-      CoarseNewDW = 3,
-      ParentOldDW = 4,
-      ParentNewDW = 5,
-      TotalDWs = 6
-    };
-
-    enum {
-      NoDW = -1,
-      InvalidDW = -2
-    };
-
-    enum TaskType {
-      Normal,
-      Reduction,
-      InitialSend,
-      OncePerProc,  // make sure to pass a PerProcessorPatchSet to the addTask function
-      Output,
-      Spatial       // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
-    };  
+  enum TaskType {
+      Normal
+    , Reduction
+    , InitialSend
+    , OncePerProc // make sure to pass a PerProcessor PatchSet to the addTask function
+    , Output
+    , Spatial    // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
+  };
     
 
 
-    Task(const std::string& taskName, TaskType type)
-        : d_taskName(taskName), d_action(0)
-    {
-      d_tasktype = type;
-      initialize();
-    }
-
-    // begin CPU only Task constructors
-    template<class T>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW))
-        : d_taskName(taskName), d_action(scinew Action<T>(ptr, pmf))
-    {
-      d_tasktype = Normal;
-      initialize();
-    }
-
-    template<class T, class Arg1>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        Arg1 arg1),
-         Arg1 arg1)
-        : d_taskName(taskName), d_action(scinew Action1<T, Arg1>(ptr, pmf, arg1))
-    {
-      d_tasktype = Normal;
-      initialize();
-    }
-
-    template<class T, class Arg1, class Arg2>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        Arg1,
-                        Arg2),
-         Arg1 arg1,
-         Arg2 arg2)
-        :
-          d_taskName(taskName),
-            d_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
-    {
-      d_tasktype = Normal;
-      initialize();
-    }
-
-    template<class T, class Arg1, class Arg2, class Arg3>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        Arg1,
-                        Arg2,
-                        Arg3),
-         Arg1 arg1,
-         Arg2 arg2,
-         Arg3 arg3)
-        :
-          d_taskName(taskName),
-            d_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
-    {
-      d_tasktype = Normal;
-      initialize();
-    }
-
-    template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        Arg1,
-                        Arg2,
-                        Arg3,
-                        Arg4),
-         Arg1 arg1,
-         Arg2 arg2,
-         Arg3 arg3,
-         Arg4 arg4)
-        :
-          d_taskName(taskName),
-            d_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
-    {
-      d_tasktype = Normal;
-      initialize();
-    }
-
-    template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        Arg1,
-                        Arg2,
-                        Arg3,
-                        Arg4,
-                        Arg5),
-         Arg1 arg1,
-         Arg2 arg2,
-         Arg3 arg3,
-         Arg4 arg4,
-         Arg5 arg5)
-        :
-          d_taskName(taskName),
-            d_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
-    {
-      d_tasktype = Normal;
-      initialize();
-    }
-    // end CPU only Task constructors
-
-
-
-    // begin Device Task constructors
-    template<class T>
-    Task(
-         const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(DetailedTask* task,
-                        CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        void* old_TaskGpuDW,
-                        void* new_TaskGpuDW,
-                        void* stream,
-                        int deviceID))
-        :
-          d_taskName(taskName),
-            d_action(scinew ActionDevice<T>(ptr, pmf))
-    {
-      initialize();
-      d_tasktype = Normal;
-    }
-
-    template<class T, class Arg1>
-    Task(
-         const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(DetailedTask* task,
-                        CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID,
-                        Arg1 arg1),
-         Arg1 arg1)
-        :
-          d_taskName(taskName),
-            d_action(scinew ActionDevice1<T, Arg1>(ptr, pmf, arg1))
-    {
-      initialize();
-      d_tasktype = Normal;
-    }
-
-    template<class T, class Arg1, class Arg2>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(DetailedTask* task,
-                        CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID,
-                        Arg1 arg1,
-                        Arg2 arg2),
-         Arg1 arg1,
-         Arg2 arg2)
-        :
-          d_taskName(taskName),
-            d_action(scinew ActionDevice2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
-    {
-      initialize();
-      d_tasktype = Normal;
-    }
-
-    template<class T, class Arg1, class Arg2, class Arg3>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(DetailedTask* task,
-                        CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID,
-                        Arg1 arg1,
-                        Arg2 arg2,
-                        Arg3 arg3),
-         Arg1 arg1,
-         Arg2 arg2,
-         Arg3 arg3)
-        :
-          d_taskName(taskName),
-            d_action(scinew ActionDevice3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
-    {
-      initialize();
-      d_tasktype = Normal;
-    }
-
-    template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(DetailedTask* task,
-                        CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID,
-                        Arg1 arg1,
-                        Arg2 arg2,
-                        Arg3 arg3,
-                        Arg4 arg4),
-         Arg1 arg1,
-         Arg2 arg2,
-         Arg3 arg3,
-         Arg4 arg4)
-        :
-          d_taskName(taskName),
-            d_action(scinew ActionDevice4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
-    {
-      initialize();
-      d_tasktype = Normal;
-    }
-
-    template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-    Task(const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(DetailedTask* task,
-                        CallBackEvent event,
-                        const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        void* oldTaskGpuDW,
-                        void* newTaskGpuDW,
-                        void* stream,
-                        int deviceID,
-                        Arg1 arg1,
-                        Arg2 arg2,
-                        Arg3 arg3,
-                        Arg4 arg4,
-                        Arg5 arg5),
-         Arg1 arg1,
-         Arg2 arg2,
-         Arg3 arg3,
-         Arg4 arg4,
-         Arg5 arg5)
-        :
-          d_taskName(taskName),
-            d_action(scinew ActionDevice5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
-    {
-      initialize();
-      d_tasktype = Normal;
-    }
-    // end Device Task constructors
-
-    void initialize();
-
-    virtual ~Task();
-
-    void hasSubScheduler(bool state = true);
-    inline bool getHasSubScheduler() const
-    {
-      return d_hasSubScheduler;
-    }
-    void usesMPI(bool state);
-    inline bool usesMPI() const
-    {
-      return d_usesMPI;
-    }
-    void usesThreads(bool state);
-    inline bool usesThreads() const
-    {
-      return d_usesThreads;
-    }
-    void usesDevice(bool state);
-    inline bool usesDevice() const
-    {
-      return d_usesDevice;
-    }
-
-    //////////
-    // Insert Documentation Here:
-    void subpatchCapable(bool state = true);
-
-    enum MaterialDomainSpec {
-      NormalDomain,  // <- Normal/default setting
-      OutOfDomain,   // <- Require things from all material 
-    };
-
-    enum PatchDomainSpec {
-      ThisLevel,  // <- Normal/default setting
-      CoarseLevel,  // <- AMR :  The data on the coarse level under the range of the fine patches (including extra cells or boundary layers)
-      FineLevel,  // <- AMR :  The data on the fine level under the range of the coarse patches (including extra cells or boundary layers)
-      OtherGridDomain  // for when we copy data to new grid after a regrid.
-    };
-
-   //////////
-    // Most general case
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const PatchSubset* patches,
-                  PatchDomainSpec patches_dom,
-                  int level_offset,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_dom,
-                  Ghost::GhostType gtype,
-                  int numGhostCells = 0,
-                  bool oldTG = false);
-
-    //////////
-    // Like general case, level_offset is not specified
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const PatchSubset* patches,
-                  PatchDomainSpec patches_dom,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_dom,
-                  Ghost::GhostType gtype,
-                  int numGhostCells = 0,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here:
-    void requires(WhichDW,
-                  const VarLabel*,
-                  Ghost::GhostType gtype,
-                  int numGhostCells = 0,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here:
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  Ghost::GhostType gtype,
-                  int numGhostCells = 0,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here:
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const PatchSubset* patches,
-                  Ghost::GhostType gtype,
-                  int numGhostCells = 0,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here:
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const MaterialSubset* matls,
-                  Ghost::GhostType gtype,
-                  int numGhostCells = 0,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here: 
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_dom,
-                  Ghost::GhostType gtype,
-                  int numGhostCells = 0,
-                  bool oldTG = false);
-
-    //////////
-    // Requires only for reduction variables
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const Level* level = 0,
-                  const MaterialSubset* matls = 0,
-                  MaterialDomainSpec matls_dom = NormalDomain,
-                  bool oldTG = false);
-
-    //////////
-    // Requires for reduction variables or perpatch veriables
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const MaterialSubset* matls,
-                  bool oldTG = false);
-
-    //////////
-    // Requires only for perpatch variables
-    void requires(WhichDW,
-                  const VarLabel*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls = 0);
-
-    //////////
-    // Most general case
-    void computes(const VarLabel*,
-                  const PatchSubset* patches,
-                  PatchDomainSpec patches_domain,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_domain);
-
-    //////////
-    // Insert Documentation Here:
-    void computes(const VarLabel*,
-                  const PatchSubset* patches = 0,
-                  const MaterialSubset* matls = 0);
-
-    //////////
-    // Insert Documentation Here:
-    void computes(const VarLabel*,
-                  const MaterialSubset* matls);
-
-    //////////
-    // Insert Documentation Here:
-    void computes(const VarLabel*,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_domain);
-
-    //////////
-    // Insert Documentation Here:
-    void computes(const VarLabel*,
-                  const PatchSubset* patches,
-                  PatchDomainSpec patches_domain);
-
-    //////////
-    // Insert Documentation Here:
-    void computes(const VarLabel*,
-                  const Level* level,
-                  const MaterialSubset* matls = 0,
-                  MaterialDomainSpec matls_domain = NormalDomain);
-
-    //////////
-    /*! \brief Allows a task to do a computes and modify with ghost cell specification.
-     *
-     *  \warning Uintah was built around the assumption that one is NOT allowed
-        to compute or modify ghost cells. Therefore, it is unlawful in the Uintah sense
-        to add a computes/modifies with ghost cells. However, certain components such
-        as Wasatch break that design assumption from the point of view that,
-        if a task can fill-in ghost values, then by all means do that and
-        avoid an extra communication in the process. This, for example, is the
-        case when one extrapolates data from the interior (e.g. Dynamic Smagorinsky
-        model). Be aware that the ghost-values computed/modified in one patch will
-        NOT be reproduced/correspond to interior cells of the neighboring patch,
-        and vice versa.
-
-        Another component which breaks this assumption is working with GPU tasks.
-        Here it is not efficient to attempt to enlarge and copy variables within the
-        GPU to make room for requires ghost cells.  Instead it is better to simply
-        provide that extra room early when it's declared as a compute.  Then when it
-        becomes a requires, no costly enlarging step is necessary.
-     */
-    void modifiesWithScratchGhost(const VarLabel*,
-                  const PatchSubset* patches,
-                  PatchDomainSpec patches_domain,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_domain,
-                  Ghost::GhostType gtype,
-                  int numGhostCells,
-                  bool oldTG = false);
-  
-    void computesWithScratchGhost(const VarLabel*,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_domain,
-                  Ghost::GhostType gtype,
-                  int numGhostCells,
-                  bool oldTG = false);
-  
-    //////////
-    // Most general case
-    void modifies(const VarLabel*,
-                  const PatchSubset* patches,
-                  PatchDomainSpec patches_domain,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_domain,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here:
-    void modifies(const VarLabel*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here:
-    void modifies(const VarLabel*,
-                  const MaterialSubset* matls,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here:
-    void modifies(const VarLabel*,
-                  const MaterialSubset* matls,
-                  MaterialDomainSpec matls_domain,
-                  bool oldTG = false);
-
-    //////////
-    // Insert Documentation Here:
-    void modifies(const VarLabel*,
-                  bool oldTG = false);
-
-    //////////
-    // Modify reduction vars
-    void modifies(const VarLabel*,
-                  const Level* level,
-                  const MaterialSubset* matls = 0,
-                  MaterialDomainSpec matls_domain = NormalDomain,
-                  bool oldTG = false);
-
-    //////////
-    // Tells the task to actually execute the function assigned to it.
-    //
-    virtual void doit(DetailedTask *task,
-                      CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset*,
-                      const MaterialSubset*,
-                      std::vector<DataWarehouseP>& dws,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
-                      void* stream,
-                      int deviceID );
-
-    inline const std::string& getName() const
-    {
-      return d_taskName;
-    }
-
-    inline const PatchSet* getPatchSet() const
-    {
-      return patch_set;
-    }
-
-    inline const MaterialSet* getMaterialSet() const
-    {
-      return matl_set;
-    }
-
-    struct Edge;
-
-    int d_phase;                    // synchronized phase id, for dynamic task scheduling
-    int d_comm;                     // task communicator id, for threaded task scheduling
-    int maxGhostCells;              // max ghost cells of this task
-    int maxLevelOffset;             // max level offset of this task
-    std::set<Task*> childTasks;
-    std::set<Task*> allChildTasks;
-
-    enum DepType {
-      Modifies, Computes, Requires
-    };
-
-    struct Dependency {
-        Dependency* next;
-        DepType deptype;
-        Task* task;
-        const VarLabel* var;
-        bool lookInOldTG;
-        const PatchSubset* patches;
-        const MaterialSubset* matls;
-        const Level* reductionLevel;
-        Edge* req_head;   // Used in compiling the task graph.
-        Edge* req_tail;
-        Edge* comp_head;
-        Edge* comp_tail;
-        PatchDomainSpec patches_dom;
-        MaterialDomainSpec matls_dom;
-        Ghost::GhostType gtype;
-        WhichDW whichdw;  // Used only by Requires
-
-        // in the multi-TG construct, this will signify that the required
-        // var will be constructed by the old TG
-        int numGhostCells;
-        int level_offset;
-        int mapDataWarehouse() const
-        {
-          return task->mapDataWarehouse(whichdw);
-        }
-
-        Dependency(DepType deptype,
-                   Task* task,
-                   WhichDW dw,
-                   const VarLabel* var,
-                   bool oldtg,
-                   const PatchSubset* patches,
-                   const MaterialSubset* matls,
-                   PatchDomainSpec patches_dom = ThisLevel,
-                   MaterialDomainSpec matls_dom = NormalDomain,
-                   Ghost::GhostType gtype = Ghost::None,
-                   int numGhostCells = 0,
-                   int level_offset = 0);
-
-        Dependency(DepType deptype,
-                   Task* task,
-                   WhichDW dw,
-                   const VarLabel* var,
-                   bool oldtg,
-                   const Level* reductionLevel,
-                   const MaterialSubset* matls,
-                   MaterialDomainSpec matls_dom = NormalDomain);
-        ~Dependency();
-        inline void addComp(Edge* edge);
-        inline void addReq(Edge* edge);
-
-        constHandle<PatchSubset>
-        getPatchesUnderDomain(const PatchSubset* domainPatches) const;
-
-        constHandle<MaterialSubset>
-        getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const;
-
-      private:
-        static constHandle<PatchSubset>
-        getOtherLevelPatchSubset(PatchDomainSpec dom,
-                                 int level_offset,
-                                 const PatchSubset* subset,
-                                 const PatchSubset* domainSubset,
-                                 int ngc);
-
-        Dependency();
-        Dependency& operator=(const Dependency& copy);
-        Dependency(const Dependency&);
-    };  // end struct Dependency
-
-    struct Edge {
-        const Dependency* comp;
-        Edge* compNext;
-        const Dependency* req;
-        Edge* reqNext;
-        inline Edge(const Dependency* comp,
-                    const Dependency * req)
-            : comp(comp), compNext(0), req(req), reqNext(0)
-        {
-        }
-    };
-
-    typedef std::multimap<const VarLabel*, Dependency*, VarLabel::Compare> DepMap;
-
-    const Dependency* getComputes() const
-    {
-      return comp_head;
-    }
-    const Dependency* getRequires() const
-    {
-      return req_head;
-    }
-    const Dependency* getModifies() const
-    {
-      return mod_head;
-    }
-
-    Dependency* getComputes()
-    {
-      return comp_head;
-    }
-    Dependency* getRequires()
-    {
-      return req_head;
-    }
-    Dependency* getModifies()
-    {
-      return mod_head;
-    }
-
-    // finds if it computes or modifies var
-    bool hasComputes(const VarLabel* var,
-                     int matlIndex,
-                     const Patch* patch) const;
-
-    // finds if it requires or modifies var
-    bool hasRequires(const VarLabel* var,
-                     int matlIndex,
-                     const Patch* patch,
-                     Uintah::IntVector lowOffset,
-                     Uintah::IntVector highOffset,
-                     WhichDW dw) const;
-
-    // finds if it modifies var
-    bool hasModifies(const VarLabel* var,
-                     int matlIndex,
-                     const Patch* patch) const;
-
-    bool isReductionTask() const
-    {
-      return d_tasktype == Reduction;
-    }
-
-    void setType(TaskType tasktype)
-    {
-      d_tasktype = tasktype;
-    }
-    TaskType getType() const
-    {
-      return d_tasktype;
-    }
-
-    //////////
-    // Prints out information about the task...
-    void display(std::ostream & out) const;
-
-    //////////
-    // Prints out all information about the task, including dependencies
-    void displayAll(std::ostream & out) const;
-
-    int mapDataWarehouse(WhichDW dw) const;
-    DataWarehouse* mapDataWarehouse(WhichDW dw,
-                                    std::vector<DataWarehouseP>& dws) const;
-
-    int getSortedOrder() const
-    {
-      return sortedOrder;
-    }
-
-    void setSortedOrder(int order)
-    {
-      sortedOrder = order;
-    }
-
-    void setMapping(int dwmap[TotalDWs]);
-
-    void setSets(const PatchSet* patches,
-                 const MaterialSet* matls);
-
-  private:
-    // class Task
-    Dependency* isInDepMap(const DepMap& depMap,
-                           const VarLabel* var,
-                           int matlIndex,
-                           const Patch* patch) const;
-
-    //////////
-    // Insert Documentation Here:
-    std::string d_taskName;
-
-  protected:
-    ActionBase* d_action;
-
-  private:
-    Dependency* comp_head;
-    Dependency* comp_tail;
-    Dependency* req_head;
-    Dependency* req_tail;
-    Dependency* mod_head;
-    Dependency* mod_tail;
-
-    DepMap d_requiresOldDW;
-    DepMap d_computes;  // also contains modifies
-    DepMap d_requires;  // also contains modifies
-    DepMap d_modifies;
-
-    const PatchSet* patch_set;
-    const MaterialSet* matl_set;
-
-    bool d_usesMPI;
-    bool d_usesThreads;
-    bool d_usesDevice;
-    bool d_subpatchCapable;
-    bool d_hasSubScheduler;
-    TaskType d_tasktype;
-
-    Task(const Task&);
-    Task& operator=(const Task&);
-
-    static const MaterialSubset* getGlobalMatlSubset();
-    static MaterialSubset* globalMatlSubset;
-
-    int dwmap[TotalDWs];
-    int sortedOrder;
-
-    friend std::ostream & operator <<(std::ostream & out,
-                                      const Uintah::Task & task);
-    friend std::ostream & operator <<(std::ostream & out,
-                                      const Uintah::Task::TaskType & tt);
-    friend std::ostream & operator <<(std::ostream & out,
-                                      const Uintah::Task::Dependency & dep);
-
-};
-// end class Task
-
-inline void Task::Dependency::addComp(Edge* edge)
+  Task( const std::string & taskName, TaskType type )
+    : m_task_name(taskName)
+    , m_action(nullptr)
+  {
+    d_tasktype = type;
+    initialize();
+  }
+
+  // CPU Task constructor
+  template<typename T, typename... Args>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)( const ProcessorGroup *
+                      , const PatchSubset    *
+                      , const MaterialSubset *
+                      ,       DataWarehouse  *
+                      ,       DataWarehouse  *
+                      ,       Args...
+                      )
+       , Args... args
+      )
+     : m_task_name(taskName)
+     , m_action(scinew Action<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
+  {
+    d_tasktype = Normal;
+    initialize();
+  }
+
+  // Device (GPU) Task constructor
+  template<typename T, typename... Args>
+  Task( const std::string & taskName
+      , T * ptr
+      , void (T::*pmf)(       DetailedTask   * m_task
+                      ,       CallBackEvent    event
+                      , const ProcessorGroup * pg
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * m_matls
+                      ,       DataWarehouse  * fromDW
+                      ,       DataWarehouse  * toDW
+                      ,       void           * old_TaskGpuDW
+                      ,       void           * new_TaskGpuDW
+                      ,       void           * stream
+                      ,       int              deviceID
+                      ,       Args...          args
+                      )
+      , Args... args
+      )
+      : m_task_name(taskName)
+      , m_action(scinew ActionDevice<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
+  {
+    initialize();
+    d_tasktype = Normal;
+  }
+
+  void initialize();
+
+  virtual ~Task();
+
+  void hasSubScheduler(bool state = true);
+  inline bool getHasSubScheduler() const { return m_has_subscheduler; }
+
+         void usesMPI(bool state);
+  inline bool usesMPI() const { return m_uses_mpi; }
+
+         void usesThreads(bool state);
+  inline bool usesThreads() const { return m_uses_threads; }
+
+         void usesDevice(bool state);
+  inline bool usesDevice() const { return m_uses_device; }
+
+
+  void subpatchCapable(bool state = true);
+
+  enum MaterialDomainSpec {
+      NormalDomain  // <- Normal/default setting
+    , OutOfDomain   // <- Require things from all material
+  };
+
+  enum PatchDomainSpec {
+      ThisLevel        // <- Normal/default setting
+    , CoarseLevel      // <- AMR :  The data on the coarse level under the range of the fine patches (including extra cells or boundary layers)
+    , FineLevel        // <- AMR :  The data on the fine level under the range of the coarse patches (including extra cells or boundary layers)
+    , OtherGridDomain  // for when we copy data to new grid after a regrid.
+  };
+
+  //////////
+  // Most general case
+  void requires( WhichDW
+               , const VarLabel       *
+               , const PatchSubset    * patches
+               , PatchDomainSpec        patches_dom
+               , int                    level_offset
+               , const MaterialSubset * matls
+               , MaterialDomainSpec     matls_dom
+               , Ghost::GhostType       gtype
+               , int                    numGhostCells = 0
+               , bool                   oldTG         = false
+               );
+
+  //////////
+  // Like general case, level_offset is not specified
+  void requires(       WhichDW
+               , const VarLabel           *
+               , const PatchSubset        * patches
+               ,       PatchDomainSpec      patches_dom
+               , const MaterialSubset     * matls
+               ,       MaterialDomainSpec   matls_dom
+               ,       Ghost::GhostType     gtype
+               ,       int                  numGhostCells = 0
+               ,       bool                 oldTG         = false
+               );
+
+  //////////
+  //
+  void requires(       WhichDW
+               , const VarLabel           *
+               ,       Ghost::GhostType   gtype
+               ,       int                numGhostCells = 0
+               ,       bool               oldTG         = false
+               );
+
+  //////////
+  //
+  void requires(       WhichDW
+               , const VarLabel         *
+               , const PatchSubset      * patches
+               , const MaterialSubset   * matls
+               ,       Ghost::GhostType   gtype
+               ,       int                numGhostCells = 0
+               ,       bool               oldTG         = false
+               );
+
+  //////////
+  //
+  void requires( WhichDW
+               , const VarLabel         *
+               , const PatchSubset      * patches
+               ,       Ghost::GhostType   gtype
+               ,       int                numGhostCells = 0
+               ,       bool               oldTG         = false
+               );
+
+  //////////
+  //
+  void requires(       WhichDW
+               , const VarLabel        *
+               , const MaterialSubset  * matls
+               ,      Ghost::GhostType   gtype
+               ,      int                numGhostCells = 0
+               ,      bool               oldTG         = false);
+
+  //////////
+  //
+  void requires(       WhichDW
+               , const VarLabel           *
+               , const MaterialSubset     * matls
+               ,       MaterialDomainSpec   matls_dom
+               ,       Ghost::GhostType     gtype
+               ,       int                  numGhostCells = 0
+               ,       bool                 oldTG         = false
+               );
+
+  //////////
+  // Requires only for Reduction variables
+  void requires(       WhichDW
+               , const VarLabel           *
+               , const Level              * level     = nullptr
+               , const MaterialSubset     * matls     = nullptr
+               ,       MaterialDomainSpec   matls_dom = NormalDomain
+               ,       bool                 oldTG     = false
+               );
+
+  //////////
+  // Requires for reduction variables or PerPatch variables
+  void requires(       WhichDW
+               , const VarLabel       *
+               , const MaterialSubset * matls
+               ,       bool             oldTG = false
+               );
+
+  //////////
+  // Requires only for PerPatch variables
+  void requires(       WhichDW
+               , const VarLabel       *
+               , const PatchSubset    * patches
+               , const MaterialSubset * matls = nullptr
+               );
+
+  //////////
+  // Most general case
+  void computes( const VarLabel           *
+               , const PatchSubset        * patches
+               ,       PatchDomainSpec      patches_domain
+               , const MaterialSubset     * matls
+               ,       MaterialDomainSpec   matls_domain
+               );
+
+  //////////
+  //
+  void computes( const VarLabel       *
+               , const PatchSubset    * patches = nullptr
+               , const MaterialSubset * matls   = nullptr
+               );
+
+  //////////
+  //
+  void computes( const VarLabel       *
+               , const MaterialSubset * matls
+               );
+
+  //////////
+  //
+  void computes( const VarLabel           *
+               , const MaterialSubset     * matls
+               ,       MaterialDomainSpec   matls_domain
+               );
+
+  //////////
+  //
+  void computes( const VarLabel        *
+               , const PatchSubset     * patches
+               ,       PatchDomainSpec   patches_domain
+               );
+
+  //////////
+  //
+  void computes( const VarLabel           *
+               , const Level              * level
+               , const MaterialSubset     * matls        = nullptr
+               ,       MaterialDomainSpec   matls_domain = NormalDomain);
+
+  //////////
+  /*! \brief Allows a task to do a computes and modify with ghost cell specification.
+   *
+   *  \warning Uintah was built around the assumption that one is NOT allowed
+      to compute or modify ghost cells. Therefore, it is unlawful in the Uintah sense
+      to add a computes/modifies with ghost cells. However, certain components such
+      as Wasatch break that design assumption from the point of view that,
+      if a task can fill-in ghost values, then by all means do that and
+      avoid an extra communication in the process. This, for example, is the
+      case when one extrapolates data from the interior (e.g. Dynamic Smagorinsky
+      model). Be aware that the ghost-values computed/modified in one patch will
+      NOT be reproduced/correspond to interior cells of the neighboring patch,
+      and vice versa.
+
+      Another component which breaks this assumption is working with GPU tasks.
+      Here it is not efficient to attempt to enlarge and copy variables within the
+      GPU to make room for requires ghost cells.  Instead it is better to simply
+      provide that extra room early when it's declared as a compute.  Then when it
+      becomes a requires, no costly enlarging step is necessary.
+   */
+  void modifiesWithScratchGhost( const VarLabel           *
+                               , const PatchSubset        * patches
+                               ,       PatchDomainSpec      patches_domain
+                               , const MaterialSubset     * matls
+                               ,       MaterialDomainSpec   matls_domain
+                               ,       Ghost::GhostType     gtype
+                               ,       int                  numGhostCells
+                               ,       bool                 oldTG = false
+                               );
+
+  void computesWithScratchGhost( const VarLabel           *
+                               , const MaterialSubset     * matls
+                               ,       MaterialDomainSpec   matls_domain
+                               ,       Ghost::GhostType     gtype
+                               ,       int                  numGhostCells
+                               ,       bool                 oldTG = false
+                               );
+
+  //////////
+  // Most general case
+  void modifies( const VarLabel           *
+               , const PatchSubset        * patches
+               ,       PatchDomainSpec      patches_domain
+               , const MaterialSubset     * matls
+               ,       MaterialDomainSpec   matls_domain
+               ,       bool                 oldTG = false
+               );
+
+  //////////
+  //
+  void modifies(const VarLabel*,
+                const PatchSubset* patches,
+                const MaterialSubset* matls,
+                bool oldTG = false);
+
+  //////////
+  //
+  void modifies( const VarLabel       *
+               , const MaterialSubset * matls
+               ,       bool             oldTG = false
+               );
+
+  //////////
+  //
+  void modifies( const VarLabel       *
+               , const MaterialSubset * matls
+               , MaterialDomainSpec     matls_domain
+               , bool                   oldTG = false
+               );
+
+  //////////
+  //
+  void modifies( const VarLabel *
+               ,       bool     oldTG = false
+               );
+
+  //////////
+  // Modify reduction vars
+  void modifies( const VarLabel*
+               , const Level* level
+               , const MaterialSubset* matls = nullptr
+               , MaterialDomainSpec matls_domain = NormalDomain
+               , bool oldTG = false);
+
+  //////////
+  // Tells the task to actually execute the function assigned to it.
+  virtual void doit(       DetailedTask                * task
+                   ,       CallBackEvent                 event
+                   , const ProcessorGroup              * pg
+                   , const PatchSubset                 *
+                   , const MaterialSubset              *
+                   ,       std::vector<DataWarehouseP> & dws
+                   ,       void                        * oldTaskGpuDW
+                   ,       void                        * newTaskGpuDW
+                   ,       void                        * stream
+                   ,       int                           deviceID
+                   );
+
+  inline const std::string & getName() const { return m_task_name; }
+
+  inline const PatchSet* getPatchSet() const { return m_patch_set; }
+
+  inline const MaterialSet * getMaterialSet() const { return m_matl_set; }
+
+  int m_phase;                    // synchronized phase id, for dynamic task scheduling
+  int m_comm;                     // task communicator id, for threaded task scheduling
+  int m_max_ghost_cells;          // max ghost cells of this task
+  int m_max_level_offset;         // max level offset of this task
+
+  std::set<Task*> m_child_tasks;
+  std::set<Task*> m_all_child_tasks;
+
+  enum DepType {
+      Modifies
+    , Computes
+    , Requires
+  };
+
+  struct Edge;
+
+  struct Dependency {
+      Dependency           * m_next;
+      DepType                m_dep_type;
+      Task                 * m_task;
+      const VarLabel       * m_var;
+      bool                   m_look_in_old_tg;
+      const PatchSubset    * m_patches;
+      const MaterialSubset * m_matls;
+      const Level          * m_reduction_level;
+      Edge                 * m_req_head;   // Used in compiling the task graph.
+      Edge                 * m_req_tail;
+      Edge                 * m_comp_head;
+      Edge                 * m_comp_tail;
+      PatchDomainSpec        m_patches_dom;
+      MaterialDomainSpec     m_matls_dom;
+      Ghost::GhostType       m_gtype;
+      WhichDW                m_whichdw;  // Used only by Requires
+
+      // in the multi-TG construct, this will signify that the required
+      // m_var will be constructed by the old TG
+      int m_num_ghost_cells;
+      int m_level_offset;
+
+      int mapDataWarehouse() const { return m_task->mapDataWarehouse(m_whichdw); }
+
+      Dependency(       DepType              deptype
+                ,       Task               * task
+                ,       WhichDW              dw
+                , const VarLabel           * var
+                ,       bool                 oldtg
+                , const PatchSubset        * patches
+                , const MaterialSubset     * matls
+                ,       PatchDomainSpec      patches_dom   = ThisLevel
+                ,       MaterialDomainSpec   matls_dom     = NormalDomain
+                ,       Ghost::GhostType     gtype         = Ghost::None
+                ,       int                  numGhostCells = 0
+                ,       int                  level_offset  = 0
+                );
+
+      Dependency(       DepType              deptype
+                ,       Task               * task
+                ,       WhichDW              dw
+                , const VarLabel           * var
+                ,       bool                 oldtg
+                , const Level              * reductionLevel
+                , const MaterialSubset     * matls
+                ,       MaterialDomainSpec   matls_dom = NormalDomain
+                );
+
+      ~Dependency();
+
+      inline void addComp( Edge * edge );
+
+      inline void addReq( Edge * edge );
+
+      constHandle<PatchSubset>
+      getPatchesUnderDomain( const PatchSubset * domainPatches ) const;
+
+      constHandle<MaterialSubset>
+      getMaterialsUnderDomain( const MaterialSubset * domainMaterials ) const;
+
+
+  private:  // struct Dependency
+
+      // eliminate copy, assignment and move
+      Dependency( const Dependency & )            = delete;
+      Dependency& operator=( const Dependency & ) = delete;
+      Dependency( Dependency && )                 = delete;
+      Dependency& operator=( Dependency && )      = delete;
+
+      static constHandle<PatchSubset>
+
+      getOtherLevelPatchSubset(       PatchDomainSpec   dom
+                              ,       int               level_offset
+                              , const PatchSubset     * subset
+                              , const PatchSubset     * domainSubset
+                              ,       int               ngc
+                              );
+  };  // end struct Dependency
+
+  struct Edge {
+      const Dependency * m_comp;
+      Edge             * m_comp_next;
+      const Dependency * m_req;
+      Edge             * m_req_next;
+
+      inline Edge( const Dependency * comp , const Dependency * req )
+        : m_comp(comp)
+        , m_comp_next(nullptr)
+        , m_req(req)
+        , m_req_next(nullptr)
+      {}
+  };
+
+  typedef std::multimap<const VarLabel*, Dependency*, VarLabel::Compare> DepMap;
+
+  const Dependency* getComputes() const { return m_comp_head; }
+
+  const Dependency* getRequires() const { return m_req_head; }
+
+  const Dependency* getModifies() const { return m_mod_head; }
+
+  Dependency* getComputes() { return m_comp_head; }
+
+  Dependency* getRequires() { return m_req_head; }
+
+  Dependency* getModifies() { return m_mod_head; }
+
+  // finds if it computes or modifies var
+  bool hasComputes( const VarLabel * var
+                  ,       int        matlIndex
+                  , const Patch    * patch
+                  ) const;
+
+  // finds if it requires or modifies var
+  bool hasRequires( const VarLabel        * var
+                  ,       int               matlIndex
+                  , const Patch           * patch
+                  ,       Uintah::IntVector lowOffset
+                  ,       Uintah::IntVector highOffset
+                  ,       WhichDW dw
+                  ) const;
+
+  // finds if it modifies var
+  bool hasModifies(const VarLabel* var,
+                   int matlIndex,
+                   const Patch* patch) const;
+
+  bool isReductionTask() const { return d_tasktype == Reduction; }
+
+  void setType(TaskType tasktype) { d_tasktype = tasktype; }
+
+  TaskType getType() const { return d_tasktype; }
+
+  //////////
+  // Prints out information about the task...
+  void display( std::ostream & out ) const;
+
+  //////////
+  // Prints out all information about the task, including dependencies
+  void displayAll( std::ostream & out ) const;
+
+  int mapDataWarehouse( WhichDW dw ) const;
+
+  DataWarehouse* mapDataWarehouse( WhichDW dw, std::vector<DataWarehouseP> & dws ) const;
+
+  int getSortedOrder() const { return m_sorted_order; }
+
+  void setSortedOrder(int order) { m_sorted_order = order; }
+
+  void setMapping(int dwmap[TotalDWs]);
+
+  void setSets( const PatchSet * patches, const MaterialSet * matls );
+
+
+private: // class Task
+
+    Dependency* isInDepMap( const DepMap   & depMap
+                          , const VarLabel * var
+                          ,       int        matlIndex
+                          , const Patch    * patch
+                          ) const;
+
+    std::string m_task_name;
+
+
+protected: // class Task
+
+    ActionBase* m_action;
+
+
+private: // class Task
+
+  // eliminate copy, assignment and move
+  Task( const Task & )            = delete;
+  Task& operator=( const Task & ) = delete;
+  Task( Task && )                 = delete;
+  Task& operator=( Task && )      = delete;
+
+
+  static const MaterialSubset* getGlobalMatlSubset();
+
+  static MaterialSubset* globalMatlSubset;
+
+  Dependency * m_comp_head;
+  Dependency * m_comp_tail;
+  Dependency * m_req_head;
+  Dependency * m_req_tail;
+  Dependency * m_mod_head;
+  Dependency * m_mod_tail;
+
+  DepMap       m_requires_old_dw;
+  DepMap       m_computes;  // also contains modifies
+  DepMap       m_requires;  // also contains modifies
+  DepMap       m_modifies;
+
+  const PatchSet    * m_patch_set;
+  const MaterialSet * m_matl_set;
+
+  bool m_uses_mpi;
+  bool m_uses_threads;
+  bool m_uses_device;
+  bool m_subpatch_capable;
+  bool m_has_subscheduler;
+
+  TaskType d_tasktype;
+
+  int m_dwmap[TotalDWs];
+  int m_sorted_order;
+
+  friend std::ostream & operator <<(std::ostream & out, const Uintah::Task & task);
+  friend std::ostream & operator <<(std::ostream & out, const Uintah::Task::TaskType & tt);
+  friend std::ostream & operator <<(std::ostream & out, const Uintah::Task::Dependency & dep);
+
+}; // end class Task
+
+
+inline void Task::Dependency::addComp( Edge * edge )
 {
-  if (comp_tail)
-    comp_tail->compNext = edge;
-  else
-    comp_head = edge;
-  comp_tail = edge;
+  if (m_comp_tail) {
+    m_comp_tail->m_comp_next = edge;
+  }
+  else {
+    m_comp_head = edge;
+  }
+  m_comp_tail = edge;
 }
-inline void Task::Dependency::addReq(Edge* edge)
+
+inline void Task::Dependency::addReq( Edge * edge )
 {
-  if (req_tail)
-    req_tail->reqNext = edge;
-  else
-    req_head = edge;
-  req_tail = edge;
+  if (m_req_tail) {
+    m_req_tail->m_req_next = edge;
+  }
+  else {
+    m_req_head = edge;
+  }
+  m_req_tail = edge;
 }
 
 }  // End namespace Uintah
@@ -1672,4 +888,4 @@ inline void Task::Dependency::addReq(Edge* edge)
 // This must be at the bottom
 #include <CCA/Ports/DataWarehouse.h>
 
-#endif
+#endif // CORE_GRID_TASK_H

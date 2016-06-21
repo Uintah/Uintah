@@ -109,7 +109,7 @@ SchedulerCommon::SchedulerCommon( const ProcessorGroup* myworld,
   // TODO replace after MiraDDT problem is debugged (APH - 03/24/15)
   maxGhost = 0;
   maxLevelOffset = 0;
-//  maxGhostCells.clear();
+//  m_max_ghost_cells.clear();
 //  maxLevelOffsets.clear();
 }
 
@@ -727,25 +727,25 @@ SchedulerCommon::addTask(       Task        * task,
   numTasks_++;
 
   // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
-  if (task->maxGhostCells > maxGhost) {
-    maxGhost = task->maxGhostCells;
+  if (task->m_max_ghost_cells > maxGhost) {
+    maxGhost = task->m_max_ghost_cells;
   }
-  if (task->maxLevelOffset > maxLevelOffset){
-    maxLevelOffset = task->maxLevelOffset;
+  if (task->m_max_level_offset > maxLevelOffset){
+    maxLevelOffset = task->m_max_level_offset;
   }
-  // get the current level for the specified PatchSet to determine maxGhostCells and maxLevelOffset
+  // get the current level for the specified PatchSet to determine m_max_ghost_cells and maxLevelOffset
   //   don't check these for output and restart tasks - patch and material sets are null then
 //  if (patches && matls) {
 //    int levelIndex = patches->getSubset(0)->get(0)->getLevel()->getIndex();
 //
 //    // initialize or update max ghost cells for the current level
 //    std::map<int, int>::iterator mgc_iter;
-//    mgc_iter = maxGhostCells.find(levelIndex);
-//    if (mgc_iter == maxGhostCells.end()) {
-//      maxGhostCells.insert(std::pair<int, int>(levelIndex, 0));
+//    mgc_iter = m_max_ghost_cells.find(levelIndex);
+//    if (mgc_iter == m_max_ghost_cells.end()) {
+//      m_max_ghost_cells.insert(std::pair<int, int>(levelIndex, 0));
 //    }
-//    else if (task->maxGhostCells > mgc_iter->second) {
-//      mgc_iter->second = task->maxGhostCells;
+//    else if (task->m_max_ghost_cells > mgc_iter->second) {
+//      mgc_iter->second = task->m_max_ghost_cells;
 //    }
 //
 //    // initialize or update max level offset for the current level
@@ -763,48 +763,48 @@ SchedulerCommon::addTask(       Task        * task,
   // need for checkpointing, switching, and the like.
   // In the case of treatAsOld Vars, we handle them because something external to the taskgraph
   // needs it that way (i.e., Regridding on a restart requires checkpointed refineFlags).
-  for( const Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->next ) {
-    if( isOldDW(dep->mapDataWarehouse()) || treatAsOldVars_.find(dep->var->getName()) != treatAsOldVars_.end() ) {
+  for( const Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->m_next ) {
+    if( isOldDW(dep->mapDataWarehouse()) || treatAsOldVars_.find(dep->m_var->getName()) != treatAsOldVars_.end() ) {
       d_initRequires.push_back(dep);
-      d_initRequiredVars.insert(dep->var);
+      d_initRequiredVars.insert(dep->m_var);
     }
   }
 
   // for the treat-as-old vars, go through the computes and add them.
   // we can (probably) safely assume that we'll avoid duplicates, since if they were inserted 
   // in the above, they wouldn't need to be marked as such
-  for( const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next ) {
-    d_computedVars.insert(dep->var);
+  for( const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->m_next ) {
+    d_computedVars.insert(dep->m_var);
 
-    if( treatAsOldVars_.find(dep->var->getName()) != treatAsOldVars_.end() ) {
+    if( treatAsOldVars_.find(dep->m_var->getName()) != treatAsOldVars_.end() ) {
       d_initRequires.push_back(dep);
-      d_initRequiredVars.insert(dep->var);
+      d_initRequiredVars.insert(dep->m_var);
     }
   }
 
   //__________________________________
   // create reduction task if computes included one or more reduction vars
-  for( const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next ) {
+  for( const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->m_next ) {
 
-    if( dep->var->typeDescription()->isReductionVariable() ) {
-      int levelidx = dep->reductionLevel ? dep->reductionLevel->getIndex() : -1;
+    if( dep->m_var->typeDescription()->isReductionVariable() ) {
+      int levelidx = dep->m_reduction_level ? dep->m_reduction_level->getIndex() : -1;
       int dw = dep->mapDataWarehouse();
 
-      if (dep->var->allowsMultipleComputes()) {
+      if (dep->m_var->allowsMultipleComputes()) {
         if (schedulercommon_dbg.active()) {
           schedulercommon_dbg << d_myworld->myrank() << " Skipping Reduction task for multi compute variable: "
-                              << dep->var->getName() << " on level " << levelidx << ", DW " << dw << '\n';
+                              << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw << '\n';
         }
         continue;
       }
 
       if (schedulercommon_dbg.active()) {
-        schedulercommon_dbg << d_myworld->myrank() << " Creating Reduction task for variable: " << dep->var->getName()
+        schedulercommon_dbg << d_myworld->myrank() << " Creating Reduction task for variable: " << dep->m_var->getName()
                             << " on level " << levelidx << ", DW " << dw << '\n';
       }
 
       ostringstream taskname;
-      taskname << "Reduction: " << dep->var->getName() << ", level " << levelidx << ", dw " << dw;
+      taskname << "Reduction: " << dep->m_var->getName() << ", level " << levelidx << ", dw " << dw;
 
       Task* newtask = scinew Task(taskname.str(), Task::Reduction);
 
@@ -818,20 +818,20 @@ SchedulerCommon::addTask(       Task        * task,
       dwmap[Task::NewDW] = dw;
       newtask->setMapping(dwmap);
 
-      if (dep->matls != 0) {
-        newtask->modifies(dep->var, dep->reductionLevel, dep->matls, Task::OutOfDomain);
-        for (int i = 0; i < dep->matls->size(); i++) {
-          int maltIdx = dep->matls->get(i);
-          VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
+      if (dep->m_matls != 0) {
+        newtask->modifies(dep->m_var, dep->m_reduction_level, dep->m_matls, Task::OutOfDomain);
+        for (int i = 0; i < dep->m_matls->size(); i++) {
+          int maltIdx = dep->m_matls->get(i);
+          VarLabelMatl<Level> key(dep->m_var, maltIdx, dep->m_reduction_level);
           reductionTasks[key] = newtask;
         }
       }
       else {
         for (int m = 0; m < task->getMaterialSet()->size(); m++) {
-          newtask->modifies(dep->var, dep->reductionLevel, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
+          newtask->modifies(dep->m_var, dep->m_reduction_level, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
           for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); i++) {
             int maltIdx = task->getMaterialSet()->getSubset(m)->get(i);
-            VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
+            VarLabelMatl<Level> key(dep->m_var, maltIdx, dep->m_reduction_level);
             reductionTasks[key] = newtask;
           }
         }
@@ -896,7 +896,7 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
   // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
   maxGhost = 0;
   maxLevelOffset = 0;
-//  maxGhostCells.clear();
+//  m_max_ghost_cells.clear();
 //  maxLevelOffsets.clear();
 
   reductionTasks.clear();
@@ -1219,9 +1219,9 @@ SchedulerCommon::compile()
       for (int i = 0; i < dts->numLocalTasks(); i++) {
         const DetailedTask* dt = dts->localTask(i);
         
-        for(const Task::Dependency* comp = dt->getTask()->getComputes();comp != 0; comp = comp->next){
+        for(const Task::Dependency* comp = dt->getTask()->getComputes();comp != 0; comp = comp->m_next){
         
-          if (comp->var->typeDescription()->getType() != TypeDescription::ReductionVariable) {
+          if (comp->m_var->typeDescription()->getType() != TypeDescription::ReductionVariable) {
             constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dt->getPatches());
             m_locallyComputedPatchVarMap->addComputedPatchSet(patches.get_rep());
           }
@@ -1302,23 +1302,23 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
         continue;
       }
 
-      for (const Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->next) {
-        bool copyThisVar = dep->whichdw == Task::OldDW;
+      for (const Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->m_next) {
+        bool copyThisVar = dep->m_whichdw == Task::OldDW;
         // override to manually copy a var
         if (!copyThisVar) {
-          if (copyDataVars_.find(dep->var->getName()) != copyDataVars_.end()) {
+          if (copyDataVars_.find(dep->m_var->getName()) != copyDataVars_.end()) {
             copyThisVar = true;
           }
         }
 
         // Overide the logic above.  There are PerPatch variables that cannot/shouldn't be copied to the new grid,
         // for example PerPatch<FileInfo>.
-        if (notCopyDataVars_.count(dep->var->getName()) > 0) {
+        if (notCopyDataVars_.count(dep->m_var->getName()) > 0) {
           copyThisVar = false;
         }
 
         if (copyThisVar) {
-          if (dep->var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+          if (dep->m_var->typeDescription()->getType() == TypeDescription::ReductionVariable) {
             // we will take care of reduction variables in a different section
             continue;
           }
@@ -1326,8 +1326,8 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           // check the level on the case where variables are only computed on certain levels
           const PatchSet* ps = task->getPatchSet();
           int level = -1;
-          if (dep->patches) {        // just in case the task is over multiple levels...
-            level = getLevel(dep->patches)->getIndex();
+          if (dep->m_patches) {        // just in case the task is over multiple levels...
+            level = getLevel(dep->m_patches)->getIndex();
           }
           else if (ps) {
             level = getLevel(ps)->getIndex();
@@ -1337,19 +1337,19 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           // using an old task graph).  That will be copied later (and chances are, it's to modify anyway).
           if( level == -1 ||
               level > grid->numLevels() - 1 ||
-              dep->patches_dom == Task::CoarseLevel ||
-              dep->patches_dom == Task::FineLevel ) {
+              dep->m_patches_dom == Task::CoarseLevel ||
+              dep->m_patches_dom == Task::FineLevel ) {
             continue;
           }
 
-          const MaterialSubset * matSubset = ( dep->matls != 0 ) ? dep->matls : dep->task->getMaterialSet()->getUnion();
+          const MaterialSubset * matSubset = ( dep->m_matls != 0 ) ? dep->m_matls : dep->m_task->getMaterialSet()->getUnion();
 
           // if var was already found, make a union of the materials
           MaterialSubset* matls = scinew MaterialSubset( matSubset->getVector() );
           matls->addReference();
 
           MaterialSubset* union_matls;
-          union_matls = label_matls_[level][dep->var];
+          union_matls = label_matls_[level][dep->m_var];
 
           if (union_matls) {
             for (int i = 0; i < union_matls->size(); i++) {
@@ -1362,7 +1362,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
             }
           }
           matls->sort();
-          label_matls_[level][dep->var] = matls;
+          label_matls_[level][dep->m_var] = matls;
         }
       }
     }
