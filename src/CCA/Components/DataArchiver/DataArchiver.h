@@ -42,8 +42,6 @@ namespace Uintah {
 
 class DataWarehouse;
 
-using Uintah::ConsecutiveRangeSet;
-
 
    /**************************************
      
