@@ -467,18 +467,18 @@ int main(int argc, char *argv[]){
   //  cin >> casePlates;
 
 //   // starting up MPI
-   MPI_Init(&argc, &argv);
-   //   MPI_Barrier(MPI_COMM_WORLD);
+   Uintah::MPI::Init(&argc, &argv);
+   //   Uintah::MPI::Barrier(MPI_COMM_WORLD);
   
-//   precision = MPI_Wtick();
+//   precision = Uintah::MPI::Wtick();
   
-//   time1 = MPI_Wtime();
+//   time1 = Uintah::MPI::Wtime();
   
 //   // Find out process rank
-//    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+//    Uintah::MPI::Comm_rank(MPI_COMM_WORLD, &my_rank);
 
 //   // Find out number of processes
-//   MPI_Comm_size(MPI_COMM_WORLD, &np);
+//   Uintah::MPI::Comm_size(MPI_COMM_WORLD, &np);
 
 
   int rayNoSurface, rayNoVol;
@@ -531,17 +531,17 @@ int main(int argc, char *argv[]){
   if ( ratioBCz == 1 )
     dzconst = Lz/Ncz;  
   
-//   MPI_Barrier (MPI_COMM_WORLD);  
-//   MPI_Bcast(&rayNoSurface, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&rayNoVol, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&Ncx, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&Ncy, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&Ncz, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&ratioBCx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&ratioBCy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
-//   MPI_Bcast(&ratioBCz, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Barrier (MPI_COMM_WORLD);  
+//   Uintah::MPI::Bcast(&rayNoSurface, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&rayNoVol, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&Ncx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&Ncy, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&Ncz, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&ratioBCx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+//   Uintah::MPI::Bcast(&ratioBCy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
+//   Uintah::MPI::Bcast(&ratioBCz, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-//   MPI_Barrier (MPI_COMM_WORLD);
+//   Uintah::MPI::Barrier (MPI_COMM_WORLD);
 
 
   // numbers of grid points
@@ -1944,7 +1944,7 @@ int main(int argc, char *argv[]){
   delete[] aveIncomInten;
   delete[] stratifyM_flag;
 
-  MPI_Finalize(); 
+  Uintah::MPI::Finalize(); 
   return 0;
 
 

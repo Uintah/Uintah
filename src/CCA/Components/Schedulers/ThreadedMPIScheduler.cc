@@ -52,7 +52,7 @@ std::condition_variable   g_next_signal{};
 std::mutex                g_next_mutex{};  // conditional wait mutex
 std::mutex                g_io_mutex{};
 
-Dout g_output_mpi_info( "MPI_Reporting"  , false );
+Dout g_output_mpi_info( "Uintah::MPI::Reporting"  , false );
 
 } // namespace
 
@@ -63,7 +63,7 @@ namespace Uintah { namespace Impl {
 
 namespace {
 
-__thread int t_tid = 0;
+thread_local int t_tid = 0;
 
 }
 
@@ -103,7 +103,7 @@ void set_affinity( const int proc_unit )
 //
 void thread_driver( const int tid )
 {
-  // t_tid is __thread variable, unique to each std::thread spawned below
+  // t_tid is a thread_local variable, unique to each std::thread spawned below
   t_tid = tid;
 
   // set each TaskWorker thread's affinity
@@ -472,7 +472,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();

@@ -107,7 +107,7 @@ namespace Uintah { namespace Impl {
 
 namespace {
 
-__thread     int         t_tid = 0;            // unique ID assigned in thread_driver()
+thread_local     int         t_tid = 0;            // unique ID assigned in thread_driver()
 
 }
 
@@ -147,7 +147,7 @@ void set_affinity( const int proc_unit )
 //
 void thread_driver( const int tid )
 {
-  // t_tid is __thread variable, unique to each std::thread spawned below
+  // t_tid is a thread_local variable, unique to each std::thread spawned below
   t_tid = tid;
 
   // set each TaskWorker thread's affinity
@@ -758,7 +758,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
-    MPI_Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
+    Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
@@ -796,7 +796,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();

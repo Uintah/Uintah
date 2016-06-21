@@ -75,7 +75,7 @@ MpiError(char* what, int errorcode)
   int  resultlen = -1;
   char string_name[ MPI_MAX_ERROR_STRING ];
 
-  MPI_Error_string( errorcode, string_name, &resultlen );
+  Uintah::MPI::Error_string( errorcode, string_name, &resultlen );
   cerr << "MPI Error in " << what << ": " << string_name << '\n';
 
   exit(1);
@@ -242,9 +242,9 @@ Parallel::initializeManager(int& argc, char**& argv)
     const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
 #endif
 #ifdef THREADED_MPI_AVAILABLE
-    if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
+    if( ( status = Uintah::MPI::Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
 #else
-    if( ( status = MPI_Init( &argc, &argv ) ) != MPI_SUCCESS) {
+    if( ( status = Uintah::MPI::Init( &argc, &argv ) ) != MPI_SUCCESS) {
 #endif
       MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
     }
@@ -258,11 +258,11 @@ Parallel::initializeManager(int& argc, char**& argv)
 #endif
 
     Uintah::worldComm_ = MPI_COMM_WORLD;
-    if( ( status=MPI_Comm_size( Uintah::worldComm_, &worldSize_ ) ) != MPI_SUCCESS ) {
+    if( ( status=Uintah::MPI::Comm_size( Uintah::worldComm_, &worldSize_ ) ) != MPI_SUCCESS ) {
       MpiError(const_cast<char*>("Uinath::MPI::Comm_size"), status);
     }
 
-    if((status=MPI_Comm_rank( Uintah::worldComm_, &worldRank_ )) != MPI_SUCCESS) {
+    if((status=Uintah::MPI::Comm_rank( Uintah::worldComm_, &worldRank_ )) != MPI_SUCCESS) {
       MpiError(const_cast<char*>("Uinath::MPI::Comm_rank"), status);
     }
 
@@ -321,7 +321,7 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     // finalizeManager() can be easily/mistakenly called multiple
     // times.  This catches that case and returns harmlessly.
     //
-    // (One example of this occurs when MPI_Abort causes an SIG_TERM
+    // (One example of this occurs when Uintah::MPI::Abort causes an SIG_TERM
     // to be thrown, which is caught by Uintah's exit handler, which
     // in turn calls finalizeManager.)
     return;
@@ -341,19 +341,19 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     if(circumstances == Abort) {
       int errorcode = 1;
       if(getenv("LAMWORLD") || getenv("LAMRANK")) {
-        errorcode = (errorcode << 16) + 1; // see LAM man MPI_Abort
+        errorcode = (errorcode << 16) + 1; // see LAM man Uintah::MPI::Abort
       }
       if( worldRank_ == 0 ) {
-        cout << "FinalizeManager() called... Calling MPI_Abort on rank " << worldRank_ << ".\n";
+        cout << "FinalizeManager() called... Calling Uintah::MPI::Abort on rank " << worldRank_ << ".\n";
       }
       cerr.flush();
       cout.flush();
       Time::waitFor(1.0);
-      MPI_Abort( Uintah::worldComm_, errorcode );
+      Uintah::MPI::Abort( Uintah::worldComm_, errorcode );
     } else {
       int status;
-      if ((status = MPI_Finalize()) != MPI_SUCCESS) {
-        MpiError(const_cast<char*>("MPI_Finalize"), status);
+      if ((status = Uintah::MPI::Finalize()) != MPI_SUCCESS) {
+        MpiError(const_cast<char*>("Uintah::MPI::Finalize"), status);
       }
     }
   }
