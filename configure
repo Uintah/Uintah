@@ -31444,7 +31444,7 @@ int main(int argc, char **argv)
 EOF
   $CC -c $CC_DEPEND_REGEN  conftest-uintah-mpi.cc > /dev/null 2>&1
   if test -f conftest-uintah-mpi.d; then
-    mpi_h=`grep -u mpi.h conftest-uintah-mpi.d | head -1 | cut -f2 -d" "`
+    mpi_h=`grep "/mpi.h" conftest-uintah-mpi.d | head -1 | sed 's,^ *,,g' | cut -f1 -d" "`
     mpi_h_dir=`dirname $mpi_h`
     if test -d $mpi_h_dir; then
       INC_MPI_H_NVCC=-I$mpi_h_dir
@@ -38398,7 +38398,7 @@ _sci_includes=''
 
 
 ##
-## SCI_TRY_LINK (BOOST_FS_V3):  check for boost filesystem v3 namespace...
+## SCI_TRY_LINK (BOOST_FS_V3):  boost filesystem v3 namespace...
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -38430,7 +38430,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : BOOST_FS_V3
-## arg 2 : check for boost filesystem v3 namespace...
+## arg 2 : boost filesystem v3 namespace...
 ## arg 3 : $_boost_incl
 ## arg 4 : $BOOST_INCLUDE_DIR
 ## arg 5 :
@@ -38450,12 +38450,12 @@ _sci_includes=''
 ##      HAVE_BOOST_FS_V3_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for check for boost filesystem v3 namespace....  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost filesystem v3 namespace....  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for check for boost filesystem v3 namespace... (optional)" >&5
-$as_echo_n "checking for check for boost filesystem v3 namespace... (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for boost filesystem v3 namespace... (optional)" >&5
+$as_echo_n "checking for boost filesystem v3 namespace... (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -38465,7 +38465,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for check for boost filesystem v3 namespace... must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost filesystem v3 namespace... must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
@@ -38837,7 +38837,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (BOOST_FS_V3):  check for boost filesystem v3 namespace...
+## END of SCI_TRY_LINK (BOOST_FS_V3):  boost filesystem v3 namespace...
 ##
 
 

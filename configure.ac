@@ -3148,7 +3148,7 @@ int main(int argc, char **argv)
 EOF
   $CC -c $CC_DEPEND_REGEN  conftest-uintah-mpi.cc > /dev/null 2>&1
   if test -f conftest-uintah-mpi.d; then
-    mpi_h=`grep -u mpi.h conftest-uintah-mpi.d | head -1 | cut -f2 -d" "`
+    mpi_h=`grep "/mpi.h" conftest-uintah-mpi.d | head -1 | sed 's,^ *,,g' | cut -f1 -d" "`
     mpi_h_dir=`dirname $mpi_h`
     if test -d $mpi_h_dir; then
       INC_MPI_H_NVCC=-I$mpi_h_dir
@@ -4046,7 +4046,7 @@ if test "$with_boost" -o "$with_boost_library"; then
      fi
   fi
 
-  SCI_TRY_LINK( BOOST_FS_V3, check for boost filesystem v3 namespace...,
+  SCI_TRY_LINK( BOOST_FS_V3, boost filesystem v3 namespace...,
                 $_boost_incl,$BOOST_INCLUDE_DIR,,,
                 $BOOST_LIB_DIR_FLAG $BOOST_LIB_FLAG,
                 [  boost::system::error_code ec;
