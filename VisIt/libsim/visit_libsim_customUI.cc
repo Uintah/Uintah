@@ -89,7 +89,7 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
   Output          *output     = sim->simController->getOutput();
 
   VisItUI_setTableValueS("OutputIntervalVariableTable",
-			 -1, -1, "CLEAR_TABLE", 0);
+                         -1, -1, "CLEAR_TABLE", 0);
 
   if( output )
   {
@@ -155,85 +155,88 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
   DataWarehouse  *dw         = sim->simController->getSchedulerP()->getLastDW();
 
-  std::vector< SimulationState::analysisVar > minMaxVars =
+  std::vector< SimulationState::analysisVar > analysisVars =
     simStateP->d_analysisVars;
     
   VisItUI_setTableValueS("MinMaxVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
-  if( minMaxVars.size() )
+  if( analysisVars.size() )
   {
     int numLevels = gridP->numLevels();
     
     VisItUI_setValueS( "MinMaxVariableGroupBox", "SHOW_WIDGET", 1);
     
-    for( unsigned int i=0; i<minMaxVars.size(); ++i )
+    for( unsigned int i=0; i<analysisVars.size(); ++i )
     {
-      SimulationState::analysisVar minMaxVar = minMaxVars[i];
-      
-      double varMin = 0, varMax = 0;
-      
-      // Set level info
-      for (int l=0; l<numLevels; ++l)
+      if( analysisVars[i].analysisType == SimulationState::MinMax )
       {
-        if( minMaxVar.level != ALL_LEVELS &&
-            minMaxVar.level != l )
-          continue;
+        SimulationState::analysisVar minMaxVar = analysisVars[i];
+      
+        double varMin = 0, varMax = 0;
         
-        LevelP levelP = gridP->getLevel(l);
-        Level *level = levelP.get_rep();
-        
-        std::stringstream name;
-        name << "L-" << l << "/"
-             << minMaxVar.label->getName()
-             << "/" << minMaxVar.matl;
-        
-        VisItUI_setTableValueS("MinMaxVariableTable",
-			       i, 0, name.str().c_str(), 0);
-        // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
-        // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
-
-        // double
-        if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
-            TypeDescription::double_type )
+        // Set level info
+        for (int l=0; l<numLevels; ++l)
         {
-          min_vartype var_min;
-          max_vartype var_max;
+          if( minMaxVar.level != ALL_LEVELS &&
+              minMaxVar.level != l )
+            continue;
+          
+          LevelP levelP = gridP->getLevel(l);
+          Level *level = levelP.get_rep();
+          
+          std::stringstream name;
+          name << "L-" << l << "/"
+               << minMaxVar.label->getName()
+               << "/" << minMaxVar.matl;
+          
+          VisItUI_setTableValueS("MinMaxVariableTable",
+                                 i, 0, name.str().c_str(), 0);
+          // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
+          // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
+          
+          // double
+          if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
+              TypeDescription::double_type )
+          {
+            min_vartype var_min;
+            max_vartype var_max;
             
-          dw->get(var_min, minMaxVar.reductionMinLabel, level );
-          dw->get(var_max, minMaxVar.reductionMaxLabel, level );
-          varMin = var_min;
-          varMax = var_max;
+            dw->get(var_min, minMaxVar.reductionMinLabel, level );
+            dw->get(var_max, minMaxVar.reductionMaxLabel, level );
+            varMin = var_min;
+            varMax = var_max;
+            
+            VisItUI_setTableValueD("MinMaxVariableTable", i, 1, varMin,  0);
+            VisItUI_setTableValueD("MinMaxVariableTable", i, 2, varMax,  0);
+          }
 
-	  VisItUI_setTableValueD("MinMaxVariableTable", i, 1, varMin,  0);
-	  VisItUI_setTableValueD("MinMaxVariableTable", i, 2, varMax,  0);
-        }
-
-        // Vector
-        else if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
-                 TypeDescription::Vector )
-        {
-          minvec_vartype var_min;
-          maxvec_vartype var_max;
+          // Vector
+          else if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
+                   TypeDescription::Vector )
+          {
+            minvec_vartype var_min;
+            maxvec_vartype var_max;
+            
+            dw->get(var_min, minMaxVar.reductionMinLabel, level );
+            dw->get(var_max, minMaxVar.reductionMaxLabel, level );
           
-          dw->get(var_min, minMaxVar.reductionMinLabel, level );
-          dw->get(var_max, minMaxVar.reductionMaxLabel, level );
-          
-          varMin = ((Vector) var_min).length();
-          varMax = ((Vector) var_max).length();
+            varMin = ((Vector) var_min).length();
+            varMax = ((Vector) var_max).length();
 
-	  VisItUI_setTableValueV("MinMaxVariableTable", i, 1,
-				 ((Vector) var_min).x(),
-				 ((Vector) var_min).y(),
-				 ((Vector) var_min).z(), 0);
-	  VisItUI_setTableValueV("MinMaxVariableTable", i, 2,
-				 ((Vector) var_max).x(),
-				 ((Vector) var_max).y(),
-				 ((Vector) var_max).z(), 0);	  
-        }
+            VisItUI_setTableValueV("MinMaxVariableTable", i, 1,
+                                   ((Vector) var_min).x(),
+                                   ((Vector) var_min).y(),
+                                   ((Vector) var_min).z(), 0);
+            VisItUI_setTableValueV("MinMaxVariableTable", i, 2,
+                                   ((Vector) var_max).x(),
+                                   ((Vector) var_max).y(),
+                                   ((Vector) var_max).z(), 0);    
+          }
         
-	visit_SetStripChartValue( sim, name.str(), varMin );
-	visit_SetStripChartValue( sim, name.str()+"_Min", varMin );
-	visit_SetStripChartValue( sim, name.str()+"_Max", varMax );
+          visit_SetStripChartValue( sim, name.str(), varMin );
+          visit_SetStripChartValue( sim, name.str()+"_Min", varMin );
+          visit_SetStripChartValue( sim, name.str()+"_Max", varMax );
+        }
       }
     }
   }
@@ -380,12 +383,12 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
       VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, name.c_str(), 0);
       VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, units.c_str(), 0);
       VisItUI_setTableValueS("RuntimeStatsTable", cc, 2,
-			     ProcessInfo::toHumanUnits(average).c_str(), 0);
+                             ProcessInfo::toHumanUnits(average).c_str(), 0);
       VisItUI_setTableValueS("RuntimeStatsTable", cc, 3,
-			     ProcessInfo::toHumanUnits(maximum).c_str(), 0);
+                             ProcessInfo::toHumanUnits(maximum).c_str(), 0);
       VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
       VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
-			     100*(1-(average/maximum)), 0);
+                             100*(1-(average/maximum)), 0);
     
       ++cc;
     }
@@ -398,7 +401,7 @@ void visit_SetRuntimeStats( visit_simulation_data *sim )
       VisItUI_setTableValueD("RuntimeStatsTable", cc, 3, maximum, 0);
       VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
       VisItUI_setTableValueD("RuntimeStatsTable", cc, 5,
-			     100*(1-(average/maximum)), 0);
+                             100*(1-(average/maximum)), 0);
 
       ++cc;
     }
@@ -446,7 +449,7 @@ void visit_SetMPIStats( visit_simulation_data *sim )
       VisItUI_setTableValueD("MPIStatsTable", i, 3, maximum, 0);
       VisItUI_setTableValueI("MPIStatsTable", i, 4, rank, 0);
       VisItUI_setTableValueD("MPIStatsTable", i, 5,
-			     100*(1-(average/maximum)), 0);
+                             100*(1-(average/maximum)), 0);
       visit_SetStripChartValue( sim, name, average );
       visit_SetStripChartValue( sim, name+"_Ave", average );
       visit_SetStripChartValue( sim, name+"_Max", maximum );
@@ -484,16 +487,16 @@ void visit_SetStripChartNames( visit_simulation_data *sim )
     {
 //      if( sim->stripChartNames[chart][i].size() )
       {
-	char cmd[128];
+        char cmd[128];
       
-	sprintf( cmd, "%d | %d | %s",
-		 chart, i, sim->stripChartNames[chart][i].c_str() );
-	
-	VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
+        sprintf( cmd, "%d | %d | %s",
+                 chart, i, sim->stripChartNames[chart][i].c_str() );
+        
+        VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
 
-	// Restore the table values.
-	VisItUI_setTableValueS("StripChartTable", i, chart,
-			       sim->stripChartNames[chart][i].c_str(), 1);
+        // Restore the table values.
+        VisItUI_setTableValueS("StripChartTable", i, chart,
+                               sim->stripChartNames[chart][i].c_str(), 1);
       }
     }
   }
@@ -504,8 +507,8 @@ void visit_SetStripChartNames( visit_simulation_data *sim )
 //    
 //---------------------------------------------------------------------
 void visit_SetStripChartValue( visit_simulation_data *sim,
-			       std::string name,
-			       double value )
+                               std::string name,
+                               double value )
 {
   for( unsigned int chart=0; chart<5; ++chart ) // Five Charts
   {
@@ -513,12 +516,12 @@ void visit_SetStripChartValue( visit_simulation_data *sim,
     {
       if( name == sim->stripChartNames[chart][i] )
       {
-	char cmd[128];
+        char cmd[128];
       
-	sprintf( cmd, "%d | %d | %lf | %lf",
-		 chart, curve, (double) sim->cycle, value );
-	
-	VisItUI_setValueS("STRIP_CHART_ADD_POINT", cmd, 1);
+        sprintf( cmd, "%d | %d | %lf | %lf",
+                 chart, curve, (double) sim->cycle, value );
+        
+        VisItUI_setValueS("STRIP_CHART_ADD_POINT", cmd, 1);
       }
     }
   }
