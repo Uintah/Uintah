@@ -25,11 +25,12 @@
 #ifndef MPM_PETSC_SOLVER_H
 #define MPM_PETSC_SOLVER_H
 
-#include <sci_defs/mpi_defs.h>
 #include <sci_defs/petsc_defs.h>  // Petsc uses mpi, so need to include mpi_defs.h
 
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/Array3.h>
+#include <Core/Parallel/UintahMPI.h>
+
 #include <CCA/Components/MPM/Solver.h>
 
 #include <set>
@@ -38,17 +39,16 @@
 #include <iostream>
 
 #ifdef HAVE_PETSC
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR < 4))
-extern "C" {
-#include "petscksp.h"
-#include "petscmat.h"
-}
-#else
-#include "petscksp.h"
-#include "petscmat.h"
+#  if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR < 4))
+      extern "C" {
+#       include "petscksp.h"
+#       include "petscmat.h"
+      }
+#  else
+#    include "petscksp.h"
+#    include "petscmat.h"
+#  endif
 #endif
-#endif
-
 
 namespace Uintah {
 

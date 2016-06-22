@@ -30,21 +30,22 @@
 #include <Core/Exceptions/InternalError.h>
 
 #if HAVE_PIDX
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Parallel/Parallel.h>
+#  include <Core/Disclosure/TypeDescription.h>
+#  include <Core/Geometry/IntVector.h>
+#  include <Core/Grid/Level.h>
+#  include <Core/Grid/Patch.h>
+#  include <Core/Parallel/Parallel.h>
+#  include <Core/Parallel/UintahMPI.h.
 
-#include <PIDX.h>
-#include <iomanip>             // setw()
-#include <mpi.h>
-#include <iostream>
-#include <string>
-#include <vector>
-
+#  include <PIDX.h>
+#  include <iomanip>  // setw()
+#  include <iostream>
+#  include <string>
+#  include <vector>
+#endif
 
 namespace Uintah {
+
 /**************************************
 
   CLASS
@@ -73,6 +74,33 @@ namespace Uintah {
   WARNING
 
   ****************************************/
+
+#if !HAVE_PIDX
+
+  class  PIDXOutputContext{
+    public:
+      PIDXOutputContext();
+      ~PIDXOutputContext();
+      
+    class PIDX_flags{
+      public:
+        // ___________________________________________________
+        // Empty methods so you can compile without PIDX
+
+        PIDX_flags(){};
+        ~PIDX_flags(){};
+        void print(){};
+        
+        void problemSetup( const Uintah::ProblemSpecP& params ){
+          std::ostringstream warn;
+          warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line...";
+          warn << "                 --with-pidx=<path to PIDX installation>\n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
+        }
+    };
+  };
+
+#else // HAVE_PIDX
 
 class PIDXOutputContext {
   public:  
@@ -203,7 +231,10 @@ class PIDXOutputContext {
     PIDX_access access;
     
     // this must match what is specified in DataArchiver.cc
-    enum typeOutput { OUTPUT=0, CHECKPOINT=1, CHECKPOINT_REDUCTION=3, NONE=-9};
+    enum typeOutput { OUTPUT               =  0,
+                      CHECKPOINT           =  1,
+                      CHECKPOINT_REDUCTION =  3,
+                      NONE                 = -9 };
 
   //__________________________________
   //    
@@ -218,31 +249,9 @@ class PIDXOutputContext {
     };
     
   };
-} // End namespace Uintah
-//______________________________________________________________________
-//                    Empty methods so you can compile without PIDX
-#else
-namespace Uintah {
-  class  PIDXOutputContext{
-    public:
-      PIDXOutputContext();
-      ~PIDXOutputContext();
-      
-    class PIDX_flags{
-      public:
-        PIDX_flags(){};
-        ~PIDX_flags(){};
-        void print(){};
-        
-        void problemSetup( const Uintah::ProblemSpecP& params ){
-          std::ostringstream warn;
-          warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line...";
-          warn << "                 --with-pidx=<path to PIDX installation>\n";
-          throw InternalError(warn.str(), __FILE__, __LINE__);
-        
-        };
-    };
-  };
-}
+
 #endif //HAVE_PIDX
+
+} // end namespace Uintah
+
 #endif //UINTAH_HOMEBREW_PIDXOutputContext_H

@@ -34,13 +34,12 @@
 #include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Parallel/UintahMPI.h>
 
 #include <iosfwd>
 #include <map>
 #include <mutex>
 #include <vector>
-
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 using Uintah::Max;
 using Uintah::FastHashTable;

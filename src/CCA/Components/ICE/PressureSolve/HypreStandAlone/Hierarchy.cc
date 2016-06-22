@@ -22,11 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#include "Hierarchy.h"
-#include "util.h"
-#include "Level.h"
-#include "Patch.h"
-#include <sci_defs/mpi_defs.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Parallel/UintahMPI.h>
+
+#include <CCA/Components/ICE/PressureSolve/HypreStandAlone/"Hierarchy.h>
+#include <CCA/Components/ICE/PressureSolve/HypreStandAlone/util.h>
+
 using namespace std;
 
 void

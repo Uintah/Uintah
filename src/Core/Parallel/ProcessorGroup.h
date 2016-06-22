@@ -25,10 +25,12 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
 #define CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+#include <Core/Parallel/UintahMPI.h>
+
 #include <vector>
 
 namespace Uintah {
+
 /**************************************
 
 CLASS

@@ -22,17 +22,16 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <cstdlib>
 #include <cstdio>
 #include <strings.h>
 #if defined(__sun)
-#include <cstring>
-#define bcopy(src,dest,n) memcpy(dest,src,n)
-#elif defined(__linux) || defined(__digital__) || defined __sgi || defined __APPLE__
-#include <cstring>
+#  include <cstring>
+#  define bcopy( src, dest, n ) memcpy( dest, src, n )
+#elif defined(__linux) || defined(__linux__) || defined(__digital__) || defined __sgi || defined __APPLE__
+#  include <cstring>
 #else
-#error "Need bcopy idfdef for this architecture"
+#  error "Need bcopy idfdef for this architecture"
 #endif
 
 int

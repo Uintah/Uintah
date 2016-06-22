@@ -36,15 +36,13 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/UintahMPI.h>
 #include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-
-
 #ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
+#  include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS
 
 #include <cstring>
