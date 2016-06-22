@@ -28,10 +28,9 @@
 
 #include <Core/Grid/Variables/Variable.h>
 #include <iosfwd>
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+#include <Core/Parallel/UintahMPI.h>
 
 namespace Uintah {
-
 
 /**************************************
 

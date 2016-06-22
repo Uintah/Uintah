@@ -27,17 +27,16 @@
 #include <set>
 #include <map>
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-
 #include <Core/Grid/Variables/ParticleVariableBase.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Parallel/UintahMPI.h>
+
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
-
 
 using namespace Uintah;
 using std::vector;

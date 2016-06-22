@@ -2325,7 +2325,7 @@ else
       found_xml2_config="yes"
       AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
-      xml2_static=`xml2-config | grep static`
+      xml2_static=`$_sci_lib/../bin/xml2-config | grep -q static`
 
       if test "$IS_STATIC_BUILD" = "yes" -a "$IS_OSX" != "yes"; then
         if test -n "$xml2_static"; then
@@ -2334,7 +2334,6 @@ else
            STATIC_FLAG=''
         fi
       fi
-
 
       XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
       XML2_LDFLAGS=""
@@ -3134,7 +3133,7 @@ fi
 sci_required_mpi="yes"
 if test "$with_mpi" = "built-in"; then
   HAVE_MPI=yes
-  AC_MSG_CHECKING(for location of mpi.h (as MPI was specified as built-in_))
+  AC_MSG_CHECKING(for location of mpi.h (as MPI was specified as built-in))
 
   ########################################################################
   ## Determine mpi.h location (it is needed by nvcc)
@@ -3142,7 +3141,6 @@ if test "$with_mpi" = "built-in"; then
 #include <mpi.h>
 int main(int argc, char **argv)
 {
-  char * s = MPICH_VERSION;
   return 0;
 }
 EOF
@@ -3160,7 +3158,32 @@ EOF
     AC_MSG_RESULT(WARNING: Could not determine location of mpi.h -- nvcc may have issues!)
   fi
   rm -rf conftest-uintah-mpi*
+
+  ########################################################################
+  ## Verify that MPI uses const correctly.. Mira check.
+  AC_MSG_CHECKING(if MPI uses const correctly)
+  cat > mpi_const_test.cc << EOF
+#include <mpi.h>
+inline int Add_error_string( int errorcode , const char *string )
+{
+  return MPI_Add_error_string( errorcode , string );
+}
+EOF
+
+  $CC $INC_MPI_H -c mpi_const_est.cc > /dev/null 2>&1
+  if test $? != 0; then
+     DEF_MPI_CONST_WORKS="#define MPICONST "
+     AC_MSG_RESULT(no)
+  else
+     DEF_MPI_CONST_WORKS="#define MPICONST const"
+     AC_MSG_RESULT(yes)
+  fi
 fi
+
+
+########################################################################
+# MPI not built-in, so look for it...
+
 if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
   echo
   AS_MESSAGE(checking for required MPI components......)
@@ -3298,20 +3321,20 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
           _sci_inc="$_sci_inc /usr/include/mpi"
           for (( num=0; num<$num_libs; num++ )); do
 
-           # After each attempt to locate mpi, we need to verify that the mpi it
-           # chose is in the path we specified.  This is because some machines
-           # have MPI installed in a standard location and sometimes will choose
-           # that one over the one we specified.
+            # After each attempt to locate mpi, we need to verify that the mpi it
+            # chose is in the path we specified.  This is because some machines
+            # have MPI installed in a standard location and sometimes will choose
+            # that one over the one we specified.
 
-           the_libs=${test_libs[[$num]]}
-           other=${other[[$num]]}
+            the_libs=${test_libs[[$num]]}
+            other=${other[[$num]]}
 
-           the_file="lib`echo "${test_libs[[$num]]}" | cut -f1 -d" "`"
+            the_file="lib`echo "${test_libs[[$num]]}" | cut -f1 -d" "`"
 
-           SCI_TRY_LINK(MPI,${num}: mpi library and header (mpi.h hack) ($the_libs),mpi.h,
-                        $_sci_inc, $the_libs $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,$other,,optional)
+            SCI_TRY_LINK(MPI,${num}: mpi library and header (mpi.h hack) ($the_libs),mpi.h,
+                         $_sci_inc, $the_libs $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,$other,,optional)
 
-           if test "$HAVE_MPI" = "yes"; then
+            if test "$HAVE_MPI" = "yes"; then
               if test "$_sci_optional" = "specific" &&
                  test ! -e $_sci_lib/$the_file.so &&
                  test ! -e $_sci_lib/$the_file.a &&
@@ -3321,48 +3344,14 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
               else
                  break
               fi
-           fi
+            fi
           done
         fi
 	######################################################################
         
-        if test "$HAVE_MPI" = "yes"; then
-           if test "$HAVE_MPICH" != "yes"; then
-             ########################################################################
-             ## Determine if mpi is actually mpich...
-             cat > conftest-mpich.cc <<EOF
-#include <mpi.h>
-int main(int argc, char **argv)
-{
-  char * s = MPICH_VERSION;
-  return 0;
-}
-EOF
-             $CC $INC_MPI_H -c conftest-mpich.cc > /dev/null 2>&1
-             if test -f conftest-mpich.o; then
-                 AC_MSG_WARN(Note: found what looked like mpi but was actually mpich.)
-                 HAVE_MPICH=yes
-             fi
-             rm -rf conftest-mpich*
-             ########################################################################
-           fi
-
-           if test "$HAVE_MPICH" = "yes"; then
-             DEF_MPI="#define HAVE_MPICH 1"
-           else
-             DEF_MPI="#define HAVE_MPI 1"
-           fi
-        fi
-
-        if test "$with_mpi" && test ! "$DEF_MPI"; then
-          echo
-          AC_MSG_ERROR(One or more of the MPI components is missing.)
-          echo
-        fi
-        
   esac
   
-  if test ! "$DEF_MPI"; then
+  if test ! "$HAVE_MPI"; then
      echo
      SCI_MSG_ERROR(one or more of the MPI components is missing.)
   fi
@@ -3371,12 +3360,19 @@ EOF
   MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
 fi #end sci_required_mpi
 
+# FIXME: These two defines need to be tested for and set correctly:
+DEF_MPI_MAX_THREADS="#define MPI_MAX_THREADS 64"
+DEF_MPI3_ENABLED="#define UINTAH_ENABLE_MPI3 false"
+
 AC_SUBST(HAVE_MPI)
-AC_SUBST(DEF_MPI)
+AC_SUBST(DEF_MPI_CONST_WORKS)
+AC_SUBST(DEF_MPI_MAX_THREADS)
+AC_SUBST(DEF_MPI3_ENABLED)
 AC_SUBST(INC_MPI_H)
 AC_SUBST(INC_MPI_H_NVCC)
 AC_SUBST(MPI_LIB_FLAG)
 AC_SUBST(MPI_LIB_DIR_FLAG)
+
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------

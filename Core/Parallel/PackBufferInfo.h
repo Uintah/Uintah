@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_PACKBUFFERINFO_H
+#define UINTAH_HOMEBREW_PACKBUFFERINFO_H
+
 /*
  * The MIT License
  *
@@ -22,14 +25,11 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_PackBufferInfo_H
-#define UINTAH_HOMEBREW_PackBufferInfo_H
-
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <Core/Parallel/BufferInfo.h>
-#include <Core/Util/RefCounted.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/BufferInfo.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/UintahMPI.h>
+#include <Core/Util/RefCounted.h>
 
 namespace Uintah {
 
@@ -91,4 +91,4 @@ class PackBufferInfo : public BufferInfo {
 };
 } // end namespace Uintah
 
-#endif
+#endif // UINTAH_HOMEBREW_PACKBUFFERINFO_H

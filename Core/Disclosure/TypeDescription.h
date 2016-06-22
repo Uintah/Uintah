@@ -1,3 +1,6 @@
+#ifndef CORE_DISCLOSURE_TYPEDESCRIPTION_H
+#define CORE_DISCLOSURE_TYPEDESCRIPTION_H
+
 /*
  * The MIT License
  *
@@ -22,13 +25,9 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CORE_DISCLOSURE_TYPEDESCRIPTION_H
-#define CORE_DISCLOSURE_TYPEDESCRIPTION_H
-
-#include <sci_defs/mpi_defs.h>
+#include <Core/Parallel/UintahMPI.h>
 
 #include <string>
-
 
 namespace Uintah {
 

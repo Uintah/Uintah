@@ -81,6 +81,7 @@
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/UintahMPI.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
@@ -88,7 +89,6 @@
 
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/malloc_defs.h>
-#include <sci_defs/mpi_defs.h>
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
 #include <sci_defs/cuda_defs.h>
@@ -128,13 +128,6 @@ using namespace std;
   };
 #endif
 
-// If we are using MPICH version 1, 
-// we must call Uintah::MPI::Init() before parsing args
-#if defined(HAVE_MPICH) && (MPI_VERSION < 2)
-#  define HAVE_MPICH_OLD
-#endif
-
-
 // Used to sync cerr so it is readable when output by multiple threads
 extern std::mutex cerrLock;
 
@@ -156,7 +149,6 @@ static
 void
 usage(const std::string& message, const std::string& badarg, const std::string& progname)
 {
-#ifndef HAVE_MPICH_OLD
   int argc = 0;
   char **argv;
   argv = 0;
@@ -164,7 +156,6 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
   // Initialize MPI so that "usage" is only printed by proc 0.
   // (If we are using MPICH, then Uintah::MPI::Init() has already been called.)
   Uintah::Parallel::initializeManager(argc, argv);
-#endif
 
   if (Uintah::Parallel::getMPIRank() == 0) {
     cerr << "\n";
@@ -292,23 +283,9 @@ main( int argc, char *argv[], char *env[] )
   // Checks to see if user is running an MPI version of sus.
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
 
-#ifdef HAVE_MPICH_OLD
   /*
-    * Initialize MPI
-    */
-  //
-  // When using old verison of MPICH, initializeManager() uses the arg list to
-  // determine whether sus is running with MPI before calling Uintah::MPI::Init())
-  //
-  // NOTE: The main problem with calling initializeManager() before
-  // parsing the args is that we don't know if thread MPI is going to
-  // However, MPICH veriosn 1 does not support Thread safety, so we will just dis-allow that.
-  
-  Uintah::Parallel::initializeManager( argc, argv );
-#endif
-  /*
-    * Parse arguments
-    */
+   * Parse arguments
+   */
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];
     if ((arg == "-help") || (arg == "-h")) {
@@ -318,9 +295,6 @@ main( int argc, char *argv[], char *env[] )
       do_AMR = true;
     }
     else if (arg == "-nthreads") {
-#ifdef HAVE_MPICH_OLD
-      usage ("This MPICH version does not support Thread safety! Please recompile with thread-safe MPI library for -nthreads.", arg, argv[0]);
-#endif
       if (++i == argc) {
         usage("You must provide a number of threads for -nthreads", arg, argv[0]);
       }
@@ -532,10 +506,8 @@ main( int argc, char *argv[], char *env[] )
 
   try {
 
-#ifndef HAVE_MPICH_OLD
-    // If regular MPI, then initialize after parsing the args...
+    // Initialize after parsing the args...
     Uintah::Parallel::initializeManager( argc, argv );
-#endif
 
     // Uncomment the following to see what the environment is... this is useful to figure out
     // what environment variable can be checked for (in Uintah/Core/Parallel/Parallel.cc)

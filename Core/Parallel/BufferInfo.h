@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_BUFFERINFO_H
+#define UINTAH_HOMEBREW_BUFFERINFO_H
+
 /*
  * The MIT License
  *
@@ -22,10 +25,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_BufferInfo_H
-#define UINTAH_HOMEBREW_BufferInfo_H
-
-#include <sci_defs/mpi_defs.h> // For mpi.h
+#include <Core/Parallel/UintahMPI.h>
 
 #include <vector>
 
@@ -103,5 +103,4 @@ class BufferInfo {
 };
 }
 
-#endif
-
+#endif // UINTAH_HOMEBREW_BUFFERINFO_H

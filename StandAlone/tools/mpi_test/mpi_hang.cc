@@ -29,7 +29,7 @@
 // Date:   July. 2013
 //
 
-#include <sci_defs/mpi_defs.h>
+#include <Core/Parallel/UintahMPI.h>
 
 #include <stdlib.h>
 

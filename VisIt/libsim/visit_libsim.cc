@@ -36,13 +36,13 @@
 
 #include <Core/Grid/Material.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/UintahMPI.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_defs/mpi_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#include "StandAlone/tools/uda2vis/uda2vis.h"
+#include <StandAlone/tools/uda2vis/uda2vis.h>
 
 #include <dlfcn.h>
 

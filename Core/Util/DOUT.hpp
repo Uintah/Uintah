@@ -1,3 +1,6 @@
+#ifndef UINTAH_CORE_UTIL_DOUT_HPP
+#define UINTAH_CORE_UTIL_DOUT_HPP
+
 /*
  * The MIT License
  *
@@ -22,9 +25,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_CORE_UTIL_DOUT_HPP
-#define UINTAH_CORE_UTIL_DOUT_HPP
-
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -32,7 +32,7 @@
 #include <string>
 #include <sstream>
 
-#include <sci_defs/mpi_defs.h>
+#include <Core/Parallel/UintahMPI.h>
 
 
 #define DOUT( cond, ... )             \

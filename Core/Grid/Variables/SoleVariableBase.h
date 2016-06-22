@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
+#define UINTAH_HOMEBREW_SOLEVARIABLEBASE_H
+
 /*
  * The MIT License
  *
@@ -22,15 +25,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SoleVariableBase_H
-#define UINTAH_HOMEBREW_SoleVariableBase_H
-
 #include <Core/Grid/Variables/Variable.h>
+#include <Core/Parallel/UintahMPI.h>
+
 #include <iosfwd>
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace Uintah {
-
 
 /**************************************
 
@@ -89,4 +89,4 @@ WARNING
    };
 } // End namespace Uintah
 
-#endif
+#endif // UINTAH_HOMEBREW_SOLEVARIABLEBASE_H

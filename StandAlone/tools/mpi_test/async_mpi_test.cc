@@ -22,10 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-
-
-#include <sci_defs/mpi_defs.h>
-
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
@@ -34,6 +30,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+#include <Core/Parallel/UintahMPI.h>
 #include <Core/Util/Time.h>
 
 #define debug_main

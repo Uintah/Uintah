@@ -28,10 +28,9 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/UintahMPI.h>
 
 #include <vector>
-
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace Uintah {
   class DataWarehouse;

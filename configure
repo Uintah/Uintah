@@ -735,7 +735,9 @@ MPI_LIB_DIR_FLAG
 MPI_LIB_FLAG
 INC_MPI_H_NVCC
 INC_MPI_H
-DEF_MPI
+DEF_MPI3_ENABLED
+DEF_MPI_MAX_THREADS
+DEF_MPI_CONST_WORKS
 HAVE_MPI
 LAPACKMP_LIB_DIR_FLAG
 LAPACKMP_LIB_FLAG
@@ -3128,10 +3130,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-atlas --without-atlas"
-  if test -n "$atlas" -a ! -e "$atlas"; then
-    as_fn_error $? "The file or directory parameter ($atlas) specified for --with-atlas does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_atlas"; then
+    if test "$with_atlas" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_atlas" ; then
+          as_fn_error $? "The parameter ($with_atlas) specified using --with-atlas is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_atlas"; then
+          as_fn_error $? "The parameter ($with_atlas) specified using --with-atlas is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3144,10 +3156,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-math --without-math"
-  if test -n "$math" -a ! -e "$math"; then
-    as_fn_error $? "The file or directory parameter ($math) specified for --with-math does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_math"; then
+    if test "$with_math" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_math" ; then
+          as_fn_error $? "The parameter ($with_math) specified using --with-math is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_math"; then
+          as_fn_error $? "The parameter ($with_math) specified using --with-math is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3161,10 +3183,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mkl --without-mkl"
-  if test -n "$mkl" -a ! -e "$mkl"; then
-    as_fn_error $? "The file or directory parameter ($mkl) specified for --with-mkl does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_mkl"; then
+    if test "$with_mkl" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_mkl" ; then
+          as_fn_error $? "The parameter ($with_mkl) specified using --with-mkl is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_mkl"; then
+          as_fn_error $? "The parameter ($with_mkl) specified using --with-mkl is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3178,10 +3210,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-essl --without-essl"
-  if test -n "$essl" -a ! -e "$essl"; then
-    as_fn_error $? "The file or directory parameter ($essl) specified for --with-essl does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_essl"; then
+    if test "$with_essl" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_essl" ; then
+          as_fn_error $? "The parameter ($with_essl) specified using --with-essl is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_essl"; then
+          as_fn_error $? "The parameter ($with_essl) specified using --with-essl is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3195,10 +3237,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-acml --without-acml"
-  if test -n "$acml" -a ! -e "$acml"; then
-    as_fn_error $? "The file or directory parameter ($acml) specified for --with-acml does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_acml"; then
+    if test "$with_acml" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_acml" ; then
+          as_fn_error $? "The parameter ($with_acml) specified using --with-acml is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_acml"; then
+          as_fn_error $? "The parameter ($with_acml) specified using --with-acml is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3212,10 +3264,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-blas --without-blas"
-  if test -n "$blas" -a ! -e "$blas"; then
-    as_fn_error $? "The file or directory parameter ($blas) specified for --with-blas does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_blas"; then
+    if test "$with_blas" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_blas" ; then
+          as_fn_error $? "The parameter ($with_blas) specified using --with-blas is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_blas"; then
+          as_fn_error $? "The parameter ($with_blas) specified using --with-blas is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3229,10 +3291,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-electric_fence --without-electric_fence"
-  if test -n "$electric_fence" -a ! -e "$electric_fence"; then
-    as_fn_error $? "The file or directory parameter ($electric_fence) specified for --with-electric_fence does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_electric_fence"; then
+    if test "$with_electric_fence" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_electric_fence" ; then
+          as_fn_error $? "The parameter ($with_electric_fence) specified using --with-electric_fence is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_electric_fence"; then
+          as_fn_error $? "The parameter ($with_electric_fence) specified using --with-electric_fence is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3246,10 +3318,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-lapack --without-lapack"
-  if test -n "$lapack" -a ! -e "$lapack"; then
-    as_fn_error $? "The file or directory parameter ($lapack) specified for --with-lapack does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_lapack"; then
+    if test "$with_lapack" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_lapack" ; then
+          as_fn_error $? "The parameter ($with_lapack) specified using --with-lapack is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_lapack"; then
+          as_fn_error $? "The parameter ($with_lapack) specified using --with-lapack is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3263,10 +3345,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-fortran --without-fortran"
-  if test -n "$fortran" -a ! -e "$fortran"; then
-    as_fn_error $? "The file or directory parameter ($fortran) specified for --with-fortran does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_fortran"; then
+    if test "$with_fortran" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_fortran" ; then
+          as_fn_error $? "The parameter ($with_fortran) specified using --with-fortran is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_fortran"; then
+          as_fn_error $? "The parameter ($with_fortran) specified using --with-fortran is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3280,10 +3372,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-ofed --without-ofed"
-  if test -n "$ofed" -a ! -e "$ofed"; then
-    as_fn_error $? "The file or directory parameter ($ofed) specified for --with-ofed does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_ofed"; then
+    if test "$with_ofed" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_ofed" ; then
+          as_fn_error $? "The parameter ($with_ofed) specified using --with-ofed is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_ofed"; then
+          as_fn_error $? "The parameter ($with_ofed) specified using --with-ofed is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3297,10 +3399,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mx --without-mx"
-  if test -n "$mx" -a ! -e "$mx"; then
-    as_fn_error $? "The file or directory parameter ($mx) specified for --with-mx does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_mx"; then
+    if test "$with_mx" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_mx" ; then
+          as_fn_error $? "The parameter ($with_mx) specified using --with-mx is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_mx"; then
+          as_fn_error $? "The parameter ($with_mx) specified using --with-mx is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3314,10 +3426,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-pokitt --without-pokitt"
-  if test -n "$pokitt" -a ! -e "$pokitt"; then
-    as_fn_error $? "The file or directory parameter ($pokitt) specified for --with-pokitt does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_pokitt"; then
+    if test "$with_pokitt" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_pokitt" ; then
+          as_fn_error $? "The parameter ($with_pokitt) specified using --with-pokitt is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_pokitt"; then
+          as_fn_error $? "The parameter ($with_pokitt) specified using --with-pokitt is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3331,10 +3453,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mpi --without-mpi"
-  if test -n "$mpi" -a ! -e "$mpi"; then
-    as_fn_error $? "The file or directory parameter ($mpi) specified for --with-mpi does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_mpi"; then
+    if test "$with_mpi" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_mpi" ; then
+          as_fn_error $? "The parameter ($with_mpi) specified using --with-mpi is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_mpi"; then
+          as_fn_error $? "The parameter ($with_mpi) specified using --with-mpi is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3348,10 +3480,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mpi_lib --without-mpi_lib"
-  if test -n "$mpi_lib" -a ! -e "$mpi_lib"; then
-    as_fn_error $? "The file or directory parameter ($mpi_lib) specified for --with-mpi_lib does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_mpi_lib"; then
+    if test "$with_mpi_lib" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_mpi_lib" ; then
+          as_fn_error $? "The parameter ($with_mpi_lib) specified using --with-mpi_lib is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_mpi_lib"; then
+          as_fn_error $? "The parameter ($with_mpi_lib) specified using --with-mpi_lib is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3365,10 +3507,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mpi_include --without-mpi_include"
-  if test -n "$mpi_include" -a ! -e "$mpi_include"; then
-    as_fn_error $? "The file or directory parameter ($mpi_include) specified for --with-mpi_include does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_mpi_include"; then
+    if test "$with_mpi_include" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_mpi_include" ; then
+          as_fn_error $? "The parameter ($with_mpi_include) specified using --with-mpi_include is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_mpi_include"; then
+          as_fn_error $? "The parameter ($with_mpi_include) specified using --with-mpi_include is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3380,10 +3532,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mpi_extra_libs --without-mpi_extra_libs"
-  if test -n "$mpi_extra_libs" -a ! -e "$mpi_extra_libs"; then
-    as_fn_error $? "The file or directory parameter ($mpi_extra_libs) specified for --with-mpi_extra_libs does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_mpi_extra_libs"; then
+    if test "$with_mpi_extra_libs" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_mpi_extra_libs" ; then
+          as_fn_error $? "The parameter ($with_mpi_extra_libs) specified using --with-mpi_extra_libs is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_mpi_extra_libs"; then
+          as_fn_error $? "The parameter ($with_mpi_extra_libs) specified using --with-mpi_extra_libs is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3398,10 +3560,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-cuda --without-cuda"
-  if test -n "$cuda" -a ! -e "$cuda"; then
-    as_fn_error $? "The file or directory parameter ($cuda) specified for --with-cuda does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_cuda"; then
+    if test "$with_cuda" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_cuda" ; then
+          as_fn_error $? "The parameter ($with_cuda) specified using --with-cuda is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_cuda"; then
+          as_fn_error $? "The parameter ($with_cuda) specified using --with-cuda is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3415,10 +3587,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-hypre --without-hypre"
-  if test -n "$hypre" -a ! -e "$hypre"; then
-    as_fn_error $? "The file or directory parameter ($hypre) specified for --with-hypre does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_hypre"; then
+    if test "$with_hypre" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_hypre" ; then
+          as_fn_error $? "The parameter ($with_hypre) specified using --with-hypre is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_hypre"; then
+          as_fn_error $? "The parameter ($with_hypre) specified using --with-hypre is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3432,10 +3614,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-petsc --without-petsc"
-  if test -n "$petsc" -a ! -e "$petsc"; then
-    as_fn_error $? "The file or directory parameter ($petsc) specified for --with-petsc does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_petsc"; then
+    if test "$with_petsc" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_petsc" ; then
+          as_fn_error $? "The parameter ($with_petsc) specified using --with-petsc is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_petsc"; then
+          as_fn_error $? "The parameter ($with_petsc) specified using --with-petsc is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3449,10 +3641,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-boost --without-boost"
-  if test -n "$boost" -a ! -e "$boost"; then
-    as_fn_error $? "The file or directory parameter ($boost) specified for --with-boost does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_boost"; then
+    if test "$with_boost" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_boost" ; then
+          as_fn_error $? "The parameter ($with_boost) specified using --with-boost is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_boost"; then
+          as_fn_error $? "The parameter ($with_boost) specified using --with-boost is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3466,10 +3668,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-boost_library --without-boost_library"
-  if test -n "$boost_library" -a ! -e "$boost_library"; then
-    as_fn_error $? "The file or directory parameter ($boost_library) specified for --with-boost_library does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_boost_library"; then
+    if test "$with_boost_library" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_boost_library" ; then
+          as_fn_error $? "The parameter ($with_boost_library) specified using --with-boost_library is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_boost_library"; then
+          as_fn_error $? "The parameter ($with_boost_library) specified using --with-boost_library is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3483,10 +3695,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-boost_include --without-boost_include"
-  if test -n "$boost_include" -a ! -e "$boost_include"; then
-    as_fn_error $? "The file or directory parameter ($boost_include) specified for --with-boost_include does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_boost_include"; then
+    if test "$with_boost_include" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_boost_include" ; then
+          as_fn_error $? "The parameter ($with_boost_include) specified using --with-boost_include is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_boost_include"; then
+          as_fn_error $? "The parameter ($with_boost_include) specified using --with-boost_include is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3500,10 +3722,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-spatialops --without-spatialops"
-  if test -n "$spatialops" -a ! -e "$spatialops"; then
-    as_fn_error $? "The file or directory parameter ($spatialops) specified for --with-spatialops does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_spatialops"; then
+    if test "$with_spatialops" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_spatialops" ; then
+          as_fn_error $? "The parameter ($with_spatialops) specified using --with-spatialops is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_spatialops"; then
+          as_fn_error $? "The parameter ($with_spatialops) specified using --with-spatialops is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3517,10 +3749,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-exprlib --without-exprlib"
-  if test -n "$exprlib" -a ! -e "$exprlib"; then
-    as_fn_error $? "The file or directory parameter ($exprlib) specified for --with-exprlib does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_exprlib"; then
+    if test "$with_exprlib" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_exprlib" ; then
+          as_fn_error $? "The parameter ($with_exprlib) specified using --with-exprlib is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_exprlib"; then
+          as_fn_error $? "The parameter ($with_exprlib) specified using --with-exprlib is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3534,10 +3776,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-tabprops --without-tabprops"
-  if test -n "$tabprops" -a ! -e "$tabprops"; then
-    as_fn_error $? "The file or directory parameter ($tabprops) specified for --with-tabprops does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_tabprops"; then
+    if test "$with_tabprops" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_tabprops" ; then
+          as_fn_error $? "The parameter ($with_tabprops) specified using --with-tabprops is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_tabprops"; then
+          as_fn_error $? "The parameter ($with_tabprops) specified using --with-tabprops is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3551,10 +3803,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-radprops --without-radprops"
-  if test -n "$radprops" -a ! -e "$radprops"; then
-    as_fn_error $? "The file or directory parameter ($radprops) specified for --with-radprops does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_radprops"; then
+    if test "$with_radprops" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_radprops" ; then
+          as_fn_error $? "The parameter ($with_radprops) specified using --with-radprops is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_radprops"; then
+          as_fn_error $? "The parameter ($with_radprops) specified using --with-radprops is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3568,10 +3830,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-zoltan --without-zoltan"
-  if test -n "$zoltan" -a ! -e "$zoltan"; then
-    as_fn_error $? "The file or directory parameter ($zoltan) specified for --with-zoltan does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_zoltan"; then
+    if test "$with_zoltan" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_zoltan" ; then
+          as_fn_error $? "The parameter ($with_zoltan) specified using --with-zoltan is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_zoltan"; then
+          as_fn_error $? "The parameter ($with_zoltan) specified using --with-zoltan is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3585,10 +3857,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-tau --without-tau"
-  if test -n "$tau" -a ! -e "$tau"; then
-    as_fn_error $? "The file or directory parameter ($tau) specified for --with-tau does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_tau"; then
+    if test "$with_tau" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_tau" ; then
+          as_fn_error $? "The parameter ($with_tau) specified using --with-tau is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_tau"; then
+          as_fn_error $? "The parameter ($with_tau) specified using --with-tau is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3602,10 +3884,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-papi --without-papi"
-  if test -n "$papi" -a ! -e "$papi"; then
-    as_fn_error $? "The file or directory parameter ($papi) specified for --with-papi does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_papi"; then
+    if test "$with_papi" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_papi" ; then
+          as_fn_error $? "The parameter ($with_papi) specified using --with-papi is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_papi"; then
+          as_fn_error $? "The parameter ($with_papi) specified using --with-papi is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3619,10 +3911,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-gperftools --without-gperftools"
-  if test -n "$gperftools" -a ! -e "$gperftools"; then
-    as_fn_error $? "The file or directory parameter ($gperftools) specified for --with-gperftools does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_gperftools"; then
+    if test "$with_gperftools" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_gperftools" ; then
+          as_fn_error $? "The parameter ($with_gperftools) specified using --with-gperftools is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_gperftools"; then
+          as_fn_error $? "The parameter ($with_gperftools) specified using --with-gperftools is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3636,10 +3938,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-ipm --without-ipm"
-  if test -n "$ipm" -a ! -e "$ipm"; then
-    as_fn_error $? "The file or directory parameter ($ipm) specified for --with-ipm does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_ipm"; then
+    if test "$with_ipm" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_ipm" ; then
+          as_fn_error $? "The parameter ($with_ipm) specified using --with-ipm is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_ipm"; then
+          as_fn_error $? "The parameter ($with_ipm) specified using --with-ipm is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3653,10 +3965,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-magma --without-magma"
-  if test -n "$magma" -a ! -e "$magma"; then
-    as_fn_error $? "The file or directory parameter ($magma) specified for --with-magma does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_magma"; then
+    if test "$with_magma" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_magma" ; then
+          as_fn_error $? "The parameter ($with_magma) specified using --with-magma is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_magma"; then
+          as_fn_error $? "The parameter ($with_magma) specified using --with-magma is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3670,10 +3992,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-zlib --without-zlib"
-  if test -n "$zlib" -a ! -e "$zlib"; then
-    as_fn_error $? "The file or directory parameter ($zlib) specified for --with-zlib does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_zlib"; then
+    if test "$with_zlib" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_zlib" ; then
+          as_fn_error $? "The parameter ($with_zlib) specified using --with-zlib is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_zlib"; then
+          as_fn_error $? "The parameter ($with_zlib) specified using --with-zlib is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3687,10 +4019,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-jpeg --without-jpeg"
-  if test -n "$jpeg" -a ! -e "$jpeg"; then
-    as_fn_error $? "The file or directory parameter ($jpeg) specified for --with-jpeg does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_jpeg"; then
+    if test "$with_jpeg" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_jpeg" ; then
+          as_fn_error $? "The parameter ($with_jpeg) specified using --with-jpeg is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_jpeg"; then
+          as_fn_error $? "The parameter ($with_jpeg) specified using --with-jpeg is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3704,10 +4046,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-tiff --without-tiff"
-  if test -n "$tiff" -a ! -e "$tiff"; then
-    as_fn_error $? "The file or directory parameter ($tiff) specified for --with-tiff does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_tiff"; then
+    if test "$with_tiff" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_tiff" ; then
+          as_fn_error $? "The parameter ($with_tiff) specified using --with-tiff is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_tiff"; then
+          as_fn_error $? "The parameter ($with_tiff) specified using --with-tiff is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3721,10 +4073,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-xalan --without-xalan"
-  if test -n "$xalan" -a ! -e "$xalan"; then
-    as_fn_error $? "The file or directory parameter ($xalan) specified for --with-xalan does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_xalan"; then
+    if test "$with_xalan" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_xalan" ; then
+          as_fn_error $? "The parameter ($with_xalan) specified using --with-xalan is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_xalan"; then
+          as_fn_error $? "The parameter ($with_xalan) specified using --with-xalan is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3738,10 +4100,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-libxml2 --without-libxml2"
-  if test -n "$libxml2" -a ! -e "$libxml2"; then
-    as_fn_error $? "The file or directory parameter ($libxml2) specified for --with-libxml2 does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_libxml2"; then
+    if test "$with_libxml2" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_libxml2" ; then
+          as_fn_error $? "The parameter ($with_libxml2) specified using --with-libxml2 is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_libxml2"; then
+          as_fn_error $? "The parameter ($with_libxml2) specified using --with-libxml2 is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3755,10 +4127,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-visit --without-visit"
-  if test -n "$visit" -a ! -e "$visit"; then
-    as_fn_error $? "The file or directory parameter ($visit) specified for --with-visit does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_visit"; then
+    if test "$with_visit" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_visit" ; then
+          as_fn_error $? "The parameter ($with_visit) specified using --with-visit is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_visit"; then
+          as_fn_error $? "The parameter ($with_visit) specified using --with-visit is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3771,10 +4153,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-visus --without-visus"
-  if test -n "$visus" -a ! -e "$visus"; then
-    as_fn_error $? "The file or directory parameter ($visus) specified for --with-visus does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_visus"; then
+    if test "$with_visus" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_visus" ; then
+          as_fn_error $? "The parameter ($with_visus) specified using --with-visus is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_visus"; then
+          as_fn_error $? "The parameter ($with_visus) specified using --with-visus is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3787,10 +4179,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-pidx --without-pidx"
-  if test -n "$pidx" -a ! -e "$pidx"; then
-    as_fn_error $? "The file or directory parameter ($pidx) specified for --with-pidx does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_pidx"; then
+    if test "$with_pidx" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_pidx" ; then
+          as_fn_error $? "The parameter ($with_pidx) specified using --with-pidx is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_pidx"; then
+          as_fn_error $? "The parameter ($with_pidx) specified using --with-pidx is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -3968,10 +4370,20 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-MallocTrace --without-MallocTrace"
-  if test -n "$MallocTrace" -a ! -e "$MallocTrace"; then
-    as_fn_error $? "The file or directory parameter ($MallocTrace) specified for --with-MallocTrace does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  if test -n "$with_MallocTrace"; then
+    if test "$with_MallocTrace" != "built-in" ; then
+      if test "" = "yes"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_MallocTrace" ; then
+          as_fn_error $? "The parameter ($with_MallocTrace) specified using --with-MallocTrace is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else # Verify that it is a directory
+        if test ! -d "$with_MallocTrace"; then
+          as_fn_error $? "The parameter ($with_MallocTrace) specified using --with-MallocTrace is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
   fi
-
 
 
 
@@ -15013,7 +15425,7 @@ $as_echo "xml2-config program not found..." >&6; }
       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&5
 $as_echo "$as_me: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 variables." >&2;}
 
-      xml2_static=`xml2-config | grep static`
+      xml2_static=`$_sci_lib/../bin/xml2-config | grep -q static`
 
       if test "$IS_STATIC_BUILD" = "yes" -a "$IS_OSX" != "yes"; then
         if test -n "$xml2_static"; then
@@ -15022,7 +15434,6 @@ $as_echo "$as_me: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 var
            STATIC_FLAG=''
         fi
       fi
-
 
       XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
       XML2_LDFLAGS=""
@@ -31429,8 +31840,8 @@ fi
 sci_required_mpi="yes"
 if test "$with_mpi" = "built-in"; then
   HAVE_MPI=yes
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for location of mpi.h (as MPI was specified as built-in_)" >&5
-$as_echo_n "checking for location of mpi.h (as MPI was specified as built-in_)... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for location of mpi.h (as MPI was specified as built-in)" >&5
+$as_echo_n "checking for location of mpi.h (as MPI was specified as built-in)... " >&6; }
 
   ########################################################################
   ## Determine mpi.h location (it is needed by nvcc)
@@ -31438,7 +31849,6 @@ $as_echo_n "checking for location of mpi.h (as MPI was specified as built-in_)..
 #include <mpi.h>
 int main(int argc, char **argv)
 {
-  char * s = MPICH_VERSION;
   return 0;
 }
 EOF
@@ -31459,7 +31869,35 @@ $as_echo "WARNING: Found bad mpi.h location of: $mpi_h_dir -- nvcc may have issu
 $as_echo "WARNING: Could not determine location of mpi.h -- nvcc may have issues!" >&6; }
   fi
   rm -rf conftest-uintah-mpi*
+
+  ########################################################################
+  ## Verify that MPI uses const correctly.. Mira check.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking if MPI uses const correctly" >&5
+$as_echo_n "checking if MPI uses const correctly... " >&6; }
+  cat > mpi_const_test.cc << EOF
+#include <mpi.h>
+inline int Add_error_string( int errorcode , const char *string )
+{
+  return MPI_Add_error_string( errorcode , string );
+}
+EOF
+
+  $CC $INC_MPI_H -c mpi_const_est.cc > /dev/null 2>&1
+  if test $? != 0; then
+     DEF_MPI_CONST_WORKS="#define MPICONST "
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+  else
+     DEF_MPI_CONST_WORKS="#define MPICONST const"
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+  fi
 fi
+
+
+########################################################################
+# MPI not built-in, so look for it...
+
 if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
   echo
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for required MPI components......" >&5
@@ -32082,15 +32520,15 @@ $as_echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_li
           _sci_inc="$_sci_inc /usr/include/mpi"
           for (( num=0; num<$num_libs; num++ )); do
 
-           # After each attempt to locate mpi, we need to verify that the mpi it
-           # chose is in the path we specified.  This is because some machines
-           # have MPI installed in a standard location and sometimes will choose
-           # that one over the one we specified.
+            # After each attempt to locate mpi, we need to verify that the mpi it
+            # chose is in the path we specified.  This is because some machines
+            # have MPI installed in a standard location and sometimes will choose
+            # that one over the one we specified.
 
-           the_libs=${test_libs[$num]}
-           other=${other[$num]}
+            the_libs=${test_libs[$num]}
+            other=${other[$num]}
 
-           the_file="lib`echo "${test_libs[$num]}" | cut -f1 -d" "`"
+            the_file="lib`echo "${test_libs[$num]}" | cut -f1 -d" "`"
 
 
 ##
@@ -32537,7 +32975,7 @@ _sci_includes=''
 
 
 
-           if test "$HAVE_MPI" = "yes"; then
+            if test "$HAVE_MPI" = "yes"; then
               if test "$_sci_optional" = "specific" &&
                  test ! -e $_sci_lib/$the_file.so &&
                  test ! -e $_sci_lib/$the_file.a &&
@@ -32548,49 +32986,14 @@ $as_echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_li
               else
                  break
               fi
-           fi
+            fi
           done
         fi
 	######################################################################
 
-        if test "$HAVE_MPI" = "yes"; then
-           if test "$HAVE_MPICH" != "yes"; then
-             ########################################################################
-             ## Determine if mpi is actually mpich...
-             cat > conftest-mpich.cc <<EOF
-#include <mpi.h>
-int main(int argc, char **argv)
-{
-  char * s = MPICH_VERSION;
-  return 0;
-}
-EOF
-             $CC $INC_MPI_H -c conftest-mpich.cc > /dev/null 2>&1
-             if test -f conftest-mpich.o; then
-                 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Note: found what looked like mpi but was actually mpich." >&5
-$as_echo "$as_me: WARNING: Note: found what looked like mpi but was actually mpich." >&2;}
-                 HAVE_MPICH=yes
-             fi
-             rm -rf conftest-mpich*
-             ########################################################################
-           fi
-
-           if test "$HAVE_MPICH" = "yes"; then
-             DEF_MPI="#define HAVE_MPICH 1"
-           else
-             DEF_MPI="#define HAVE_MPI 1"
-           fi
-        fi
-
-        if test "$with_mpi" && test ! "$DEF_MPI"; then
-          echo
-          as_fn_error $? "One or more of the MPI components is missing." "$LINENO" 5
-          echo
-        fi
-
   esac
 
-  if test ! "$DEF_MPI"; then
+  if test ! "$HAVE_MPI"; then
      echo
 
 ## SCI_MSG_ERROR
@@ -32626,6 +33029,13 @@ as_fn_error $? "one or more of the MPI components is missing." "$LINENO" 5
   MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
   MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
 fi #end sci_required_mpi
+
+# FIXME: These two defines need to be tested for and set correctly:
+DEF_MPI_MAX_THREADS="#define MPI_MAX_THREADS 64"
+DEF_MPI3_ENABLED="#define UINTAH_ENABLE_MPI3 false"
+
+
+
 
 
 

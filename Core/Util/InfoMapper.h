@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_INFOMAPPER_H
+#define UINTAH_HOMEBREW_INFOMAPPER_H
+
 /*
  * The MIT License
  *
@@ -22,13 +25,9 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_InfoMapper_H
-#define UINTAH_HOMEBREW_InfoMapper_H
-
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
-#include <sci_defs/mpi_defs.h>
+#include <Core/Parallel/UintahMPI.h>
 
 #include <iostream>
 #include <sstream>
@@ -326,4 +325,4 @@ protected:
 
 } // End namespace Uintah
 
-#endif
+#endif // UINTAH_HOMEBREW_INFOMAPPER_H

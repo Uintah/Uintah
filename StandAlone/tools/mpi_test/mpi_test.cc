@@ -29,8 +29,6 @@
 // Date:   Mar. 2008
 //
 
-#include <sci_defs/mpi_defs.h>
-
 #include <unistd.h> // for gethostname()
 
 #include <algorithm>
@@ -39,8 +37,9 @@
 #include <string>
 #include <sstream>
 
-#include <Core/Util/Time.h>    // for currentSeconds()
-#include <Core/Util/FileUtils.h> // for testFilesystem()
+#include <Core/Parallel/UintahMPI.h>
+#include <Core/Util/Time.h>          // for currentSeconds()
+#include <Core/Util/FileUtils.h>     // for testFilesystem()
 
 using std::stringstream;
 using std::cout;
