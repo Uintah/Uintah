@@ -3170,7 +3170,7 @@ inline int Add_error_string( int errorcode , const char *string )
 }
 EOF
 
-  $CC $INC_MPI_H -c mpi_const_est.cc > /dev/null 2>&1
+  $CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
   if test $? != 0; then
      DEF_MPI_CONST_WORKS="#define MPICONST "
      AC_MSG_RESULT(no)
