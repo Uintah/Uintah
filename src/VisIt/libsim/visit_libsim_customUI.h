@@ -70,8 +70,8 @@ void visit_SetMPIStats       ( visit_simulation_data *sim );
 
 void visit_SetStripChartNames( visit_simulation_data *sim );
 void visit_SetStripChartValue( visit_simulation_data *sim,
-			       std::string name,
-			       double value );
+                               std::string name,
+                               double value );
 } // End namespace Uintah
 
 #endif

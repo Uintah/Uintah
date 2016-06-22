@@ -82,7 +82,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   // bool &nodeCentered = sim->nodeCentered;
 
   sim->stepInfo =
-    getTimeStepInfo2(schedulerP, gridP, timestate, useExtraCells);
+    getTimeStepInfo(schedulerP, simStateP, gridP, timestate, useExtraCells);
 
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
@@ -93,7 +93,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
   {
     /* Set the simulation state. */
 
-    /* NOTE visit_ReadMetaData is called as a results of calling
+    /* NOTE visit_SimGetMetaData is called as a results of calling
        visit_CheckState which calls VisItTimeStepChanged at this point
        the sim->runMode will always be VISIT_SIMMODE_RUNNING. */
     if(sim->runMode == VISIT_SIMMODE_FINISHED ||
@@ -628,8 +628,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     visit_SetImageVars( sim );
 
     // These are one time initializations.
-    VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);	
-    VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);	
+    VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
+    VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
+    VisItUI_setValueI("ScrubDataWarehouse", sim->scrubDataWarehouse, 1);
 
     // if( sim->message.size() )
     // {
@@ -947,8 +948,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 //  string vars = getParticlePositionName(schedulerP);
 
     ParticleDataRaw *pd =
-      getParticleData2(schedulerP, gridP, level, local_patch, vars,
-                       matlNo, timestate);
+      getParticleData(schedulerP, gridP, level, local_patch, vars,
+                      matlNo, timestate);
 
     visit_handle cordsH = VISIT_INVALID_HANDLE;
 
@@ -1013,8 +1014,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       //debug5<<"\t(*getParticleData)...\n";
       //todo: this returns an array of doubles. Need to return
       //expected datatype to avoid unnecessary conversion.
-      pd = getParticleData2(schedulerP, gridP, level, local_patch,
-                            "p.particleID", matlNo, timestate);
+      pd = getParticleData(schedulerP, gridP, level, local_patch,
+                           "p.particleID", matlNo, timestate);
 
       //debug5 << "got particle data: "<<pd<<"\n";
       if (pd)
@@ -1266,8 +1267,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       matlNo = atoi(matl.c_str());
       
     ParticleDataRaw *pd = 
-      getParticleData2(schedulerP, gridP, level, local_patch, varName,
-		       matlNo, timestate);
+      getParticleData(schedulerP, gridP, level, local_patch, varName,
+                      matlNo, timestate);
 
     CheckNaNs(pd->num*pd->components,pd->data,level,local_patch);
 
@@ -1329,7 +1330,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         val = mpiScheduler->mpi_info_.getValue( varName );
       }
       else
-	val = 0;
+        val = 0;
       
       // Create at new grid data for the values.
       gd = new GridDataRaw;
@@ -1364,16 +1365,61 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         }
       }
       
-      gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
-                        atoi(matl.c_str()), timestate, qlow, qhigh);
+      gd = getGridData(schedulerP, gridP, level, local_patch, varName,
+                       atoi(matl.c_str()), timestate, qlow, qhigh);
 
-      CheckNaNs(gd->num*gd->components, gd->data, level, local_patch);
+      if( gd )
+      {
+        CheckNaNs(gd->num*gd->components, gd->data, level, local_patch);
+      }
+      else
+      {
+        gd = new GridDataRaw;
+
+        int numVars = stepInfo->varInfo.size();
+        
+        for (int i=0; i<numVars; ++i)
+        {
+          std::string varname = stepInfo->varInfo[i].name;
+          std::string vartype = stepInfo->varInfo[i].type;
+
+          if( varname == varName )
+          {
+            // 3 -> vector 
+            if (vartype.find("Vector") != std::string::npos)
+              gd->components = 3;
+            // 9 -> tensor 
+            else if (vartype.find("Matrix3") != std::string::npos)
+              gd->components = 9;
+            // 7 -> vector
+            else if (vartype.find("Stencil7") != std::string::npos)
+              gd->components = 7;
+            // 4 -> vector
+            else if (vartype.find("Stencil4") != std::string::npos)
+              gd->components = 4;
+            // scalar
+            else 
+              gd->components = 1;
+          }
+        }
+        
+        for (int i=0; i<3; i++) {
+          gd->low[i] = qlow[i];
+          gd->high[i] = qhigh[i];
+        }
+
+        gd->num = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+        gd->data = new double[gd->num*gd->components];
+
+        for (int i=0; i<gd->num*gd->components; ++i)
+          gd->data[i] = 0;
+      }
     }
 
     if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
     {
       VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
-				  gd->num*gd->components, gd->data);
+                                  gd->num*gd->components, gd->data);
       
       // vtkDoubleArray *rv = vtkDoubleArray::New();
       // rv->SetNumberOfComponents(gd->components);

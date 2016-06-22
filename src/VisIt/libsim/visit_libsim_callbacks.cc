@@ -78,7 +78,7 @@ std::string getNextString( std::string &cmd, const std::string delimiter )
 //   row, column, and double value.
 //---------------------------------------------------------------------
 void getTableCMD( char *cmd,
-		  unsigned int &row, unsigned int &column, double &value )
+                  unsigned int &row, unsigned int &column, double &value )
 {
   std::string strcmd(cmd);
 
@@ -98,7 +98,7 @@ void getTableCMD( char *cmd,
 //   row, column, and name.
 //---------------------------------------------------------------------
 void getTableCMD( char *cmd,
-		  unsigned int &row, unsigned int &column, char *name )
+                  unsigned int &row, unsigned int &column, char *name )
 {
   std::string strcmd(cmd);
 
@@ -530,8 +530,8 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
   {
     std::stringstream msg;
     msg << "Visit libsim - At time step " << sim->cycle << " "
-	<< "the user modified the variable " << var.name << " "
-	<< "to be " << str << ". ";
+        << "the user modified the variable " << var.name << " "
+        << "to be " << str << ". ";
 
     if( var.recompile )
       msg << "The task graph will be recompiled.";
@@ -559,9 +559,10 @@ void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
 
   getTableCMD( val, row, column, value);
 
-  // Output interval based on time.
+  // Output interval.
   if( row == OutputIntervalRow )
   {
+    // Output interval based on time.
     if( output->getOutputInterval() > 0 )
       output->updateOutputInterval( value );
     // Output interval based on timestep.
@@ -569,9 +570,10 @@ void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
       output->updateOutputTimestepInterval( value );
   }
   
-  // Checkpoint interval based on times.
+  // Checkpoint interval.
   else if( row == CheckpointIntervalRow )
   {
+    // Checkpoint interval based on times.
     if( output->getCheckpointInterval() > 0 )
       output->updateCheckpointInterval( value );
     // Checkpoint interval based on timestep.
@@ -658,6 +660,17 @@ void visit_StopAtLastTimeStepCallback(int val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
+// ScrubDataWarehouseCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_ScrubDataWarehouseCallback(int val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->scrubDataWarehouse = val;
+}
+
+//---------------------------------------------------------------------
 // StripChartCallback
 //     Custom UI callback
 //---------------------------------------------------------------------
@@ -681,15 +694,15 @@ void visit_StripChartCallback(char *val, void *cbdata)
 //     Process commands from the viewer on all processors.
 //---------------------------------------------------------------------
 void visit_VarModifiedMessage( visit_simulation_data *sim,
-			       std::string name,
-			       std::string value )
+                               std::string name,
+                               std::string value )
 {
   if( sim->isProc0 )
   {
     std::stringstream msg;
     msg << "Visit libsim - At time step " << sim->cycle << " "
-	<< "the user modified the variable " << name << " "
-	<< "to be " << value << ". ";
+        << "the user modified the variable " << name << " "
+        << "to be " << value << ". ";
       
     VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);

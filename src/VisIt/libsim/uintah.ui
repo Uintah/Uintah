@@ -840,6 +840,32 @@
        </column>
       </widget>
      </widget>
+     <widget class="QGroupBox" name="DebugGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>490</y>
+        <width>271</width>
+        <height>191</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Debug options</string>
+      </property>
+      <widget class="QCheckBox" name="ScrubDataWarehouse">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>171</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Scrub Data Warehouse</string>
+       </property>
+      </widget>
+     </widget>
     </widget>
    </widget>
   </widget>

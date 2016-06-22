@@ -145,6 +145,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->stopAtTimeStep = 0;
   sim->stopAtLastTimeStep = 0;
 
+  sim->scrubDataWarehouse = 1;
+
   for( int i=0; i<5; ++i )
     for( int j=0; j<5; ++j )
       sim->stripChartNames[i][j] = std::string("");
@@ -328,7 +330,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       // Check to see if the user wants to stop.
       if( sim->cycle == sim->stopAtTimeStep )
       {
-	sim->runMode = VISIT_SIMMODE_STOPPED;
+        sim->runMode = VISIT_SIMMODE_STOPPED;
       }
     }
   }
@@ -420,7 +422,7 @@ bool visit_CheckState( visit_simulation_data *sim )
       /* VisIt is trying to connect to sim. */
       if(VisItAttemptToCompleteConnection())
       {
-	visit_Initialize( sim );
+        visit_Initialize( sim );
       }
       else
       {
@@ -592,32 +594,34 @@ void visit_Initialize( visit_simulation_data *sim )
 
   VisItUI_textChanged("MaxTimeStep",  visit_MaxTimeStepCallback,  (void*) sim);
   VisItUI_textChanged("MaxTime",      visit_MaxTimeCallback,      (void*) sim);
-//VisItUI_textChanged("DeltaT",       visit_DeltaTCallback,       (void*) sim);
   VisItUI_textChanged("DeltaTNext",   visit_DeltaTCallback,       (void*) sim);
   VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
   VisItUI_textChanged("DeltaTMin",    visit_DeltaTMinCallback,    (void*) sim);
   VisItUI_textChanged("DeltaTMax",    visit_DeltaTMaxCallback,    (void*) sim);
   VisItUI_textChanged("MaxWallTime",  visit_MaxWallTimeCallback,  (void*) sim);
   VisItUI_cellChanged("UPSVariableTable",
-		      visit_UPSVariableTableCallback, (void*) sim);
+                      visit_UPSVariableTableCallback, (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
-		      visit_OutputIntervalVariableTableCallback,  (void*) sim);
+                      visit_OutputIntervalVariableTableCallback,  (void*) sim);
         
   VisItUI_valueChanged("ImageGroupBox",
-		       visit_ImageGenerateCallback, (void*) sim);
+                       visit_ImageGenerateCallback, (void*) sim);
   VisItUI_textChanged ("ImageFilename",
-		       visit_ImageFilenameCallback, (void*) sim);
+                       visit_ImageFilenameCallback, (void*) sim);
   VisItUI_textChanged("ImageHeight",    visit_ImageHeightCallback, (void*) sim);
   VisItUI_textChanged("ImageWidth",     visit_ImageWidthCallback,  (void*) sim);
   VisItUI_valueChanged("ImageFormat",   visit_ImageFormatCallback, (void*) sim);
 
   VisItUI_textChanged("StopAtTimeStep",
-		      visit_StopAtTimeStepCallback,      (void*) sim);
+                      visit_StopAtTimeStepCallback,      (void*) sim);
   VisItUI_valueChanged("StopAtLastTimeStep",
-		       visit_StopAtLastTimeStepCallback, (void*) sim);
+                       visit_StopAtLastTimeStepCallback, (void*) sim);
+
+  VisItUI_valueChanged("ScrubDataWarehouse",
+                       visit_ScrubDataWarehouseCallback, (void*) sim);
 
   VisItUI_cellChanged("StripChartTable",
-		      visit_StripChartCallback, (void*) sim);
+                      visit_StripChartCallback, (void*) sim);
 }
   
 } // End namespace Uintah
