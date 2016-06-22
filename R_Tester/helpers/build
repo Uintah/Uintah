@@ -37,53 +37,10 @@ if [ "$OS" = "Linux" ]; then
 
     ENV="     CC=gcc \\
      CXX=g++ \\
-     F77=gfortran"
-  fi
-  
-  #_________________
-  if [ "$MACHINE" == "kaibab" ]; then
-    COMMON="      --with-mpi=/usr/local/openmpi \\
-       --with-petsc=/usr/local/petsc \\
-       --with-hypre=/usr/local/hypre \\
-       --with-boost=/usr/local/boost \\
-       --with-cuda=/usr/local/cuda \\
-       --enable-gencode=20 \\
-       --enable-wasatch_3p \\
-       USE_WASATCH=yes \\"
-
-    ENV="      CC=gcc \\
-       CXX=g++ \\
-       F77=gfortran"
-  fi
-  
-  #_________________
-  if [ "$MACHINE" == "albion" ]; then
-    COMMON="      --with-mpi=/usr/local/openmpi \\
-      --with-cuda=/usr/local/cuda \\
-      --enable-gencode=30 \\
-      --enable-ray-scatter\\"
-
-    ENV="       CC=gcc-4.8 \\
-       CXX=g++-4.8 \\
-       F77=gfortran-4.8"
-  fi
-  
-  #_________________
-  if [ "$MACHINE" == "albion" ] && [ "$LOGNAME" == "arl-rt" ]; then
-    COMMON="      --with-mpi=/usr/local/openmpi \\
-      --with-fftw=/usr/local/fftw \\
-      --with-boost=/usr/  \\
-      --enable-ice \\
-      --enable-mpm \\
-      --enable-md \\
-      --enable-arches \\
-      --enable-wasatch \\
-      --enable-wasatch_3p \\
-      --enable-ray-scatter\\"
-
-    ENV="       CC=gcc \\
-       CXX=g++ \\
-       F77=gfortran"
+     F77=gfortran \\
+     CXXFLAGS=-fpermissive"
+     # Remove the above CXXFLAGS once the new buildbot machine is online - APH, 06/22/16
+     #   This is a hack to get around const correctness enforced by the new MPI wrappers
   fi
   
   #_________________
