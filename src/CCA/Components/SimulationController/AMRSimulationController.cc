@@ -91,6 +91,7 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
 						 ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
+  scrubDataWarehouse = true;
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -429,7 +430,7 @@ AMRSimulationController::run()
 
     // Execute the current timestep, restarting if necessary
     executeTimestep( time, delt, currentGrid, totalFine );
-
+      
     // Update the profiler weights
     d_lb->finalizeContributions(currentGrid);
 
@@ -529,6 +530,8 @@ AMRSimulationController::run()
       if( visit_CheckState( &visitSimData ) )
 	break;
 
+      scrubDataWarehouse = visitSimData.scrubDataWarehouse;
+      
       // Check to see if at the last iteration. If so stop so the
       // user can have once last chance see the data.
       // if( visitSimData.stopAtLastTimeStep && last )
@@ -1090,22 +1093,29 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
   do {
     bool restartable = d_sim->restartableTimesteps();
     d_scheduler->setRestartable(restartable);
-    //if (Uintah::Parallel::getMaxThreads() < 1) { 
-    if (restartable) {
-      d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-    }else {
-      d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-    }
     
-    for(int i=0;i<=totalFine;i++) {
-      // getNthProc requires the variables after they would have been scrubbed
-      if ( d_lb->getNthProc() > 1 ){
-        d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
-      } else {
-        d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+    // if (Uintah::Parallel::getMaxThreads() < 1) { 
+
+      // Standard data warehouse scrubbing.
+      if( scrubDataWarehouse && d_lb->getNthProc() == 1 )
+      {
+	if (restartable)
+	  d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+	else
+	  d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+	
+	// The other data warehouse as well as those for other levels.
+	for(int i=1; i<=totalFine; ++i)
+	  d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
-    }
-    //}
+      // If not scubbing or getNthProc requires the variables after
+      // they would have been scrubbed so turn off all scrubbing.
+      else //if( !scrubDataWarehouse || d_lb->getNthProc() > 1 )
+      {
+	for(int i=0; i<=totalFine; ++i)
+	  d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
+      }
+    // }
     
     if (d_scheduler->getNumTaskGraphs() == 1){
       d_scheduler->execute(0, d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);

@@ -111,6 +111,8 @@ class Regridder;
                                DataWarehouse  * /*old_dw*/,
                                DataWarehouse  * new_dw );
 
+     // Optional flag for scrubbing, defaulted to true.
+     bool scrubDataWarehouse;
    };
 
 } // End namespace Uintah
