@@ -37,10 +37,7 @@ if [ "$OS" = "Linux" ]; then
 
     ENV="     CC=gcc \\
      CXX=g++ \\
-     F77=gfortran \\
-     CXXFLAGS=-fpermissive"
-     # Remove the above CXXFLAGS once the new buildbot machine is online - APH, 06/22/16
-     #   This is a hack to get around const correctness enforced by the new MPI wrappers
+     F77=gfortran"
   fi
   
   #_________________
