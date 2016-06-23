@@ -80,7 +80,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   //  Form the matrix
   printSchedule(level,cout_doing,"ICE::scheduleSetupMatrix");            
             
-  t = scinew Task("ICE::setupMatrix", this, &ICE::setupMatrix);
+  t = new Task("ICE::setupMatrix", this, &ICE::setupMatrix);
   t->requires( Task::ParentOldDW, lb->delTLabel, getLevel(patches));
   t->requires( whichDW,   lb->sp_volX_FCLabel,    gac,1);        
   t->requires( whichDW,   lb->sp_volY_FCLabel,    gac,1);        
@@ -113,7 +113,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"ICE::scheduleSetupRHS");
   
-  t = scinew Task("ICE::setupRHS", this, 
+  t = new Task("ICE::setupRHS", this, 
                   &ICE::setupRHS, insideOuterIterLoop,computes_or_modifies);
  
   Task::WhichDW pNewDW;
@@ -174,7 +174,7 @@ void ICE::scheduleCompute_maxRHS(SchedulerP& sched,
   printSchedule(level,cout_doing,"ICE::scheduleCompute_maxRHS");
   
   Task* t;
-  t = scinew Task("ICE::compute_maxRHS", this, &ICE::compute_maxRHS);
+  t = new Task("ICE::compute_maxRHS", this, &ICE::compute_maxRHS);
   
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   t->requires( Task::NewDW, lb->rhsLabel,  one_matl,oims,Ghost::None,0);
@@ -202,7 +202,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   // update the pressure
   printSchedule(level,cout_doing,"ICE::scheduleUpdatePressure");
   
-  t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
+  t = new Task("ICE::updatePressure", this, &ICE::updatePressure);
   
   t->requires( Task::ParentOldDW, lb->delTLabel, getLevel(patches));
   t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);       
@@ -240,7 +240,7 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
   Task* t = 0;
   printSchedule(patches,cout_doing,"ICE::scheduleRecomputeVel_FC");
   
-  t = scinew Task("ICE::scheduleUpdateVel_FC",
+  t = new Task("ICE::scheduleUpdateVel_FC",
             this, &ICE::updateVel_FC, recursion);
            
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -295,7 +295,7 @@ void ICE::scheduleComputeDel_P(  SchedulerP& sched,
 
   printSchedule(level,cout_doing,"ICE::scheduleComputeDel_P");
   
-  t = scinew Task("ICE::scheduleComputeDel_P", this, &ICE::computeDel_P);
+  t = new Task("ICE::scheduleComputeDel_P", this, &ICE::computeDel_P);
  
   t->requires(Task::NewDW, lb->sum_imp_delPLabel,    press_matl, oims, gn);     
   t->requires(Task::NewDW, lb->sumKappaLabel,        one_matl,   oims, gn);
@@ -325,7 +325,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
 
   // if we're here, we're compiling the outer taskgraph.  Then we should compile the inner one too.
   d_recompileSubsched = true;
-  Task* t = scinew Task("ICE::implicitPressureSolve", 
+  Task* t = new Task("ICE::implicitPressureSolve", 
                    this, &ICE::implicitPressureSolve,
                    level, ice_matls, mpm_matls);
  
@@ -633,7 +633,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       
       //__________________________________
       // common variables that get passed into the advection operators
-      advectVarBasket* varBasket = scinew advectVarBasket();
+      advectVarBasket* varBasket = new advectVarBasket();
       varBasket->new_dw = new_dw;
       varBasket->old_dw = old_dw;
       varBasket->indx   = indx;
@@ -828,7 +828,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     }   
     //__________________________________
     //  set boundary conditions   
-    customBC_localVars* BC_localVars = scinew customBC_localVars();
+    customBC_localVars* BC_localVars = new customBC_localVars();
     
     preprocess_CustomBCs("imp_update_press_CC",parent_old_dw,parent_new_dw, 
                             lb,  patch, 999, d_BC_globalVars, BC_localVars );

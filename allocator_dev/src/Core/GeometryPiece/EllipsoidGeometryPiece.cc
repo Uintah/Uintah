@@ -27,7 +27,6 @@
 #include <Core/Grid/Box.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/Matrix3.h>
 
 using namespace Uintah;
@@ -110,7 +109,7 @@ void EllipsoidGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 
 GeometryPieceP EllipsoidGeometryPiece::clone() const
 {
-  return scinew EllipsoidGeometryPiece(*this);
+  return new EllipsoidGeometryPiece(*this);
 }
 
 bool EllipsoidGeometryPiece::inside(const Point& p) const

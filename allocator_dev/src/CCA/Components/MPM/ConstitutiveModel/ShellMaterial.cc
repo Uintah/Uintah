@@ -192,7 +192,7 @@ void ShellMaterial::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ShellMaterial* ShellMaterial::clone()
 {
-  return scinew ShellMaterial(*this);
+  return new ShellMaterial(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

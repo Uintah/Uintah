@@ -150,7 +150,7 @@ SchedulerP
 DynamicMPIScheduler::createSubScheduler()
 {
   UintahParallelPort  * lbp      = getPort("load balancer");
-  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_outPort_, this );
+  DynamicMPIScheduler * newsched = new DynamicMPIScheduler( d_myworld, m_outPort_, this );
   newsched->d_sharedState = d_sharedState;
   newsched->attachPort( "load balancer", lbp );
   newsched->d_sharedState = d_sharedState;
@@ -168,7 +168,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     return;
   }
 
-  MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
   TaskGraph* tg = graphs[tgnum];

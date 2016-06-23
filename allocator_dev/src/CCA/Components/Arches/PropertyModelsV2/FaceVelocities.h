@@ -54,7 +54,7 @@ public:
       ~Builder(){}
 
       FaceVelocities* build()
-      { return scinew FaceVelocities( _task_name, _matl_index ); }
+      { return new FaceVelocities( _task_name, _matl_index ); }
 
       private:
 

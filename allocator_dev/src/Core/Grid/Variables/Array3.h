@@ -36,7 +36,6 @@
 
 #include <Core/Util/Endian.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
 #include <iosfwd>
@@ -84,7 +83,7 @@ public:
   Array3() {}
 
   Array3(int size1, int size2, int size3) {
-    d_window=scinew Array3Window<T>(new Array3Data<T>( IntVector(size1, size2, size3) ));
+    d_window=new Array3Window<T>(new Array3Data<T>( IntVector(size1, size2, size3) ));
     d_window->addReference();
 #if defined(UINTAH_ENABLE_KOKKOS)
     if (d_window) {
@@ -178,7 +177,7 @@ public:
       d_window=0;
     }
     IntVector size = highIndex-lowIndex;
-    d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
+    d_window=new Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
     d_window->addReference();
 #if defined(UINTAH_ENABLE_KOKKOS)
     if (d_window) {
@@ -189,7 +188,7 @@ public:
 
   void offset(const IntVector offset) {
     Array3Window<T>* old_window = d_window;
-    d_window=scinew Array3Window<T>(d_window->getData(), d_window->getOffset() + offset, getLowIndex() + offset, getHighIndex() + offset);
+    d_window=new Array3Window<T>(d_window->getData(), d_window->getOffset() + offset, getLowIndex() + offset, getHighIndex() + offset);
     d_window->addReference();
     if(old_window && old_window->removeReference())
     {
@@ -376,7 +375,7 @@ bool Array3<T>::rewindow(const IntVector& lowIndex,
   if (inside) {
     // just rewindow
     d_window=
-      scinew Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(),
+      new Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(),
           lowIndex, highIndex);
     no_reallocation_needed = true;
   }
@@ -393,7 +392,7 @@ bool Array3<T>::rewindow(const IntVector& lowIndex,
     tempWindow.copy(oldWindow); // copies into newData
 
     Array3Window<T>* new_window=
-      scinew Array3Window<T>(newData, encompassingLow, lowIndex,highIndex);
+      new Array3Window<T>(newData, encompassingLow, lowIndex,highIndex);
     d_window = new_window;  //Note, this has concurrency problems.
     //If two tasks running on two cores try to rewindow the same variable at the
     //same time, they could both write to d_window effectively at the same time

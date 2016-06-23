@@ -1319,15 +1319,15 @@ namespace Uintah{
        
           if ( type == "super_bee" ) { 
 
-            _limiter_function = scinew SuperBeeFunction(); 
+            _limiter_function = new SuperBeeFunction(); 
 
           } else if ( type == "roe_minmod" ) { 
 
-            _limiter_function = scinew RoeMindModFunction(); 
+            _limiter_function = new RoeMindModFunction(); 
 
           } else if ( type == "vanleer" ) { 
 
-            _limiter_function = scinew VanLeerFunction(); 
+            _limiter_function = new VanLeerFunction(); 
 
           } else { 
 
@@ -1561,15 +1561,15 @@ namespace Uintah{
        
           if ( type == "super_bee" ) { 
 
-            _limiter_function = scinew SuperBeeFunction(); 
+            _limiter_function = new SuperBeeFunction(); 
 
           } else if ( type == "roe_minmod" ) { 
 
-            _limiter_function = scinew RoeMindModFunction(); 
+            _limiter_function = new RoeMindModFunction(); 
 
           } else if ( type == "vanleer" ) { 
 
-            _limiter_function = scinew VanLeerFunction(); 
+            _limiter_function = new VanLeerFunction(); 
 
           } else { 
 
@@ -2043,9 +2043,9 @@ namespace Uintah{
 
       if (convScheme == "upwind") { 
 
-       UpwindInterpolation<oldPhiT>* the_interpolant = scinew UpwindInterpolation<oldPhiT>(); 
+       UpwindInterpolation<oldPhiT>* the_interpolant = new UpwindInterpolation<oldPhiT>(); 
        ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -2054,9 +2054,9 @@ namespace Uintah{
 
       } else if ( convScheme == "2upwind" ){ 
 
-       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = scinew SecondOrderUpwindInterpolation<oldPhiT>(); 
+       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = new SecondOrderUpwindInterpolation<oldPhiT>(); 
        ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -2065,9 +2065,9 @@ namespace Uintah{
 
       } else if ( convScheme == "quick" ){ 
 
-       QUICKInterpolation<oldPhiT>* the_interpolant = scinew QUICKInterpolation<oldPhiT>(); 
+       QUICKInterpolation<oldPhiT>* the_interpolant = new QUICKInterpolation<oldPhiT>(); 
        ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -2076,9 +2076,9 @@ namespace Uintah{
 
       } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
-       FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
+       FluxLimiterInterpolation<oldPhiT>* the_interpolant = new FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -2096,9 +2096,9 @@ namespace Uintah{
          mod_convScheme = "vanleer";
        }
 
-       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = new FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
        ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -2107,9 +2107,9 @@ namespace Uintah{
 
       } else if (convScheme == "old_super_bee") { 
 
-       OldSuperBeeInterpolation<oldPhiT>* the_interpolant = scinew OldSuperBeeInterpolation<oldPhiT>(); 
+       OldSuperBeeInterpolation<oldPhiT>* the_interpolant = new OldSuperBeeInterpolation<oldPhiT>(); 
        ConvHelper1<OldSuperBeeInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<OldSuperBeeInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<OldSuperBeeInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -2118,9 +2118,9 @@ namespace Uintah{
 
       } else if (convScheme == "central") {
 
-       CentralInterpolation<oldPhiT>* the_interpolant = scinew CentralInterpolation<oldPhiT>(); 
+       CentralInterpolation<oldPhiT>* the_interpolant = new CentralInterpolation<oldPhiT>(); 
        ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -2146,9 +2146,9 @@ namespace Uintah{
 
       if (convScheme == "upwind") { 
 
-       UpwindInterpolation<oldPhiT>* the_interpolant = scinew UpwindInterpolation<oldPhiT>(); 
+       UpwindInterpolation<oldPhiT>* the_interpolant = new UpwindInterpolation<oldPhiT>(); 
        ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
@@ -2157,9 +2157,9 @@ namespace Uintah{
 
       } else if ( convScheme == "2upwind"){ 
 
-       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = scinew SecondOrderUpwindInterpolation<oldPhiT>(); 
+       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = new SecondOrderUpwindInterpolation<oldPhiT>(); 
        ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
@@ -2168,9 +2168,9 @@ namespace Uintah{
 
       } else if ( convScheme == "quick"){ 
 
-       QUICKInterpolation<oldPhiT>* the_interpolant = scinew QUICKInterpolation<oldPhiT>(); 
+       QUICKInterpolation<oldPhiT>* the_interpolant = new QUICKInterpolation<oldPhiT>(); 
        ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
@@ -2181,9 +2181,9 @@ namespace Uintah{
 
       } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
-       FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
+       FluxLimiterInterpolation<oldPhiT>* the_interpolant = new FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
@@ -2201,9 +2201,9 @@ namespace Uintah{
          mod_convScheme = "vanleer";
        }
 
-       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = new FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
        ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
@@ -2212,9 +2212,9 @@ namespace Uintah{
 
       } else if (convScheme == "central") {
 
-       CentralInterpolation<oldPhiT>* the_interpolant = scinew CentralInterpolation<oldPhiT>(); 
+       CentralInterpolation<oldPhiT>* the_interpolant = new CentralInterpolation<oldPhiT>(); 
        ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
@@ -2241,9 +2241,9 @@ namespace Uintah{
     {
       if (convScheme == "upwind") { 
 
-       UpwindInterpolation<oldPhiT>* the_interpolant = scinew UpwindInterpolation<oldPhiT>(); 
+       UpwindInterpolation<oldPhiT>* the_interpolant = new UpwindInterpolation<oldPhiT>(); 
        ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 
@@ -2252,9 +2252,9 @@ namespace Uintah{
 
       } else if ( convScheme == "2upwind" ){ 
 
-       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = scinew SecondOrderUpwindInterpolation<oldPhiT>(); 
+       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = new SecondOrderUpwindInterpolation<oldPhiT>(); 
        ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 
@@ -2263,9 +2263,9 @@ namespace Uintah{
 
       } else if ( convScheme == "quick" ){ 
 
-       QUICKInterpolation<oldPhiT>* the_interpolant = scinew QUICKInterpolation<oldPhiT>(); 
+       QUICKInterpolation<oldPhiT>* the_interpolant = new QUICKInterpolation<oldPhiT>(); 
        ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 
@@ -2275,9 +2275,9 @@ namespace Uintah{
 
       } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
-       FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
+       FluxLimiterInterpolation<oldPhiT>* the_interpolant = new FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
  
        convection_helper->do_convection( p, Fconv, partVel,  areaFraction, this );
 
@@ -2295,9 +2295,9 @@ namespace Uintah{
          mod_convScheme = "vanleer";
        }
 
-       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = new FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
        ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 
@@ -2306,9 +2306,9 @@ namespace Uintah{
 
       } else if (convScheme == "central") {
 
-       CentralInterpolation<oldPhiT>* the_interpolant = scinew CentralInterpolation<oldPhiT>(); 
+       CentralInterpolation<oldPhiT>* the_interpolant = new CentralInterpolation<oldPhiT>(); 
        ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+         new ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 

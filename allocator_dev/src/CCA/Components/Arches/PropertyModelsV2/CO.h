@@ -110,7 +110,7 @@ public:
       ~Builder(){}
 
       CO* build()
-      { return scinew CO( _task_name, _matl_index ); }
+      { return new CO( _task_name, _matl_index ); }
 
       private:
 

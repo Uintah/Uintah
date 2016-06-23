@@ -75,7 +75,7 @@ WARNING
     
     virtual GridVariableBase* clone();
     virtual const GridVariableBase* clone() const;
-    virtual GridVariableBase* cloneType() const { return scinew CCVariable<T>(); }
+    virtual GridVariableBase* cloneType() const { return new CCVariable<T>(); }
     
     // allocate(IntVector, IntVector) is hidden without this
     using GridVariable<T>::allocate;
@@ -120,7 +120,7 @@ WARNING
   CCVariable<T>::getTypeDescription()
   {
     if( !td ){
-      td = scinew TypeDescription( TypeDescription::CCVariable,
+      td = new TypeDescription( TypeDescription::CCVariable,
                                    "CCVariable", &maker,
                                    fun_getTypeDescription((T*)0) );
     }
@@ -131,7 +131,7 @@ WARNING
   Variable*
   CCVariable<T>::maker()
   {
-    return scinew CCVariable<T>();
+    return new CCVariable<T>();
   }
    
   template<class T>
@@ -143,14 +143,14 @@ WARNING
   GridVariableBase*
   CCVariable<T>::clone()
   {
-    return scinew CCVariable<T>(*this);
+    return new CCVariable<T>(*this);
   }
 
   template<class T>
   const GridVariableBase*
   CCVariable<T>::clone() const
   {
-    return scinew CCVariable<T>(*this);
+    return new CCVariable<T>(*this);
   }
 
   template<class T>

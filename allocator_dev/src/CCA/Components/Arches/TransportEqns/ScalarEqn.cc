@@ -30,7 +30,7 @@ CCScalarEqnBuilder::~CCScalarEqnBuilder(){}
 
 EqnBase*
 CCScalarEqnBuilder::build(){
-  return scinew ScalarEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
+  return new ScalarEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -202,7 +202,7 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   printSchedule(level,dbg,"ScalarEqn::sched_initializeVariables");
 
   string taskname = "ScalarEqn::initializeVariables";
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::initializeVariables);
+  Task* tsk = new Task(taskname, this, &ScalarEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
 
   if (!d_use_constant_D){
@@ -322,7 +322,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
 {
   string taskname = "ScalarEqn::buildTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
+  Task* tsk = new Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
   printSchedule(level,dbg,taskname);
 
   if ( timeSubStep == 0 ){
@@ -530,7 +530,7 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
 {
   string taskname = "ScalarEqn::solveTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep);
+  Task* tsk = new Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep);
   printSchedule(level,dbg, taskname);
 
   //New
@@ -612,7 +612,7 @@ ScalarEqn::sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubSte
 {
   string taskname = "ScalarEqn::timeAve";
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::timeAve, timeSubStep);
+  Task* tsk = new Task(taskname, this, &ScalarEqn::timeAve, timeSubStep);
   printSchedule(level,dbg, taskname);
 
   //New
@@ -711,7 +711,7 @@ ScalarEqn::sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSu
 
     string taskname = "ScalarEqn::advClipping";
 
-    Task* tsk = scinew Task(taskname, this, &ScalarEqn::advClipping, timeSubStep);
+    Task* tsk = new Task(taskname, this, &ScalarEqn::advClipping, timeSubStep);
     printSchedule(level,dbg, taskname);
 
     if ( clip.my_type == ClipInfo::CONSTRAINED ){

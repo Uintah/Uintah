@@ -52,7 +52,7 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
   // Parse default values
   for (ProblemSpecP child = params->findBlock("defaultValue"); child != 0;
        child = child->findNextBlock("defaultValue")) {
-    DefaultValue* df = scinew DefaultValue;
+    DefaultValue* df = new DefaultValue;
     if(!child->getAttribute("name", df->name))
       throw ProblemSetupException("No name for defaultValue", __FILE__, __LINE__);
     child->get(df->value);
@@ -62,7 +62,7 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
   // Parse constant values
   for (ProblemSpecP child = params->findBlock("constantValue"); child != 0;
        child = child->findNextBlock("constantValue")) {
-    Dep* dep = scinew Dep(Dep::ConstantValue);
+    Dep* dep = new Dep(Dep::ConstantValue);
     if(!child->getAttribute("name", dep->name))
       throw ProblemSetupException("No name for constantValue", __FILE__, __LINE__);
     child->get(dep->constantValue);
@@ -72,7 +72,7 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
   // Parse derived values
   for (ProblemSpecP child = params->findBlock("derivedValue"); child != 0;
        child = child->findNextBlock("derivedValue")) {
-    Dep* dep = scinew Dep(Dep::DerivedValue);
+    Dep* dep = new Dep(Dep::DerivedValue);
     if(!child->getAttribute("name", dep->name))
       throw ProblemSetupException("No expression for derivedValue", __FILE__, __LINE__);
 
@@ -138,7 +138,7 @@ ArchesTable::parse_addsub( string::iterator & begin,
       Expr* child2 = parse_muldiv(begin, end);
       if(!child2)
         return 0;
-      child1 = scinew Expr(next, child1, child2);
+      child1 = new Expr(next, child1, child2);
     } else if(next == ' ' || next == '\t' || next == '\n'){
       begin++;
     } else {
@@ -163,7 +163,7 @@ ArchesTable::parse_muldiv( string::iterator& begin,
       Expr* child2 = parse_sign(begin, end);
       if(!child2)
         return 0;
-      child1 = scinew Expr(next, child1, child2);
+      child1 = new Expr(next, child1, child2);
     } else if(next == ' ' || next == '\t' || next == '\n'){
       begin++;
     } else {
@@ -184,7 +184,7 @@ ArchesTable::parse_sign( string::iterator& begin,
       Expr* child = parse_idorconstant(begin, end);
       if(!child)
         return 0;
-      return scinew Expr(next, child, 0);
+      return new Expr(next, child, 0);
     } else if(next == '+'){
       begin++;
       Expr* child = parse_idorconstant(begin, end);
@@ -225,9 +225,9 @@ ArchesTable::parse_idorconstant( string::iterator& begin,
     int id_index = addDependentVariable(id);
     Dep* dep = deps[id_index];
     if(dep->type == Dep::ConstantValue)
-      return scinew Expr(dep->constantValue);
+      return new Expr(dep->constantValue);
     else
-      return scinew Expr(id_index);
+      return new Expr(id_index);
   } else if(next == '{') {
     // Independent variable...
     begin++;
@@ -240,7 +240,7 @@ ArchesTable::parse_idorconstant( string::iterator& begin,
     }
     begin++; // skip }
 
-    return scinew Expr(id);
+    return new Expr(id);
   } else if(next =='(') {
     // Parenthetical
     begin++;
@@ -266,7 +266,7 @@ ArchesTable::parse_idorconstant( string::iterator& begin,
     in >> c;
     if(!in)
       return 0;
-    return scinew Expr(c);
+    return new Expr(c);
   } else {
     return 0;
   }
@@ -281,7 +281,7 @@ ArchesTable::addDependentVariable( const string & name )
     if(dep->name == name)
       return i;
   }
-  Dep* dep = scinew Dep(Dep::TableValue);
+  Dep* dep = new Dep(Dep::TableValue);
   dep->name = name;
   deps.push_back(dep);
   return (int)deps.size()-1;
@@ -291,7 +291,7 @@ void
 ArchesTable::addIndependentVariable( const string& name )
 {
   ASSERT(!file_read_);
-  Ind* ind = scinew Ind;
+  Ind* ind = new Ind;
   ind->name = name;
   inds.push_back(ind);
 }
@@ -321,7 +321,7 @@ ArchesTable::setup(const bool cerrSwitch)
 
   // Read the names.
   for( int i = 0; i < nvars; i++ ) {
-    Ind* ind = scinew Ind;
+    Ind* ind = new Ind;
     ind->name = getString( gzFp );
     in_inds[i] = ind;
   }
@@ -346,7 +346,7 @@ ArchesTable::setup(const bool cerrSwitch)
   long stride = axis_sizes[0];
   in_axes[0] = 0;
   for( int i = nvars-1; i >= 1; i-- ) {
-    in_axes[i] = scinew InterpAxis(axis_sizes[i], stride);
+    in_axes[i] = new InterpAxis(axis_sizes[i], stride);
     in_axes[i]->useCount++;
     stride *= axis_sizes[i];
   }
@@ -355,12 +355,12 @@ ArchesTable::setup(const bool cerrSwitch)
   int ndeps = getInt( gzFp );
   vector<Dep*> in_deps(ndeps);
   for(int j=0;j<ndeps;j++) {
-    Dep* dep = scinew Dep(Dep::TableValue);
+    Dep* dep = new Dep(Dep::TableValue);
     
     dep->name = getString( gzFp );
-    dep->data = scinew double[size];
+    dep->data = new double[size];
     // Add the first (typically masss fraction) axis with stride 1
-    dep->addAxis(scinew InterpAxis(axis_sizes[0], 1));
+    dep->addAxis(new InterpAxis(axis_sizes[0], 1));
     for(int i=1;i<nvars;i++)
       dep->addAxis(in_axes[i]);
     in_deps[j] = dep;
@@ -436,7 +436,7 @@ ArchesTable::setup(const bool cerrSwitch)
       new_axes[i] = 0;
     } else {
       InterpAxis* in_axis = in_axes[axis_map[i]];
-      new_axes[i] = scinew InterpAxis(in_axis, newstride);
+      new_axes[i] = new InterpAxis(in_axis, newstride);
     }
     newstride *= axis_sizes[axis_map[i]];
   }
@@ -446,8 +446,8 @@ ArchesTable::setup(const bool cerrSwitch)
   // Down-slice the table if necessary
   int dim_diff = in_inds.size()-inds.size();
   long interp_size = 1<<dim_diff;
-  long* idx = scinew long[interp_size];
-  double* w =scinew double[interp_size];
+  long* idx = new long[interp_size];
+  double* w =new double[interp_size];
 
   for(int idep=0;idep<static_cast<int>(deps.size());idep++){
     Dep* dep = deps[idep];
@@ -464,7 +464,7 @@ ArchesTable::setup(const bool cerrSwitch)
       throw InternalError(string("Dependent variable: ")+dep->name+" not found", __FILE__, __LINE__);
     }
     cerr_dbg << "Downslicing: " << dep->name << '\n';
-    dep->data =scinew double[newsize];
+    dep->data =new double[newsize];
 
     // Build the axes
     for(int i=0;i<static_cast<int>(inds.size());i++){
@@ -485,7 +485,7 @@ ArchesTable::setup(const bool cerrSwitch)
           }
         }
         if(!newAxis)
-          newAxis = scinew InterpAxis(inputdep->axes[axis_map[i]],
+          newAxis = new InterpAxis(inputdep->axes[axis_map[i]],
                                       firststride);
         dep->addAxis(newAxis);
       }
@@ -602,7 +602,7 @@ ArchesTable::setup(const bool cerrSwitch)
       continue;
 
     cerr_dbg << "Evaluating: " << dep->name << '\n';
-    dep->data =scinew double[newsize];
+    dep->data =new double[newsize];
     vector<InterpAxis*> axes;
     evaluate(dep->expression, axes, dep->data, newsize);
     for(int i=0;i<static_cast<int>(axes.size());i++)
@@ -651,8 +651,8 @@ ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     {
       vector<InterpAxis*> axes1;
       vector<InterpAxis*> axes2;
-      double* data1 =scinew double[size];
-      double* data2 =scinew double[size];
+      double* data1 =new double[size];
+      double* data2 =new double[size];
       evaluate(expr->child1, axes1, data1, size);
       evaluate(expr->child2, axes2, data2, size);
       checkAxes(axes1, axes2, out_axes);
@@ -666,8 +666,8 @@ ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     {
       vector<InterpAxis*> axes1;
       vector<InterpAxis*> axes2;
-      double* data1 =scinew double[size];
-      double* data2 =scinew double[size];
+      double* data1 =new double[size];
+      double* data2 =new double[size];
       evaluate(expr->child1, axes1, data1, size);
       evaluate(expr->child2, axes2, data2, size);
       checkAxes(axes1, axes2, out_axes);
@@ -681,8 +681,8 @@ ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     {
       vector<InterpAxis*> axes1;
       vector<InterpAxis*> axes2;
-      double* data1 =scinew double[size];
-      double* data2 =scinew double[size];
+      double* data1 =new double[size];
+      double* data2 =new double[size];
       evaluate(expr->child1, axes1, data1, size);
       evaluate(expr->child2, axes2, data2, size);
       checkAxes(axes1, axes2, out_axes);
@@ -696,8 +696,8 @@ ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     {
       vector<InterpAxis*> axes1;
       vector<InterpAxis*> axes2;
-      double* data1 =scinew double[size];
-      double* data2 =scinew double[size];
+      double* data1 =new double[size];
+      double* data2 =new double[size];
       evaluate(expr->child1, axes1, data1, size);
       evaluate(expr->child2, axes2, data2, size);
       checkAxes(axes1, axes2, out_axes);

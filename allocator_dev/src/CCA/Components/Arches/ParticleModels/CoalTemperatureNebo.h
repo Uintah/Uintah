@@ -55,7 +55,7 @@ public:
       ~Builder(){}
 
       CoalTemperatureNebo* build()
-      { return scinew CoalTemperatureNebo( _task_name, _matl_index ); }
+      { return new CoalTemperatureNebo( _task_name, _matl_index ); }
 
       private: 
 

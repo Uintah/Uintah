@@ -23,7 +23,6 @@
  */
 
 #include <Core/Grid/AxiLinearInterpolator.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using std::vector;
@@ -46,7 +45,7 @@ AxiLinearInterpolator::~AxiLinearInterpolator()
 
 AxiLinearInterpolator* AxiLinearInterpolator::clone(const Patch* patch)
 {
-  return scinew AxiLinearInterpolator(patch);
+  return new AxiLinearInterpolator(patch);
  }
     
 //__________________________________

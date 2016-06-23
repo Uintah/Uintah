@@ -89,7 +89,7 @@ void NullContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* ms)
 {
-  Task * t = scinew Task("NullContact::exMomInterpolated", this, &NullContact::exMomInterpolated);
+  Task * t = new Task("NullContact::exMomInterpolated", this, &NullContact::exMomInterpolated);
   
   sched->addTask(t, patches, ms);
 }
@@ -98,7 +98,7 @@ void NullContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
                                              const PatchSet* patches,
                                              const MaterialSet* ms) 
 {
-  Task * t = scinew Task("NullContact::exMomIntegrated", this, &NullContact::exMomIntegrated);
+  Task * t = new Task("NullContact::exMomIntegrated", this, &NullContact::exMomIntegrated);
   
   sched->addTask(t, patches, ms);
 }

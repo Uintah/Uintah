@@ -95,7 +95,7 @@ void ExplicitTimeInt::sched_fe_update( SchedulerP& sched,
                                        int rkstep )
 {
   
-  Task* tsk = scinew Task("ExplicitTimeInt::fe_update", this, &ExplicitTimeInt::fe_update, phi, rhs, rkstep);
+  Task* tsk = new Task("ExplicitTimeInt::fe_update", this, &ExplicitTimeInt::fe_update, phi, rhs, rkstep);
   Ghost::GhostType ghost_type = Ghost::None; 
   int n_extra = 0;
   
@@ -179,7 +179,7 @@ void ExplicitTimeInt::sched_time_ave( SchedulerP& sched,
                                       int rkstep)
 {
   
-  Task* tsk = scinew Task("ExplicitTimeInt::time_ave", this, &ExplicitTimeInt::time_ave, phi, rkstep);
+  Task* tsk = new Task("ExplicitTimeInt::time_ave", this, &ExplicitTimeInt::time_ave, phi, rkstep);
   Ghost::GhostType ghost_type = Ghost::None; 
   int extra_cells = 0;
 

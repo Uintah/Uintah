@@ -120,7 +120,7 @@ namespace WasatchCore{
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef Expr::ConstantExpr<ParticleField>::Builder RHSBuilder;
-    return factory.register_expression( scinew RHSBuilder(rhsTag_, 0.0 ) );
+    return factory.register_expression( new RHSBuilder(rhsTag_, 0.0 ) );
   }
   
   //------------------------------------------------------------------

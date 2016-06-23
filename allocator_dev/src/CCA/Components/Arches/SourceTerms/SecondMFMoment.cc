@@ -39,7 +39,7 @@ void
 SecondMFMoment::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "SecondMFMoment::eval";
-  Task* tsk = scinew Task(taskname, this, &SecondMFMoment::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &SecondMFMoment::computeSource, timeSubStep);
   
   if (timeSubStep == 0) {
 
@@ -109,7 +109,7 @@ SecondMFMoment::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "SecondMFMoment::initialize"; 
   
-  Task* tsk = scinew Task(taskname, this, &SecondMFMoment::initialize);
+  Task* tsk = new Task(taskname, this, &SecondMFMoment::initialize);
   
   tsk->computes(_src_label);
   

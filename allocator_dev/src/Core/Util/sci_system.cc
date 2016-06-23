@@ -54,8 +54,6 @@
 #  include <cstring>
 #  include <pthread.h>
 
-#  include <Core/Malloc/Allocator.h>
-
 /*
  This file is straight out of the glibc-2.2.1 distribution, with the
  exception that I've made some very minor changes: commented out some
@@ -211,10 +209,6 @@ sci_system_linuxthreads(const char *line)
     return 1;
   }
 
-#if !defined( DISABLE_SCI_MALLOC )
-  // Recursively lock the allocator, to keep other threads out.
-  Uintah::LockAllocator( Uintah::DefaultAllocator() );
-#endif
   pid = __fork ();
   if (pid == (pid_t) 0)
     {
@@ -271,9 +265,6 @@ sci_system_linuxthreads(const char *line)
     {
       /* The fork failed.  */
       status = -1;
-#if !defined( DISABLE_SCI_MALLOC )
-      Uintah::UnLockAllocator( Uintah::DefaultAllocator() );
-#endif
     }
   else
     /* Parent side.  */
@@ -287,15 +278,9 @@ sci_system_linuxthreads(const char *line)
       char from_child[1];
       if (read(pipe_fd[0], from_child, 1) != 1) {
 	fprintf(stderr, "sci_system.cc:Error in reading from pipe in parent\n");
-#if !defined( DISABLE_SCI_MALLOC )
-	Uintah::UnLockAllocator( Uintah::DefaultAllocator() );
-#endif
 	return 1;
       }
       // We can unlock the allocator, because the child has
-#if !defined( DISABLE_SCI_MALLOC )
-      Uintah::UnLockAllocator( Uintah::DefaultAllocator() );
-#endif
       if (close(pipe_fd[0]) == -1) {
 	fprintf(stderr, "sci_system.cc:Error in closing read pipe in parent\n");
 	return 1;
@@ -362,7 +347,7 @@ sci_system(const char *line)
   const size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, nullptr, (size_t) 0);
   if (n > 0)
   {
-    char *buf = scinew char[n];
+    char *buf = new char[n];
     confstr(_CS_GNU_LIBPTHREAD_VERSION, buf, n);
     const bool nptl = strncmp(buf, "NPTL", 4) == 0;
     delete[] buf;

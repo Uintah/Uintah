@@ -25,7 +25,6 @@
 #include <Core/GeometryPiece/BoxGeometryPiece.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 #include <sstream>
 #ifndef DMIN
@@ -84,7 +83,7 @@ BoxGeometryPiece::outputHelper( ProblemSpecP& ps ) const
 GeometryPieceP
 BoxGeometryPiece::clone() const
 {
-  return scinew BoxGeometryPiece(*this);
+  return new BoxGeometryPiece(*this);
 }
 
 bool

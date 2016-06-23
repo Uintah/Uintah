@@ -149,7 +149,7 @@ main(int argc, char** argv)
       basedir = filebase.substr(0, filebase.find('.'));
     
     cout << "filebase: " << filebase << endl;
-    DataArchive* da = scinew DataArchive(filebase);
+    DataArchive* da = new DataArchive(filebase);
     
     // load list of possible variables from the data archive
     vector<string> allvars;
@@ -173,16 +173,16 @@ main(int argc, char** argv)
     // build a specific dumper
     FieldDumper * dumper = 0;
     if(fmt=="text") {
-      dumper = scinew TextDumper(da, basedir, args, fldselection);
+      dumper = new TextDumper(da, basedir, args, fldselection);
       /* untested 
     } else if(fmt=="ensight") {
-      dumper = scinew EnsightDumper(da, basedir, args, fldselection);
+      dumper = new EnsightDumper(da, basedir, args, fldselection);
       */
     } else if(fmt=="histogram" || fmt=="hist") {
       dumper = new HistogramDumper(da, basedir, args, fldselection);
       /* untested
     } else if(fmt=="dx" || fmt=="opendx") {
-      dumper = scinew DXDumper(da, basedir, binary, onedim);
+      dumper = new DXDumper(da, basedir, binary, onedim);
       */
     } else if(fmt=="info") {
       dumper = new InfoDumper(da, basedir, args, fldselection);

@@ -28,7 +28,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <cmath>
 #ifndef M_PI
@@ -72,7 +71,7 @@ void SphereShellPiece::outputHelper(ProblemSpecP& sphere_ps) const
 GeometryPieceP
 SphereShellPiece::clone() const
 {
-  return scinew SphereShellPiece(*this);
+  return new SphereShellPiece(*this);
 }
 
 bool 

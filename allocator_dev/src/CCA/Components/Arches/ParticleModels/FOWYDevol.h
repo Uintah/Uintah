@@ -49,7 +49,7 @@ namespace Uintah{
       ~Builder(){}
       
       FOWYDevol* build()
-      { return scinew FOWYDevol<IT, DT>( _task_name, _matl_index, _base_var_name, _Nenv ); }
+      { return new FOWYDevol<IT, DT>( _task_name, _matl_index, _base_var_name, _Nenv ); }
       
     private:
       

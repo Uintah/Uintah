@@ -66,8 +66,8 @@ particleExtract::particleExtract(ProblemSpecP& module_spec,
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
   d_matl_set = 0;
-  ps_lb = scinew particleExtractLabel();
-  M_lb = scinew MPMLabel();
+  ps_lb = new particleExtractLabel();
+  M_lb = new MPMLabel();
 }
 
 //__________________________________
@@ -109,7 +109,7 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
   it = unique(m.begin(), m.end());
   m.erase(it, m.end());
   
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();   
   
@@ -205,7 +205,7 @@ void particleExtract::scheduleInitialize(SchedulerP& sched,
   
   printSchedule(level,cout_doing,"particleExtract::scheduleInitialize");
   
-  Task* t = scinew Task("particleExtract::initialize", 
+  Task* t = new Task("particleExtract::initialize", 
                   this, &particleExtract::initialize);
   
   t->computes( ps_lb->lastWriteTimeLabel );
@@ -277,7 +277,7 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
   }
 
   printSchedule(level,cout_doing,"particleExtract::scheduleDoAnalysis_preReloc");
-  Task* t = scinew Task("particleExtract::doAnalysis_preReloc", 
+  Task* t = new Task("particleExtract::doAnalysis_preReloc", 
                    this,&particleExtract::doAnalysis_preReloc);
 
   // Tell the scheduler to not copy this variable to a new AMR grid and 
@@ -341,7 +341,7 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
   }
 
   printSchedule(level,cout_doing,"particleExtract::scheduleDoAnalysis");
-  Task* t = scinew Task("particleExtract::doAnalysis", 
+  Task* t = new Task("particleExtract::doAnalysis", 
                    this,&particleExtract::doAnalysis);
                      
                      

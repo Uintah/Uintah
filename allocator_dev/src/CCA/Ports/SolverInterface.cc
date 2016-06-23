@@ -51,14 +51,14 @@ namespace Uintah {
       varLabels_.push_back(rhsIntegralLabel);
     }
     
-    Task* tskIntegral = scinew Task("SolverInterface::computeRHSIntegral" + strRKStage.str(),
+    Task* tskIntegral = new Task("SolverInterface::computeRHSIntegral" + strRKStage.str(),
                                     this, &SolverInterface::computeRHSIntegral<FieldT>, bLabel,
                                     rhsIntegralLabel);
     tskIntegral->computes( rhsIntegralLabel );
     tskIntegral->requires( Uintah::Task::NewDW, bLabel, Ghost::None, 0 );
     sched->addTask(tskIntegral, level->eachPatch(), matls);
     
-    Task* tskSolvability = scinew Task("SolverInterface::enforceSolvability"+ strRKStage.str(),
+    Task* tskSolvability = new Task("SolverInterface::enforceSolvability"+ strRKStage.str(),
                                        this, &SolverInterface::enforceSolvability<FieldT>, bLabel,
                                        rhsIntegralLabel);
     tskSolvability->requires( Uintah::Task::NewDW, rhsIntegralLabel );
@@ -85,14 +85,14 @@ namespace Uintah {
       varLabels_.push_back(refValueLabel);
     }
     
-    Task* tskFindDiff = scinew Task("SolverInterface::findRefValueDiff",
+    Task* tskFindDiff = new Task("SolverInterface::findRefValueDiff",
                                     this, &SolverInterface::findRefValueDiff<FieldT>, xLabel,
                                     refValueLabel, refCell, refValue);
     tskFindDiff->computes( refValueLabel );
     tskFindDiff->requires( Uintah::Task::NewDW, xLabel, Ghost::None, 0 );
     sched->addTask(tskFindDiff, level->eachPatch(), matls);
     
-    Task* tskSetRefValue = scinew Task("SolverInterface::setRefValue",
+    Task* tskSetRefValue = new Task("SolverInterface::setRefValue",
                                        this, &SolverInterface::setRefValue<FieldT>, xLabel,
                                        refValueLabel);
     tskSetRefValue->requires( Uintah::Task::NewDW, refValueLabel );

@@ -86,7 +86,7 @@ void Material::setDWIndex(int idx)
 {
    d_dwindex = idx;
    ASSERT(!thismatl);
-   thismatl = scinew MaterialSubset(); 
+   thismatl = new MaterialSubset(); 
                                        
    thismatl->addReference();
    thismatl->add(idx);

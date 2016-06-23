@@ -54,7 +54,7 @@ void ScalarDissipation::sched_computeProp( const LevelP& level, SchedulerP& sche
   } 
   
   std::string taskname = "ScalarDissipation::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &ScalarDissipation::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &ScalarDissipation::computeProp, time_substep ); 
   
   tsk->modifies( _prop_label );
   if ( time_substep == 0 ){ 
@@ -114,7 +114,7 @@ void ScalarDissipation::sched_initialize( const LevelP& level, SchedulerP& sched
 {
   std::string taskname = "ScalarDissipation::initialize"; 
   
-  Task* tsk = scinew Task(taskname, this, &ScalarDissipation::initialize);
+  Task* tsk = new Task(taskname, this, &ScalarDissipation::initialize);
   tsk->computes(_prop_label); 
   
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

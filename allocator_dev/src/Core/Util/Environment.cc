@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 // Core SCIRun Includes
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/RWS.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FileUtils.h>

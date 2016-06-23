@@ -32,7 +32,7 @@ IntMatrix::IntMatrix(const Counter rows,
 {
   assert(rows>0);
   assert(cols>0);
-  mat = scinew int[rows*cols];
+  mat = new int[rows*cols];
 }
 
 IntMatrix::~IntMatrix(void)
@@ -106,7 +106,7 @@ IntMatrix::operator = (const IntMatrix& other)
   //Counter size=rows*cols;
   if (mat) {
     delete[] mat;
-    mat = scinew int[rows*cols];
+    mat = new int[rows*cols];
   }
   for(Counter i = 0; i < rows*cols; i++) {
     mat[i] = other.mat[i];
@@ -121,7 +121,7 @@ IntMatrix::IntMatrix(const IntMatrix& other)
   //Counter size=rows*cols;
   if (mat) {
     delete[] mat;
-    mat = scinew int[rows*cols];
+    mat = new int[rows*cols];
   }
   for(Counter i = 0; i < rows*cols; i++) {
     mat[i] = other.mat[i];

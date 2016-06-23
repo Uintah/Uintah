@@ -56,7 +56,7 @@ public:
       ~Builder(){}
 
       ComputePsi* build()
-      { return scinew ComputePsi( _task_name, _matl_index ); }
+      { return new ComputePsi( _task_name, _matl_index ); }
 
       private:
 

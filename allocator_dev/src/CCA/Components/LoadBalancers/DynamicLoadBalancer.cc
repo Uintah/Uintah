@@ -978,7 +978,6 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & cos
 bool
 DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
-  MALLOC_TRACE_TAG_SCOPE("DynamicLoadBalancer::possiblyDynamicallyReallocate");
 
   if (d_myworld->myrank() == 0) {
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
@@ -1129,24 +1128,24 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
     string costAlgo="ModelLS";
     p->get("costAlgorithm",costAlgo);
     if(costAlgo=="ModelLS") {
-      d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
+      d_costForecaster= new CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     }
     else if(costAlgo=="Kalman") {
       int timestepWindow;
       p->getWithDefault("profileTimestepWindow",timestepWindow,10);
-      d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::KALMAN,this);
+      d_costForecaster=new CostProfiler(d_myworld,ProfileDriver::KALMAN,this);
       d_costForecaster->setTimestepWindow(timestepWindow);
       d_collectParticles=false;
     }
     else if(costAlgo=="Memory") {
       int timestepWindow;
       p->getWithDefault("profileTimestepWindow",timestepWindow,10);
-      d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::MEMORY,this);
+      d_costForecaster=new CostProfiler(d_myworld,ProfileDriver::MEMORY,this);
       d_costForecaster->setTimestepWindow(timestepWindow);
       d_collectParticles=false;
     }
     else if(costAlgo=="Model") {
-      d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
+      d_costForecaster=new CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     }
     else {
       throw InternalError("Invalid CostAlgorithm in Dynamic Load Balancer\n",__FILE__,__LINE__);

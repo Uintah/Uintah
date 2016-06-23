@@ -52,7 +52,7 @@ namespace Uintah
 {
   RegridderTest::RegridderTest ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
   {
-    //d_examplesLabel = scinew ExamplesLabel();
+    //d_examplesLabel = new ExamplesLabel();
     d_oldDensityLabel = VarLabel::create("old_density",
                                          CCVariable<double>::getTypeDescription());
     d_densityLabel = VarLabel::create("density",
@@ -72,7 +72,7 @@ namespace Uintah
                                    GridP& grid, SimulationStateP& state )
   {
     d_sharedState = state;
-    d_material = scinew SimpleMaterial();
+    d_material = new SimpleMaterial();
     d_sharedState->registerSimpleMaterial( d_material );
 
     ProblemSpecP spec = params->findBlock("RegridderTest");
@@ -100,7 +100,7 @@ namespace Uintah
 
   void RegridderTest::scheduleInitialize ( const LevelP& level, SchedulerP& scheduler )
   {
-    Task* task = scinew Task( "initialize", this, &RegridderTest::initialize );
+    Task* task = new Task( "initialize", this, &RegridderTest::initialize );
     task->computes( d_densityLabel );
     task->computes( d_currentAngleLabel, (Level*)0 );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
@@ -113,14 +113,14 @@ namespace Uintah
 
   void RegridderTest::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
   {
-    Task* task = scinew Task( "computeStableTimestep", this, &RegridderTest::computeStableTimestep );
+    Task* task = new Task( "computeStableTimestep", this, &RegridderTest::computeStableTimestep );
     task->computes( d_sharedState->get_delt_label(),level.get_rep() );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
   void RegridderTest::scheduleTimeAdvance ( const LevelP& level, SchedulerP& scheduler)
   {
-    Task* task = scinew Task( "timeAdvance", this, &RegridderTest::timeAdvance );
+    Task* task = new Task( "timeAdvance", this, &RegridderTest::timeAdvance );
     task->requires( Task::OldDW, d_densityLabel, Ghost::AroundCells, 1 );
     task->computes( d_oldDensityLabel );
     task->computes( d_densityLabel );
@@ -129,7 +129,7 @@ namespace Uintah
 
   void RegridderTest::scheduleErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
   {
-    Task* task = scinew Task( "errorEstimate", this, &RegridderTest::errorEstimate, false );
+    Task* task = new Task( "errorEstimate", this, &RegridderTest::errorEstimate, false );
     task->requires( Task::OldDW, d_currentAngleLabel, (Level*) 0);
     task->requires( Task::NewDW, d_densityLabel, Ghost::AroundCells, 1 );
     task->requires( Task::NewDW, d_oldDensityLabel, Ghost::AroundCells, 1 );
@@ -142,7 +142,7 @@ namespace Uintah
 
   void RegridderTest::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
   {
-    Task* task = scinew Task( "initialErrorEstimate", this, &RegridderTest::errorEstimate, true );
+    Task* task = new Task( "initialErrorEstimate", this, &RegridderTest::errorEstimate, true );
     task->requires( Task::NewDW, d_densityLabel, Ghost::AroundCells, 1 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
@@ -152,7 +152,7 @@ namespace Uintah
 
   void RegridderTest::scheduleCoarsen ( const LevelP& coarseLevel, SchedulerP& scheduler )
   {
-    Task* task = scinew Task( "coarsen", this, &RegridderTest::coarsen );
+    Task* task = new Task( "coarsen", this, &RegridderTest::coarsen );
     task->requires(Task::NewDW, d_densityLabel,
                    0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
     task->modifies(d_densityLabel);
@@ -161,7 +161,7 @@ namespace Uintah
 
   void RegridderTest::scheduleRefine ( const PatchSet* patches, SchedulerP& scheduler )
   {
-    Task* task = scinew Task( "refine", this, &RegridderTest::refine );
+    Task* task = new Task( "refine", this, &RegridderTest::refine );
     task->requires(Task::NewDW, d_densityLabel, 0, Task::CoarseLevel, 0,
                    Task::NormalDomain, Ghost::None, 0);
     //    task->requires(Task::NewDW, d_oldDensityLabel, 0, Task::CoarseLevel, 0,

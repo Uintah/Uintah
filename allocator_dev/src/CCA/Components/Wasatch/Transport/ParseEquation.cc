@@ -98,23 +98,23 @@ namespace WasatchCore{
     
     if( eqnLabel == "generic" ){
       typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
-      transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
+      transeqn = new ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
                                        params,
                                        gc,
                                        densityTag,
                                        isConstDensity,
                                        turbParams );
-      adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
+      adaptor = new EqnTimestepAdaptor< SVolField >( transeqn );
     }
     else if( eqnLabel == "enthalpy" ){
       typedef EnthalpyTransportEquation TransEqn;
-      transeqn = scinew TransEqn( ScalarTransportEquation<SVolField>::get_solnvar_name(params),
+      transeqn = new TransEqn( ScalarTransportEquation<SVolField>::get_solnvar_name(params),
                                  params,
                                  gc,
                                  densityTag,
                                  isConstDensity,
                                  turbParams );
-      adaptor = scinew EqnTimestepAdaptor<SVolField>(transeqn);
+      adaptor = new EqnTimestepAdaptor<SVolField>(transeqn);
     }
     else {
       std::ostringstream msg;
@@ -171,12 +171,12 @@ namespace WasatchCore{
       const Expr::Tag icTag( thisPhiName, Expr::STATE_NONE );
       const Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
       typedef Expr::SinFunction<SVolField>::Builder Builder;
-      icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
+      icGraphHelper->exprFactory->register_expression( new Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
       
       // create the transport equation with all-to-all source term
       typedef ScalabilityTestTransportEquation< SVolField > ScalTestEqn;
-      EquationBase* scaltesteqn = scinew ScalTestEqn( gc, thisPhiName, params );
-      adaptors.push_back( scinew EqnTimestepAdaptor< SVolField >( scaltesteqn ) );
+      EquationBase* scaltesteqn = new ScalTestEqn( gc, thisPhiName, params );
+      adaptors.push_back( new EqnTimestepAdaptor< SVolField >( scaltesteqn ) );
       
       //_____________________________________________________
       // set up initial conditions on this equation
@@ -567,7 +567,7 @@ namespace WasatchCore{
         proc0cout << "Setting up X momentum transport equation" << std::endl;
         
         typedef CompressibleMomentumTransportEquation<SpatialOps::XDIR> XMomEq;
-        EquationBase* momtranseq = scinew XMomEq( WasatchCore::XDIR,
+        EquationBase* momtranseq = new XMomEq( WasatchCore::XDIR,
                                                   xvelname,
                                                   xmomname,
                                                   rhoTag,
@@ -580,7 +580,7 @@ namespace WasatchCore{
                                                   momentumSpec,
                                                   turbParams );
         
-        adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
+        adaptors.push_back( new EqnTimestepAdaptor<SVolField>(momtranseq) );
         
         xVelTag = Expr::Tag(xvelname, Expr::STATE_NONE);
       }
@@ -589,7 +589,7 @@ namespace WasatchCore{
         proc0cout << "Setting up Y momentum transport equation" << std::endl;
         
         typedef CompressibleMomentumTransportEquation<SpatialOps::YDIR> YMomEq;
-        EquationBase* momtranseq = scinew YMomEq( WasatchCore::YDIR, yvelname,
+        EquationBase* momtranseq = new YMomEq( WasatchCore::YDIR, yvelname,
                                                   ymomname,
                                                   rhoTag,
                                                   temperatureTag,
@@ -601,7 +601,7 @@ namespace WasatchCore{
                                                   momentumSpec,
                                                   turbParams );
         
-        adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
+        adaptors.push_back( new EqnTimestepAdaptor<SVolField>(momtranseq) );
         
         yVelTag = Expr::Tag(yvelname, Expr::STATE_NONE);
       }
@@ -609,7 +609,7 @@ namespace WasatchCore{
       if( dozvel && dozmom ){
         proc0cout << "Setting up Z momentum transport equation" << std::endl;
         typedef CompressibleMomentumTransportEquation<SpatialOps::ZDIR> ZMomEq;
-        EquationBase* momtranseq = scinew ZMomEq( WasatchCore::ZDIR, zvelname,
+        EquationBase* momtranseq = new ZMomEq( WasatchCore::ZDIR, zvelname,
                                                  zmomname,
                                                  rhoTag,
                                                  temperatureTag,
@@ -621,15 +621,15 @@ namespace WasatchCore{
                                                  momentumSpec,
                                                  turbParams );
         
-        adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
+        adaptors.push_back( new EqnTimestepAdaptor<SVolField>(momtranseq) );
         
         zVelTag = Expr::Tag(zvelname, Expr::STATE_NONE);
       }
       
       
       // register continuity equation
-      EquationBase* contEq = scinew ContinuityTransportEquation(rhoTag, temperatureTag, mixMWTag, R, gc, xVelTag, yVelTag, zVelTag);
-      adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(contEq) );
+      EquationBase* contEq = new ContinuityTransportEquation(rhoTag, temperatureTag, mixMWTag, R, gc, xVelTag, yVelTag, zVelTag);
+      adaptors.push_back( new EqnTimestepAdaptor<SVolField>(contEq) );
       
       // register total internal energy equation
       const Expr::TagList velTags = tag_list(xVelTag, yVelTag, zVelTag);
@@ -638,7 +638,7 @@ namespace WasatchCore{
       std::string rhoETotal;
       energySpec->get("SolutionVariable", rhoETotal);
       proc0cout << "Creating TotalInternalEnergyTransportEquation" << std::endl;
-      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation( rhoETotal,
+      EquationBase* totalEEq = new TotalInternalEnergyTransportEquation( rhoETotal,
                                                                             energySpec,
                                                                             gc,
                                                                             rhoTag,
@@ -649,7 +649,7 @@ namespace WasatchCore{
                                                                             viscTag,
                                                                             TagNames::self().dilatation,
                                                                             turbParams );
-      adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(totalEEq) );
+      adaptors.push_back( new EqnTimestepAdaptor<SVolField>(totalEEq) );
       
     } // isCompressible
     else{ // low mach
@@ -657,7 +657,7 @@ namespace WasatchCore{
       if( doxvel && doxmom ){
         proc0cout << "Setting up X momentum transport equation" << std::endl;
         typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
-        EquationBase* momtranseq = scinew MomTransEq( WasatchCore::XDIR, xvelname,
+        EquationBase* momtranseq = new MomTransEq( WasatchCore::XDIR, xvelname,
                                                       xmomname,
                                                       densityTag,
                                                       isConstDensity,
@@ -667,13 +667,13 @@ namespace WasatchCore{
                                                       momentumSpec,
                                                       turbParams,
                                                       linSolver, sharedState );
-        adaptors.push_back( scinew EqnTimestepAdaptor<XVolField>(momtranseq) );
+        adaptors.push_back( new EqnTimestepAdaptor<XVolField>(momtranseq) );
       }
       
       if( doyvel && doymom ){
         proc0cout << "Setting up Y momentum transport equation" << std::endl;
         typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
-        EquationBase* momtranseq = scinew MomTransEq( WasatchCore::YDIR, yvelname,
+        EquationBase* momtranseq = new MomTransEq( WasatchCore::YDIR, yvelname,
                                                       ymomname,
                                                       densityTag,
                                                       isConstDensity,
@@ -683,13 +683,13 @@ namespace WasatchCore{
                                                       momentumSpec,
                                                       turbParams,
                                                       linSolver,sharedState );
-        adaptors.push_back( scinew EqnTimestepAdaptor<YVolField>(momtranseq) );
+        adaptors.push_back( new EqnTimestepAdaptor<YVolField>(momtranseq) );
       }
       
       if( dozvel && dozmom ){
         proc0cout << "Setting up Z momentum transport equation" << std::endl;
         typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
-        EquationBase* momtranseq = scinew MomTransEq( WasatchCore::ZDIR, zvelname,
+        EquationBase* momtranseq = new MomTransEq( WasatchCore::ZDIR, zvelname,
                                                       zmomname,
                                                       densityTag,
                                                       isConstDensity,
@@ -699,7 +699,7 @@ namespace WasatchCore{
                                                       momentumSpec,
                                                       turbParams,
                                                       linSolver,sharedState );
-        adaptors.push_back( scinew EqnTimestepAdaptor<ZVolField>(momtranseq) );
+        adaptors.push_back( new EqnTimestepAdaptor<ZVolField>(momtranseq) );
       }
     }
     
@@ -723,7 +723,7 @@ namespace WasatchCore{
         pvTag = Expr::Tag(pvname,Expr::STATE_DYNAMIC);
         pwTag = Expr::Tag(pwname,Expr::STATE_DYNAMIC);
       }
-      const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
+      const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(new StableTimestep::Builder( TagNames::self().stableTimestep,
                                                                                                                            densityTag,
                                                                                                                            viscTag,
                                                                                                                            xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag ), true);
@@ -828,14 +828,14 @@ namespace WasatchCore{
       
       // create moment transport equation
       typedef MomentTransportEquation< SVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( thisPhiName,
+      EquationBase* momtranseq = new MomTransEq( thisPhiName,
                                                    gc,
                                                    momentID,
                                                    isConstDensity,
                                                    params,
                                                    initialMoments[iMom] );
       
-      adaptors.push_back( scinew EqnTimestepAdaptor< SVolField >( momtranseq ) );
+      adaptors.push_back( new EqnTimestepAdaptor< SVolField >( momtranseq ) );
       
       // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO
       // THAT ELSEWHERE, BUT THIS IS NEEDED TO MAKE THINGS EASIER WHEN USING

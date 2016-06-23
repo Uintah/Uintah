@@ -52,7 +52,7 @@ namespace Uintah{
      ~Builder(){}
 
      KokkosSolver* build(){
-       return scinew KokkosSolver( _sharedState, _myworld, _task_factory_map );
+       return new KokkosSolver( _sharedState, _myworld, _task_factory_map );
      }
 
   private:

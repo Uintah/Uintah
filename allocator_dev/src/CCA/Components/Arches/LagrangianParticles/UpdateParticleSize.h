@@ -46,7 +46,7 @@ public:
       ~Builder(){}
 
       UpdateParticleSize* build()
-      { return scinew UpdateParticleSize( _task_name, _matl_index ); }
+      { return new UpdateParticleSize( _task_name, _matl_index ); }
 
       private: 
 

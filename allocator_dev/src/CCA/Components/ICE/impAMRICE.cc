@@ -245,7 +245,7 @@ void impAMRICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
   cout_doing << d_myworld->myrank() <<
                 " impAMRICE::scheduleMultiLevelPressureSolve" << endl;
   
-  Task* t = scinew Task("impAMRICE::multiLevelPressureSolve", 
+  Task* t = new Task("impAMRICE::multiLevelPressureSolve", 
                    this, &impAMRICE::multiLevelPressureSolve,
                    grid, ice_matls, mpm_matls);
 
@@ -645,7 +645,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                << " impAMRICE::scheduleCompute_refluxFluxes_RHS\t\t\t\tL-" 
                << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
 
-    Task* t1 = scinew Task("impAMRICE::compute_refluxFluxes_RHS",
+    Task* t1 = new Task("impAMRICE::compute_refluxFluxes_RHS",
                      this, &impAMRICE::compute_refluxFluxes_RHS);
 
     Ghost::GhostType gn  = Ghost::None;
@@ -672,7 +672,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                << " impAMRICE::scheduleApply_refluxFluxes_RHS\t\t\t\tL-" 
                << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
 
-    Task* t2 = scinew Task("impAMRICE::apply_refluxFluxes_RHS",
+    Task* t2 = new Task("impAMRICE::apply_refluxFluxes_RHS",
                      this, &impAMRICE::apply_refluxFluxes_RHS);
                      
     // coarse grid RHS after setupRHS               
@@ -809,7 +809,7 @@ void impAMRICE::scheduleCoarsen_delP(SchedulerP& sched,
   cout_doing << d_myworld->myrank()<< " impAMRICE::scheduleCoarsen_"<< variable->getName()
              <<"\t\t\t\t\tL-" << coarseLevel->getIndex() << endl;
 
-  Task* t = scinew Task("impAMRICE::coarsen_delP",
+  Task* t = new Task("impAMRICE::coarsen_delP",
                   this, &impAMRICE::coarsen_delP, variable);
 
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -919,7 +919,7 @@ void impAMRICE::scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched,
              << " impAMRICE::scheduleZeroMatrix_RHS_UnderFinePatches\t\t\tL-" 
              << coarseLevel->getIndex() << endl;
   
-  Task* t = scinew Task("impAMRICE::zeroMatrix_UnderFinePatches",
+  Task* t = new Task("impAMRICE::zeroMatrix_UnderFinePatches",
                   this, &impAMRICE::zeroMatrix_UnderFinePatches);
   
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
@@ -1001,7 +1001,7 @@ void impAMRICE::schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched,
                << " impAMRICE::matrixBC_CFI_coarsePatch\t\t\t\t\tL-" 
                << coarseLevel->getIndex() <<endl;
 
-    Task* task = scinew Task("schedule_matrixBC_CFI_coarsePatch",
+    Task* task = new Task("schedule_matrixBC_CFI_coarsePatch",
                   this, &impAMRICE::matrixBC_CFI_coarsePatch);
 
     Ghost::GhostType  gn  = Ghost::None;
@@ -1150,7 +1150,7 @@ void impAMRICE::schedule_bogus_imp_delP(SchedulerP& sched,
   cout_doing << d_myworld->myrank() 
              << " impAMRICE::schedule_bogus_impDelP"<<endl;
 
-  Task* t = scinew Task("bogus_imp_delP",this, &impAMRICE::bogus_imp_delP);
+  Task* t = new Task("bogus_imp_delP",this, &impAMRICE::bogus_imp_delP);
     
   GridP grid = perProcPatches->getUnion()->get(0)->getLevel()->getGrid();
 

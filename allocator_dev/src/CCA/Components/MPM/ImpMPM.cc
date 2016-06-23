@@ -91,8 +91,8 @@ static DebugStream cout_doing("IMPM", false);
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   MPMCommon(myworld), UintahParallelComponent(myworld)
 {
-  lb = scinew MPMLabel();
-  flags = scinew ImpMPMFlags(myworld);
+  lb = new MPMLabel();
+  flags = new ImpMPMFlags(myworld);
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   d_rigid_body = false;
@@ -103,7 +103,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_perproc_patches = 0;
   d_switchCriteria = 0;
 
-  one_matl = scinew MaterialSubset();
+  one_matl = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   NGP     = 1;
@@ -257,10 +257,10 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
    
   if (flags->d_solver_type == "petsc") {
-    d_solver = scinew MPMPetscSolver();
+    d_solver = new MPMPetscSolver();
   }
   else {
-    d_solver = scinew SimpleSolver();
+    d_solver = new SimpleSolver();
   }
 
   d_solver->initialize();
@@ -279,7 +279,7 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
    
   d_recompileSubsched = true;
 
-  heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
+  heatConductionModel = new ImplicitHeatConduction(sharedState,lb,flags);
 
   heatConductionModel->problemSetup(flags->d_solver_type);
 
@@ -342,7 +342,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
-  Task* t = scinew Task("ImpMPM::actuallyInitialize",
+  Task* t = new Task("ImpMPM::actuallyInitialize",
                         this, &ImpMPM::actuallyInitialize);
 
   const PatchSet* patches = level->eachPatch();
@@ -405,7 +405,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
 
-  t = scinew Task("ImpMPM::printParticleCount",
+  t = new Task("ImpMPM::printParticleCount",
                   this, &ImpMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
@@ -781,7 +781,7 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
 void ImpMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
-  d_loadCurveIndex = scinew MaterialSubset();
+  d_loadCurveIndex = new MaterialSubset();
   d_loadCurveIndex->add(0);
   d_loadCurveIndex->addReference();
 
@@ -794,7 +794,7 @@ void ImpMPM::scheduleInitializePressureBCs(const LevelP& level,
 
     // Create a task that calculates the total number of particles
     // associated with each load curve.  
-    Task* t = scinew Task("ImpMPM::countMaterialPointsPerLoadCurve",
+    Task* t = new Task("ImpMPM::countMaterialPointsPerLoadCurve",
                           this, &ImpMPM::countMaterialPointsPerLoadCurve);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
@@ -803,7 +803,7 @@ void ImpMPM::scheduleInitializePressureBCs(const LevelP& level,
 
     // Create a task that calculates the force to be associated with
     // each particle based on the pressure BCs
-    t = scinew Task("ImpMPM::initializePressureBC",
+    t = new Task("ImpMPM::initializePressureBC",
                     this, &ImpMPM::initializePressureBC);
     t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
@@ -824,7 +824,7 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched
 
   printSchedule(level,cout_doing,"IMPM::scheduleComputeStableTimestep");
 
-  Task* t = scinew Task("ImpMPM::actuallyComputeStableTimestep",
+  Task* t = new Task("ImpMPM::actuallyComputeStableTimestep",
                      this, &ImpMPM::actuallyComputeStableTimestep);
 
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
@@ -896,7 +896,7 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                                                                 
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleApplyExternalLoads");
-  Task* t=scinew Task("IMPM::applyExternalLoads",
+  Task* t=new Task("IMPM::applyExternalLoads",
                     this, &ImpMPM::applyExternalLoads);
                                                                                 
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
@@ -921,7 +921,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                 const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleInterpolateParticlesToGrid");
-  Task* t = scinew Task("ImpMPM::interpolateParticlesToGrid",
+  Task* t = new Task("ImpMPM::interpolateParticlesToGrid",
                         this,&ImpMPM::interpolateParticlesToGrid);
 
 
@@ -978,7 +978,7 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
                                                 const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleProjectCCHeatSourceToNodes");
-  Task* t = scinew Task("ImpMPM::projectCCHeatSourceToNodes",
+  Task* t = new Task("ImpMPM::projectCCHeatSourceToNodes",
                         this,&ImpMPM::projectCCHeatSourceToNodes);
 
   t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
@@ -999,7 +999,7 @@ void ImpMPM::scheduleComputeCCVolume(SchedulerP& sched,
                                      const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeCCVolume");
-  Task* t = scinew Task("ImpMPM::computeCCVolume",
+  Task* t = new Task("ImpMPM::computeCCVolume",
                         this,&ImpMPM::computeCCVolume);
                                                                                 
   t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
@@ -1023,7 +1023,7 @@ void ImpMPM::scheduleComputeHeatExchange(SchedulerP& sched,
    *   out(G.EXTERNAL_HEAT_RATE) */
 
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeHeatExchange");
-  Task* t = scinew Task("ThermalContact::computeHeatExchange",
+  Task* t = new Task("ThermalContact::computeHeatExchange",
                         thermalContactModel,
                         &ThermalContact::computeHeatExchange);
 
@@ -1039,7 +1039,7 @@ void ImpMPM::scheduleDestroyMatrix(SchedulerP& sched,
                                    bool recursion)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleDestroyMatrix");
-  Task* t = scinew Task("ImpMPM::destroyMatrix",this,&ImpMPM::destroyMatrix,
+  Task* t = new Task("ImpMPM::destroyMatrix",this,&ImpMPM::destroyMatrix,
                          recursion);
 
   t->setType(Task::OncePerProc);
@@ -1059,7 +1059,7 @@ void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
                                   const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleCreateMatrix");
-  Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix);
+  Task* t = new Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix);
 
   t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
 
@@ -1080,7 +1080,7 @@ void ImpMPM::scheduleApplyBoundaryConditions(SchedulerP& sched,
                                              const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleApplyBoundaryConditions");
-  Task* t = scinew Task("ImpMPM::applyBoundaryCondition",
+  Task* t = new Task("ImpMPM::applyBoundaryCondition",
                         this, &ImpMPM::applyBoundaryConditions);
 
   t->modifies(lb->gVelocityOldLabel);
@@ -1103,7 +1103,7 @@ void ImpMPM::scheduleComputeContact(SchedulerP& sched,
                                     const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeContact");
-  Task* t = scinew Task("ImpMPM::computeContact",
+  Task* t = new Task("ImpMPM::computeContact",
                          this, &ImpMPM::computeContact);
 
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
@@ -1127,7 +1127,7 @@ void ImpMPM::scheduleFindFixedDOF(SchedulerP& sched,
                                   const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleFindFixedDOF");
-  Task* t = scinew Task("ImpMPM::findFixedDOF", this, 
+  Task* t = new Task("ImpMPM::findFixedDOF", this, 
                         &ImpMPM::findFixedDOF);
 
   t->requires(Task::NewDW, lb->gMassAllLabel, Ghost::None, 0);
@@ -1152,7 +1152,7 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensor");
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("ImpMPM::computeStressTensorImplicit",
+  Task* t = new Task("ImpMPM::computeStressTensorImplicit",
                     this, &ImpMPM::computeStressTensorImplicit,recursion);
 
   t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
@@ -1170,7 +1170,7 @@ void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,
                                          const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleFormStiffnessMatrix");
-  Task* t = scinew Task("ImpMPM::formStiffnessMatrix",
+  Task* t = new Task("ImpMPM::formStiffnessMatrix",
                     this, &ImpMPM::formStiffnessMatrix);
 
   t->requires(Task::ParentNewDW,lb->gMassAllLabel, Ghost::None);
@@ -1193,7 +1193,7 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                           const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeInternalForce");
-  Task* t = scinew Task("ImpMPM::computeInternalForce",
+  Task* t = new Task("ImpMPM::computeInternalForce",
                          this, &ImpMPM::computeInternalForce);
 
 
@@ -1217,7 +1217,7 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
                            const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleFormQ");
-  Task* t = scinew Task("ImpMPM::formQ", this, 
+  Task* t = new Task("ImpMPM::formQ", this, 
                         &ImpMPM::formQ);
 
   Ghost::GhostType  gnone = Ghost::None;
@@ -1254,7 +1254,7 @@ void ImpMPM::scheduleSolveForDuCG(SchedulerP& sched,
                                   const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleSolveForDuCG");
-  Task* t = scinew Task("ImpMPM::solveForDuCG", this, 
+  Task* t = new Task("ImpMPM::solveForDuCG", this, 
                         &ImpMPM::solveForDuCG);
 
   t->setType(Task::OncePerProc);
@@ -1274,7 +1274,7 @@ void ImpMPM::scheduleGetDisplacementIncrement(SchedulerP& sched,
                                               const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleGetDisplacementIncrement");
-  Task* t = scinew Task("ImpMPM::getDisplacementIncrement", this, 
+  Task* t = new Task("ImpMPM::getDisplacementIncrement", this, 
                         &ImpMPM::getDisplacementIncrement);
 
   t->computes(lb->dispIncLabel);
@@ -1296,7 +1296,7 @@ void ImpMPM::scheduleUpdateGridKinematics(SchedulerP& sched,
                                           const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleUpdateGridKinematics");
-  Task* t = scinew Task("ImpMPM::updateGridKinematics", this, 
+  Task* t = new Task("ImpMPM::updateGridKinematics", this, 
                         &ImpMPM::updateGridKinematics);
 
   t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
@@ -1321,7 +1321,7 @@ void ImpMPM::scheduleCheckConvergence(SchedulerP& sched,
                                       const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleCheckConvergence");
-  Task* t = scinew Task("ImpMPM::checkConvergence", this,
+  Task* t = new Task("ImpMPM::checkConvergence", this,
                         &ImpMPM::checkConvergence);
 
   t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
@@ -1342,7 +1342,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 {
   d_recompileSubsched = true;
   printSchedule(patches,cout_doing,"IMPM::scheduleIterate");
-  Task* task = scinew Task("ImpMPM::iterate", this, &ImpMPM::iterate,level,
+  Task* task = new Task("ImpMPM::iterate", this, &ImpMPM::iterate,level,
                            sched.get_rep());
 
   task->hasSubScheduler();
@@ -1388,7 +1388,7 @@ void ImpMPM::scheduleComputeStressTensorImplicit(SchedulerP& sched,
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensorImplicit");
-  Task* t = scinew Task("ImpMPM::computeStressTensorImplicit",
+  Task* t = new Task("ImpMPM::computeStressTensorImplicit",
                   this, &ImpMPM::computeStressTensorImplicit);
 
   for(int m = 0; m < numMatls; m++){
@@ -1406,7 +1406,7 @@ void ImpMPM::scheduleUpdateTotalDisplacement(SchedulerP& sched,
 {
   if(!flags->d_doGridReset){
     printSchedule(patches,cout_doing,"IMPM::scheduleUpdateTotalDisplacement");
-    Task* t = scinew Task("ImpMPM::updateTotalDisplacement",
+    Task* t = new Task("ImpMPM::updateTotalDisplacement",
                               this, &ImpMPM::updateTotalDisplacement);
 
     t->requires(Task::OldDW, lb->gDisplacementLabel, Ghost::None);
@@ -1423,7 +1423,7 @@ void ImpMPM::scheduleComputeAcceleration(SchedulerP& sched,
                                          const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeAcceleration");
-  Task* t = scinew Task("ImpMPM::computeAcceleration",
+  Task* t = new Task("ImpMPM::computeAcceleration",
                             this, &ImpMPM::computeAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -1445,7 +1445,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                      const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleInterpolateToParticlesAndUpdate");
-  Task* t=scinew Task("ImpMPM::interpolateToParticlesAndUpdate",
+  Task* t=new Task("ImpMPM::interpolateToParticlesAndUpdate",
                     this, &ImpMPM::interpolateToParticlesAndUpdate);
 
  
@@ -1501,7 +1501,7 @@ void ImpMPM::scheduleRefine(const PatchSet* patches,
                             SchedulerP& sched)
 {
   printSchedule(patches,cout_doing,"ImpMPM::scheduleRefine");
-  Task* t = scinew Task("ImpMPM::refine", this, &ImpMPM::refine);
+  Task* t = new Task("ImpMPM::refine", this, &ImpMPM::refine);
                                                                                 
   t->computes(lb->partCountLabel);
   t->computes(lb->pXLabel);
@@ -1571,7 +1571,7 @@ void ImpMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
     cout_doing << "ImpMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
               
   // The simulation controller should not schedule it every time step
-  Task* task = scinew Task("IMPM::errorEstimate", this, &ImpMPM::errorEstimate);
+  Task* task = new Task("IMPM::errorEstimate", this, &ImpMPM::errorEstimate);
                                                                                 
   // if the finest level, compute flagged cells
   if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
@@ -1599,7 +1599,7 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  Task* t=scinew Task("ImpMPM::interpolateStressToGrid",
+  Task* t=new Task("ImpMPM::interpolateStressToGrid",
                     this, &ImpMPM::interpolateStressToGrid);
 
   // This task is done for visualization only
@@ -3577,7 +3577,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
 
-      ParticleSubset* delete_particles = scinew ParticleSubset(0,dwindex,patch);
+      ParticleSubset* delete_particles = new ParticleSubset(0,dwindex,patch);
     
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);
@@ -3898,7 +3898,7 @@ void ImpMPM::printParticleCount(const ProcessorGroup* pg,
 void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
-  MaterialSubset* loadCurveIndex = scinew MaterialSubset();
+  MaterialSubset* loadCurveIndex = new MaterialSubset();
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -3909,7 +3909,7 @@ void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
 
     // Create a task that calculates the total number of particles
     // associated with each load curve.  
-    Task* t = scinew Task("ImpMPM::countMaterialPointsPerLoadCurve",
+    Task* t = new Task("ImpMPM::countMaterialPointsPerLoadCurve",
                           this, &ImpMPM::countMaterialPointsPerLoadCurve);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, loadCurveIndex,
@@ -3918,7 +3918,7 @@ void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
 
     // Create a task that calculates the heatflux to be associated with
     // each particle based on the HeatFluxBCs
-    t = scinew Task("ImpMPM::initializeHeatFluxBC",
+    t = new Task("ImpMPM::initializeHeatFluxBC",
                     this, &ImpMPM::initializeHeatFluxBC);
     t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);

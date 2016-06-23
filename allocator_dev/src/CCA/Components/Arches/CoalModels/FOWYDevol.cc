@@ -38,7 +38,7 @@ FOWYDevolBuilder::FOWYDevolBuilder( const std::string         & modelName,
 FOWYDevolBuilder::~FOWYDevolBuilder(){}
 
 ModelBase* FOWYDevolBuilder::build() {
-  return scinew FOWYDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new FOWYDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -224,7 +224,7 @@ void
 FOWYDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "FOWYDevol::initVars";
-  Task* tsk = scinew Task(taskname, this, &FOWYDevol::initVars);
+  Task* tsk = new Task(taskname, this, &FOWYDevol::initVars);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel);
@@ -274,7 +274,7 @@ void
 FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "FOWYDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &FOWYDevol::computeModel, timeSubStep);
+  Task* tsk = new Task(taskname, this, &FOWYDevol::computeModel, timeSubStep);
 
   Ghost::GhostType gn = Ghost::None;
 

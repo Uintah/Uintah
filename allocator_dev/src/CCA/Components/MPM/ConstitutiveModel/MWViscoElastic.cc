@@ -118,7 +118,7 @@ void MWViscoElastic::outputProblemSpec(ProblemSpecP& ps,
 
 MWViscoElastic* MWViscoElastic::clone()
 {
-  return scinew MWViscoElastic(*this);
+  return new MWViscoElastic(*this);
 }
 
 void MWViscoElastic::initializeCMData(const Patch* patch,
@@ -473,7 +473,7 @@ const TypeDescription* fun_getTypeDescription(MWViscoElastic::StateData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = scinew
+      td = new
         TypeDescription(TypeDescription::Other,
                         "MWViscoElastic::StateData", true, &makeMPI_CMData);
    }

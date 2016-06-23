@@ -36,7 +36,6 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
@@ -226,7 +225,7 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap& sortinfo )
           }
           std::ostringstream taskname;
           taskname << "Reduction: " << comp->m_var->getName() << ", level: " << levelidx << ", dw: " << dw;
-          Task* newtask = scinew Task(taskname.str(), Task::Reduction);
+          Task* newtask = new Task(taskname.str(), Task::Reduction);
 
           sortinfo[newtask] = GraphSortInfo();
 
@@ -420,7 +419,7 @@ TaskGraph::addDependencyEdges( Task*              task,
               if (priorReq != req) {
                 ASSERT(priorReq->m_var->equals(req->m_var));
                 if (priorReq->m_task != task) {
-                  Task::Edge* edge = scinew Task::Edge(priorReq, req);
+                  Task::Edge* edge = new Task::Edge(priorReq, req);
                   edges.push_back(edge);
                   req->addComp(edge);
                   priorReq->addReq(edge);
@@ -436,7 +435,7 @@ TaskGraph::addDependencyEdges( Task*              task,
           }
 
           // add the edge between the require/modify and compute
-          Task::Edge* edge = scinew Task::Edge(comp, req);
+          Task::Edge* edge = new Task::Edge(comp, req);
           edges.push_back(edge);
           req->addComp(edge);
           comp->addReq(edge);
@@ -681,7 +680,7 @@ TaskGraph::createDetailedTask(       Task*           task,
                                const PatchSubset*    patches,
                                const MaterialSubset* matls )
 {
-  DetailedTask* dt = scinew DetailedTask(task, patches, matls, dts_);
+  DetailedTask* dt = new DetailedTask(task, patches, matls, dts_);
 
   if (task->getType() == Task::Reduction) {
     Task::Dependency* req = task->getModifies();
@@ -714,7 +713,7 @@ TaskGraph::createDetailedTasks(       bool           useInternalDeps,
   lb->createNeighborhood(grid, oldGrid);
 
   const std::set<int> neighborhood_procs=lb->getNeighborhoodProcessors();
-  dts_ = scinew DetailedTasks(sc, d_myworld, first, this, neighborhood_procs, useInternalDeps );
+  dts_ = new DetailedTasks(sc, d_myworld, first, this, neighborhood_procs, useInternalDeps );
   
   for (int i = 0; i < (int)sorted_tasks.size(); i++) {
 
@@ -941,7 +940,7 @@ CompTable::remembercomp(       DetailedTask*     task,
       const Patch* patch = patches->get(p);
       for (int m = 0; m < matls->size(); m++) {
         int matl = matls->get(m);
-        Data* newData = scinew Data(task, comp, patch, matl);
+        Data* newData = new Data(task, comp, patch, matl);
         remembercomp(newData, pg);
       }
     }
@@ -949,19 +948,19 @@ CompTable::remembercomp(       DetailedTask*     task,
   else if (matls) {
     for (int m = 0; m < matls->size(); m++) {
       int matl = matls->get(m);
-      Data* newData = scinew Data(task, comp, 0, matl);
+      Data* newData = new Data(task, comp, 0, matl);
       remembercomp(newData, pg);
     }
   }
   else if (patches) {
     for (int p = 0; p < patches->size(); p++) {
       const Patch* patch = patches->get(p);
-      Data* newData = scinew Data(task, comp, patch, 0);
+      Data* newData = new Data(task, comp, patch, 0);
       remembercomp(newData, pg);
     }
   }
   else {
-    Data* newData = scinew Data(task, comp, nullptr, 0);
+    Data* newData = new Data(task, comp, nullptr, 0);
     remembercomp(newData, pg);
   }
 }

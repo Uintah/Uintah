@@ -91,7 +91,6 @@ porosity).
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/Weibull.h>
 #include <iostream>
@@ -353,7 +352,7 @@ void Arenisca::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Arenisca* Arenisca::clone()
 {
-  return scinew Arenisca(*this);
+  return new Arenisca(*this);
 }
 
 void Arenisca::initializeCMData(const Patch* patch,

@@ -25,7 +25,6 @@
 #include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 
 using namespace Uintah;
@@ -48,7 +47,7 @@ fastAxiCpdiInterpolator::~fastAxiCpdiInterpolator()
 
 fastAxiCpdiInterpolator* fastAxiCpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew fastAxiCpdiInterpolator(patch);
+  return new fastAxiCpdiInterpolator(patch);
 }
 
 void fastAxiCpdiInterpolator::findCellAndWeights(const Point& pos,

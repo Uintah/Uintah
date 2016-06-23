@@ -65,7 +65,7 @@ public:
       ~Builder(){}; 
 
       PCTransport* build()
-      { return scinew PCTransport( _name, _shared_state, _required_label_names, _type ); };
+      { return new PCTransport( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

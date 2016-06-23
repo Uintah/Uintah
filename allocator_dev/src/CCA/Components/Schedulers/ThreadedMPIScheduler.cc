@@ -286,7 +286,7 @@ SchedulerP
 ThreadedMPIScheduler::createSubScheduler()
 {
   UintahParallelPort   * lbp       = getPort( "load balancer" );
-  ThreadedMPIScheduler * subsched = scinew ThreadedMPIScheduler( d_myworld, m_outPort_, this );
+  ThreadedMPIScheduler * subsched = new ThreadedMPIScheduler( d_myworld, m_outPort_, this );
 
   subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;

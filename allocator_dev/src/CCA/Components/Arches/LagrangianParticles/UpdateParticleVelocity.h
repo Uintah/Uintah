@@ -46,7 +46,7 @@ public:
       ~Builder(){}
 
       UpdateParticleVelocity* build()
-      { return scinew UpdateParticleVelocity( _task_name, _matl_index ); }
+      { return new UpdateParticleVelocity( _task_name, _matl_index ); }
 
       private: 
 

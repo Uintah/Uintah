@@ -29,7 +29,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace std;
@@ -135,7 +134,7 @@ SmoothCylGeomPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 SmoothCylGeomPiece::clone() const
 {
-  return scinew SmoothCylGeomPiece(*this);
+  return new SmoothCylGeomPiece(*this);
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -223,7 +223,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   HYPRE_SStructGridCreate(_pg->getComm(), numDims, numLevels, &_grid);
 
   _exists[SStructGrid] = SStructCreated;
-  _vars = scinew HYPRE_SStructVariable[CC_NUM_VARS];
+  _vars = new HYPRE_SStructVariable[CC_NUM_VARS];
   _vars[CC_VAR] = HYPRE_SSTRUCT_VARIABLE_CELL; // We use only cell centered var
 
   // if my processor doesn't have patches on a given level, then we need to create
@@ -636,7 +636,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations(HYPRE_SStructMatrix& HA
   }
   
   if (symmetric) {
-    double* values = scinew double[(_high.x()-_low.x()+1)*stencilSize];
+    double* values = new double[(_high.x()-_low.x()+1)*stencilSize];
     int stencil_indices[] = {0,1,2,3};
     for(int z = _low.z(); z <= _high.z(); z++) {
       for(int y = _low.y(); y <= _high.y(); y++) {
@@ -661,7 +661,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations(HYPRE_SStructMatrix& HA
     }
     delete[] values;
   } else { // now symmetric = false
-    double* values = scinew double[(_high.x()-_low.x()+1)*stencilSize];
+    double* values = new double[(_high.x()-_low.x()+1)*stencilSize];
     int stencil_indices[] = {0,1,2,3,4,5,6};
     for(int z = _low.z(); z <= _high.z(); z++) {
       for(int y = _low.y(); y <= _high.y(); y++) {

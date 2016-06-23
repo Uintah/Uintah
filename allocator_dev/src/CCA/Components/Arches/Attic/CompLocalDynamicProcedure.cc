@@ -168,7 +168,7 @@ CompLocalDynamicProcedure::sched_initializeSmagCoeff( SchedulerP& sched,
                                                       const TimeIntegratorLabel* timelabels )
 {
   string taskname =  "CompLocalDynamicProcedure::initializeSmagCoeff" + timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &CompLocalDynamicProcedure::initializeSmagCoeff,
                           timelabels);
 
@@ -194,7 +194,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeTurbSubmodel" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeTurbSubmodel,
                             timelabels);
     // Requires
@@ -257,7 +257,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeStrainRateTensors" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeStrainRateTensors,
                             timelabels);
     // Requires
@@ -348,7 +348,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeFilterValues" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeFilterValues,
                             timelabels);
 
@@ -452,7 +452,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeSmagCoeff" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeSmagCoeff,
                             timelabels);
 
@@ -2845,7 +2845,7 @@ CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarVaraince" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &CompLocalDynamicProcedure::computeScalarVariance,
                           timelabels);
 
@@ -3027,7 +3027,7 @@ CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarDissipation" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &CompLocalDynamicProcedure::computeScalarDissipation,
                           timelabels );
 

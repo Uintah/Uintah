@@ -29,7 +29,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Geometry/Point.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
@@ -147,7 +146,7 @@ NaaBoxGeometryPiece::outputHelper( ProblemSpecP & ps ) const {
 GeometryPieceP
 NaaBoxGeometryPiece::clone() const
 {
-  return scinew NaaBoxGeometryPiece(*this);
+  return new NaaBoxGeometryPiece(*this);
 }
 
 //______________________________________________________________________

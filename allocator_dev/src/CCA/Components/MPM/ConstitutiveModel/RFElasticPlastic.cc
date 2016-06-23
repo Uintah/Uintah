@@ -59,7 +59,6 @@
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <cmath>
 #include <iostream>
@@ -301,7 +300,7 @@ void RFElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 RFElasticPlastic* RFElasticPlastic::clone()
 {
-  return scinew RFElasticPlastic(*this);
+  return new RFElasticPlastic(*this);
 }
 
 //______________________________________________________________________
@@ -762,7 +761,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       //double temperature = pTemperature[idx];
 
       // Set up the PlasticityState (for t_n+1)
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       //state->plasticStrain     = pPlasticStrain[idx];
       //state->plasticStrainRate = sqrtTwoThird*tensorEta.Norm();
       state->plasticStrainRate   = pPlasticStrainRate[idx];
@@ -816,7 +815,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // This is simply the previous timestep deviatoric stress plus a
       // deviatoric elastic increment based on the shear modulus supplied by
       // the strength routine in use.
-      DeformationState* defState = scinew DeformationState();
+      DeformationState* defState = new DeformationState();
       defState->tensorD    = tensorD;
       defState->tensorEta  = tensorEta;
       defState->viscoElasticWorkRate = 0.0;

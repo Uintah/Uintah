@@ -26,7 +26,6 @@
 #include <Core/GeometryPiece/NullGeometryPiece.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 #include <fstream>
 
 using namespace Uintah;
@@ -57,7 +56,7 @@ NullGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 NullGeometryPiece::clone() const
 {
-  return scinew NullGeometryPiece(*this);
+  return new NullGeometryPiece(*this);
 }
 
 bool

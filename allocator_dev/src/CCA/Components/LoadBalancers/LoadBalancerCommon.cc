@@ -458,7 +458,7 @@ LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid, int state
 const PatchSet*
 LoadBalancerCommon::createPerProcessorPatchSet( const LevelP & level )
 {
-  PatchSet* patches = scinew PatchSet();
+  PatchSet* patches = new PatchSet();
   patches->createEmptySubsets(d_myworld->size());
   
   for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
@@ -479,7 +479,7 @@ LoadBalancerCommon::createPerProcessorPatchSet( const LevelP & level )
 const PatchSet*
 LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
 {
-  PatchSet* patches = scinew PatchSet();
+  PatchSet* patches = new PatchSet();
   patches->createEmptySubsets(d_myworld->size());
   
   for( int i = 0; i < grid->numLevels(); i++ ) {
@@ -507,7 +507,7 @@ LoadBalancerCommon::createOutputPatchSet(const LevelP& level)
     return d_levelPerProcPatchSets[level->getIndex()].get_rep();
   }
   else {
-    PatchSet* patches = scinew PatchSet();
+    PatchSet* patches = new PatchSet();
     patches->createEmptySubsets(d_myworld->size());
     
     for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){

@@ -122,7 +122,7 @@ OdtClosure::sched_initializeSmagCoeff( SchedulerP& sched,
                                        const TimeIntegratorLabel* timelabels )
 {
   string taskname =  "OdtClosure::initializeSmagCoeff" + timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &OdtClosure::initializeSmagCoeff,
                           timelabels);
 
@@ -206,7 +206,7 @@ OdtClosure::sched_initializeOdtvariable( SchedulerP& sched,
                                          const TimeIntegratorLabel* timelabels )
 {
   string taskname =  "OdtClosure::initializeOdtvariable" + timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &OdtClosure::initializeOdtvariable,
                           timelabels);
 
@@ -228,7 +228,7 @@ OdtClosure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
   string taskname =  "OdtClosure::ReTurbSubmodel" +
                      timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &OdtClosure::reComputeTurbSubmodel,
                             timelabels);
 
@@ -1122,7 +1122,7 @@ OdtClosure::sched_computeScalarVariance(SchedulerP& sched,
 {
   string taskname =  "OdtClosure::computeScalarVaraince" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &OdtClosure::computeScalarVariance,
                           timelabels );
 
@@ -1238,7 +1238,7 @@ OdtClosure::sched_computeScalarDissipation(SchedulerP& sched,
 {
   string taskname =  "OdtClosure::computeScalarDissipation" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &OdtClosure::computeScalarDissipation,
                           timelabels );
 

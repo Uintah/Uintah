@@ -39,7 +39,7 @@ CharOxidationSmithBuilder::CharOxidationSmithBuilder( const std::string         
 CharOxidationSmithBuilder::~CharOxidationSmithBuilder(){}
 
 ModelBase* CharOxidationSmithBuilder::build() {
-  return scinew CharOxidationSmith( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new CharOxidationSmith( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -343,7 +343,7 @@ void
 CharOxidationSmith::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CharOxidationSmith::initVars"; 
-  Task* tsk = scinew Task(taskname, this, &CharOxidationSmith::initVars);
+  Task* tsk = new Task(taskname, this, &CharOxidationSmith::initVars);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel);
@@ -407,7 +407,7 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
 {
 
   std::string taskname = "CharOxidationSmith::computeModel";
-  Task* tsk = scinew Task(taskname, this, &CharOxidationSmith::computeModel, timeSubStep );
+  Task* tsk = new Task(taskname, this, &CharOxidationSmith::computeModel, timeSubStep );
 
   Ghost::GhostType  gn  = Ghost::None;
 
@@ -506,7 +506,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     CCVariable<double> surface_rate;
     CCVariable<double> PO2surf_;
     StaticArray< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
-    dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
+    dfdrh = new DenseMatrix(_NUM_reactions,_NUM_reactions);
      
     DataWarehouse* which_dw; 
     if ( timeSubStep == 0 ){ 
@@ -816,7 +816,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
       }// else statement 
     }//end cell loop
-  // delete scinew DenseMatrix 
+  // delete new DenseMatrix 
   delete dfdrh; 
   //my_timer.stop("my_total");
   }//end patch loop

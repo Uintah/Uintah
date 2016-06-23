@@ -56,7 +56,6 @@
 #ifndef NULL
 #define NULL 0
 #endif
-#include <Core/Malloc/Allocator.h>
 
 namespace TNT
 {
@@ -127,8 +126,8 @@ i_refvec<T>::i_refvec(int n) : data_(nullptr), ref_count_(nullptr)
 #ifdef TNT_DEBUG
 		std::cout  << "new data storage.\n";
 #endif
-		data_ = scinew T[n];
-		ref_count_ = scinew int;
+		data_ = new T[n];
+		ref_count_ = new int;
 		*ref_count_ = 1;
 	}
 }

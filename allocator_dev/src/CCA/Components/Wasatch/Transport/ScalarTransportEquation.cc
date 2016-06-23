@@ -81,7 +81,7 @@ namespace WasatchCore{
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       if( !factory.have_entry( turbDiffTag_ ) ){
         typedef typename TurbulentDiffusivity::Builder TurbDiffT;
-        factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
+        factory.register_expression( new TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
       }
     }
 
@@ -252,7 +252,7 @@ namespace WasatchCore{
 
         const Expr::Tag scalEOSTag (primVarStarTag.name() + "_EOS_Coupling", Expr::STATE_NONE);
         const Expr::Tag dRhoDfStarTag("drhod" + primVarStarTag.name(), Expr::STATE_NONE);
-        factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoStar_, srcTags, densityStarTag, dRhoDfStarTag, isStrong_) );
+        factory.register_expression( new ScalarEOSBuilder( scalEOSTag, infoStar_, srcTags, densityStarTag, dRhoDfStarTag, isStrong_) );
         
         // register an expression for divu. divu is just a constant expression to which we add the
         // necessary couplings from the scalars that represent the equation of state.
@@ -265,7 +265,7 @@ namespace WasatchCore{
       }
     }
 
-    return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.drhodt ) );
+    return factory.register_expression( new RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.drhodt ) );
   }
 
   //------------------------------------------------------------------

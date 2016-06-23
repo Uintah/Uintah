@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
@@ -32,7 +31,7 @@ using namespace std;
 NormalForceBC::NormalForceBC(ProblemSpecP& ps)
 {
   // Read and save the load curve information
-  d_loadCurve = scinew LoadCurve<double>(ps);
+  d_loadCurve = new LoadCurve<double>(ps);
 }
 
 NormalForceBC::~NormalForceBC()

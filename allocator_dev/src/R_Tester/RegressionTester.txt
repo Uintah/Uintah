@@ -621,7 +621,7 @@ Usage:
 
 Side effects:
   Looks for memory leaks in stats_file, and outputs them to 
-tmpdir/scinew_malloc_stats.  Then calls highwater_percent.pl to check
+tmpdir/new_malloc_stats.  Then calls highwater_percent.pl to check
 memory usage. If the percentage returned is greater than 10, an error is
 posted, if it returns a percentage less that -5%, than it replaces the stats
 in the goldStandard.

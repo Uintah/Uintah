@@ -74,7 +74,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           TabStripFactor* build()
-          { return scinew TabStripFactor( _name, _shared_state ); };
+          { return new TabStripFactor( _name, _shared_state ); };
 
         private: 
 

@@ -28,7 +28,6 @@
 #include <Core/Math/CubeRoot.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
 
@@ -84,7 +83,7 @@ const TypeDescription* fun_getTypeDescription(Short27*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription(TypeDescription::Short27, "Short27", true,
+    td = new TypeDescription(TypeDescription::Short27, "Short27", true,
                                 &makeMPI_Short27);
   }
   return td;

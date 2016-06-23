@@ -41,7 +41,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/Weibull.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace std;
@@ -502,7 +501,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
 
 UCNH* UCNH::clone()
 {
-  return scinew UCNH(*this);
+  return new UCNH(*this);
 }
 
 UCNH::~UCNH()
@@ -682,7 +681,7 @@ void UCNH::initializeCMData(const Patch* patch,
       int patch_div_32 = patchID/32;
       patchID = patchID%32;
       unsigned int unique_seed = ((d_yield.seed+patch_div_32+1) << patchID);
-      MusilRNG* randGen = scinew MusilRNG(unique_seed);
+      MusilRNG* randGen = new MusilRNG(unique_seed);
       //cout << "   seed = " << unique_seed << " first rand = " << (*randGen)() << endl;
       for(;iterPlas != pset->end(); iterPlas++){
         pPlasticStrain[*iterPlas] = d_initialData.Alpha;
@@ -768,7 +767,7 @@ void UCNH::initializeCMData(const Patch* patch,
       int patch_div_32 = patchID/32;
       patchID = patchID%32;
       unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
-      MusilRNG* randGen = scinew MusilRNG(unique_seed);
+      MusilRNG* randGen = new MusilRNG(unique_seed);
       for(;iter != pset->end();iter++){
         pLocalized[*iter]     = 0;
         pTimeOfLoc[*iter]     = -1.e99;;
@@ -2930,7 +2929,7 @@ static MPI_Datatype makeMPI_CMData()
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "UCNH::double", 
                                   true, &makeMPI_CMData);
     }

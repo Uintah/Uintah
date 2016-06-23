@@ -100,7 +100,7 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   db->getWithDefault("do_only_last_projection", d_do_only_last_projection, false);
 
   // make source and boundary_condition objects
-  d_source = scinew Source(d_physicalConsts);
+  d_source = new Source(d_physicalConsts);
 
   d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure",
                                                            state);
@@ -226,7 +226,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   printSchedule(patches,dbg,taskname);
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PressureSolver::buildLinearMatrix,
                           patches,
                           timelabels, extraProjection);
@@ -312,7 +312,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
-  Discretization* discrete = scinew Discretization(d_physicalConsts);
+  Discretization* discrete = new Discretization(d_physicalConsts);
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -441,7 +441,7 @@ PressureSolver::sched_setGuessForX(SchedulerP& sched,
   cout << "     timelabel->pressure_out:   " << timelabels->pressure_out->getName() << endl;
 #endif
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PressureSolver::setGuessForX,
                           timelabels, extraProjection);
 
@@ -628,7 +628,7 @@ PressureSolver::sched_set_BC_RefPress(SchedulerP& sched,
 
   const string integratorPhase = timelabels->integrator_step_name;
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PressureSolver::set_BC_RefPress,
                           pressLabel, refPressLabel, integratorPhase);
 
@@ -725,7 +725,7 @@ PressureSolver::sched_normalizePress(SchedulerP& sched,
   const VarLabel* pressLabel    = VarLabel::find(pressLabelname);
   const VarLabel* refPressLabel = timelabels->ref_pressure;
 
-  Task* tsk = scinew Task("PressureSolver::normalizePress",this,
+  Task* tsk = new Task("PressureSolver::normalizePress",this,
                           &PressureSolver::normalizePress, pressLabel, refPressLabel);
 
   tsk->modifies(pressLabel);
@@ -778,7 +778,7 @@ PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched,
 {
   printSchedule(patches,dbg,"PressureSolver::sched_addHydrostaticTermtoPressure");
 
-  Task* tsk = scinew Task("PressureSolver::sched_addHydrostaticTermtoPressure",
+  Task* tsk = new Task("PressureSolver::sched_addHydrostaticTermtoPressure",
                           this, &PressureSolver::addHydrostaticTermtoPressure,
                           timelabels);
 

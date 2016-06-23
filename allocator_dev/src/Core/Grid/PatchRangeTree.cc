@@ -51,7 +51,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
     }
   }
 
-  d_rangeTree = scinew RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
+  d_rangeTree = new RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
 }
 
 PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
@@ -76,7 +76,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
     }
   }
 
-  d_rangeTree = scinew RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
+  d_rangeTree = new RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
 }
 
 PatchRangeTree::~PatchRangeTree()

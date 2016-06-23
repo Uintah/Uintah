@@ -184,7 +184,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
   //Automatically adding density_old to the table lookup because this 
   //is needed for scalars that aren't solved on stage 1: 
-  ChemHelper::TableLookup* extra_lookup = scinew ChemHelper::TableLookup;
+  ChemHelper::TableLookup* extra_lookup = new ChemHelper::TableLookup;
   extra_lookup->lookup.insert(std::make_pair("density",ChemHelper::TableLookup::OLD));
   d_lab->add_species_struct( extra_lookup );
   delete extra_lookup; 
@@ -211,7 +211,7 @@ ColdFlow::sched_getState( const LevelP& level,
   string taskname = "ColdFlow::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &ColdFlow::getState, time_substep, initialize_me, modify_ref_den );
+  Task* tsk = new Task(taskname, this, &ColdFlow::getState, time_substep, initialize_me, modify_ref_den );
 
   // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {

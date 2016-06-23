@@ -68,7 +68,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/Weibull.h> // For variability
 #include <iostream>
@@ -291,7 +290,7 @@ void Arenisca3::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Arenisca3* Arenisca3::clone()
 {
-  return scinew Arenisca3(*this);
+  return new Arenisca3(*this);
 }
 
 void Arenisca3::initializeCMData(const Patch* patch,

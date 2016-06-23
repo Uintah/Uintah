@@ -444,7 +444,7 @@ ConstitutiveModel*
 ElasticConstitutiveModel::create(double *p_array)
 {
 #ifdef WONT_COMPILE_YET
-  return(scinew ElasticConstitutiveModel(p_array[0], p_array[1]));
+  return(new ElasticConstitutiveModel(p_array[0], p_array[1]));
 #else
   return 0;
 #endif
@@ -487,7 +487,7 @@ const TypeDescription* fun_getTypeDescription(ElasticConstitutiveModel::CMData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other, "ElasticConstitutiveModel::CMData", true, &makeMPI_CMData);
+      td = new TypeDescription(TypeDescription::Other, "ElasticConstitutiveModel::CMData", true, &makeMPI_CMData);
    }
    return td;   
 }
@@ -496,7 +496,7 @@ ConstitutiveModel*
 ElasticConstitutiveModel::copy() const
 {
 #ifdef WONT_COMPILE_YET
-  return( scinew ElasticConstitutiveModel(*this) );
+  return( new ElasticConstitutiveModel(*this) );
 #else
   return 0;
 #endif

@@ -95,7 +95,7 @@ namespace WasatchCore{
 
       typedef ParticleRadProps<SpatialOps::SVolField>::Builder ParticleProps;
       gh.exprFactory->register_expression(
-          scinew ParticleProps( propSelection,
+          new ParticleProps( propSelection,
                                 parse_nametag( pParams->findBlock("NameTag") ),
                                 parse_nametag( pParams->findBlock("Temperature"   )->findBlock("NameTag")),
                                 parse_nametag( pParams->findBlock("ParticleRadius")->findBlock("NameTag")),
@@ -129,7 +129,7 @@ namespace WasatchCore{
       spMap[ species_enum( spnam ) ] = parse_nametag( spParams->findBlock("NameTag") );
     }
     typedef RadPropsEvaluator<SpatialOps::SVolField>::Builder RadPropsExpr;
-    gh.exprFactory->register_expression( scinew RadPropsExpr( parse_nametag(ggParams->findBlock("NameTag")),
+    gh.exprFactory->register_expression( new RadPropsExpr( parse_nametag(ggParams->findBlock("NameTag")),
                                                               parse_nametag(ggParams->findBlock("Temperature")->findBlock("NameTag")),
                                                               spMap,fileName) );
   }
@@ -202,7 +202,7 @@ namespace WasatchCore{
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
       factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
 
-      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, rtol, (size_t) maxIter) );
+      densCalcID = factory.register_expression( new DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, rtol, (size_t) maxIter) );
 
     }
     else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
@@ -235,7 +235,7 @@ namespace WasatchCore{
       factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
 
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
-      densCalcID = factory.register_expression( scinew DensCalc( rhoOldTag, densityTag, heatLossOldTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
+      densCalcID = factory.register_expression( new DensCalc( rhoOldTag, densityTag, heatLossOldTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
     }
     return densCalcID;
   }
@@ -347,26 +347,26 @@ namespace WasatchCore{
       switch( get_field_type(fieldType) ){
       case SVOL: {
         typedef TabPropsEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
+        gh.exprFactory->register_expression( new PropEvaluator( dvarTag, *interp, ivarNames ) );
         if( doDenstPlus && dvarTableName=="Density" ){
           const Expr::Tag densStarTag ( dvarTag.name()+TagNames::self().star,       dvarTag.context() );
-          gh.rootIDs.insert( gh.exprFactory->register_expression( scinew PropEvaluator( densStarTag,  *interp, ivarNames ) ) );
+          gh.rootIDs.insert( gh.exprFactory->register_expression( new PropEvaluator( densStarTag,  *interp, ivarNames ) ) );
         }
         break;
       }
       case XVOL: {
         typedef TabPropsEvaluator<SpatialOps::SSurfXField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
+        gh.exprFactory->register_expression( new PropEvaluator( dvarTag, *interp, ivarNames ) );
         break;
       }
       case YVOL: {
         typedef TabPropsEvaluator<SpatialOps::SSurfYField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
+        gh.exprFactory->register_expression( new PropEvaluator( dvarTag, *interp, ivarNames ) );
         break;
       }
       case ZVOL: {
         typedef TabPropsEvaluator<SpatialOps::SSurfZField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
+        gh.exprFactory->register_expression( new PropEvaluator( dvarTag, *interp, ivarNames ) );
         break;
       }
       default:
@@ -400,7 +400,7 @@ namespace WasatchCore{
       const InterpT* const sensEnthInterp = table.find_entry( "SensibleEnthalpy"  );
       const InterpT* const enthInterp     = table.find_entry( "Enthalpy"          );
       typedef TabPropsHeatLossEvaluator<SpatialOps::SVolField>::Builder HLEval;
-      gh.exprFactory->register_expression( scinew HLEval( parse_nametag( hlParams->findBlock("NameTag") ),
+      gh.exprFactory->register_expression( new HLEval( parse_nametag( hlParams->findBlock("NameTag") ),
                                                           *adEnthInterp  ,
                                                           *sensEnthInterp,
                                                           *enthInterp    ,
@@ -446,18 +446,18 @@ namespace WasatchCore{
       GraphHelper& gh = *gc[INITIALIZATION];
       typedef TwoStreamDensFromMixfr<SVolField>::Builder ICDensExpr;
       const Expr::Tag icRhoTag( rhoTag.name(), Expr::STATE_NONE );
-      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoTag,fTag,rho0,rho1) ) );
+      gh.rootIDs.insert( gh.exprFactory->register_expression( new ICDensExpr(icRhoTag,fTag,rho0,rho1) ) );
 
       if( doDenstPlus ){
         const Expr::Tag icRhoStarTag ( rhoTag.name()+TagNames::self().star,       Expr::STATE_NONE );
-        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
+        gh.rootIDs.insert( gh.exprFactory->register_expression( new ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
       }
     }
 
     typedef TwoStreamMixingDensity<SVolField>::Builder DensExpr;
     const Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
     const Expr::TagList theTagList( tag_list( rhoTag, drhodfTag ));
-    gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
+    gc[ADVANCE_SOLUTION]->exprFactory->register_expression( new DensExpr(theTagList,rhofTag,rho0,rho1) );
 
     if( doDenstPlus ){
       const TagNames& names = TagNames::self();
@@ -467,7 +467,7 @@ namespace WasatchCore{
 
       const Expr::Tag drhodfStarTag("drhod" + fTag.name() + "*", Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( rhoStar, drhodfStarTag ));
-      const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofStar,rho0,rho1) );
+      const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( new DensExpr(theTagList,rhofStar,rho0,rho1) );
       gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
     }
   }

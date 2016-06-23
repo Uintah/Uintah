@@ -35,7 +35,7 @@ ShaddixHeatTransferBuilder::ShaddixHeatTransferBuilder( const std::string       
 ShaddixHeatTransferBuilder::~ShaddixHeatTransferBuilder(){}
 
 ModelBase* ShaddixHeatTransferBuilder::build() {
-  return scinew ShaddixHeatTransfer( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new ShaddixHeatTransfer( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -240,7 +240,7 @@ void
 ShaddixHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "ShaddixHeatTransfer::initVars";
-  Task* tsk = scinew Task(taskname, this, &ShaddixHeatTransfer::initVars);
+  Task* tsk = new Task(taskname, this, &ShaddixHeatTransfer::initVars);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -272,7 +272,7 @@ void
 ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "ShaddixHeatTransfer::computeModel";
-  Task* tsk = scinew Task(taskname, this, &ShaddixHeatTransfer::computeModel);
+  Task* tsk = new Task(taskname, this, &ShaddixHeatTransfer::computeModel);
 
   d_timeSubStep = timeSubStep; 
 

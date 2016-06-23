@@ -293,11 +293,11 @@ void AMRICE::scheduleRefineInterface_Variable(const LevelP& fineLevel,
   switch(variable->typeDescription()->getSubType()->getType()){
     case TypeDescription::double_type:
       func = &AMRICE::refineCoarseFineInterface<double>;
-      t =    scinew Task(taskName.str().c_str(), this, func, variable);
+      t =    new Task(taskName.str().c_str(), this, func, variable);
       break;
     case TypeDescription::Vector:
       func = &AMRICE::refineCoarseFineInterface<Vector>;
-      t =    scinew Task(taskName.str().c_str(), this, func, variable);
+      t =    new Task(taskName.str().c_str(), this, func, variable);
       break;
     default:
       throw InternalError("Unknown variable type for AMRICE::scheduleRefineInterface_Variable", __FILE__, __LINE__);
@@ -475,7 +475,7 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
                << L_indx <<" P-" << *patches << '\n';
     
     Task* t;
-    t = scinew Task("AMRICE::setBC_FineLevel", this, &AMRICE::setBC_FineLevel);
+    t = new Task("AMRICE::setBC_FineLevel", this, &AMRICE::setBC_FineLevel);
     Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
     Ghost::GhostType  gn = Ghost::None;
     Task::MaterialDomainSpec ND   = Task::NormalDomain;
@@ -599,7 +599,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
                              fineLevel, refineRatio, fl,fh, vol_frac);     
         } // boundary face loop
         
-        customBC_localVars* BC_localVars = scinew customBC_localVars();
+        customBC_localVars* BC_localVars = new customBC_localVars();
 #if 0        
         // Worry about this later
         // the problem is that you don't know have delT for the finer level at this point in the cycle
@@ -648,7 +648,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       
       //__________________________________
       //  Pressure boundary condition
-      customBC_localVars* notUsed = scinew customBC_localVars();
+      customBC_localVars* notUsed = new customBC_localVars();
       
       CCVariable<double> press_CC;
       StaticArray<CCVariable<double> > placeHolder(0);
@@ -681,9 +681,9 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
     cout_doing << d_myworld->myrank() 
                << " AMRICE::scheduleRefine\t\t\t\tL-" 
                <<  L_indx << " P-" << *patches << '\n';
-    Task* task = scinew Task("AMRICE::refine",this, &AMRICE::refine);
+    Task* task = new Task("AMRICE::refine",this, &AMRICE::refine);
     
-    MaterialSubset* subset = scinew MaterialSubset;
+    MaterialSubset* subset = new MaterialSubset;
     
     subset->add(0);
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -919,7 +919,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
              << " AMRICE::scheduleCoarsen\t\t\t\tL-" 
              << fineLevel->getIndex()<< "->"<<coarseLevel->getIndex()<<endl; 
              
-  Task* task = scinew Task("AMRICE::coarsen",this, &AMRICE::coarsen);
+  Task* task = new Task("AMRICE::coarsen",this, &AMRICE::coarsen);
 
   Task::MaterialDomainSpec ND   = Task::NormalDomain;                            
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
@@ -979,7 +979,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
             
     //__________________________________
     //  initialize the bullet proofing flags
-    t = scinew Task("AMRICE::reflux_BP_zero_CFI_cells",this, 
+    t = new Task("AMRICE::reflux_BP_zero_CFI_cells",this, 
                     &AMRICE::reflux_BP_zero_CFI_cells);
     sched->addTask(t, coarseLevel->eachPatch(), ice_matls);
     
@@ -987,11 +987,11 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
     
     //__________________________________
     // check the bullet proofing flags    
-    t = scinew Task("AMRICE::reflux_BP_count_CFI_cells",this, 
+    t = new Task("AMRICE::reflux_BP_count_CFI_cells",this, 
                     &AMRICE::reflux_BP_count_CFI_cells);
     
     string desc2 = "applyRefluxCorrection";
-    t1 = scinew Task("AMRICE::reflux_BP_check_CFI_cells",this,
+    t1 = new Task("AMRICE::reflux_BP_check_CFI_cells",this,
                     &AMRICE::reflux_BP_check_CFI_cells, desc2);
                     
     sched->addTask(t,  patch_set, ice_matls);
@@ -1099,7 +1099,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
              << " AMRICE::scheduleReflux_computeCorrectionFluxes\tL-" 
              << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
              
-  Task* task = scinew Task("AMRICE::reflux_computeCorrectionFluxes",
+  Task* task = new Task("AMRICE::reflux_computeCorrectionFluxes",
                            this, &AMRICE::reflux_computeCorrectionFluxes);
   
   Ghost::GhostType gx  = Ghost::AroundFacesX;
@@ -1417,7 +1417,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
              << " AMRICE::scheduleReflux_applyCorrectionFluxes\t\tL-" 
              << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
              
-  Task* task = scinew Task("AMRICE::reflux_applyCorrectionFluxes",
+  Task* task = new Task("AMRICE::reflux_applyCorrectionFluxes",
                           this, &AMRICE::reflux_applyCorrectionFluxes);
   
   Ghost::GhostType gac = Ghost::AroundCells;
@@ -1762,7 +1762,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   if(d_sharedState->getCurrentTopLevelTimeStep() == 0){
     initial = true;  // during initialization 
   }
-  Task* t = scinew Task("AMRICE::errorEstimate", 
+  Task* t = new Task("AMRICE::errorEstimate", 
                   this, &AMRICE::errorEstimate, initial);  
   
   Ghost::GhostType  gac  = Ghost::AroundCells; 

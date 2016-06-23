@@ -190,27 +190,27 @@ void printData(DataArchive* archive, string& variable_name,
     for (int p = 0; p < patches.size(); p++) {
       switch (variable_type->getType()) {
       case Uintah::TypeDescription::CCVariable:
-        vars[p] = scinew CCVariable<T>;
+        vars[p] = new CCVariable<T>;
         archive->query( *(CCVariable<T>*)vars[p], variable_name, 
                         material, patches[p], timestep);
         break;
       case Uintah::TypeDescription::NCVariable:
-        vars[p] = scinew NCVariable<T>;
+        vars[p] = new NCVariable<T>;
         archive->query( *(NCVariable<T>*)vars[p], variable_name, 
                         material, patches[p], timestep);
         break;
       case Uintah::TypeDescription::SFCXVariable:
-        vars[p] = scinew SFCXVariable<T>;
+        vars[p] = new SFCXVariable<T>;
         archive->query( *(SFCXVariable<T>*)vars[p], variable_name, 
                         material, patches[p], timestep);
         break;
       case Uintah::TypeDescription::SFCYVariable:
-        vars[p] = scinew SFCYVariable<T>;
+        vars[p] = new SFCYVariable<T>;
         archive->query( *(SFCYVariable<T>*)vars[p], variable_name, 
                         material, patches[p], timestep);
         break;
       case Uintah::TypeDescription::SFCZVariable:
-        vars[p] = scinew SFCZVariable<T>;
+        vars[p] = new SFCZVariable<T>;
         archive->query( *(SFCZVariable<T>*)vars[p], variable_name, 
                         material, patches[p], timestep);
         break;
@@ -597,7 +597,7 @@ main( int argc, char** argv )
   }
 
   try {
-    DataArchive* archive = scinew DataArchive(input_uda_name);
+    DataArchive* archive = new DataArchive(input_uda_name);
     
     vector<string> vars;
     vector<const Uintah::TypeDescription*> types;

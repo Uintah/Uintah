@@ -27,7 +27,6 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <string>
 
@@ -64,9 +63,9 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   }
 
   if (diff_interface_type == "common"){
-    return(scinew CommonIFConcDiff(mpm_ps, ss, flags));
+    return(new CommonIFConcDiff(mpm_ps, ss, flags));
   }else if (diff_interface_type == "null"){
-    return(scinew SDInterfaceModel(mpm_ps, ss, flags));
+    return(new SDInterfaceModel(mpm_ps, ss, flags));
   }else{
     throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }

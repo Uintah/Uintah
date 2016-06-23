@@ -52,7 +52,7 @@ void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   printSchedule(level,dbg,"Switching Criteria:None::scheduleSwitchTest");
   
-  Task* t = scinew Task("switchTest", this, &None::switchTest);
+  Task* t = new Task("switchTest", this, &None::switchTest);
 
   t->computes(d_sharedState->get_switch_label());
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());

@@ -25,7 +25,6 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/UintahMPI.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
@@ -47,7 +46,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Stencil7,
+      td = new TypeDescription(TypeDescription::Stencil7,
                                   "Stencil7", true, 
                                   &makeMPI_Stencil7);
     }

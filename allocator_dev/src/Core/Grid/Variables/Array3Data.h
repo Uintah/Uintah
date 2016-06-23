@@ -29,7 +29,6 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #include <Kokkos_Core.hpp>

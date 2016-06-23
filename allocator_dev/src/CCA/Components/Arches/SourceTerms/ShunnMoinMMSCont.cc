@@ -68,7 +68,7 @@ void
 ShunnMoinMMSCont::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "ShunnMoinMMSCont::eval";
-  Task* tsk = scinew Task(taskname, this, &ShunnMoinMMSCont::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &ShunnMoinMMSCont::computeSource, timeSubStep);
 
   if (timeSubStep == 0) { 
 
@@ -137,7 +137,7 @@ ShunnMoinMMSCont::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "ShunnMoinMMSCont::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &ShunnMoinMMSCont::initialize);
+  Task* tsk = new Task(taskname, this, &ShunnMoinMMSCont::initialize);
 
   tsk->computes(_src_label);
 

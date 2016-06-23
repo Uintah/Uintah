@@ -47,7 +47,7 @@ public:
       ~Builder(){}; 
 
       MMS1* build()
-      { return scinew MMS1( _name, _shared_state, _required_label_names, _type ); };
+      { return new MMS1( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

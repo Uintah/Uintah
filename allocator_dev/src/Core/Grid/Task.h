@@ -29,7 +29,6 @@
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
@@ -315,7 +314,7 @@ public: // class Task
        , Args... args
       )
      : m_task_name(taskName)
-     , m_action(scinew Action<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
+     , m_action(new Action<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
   {
     d_tasktype = Normal;
     initialize();
@@ -341,7 +340,7 @@ public: // class Task
       , Args... args
       )
       : m_task_name(taskName)
-      , m_action(scinew ActionDevice<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
+      , m_action(new ActionDevice<T, Args...>(ptr, pmf, std::forward<Args>(args)...))
   {
     initialize();
     d_tasktype = Normal;

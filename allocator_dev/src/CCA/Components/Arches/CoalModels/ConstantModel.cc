@@ -31,7 +31,7 @@ ConstantModelBuilder::ConstantModelBuilder( const std::string         & modelNam
 ConstantModelBuilder::~ConstantModelBuilder(){}
 
 ModelBase* ConstantModelBuilder::build(){
-  return scinew ConstantModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new ConstantModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 
 // End Builder
@@ -78,7 +78,7 @@ void
 ConstantModel::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "ConstantModel::initVars";
-  Task* tsk = scinew Task(taskname, this, &ConstantModel::initVars);
+  Task* tsk = new Task(taskname, this, &ConstantModel::initVars);
   
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel);
@@ -122,7 +122,7 @@ void
 ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "ConstantModel::computeModel";
-  Task* tsk = scinew Task(taskname, this, &ConstantModel::computeModel);
+  Task* tsk = new Task(taskname, this, &ConstantModel::computeModel);
 
   d_timeSubStep = timeSubStep; 
 

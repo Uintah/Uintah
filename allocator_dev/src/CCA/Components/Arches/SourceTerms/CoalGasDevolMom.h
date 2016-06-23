@@ -50,7 +50,7 @@ class CoalGasDevolMom: public SourceTermBase {
       ~Builder(){}; 
 
       CoalGasDevolMom* build()
-      { return scinew CoalGasDevolMom( _name, _required_label_names, _field_labels,  _shared_state, _type ); };
+      { return new CoalGasDevolMom( _name, _required_label_names, _field_labels,  _shared_state, _type ); };
 
     private: 
 

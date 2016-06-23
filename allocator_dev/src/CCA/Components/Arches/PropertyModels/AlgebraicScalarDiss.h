@@ -53,7 +53,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           AlgebraicScalarDiss* build()
-          { return scinew AlgebraicScalarDiss( _name, _shared_state ); };
+          { return new AlgebraicScalarDiss( _name, _shared_state ); };
 
         private: 
 

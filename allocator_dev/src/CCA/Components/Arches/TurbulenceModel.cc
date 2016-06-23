@@ -82,7 +82,7 @@ TurbulenceModel::problemSetupCommon( const ProblemSpecP& params )
     }
   }
 
-  d_filter = scinew Filter( d_use_old_filter, d_filter_type, d_filter_width ); 
+  d_filter = new Filter( d_use_old_filter, d_filter_type, d_filter_width ); 
 
 }
 void TurbulenceModel::sched_computeFilterVol( SchedulerP& sched, 
@@ -90,7 +90,7 @@ void TurbulenceModel::sched_computeFilterVol( SchedulerP& sched,
                                               const MaterialSet* matls )
 {
 
-  Task* tsk = scinew Task( "TurbulenceModel::computeFilterVol",this, &TurbulenceModel::computeFilterVol);
+  Task* tsk = new Task( "TurbulenceModel::computeFilterVol",this, &TurbulenceModel::computeFilterVol);
   tsk->computes( d_lab->d_filterVolumeLabel ); 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
@@ -129,7 +129,7 @@ void TurbulenceModel::sched_carryForwardFilterVol( SchedulerP& sched,
                                                    const PatchSet* patches, 
                                                    const MaterialSet* matls )
 {
-  Task* tsk = scinew Task( "TurbulenceModel::carryForwardFilterVol", 
+  Task* tsk = new Task( "TurbulenceModel::carryForwardFilterVol", 
       this, &TurbulenceModel::carryForwardFilterVol);
   tsk->computes( d_lab->d_filterVolumeLabel ); 
   tsk->requires( Task::OldDW, d_lab->d_filterVolumeLabel, Ghost::None, 0 );

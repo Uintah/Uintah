@@ -184,7 +184,7 @@ namespace WasatchCore{
   ContinuityTransportEquation::initial_condition( Expr::ExpressionFactory& exprFactory )
   {
     typedef Density_IC<FieldT>::Builder DensIC;
-    return exprFactory.register_expression( scinew DensIC( initial_condition_tag(),
+    return exprFactory.register_expression( new DensIC( initial_condition_tag(),
                                                            temperatureTag_,
                                                            TagNames::self().pressure,
                                                            mixMWTag_,
@@ -229,7 +229,7 @@ namespace WasatchCore{
 
     typedef IdealGasPressure<FieldT>::Builder Pressure;
     if (!factory.have_entry(TagNames::self().pressure)) {
-      factory.register_expression( scinew Pressure( TagNames::self().pressure,
+      factory.register_expression( new Pressure( TagNames::self().pressure,
                                                     densityTag,
                                                     temperatureTag,
                                                     mixMWTag,
@@ -252,7 +252,7 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
 
     typedef typename MomRHS<SVolField, MomDirT>::Builder RHS;
-    const Expr::ExpressionID rhsID = factory.register_expression( scinew RHS( this->rhsTag_,
+    const Expr::ExpressionID rhsID = factory.register_expression( new RHS( this->rhsTag_,
                                                    this->pressureTag_,
                                                    rhs_part_tag(this->solnVarTag_),
                                                    volFracTag ) );

@@ -136,7 +136,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 
     //__________________________________
     // Get the variables that will need to be initialized by this subcomponent
-    initVars* initVar = scinew initVars;
+    initVars* initVar = new initVars;
     for( ProblemSpecP var = child->findBlock("init"); var != 0; var = var->findNextBlock("init") ) {
 
       std::map<std::string, std::string> attributes;
@@ -195,7 +195,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 
   UintahParallelComponent* last_comp = dynamic_cast<UintahParallelComponent*>(getPort("sim",num_components-1));
 
-  SwitchingCriteria* none_switch_criteria = scinew None();
+  SwitchingCriteria* none_switch_criteria = new None();
   
   // Attaching to switcher so that the switcher can delete it
   attachPort(           "switch_criteria",none_switch_criteria);
@@ -218,7 +218,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 
     MaterialSubset* carry_over_matls = 0;
     if (matls != "") {
-      carry_over_matls = scinew MaterialSubset;
+      carry_over_matls = new MaterialSubset;
       ConsecutiveRangeSet crs = matls;
       ConsecutiveRangeSet::iterator iter = crs.begin();
 
@@ -432,7 +432,7 @@ void Switcher::scheduleSwitchTest(const LevelP     & level,
   
   d_sim->scheduleSwitchTest(level,sched); // generates switch test data;
 
-  Task* t = scinew Task("Switcher::switchTest", this, & Switcher::switchTest);
+  Task* t = new Task("Switcher::switchTest", this, & Switcher::switchTest);
 
   t->setType(Task::OncePerProc);
   
@@ -454,7 +454,7 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
   
   printSchedule(level,dbg,"Switcher::scheduleInitNewVars");
   
-  Task* t = scinew Task("Switcher::initNewVars",this, & Switcher::initNewVars);
+  Task* t = new Task("Switcher::initNewVars",this, & Switcher::initNewVars);
   
   initVars* initVar  = d_initVars.find(nextComp_indx)->second;
   
@@ -535,7 +535,7 @@ void Switcher::scheduleCarryOverVars(const LevelP     & level,
   
   //__________________________________
   //
-  Task* t = scinew Task("Switcher::carryOverVars",this, 
+  Task* t = new Task("Switcher::carryOverVars",this, 
                        & Switcher::carryOverVars);
                         
   // schedule the vars to be carried over (if this happens before a switch, don't do it)
@@ -946,7 +946,7 @@ Switcher::readSwitcherState(const ProblemSpecP     & spec,
   ps->get("switcherCarryOverMatls", numMatls);
 
   if (numMatls != 0) {
-    MaterialSet* new_matls = scinew MaterialSet;
+    MaterialSet* new_matls = new MaterialSet;
     new_matls->addReference();
     new_matls->createEmptySubsets(1);
 

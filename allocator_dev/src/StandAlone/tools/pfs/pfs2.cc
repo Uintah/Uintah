@@ -38,7 +38,6 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 
 #include <cstdio>
@@ -157,7 +156,7 @@ int main(int argc, char *argv[])
       try {                                                                                                
         Point bottom(xb,yb,zb);                                                                          
         Point top(xt,yt,zt);                                                                             
-        cylinder = scinew CylinderGeometryPiece(top, bottom, radius);                                    
+        cylinder = new CylinderGeometryPiece(top, bottom, radius);                                    
         fprintf(stderr, "Cylinder height, volume: %g, %g\n", cylinder->height(), cylinder->volume());    
       } catch (Exception& e) {                                                                             
         cerr << "Caught exception: " << e.message() << endl;                                             
@@ -288,7 +287,7 @@ int main(int argc, char *argv[])
           // read the image data
           unsigned int nPixels = res[0]*res[1]*res[2];
           cout << "Reading " << nPixels << " nPixels\n";
-          pixel* pimg = scinew pixel[nPixels];
+          pixel* pimg = new pixel[nPixels];
           
           if (ReadImage(imgname.c_str(), nPixels, pimg, endianness) == false) {
             cout << "FATAL ERROR : Failed reading image data" << endl;
@@ -442,7 +441,7 @@ int main(int argc, char *argv[])
 GridP CreateGrid(ProblemSpecP ups)
 {
     // Setup the initial grid
-    GridP grid=scinew Grid();
+    GridP grid=new Grid();
     IntVector extraCells(0,0,0);
 
     // save and remove the extra cells before the problem setup

@@ -99,10 +99,10 @@ namespace WasatchCore {
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
         
         if (!factory.have_entry( momentClosureTag ) )
-          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-2));
+          factory.register_expression(new MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-2));
       }
       typedef typename Growth<FieldT>::Builder growth;
-      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
+      builder = new growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
 
     } else if (growthModel == "MONOSURFACE") { //g(r) = r^2
       std::stringstream nextMomentOrderStr;
@@ -114,10 +114,10 @@ namespace WasatchCore {
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
         
         if (!factory.have_entry( momentClosureTag ) )
-          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder+1));
+          factory.register_expression(new MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder+1));
       }
       typedef typename Growth<FieldT>::Builder growth;
-      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
+      builder = new growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
 
     } else if (growthModel == "CONSTANT" || growthModel == "KINETIC" ) {   // g0
       std::stringstream previousMomentOrderStr;
@@ -128,10 +128,10 @@ namespace WasatchCore {
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
         
         if (!factory.have_entry( momentClosureTag ) )
-          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-1));
+          factory.register_expression(new MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-1));
       }
       typedef typename Growth<FieldT>::Builder growth;
-      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
+      builder = new growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
     }
 
     growthTags.push_back(growthTag);
@@ -168,7 +168,7 @@ namespace WasatchCore {
     expCoef = 2.0*Molec_Vol*Surf_Eng/R/Temperature / CFCoef;  //r is divided in this equation later
     
     typedef typename OstwaldRipening<FieldT>::Builder ostwald;
-    builder = scinew ostwald(ostwaldTag, weightsTagList, abscissaeTagList, m0Tag, expCoef, tolmanLength, RCutoff);
+    builder = new ostwald(ostwaldTag, weightsTagList, abscissaeTagList, m0Tag, expCoef, tolmanLength, RCutoff);
     factory.register_expression( builder );
   }
 
@@ -229,7 +229,7 @@ namespace WasatchCore {
     
     birthTag = Expr::Tag( thisPhiName + "_birth_" + birthModel, Expr::STATE_NONE );
     typedef typename Birth<FieldT>::Builder birth;
-    builder = scinew birth(birthTag, birthCoefTag, RStarTag, preCoef, momentOrder, birthType, ConstRStar, stdDev);
+    builder = new birth(birthTag, birthCoefTag, RStarTag, preCoef, momentOrder, birthType, ConstRStar, stdDev);
 
     birthTags.push_back(birthTag);
     factory.register_expression( builder );
@@ -259,7 +259,7 @@ namespace WasatchCore {
     superSatTag = parse_nametag( nameTagParam );
     
     typedef typename Dissolution<FieldT>::Builder death;
-    builder = scinew death(deathTag, weightsTagList, abscissaeTagList, ostwaldTag, superSatTag, rCutoff, momentOrder, deathCoefficient);
+    builder = new death(deathTag, weightsTagList, abscissaeTagList, ostwaldTag, superSatTag, rCutoff, momentOrder, deathCoefficient);
     deathTags.push_back(deathTag);
     factory.register_expression( builder );
   }
@@ -319,7 +319,7 @@ namespace WasatchCore {
         effParams->get("GrowthModel",growthModel);
         
         typedef typename AggregationEfficiency<FieldT>::Builder aggregationEfficiency;
-        builder = scinew aggregationEfficiency(efficiencyTagList, abscissaeTagList, growthCoefTag, dissipationTag, densityTag, lengthParam, growthModel);
+        builder = new aggregationEfficiency(efficiencyTagList, abscissaeTagList, growthCoefTag, dissipationTag, densityTag, lengthParam, growthModel);
         factory.register_expression(builder);
       }
     }
@@ -335,7 +335,7 @@ namespace WasatchCore {
     
     aggTag = Expr::Tag( thisPhiName + "_agg_" + aggModel, Expr::STATE_NONE );
     typedef typename Aggregation<FieldT>::Builder aggregation;
-    builder = scinew aggregation(aggTag, weightsTagList, abscissaeTagList, efficiencyTagList, aggCoefTag,  momentOrder, efficiencyCoef, aggType, useEffTags);
+    builder = new aggregation(aggTag, weightsTagList, abscissaeTagList, efficiencyTagList, aggCoefTag,  momentOrder, efficiencyCoef, aggType, useEffTags);
     aggTags.push_back(aggTag);
     factory.register_expression( builder );
   }
@@ -412,7 +412,7 @@ namespace WasatchCore {
       }
       typedef typename QMOM<FieldT>::Builder QMOMExpr;
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-      factory.register_expression( scinew QMOMExpr( weightsAndAbscissaeTags, transportedMomentTags, realizableQMOM) );
+      factory.register_expression( new QMOMExpr( weightsAndAbscissaeTags, transportedMomentTags, realizableQMOM) );
     }
 
     setup();
@@ -539,13 +539,13 @@ namespace WasatchCore {
       //register source term from mixing
       const Expr::Tag mixingSourceTag( solnVarName_ + "_mixing_source", Expr::STATE_NONE);
       typedef typename MultiEnvSource<FieldT>::Builder MixSource;
-      factory.register_expression( scinew MixSource( mixingSourceTag, multiEnvWeightsTags, solnVarTag_, initialMoment_ ) );
+      factory.register_expression( new MixSource( mixingSourceTag, multiEnvWeightsTags, solnVarTag_, initialMoment_ ) );
       rhsTags.push_back( mixingSourceTag );
 
       //register averaged moment
       const Expr::Tag aveMomentTag( solnVarName_ + "_ave", Expr::STATE_NONE );
       typedef typename MultiEnvAveMoment<FieldT>::Builder AveMoment;
-      factory.register_expression( scinew AveMoment( aveMomentTag, multiEnvWeightsTags, solnVarTag_, initialMoment_ ) );
+      factory.register_expression( new AveMoment( aveMomentTag, multiEnvWeightsTags, solnVarTag_, initialMoment_ ) );
     }
 
     //____________
@@ -617,7 +617,7 @@ namespace WasatchCore {
     // the builder of ScalarRHS in order to prevent any errors in ScalarRHS
     const Expr::Tag densT = Expr::Tag();
     const bool tempConstDens = false;
-    return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag_,info,srcTags,densT,tempConstDens) );
+    return factory.register_expression( new typename ScalarRHS<FieldT>::Builder(rhsTag_,info,srcTags,densT,tempConstDens) );
   }
 
   //------------------------------------------------------------------

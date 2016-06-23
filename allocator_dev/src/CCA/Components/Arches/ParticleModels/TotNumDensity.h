@@ -55,7 +55,7 @@ public:
       ~Builder(){}
 
       TotNumDensity* build()
-      { return scinew TotNumDensity( _task_name, _matl_index ); }
+      { return new TotNumDensity( _task_name, _matl_index ); }
 
       private: 
 

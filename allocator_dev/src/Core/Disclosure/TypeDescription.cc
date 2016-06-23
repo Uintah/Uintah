@@ -24,7 +24,6 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Util/Assert.h>
 
@@ -121,8 +120,8 @@ TypeDescription::register_type()
       ASSERT(!killed);
       ASSERT(!typelist_g)
 
-      types_g    = scinew std::map<std::string, const TypeDescription*>;
-      typelist_g = scinew std::vector<const TypeDescription*>;
+      types_g    = new std::map<std::string, const TypeDescription*>;
+      typelist_g = new std::vector<const TypeDescription*>;
     }
 
     auto iter = types_g->find(getName());

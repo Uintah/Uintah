@@ -48,7 +48,7 @@ public:
       ~Builder(){}; 
 
       UnweightedSrcTerm* build()
-      { return scinew UnweightedSrcTerm( _name, _shared_state, _required_label_names, _type ); };
+      { return new UnweightedSrcTerm( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

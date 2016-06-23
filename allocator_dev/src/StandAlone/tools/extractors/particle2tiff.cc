@@ -891,8 +891,8 @@ void find_CC_ave( DataArchive                   * archive,
       for (iter = matls.begin(); iter < matls.end(); iter++) {
         int m = *iter;
       
-        pVar[m] = scinew ParticleVariable<T>;
-        pos[m]  = scinew ParticleVariable<Point>;
+        pVar[m] = new ParticleVariable<T>;
+        pos[m]  = new ParticleVariable<Point>;
 
         archive->query( *(ParticleVariable<T>*)pVar[m], variable_name, 
                         m, patch, time_step);
@@ -902,7 +902,7 @@ void find_CC_ave( DataArchive                   * archive,
                         
           
       }
-      ave[p] = scinew CCVariable<double>;
+      ave[p] = new CCVariable<double>;
 
       compute_ave( matls, clampVals, pVar, *ave[p], pos, patch );
       
@@ -1028,11 +1028,11 @@ main( int argc, char** argv )
   vector<IntVector> cells;
   string variable_name;
   
-  clampVals* clamps = scinew clampVals();
+  clampVals* clamps = new clampVals();
   clamps->minVal = -DBL_MAX;
   clamps->maxVal = DBL_MAX;
   
-  tiffFlags* flags = scinew tiffFlags();  // currently not used.
+  tiffFlags* flags = new tiffFlags();  // currently not used.
 
   unsigned int nBits     = 8;
   bool doVerification    = false;
@@ -1149,7 +1149,7 @@ main( int argc, char** argv )
   matls.erase(it, matls.end()); 
 
   try {
-    DataArchive* archive = scinew DataArchive(input_uda_name);
+    DataArchive* archive = new DataArchive(input_uda_name);
     
     vector<string> vars;
     vector<const Uintah::TypeDescription*> types;

@@ -1243,7 +1243,6 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
                             int numGhostCells,
                             IntVector& lowOffset, IntVector& highOffset)
 {
-  MALLOC_TRACE_TAG_SCOPE("Patch::getGhostOffsets");
   // This stuff works by assuming there are no neighbors.  If there are
   // neighbors, it can simply cut back appropriately later (no neighbor
   // essentially means no ghost cell on that side).
@@ -1852,7 +1851,7 @@ void Patch::initializeBoundaryConditions()
     d_arrayBCS->clear();
     delete d_arrayBCS;
   }
-  d_arrayBCS = scinew vector<BCDataArray*>(6);
+  d_arrayBCS = new vector<BCDataArray*>(6);
   for (unsigned int i = 0; i< 6; ++i)
     (*d_arrayBCS)[i] = 0;
   
@@ -1863,7 +1862,7 @@ void Patch::initializeBoundaryConditions()
     d_interiorBndArrayBCS->clear();
     delete d_interiorBndArrayBCS;
   }
-  d_interiorBndArrayBCS = scinew vector<BCDataArray*>(6);
+  d_interiorBndArrayBCS = new vector<BCDataArray*>(6);
   for (unsigned int i = 0; i< 6; ++i)
     (*d_interiorBndArrayBCS)[i] = 0;
 }

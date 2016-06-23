@@ -157,7 +157,7 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
   //  define the materialSet
   // The constructor can be called twice, so only create matlSet once.
   if (d_matlSet == 0) {
-    d_matlSet = scinew MaterialSet();
+    d_matlSet = new MaterialSet();
     vector<int> m;
     m.push_back(matlIndex);
     d_matlSet->addAll(m);
@@ -183,7 +183,7 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   // only run task if a conversion is needed.
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&  subtype == TypeDescription::double_type ){
-    tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, myDW, radCalc_freq);
+    tsk = new Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, myDW, radCalc_freq);
   } else {
     return;
   }
@@ -249,9 +249,9 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, radCalc_freq, includeEC );
+    tsk = new Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, radCalc_freq, includeEC );
   } else {
-    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, radCalc_freq, includeEC );
+    tsk = new Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, radCalc_freq, includeEC );
   }
 
   printSchedule(level,dbg,taskname);
@@ -712,7 +712,7 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
   string taskname = "        carryForward_Var: " + variable->getName();
   printSchedule(level, dbg, taskname);
 
-  Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
+  Task* tsk = new Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
 
   tsk->requires(Task::OldDW, variable,   d_gn, 0);
   tsk->computes(variable);

@@ -142,7 +142,7 @@ main( int argc, char** argv )
   cout << "Output file name = " << outFile << endl;
   cout << "UDA directory to be read = " << udaDir << endl;
   try {
-    DataArchive* da = scinew DataArchive(udaDir);
+    DataArchive* da = new DataArchive(udaDir);
     
     // Print a particular particle variable
     printVelocity(da, matID, partID, outFile);
@@ -192,9 +192,9 @@ void printVelocity(DataArchive* da,
   }
 
   // Create arrays of material data for each particle ID
-  MaterialData* matData = scinew MaterialData[partID.size()-1];
+  MaterialData* matData = new MaterialData[partID.size()-1];
   //for (unsigned int ii = 0; ii < partID.size() ; ++ii) {
-  //  matData[ii] = scinew MaterialData();
+  //  matData[ii] = new MaterialData();
   //}
 
   // Now that the variable has been found, get the data for all 

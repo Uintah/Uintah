@@ -52,16 +52,16 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         db_task->findBlock("wave")->findBlock("grid")->getAttribute("type",variable_type);
 
         if ( variable_type == "CC"){
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<CCVariable<double> >::Builder(task_name, 0, eqn_name);
+          TaskInterface::TaskBuilder* tsk = new WaveFormInit<CCVariable<double> >::Builder(task_name, 0, eqn_name);
           register_task( task_name, tsk );
         } else if ( variable_type == "FX" ){
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCXVariable<double> >::Builder(task_name, 0, eqn_name);
+          TaskInterface::TaskBuilder* tsk = new WaveFormInit<SFCXVariable<double> >::Builder(task_name, 0, eqn_name);
           register_task( task_name, tsk );
         } else if ( variable_type == "FY" ){
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCYVariable<double> >::Builder(task_name, 0, eqn_name);
+          TaskInterface::TaskBuilder* tsk = new WaveFormInit<SFCYVariable<double> >::Builder(task_name, 0, eqn_name);
           register_task( task_name, tsk );
         } else if ( variable_type == "FZ" ){
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCZVariable<double> >::Builder(task_name, 0, eqn_name);
+          TaskInterface::TaskBuilder* tsk = new WaveFormInit<SFCZVariable<double> >::Builder(task_name, 0, eqn_name);
           register_task( task_name, tsk );
         } else {
           throw InvalidValue("Error: Grid type not valid for WaveForm initializer: "+variable_type, __FILE__, __LINE__);
@@ -69,17 +69,17 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "random_lagrangian_particles"){
 
-        TaskInterface::TaskBuilder* tsk = scinew RandParticleLoc::Builder( task_name, 0 );
+        TaskInterface::TaskBuilder* tsk = new RandParticleLoc::Builder( task_name, 0 );
         register_task( task_name, tsk );
 
       } else if ( type == "lagrangian_particle_velocity"){
 
-        TaskInterface::TaskBuilder* tsk = scinew InitLagrangianParticleVelocity::Builder( task_name, 0 );
+        TaskInterface::TaskBuilder* tsk = new InitLagrangianParticleVelocity::Builder( task_name, 0 );
         register_task( task_name, tsk );
 
       } else if ( type == "lagrangian_particle_size"){
 
-        TaskInterface::TaskBuilder* tsk = scinew InitLagrangianParticleSize::Builder( task_name, 0 );
+        TaskInterface::TaskBuilder* tsk = new InitLagrangianParticleSize::Builder( task_name, 0 );
         register_task( task_name, tsk );
 
       } else {

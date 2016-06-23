@@ -77,7 +77,6 @@
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -203,28 +202,7 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
 
 void
 sanityChecks()
-{
-#if defined( DISABLE_SCI_MALLOC )
-  if (getenv("MALLOC_STATS")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n");
-    printf("ERROR:\n\n");
-    Parallel::exitAll(1);
-  }
-  if (getenv("MALLOC_TRACE")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n");
-    printf("ERROR:\n\n");
-    Parallel::exitAll(1);
-  }
-  if (getenv("MALLOC_STRICT")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n");
-    printf("ERROR:\n\n");
-    Parallel::exitAll(1);
-  }
-#endif
-}
+{}
 
 void
 abortCleanupFunc()
@@ -242,7 +220,6 @@ main( int argc, char *argv[], char *env[] )
   sanityChecks();
 
   string oldTag;
-  MALLOC_TRACE_TAG_SCOPE("main()");
 
 #if HAVE_IEEEFP_H
   fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
@@ -470,7 +447,7 @@ main( int argc, char *argv[], char *env[] )
       }
     }
   }
- 
+
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, 0, true );
 
@@ -527,13 +504,6 @@ main( int argc, char *argv[], char *env[] )
       proc0cout << "\n";
     }
 
-#if defined(MALLOC_TRACE)
-    ostringstream traceFilename;
-    traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
-    MALLOC_TRACE_LOG_FILE( traceFilename.str().c_str() );
-    //mallocTraceInfo.setTracingState( false );
-#endif
-
     if (Uintah::Parallel::getMPIRank() == 0) {
       // helpful for cleaning out old stale udas
       time_t t = time(nullptr);
@@ -549,7 +519,7 @@ main( int argc, char *argv[], char *env[] )
       cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
       cout << "CFLAGS: " << CFLAGS << "\n";
 
-      // Run svn commands on Packages/Uintah 
+      // Run svn commands on Packages/Uintah
       if (do_svnDiff || do_svnStat) {
         cout << "____SVN_____________________________________________________________\n";
         string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
@@ -634,28 +604,28 @@ main( int argc, char *argv[], char *env[] )
       // title.
       if( !have_comment )
       {
-	// Find the meta data and the title. 
+	// Find the meta data and the title.
 	std::string title;
-	
+
 	if( ups->findBlock( "Meta" ) )
 	  ups->findBlock( "Meta" )->require( "title", title );
-	
+
 	if( title.size() )
 	{
-	  // Have the title so pass that into the libsim 
+	  // Have the title so pass that into the libsim
 	  char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
-	  
+
 	  if (new_argv != nullptr)
 	  {
 	    memmove(new_argv, argv, sizeof(*new_argv) * argc);
-	    
+
 	    argv = new_argv;
-	    
+
 	    argv[argc] =
 	      (char*) malloc( (strlen("-visit_comment")+1) * sizeof(char) );
 	    strcpy( argv[argc], "-visit_comment" );
 	    ++argc;
-	    
+
 	    argv[argc] =
 	      (char*) malloc( (title.size()+1) * sizeof(char) );
 	    strcpy( argv[argc], title.c_str() );
@@ -664,7 +634,7 @@ main( int argc, char *argv[], char *env[] )
 	}
       }
 
-      visit_LibSimArguments( argc, argv );      
+      visit_LibSimArguments( argc, argv );
     }
 #endif
 
@@ -681,10 +651,10 @@ main( int argc, char *argv[], char *env[] )
     if(reduce_uda){
       do_AMR = false;
     }
-    
+
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
+    SimulationController* ctl = new AMRSimulationController( world, do_AMR, ups );
 
 #ifdef HAVE_VISIT
     ctl->setVisIt( do_VisIt );
@@ -707,7 +677,6 @@ main( int argc, char *argv[], char *env[] )
 
     proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
 
-    MALLOC_TRACE_TAG("main():create components");
     //______________________________________________________________________
     // Create the components
 
@@ -725,11 +694,11 @@ main( int argc, char *argv[], char *env[] )
     ctl->attachPort("sim", sim);
     comp->attachPort("solver", solve);
     comp->attachPort("regridder", reg);
-    
+
 #ifndef NO_ICE
     //__________________________________
     //  Model
-    ModelMaker* modelmaker = scinew ModelFactory(world);
+    ModelMaker* modelmaker = new ModelFactory(world);
     comp->attachPort("modelmaker", modelmaker);
 #endif
 
@@ -741,16 +710,16 @@ main( int argc, char *argv[], char *env[] )
       reg->attachPort("load balancer", lbc);
       lbc->attachPort("regridder",reg);
     }
-    
+
     //__________________________________
     // Output
-    DataArchiver * dataarchiver = scinew DataArchiver( world, udaSuffix );
+    DataArchiver * dataarchiver = new DataArchiver( world, udaSuffix );
     Output       * output       = dataarchiver;
     ctl->attachPort( "output", dataarchiver );
     dataarchiver->attachPort( "load balancer", lbc );
     comp->attachPort( "output", dataarchiver );
     dataarchiver->attachPort( "sim", sim );
-    
+
     //__________________________________
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
@@ -760,7 +729,7 @@ main( int argc, char *argv[], char *env[] )
     comp->attachPort("scheduler", sched);
 
     sched->setStartAddr( start_addr );
-    
+
     if (reg) {
       reg->attachPort("scheduler", sched);
     }
@@ -770,14 +739,12 @@ main( int argc, char *argv[], char *env[] )
       sched->doEmitTaskGraphDocs();
     }
 
-    MALLOC_TRACE_TAG(oldTag);
-
     //__________________________________
     // Start the simulation controller
     if (restart) {
       ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
     }
-    
+
     // This gives memory held by the 'ups' back before the simulation starts... Assuming
     // no one else is holding on to it...
     ups = 0;
@@ -856,7 +823,7 @@ main( int argc, char *argv[], char *env[] )
     cerrLock.unlock();
     thrownException = true;
   }
-  
+
   Uintah::TypeDescription::deleteAll();
 
   /*

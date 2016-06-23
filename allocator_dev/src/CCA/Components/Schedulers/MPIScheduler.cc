@@ -33,7 +33,6 @@
 
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
@@ -170,7 +169,7 @@ SchedulerP
 MPIScheduler::createSubScheduler()
 {
   UintahParallelPort * lbp      = getPort("load balancer");
-  MPIScheduler       * newsched = scinew MPIScheduler( d_myworld, m_outPort_, this );
+  MPIScheduler       * newsched = new MPIScheduler( d_myworld, m_outPort_, this );
   newsched->attachPort( "load balancer", lbp );
   newsched->d_sharedState = d_sharedState;
   return newsched;
@@ -627,11 +626,11 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
       }
 
       // Prepare to receive a message
-      BatchReceiveHandler* pBatchRecvHandler = scinew BatchReceiveHandler(batch);
+      BatchReceiveHandler* pBatchRecvHandler = new BatchReceiveHandler(batch);
       PackBufferInfo* p_mpibuff = 0;
 
 #ifdef USE_PACKING
-      p_mpibuff = scinew PackBufferInfo();
+      p_mpibuff = new PackBufferInfo();
       PackBufferInfo& mpibuff = *p_mpibuff;
 #else
       BufferInfo mpibuff;
@@ -740,7 +739,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
         Uintah::MPI::Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
         int bytes = count;
-        recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
+        recvs_.add(requestid, bytes, new ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
         mpi_info_[TotalRecvMPI] += Time::currentSeconds() - start;
 
         /*}

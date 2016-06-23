@@ -24,7 +24,6 @@
 
 #include <Core/Util/RefCounted.h>
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 
@@ -49,7 +48,7 @@ RefCounted::RefCounted()
     initlock.lock();
     {
       for (int i = 0; i < NLOCKS; ++i) {
-        locks[i] = scinew std::mutex();
+        locks[i] = new std::mutex();
       }
       initialized = true;
     }

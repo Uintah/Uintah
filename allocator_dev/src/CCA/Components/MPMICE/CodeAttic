@@ -22,7 +22,7 @@ void MPMICE::scheduleInterpolateVelIncFCToNC(SchedulerP& sched,
 {
   cout_doing << "MPMICE::scheduleInterpolateVelIncFCToNC" << endl;
 
-   Task* t=scinew Task("MPMICE::interpolateVelIncFCToNC",
+   Task* t=new Task("MPMICE::interpolateVelIncFCToNC",
                  this, &MPMICE::interpolateVelIncFCToNC);
 
    t->requires(Task::NewDW, Ilb->uvel_FCLabel,   Ghost::None);
@@ -320,7 +320,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolateCCToNC" << endl;
                                                                                 
-  Task* t=scinew Task("MPMICE::interpolateCCToNC",
+  Task* t=new Task("MPMICE::interpolateCCToNC",
                       this, &MPMICE::interpolateCCToNC);
   const MaterialSubset* mss = mpm_matls->getUnion();
   Ghost::GhostType  gac = Ghost::AroundCells;

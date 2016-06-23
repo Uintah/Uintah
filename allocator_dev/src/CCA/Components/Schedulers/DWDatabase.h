@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
 

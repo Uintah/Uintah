@@ -168,7 +168,7 @@ void DQMOMEqnFactory::registerDQMOMEqns(ProblemSpecP& db, ArchesLabel* field_lab
 
       proc0cout << "creating a weight for: " << weight_name << std::endl;
 
-      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( field_labels, time_integrator, weight_name, ic_name, iqn );
+      DQMOMEqnBuilderBase* eqnBuilder = new DQMOMEqnBuilder( field_labels, time_integrator, weight_name, ic_name, iqn );
       this->register_scalar_eqn( weight_name, eqnBuilder );
 
     }
@@ -193,7 +193,7 @@ void DQMOMEqnFactory::registerDQMOMEqns(ProblemSpecP& db, ArchesLabel* field_lab
 
         proc0cout << "created a weighted abscissa for: " << final_name << std::endl;
 
-        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( field_labels, time_integrator, final_name, ic_name, iqn );
+        DQMOMEqnBuilderBase* eqnBuilder = new DQMOMEqnBuilder( field_labels, time_integrator, final_name, ic_name, iqn );
         this->register_scalar_eqn( final_name, eqnBuilder );
 
       }

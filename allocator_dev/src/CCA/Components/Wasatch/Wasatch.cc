@@ -38,7 +38,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
@@ -139,10 +138,10 @@ namespace WasatchCore{
     Uintah::OnDemandDataWarehouse::d_combineMemory = false;
 
     const bool log = false;
-    graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
-    graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
-    graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
-    graphCategories_[ POSTPROCESSING     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+    graphCategories_[ INITIALIZATION     ] = new GraphHelper( new Expr::ExpressionFactory(log) );
+    graphCategories_[ TIMESTEP_SELECTION ] = new GraphHelper( new Expr::ExpressionFactory(log) );
+    graphCategories_[ ADVANCE_SOLUTION   ] = new GraphHelper( new Expr::ExpressionFactory(log) );
+    graphCategories_[ POSTPROCESSING     ] = new GraphHelper( new Expr::ExpressionFactory(log) );
 
     OldVariable::self().sync_with_wasatch( this );
     ReductionHelper::self().sync_with_wasatch( this );
@@ -365,7 +364,7 @@ namespace WasatchCore{
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
     if( doParticles_ ){
-      particlesHelper_ = scinew WasatchParticlesHelper();
+      particlesHelper_ = new WasatchParticlesHelper();
       particlesHelper_->sync_with_wasatch(this);
       particlesHelper_->problem_setup( uintahSpec, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState );
     }
@@ -448,8 +447,8 @@ namespace WasatchCore{
           constDensParam->getAttribute( "value", densVal );
           constDensParam->getAttribute( "name", densName );
           densityTag = Expr::Tag( densName, Expr::STATE_NONE );
-          graphCategories_[INITIALIZATION  ]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
-          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
+          graphCategories_[INITIALIZATION  ]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
+          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
         }
       }
     }
@@ -508,7 +507,7 @@ namespace WasatchCore{
     // Material
     //
     if( buildWasatchMaterial_ ){
-      Uintah::WasatchMaterial* mat= scinew Uintah::WasatchMaterial();
+      Uintah::WasatchMaterial* mat= new Uintah::WasatchMaterial();
       sharedState->registerWasatchMaterial(mat);
     }
 
@@ -700,7 +699,7 @@ namespace WasatchCore{
     }
 
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeIntegrator_ );
+      timeStepper_ = new TimeStepper( sharedState_, graphCategories_, timeIntegrator_ );
     }    
     
     //
@@ -732,8 +731,8 @@ namespace WasatchCore{
     // radiation
     if( uintahSpec->findBlock("RMCRT") ){
       doRadiation_ = true;
-      cellType_ = scinew CellType();
-      rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
+      cellType_ = new CellType();
+      rmcrt_ = new Uintah::Ray( Uintah::TypeDescription::double_type );
 
       Uintah::ProblemSpecP radSpec = uintahSpec->findBlock("RMCRT");
       Uintah::ProblemSpecP radPropsSpec=wasatchSpec_->findBlock("RadProps");
@@ -847,7 +846,7 @@ namespace WasatchCore{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    bcHelperMap_[level->getID()] = new WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
     if( wasatchSpec_->findBlock("EmbeddedGeometry") ){
@@ -861,7 +860,7 @@ namespace WasatchCore{
     timeTags.push_back( TagNames::self().dt       );
     timeTags.push_back( TagNames::self().timestep );
     timeTags.push_back( TagNames::self().rkstage  );
-    exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
+    exprFactory.register_expression( new SetCurrentTime::Builder(timeTags), true );
     
     //_____________________________________________
     // Build the initial condition expression graph
@@ -898,7 +897,7 @@ namespace WasatchCore{
       process_field_clipping( wasatchSpec_, graphCategories_, allPatches );
       // -----------------------------------------------------------------------
       try{
-        TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
+        TaskInterface* const task = new TaskInterface( icGraphHelper->rootIDs,
                                                           "initialization",
                                                           *icGraphHelper->exprFactory,
                                                           level, sched,
@@ -974,14 +973,14 @@ namespace WasatchCore{
     for( int ipss=0; ipss<patches->size(); ++ipss ){
       const Uintah::PatchSubset* pss = patches->getSubset(ipss);
       for( int ip=0; ip<pss->size(); ++ip ){
-        SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+        SpatialOps::OperatorDatabase* const opdb = new SpatialOps::OperatorDatabase();
         const Uintah::Patch* const patch = pss->get(ip);
 
         //tsaad: register a patch container as an operator for easy access to the Uintah patch
         // inside of an expression.
-        opdb->register_new_operator<UintahPatchContainer>(scinew UintahPatchContainer(patch) );
+        opdb->register_new_operator<UintahPatchContainer>(new UintahPatchContainer(patch) );
         
-        opdb->register_new_operator<TimeIntegrator>(scinew TimeIntegrator(timeIntegrator_.name) );
+        opdb->register_new_operator<TimeIntegrator>(new TimeIntegrator(timeIntegrator_.name) );
         
         build_operators( *patch, *opdb );
         PatchInfo& pi = patchInfoMap_[patch->getID()];
@@ -1007,7 +1006,7 @@ namespace WasatchCore{
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      TaskInterface* const task = scinew TaskInterface( tsGraphHelper->rootIDs,
+      TaskInterface* const task = new TaskInterface( tsGraphHelper->rootIDs,
                                                         "compute timestep",
                                                         *tsGraphHelper->exprFactory,
                                                         level, sched,
@@ -1022,7 +1021,7 @@ namespace WasatchCore{
 
       proc0cout << "Scheduling Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
 
-      Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
+      Uintah::Task* task = new Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
       	task->computes( sharedState_->get_delt_label(),
@@ -1053,7 +1052,7 @@ namespace WasatchCore{
                                                 Uintah::SchedulerP& subsched)
   {
     
-    Uintah::Task* t = scinew Uintah::Task("Wasatch::computeDualTimeResidual", this, &Wasatch::computeDualTimeResidual, level, subsched.get_rep());
+    Uintah::Task* t = new Uintah::Task("Wasatch::computeDualTimeResidual", this, &Wasatch::computeDualTimeResidual, level, subsched.get_rep());
     
     t->requires( Uintah::Task::NewDW, Uintah::VarLabel::find("convergence"), Uintah::Ghost::None, 0);
     t->computes(Uintah::VarLabel::find("DualtimeResidual"));
@@ -1103,7 +1102,7 @@ namespace WasatchCore{
       scheduleUpdateCurrentTime(level, sched, 1);
 
       // if we are in dual time, then the TimeAdvance will drive the dual time integrator
-      Uintah::Task* dualTimeTask = scinew Uintah::Task("Wasatch::dualTimeAdvance",
+      Uintah::Task* dualTimeTask = new Uintah::Task("Wasatch::dualTimeAdvance",
                                                        this, &Wasatch::dualTimeAdvance,
                                                        level, sched.get_rep(),
                                                        advSolGraphHelper->exprFactory);
@@ -1216,7 +1215,7 @@ namespace WasatchCore{
           particlesHelper_->schedule_find_boundary_particles(level,sched);
         }
         
-        bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+        bcHelperMap_[level->getID()] = new WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
       }
       
       if( doParticles_ ){
@@ -1304,7 +1303,7 @@ namespace WasatchCore{
       GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
       Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
       if( !postProcGH->rootIDs.empty() ){
-        TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
+        TaskInterface* const task = new TaskInterface( postProcGH->rootIDs,
                                                          "postprocessing",
                                                          postProcFactory,
                                                          level, sched,
@@ -1446,7 +1445,7 @@ namespace WasatchCore{
       timeTags.push_back( TagNames::self().dt     );
       timeTags.push_back( TagNames::self().timestep );
       timeTags.push_back( TagNames::self().rkstage  );
-      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
+      timeID = exprFactory.register_expression( new SetCurrentTime::Builder(timeTags), true );
     }
     else{
       timeID = exprFactory.get_id(TagNames::self().time);
@@ -1461,7 +1460,7 @@ namespace WasatchCore{
     {
       // add a task to update current simulation time
       Uintah::Task* updateCurrentTimeTask =
-      scinew Uintah::Task( "update current time",
+      new Uintah::Task( "update current time",
                           this,
                           &Wasatch::update_current_time,
                           rkStage );
@@ -1531,7 +1530,7 @@ namespace WasatchCore{
     typedef Expr::ConstantExpr<SpatialOps::SingleValueField>::Builder ConstantSingleValueT;
     const double ds = timeIntegrator_.dualTimeds;
     const TagNames& tagNames = TagNames::self();
-    const Expr::ExpressionID dsID = exprFactory.register_expression(scinew ConstantSingleValueT(tagNames.ds, ds), true );
+    const Expr::ExpressionID dsID = exprFactory.register_expression(new ConstantSingleValueT(tagNames.ds, ds), true );
 
     //____________________________________________________________________
     // create all of the required tasks on the timestepper.  This involves

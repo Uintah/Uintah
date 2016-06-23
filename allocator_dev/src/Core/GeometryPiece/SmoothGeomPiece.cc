@@ -24,7 +24,6 @@
 
 #include <Core/GeometryPiece/SmoothGeomPiece.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 #include <vector>
 #include <iostream>
 
