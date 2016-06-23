@@ -23,7 +23,7 @@
  */
 
 /*
- *  uda2vis.cc: Provides an interface between VisIt's libsim and Uintah.
+ *  uda2vis.h: Provides an interface between VisIt's libsim and Uintah.
  *
  *  Written by:
  *   Department of Computer Science
@@ -41,30 +41,33 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/GridP.h>
 
+// Define these for the in-situ usage.
+
 namespace Uintah {
 
-TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
-			       GridP grid,
-			       int timestep,
-			       bool useExtraCells);
+TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
+			      SimulationStateP simStateP,
+			      GridP grid,
+			      int timestep,
+			      bool useExtraCells);
 
-GridDataRaw* getGridData2(SchedulerP schedulerP,
-			  GridP gridP,
-			  int level_i,
-			  int patch_i,
-			  std::string variable_name,
-			  int material,
-			  int timestep,
-			  int low[3],
-			  int high[3]);
+GridDataRaw* getGridData(SchedulerP schedulerP,
+			 GridP gridP,
+			 int level_i,
+			 int patch_i,
+			 std::string variable_name,
+			 int material,
+			 int timestep,
+			 int low[3],
+			 int high[3]);
 
-ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
-				  GridP gridP,
-				  int level_i,
-				  int patch_i,
-				  std::string variable_name,
-				  int material,
-				  int timestep);
+ParticleDataRaw* getParticleData(SchedulerP schedulerP,
+				 GridP gridP,
+				 int level_i,
+				 int patch_i,
+				 std::string variable_name,
+				 int material,
+				 int timestep);
 
 void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
 				 int global_patch, 

@@ -223,6 +223,7 @@ std::vector<double> getCycleTimes(DataArchive *archive)
 /////////////////////////////////////////////////////////////////////
 // Get all the information that may be needed for the current timestep,
 // including variable/material info, and level/patch info
+// This function uses the archive for file reading.
 extern "C"
 TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                               GridP *grid,
@@ -265,20 +266,22 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
   }
 
   // Get level information
-  for (int l=0; l<numLevels; l++) {
+  for (int l=0; l<numLevels; ++l)
+  {
     LevelInfo &levelInfo = stepInfo->levelInfo[l];
     LevelP level = (*grid)->getLevel(l);
 
     copyIntVector(levelInfo.refinementRatio, level->getRefinementRatio());
-    copyVector(levelInfo.spacing, level->dCell());
-    copyVector(levelInfo.anchor, level->getAnchor());
-    copyIntVector(levelInfo.periodic, level->getPeriodicBoundaries());
+    copyVector(   levelInfo.spacing,         level->dCell());
+    copyVector(   levelInfo.anchor,          level->getAnchor());
+    copyIntVector(levelInfo.periodic,        level->getPeriodicBoundaries());
 
     // Patch info
     int numPatches = level->numPatches();
     levelInfo.patchInfo.resize(numPatches);
 
-    for (int p=0; p<numPatches; p++) {
+    for (int p=0; p<numPatches; ++p)
+    {
       const Patch* patch = level->getPatch(p);
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
 
@@ -324,6 +327,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
 
 /////////////////////////////////////////////////////////////////////
 // Read the grid data for the given index range
+// This function uses the archive for file reading.
 template<template <typename> class VAR, typename T>
 static GridDataRaw* readGridData(DataArchive *archive,
                                  const Patch *patch,
@@ -364,6 +368,9 @@ static GridDataRaw* readGridData(DataArchive *archive,
 }
 
 
+/////////////////////////////////////////////////////////////////////
+// Read the grid data based on the type
+// This function uses the archive for file reading.
 template<template<typename> class VAR>
 GridDataRaw* getGridDataMainType(DataArchive *archive,
                                  const Patch *patch,
@@ -413,6 +420,9 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
 }
 
 
+/////////////////////////////////////////////////////////////////////
+// Read the grid data
+// This function uses the archive for file reading.
 extern "C"
 GridDataRaw* getGridData(DataArchive *archive,
                          GridP *grid,
@@ -480,6 +490,7 @@ GridDataRaw* getGridData(DataArchive *archive,
 
 /////////////////////////////////////////////////////////////////////
 // Check to see if a variable exists.
+// This function uses the archive for file reading.
 extern "C"
 bool variableExists(DataArchive *archive,
                     std::string variable_name)
@@ -505,6 +516,7 @@ bool variableExists(DataArchive *archive,
 
 /////////////////////////////////////////////////////////////////////
 // Read all the particle data for a given patch.
+// This function uses the archive for file reading.
 template<typename T>
 ParticleDataRaw* readParticleData(DataArchive *archive,
                                   const Patch *patch,
@@ -572,6 +584,9 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
 }
 
 
+/////////////////////////////////////////////////////////////////////
+// Read the particle data
+// This function uses the archive for file reading.
 extern "C"
 ParticleDataRaw* getParticleData(DataArchive *archive,
                                  GridP *grid,
@@ -639,6 +654,9 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   }
 }
 
+/////////////////////////////////////////////////////////////////////
+// Read the particle position name
+// This function uses the archive for file reading.
 extern "C"
 std::string getParticlePositionName(DataArchive *archive)
 {
@@ -652,10 +670,12 @@ namespace Uintah {
 /////////////////////////////////////////////////////////////////////
 // Get all the information that may be needed for the current timestep,
 // including variable/material info, and level/patch info
-TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
-                               GridP gridP,
-                               int timestep,
-                               bool useExtraCells)
+// This uses the scheduler for in-situ.
+TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
+                              SimulationStateP simStateP,
+                              GridP gridP,
+                              int timestep,
+                              bool useExtraCells)
 {
   DataWarehouse *dw = schedulerP->getLastDW();
   LoadBalancer  *lb = schedulerP->getLoadBalancer();
@@ -664,80 +684,87 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
   TimeStepInfo *stepInfo = new TimeStepInfo();
   stepInfo->levelInfo.resize(numLevels);
 
-  // Get the variable information
-  const std::set<const VarLabel*, VarLabel::Compare> varLabels =
-    schedulerP->getInitialRequiredVars();
-
   // Get the material information
   Scheduler::VarLabelMaterialMap* pLabelMatlMap =
     schedulerP->makeVarLabelMaterialMap();
 
-  stepInfo->varInfo.resize(varLabels.size());
-
-  // Loop through all of the variables
-  unsigned int i = 0;
+  std::set<const VarLabel*, VarLabel::Compare> varLabels;
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
-
-  for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter, ++i )
+  
+  // Loop through all of the required and computed variables
+  for (int i=0; i<2; ++i )
   {
-    VariableInfo &varInfo = stepInfo->varInfo[i];
-      
-    varInfo.name = (*varIter)->getName();
-    varInfo.type = (*varIter)->typeDescription()->getName();
-    
-    // Loop through all of the materials for this variable
-    Scheduler::VarLabelMaterialMap::iterator matMapIter =
-      pLabelMatlMap->find( varInfo.name );
-    
-    std::list< int > &materials = matMapIter->second;
-    std::list< int >::iterator matIter;
+    if( i == 0 )
+        varLabels = schedulerP->getInitialRequiredVars();
+    else
+        varLabels = schedulerP->getComputedVars();
+        
+    for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
+    {      
+      const VarLabel *varLabel = *varIter;
 
-    for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
-    {
-      bool exists = false;
+      VariableInfo varInfo;
+      varInfo.name = varLabel->getName();
+      varInfo.type = varLabel->typeDescription()->getName();
+    
+      // Loop through all of the materials for this variable
+      Scheduler::VarLabelMaterialMap::iterator matMapIter =
+        pLabelMatlMap->find( varInfo.name );
+    
+      std::list< int > &materials = matMapIter->second;
+      std::list< int >::iterator matIter;
 
-      // Check to make sure the variable exists on at least one patch
-      // for at least one level.
-      for (int l=0; l<numLevels; ++l)
+      for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
       {
-        LevelP level = gridP->getLevel(l);
-        int numPatches = level->numPatches();
+        const int material = *matIter;
 
-        for (int p=0; p<numPatches; ++p)
+        // Check to make sure the variable exists on at least one patch
+        // for at least one level.
+        bool exists = false;
+
+        for (int l=0; l<numLevels; ++l)
         {
-          const Patch* patch = level->getPatch(p);
-
-          if( dw->exists( *varIter, *matIter, patch ) )
+          LevelP level = gridP->getLevel(l);
+          int numPatches = level->numPatches();
+          
+          for (int p=0; p<numPatches; ++p)
           {
-            // The variable exists on this level and patch.
-            varInfo.materials.push_back( *matIter );
-            exists = true;
-            break;
+            const Patch* patch = level->getPatch(p);
+            
+            if( dw->exists( varLabel, material, patch ) )
+            {
+              // The variable exists on this level and patch.
+              varInfo.materials.push_back( material );
+              exists = true;
+              break;
+            }
           }
+          
+          if( exists == true )
+            break;
         }
-
-        if( exists == true )
-          break;
       }
+
+      stepInfo->varInfo.push_back( varInfo );
     }
   }
-
+  
   // Get the level information
-  for (int l=0; l<numLevels; l++)
+  for (int l=0; l<numLevels; ++l)
   {
     LevelInfo &levelInfo = stepInfo->levelInfo[l];
     LevelP level = gridP->getLevel(l);
 
     copyIntVector(levelInfo.refinementRatio, level->getRefinementRatio());
-    copyVector(levelInfo.spacing, level->dCell());
-    copyVector(levelInfo.anchor, level->getAnchor());
-    copyIntVector(levelInfo.periodic, level->getPeriodicBoundaries());
+    copyVector(   levelInfo.spacing,         level->dCell());
+    copyVector(   levelInfo.anchor,          level->getAnchor());
+    copyIntVector(levelInfo.periodic,        level->getPeriodicBoundaries());
 
     // Patch info
     int numPatches = level->numPatches();
     levelInfo.patchInfo.resize(numPatches);
 
-    for (int p=0; p<numPatches; p++)
+    for (int p=0; p<numPatches; ++p)
     {
       const Patch* patch = level->getPatch(p);
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
@@ -932,6 +959,7 @@ void CheckNaNs(int num, double *data, int level, int patch)
 
 /////////////////////////////////////////////////////////////////////
 // Read the grid data for the given index range
+// This uses the scheduler for in-situ.
 template<template <typename> class VAR, typename T>
 static GridDataRaw* readGridData(SchedulerP schedulerP,
                                  const Patch *patch,
@@ -943,8 +971,6 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
                                  int high[3])
 {
   DataWarehouse *dw = schedulerP->getLastDW();
-
-  std::string variable_name = varLabel->getName();
 
   IntVector ilow(low[0], low[1], low[2]);
   IntVector ihigh(high[0], high[1], high[2]);
@@ -988,6 +1014,7 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
 
 /////////////////////////////////////////////////////////////////////
 // Read the grid data for a given patch.
+// This uses the scheduler for in-situ.
 template<template<typename> class VAR>
 GridDataRaw* getGridDataMainType(SchedulerP schedulerP,
                                  const Patch *patch,
@@ -1041,48 +1068,59 @@ GridDataRaw* getGridDataMainType(SchedulerP schedulerP,
 
 /////////////////////////////////////////////////////////////////////
 // Read the grid data for a given patch.
-GridDataRaw* getGridData2(SchedulerP schedulerP,
-                          GridP gridP,
-                          int level_i,
-                          int patch_i,
-                          std::string variable_name,
-                          int material,
-                          int timestep,
-                          int low[3],
-                          int high[3])
+// This uses the scheduler for in-situ.
+GridDataRaw* getGridData(SchedulerP schedulerP,
+                         GridP gridP,
+                         int level_i,
+                         int patch_i,
+                         std::string variable_name,
+                         int material,
+                         int timestep,
+                         int low[3],
+                         int high[3])
 {
   LevelP level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
   // get the variable information
-  const std::set<const VarLabel*, VarLabel::Compare> varLabels =
-    schedulerP->getInitialRequiredVars();
-
-  std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
-
   const VarLabel *varLabel;
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype = nullptr;
 
-  for (varIter = varLabels.begin(); varIter != varLabels.end(); varIter++)
-  {
-    if ((*varIter)->getName() == variable_name) {
-    
-      varLabel = (*varIter);    
-      maintype = (*varIter)->typeDescription();
-      subtype = (*varIter)->typeDescription()->getSubType();
+  std::set<const VarLabel*, VarLabel::Compare> varLabels;
+  std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
 
-      break;
+  // Loop through all of the required and computed variables
+  for (int i=0; i<2; ++i )
+  {
+    if( i == 0 )
+        varLabels = schedulerP->getInitialRequiredVars();
+    else
+        varLabels = schedulerP->getComputedVars();
+        
+    for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
+    {      
+      varLabel = *varIter;
+    
+      if (varLabel->getName() == variable_name)
+      {
+        maintype = varLabel->typeDescription();
+        subtype = varLabel->typeDescription()->getSubType();
+        
+        break;
+      }
     }
   }
 
-  if (!maintype || !subtype) {
-    std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable "
+  if (!maintype || !subtype)
+  {
+    std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable type for "
               << variable_name <<  std::endl;
     return nullptr;
   }
 
-  switch(maintype->getType()) {
+  switch(maintype->getType())
+  {
   case Uintah::TypeDescription::CCVariable:
     return getGridDataMainType<constCCVariable>(schedulerP, patch, level,
                                                 varLabel, material, timestep,
@@ -1114,6 +1152,7 @@ GridDataRaw* getGridData2(SchedulerP schedulerP,
 
 /////////////////////////////////////////////////////////////////////
 // Read all the particle data for a given patch.
+// This uses the scheduler for in-situ.
 template<typename T>
 ParticleDataRaw* readParticleData(SchedulerP schedulerP,
                                   const Patch *patch,
@@ -1167,12 +1206,12 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
   for( std::list< int >::iterator matIter = matlsForVar.begin();
        matIter != matlsForVar.end(); matIter++ )
   {
-    int matl = *matIter;
+    const int material = *matIter;
 
     constParticleVariable<T> *var = new constParticleVariable<T>;
 
-    if( dw->exists( varLabel, matl, patch ) )
-      dw->get( *var, varLabel, matl, patch);
+    if( dw->exists( varLabel, material, patch ) )
+      dw->get( *var, varLabel, material, patch);
 
     //archive->query(*var, variable_name, matl, patch, timestep);
 
@@ -1244,37 +1283,45 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
 
 /////////////////////////////////////////////////////////////////////
 // Read all the particle data for a given patch.
-ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
-                                  GridP gridP,
-                                  int level_i,
-                                  int patch_i,
-                                  std::string variable_name,
-                                  int material,
-                                  int timestep)
+// This uses the scheduler for in-situ.
+ParticleDataRaw* getParticleData(SchedulerP schedulerP,
+                                 GridP gridP,
+                                 int level_i,
+                                 int patch_i,
+                                 std::string variable_name,
+                                 int material,
+                                 int timestep)
 {
   LevelP level = gridP->getLevel(level_i);
   const Patch *patch = level->getPatch(patch_i);
 
   // get the variable information
-  const std::set<const VarLabel*, VarLabel::Compare> varLabels =
-    schedulerP->getInitialRequiredVars();
-
-  std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
-
   const VarLabel *varLabel;
   const Uintah::TypeDescription* maintype = nullptr;
   const Uintah::TypeDescription* subtype = nullptr;
-  
 
-  for (varIter = varLabels.begin(); varIter != varLabels.end(); varIter++)
+  std::set<const VarLabel*, VarLabel::Compare> varLabels;
+  std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
+
+  // Loop through all of the required and computed variables
+  for (int i=0; i<2; ++i )
   {
-    if ((*varIter)->getName() == variable_name) {
+    if( i == 0 )
+        varLabels = schedulerP->getInitialRequiredVars();
+    else
+        varLabels = schedulerP->getComputedVars();
 
-      varLabel = (*varIter);    
-      maintype = (*varIter)->typeDescription();
-      subtype = (*varIter)->typeDescription()->getSubType();
-
-      break;
+    for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter)
+    {
+      varLabel = *varIter;
+      
+      if (varLabel->getName() == variable_name)
+      {
+        maintype = varLabel->typeDescription();
+        subtype = varLabel->typeDescription()->getSubType();
+        
+        break;
+      }
     }
   }
 
