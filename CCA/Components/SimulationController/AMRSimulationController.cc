@@ -1228,7 +1228,8 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup *,
  
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR
-  if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_delt_label(), -1, 0)) {
+  Patch* patch = nullptr;
+  if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_delt_label(), -1, patch)) {
     int multiplier = 1;
     const GridP grid = patches->get(0)->getLevel()->getGrid();
 
@@ -1261,7 +1262,7 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup *,
 
   if (d_sharedState->updateOutputInterval()) {
 
-    if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_outputInterval_label(), -1, 0)) {
+    if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_outputInterval_label(), -1, patch)) {
       min_vartype inv;
       inv.setBenignValue();
       new_dw->put(inv, d_sharedState->get_outputInterval_label());
@@ -1274,7 +1275,7 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup *,
 
   if (d_sharedState->updateCheckpointInterval()) {
 
-    if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_checkpointInterval_label(), -1, 0)) {
+    if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_checkpointInterval_label(), -1, patch)) {
       min_vartype inv;
       inv.setBenignValue();
       new_dw->put(inv, d_sharedState->get_checkpointInterval_label());
