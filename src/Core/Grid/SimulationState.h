@@ -308,22 +308,6 @@ public:
   int    overheadIndex;
   double overheadAvg;
 
-  // Analysis variable for on the fly analysis
-  enum AnalysisType
-  {
-    MinMax = 0,
-    MAX_ANALYSIS_TYPES
-  };
-  
-  struct analysisVar {
-    AnalysisType analysisType;
-    VarLabel* label;
-    VarLabel* reductionMinLabel;
-    VarLabel* reductionMaxLabel;
-    int matl;
-    int level;
-  };
-  
 private:
 
   void registerMaterial( Material* );
@@ -400,19 +384,29 @@ private:
   
 #ifdef HAVE_VISIT
 public:
+  // Reduction analysis variables for on the fly analysis
+  struct analysisVar {
+    std::string name;
+    int matl;
+    int level;
+    std::vector< const VarLabel* > labels;
+  };
+  
+  std::vector< analysisVar >    d_analysisVars;
+
+  // Interactive variables from the UPS problem spec.
   struct interactiveVar {
     std::string name;
     TypeDescription::Type type;
     int*    Ivalue;
     double* Dvalue;
     Vector* Vvalue;
-    bool    modifiable; // If true the user may modify the value, otherwise it is read-only.
+    bool    modifiable; // If true the variable maybe modified.
     bool    modified;   // If true the variable was modified by the user.
-    bool    recompile;  // If true and the variable was modified force the task graph to be recompiled.
+    bool    recompile;  // If true and the variable was modified recompile the task graph.
   };
   
   std::vector< interactiveVar > d_interactiveVars;
-  std::vector< analysisVar >    d_analysisVars;
 
   void setVisIt( bool val ) { d_doVisIt = val; }
   bool getVisIt() { return d_doVisIt; }
