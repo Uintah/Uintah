@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>cylinder in a crossflow of air and water</title>
+   </Meta>
+    <Solver type="hypre"/>
+   <SimulationComponent type="rmpmice" />
+    
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            1.25         </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+
+       <max_delt_increase>    1.0       </max_delt_increase>
+       <timestep_multiplier>0.6         </timestep_multiplier>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+
+       <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      
+          
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      
+      <Face side = "z-">
+          <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+      </Face>
+      
+      <Face side = "z+">
+          <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+      </Face>
+
+    </BoundaryConditions>
+       <Level>
+         <Box label="1">
+            <lower>        [-0.5, 0,-0.25]   </lower>
+            <upper>        [1.5,  1, 0.25]   </upper>
+            <extraCells>   [1,1,1]          </extraCells>
+            <patches>      [4,4,4]          </patches>
+         </Box>
+         <spacing>        [0.0125,0.0125,0.0125]     </spacing>
+       </Level>
+    </Grid>
+    
+   <!--__________________________________
+       At this resolution it takes 16 hrs on 32 processors to 
+       simulate 1.1 physical seconds
+       __________________________________-->
+   
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>cyl_WaterAir_3D.uda</filebase>
+      <outputInterval>0.005</outputInterval>
+      <save label="press_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="vol_frac_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/>
+      <save label="temp_CC"/>
+      <save label="mom_source_CC"/>
+      <save label="sp_vol_CC"/>
+      <save label="p.x"/>
+      <save label="p.particleID"/>
+      <checkpoint interval="0.1" cycle="2"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    M  P   M  I  C  E     P  A  R  A  M  E  T  E  R  S              -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.1</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.01           </knob_for_speedSound>
+        </TimeStepControl>
+
+        <applyHydrostaticPressure>false </applyHydrostaticPressure>
+        <ClampSpecificVolume>     true  </ClampSpecificVolume>
+
+        <ImplicitSolver>
+           <max_outer_iterations>      5     </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 4 </iters_before_timestep_restart>
+           
+           <Parameters variable="implicitPressure">
+              <tolerance>     1.e-20   </tolerance>
+              <!-- The solver tolerance is relative high to prevent checker boarding -->
+              
+              <solver>         cg      </solver>
+              <preconditioner> pfmg    </preconditioner>
+              <maxiterations>  7500    </maxiterations>
+              <npre>           1       </npre>
+              <npost>          1       </npost>
+              <skip>           1       </skip>
+              <jump>           0       </jump>
+              <relax_type>     2       </relax_type>
+           </Parameters>
+        </ImplicitSolver>
+
+      </ICE>        
+    </CFD>
+    <MPM>
+        <time_integrator>     explicit  </time_integrator>
+        <testForNegTemps_mpm> false     </testForNegTemps_mpm>
+        <interpolator>        gimp      </interpolator>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,9.81,0]   </gravity>
+       <reference_pressure> 202650.0  </reference_pressure>
+    </PhysicalConstants>
+
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name = "unknown">
+            <density>             8900.0           </density>
+            <constitutive_model type = "comp_neo_hook">
+              <useModifiedEOS>      true          </useModifiedEOS>
+              <bulk_modulus>       117.0e7        </bulk_modulus>
+              <shear_modulus>       43.8e7        </shear_modulus> 
+            </constitutive_model>
+            
+            <thermal_conductivity>  400.0         </thermal_conductivity>
+            <specific_heat>         386.0         </specific_heat>
+            <geom_object>
+              <cylinder label = "cylinder">
+                  <bottom>    [0.0,0.25,  0.0]      </bottom>
+                  <top>       [0.0,0.75,  0.0]      </top>
+                  <radius>        0.1               </radius>
+              </cylinder>
+
+              <res>               [2,2,2]         </res>
+              <velocity>          [1.0,0.0,0.0]   </velocity>
+              <temperature>       300             </temperature>
+            </geom_object>
+         </material>
+      </MPM>
+      
+       <ICE>
+          <material name = "Water">
+            <EOS type="Thomsen_Hartka_water">
+              <a>  2.0e-7     </a>    <!-- (K/Pa)     -->    
+              <b>  2.6        </b>    <!-- (J/kg K^2) -->
+              <co> 4205.7     </co>   <!-- (J/Kg K)   -->
+              <ko> 5.0e-10    </ko>   <!-- (1/Pa)     -->
+              <To> 277.0      </To>   <!-- (K)        -->
+              <L>  8.0e-6     </L>    <!-- (1/K^2)    -->
+              <vo> 1.00008e-3 </vo>   <!-- (m^3/kg)   -->
+            </EOS>
+
+            <dynamic_viscosity>    0          </dynamic_viscosity>
+            <thermal_conductivity> 0           </thermal_conductivity>
+            <!--
+            <dynamic_viscosity>    855           </dynamic_viscosity>
+            <thermal_conductivity> 613000        </thermal_conductivity>
+            -->
+            <specific_heat>        4145.37627765 </specific_heat>
+            <gamma>                1.000009      </gamma>
+            <geom_object>
+              <difference>
+                <box label="bottomHalf">
+                    <min>           [-10,-10,-10]      </min>  
+                    <max>           [ 10, 0.5, 10 ]    </max>  
+                </box>
+
+                <cylinder label="cylinder"/>
+              </difference>
+               <res>                [2,2,2]            </res>  
+               <velocity>           [0.0,0.0,0.0]      </velocity>
+               
+              <!--_____________________________________________________-->
+              <!--              995.749014615     1atm                 --> 
+              <!--  The key to this problem is setting the initial pressure                   -->
+              <!--  significantly above 1ATM.  The MPMICE:equilbration pressure task          -->
+              <!--  will fail to converge to a solution if pressure in the water in the wake region -->
+              <!--  falls below 1 atm.  This simulation is run at roughly 20atm.  The pressure-->
+              <!--  in the water is adjusted via the density.          -->
+              <!--_____________________________________________________-->
+              
+              
+              <density>        996.5623739544401       </density> 
+              <pressure>             202650.0          </pressure>
+              <temperature>          300.0             </temperature>  
+            </geom_object>
+          </material>       
+   
+         <material name = "Air">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>          0.0             </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+              <difference>
+                <box label="topHalf">
+                    <min>           [-10, 0.5,-10]       </min>
+                    <max>           [ 10, 10,  10 ]      </max>
+                </box>
+                
+                <cylinder label="cylinder"/>
+              </difference>
+               <res>                      [2,2,2]       </res>
+               <velocity>           [0.0,0.0,0.0]       </velocity>
+               <temperature>        300.0               </temperature>
+               <density>        23.536585365853661      </density>
+               <pressure>       2026500.                </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+       
+      <exchange_properties> 
+        <exchange_coefficients>
+              <momentum>           [1e15, 1e15, 1e15]          </momentum>
+              <heat>                  [1e5, 1e5, 1e15]           </heat>
+        </exchange_coefficients>
+      </exchange_properties> 
+    </MaterialProperties>
+
+       
+</Uintah_specification>
