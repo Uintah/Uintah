@@ -109,6 +109,14 @@ class OnDemandDataWarehouse : public DataWarehouse {
                         int matIndex,
                         const Patch*) const;
 
+    virtual bool exists(const VarLabel*,
+                        int matIndex,
+                        const Level*) const;
+
+    virtual ReductionVariableBase* getReductionVariable( const VarLabel* label,
+							 int             matlIndex,
+							 const Level*    level ) const;
+
     void copyKeyDB(KeyDatabase<Patch>& varkeyDB,
                    KeyDatabase<Level>& levekeyDB);
 

@@ -394,6 +394,20 @@ OnDemandDataWarehouse::exists( const VarLabel* label,
 //______________________________________________________________________
 //
 bool
+OnDemandDataWarehouse::exists( const VarLabel* label,
+                                     int       matlIndex,
+                               const Level*    level ) const
+{
+  if( level && d_levelDB.exists( label, matlIndex, level ) ) {
+    return true;
+  }
+
+  return false;
+}
+
+//______________________________________________________________________
+//
+bool
 OnDemandDataWarehouse::exists( const VarLabel* label ) const
 {
   {
@@ -406,6 +420,24 @@ OnDemandDataWarehouse::exists( const VarLabel* label ) const
       return false;
     }
   }
+}
+
+//______________________________________________________________________
+//
+ReductionVariableBase*
+OnDemandDataWarehouse::getReductionVariable( const VarLabel* label,
+					     int             matlIndex,
+					     const Level*    level ) const
+{  
+  if( d_levelDB.exists( label, matlIndex, level ) ) {
+    ReductionVariableBase* var =
+      dynamic_cast<ReductionVariableBase*>( d_levelDB.get( label,
+							   matlIndex,
+							   level ) );
+    return var;
+  }
+  else
+    return nullptr;
 }
 
 #ifdef HAVE_CUDA
@@ -929,6 +961,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
     int matlIndex = matls->get( m );
 
     ReductionVariableBase* var;
+
     if( d_levelDB.exists( label, matlIndex, level ) ) {
       var = dynamic_cast<ReductionVariableBase*>( d_levelDB.get( label, matlIndex, level ) );
     }
