@@ -197,7 +197,7 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
 #ifdef HAVE_VISIT
   if( sharedState->getVisIt() ) {
     SimulationState::analysisVar aVar;
-    aVar.name = M_lb->gHeatFluxLabel->getName();
+    aVar.name  = M_lb->gHeatFluxLabel->getName();
     aVar.matl  = d_matl->getDWIndex();
     aVar.level = -1;
     aVar.labels.push_back( v_lb->total_heatRateLabel );
