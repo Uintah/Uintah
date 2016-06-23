@@ -174,7 +174,7 @@ void
 PCTransport::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "PCTransport::computeSource";
-  Task* tsk = scinew Task(taskname, this, &PCTransport::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &PCTransport::computeSource, timeSubStep);
   check_for_pc_labels();
 
   if (timeSubStep == 0 ) { 

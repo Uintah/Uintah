@@ -131,7 +131,7 @@ int main(int argc, char** argv)
   }
 
   try {
-    DataArchive* da = scinew DataArchive(filebase);
+    DataArchive* da = new DataArchive(filebase);
 
     // Setup box
     Point lower(xmin,ymin,zmin);

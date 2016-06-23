@@ -141,7 +141,7 @@ const MaterialSubset*
 Task::getGlobalMatlSubset()
 {
   if (globalMatlSubset == nullptr) {
-    globalMatlSubset = scinew MaterialSubset();
+    globalMatlSubset = new MaterialSubset();
     globalMatlSubset->add(-1);
     globalMatlSubset->addReference();
   }
@@ -213,7 +213,7 @@ void Task::requires(WhichDW dw,
     return;  // no materials, no dependency
   }
 
-  Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom, matls_dom, gtype, numGhostCells,
+  Dependency* dep = new Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom, matls_dom, gtype, numGhostCells,
                                       level_offset);
 
   if (numGhostCells > m_max_ghost_cells) {
@@ -391,7 +391,7 @@ void Task::requires(WhichDW dw,
     return;  // no materials, no dependency
   }
 
-  Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, level, matls, matls_dom);
+  Dependency* dep = new Dependency(Requires, this, dw, var, oldTG, level, matls, matls_dom);
   dep->m_next = nullptr;
 
   if (m_req_tail) {
@@ -427,7 +427,7 @@ void Task::computes(const VarLabel * var,
     ASSERT(patches == nullptr);
   }
 
-  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, false, patches, matls, patches_dom, matls_dom);
+  Dependency* dep = new Dependency(Computes, this, NewDW, var, false, patches, matls, patches_dom, matls_dom);
   dep->m_next = nullptr;
 
   if (m_comp_tail) {
@@ -503,7 +503,7 @@ void Task::computes(const VarLabel* var,
     throw InternalError("Computes of an empty material set!", __FILE__, __LINE__);
   }
 
-  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, false, level, matls, matls_dom);
+  Dependency* dep = new Dependency(Computes, this, NewDW, var, false, level, matls, matls_dom);
   dep->m_next = nullptr;
 
   if (m_comp_tail) {
@@ -530,7 +530,7 @@ void Task::computesWithScratchGhost(const VarLabel* var,
     SCI_THROW(InternalError("ComputeswithScratchGhost should not be used for reduction variable", __FILE__, __LINE__));
   }
 
-  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, oldTG, nullptr, matls, ThisLevel, matls_dom, gtype,
+  Dependency* dep = new Dependency(Computes, this, NewDW, var, oldTG, nullptr, matls, ThisLevel, matls_dom, gtype,
                                       numGhostCells);
   dep->m_next = nullptr;
 
@@ -578,7 +578,7 @@ void Task::modifies(const VarLabel* var,
     ASSERT(patches == nullptr);
   }
 
-  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, oldTG, patches, matls, patches_dom, matls_dom);
+  Dependency* dep = new Dependency(Modifies, this, NewDW, var, oldTG, patches, matls, patches_dom, matls_dom);
   dep->m_next = nullptr;
   if (m_mod_tail) {
     m_mod_tail->m_next = dep;
@@ -613,7 +613,7 @@ void Task::modifies(const VarLabel* var,
     SCI_THROW(InternalError("modifies with level should only be used for reduction variable", __FILE__, __LINE__));
   }
 
-  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, oldTG, level, matls, matls_domain);
+  Dependency* dep = new Dependency(Modifies, this, NewDW, var, oldTG, level, matls, matls_domain);
   dep->m_next = nullptr;
   if (m_mod_tail) {
     m_mod_tail->m_next = dep;
@@ -941,7 +941,7 @@ constHandle<PatchSubset> Task::Dependency::getOtherLevelPatchSubset(Task::PatchD
     patches.insert(somePatches.begin(), somePatches.end());
   }
 
-  return constHandle<PatchSubset>(scinew PatchSubset(patches.begin(), patches.end()));
+  return constHandle<PatchSubset>(new PatchSubset(patches.begin(), patches.end()));
 }
 
 } // end namespace Uintah

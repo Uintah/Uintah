@@ -25,7 +25,6 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h> // Only used for MPI cerr
 #include <Core/Parallel/ProcessorGroup.h> // process determination
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -761,7 +760,6 @@ Tag::update( TagP tag )
 void
 Tag::parseXmlTag( const xmlNode * xmlTag )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseXmlTag");
 
   //  string name = to_char_ptr( xmlTag->name );
   string name = (const char *)( xmlTag->name );
@@ -1146,7 +1144,6 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 void
 ProblemSpecReader::parseValidationFile()
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseValidationFile");
 
   dbg << "\n";
   dbg << "-------------------------------------------------------------------\n";
@@ -1175,7 +1172,7 @@ ProblemSpecReader::parseValidationFile()
     }
   }
                                
-  string * valFileNamePtr = scinew string( valFileName );
+  string * valFileNamePtr = new string( valFileName );
   d_upsFilename.push_back( valFileNamePtr );
 
   xmlNode * root = xmlDocGetRootElement( doc );
@@ -1471,7 +1468,6 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
   indent( inc_dbg, depth );
   inc_dbg << name << "\t\t\t" << getErrorInfo( ps->getNode() ) << "\n";
 
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validate");
   if( !uintahSpec_g ) {
     throw ProblemSetupException( "Strange, UintahSpec_g does not exist...", __FILE__, __LINE__ );
   }
@@ -1770,7 +1766,6 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 void
 ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validateProblemSpec");
   // qwerty: fixme: this comment is no longer correct... i think... Currently, the readInputFile() (and thus this validation) is called
   // multiple times (once for the initial .ups, but then again for 
   // saving data archives and such...)  this (temporary?) hack is used
@@ -1946,7 +1941,6 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
 ProblemSpecP
 ProblemSpecReader::readInputFile( const string & filename, const vector<int> & patches, bool validate /* = false */ )
 {
-  MALLOC_TRACE_TAG_SCOPE( "ProblemSpecReader::readInputFile" );
   if( d_xmlData != 0 ) {
     return d_xmlData;
   }
@@ -2054,7 +2048,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
     throw ProblemSetupException( "Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
   }
 
-  ProblemSpecP prob_spec = scinew ProblemSpec( xmlDocGetRootElement(doc), true );
+  ProblemSpecP prob_spec = new ProblemSpec( xmlDocGetRootElement(doc), true );
 
   string * strPtr = new string( full_filename );
 
@@ -2087,7 +2081,6 @@ ProblemSpecReader::findFileNamePtr( const string & filename )
 void
 ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth /* = 0 */ )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::resolveIncludes");
 
   while( child != nullptr ) {
     if( child->type == XML_ELEMENT_NODE ) {

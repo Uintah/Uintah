@@ -46,7 +46,7 @@ namespace WasatchCore{
                                      FieldT::getTypeDescription(),
                                      Uintah::IntVector(0,0,0) );
 
-    Uintah::Task* task = scinew Uintah::Task( "set_rank", this, &SetProcID::set_rank );
+    Uintah::Task* task = new Uintah::Task( "set_rank", this, &SetProcID::set_rank );
     task->computes( pid_,
                     patches->getUnion(), Uintah::Task::NormalDomain,
                     materials->getUnion(), Uintah::Task::NormalDomain );

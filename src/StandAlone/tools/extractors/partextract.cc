@@ -194,7 +194,7 @@ main( int argc, char** argv )
   }
 
   try {
-    DataArchive* da = scinew DataArchive(filebase);
+    DataArchive* da = new DataArchive(filebase);
  
     // Recover time data
     vector<int> index;

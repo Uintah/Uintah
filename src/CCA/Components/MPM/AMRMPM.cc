@@ -69,7 +69,6 @@
 #include <Core/Grid/Variables/VarLabel.h>                // for VarLabel
 #include <Core/Grid/Variables/VarTypes.h>                // for delt_vartype, etc
 #include <Core/Labels/MPMLabel.h>                        // for MPMLabel
-#include <Core/Malloc/Allocator.h>                       // for scinew
 #include <Core/Math/Matrix3.h>                           // for Matrix3, swapbytes, etc
 #include <Core/Parallel/Parallel.h>                      // for proc0cout
 #include <Core/Parallel/ProcessorGroup.h>                // for ProcessorGroup
@@ -119,8 +118,8 @@ static DebugStream amr_doing("AMRMPM", false);
 
 AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 {
-  //lb = scinew MPMLabel();
-  //flags = scinew MPMFlags(myworld);
+  //lb = new MPMLabel();
+  //flags = new MPMFlags(myworld);
   flags->d_minGridLevel = 0;
   flags->d_maxGridLevel = 1000;
 
@@ -157,7 +156,7 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   RefineFlagZMinLabel = VarLabel::create("RefFlagZMin",
                                          min_vartype::getTypeDescription() );
   
-  d_one_matl = scinew MaterialSubset();
+  d_one_matl = new MaterialSubset();
   d_one_matl->add(0);
   d_one_matl->addReference();
 }
@@ -346,12 +345,12 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
       if(pieces.size() == 0){
         throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
-         mainpiece = scinew UnionGeometryPiece(pieces);
+         mainpiece = new UnionGeometryPiece(pieces);
       } else {
          mainpiece = pieces[0];
       }
       piece_num++;
-      d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+      d_refine_geom_objs.push_back(new GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
    }
  }  // if(refine_ps)
 #endif
@@ -444,7 +443,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
-  Task* t = scinew Task("AMRMPM::actuallyInitialize",
+  Task* t = new Task("AMRMPM::actuallyInitialize",
                   this, &AMRMPM::actuallyInitialize);
 
   t->computes(lb->partCountLabel);
@@ -536,7 +535,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 void AMRMPM::schedulePrintParticleCount(const LevelP& level, 
                                         SchedulerP& sched)
 {
-  Task* t = scinew Task("AMRMPM::printParticleCount",
+  Task* t = new Task("AMRMPM::printParticleCount",
                   this, &AMRMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
@@ -738,7 +737,7 @@ void AMRMPM::schedulePartitionOfUnity(SchedulerP& sched,
                                       const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"AMRMPM::schedulePartitionOfUnity");
-  Task* t = scinew Task("AMRMPM::partitionOfUnity",
+  Task* t = new Task("AMRMPM::partitionOfUnity",
                   this, &AMRMPM::partitionOfUnity);
                   
   t->requires(Task::OldDW, lb->pXLabel,    Ghost::None);
@@ -767,7 +766,7 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
   if(L_indx > 0 ){
 
     printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeZoneOfInfluence");
-    Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
+    Task* t = new Task("AMRMPM::computeZoneOfInfluence",
                     this, &AMRMPM::computeZoneOfInfluence);
 
     t->computes(lb->gZOILabel, d_one_matl);
@@ -792,7 +791,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateParticlesToGrid");
 
 
-  Task* t = scinew Task("AMRMPM::interpolateParticlesToGrid",
+  Task* t = new Task("AMRMPM::interpolateParticlesToGrid",
                    this,&AMRMPM::interpolateParticlesToGrid);
 
   t->requires(Task::OldDW, lb->pMassLabel,               d_gan,NGP);
@@ -846,10 +845,10 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     Task* t = nullptr;
     if( d_CFI_interpolator == "gimp" ){
 
-      t = scinew Task("AMRMPM::interpolateParticlesToGrid_CFI_GIMP",
+      t = new Task("AMRMPM::interpolateParticlesToGrid_CFI_GIMP",
                  this,&AMRMPM::interpolateParticlesToGrid_CFI_GIMP);
     }else{
-      t = scinew Task("AMRMPM::interpolateParticlesToGrid_CFI",
+      t = new Task("AMRMPM::interpolateParticlesToGrid_CFI",
                  this,&AMRMPM::interpolateParticlesToGrid_CFI);
     }
 
@@ -917,7 +916,7 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI"+txt);
 
-  Task* t = scinew Task("AMRMPM::coarsenNodalData_CFI",
+  Task* t = new Task("AMRMPM::coarsenNodalData_CFI",
                    this,&AMRMPM::coarsenNodalData_CFI, flag);
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   #define allPatches 0
@@ -960,7 +959,7 @@ void AMRMPM::scheduleCoarsenNodalData_CFI2(SchedulerP& sched,
 {
   printSchedule( patches, cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI2" );
 
-  Task* t = scinew Task( "AMRMPM::coarsenNodalData_CFI2",
+  Task* t = new Task( "AMRMPM::coarsenNodalData_CFI2",
                     this,&AMRMPM::coarsenNodalData_CFI2 );
 
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
@@ -991,7 +990,7 @@ void AMRMPM::scheduleNormalizeNodalVelTempConc(SchedulerP& sched,
 {
   printSchedule(patches,cout_doing,"AMRMPM::scheduleNormalizeNodalVelTempConc");
 
-  Task* t = scinew Task("AMRMPM::normalizeNodalVelTempConc",
+  Task* t = new Task("AMRMPM::normalizeNodalVelTempConc",
                    this,&AMRMPM::normalizeNodalVelTempConc);
                    
   t->requires(Task::NewDW, lb->gMassLabel,  d_gn);
@@ -1027,7 +1026,7 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeStressTensor");
   
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("AMRMPM::computeStressTensor",
+  Task* t = new Task("AMRMPM::computeStressTensor",
                   this, &AMRMPM::computeStressTensor);
                   
   for(int m = 0; m < numMatls; m++){
@@ -1061,7 +1060,7 @@ void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleUpdateErosionParameter");
 
-  Task* t = scinew Task("AMRMPM::updateErosionParameter",
+  Task* t = new Task("AMRMPM::updateErosionParameter",
                   this, &AMRMPM::updateErosionParameter);
 
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -1087,7 +1086,7 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeInternalForce");
    
-  Task* t = scinew Task("AMRMPM::computeInternalForce",
+  Task* t = new Task("AMRMPM::computeInternalForce",
                   this, &AMRMPM::computeInternalForce);
 
   t->requires(Task::NewDW,lb->gVolumeLabel, d_gn);
@@ -1119,7 +1118,7 @@ void AMRMPM::scheduleComputeInternalForce_CFI(SchedulerP& sched,
   if(L_indx > 0 ){
     printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeInternalForce_CFI");
 
-    Task* t = scinew Task("AMRMPM::computeInternalForce_CFI",
+    Task* t = new Task("AMRMPM::computeInternalForce_CFI",
                     this, &AMRMPM::computeInternalForce_CFI);
 
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
@@ -1166,7 +1165,7 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   printSchedule(patches,cout_doing,
                              "AMRMPM::scheduleComputeAndIntegrateAcceleration");
 
-  Task* t = scinew Task("AMRMPM::computeAndIntegrateAcceleration",
+  Task* t = new Task("AMRMPM::computeAndIntegrateAcceleration",
                   this, &AMRMPM::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -1204,7 +1203,7 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleSetGridBoundaryConditions");
 
-  Task* t=scinew Task("AMRMPM::setGridBoundaryConditions",
+  Task* t=new Task("AMRMPM::setGridBoundaryConditions",
                this,  &AMRMPM::setGridBoundaryConditions);
 
   const MaterialSubset* mss = matls->getUnion();
@@ -1235,7 +1234,7 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeLAndF");
   
-  Task* t=scinew Task("AMRMPM::computeLAndF",
+  Task* t=new Task("AMRMPM::computeLAndF",
                 this, &AMRMPM::computeLAndF);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -1275,7 +1274,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   printSchedule(patches,cout_doing,
                         "AMRMPM::scheduleInterpolateToParticlesAndUpdate");
   
-  Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate",
+  Task* t=new Task("AMRMPM::interpolateToParticlesAndUpdate",
                 this, &AMRMPM::interpolateToParticlesAndUpdate);
                 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -1352,7 +1351,7 @@ void AMRMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
   printSchedule(patches,cout_doing,
                         "AMRMPM::scheduleComputeParticleScaleFactor");
 
-  Task* t=scinew Task("AMRMPM::computeParticleScaleFactor",this,
+  Task* t=new Task("AMRMPM::computeParticleScaleFactor",this,
                       &AMRMPM::computeParticleScaleFactor);
 
   t->requires(Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None);
@@ -1373,7 +1372,7 @@ void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"AMRMPM::scheduleFinalParticleUpdate");
 
-  Task* t=scinew Task("AMRMPM::finalParticleUpdate",
+  Task* t=new Task("AMRMPM::finalParticleUpdate",
                       this, &AMRMPM::finalParticleUpdate);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -1397,7 +1396,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
 
     printSchedule(patches,cout_doing,"AMRMPM::scheduleAddParticles");
 
-    Task* t=scinew Task("AMRMPM::addParticles",this,
+    Task* t=new Task("AMRMPM::addParticles",this,
                         &AMRMPM::addParticles);
 
     t->modifies(lb->pParticleIDLabel_preReloc);
@@ -1464,7 +1463,7 @@ void AMRMPM::scheduleReduceFlagsExtents(SchedulerP& sched,
   if(level->getIndex() > 0 ){
     printSchedule(patches,cout_doing,"AMRMPM::scheduleReduceFlagsExtents");
 
-    Task* t=scinew Task("AMRMPM::reduceFlagsExtents",
+    Task* t=new Task("AMRMPM::reduceFlagsExtents",
                         this, &AMRMPM::reduceFlagsExtents);
 
     t->requires(Task::NewDW, lb->MPMRefineCellLabel, d_one_matl, Ghost::None);
@@ -1485,7 +1484,7 @@ void AMRMPM::scheduleReduceFlagsExtents(SchedulerP& sched,
 void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
 {
   printSchedule(patches,cout_doing,"AMRMPM::scheduleRefine");
-  Task* t = scinew Task("AMRMPM::refineGrid", this, &AMRMPM::refineGrid);
+  Task* t = new Task("AMRMPM::refineGrid", this, &AMRMPM::refineGrid);
 
   t->computes(lb->pXLabel);
   t->computes(lb->pDispLabel);
@@ -1560,7 +1559,7 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
   // Coarsening the refineCell data so that errorEstimate will have it
   // on all levels
 
-  Task* task = scinew Task("AMRMPM::coarsen",this,
+  Task* task = new Task("AMRMPM::coarsen",this,
                            &AMRMPM::coarsen);
 
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
@@ -1671,7 +1670,7 @@ void AMRMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
 //  cout << "scheduleErrorEstimate" << endl;
   printSchedule(coarseLevel,cout_doing,"AMRMPM::scheduleErrorEstimate");
   
-  Task* task = scinew Task("AMRMPM::errorEstimate", this, 
+  Task* task = new Task("AMRMPM::errorEstimate", this, 
                            &AMRMPM::errorEstimate);
 
   task->modifies(d_sharedState->get_refineFlag_label(),
@@ -1930,7 +1929,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
 #ifdef CBDI_FLUXBCS
     LinearInterpolator* LPI;
-    LPI = scinew LinearInterpolator(patch);
+    LPI = new LinearInterpolator(patch);
     vector<IntVector> ni_LPI(LPI->size());
     vector<double> S_LPI(LPI->size());
 #endif
@@ -3735,7 +3734,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                         lb->pConcPreviousLabel_preReloc,  pset);
       }
 
-      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+      ParticleSubset* delset = new ParticleSubset(0, dwi, patch);
 
       //Carry forward ParticleID and pSize
       old_dw->get(pids,                lb->pParticleIDLabel,          pset);
@@ -3885,7 +3884,7 @@ void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
       ParticleVariable<double> pTempNew;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+      ParticleSubset* delset = new ParticleSubset(0, dwi, patch);
 
       new_dw->get(pdTdt,        lb->pdTdtLabel,                      pset);
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
@@ -4750,7 +4749,7 @@ void AMRMPM::scheduleCountParticles(const PatchSet* patches,
                                     SchedulerP& sched)
 {
   printSchedule(patches,cout_doing,"AMRMPM::scheduleCountParticles");
-  Task* t = scinew Task("AMRMPM::countParticles",this, 
+  Task* t = new Task("AMRMPM::countParticles",this, 
                         &AMRMPM::countParticles);
   t->computes(lb->partCountLabel);
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
@@ -4801,7 +4800,7 @@ void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
   #define allPatches 0
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
 
-  Task* t = scinew Task("AMRMPM::debug_CFI",
+  Task* t = new Task("AMRMPM::debug_CFI",
                    this,&AMRMPM::debug_CFI);
   printSchedule(patches,cout_doing,"AMRMPM::scheduleDebug_CFI");
   if(level->hasFinerLevel()){ 
@@ -5047,7 +5046,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
 
     printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI");
 
-    Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate_CFI",
+    Task* t=new Task("AMRMPM::interpolateToParticlesAndUpdate_CFI",
                   this, &AMRMPM::interpolateToParticlesAndUpdate_CFI);
 
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
@@ -5214,7 +5213,7 @@ void AMRMPM::scheduleComputeFlux(SchedulerP& sched,
 
     printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeFlux");
 
-    Task* t = scinew Task("AMRMPM::computeFlux",
+    Task* t = new Task("AMRMPM::computeFlux",
                      this,&AMRMPM::computeFlux);
 
     int numMPM = d_sharedState->getNumMPMMatls();
@@ -5259,7 +5258,7 @@ void AMRMPM::scheduleComputeDivergence(SchedulerP& sched,
     
   printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeDivergence");
 
-  Task* t = scinew Task("AMRMPM::computeDivergence",
+  Task* t = new Task("AMRMPM::computeDivergence",
                     this,&AMRMPM::computeDivergence);
 
 #if 1
@@ -5307,7 +5306,7 @@ void AMRMPM::scheduleComputeDivergence_CFI(SchedulerP& sched,
   if(L_indx > 0 ){
     printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeDivergence_CFI");
 
-    Task* t = scinew Task("AMRMPM::computeDivergence_CFI",
+    Task* t = new Task("AMRMPM::computeDivergence_CFI",
                      this,&AMRMPM::computeDivergence_CFI);
 
     int numMPM = d_sharedState->getNumMPMMatls();
@@ -5343,7 +5342,7 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
 {
   const PatchSet* patches = level->eachPatch();
   
-  d_loadCurveIndex = scinew MaterialSubset();
+  d_loadCurveIndex = new MaterialSubset();
   d_loadCurveIndex->add(0);
   d_loadCurveIndex->addReference();
   
@@ -5359,7 +5358,7 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
    printSchedule(patches,cout_doing,"MPM::scheduleInitializeScalarFluxBCs");
     // Create a task that calculates the total number of particles
     // associated with each load curve.  
-    Task* t = scinew Task("MPM::countMaterialPointsPerFluxLoadCurve",
+    Task* t = new Task("MPM::countMaterialPointsPerFluxLoadCurve",
                           this, &AMRMPM::countMaterialPointsPerFluxLoadCurve);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
@@ -5369,7 +5368,7 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
 #if 1
     // Create a task that calculates the force to be associated with
     // each particle based on the pressure BCs
-    t = scinew Task("MPM::initializeScalarFluxBC",
+    t = new Task("MPM::initializeScalarFluxBC",
                     this, &AMRMPM::initializeScalarFluxBC);
     t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
                             d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
@@ -5477,7 +5476,7 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"MPM::scheduleApplyExternalScalarFlux");
 
-  Task* t=scinew Task("MPM::applyExternalScalarFlux",
+  Task* t=new Task("MPM::applyExternalScalarFlux",
                     this, &AMRMPM::applyExternalScalarFlux);
 
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);

@@ -32,7 +32,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
   //Force the face velocity property model to be created:
   //m_vel_name = "face_velocities";
-  //TaskInterface::TaskBuilder* vel_tsk = scinew FaceVelocities::Builder(m_vel_name, 0 );
+  //TaskInterface::TaskBuilder* vel_tsk = new FaceVelocities::Builder(m_vel_name, 0 );
   //register_task(m_vel_name, vel_tsk);
   //_pre_update_property_tasks.push_back(m_vel_name);
 
@@ -50,24 +50,24 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = new WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
 
       } else if ( type == "variable_stats" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew VariableStats::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new VariableStats::Builder( name, 0 );
         register_task( name, tsk );
         _var_stats_tasks.push_back( name );
 
       } else if ( type == "density_predictor" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
 
       } else if ( type == "CO" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew CO::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new CO::Builder( name, 0 );
         register_task( name, tsk );
         _finalize_property_tasks.push_back( name );
 
@@ -78,16 +78,16 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk;
         if ( var_type == "CC" ){
-          tsk = scinew ConstantProperty<CCVariable<double> >::Builder(name, 0);
+          tsk = new ConstantProperty<CCVariable<double> >::Builder(name, 0);
           _pre_update_property_tasks.push_back(name);
         } else if ( var_type == "FX" ){
-          tsk = scinew ConstantProperty<SFCXVariable<double> >::Builder(name, 0);
+          tsk = new ConstantProperty<SFCXVariable<double> >::Builder(name, 0);
           _pre_update_property_tasks.push_back(name);
         } else if ( var_type == "FY" ){
-          tsk = scinew ConstantProperty<SFCYVariable<double> >::Builder(name, 0);
+          tsk = new ConstantProperty<SFCYVariable<double> >::Builder(name, 0);
           _pre_update_property_tasks.push_back(name);
         } else if ( var_type == "FZ" ){
-          tsk = scinew ConstantProperty<SFCZVariable<double> >::Builder(name, 0);
+          tsk = new ConstantProperty<SFCZVariable<double> >::Builder(name, 0);
           _pre_update_property_tasks.push_back(name);
         } else {
           throw InvalidValue("Error: Property grid type not recognized for model: "+name,__FILE__,__LINE__);
@@ -146,24 +146,24 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = new WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
 
       } else if ( type == "variable_stats" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew VariableStats::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new VariableStats::Builder( name, 0 );
         register_task( name, tsk );
         _finalize_property_tasks.push_back( name );
 
       } else if ( type == "density_predictor" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
 
       } else if ( type == "CO" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew CO::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new CO::Builder( name, 0 );
         register_task( name, tsk );
         _finalize_property_tasks.push_back( name );
 

@@ -120,7 +120,7 @@ namespace WasatchCore {
                                                const int RKStage )
   {
     // hack in a task to apply boundary condition on the poisson variable after the linear solve
-    Uintah::Task* task = scinew Uintah::Task("Poisson Equation: process poisson bcs", this,
+    Uintah::Task* task = new Uintah::Task("Poisson Equation: process poisson bcs", this,
                                              &PoissonExpression::process_bcs);
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
     const int ng = get_n_ghost<SVolField>();

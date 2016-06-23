@@ -27,7 +27,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
 
 using namespace Uintah;
@@ -119,7 +118,7 @@ CylinderGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 CylinderGeometryPiece::clone() const
 {
-  return scinew CylinderGeometryPiece(*this);
+  return new CylinderGeometryPiece(*this);
 }
 
 bool

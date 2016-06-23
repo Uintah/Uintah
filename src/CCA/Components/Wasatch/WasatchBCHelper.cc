@@ -280,7 +280,7 @@ namespace WasatchCore {
     
     // register the null dependency
     typedef typename NullExpression<SrcT, TargetT>::Builder NullExpr;
-    factory.register_expression( scinew NullExpr(dummyTag, dependencies), true );
+    factory.register_expression( new NullExpr(dummyTag, dependencies), true );
   }
   
   //------------------------------------------------------------------------------------------------

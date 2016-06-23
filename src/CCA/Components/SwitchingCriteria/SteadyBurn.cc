@@ -58,9 +58,9 @@ SteadyBurnCriteria::SteadyBurnCriteria(ProblemSpecP& ps)
             << ", Boundary Particles " << d_BP<< endl;
 
 
-  Mlb  = scinew MPMLabel();
-  Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
+  Mlb  = new MPMLabel();
+  Ilb  = new ICELabel();
+  MIlb = new MPMICELabel();
 }
 
 SteadyBurnCriteria::~SteadyBurnCriteria()
@@ -83,9 +83,9 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
 {
   
   printSchedule(level,dbg,"Switching Criteria:SteadyBurnCriteria::scheduleSwitchTest");
-  Task* t = scinew Task("switchTest", this, &SteadyBurnCriteria::switchTest);
+  Task* t = new Task("switchTest", this, &SteadyBurnCriteria::switchTest);
 
-  MaterialSubset* one_matl = scinew MaterialSubset();
+  MaterialSubset* one_matl = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   

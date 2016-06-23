@@ -57,7 +57,7 @@ public:
       ~Builder(){}
 
       ConstantProperty* build()
-      { return scinew ConstantProperty( _task_name, _matl_index ); }
+      { return new ConstantProperty( _task_name, _matl_index ); }
 
       private:
 

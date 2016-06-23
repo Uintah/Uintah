@@ -580,7 +580,7 @@ Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
     ratio = IntVector(1,1,1);
 
 
-  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, id);  
+  Level* level = new Level(this, anchor, dcell, (int)d_levels.size(), ratio, id);  
 
   d_levels.push_back( level );
   return level;

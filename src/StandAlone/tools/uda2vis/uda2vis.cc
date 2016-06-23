@@ -165,7 +165,7 @@ void copyComponents<Matrix3>(double *dest, const Matrix3 &src)
 extern "C"
 DataArchive* openDataArchive(const std::string& input_uda_name)
 {
-  DataArchive *archive = scinew DataArchive(input_uda_name);
+  DataArchive *archive = new DataArchive(input_uda_name);
 
   return archive;
 }

@@ -77,7 +77,7 @@ WARNING
     virtual GridVariableBase* clone();
     virtual const GridVariableBase* clone() const;
     virtual GridVariableBase* cloneType() const
-    { return scinew SFCYVariable<T>(); }
+    { return new SFCYVariable<T>(); }
     
     // allocate(IntVector, IntVector) is hidden without this
     using GridVariable<T>::allocate;
@@ -122,7 +122,7 @@ WARNING
   SFCYVariable<T>::getTypeDescription()
   {
     if(!td){
-      td = scinew TypeDescription(TypeDescription::SFCYVariable,
+      td = new TypeDescription(TypeDescription::SFCYVariable,
                                   "SFCYVariable", &maker,
                                   fun_getTypeDescription((T*)0));
     }
@@ -133,7 +133,7 @@ WARNING
   Variable*
   SFCYVariable<T>::maker()
   {
-    return scinew SFCYVariable<T>();
+    return new SFCYVariable<T>();
   }
    
   template<class T>
@@ -145,14 +145,14 @@ WARNING
   GridVariableBase*
   SFCYVariable<T>::clone()
   {
-    return scinew SFCYVariable<T>(*this);
+    return new SFCYVariable<T>(*this);
   }
 
   template<class T>
   const GridVariableBase*
   SFCYVariable<T>::clone() const
   {
-    return scinew SFCYVariable<T>(*this);
+    return new SFCYVariable<T>(*this);
   }
 
   template<class T>

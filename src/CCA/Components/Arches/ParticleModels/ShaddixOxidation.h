@@ -48,7 +48,7 @@ namespace Uintah{
       ~Builder(){}
       
       ShaddixOxidation* build()
-      { return scinew ShaddixOxidation<IT, DT>( _task_name, _matl_index, _base_var_name, _Nenv ); }
+      { return new ShaddixOxidation<IT, DT>( _task_name, _matl_index, _base_var_name, _Nenv ); }
       
     private:
       

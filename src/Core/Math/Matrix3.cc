@@ -32,7 +32,6 @@
 #include <Core/Math/CubeRoot.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
 #include <Core/Math/MinMax.h>
@@ -909,7 +908,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
+      td = new TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
                                   &makeMPI_Matrix3);
     }
     return td;

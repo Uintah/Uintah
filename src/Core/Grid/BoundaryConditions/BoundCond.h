@@ -27,7 +27,6 @@
 
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
 #include <string>
 
 namespace Uintah {
@@ -86,7 +85,7 @@ WARNING
    virtual ~BoundCond() {};
    virtual BoundCond* clone()
    {
-     return scinew BoundCond(*this);
+     return new BoundCond(*this);
    };
 
    T getValue() const { return d_value;}; 
@@ -122,7 +121,7 @@ WARNING
 
    virtual BoundCond* clone()
    {
-     return scinew BoundCond(*this);
+     return new BoundCond(*this);
    };
 
    

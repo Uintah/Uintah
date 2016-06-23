@@ -101,7 +101,7 @@ namespace WasatchCore{
     if( params->findBlock("Constant") ){
       double val;  params->get("Constant",val);
       typedef typename Expr::ConstantExpr<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, val );
+      builder = new Builder( tag, val );
     } else if (params->findBlock("ParticlePositionIC")) {
       Uintah::ProblemSpecP valParams = params->findBlock("ParticlePositionIC");
       // parse coordinate
@@ -121,11 +121,11 @@ namespace WasatchCore{
       if (valParams->findBlock("Uniform")) {
         bool transverse = false;
         valParams->findBlock("Uniform")->getAttribute("transversedir", transverse);
-        builder = scinew ParticleUniformIC::Builder( tag, lo, hi, transverse, coord, usePatchBounds );
+        builder = new ParticleUniformIC::Builder( tag, lo, hi, transverse, coord, usePatchBounds );
       } else if (valParams->findBlock("Random")) {
         int seed = 0;
         valParams->findBlock("Random")->getAttribute("seed",seed);
-        builder = scinew ParticleRandomIC::Builder( tag, coord, lo, hi, seed, usePatchBounds );
+        builder = new ParticleRandomIC::Builder( tag, coord, lo, hi, seed, usePatchBounds );
       } else if ( valParams->findBlock("Geometry") ) {
         std::vector <Uintah::GeometryPieceP > geomObjects;
         Uintah::ProblemSpecP geomBasedSpec = valParams->findBlock("Geometry");
@@ -139,7 +139,7 @@ namespace WasatchCore{
         {
           Uintah::GeometryPieceFactory::create(intrusionParams,geomObjects);
         }
-        builder = scinew typename ParticleGeometryBased::Builder(tag, coord, seed, geomObjects);
+        builder = new typename ParticleGeometryBased::Builder(tag, coord, seed, geomObjects);
       }
 
       
@@ -151,7 +151,7 @@ namespace WasatchCore{
       valParams->getAttribute("seed",seed);
       const std::string coord="";
       const bool usePatchBounds = false;
-      builder = scinew ParticleRandomIC::Builder( tag, coord, lo, hi, seed, usePatchBounds );
+      builder = new ParticleRandomIC::Builder( tag, coord, lo, hi, seed, usePatchBounds );
     } else if( params->findBlock("LinearFunction") ){
       double slope, intercept;
       Uintah::ProblemSpecP valParams = params->findBlock("LinearFunction");
@@ -159,7 +159,7 @@ namespace WasatchCore{
       valParams->getAttribute("intercept",intercept);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::LinearFunction<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, slope, intercept );
+      builder = new Builder( tag, indepVarTag, slope, intercept );
     } else if ( params->findBlock("SineFunction") ) {
       double amplitude, frequency, offset;
       Uintah::ProblemSpecP valParams = params->findBlock("SineFunction");
@@ -168,7 +168,7 @@ namespace WasatchCore{
       valParams->getAttribute("offset",offset);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::SinFunction<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, amplitude, frequency, offset);
+      builder = new Builder( tag, indepVarTag, amplitude, frequency, offset);
     } else {
       std::ostringstream msg;
       msg << "ERROR: unsupported BasicExpression for Particles. Note that not all BasicExpressions are supported by particles. Please revise your input file." << std::endl;
@@ -194,7 +194,7 @@ namespace WasatchCore{
     if( params->findBlock("Constant") ){
       double val;  params->get("Constant",val);
       typedef typename Expr::ConstantExpr<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, val );
+      builder = new Builder( tag, val );
     }
     else if( params->findBlock("LinearFunction") ){
       double slope, intercept;
@@ -203,7 +203,7 @@ namespace WasatchCore{
       valParams->getAttribute("intercept",intercept);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::LinearFunction<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, slope, intercept );
+      builder = new Builder( tag, indepVarTag, slope, intercept );
     }
     
     else if ( params->findBlock("SineFunction") ) {
@@ -214,7 +214,7 @@ namespace WasatchCore{
       valParams->getAttribute("offset",offset);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::SinFunction<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, amplitude, frequency, offset);
+      builder = new Builder( tag, indepVarTag, amplitude, frequency, offset);
     }
     
     else if ( params->findBlock("ParabolicFunction") ) {
@@ -245,7 +245,7 @@ namespace WasatchCore{
       }
       
       typedef typename Expr::ParabolicFunction<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, a, b, c, x0 );
+      builder = new Builder( tag, indepVarTag, a, b, c, x0 );
     }
     
     else if ( params->findBlock("GaussianFunction") ) {
@@ -257,7 +257,7 @@ namespace WasatchCore{
       valParams->getAttribute("baseline",baseline);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::GaussianFunction<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, amplitude, deviation, mean, baseline);
+      builder = new Builder( tag, indepVarTag, amplitude, deviation, mean, baseline);
     }
     
     else if ( params->findBlock("DoubleTanhFunction") ) {
@@ -269,13 +269,13 @@ namespace WasatchCore{
       valParams->getAttribute("midpointDown",midpointDown);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::DoubleTanhFunction<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, midpointUp, midpointDown, width, amplitude);
+      builder = new Builder( tag, indepVarTag, midpointUp, midpointDown, width, amplitude);
     }
     
     else if ( params->findBlock("SineTime") ) {
       const Expr::Tag timeVarTag( "time", Expr::STATE_NONE );
       typedef typename SineTime<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, timeVarTag );
+      builder = new Builder( tag, timeVarTag );
     }
     
     else if ( params->findBlock("ExprAlgebra") ) {
@@ -308,14 +308,14 @@ namespace WasatchCore{
         << " is not supported in ExprAlgebra." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builder = scinew typename AlgExpr::Builder( tag, srcFieldTagList, optype );
+      builder = new typename AlgExpr::Builder( tag, srcFieldTagList, optype );
     }    
     
     else if( params->findBlock("WallDistanceFunction") ){
       Uintah::ProblemSpecP valParams = params->findBlock("WallDistanceFunction");
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename WallDistance::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag );
+      builder = new Builder( tag, indepVarTag );
     }
     
     else if( params->findBlock("ReadFromFile") ){
@@ -331,7 +331,7 @@ namespace WasatchCore{
       const Expr::Tag zTag("Z" + fieldType, Expr::STATE_NONE);
       
       typedef typename ReadFromFileExpression<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, xTag, yTag, zTag, fileName );
+      builder = new Builder( tag, xTag, yTag, zTag, fileName );
     }
     
     else if ( params->findBlock("StepFunction") ) {
@@ -342,7 +342,7 @@ namespace WasatchCore{
       valParams->getAttribute("highValue",highValue);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename StepFunction<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, transitionPoint, lowValue, highValue );
+      builder = new Builder( tag, indepVarTag, transitionPoint, lowValue, highValue );
     }
     
     else if ( params->findBlock("RayleighTaylor") ) {
@@ -361,7 +361,7 @@ namespace WasatchCore{
       const Expr::Tag x2Tag(x2,Expr::STATE_NONE);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename RayleighTaylor<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, x1Tag, x2Tag, transitionPoint, lowValue, highValue, frequency, amplitude );
+      builder = new Builder( tag, indepVarTag, x1Tag, x2Tag, transitionPoint, lowValue, highValue, frequency, amplitude );
     }
 
     else if ( params->findBlock("VarDen1DMMSMixFracSrc") ) {
@@ -372,7 +372,7 @@ namespace WasatchCore{
       valParams->getAttribute("rho1", rho1);
       const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate")->findBlock("NameTag") );
       typedef typename VarDen1DMMSMixFracSrc<SVolField>::Builder Builder;
-      builder = scinew Builder( tag, xTag, tagNames.time, tagNames.dt, D, rho0, rho1, false );
+      builder = new Builder( tag, xTag, tagNames.time, tagNames.dt, D, rho0, rho1, false );
     }
     
     else if ( params->findBlock("ExponentialVortex") ) {
@@ -403,7 +403,7 @@ namespace WasatchCore{
       const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
       const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
       
-      builder = scinew typename ExpVortex::Builder( tag, xTag, yTag, x0, y0, G, R, U, V, velComponent );
+      builder = new typename ExpVortex::Builder( tag, xTag, yTag, x0, y0, G, R, U, V, velComponent );
     }
     
     else if ( params->findBlock("LambsDipole") ) {
@@ -432,7 +432,7 @@ namespace WasatchCore{
       
       const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
       const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
-      builder = scinew typename Dipole::Builder( tag, xTag, yTag, x0, y0, G, R, U, velComponent );
+      builder = new typename Dipole::Builder( tag, xTag, yTag, x0, y0, G, R, U, velComponent );
     }
     
     else if( params->findBlock("RandomField") ){
@@ -442,7 +442,7 @@ namespace WasatchCore{
       valParams->getAttribute("high",high);
       valParams->getAttribute("seed",seed);
       typedef typename RandomField<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, low, high, seed );
+      builder = new Builder( tag, low, high, seed );
     }
     
     else if( params->findBlock("TimeDerivative") ){
@@ -455,7 +455,7 @@ namespace WasatchCore{
       Expr::Tag srcOldTag = Expr::Tag( srcTag.name() + "_old", Expr::STATE_NONE );
       const TagNames& tagNames = TagNames::self();
       typedef typename TimeDerivative<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, srcTag, srcOldTag, tagNames.dt );
+      builder = new Builder( tag, srcTag, srcOldTag, tagNames.dt );
     }
     
     else if ( params->findBlock("BurnsChristonAbskg") ){
@@ -466,7 +466,7 @@ namespace WasatchCore{
       const Expr::Tag yTag("Y" + fieldType, Expr::STATE_NONE);
       const Expr::Tag zTag("Z" + fieldType, Expr::STATE_NONE);
       
-      builder = scinew typename BurnsChristonAbskgExpr::Builder( tag, xTag, yTag, zTag  );
+      builder = new typename BurnsChristonAbskgExpr::Builder( tag, xTag, yTag, zTag  );
     }
 
     else if ( params->findBlock("GeometryBased") ) {
@@ -487,7 +487,7 @@ namespace WasatchCore{
         intrusionParams->getAttribute("value", insideValue);
         geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(geomObjects.back(), insideValue)); // set a value inside the geometry object
       }
-      builder = scinew typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
+      builder = new typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
     }
     
     else if ( params->findBlock("Bubbles") ) {
@@ -533,16 +533,16 @@ namespace WasatchCore{
           cy = cy0 + ny * wy;
           for (int nx = 0; nx < layout[0]; ++nx) {
             cx = cx0 + nx * wx;
-            geomObjects.push_back( scinew Uintah::SphereGeometryPiece(Uintah::Point(cx,cy,cz), r) );
+            geomObjects.push_back( new Uintah::SphereGeometryPiece(Uintah::Point(cx,cy,cz), r) );
           }
         }
       }
 
-      Uintah::UnionGeometryPiece* bubblesUnited = scinew Uintah::UnionGeometryPiece(geomObjects);
+      Uintah::UnionGeometryPiece* bubblesUnited = new Uintah::UnionGeometryPiece(geomObjects);
       
       geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(bubblesUnited, insideValue)); // set a value inside the geometry object
       
-      builder = scinew typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
+      builder = new typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
     }
 
 
@@ -572,7 +572,7 @@ namespace WasatchCore{
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
       typedef typename VelocityX<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
+      builder = new Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
     }
     
     else if( params->findBlock("VelocityY") ){
@@ -583,7 +583,7 @@ namespace WasatchCore{
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
       typedef typename VelocityY<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
+      builder = new Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
     }
     
     else if( params->findBlock("GradP") ){
@@ -593,7 +593,7 @@ namespace WasatchCore{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("Coordinate")->findBlock("NameTag") );
       typedef typename GradP<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, tagNames.time, amplitude, viscosity );
+      builder = new Builder( tag, indepVarTag, tagNames.time, amplitude, viscosity );
     }
     
     else if( params->findBlock("TGVel3D") ){
@@ -609,12 +609,12 @@ namespace WasatchCore{
       // shuffle the x, y, and z coordinates based on the velocity component
       if (velComponent=="X") {
         angle += 2*PI/3.0;
-        builder = scinew Builder( tag, XCoordinate, YCoordinate, ZCoordinate, angle );
+        builder = new Builder( tag, XCoordinate, YCoordinate, ZCoordinate, angle );
       } else if (velComponent=="Y") {
         angle -= 2*PI/3.0;
-        builder = scinew Builder( tag, YCoordinate, XCoordinate, ZCoordinate, angle );
+        builder = new Builder( tag, YCoordinate, XCoordinate, ZCoordinate, angle );
       } else if (velComponent=="Z") {
-        builder = scinew Builder( tag, ZCoordinate, XCoordinate, YCoordinate, angle );
+        builder = new Builder( tag, ZCoordinate, XCoordinate, YCoordinate, angle );
       }
     }
     
@@ -649,7 +649,7 @@ namespace WasatchCore{
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename PrecipitationBulkDiffusionCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqTag, sBarTag, coef, sMin);
+      builder = new Builder(tag, saturationTag, eqTag, sBarTag, coef, sMin);
     }
     
     else if (params->findBlock("CylindricalDiffusionCoefficient") ) {
@@ -667,7 +667,7 @@ namespace WasatchCore{
       if (coefParams->findBlock("SBar") ) 
         sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
       typedef typename CylindricalDiffusionCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, saturationTag, eqTag, sBarTag, coef, sMin);
+      builder = new Builder( tag, saturationTag, eqTag, sBarTag, coef, sMin);
     }
     
     else if (params->findBlock("KineticGrowthCoefficient") ) {
@@ -685,7 +685,7 @@ namespace WasatchCore{
       if (coefParams->findBlock("SBar") ) 
         sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
       typedef typename KineticGrowthCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, saturationTag, sBarTag, coef, sMax, sMin);
+      builder = new Builder( tag, saturationTag, sBarTag, coef, sMax, sMin);
     }
     
     else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {
@@ -699,7 +699,7 @@ namespace WasatchCore{
       expcoef = - surfaceEnergy * surfaceEnergy * molecularDiameter * molecularDiameter * PI / kB / kB / T / T;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationMonosurfaceCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, coef, expcoef);
+      builder = new Builder(tag, saturationTag, coef, expcoef);
     }
     
     else if (params->findBlock("PrecipitationClassicNucleationCoefficient") ) {
@@ -711,7 +711,7 @@ namespace WasatchCore{
       expcoef = -16 * PI / 3 * SurfaceEnergy * SurfaceEnergy * SurfaceEnergy / kB / kB / kB / T / T / T * MolecularVolume * MolecularVolume / nA / nA;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationClassicNucleationCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, expcoef);
+      builder = new Builder(tag, saturationTag, expcoef);
     }
     
     else if (params->findBlock("HomogeneousNucleationCoefficient") ) {
@@ -731,7 +731,7 @@ namespace WasatchCore{
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqConcTag = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename HomogeneousNucleationCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqConcTag,  surfaceEngTag, molecularVolume, surfaceEnergy, T, D, sRatio);
+      builder = new Builder(tag, saturationTag, eqConcTag,  surfaceEngTag, molecularVolume, surfaceEnergy, T, D, sRatio);
     }
     
     else if (params->findBlock("PrecipitationSimpleRStarValue") ) {
@@ -743,7 +743,7 @@ namespace WasatchCore{
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag surfaceEngTag; //dummy tag since this uses same function as classic rStar
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, surfaceEngTag, coef);
+      builder = new Builder(tag, saturationTag, surfaceEngTag, coef);
     }
     
     else if (params->findBlock("PrecipitationClassicRStarValue") ) {
@@ -762,7 +762,7 @@ namespace WasatchCore{
       
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, surfaceEngTag, coef);
+      builder = new Builder(tag, saturationTag, surfaceEngTag, coef);
       //Note: both RStars are same basic form, same builder, but different coefficient parse
     }
     
@@ -777,7 +777,7 @@ namespace WasatchCore{
       double r1 = pow(3.0*molarVolume/nA/4.0/PI,1.0/3.0); //convert molar vol to molec radius
       coef = 4.0 * tolmanL * R * T*bulkSurfaceEnergy* r1/molarVolume;
       typedef typename CriticalSurfaceEnergy<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, bulkSurfaceEnergy, coef);
+      builder = new Builder(tag, saturationTag, bulkSurfaceEnergy, coef);
     }
     
     else if (params->findBlock("BrownianAggregationCoefficient") ) {
@@ -790,7 +790,7 @@ namespace WasatchCore{
       coef = 2.0 * kB * T / 3.0 * ConvFac ;
       const Expr::Tag densityTag = parse_nametag( coefParams->findBlock("Density")->findBlock("NameTag") );
       typedef typename BrownianAggregationCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, densityTag, coef);
+      builder = new Builder(tag, densityTag, coef);
     }
     
     else if (params->findBlock("TurbulentAggregationCoefficient") ) {
@@ -803,7 +803,7 @@ namespace WasatchCore{
         coefParams->getAttribute("Conversion_Fac", convFac);
       coef = (4.0 / 3.0) * sqrt(3.0 * PI / 10.0) * convFac;
       typedef typename TurbulentAggregationCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, kinematicViscosityTag, energyDissipationTag, coef);
+      builder = new Builder(tag, kinematicViscosityTag, energyDissipationTag, coef);
     }
     
     else if (params->findBlock("PrecipitateEffectiveViscosity") ) {
@@ -816,7 +816,7 @@ namespace WasatchCore{
       coefParams -> getAttribute("BaseViscosity", baseViscos);
       coefParams -> getAttribute("MinStrain", minStrain);
       typedef typename PrecipitateEffectiveViscosity<FieldT>::Builder Builder;
-      builder= scinew Builder(tag, volFracTag, strainMagTag, corrFac, baseViscos, power, minStrain);
+      builder= new Builder(tag, volFracTag, strainMagTag, corrFac, baseViscos, power, minStrain);
     }
     
     else if (params->findBlock("ParticleVolumeFraction") ) {
@@ -845,7 +845,7 @@ namespace WasatchCore{
         }
       }
       typedef typename ParticleVolumeFraction<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, zerothMomentTags, firstMomentTags, convFac);
+      builder = new Builder(tag, zerothMomentTags, firstMomentTags, convFac);
     }
     
     else if (params->findBlock("MultiEnvMixingModel") ) {
@@ -874,7 +874,7 @@ namespace WasatchCore{
       const Expr::Tag mixFracTag = parse_nametag( multiEnvParams->findBlock("MixtureFraction")->findBlock("NameTag") );
       const Expr::Tag scalarVarTag = parse_nametag( multiEnvParams->findBlock("ScalarVariance")->findBlock("NameTag") );
       const Expr::Tag scalarDissTag = parse_nametag( multiEnvParams->findBlock("ScalarDissipation")->findBlock("NameTag") );
-      builder = scinew typename MultiEnvMixingModel<FieldT>::Builder(multiEnvWeightsTags, mixFracTag, scalarVarTag, scalarDissTag, maxDt);
+      builder = new typename MultiEnvMixingModel<FieldT>::Builder(multiEnvWeightsTags, mixFracTag, scalarVarTag, scalarDissTag, maxDt);
     }
     
     else if (params->findBlock("PrecipitationSource") ) {
@@ -925,7 +925,7 @@ namespace WasatchCore{
         }
       }
       typedef typename PrecipitationSource<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, sourceTagList, etaScaleTag, densityTag, midEnvWeightTag, molecVolumes);
+      builder = new Builder(tag, sourceTagList, etaScaleTag, densityTag, midEnvWeightTag, molecVolumes);
     }
     return builder;
   }
@@ -943,7 +943,7 @@ namespace WasatchCore{
     if( params->findBlock("Constant") ){
       double val;  params->get("Constant",val);
       typedef typename ConstantBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder( tag, val ) );
+      builders.push_back( new Builder( tag, val ) );
     }
     
     else if( params->findBlock("LinearFunction") ){
@@ -953,7 +953,7 @@ namespace WasatchCore{
       valParams->getAttribute("intercept",intercept);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename LinearBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder( tag, indepVarTag, slope, intercept ) );
+      builders.push_back( new Builder( tag, indepVarTag, slope, intercept ) );
     }
     
     else if( params->findBlock("ParabolicFunction") ){
@@ -982,7 +982,7 @@ namespace WasatchCore{
       }
       
       typedef typename ParabolicBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder( tag, indepVarTag, a, b, c, x0) );
+      builders.push_back( new Builder( tag, indepVarTag, a, b, c, x0) );
     }
     
     else if( params->findBlock("PowerLawFunction") ) {
@@ -994,7 +994,7 @@ namespace WasatchCore{
       valParams->getAttribute("n",n);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename PowerLawBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder( tag, indepVarTag,x0, phic, R, n) );
+      builders.push_back( new Builder( tag, indepVarTag,x0, phic, R, n) );
     }
     
     else if( params->findBlock("VarDenMMSVelocity") ){
@@ -1013,7 +1013,7 @@ namespace WasatchCore{
         << " is not supported in VarDen1DMMSVelocity expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builders.push_back( scinew typename VarDenMMSVExpr::Builder( tag, tagNames.time, bcSide ) );
+      builders.push_back( new typename VarDenMMSVExpr::Builder( tag, tagNames.time, bcSide ) );
     }
 
     else if( params->findBlock("VarDenMMSMomentum") ){
@@ -1034,13 +1034,13 @@ namespace WasatchCore{
         << " is not supported in VarDen1DMMSMomentum expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builders.push_back( scinew typename VarDenMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide ) );
+      builders.push_back( new typename VarDenMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide ) );
     }
 
     else if( params->findBlock("VarDenMMSMixtureFraction") ){
       Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSMixtureFraction");      
       typedef VarDen1DMMSMixtureFraction<FieldT> VarDen1DMMSMixtureFractionExpr;
-      builders.push_back( scinew typename VarDen1DMMSMixtureFractionExpr::Builder( tag, tagNames.time ) );
+      builders.push_back( new typename VarDen1DMMSMixtureFractionExpr::Builder( tag, tagNames.time ) );
     }
 
     else if( params->findBlock("VarDenMMSDensity") ){
@@ -1050,7 +1050,7 @@ namespace WasatchCore{
       valParams->get("rho1",rho1);
 
       typedef VarDen1DMMSDensity<FieldT> VarDen1DMMSDensityExpr;
-      builders.push_back( scinew typename VarDen1DMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 ) );
+      builders.push_back( new typename VarDen1DMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 ) );
     }
 
     else if( params->findBlock("VarDenMMSSolnVar") ){
@@ -1060,7 +1060,7 @@ namespace WasatchCore{
       valParams->get("rho1",rho1);
 
       typedef VarDen1DMMSSolnVar<FieldT> VarDen1DMMSSolnVarExpr;
-      builders.push_back( scinew typename VarDen1DMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 ) );
+      builders.push_back( new typename VarDen1DMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 ) );
     }
     
     else if( params->findBlock("TurbulentInlet") ){
@@ -1083,7 +1083,7 @@ namespace WasatchCore{
       }
       
       typedef typename TurbulentInletBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder(tag,inputFileName, velDir,period, timePeriod) );
+      builders.push_back( new Builder(tag,inputFileName, velDir,period, timePeriod) );
     }
     
     return builders;
@@ -1195,7 +1195,7 @@ namespace WasatchCore{
           zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
         
         typedef VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
-        builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+        builder = new Builder(tag, xVelTag, yVelTag, zVelTag);
       }
       
       else if( exprParams->findBlock("Vorticity") ){
@@ -1211,13 +1211,13 @@ namespace WasatchCore{
           vel2Tag = parse_nametag( valParams->findBlock("Vel2")->findBlock("NameTag") );
         if (vorticityComponent == "X") {
           typedef Vorticity<SVolField, ZVolField, YVolField>::Builder Builder;
-          builder = scinew Builder(tag, vel1Tag, vel2Tag);
+          builder = new Builder(tag, vel1Tag, vel2Tag);
         } else if (vorticityComponent == "Y") {
           typedef Vorticity<SVolField, XVolField, ZVolField>::Builder Builder;
-          builder = scinew Builder(tag, vel1Tag, vel2Tag);
+          builder = new Builder(tag, vel1Tag, vel2Tag);
         } else if (vorticityComponent == "Z") {
           typedef Vorticity<SVolField, YVolField, XVolField>::Builder Builder;
-          builder = scinew Builder(tag, vel1Tag, vel2Tag);
+          builder = new Builder(tag, vel1Tag, vel2Tag);
         }
       }
       
@@ -1240,10 +1240,10 @@ namespace WasatchCore{
         keSpec->getAttribute("total",totalKE);
         if (totalKE) {
           typedef TotalKineticEnergy<XVolField, YVolField, ZVolField>::Builder Builder;
-          builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+          builder = new Builder(tag, xVelTag, yVelTag, zVelTag);
         } else {
           typedef KineticEnergy<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
-          builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+          builder = new Builder(tag, xVelTag, yVelTag, zVelTag);
         }
       }  else if( exprParams->findBlock("InterpolateExpression") ){
         Uintah::ProblemSpecP valParams = exprParams->findBlock("InterpolateExpression");
@@ -1254,17 +1254,17 @@ namespace WasatchCore{
         switch( get_field_type(srcFieldType) ){
           case XVOL : {
             typedef InterpolateExpression<XVolField, SVolField>::Builder Builder;
-            builder = scinew Builder(tag, srcTag);
+            builder = new Builder(tag, srcTag);
             break;
           }
           case YVOL : {
             typedef InterpolateExpression<YVolField, SVolField>::Builder Builder;
-            builder = scinew Builder(tag, srcTag);
+            builder = new Builder(tag, srcTag);
             break;
           }
           case ZVOL : {
             typedef InterpolateExpression<ZVolField, SVolField>::Builder Builder;
-            builder = scinew Builder(tag, srcTag);
+            builder = new Builder(tag, srcTag);
             break;
           }
           case PARTICLE : {
@@ -1285,7 +1285,7 @@ namespace WasatchCore{
             const Expr::Tag pzTag(pz,Expr::STATE_NP1);
             
             const Expr::TagList pPosTags = tag_list(pxTag,pyTag,pzTag);
-            builder = scinew Builder(tag, srcTag, psizeTag, pPosTags );
+            builder = new Builder(tag, srcTag, psizeTag, pPosTags );
             break;
           }
           default:
@@ -1381,14 +1381,14 @@ namespace WasatchCore{
       typedef TurbulentInletBC<ZVolField>::Builder zBuilder;
       
       GraphHelper* const initGraphHelper = gc[INITIALIZATION];
-      initGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
-      initGraphHelper->exprFactory->register_expression( scinew yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
-      initGraphHelper->exprFactory->register_expression( scinew zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
+      initGraphHelper->exprFactory->register_expression( new xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
+      initGraphHelper->exprFactory->register_expression( new yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
+      initGraphHelper->exprFactory->register_expression( new zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
       
       GraphHelper* const slnGraphHelper = gc[ADVANCE_SOLUTION];
-      slnGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
-      slnGraphHelper->exprFactory->register_expression( scinew yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
-      slnGraphHelper->exprFactory->register_expression( scinew zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
+      slnGraphHelper->exprFactory->register_expression( new xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
+      slnGraphHelper->exprFactory->register_expression( new yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
+      slnGraphHelper->exprFactory->register_expression( new zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
     }
 
     //_________________________________________________
@@ -1430,12 +1430,12 @@ namespace WasatchCore{
       exprParams->get("Scalar", mixFracName);
       const Expr::Tag mixFracTag( mixFracName, Expr::STATE_NONE );
       typedef VarDenOscillatingMMSMixFrac<SVolField>::Builder MixFracBuilder;
-      initGraphHelper->exprFactory->register_expression( scinew MixFracBuilder( mixFracTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf ) );
+      initGraphHelper->exprFactory->register_expression( new MixFracBuilder( mixFracTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf ) );
 
       const Expr::Tag diffCoefTag = parse_nametag(exprParams->findBlock("DiffusionCoefficient")->findBlock("NameTag"));
       const Expr::Tag densityTag = parse_nametag( parser->findBlock("Density")->findBlock("NameTag") );
       typedef DiffusiveConstant<SVolField>::Builder diffCoefBuilder;
-      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, densityTag, d ) );
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( new diffCoefBuilder( diffCoefTag, densityTag, d ) );
     }  
     
     //___________________________________________________
@@ -1466,7 +1466,7 @@ namespace WasatchCore{
         std::stringstream ss;
         ss << i;
         Expr::Tag thisMomentTag("m_" + populationName + "_" + ss.str(), Expr::STATE_NONE);
-        graphHelper->exprFactory->register_expression( scinew Builder( thisMomentTag, val ) );
+        graphHelper->exprFactory->register_expression( new Builder( thisMomentTag, val ) );
       }
     }
   }

@@ -590,7 +590,7 @@ namespace WasatchCore {
     if( xmom != "" ){
       const Expr::Tag pgsPressureTag( "PGS_pressure_" + xmom, Expr::STATE_NONE );
       typedef typename ArtCompPGSPressure<SpatialOps::XDIR>::Builder ACPGSPressure;
-      factory_->register_expression( scinew ACPGSPressure( pgsPressureTag, tags.pressure, alpha ) );
+      factory_->register_expression( new ACPGSPressure( pgsPressureTag, tags.pressure, alpha ) );
       factory_->attach_dependency_to_expression( pgsPressureTag,
                                                  Expr::Tag( xmom+"_rhs", Expr::STATE_NONE ),
                                                  Expr::ADD_SOURCE_EXPRESSION );
@@ -598,7 +598,7 @@ namespace WasatchCore {
     if( ymom != "" ){
       const Expr::Tag pgsPressureTag( "PGS_pressure_" + ymom, Expr::STATE_NONE );
       typedef typename ArtCompPGSPressure<SpatialOps::YDIR>::Builder ACPGSPressure;
-      factory_->register_expression( scinew ACPGSPressure( pgsPressureTag, tags.pressure, alpha ) );
+      factory_->register_expression( new ACPGSPressure( pgsPressureTag, tags.pressure, alpha ) );
       factory_->attach_dependency_to_expression( pgsPressureTag,
                                                  Expr::Tag( ymom+"_rhs", Expr::STATE_NONE ),
                                                  Expr::ADD_SOURCE_EXPRESSION );
@@ -606,7 +606,7 @@ namespace WasatchCore {
     if( zmom != "" ){
       const Expr::Tag pgsPressureTag( "PGS_pressure_" + zmom, Expr::STATE_NONE );
       typedef typename ArtCompPGSPressure<SpatialOps::ZDIR>::Builder ACPGSPressure;
-      factory_->register_expression( scinew ACPGSPressure( pgsPressureTag, tags.pressure, alpha ) );
+      factory_->register_expression( new ACPGSPressure( pgsPressureTag, tags.pressure, alpha ) );
       factory_->attach_dependency_to_expression( pgsPressureTag,
                                                  Expr::Tag( zmom+"_rhs", Expr::STATE_NONE ),
                                                  Expr::ADD_SOURCE_EXPRESSION );
@@ -618,7 +618,7 @@ namespace WasatchCore {
     wasatchSpec_->findBlock("EnergyEquation")->get("SolutionVariable",totEnerg);
     const Expr::Tag pgsEnergyTag( "AC_Energy", Expr::STATE_NONE );
     typedef ArtCompPGSEnergy::Builder ACEnergy;
-    factory_->register_expression( scinew ACEnergy( pgsEnergyTag, tags.pressure, vel_tags(), alpha ) );
+    factory_->register_expression( new ACEnergy( pgsEnergyTag, tags.pressure, vel_tags(), alpha ) );
     factory_->attach_dependency_to_expression( pgsEnergyTag,
                                                Expr::Tag( totEnerg+"_rhs", Expr::STATE_NONE ),
                                                Expr::ADD_SOURCE_EXPRESSION );
@@ -640,7 +640,7 @@ namespace WasatchCore {
     const Expr::Tag asrEnergyTag( "ASR_Energy", Expr::STATE_NONE );
 
     typedef ArtCompASREnergy<SpatialOps::SVolField>::Builder ASR;
-    factory_->register_expression( scinew ASR( asrEnergyTag,
+    factory_->register_expression( new ASR( asrEnergyTag,
                                                vel_tags(),
                                                diffFluxTags,
                                                viscTag,

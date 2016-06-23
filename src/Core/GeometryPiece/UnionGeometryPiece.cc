@@ -26,7 +26,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
@@ -84,7 +83,7 @@ UnionGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 UnionGeometryPiece::clone() const
 {
-  return scinew UnionGeometryPiece(*this);
+  return new UnionGeometryPiece(*this);
 }
 
 //------------------------------------------------------------------

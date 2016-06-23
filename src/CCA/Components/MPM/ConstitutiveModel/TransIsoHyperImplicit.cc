@@ -127,7 +127,7 @@ void TransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
 
 TransIsoHyperImplicit* TransIsoHyperImplicit::clone()
 {
-  return scinew TransIsoHyperImplicit(*this);
+  return new TransIsoHyperImplicit(*this);
 }
 
 void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
@@ -1145,7 +1145,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "TransIsoHyperImplicit::StateData", true,
                                   &makeMPI_CMData);
     }

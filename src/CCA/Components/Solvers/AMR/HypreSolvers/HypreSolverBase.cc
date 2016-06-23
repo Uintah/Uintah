@@ -169,36 +169,36 @@ namespace Uintah {
     switch (solverType) {
     case SMG:
       {
-        return scinew HypreSolverSMG(driver,precond);
+        return new HypreSolverSMG(driver,precond);
       }
     case PFMG:
       {
-        return scinew HypreSolverPFMG(driver,precond);
+        return new HypreSolverPFMG(driver,precond);
       }
     case SparseMSG:
       {
-        return scinew HypreSolverSparseMSG(driver,precond);
+        return new HypreSolverSparseMSG(driver,precond);
       }
     case CG:
       {
         cout_dbg << "Doing new HypreSolverCG" << "\n";
-        return scinew HypreSolverCG(driver,precond);
+        return new HypreSolverCG(driver,precond);
       }
     case Hybrid: 
       {
-        return scinew HypreSolverHybrid(driver,precond);
+        return new HypreSolverHybrid(driver,precond);
       }
     case GMRES:
       {
-        return scinew HypreSolverGMRES(driver,precond);
+        return new HypreSolverGMRES(driver,precond);
       }
     case AMG:
       {
-        return scinew HypreSolverAMG(driver,precond);
+        return new HypreSolverAMG(driver,precond);
       }
     case FAC:
       {
-        return scinew HypreSolverFAC(driver,precond);
+        return new HypreSolverFAC(driver,precond);
       }
     default:
       throw InternalError("Unsupported solver type: "+solverType,

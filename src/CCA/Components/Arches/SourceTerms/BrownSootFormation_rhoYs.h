@@ -77,7 +77,7 @@ public:
       ~Builder(){}; 
 
       BrownSootFormation_rhoYs* build()
-      { return scinew BrownSootFormation_rhoYs( _name, _field_labels, _required_label_names, _type ); };
+      { return new BrownSootFormation_rhoYs( _name, _field_labels, _required_label_names, _type ); };
 
     private: 
 

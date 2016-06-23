@@ -108,21 +108,21 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault( "always_construct_A", d_always_construct_A, true ); 
   d_construct_A = true;  // Must always be true @ start.  
 
-  d_discretize = scinew Discretization();
+  d_discretize = new Discretization();
 
   // make source and boundary_condition objects
-  d_source = scinew Source(d_physicalConsts);
+  d_source = new Source(d_physicalConsts);
   if (d_doMMS){
     d_source->problemSetup(db);
   }
   string linear_sol;
   db->require("linear_solver", linear_sol);
   if (linear_sol == "petsc"){
-    d_linearSolver = scinew PetscSolver(d_myworld);
+    d_linearSolver = new PetscSolver(d_myworld);
   }
 #ifdef HAVE_HYPRE
   else if (linear_sol == "hypre"){
-    d_linearSolver = scinew HypreSolver(d_myworld);
+    d_linearSolver = new HypreSolver(d_myworld);
   }
 #endif
   else {
@@ -176,7 +176,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   if (doing_EKT_now){
     taskname += "EKTnow";
   }
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PressureSolver::buildLinearMatrix,
                           timelabels, extraProjection,
                           d_EKTCorrection, doing_EKT_now);
@@ -372,7 +372,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
                      timelabels->integrator_step_name;
   if (extraProjection) taskname += "extraProjection";
   if (doing_EKT_now) taskname += "EKTnow";
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PressureSolver::pressureLinearSolve_all,
                           timelabels, extraProjection,
                           d_EKTCorrection, doing_EKT_now);
@@ -588,7 +588,7 @@ PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched,
                                                    const TimeIntegratorLabel* timelabels)
 
 {
-  Task* tsk = scinew Task("Psolve:addhydrostaticterm",
+  Task* tsk = new Task("Psolve:addhydrostaticterm",
                           this, &PressureSolver::addHydrostaticTermtoPressure,
                           timelabels);
 

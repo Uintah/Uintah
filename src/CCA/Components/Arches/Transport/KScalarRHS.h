@@ -56,7 +56,7 @@ public:
       ~Builder(){}
 
       KScalarRHS* build()
-      { return scinew KScalarRHS<T>( _task_name, _matl_index ); }
+      { return new KScalarRHS<T>( _task_name, _matl_index ); }
 
       private:
 

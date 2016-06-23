@@ -31,7 +31,7 @@ public:
       ~Builder(){}
 
       KFEUpdate* build()
-      { return scinew KFEUpdate( _task_name, _matl_index ); }
+      { return new KFEUpdate( _task_name, _matl_index ); }
 
       private:
 

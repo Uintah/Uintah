@@ -54,13 +54,13 @@ void
 DXDumper::addField(string fieldname, const Uintah::TypeDescription * /*td*/)
 {
   if(fieldname=="p.particleID") return;
-  fldwriters_[fieldname] = scinew FldWriter(this->dirname_, fieldname);
+  fldwriters_[fieldname] = new FldWriter(this->dirname_, fieldname);
 }
 
 DXDumper::Step * 
 DXDumper::addStep(int timestep, double time, int index)
 {
-  DXDumper::Step * r = scinew Step(archive(), dirname_, timestep, time, index, nsteps_++, fldwriters_, bin_, onedim_);
+  DXDumper::Step * r = new Step(archive(), dirname_, timestep, time, index, nsteps_++, fldwriters_, bin_, onedim_);
   return r;
 }
   

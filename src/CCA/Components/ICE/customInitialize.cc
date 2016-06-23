@@ -58,7 +58,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     // multiple vortices section
     ProblemSpecP vortices_ps= c_init_ps->findBlock("vortices");    
     if(vortices_ps) {
-      cib->vortex_inputs = scinew vortices();
+      cib->vortex_inputs = new vortices();
       cib->which = "vortices";
       cib->doesComputePressure = true;
       
@@ -82,7 +82,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     ProblemSpecP gaussTemp_ps= c_init_ps->findBlock("gaussianTemperature");
     if(gaussTemp_ps){
       cib->which = "gaussianTemp";
-      cib->gaussTemp_inputs = scinew gaussTemp();
+      cib->gaussTemp_inputs = new gaussTemp();
       double spread_x;
       double spread_y;
       Point  origin;
@@ -109,12 +109,12 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       
       if(cib->which == "mms_1") {
         cib->doesComputePressure = true;
-        cib->mms_inputs = scinew mms();
+        cib->mms_inputs = new mms();
         mms_ps->require("A", cib->mms_inputs->A);
       }
       if(cib->which == "mms_3") {
         cib->doesComputePressure = false;
-        cib->mms_inputs = scinew mms();
+        cib->mms_inputs = new mms();
         mms_ps->require("angle", cib->mms_inputs->angle);
       }
     } 
@@ -125,7 +125,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     if(cf_ps) {
       cib->which = "counterflow";
       cib->doesComputePressure = true;
-      cib->counterflow_inputs = scinew counterflow();
+      cib->counterflow_inputs = new counterflow();
       cf_ps->require("strainRate",   cib->counterflow_inputs->strainRate);
       cf_ps->require("referenceCell", cib->counterflow_inputs->refCell);
       
@@ -140,7 +140,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->which = "powerLaw";
       cib->doesComputePressure = true;
 
-      cib->powerLaw_inputs = scinew powerLaw();
+      cib->powerLaw_inputs = new powerLaw();
       powerLaw* inputs = cib->powerLaw_inputs;   // for code readability
             
       // geometry: computational domain

@@ -143,9 +143,9 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
    string isFloat = type["type"];
 
    if( isFloat == "float" ){
-     d_radiometer = scinew Radiometer( TypeDescription::float_type );
+     d_radiometer = new Radiometer( TypeDescription::float_type );
    } else {
-     d_radiometer = scinew Radiometer( TypeDescription::double_type );
+     d_radiometer = new Radiometer( TypeDescription::double_type );
    }
 
   //__________________________________

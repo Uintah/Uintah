@@ -66,7 +66,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           RadProperties* build()
-          { return scinew RadProperties( _name, _shared_state, _fieldLabels ); };
+          { return new RadProperties( _name, _shared_state, _fieldLabels ); };
 
         private: 
 

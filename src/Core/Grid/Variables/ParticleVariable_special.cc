@@ -86,7 +86,7 @@ using namespace std;
     d_pset = pset;
     pset->addReference();
     
-    d_pdata = scinew ParticleData<Point>(pset->numParticles());
+    d_pdata = new ParticleData<Point>(pset->numParticles());
     d_pdata->addReference();
     
     ASSERTEQ(subsets.size(), srcs.size());

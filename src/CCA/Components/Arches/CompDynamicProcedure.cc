@@ -118,7 +118,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
     string taskname =  "CompDynamicProcedure::reComputeTurbSubmodel" +
                         timelabels->integrator_step_name;
 
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
         &CompDynamicProcedure::reComputeTurbSubmodel,
         timelabels);
 
@@ -153,7 +153,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   {
     string taskname =  "CompDynamicProcedure::reComputeStrainRateTensors" +
                         timelabels->integrator_step_name;
-    Task* tsk = scinew Task( taskname, this,
+    Task* tsk = new Task( taskname, this,
                              &CompDynamicProcedure::reComputeStrainRateTensors,
                              timelabels);
     // Requires
@@ -189,7 +189,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   {
     string taskname =  "CompDynamicProcedure::reComputeFilterValues" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task( taskname, this,
+    Task* tsk = new Task( taskname, this,
                              &CompDynamicProcedure::reComputeFilterValues,
                              timelabels);
 
@@ -230,7 +230,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   {
     string taskname =  "CompDynamicProcedure::reComputeSmagCoeff" +
                         timelabels->integrator_step_name;
-    Task* tsk = scinew Task( taskname, this,
+    Task* tsk = new Task( taskname, this,
                              &CompDynamicProcedure::reComputeSmagCoeff,
                              timelabels);
 

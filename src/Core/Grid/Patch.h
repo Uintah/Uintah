@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/Iterator.h>
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -1979,7 +1978,7 @@ namespace Uintah {
     ~Patch();
     
     Patch* createVirtualPatch(const IntVector& offset) const
-    { return scinew Patch(this, offset); }
+    { return new Patch(this, offset); }
   private:
     /**
      * This struct will tightly store data that the patch needs

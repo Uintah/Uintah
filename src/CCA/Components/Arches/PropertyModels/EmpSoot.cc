@@ -60,7 +60,7 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
 void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
   std::string taskname = "EmpSoot::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &EmpSoot::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &EmpSoot::computeProp, time_substep ); 
   Ghost::GhostType  gn  = Ghost::None;
 
   _den_label    = VarLabel::find( _den_label_name );
@@ -199,7 +199,7 @@ void EmpSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
     throw InvalidValue("Error: Cannot find absorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
   }
 
-  Task* tsk = scinew Task(taskname, this, &EmpSoot::initialize);
+  Task* tsk = new Task(taskname, this, &EmpSoot::initialize);
   tsk->computes(_prop_label); 
   tsk->computes(_absorp_label); 
 

@@ -120,7 +120,7 @@ void
 ParticleSubset::fillset()
 {
   if (d_numParticles > 0) {
-    d_particles = scinew particleIndex[d_numParticles];
+    d_particles = new particleIndex[d_numParticles];
     
     for( unsigned int i = 0; i < d_numParticles; i++ ) {
       d_particles[i] = i;
@@ -185,7 +185,7 @@ ParticleSubset::resize(particleIndex newSize)
   d_allocatedSize = newSize;
   d_numParticles  = newSize;
 
-  d_particles = scinew particleIndex[ newSize ];
+  d_particles = new particleIndex[ newSize ];
 }
 
 //______________________________________________________________________
@@ -209,7 +209,7 @@ ParticleSubset::expand( unsigned int minSizeIncrement )
     warn.invoke();
   }
 #endif
-  particleIndex* newparticles = scinew particleIndex[d_allocatedSize];
+  particleIndex* newparticles = new particleIndex[d_allocatedSize];
   if(d_particles){
     for(unsigned int i = 0; i < d_numParticles; i++ ) {
       newparticles[i] = d_particles[i];

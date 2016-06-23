@@ -102,13 +102,13 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("DORadiationModel")) {
     d_DORadiationCalc = true;
     d_radiationCalc   = true; 
-    d_DORadiation = scinew DORadiationModel( d_lab, d_MAlab, d_boundaryCondition, d_myworld);
+    d_DORadiation = new DORadiationModel( d_lab, d_MAlab, d_boundaryCondition, d_myworld);
     d_DORadiation->problemSetup(db, false);
   }
 
   //__________________________________
   //  Convection scheme
-  d_discretize = scinew Discretization();
+  d_discretize = new Discretization();
 
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"central-upwind");
@@ -167,12 +167,12 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   }
 
   // make source and boundary_condition objects
-  d_source = scinew Source(d_physicalConsts);
+  d_source = new Source(d_physicalConsts);
   
   if (d_doMMS){
     d_source->problemSetup(db);
   }
-  d_rhsSolver = scinew RHSSolver();
+  d_rhsSolver = new RHSSolver();
 
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   double model_turbPrNo;
@@ -277,7 +277,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   string taskname =  "EnthalpySolver::BuildCoeff" +
                      timelabels->integrator_step_name;
   
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &EnthalpySolver::buildLinearMatrix,
                           timelabels );
 
@@ -671,7 +671,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
   string taskname =  "EnthalpySolver::enthalpyLinearSolve" + 
                      timelabels->integrator_step_name;
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &EnthalpySolver::enthalpyLinearSolve,
                           timelabels );
   

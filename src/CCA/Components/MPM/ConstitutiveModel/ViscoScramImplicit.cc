@@ -252,7 +252,7 @@ void ViscoScramImplicit::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ViscoScramImplicit* ViscoScramImplicit::clone()
 {
-  return scinew ViscoScramImplicit(*this);
+  return new ViscoScramImplicit(*this);
 }
 
 void ViscoScramImplicit::addInitialComputesAndRequires(Task* task,

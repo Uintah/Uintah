@@ -30,7 +30,6 @@
 #include <vector>
 
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Variables/BaseIterator.h>
 namespace Uintah {
 
@@ -136,7 +135,7 @@ namespace Uintah {
      */
     ListOfCellsIterator* clone() const
     {
-      return scinew ListOfCellsIterator(*this);
+      return new ListOfCellsIterator(*this);
 
     };
     

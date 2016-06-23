@@ -140,7 +140,7 @@ void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ProgramBurn* ProgramBurn::clone()
 {
-  return scinew ProgramBurn(*this);
+  return new ProgramBurn(*this);
 }
 
 void ProgramBurn::initializeCMData(const Patch* patch,

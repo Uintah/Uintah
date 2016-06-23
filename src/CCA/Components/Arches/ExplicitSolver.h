@@ -109,7 +109,7 @@ public:
     ~Builder(){}
 
     ExplicitSolver* build(){
-      return scinew ExplicitSolver( _sharedState,
+      return new ExplicitSolver( _sharedState,
                                     _MAlb,
                                     _physConst,
                                     _task_factory_map,

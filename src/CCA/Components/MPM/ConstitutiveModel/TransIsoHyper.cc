@@ -126,7 +126,7 @@ void TransIsoHyper::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 TransIsoHyper* TransIsoHyper::clone()
 {
-  return scinew TransIsoHyper(*this);
+  return new TransIsoHyper(*this);
 }
 
 void TransIsoHyper::initializeCMData(const Patch* patch,
@@ -641,7 +641,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "TransIsoHyper::StateData", true, &makeMPI_CMData);
     }
     return td;

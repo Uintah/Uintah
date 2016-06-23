@@ -70,8 +70,8 @@ HypoViscoElasticDevStress::HypoViscoElasticDevStress(ProblemSpecP& ps)
   
   // create the arrays
   for( unsigned int j = 0; j< d_MaxwellElements; j++){
-    d_sigmaDev[j]     = scinew constParticleVariable<Matrix3> () ;
-    d_sigmaDev_new[j] = scinew ParticleVariable<Matrix3> () ; 
+    d_sigmaDev[j]     = new constParticleVariable<Matrix3> () ;
+    d_sigmaDev_new[j] = new ParticleVariable<Matrix3> () ; 
   }
 }
 //______________________________________________________________________

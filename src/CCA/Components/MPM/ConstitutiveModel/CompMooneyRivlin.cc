@@ -33,7 +33,6 @@
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 
@@ -81,7 +80,7 @@ void CompMooneyRivlin::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CompMooneyRivlin* CompMooneyRivlin::clone()
 {
-  return scinew CompMooneyRivlin(*this);
+  return new CompMooneyRivlin(*this);
 }
 
 void 
@@ -375,7 +374,7 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other, "CompMooneyRivlin::CMData", true, &makeMPI_CMData);
+      td = new TypeDescription(TypeDescription::Other, "CompMooneyRivlin::CMData", true, &makeMPI_CMData);
    }
    return td;   
 }

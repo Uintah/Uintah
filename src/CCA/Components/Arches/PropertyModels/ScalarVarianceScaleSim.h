@@ -62,7 +62,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           ScalarVarianceScaleSim* build()
-          { return scinew ScalarVarianceScaleSim( _name, _shared_state ); };
+          { return new ScalarVarianceScaleSim( _name, _shared_state ); };
 
         private: 
 

@@ -103,7 +103,7 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   d_sharedState->d_switchState = true;         /// HACK NEED TO CHANGE THIS
    
   // This matl is for delT
-  d_oneMatl = scinew SimpleMaterial();
+  d_oneMatl = new SimpleMaterial();
   d_sharedState->registerSimpleMaterial( d_oneMatl );
   
   delt_label = d_sharedState->get_delt_label();
@@ -115,7 +115,7 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Find timestep data from the original uda
-  d_dataArchive = scinew DataArchive( d_udaDir, d_myworld->myrank(), d_myworld->size() );
+  d_dataArchive = new DataArchive( d_udaDir, d_myworld->myrank(), d_myworld->size() );
   d_dataArchive->queryTimesteps( d_timesteps, d_times );  
   d_dataArchive->turnOffXMLCaching();
   
@@ -148,7 +148,7 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
 void UdaReducer::scheduleInitialize(const LevelP& level, 
                                     SchedulerP& sched)
 {
-  Task* t = scinew Task("UdaReducer::initialize", this, 
+  Task* t = new Task("UdaReducer::initialize", this, 
                        &UdaReducer::initialize);
 
   t->computes( delt_label, level.get_rep() );
@@ -199,14 +199,14 @@ void UdaReducer::sched_readDataArchive(const LevelP& level,
   const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myrank());  
     
     
-  Task* t = scinew Task("UdaReducer::readDataArchive", this, 
+  Task* t = new Task("UdaReducer::readDataArchive", this, 
                         &UdaReducer::readDataArchive);
                                                   
 
   // manually determine which matls to use in scheduling.
   // The sharedState does not have any materials registered
   // so you have to do it manually
-  MaterialSetP allMatls = scinew MaterialSet();
+  MaterialSetP allMatls = new MaterialSet();
   allMatls->createEmptySubsets(1);
   MaterialSubset* allMatlSubset = allMatls->getSubset(0);
 
@@ -237,7 +237,7 @@ void UdaReducer::sched_readDataArchive(const LevelP& level,
       matlSet = prevMatlSet.get_rep();
     } else {
      
-      matlSet = scinew MaterialSet();
+      matlSet = new MaterialSet();
       vector<int> matls_vec;
       matls_vec.reserve(matlsRangeSet.size());
       
@@ -291,7 +291,7 @@ void UdaReducer::readDataArchive(const ProcessorGroup* pg,
 void UdaReducer::scheduleComputeStableTimestep(const LevelP& level,
                                                SchedulerP& sched)
 {
-  Task* t = scinew Task("UdaReducer::computeDelT",
+  Task* t = new Task("UdaReducer::computeDelT",
                   this, &UdaReducer::computeDelT);
            
   t->computes( delt_label, level.get_rep() );

@@ -35,7 +35,7 @@ MaximumTemperatureBuilder::MaximumTemperatureBuilder( const std::string         
 MaximumTemperatureBuilder::~MaximumTemperatureBuilder(){}
 
 ModelBase* MaximumTemperatureBuilder::build() {
-  return scinew MaximumTemperature( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new MaximumTemperature( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -108,7 +108,7 @@ void
 MaximumTemperature::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "MaximumTemperature::initVars"; 
-  Task* tsk = scinew Task(taskname, this, &MaximumTemperature::initVars);
+  Task* tsk = new Task(taskname, this, &MaximumTemperature::initVars);
 
   tsk->computes(d_modelLabel);
 
@@ -146,7 +146,7 @@ void
 MaximumTemperature::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "MaximumTemperature::computeModel";
-  Task* tsk = scinew Task(taskname, this, &MaximumTemperature::computeModel, timeSubStep);
+  Task* tsk = new Task(taskname, this, &MaximumTemperature::computeModel, timeSubStep);
 
   Ghost::GhostType gn = Ghost::None;
 

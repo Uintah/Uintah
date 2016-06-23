@@ -63,7 +63,7 @@ public:
       ~Builder(){}; 
 
       SootMassBalance* build()
-      { return scinew SootMassBalance( _name, _field_labels, _required_label_names, _type ); };
+      { return new SootMassBalance( _name, _field_labels, _required_label_names, _type ); };
 
     private: 
 

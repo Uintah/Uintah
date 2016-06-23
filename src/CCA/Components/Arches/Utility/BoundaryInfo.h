@@ -47,7 +47,7 @@ public:
       ~Builder(){}
 
       BoundaryInfo* build()
-      { return scinew BoundaryInfo( _task_name, _matl_index ); }
+      { return new BoundaryInfo( _task_name, _matl_index ); }
 
       private:
 

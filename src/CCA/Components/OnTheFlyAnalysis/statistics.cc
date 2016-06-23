@@ -329,7 +329,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   it = unique(m.begin(), m.end());
   m.erase(it, m.end());
 
-  d_matlSet = scinew MaterialSet();
+  d_matlSet = new MaterialSet();
   d_matlSet->addAll(m);
   d_matlSet->addReference();
   d_matSubSet = d_matlSet->getUnion();
@@ -348,7 +348,7 @@ void statistics::scheduleInitialize(SchedulerP& sched,
 {
   printSchedule( level,cout_doing,"statistics::scheduleInitialize" );
 
-  Task* t = scinew Task("statistics::initialize",
+  Task* t = new Task("statistics::initialize",
                    this,&statistics::initialize);
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
@@ -429,7 +429,7 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   const PatchSubset* myPatches = ps->getSubset(rank);
   const Patch* firstPatch = myPatches->get(0);
 
-  Task* t = scinew Task("statistics::restartInitialize",
+  Task* t = new Task("statistics::restartInitialize",
                    this,&statistics::restartInitialize);
 
   bool addTask = false;
@@ -562,7 +562,7 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
 {
   printSchedule( level,cout_doing,"statistics::scheduleDoAnalysis" );
 
-  Task* t = scinew Task("statistics::doAnalysis",
+  Task* t = new Task("statistics::doAnalysis",
                    this,&statistics::doAnalysis);
 
   Ghost::GhostType  gn  = Ghost::None;
@@ -571,7 +571,7 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     Qstats Q = d_Qstats[i];
 
     // define the matl subset for this variable
-    MaterialSubset* matSubSet = scinew MaterialSubset();
+    MaterialSubset* matSubSet = new MaterialSubset();
     matSubSet->add( Q.matl );
     matSubSet->addReference();
 
@@ -629,7 +629,7 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
   //__________________________________
   //  Reynolds Stress Terms
   if ( d_computeReynoldsStress ){
-    MaterialSubset* matSubSet = scinew MaterialSubset();
+    MaterialSubset* matSubSet = new MaterialSubset();
     matSubSet->add( d_RS_matl );
     matSubSet->addReference();
 
@@ -853,7 +853,7 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
 
 //    proc0cout << " IGNORING------------statistics::computeReynoldsStress" << endl;
     // define the matl subset for this variable
-    MaterialSubset* matSubSet = scinew MaterialSubset();
+    MaterialSubset* matSubSet = new MaterialSubset();
     matSubSet->add( Q.matl );
     matSubSet->addReference();
 
@@ -998,7 +998,7 @@ void statistics::carryForwardSums( DataWarehouse* old_dw,
                                    const Qstats& Q )
 {
     // define the matl subset for this variable
-  MaterialSubset* matSubSet = scinew MaterialSubset();
+  MaterialSubset* matSubSet = new MaterialSubset();
   matSubSet->add( Q.matl );
   matSubSet->addReference();
 

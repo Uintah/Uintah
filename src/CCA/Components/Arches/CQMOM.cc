@@ -229,7 +229,7 @@ void
 CQMOM::sched_solveCQMOMInversion( const LevelP& level, SchedulerP& sched, int timeSubStep)
 {
   string taskname = "CQMOM:solveCQMOMInversion";
-  Task* tsk = scinew Task(taskname, this, &CQMOM::solveCQMOMInversion);
+  Task* tsk = new Task(taskname, this, &CQMOM::solveCQMOMInversion);
 
   //tsk requires on moment eqns
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
@@ -292,7 +292,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* weight_label = iW->second;
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       if( new_dw->exists(weight_label, matlIndex, patch) ) {
         new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
       } else {
@@ -306,7 +306,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* abscissa_label = iA->second;
       
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       if( new_dw->exists(abscissa_label, matlIndex, patch) ) {
         new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
       } else {
@@ -390,7 +390,7 @@ void
 CQMOM::sched_momentCorrection( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOM::momentCorrection";
-  Task* tsk = scinew Task(taskname, this, &CQMOM::momentCorrection);
+  Task* tsk = new Task(taskname, this, &CQMOM::momentCorrection);
 
   //tsk modifies on moment eqns
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
@@ -438,7 +438,7 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
     vector<CCVariable<double>* > ccMoments;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       new_dw->getModifiable( *tempCCVar, equation_label, matlIndex, patch );
       ccMoments.push_back(tempCCVar);
     }
@@ -447,7 +447,7 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* weight_label = iW->second;
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
       cqmomWeights.push_back(tempCCVar);
     }
@@ -456,7 +456,7 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
     vector<CCVariable<double>* > cqmomAbscissas;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* abscissa_label = iA->second;
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
       cqmomAbscissas.push_back(tempCCVar);
     }
@@ -559,7 +559,7 @@ void
 CQMOM::sched_solveCQMOMInversion321( const LevelP& level, SchedulerP& sched, int timeSubStep)
 {
   string taskname = "CQMOM:solveCQMOMInversion321";
-  Task* tsk = scinew Task(taskname, this, &CQMOM::solveCQMOMInversion321);
+  Task* tsk = new Task(taskname, this, &CQMOM::solveCQMOMInversion321);
   
   //tsk requires on moment eqns
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
@@ -621,7 +621,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* weight_label = iW->second;
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       if( new_dw->exists(weight_label, matlIndex, patch) ) {
         new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
       } else {
@@ -635,7 +635,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* abscissa_label = iA->second;
       
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       if( new_dw->exists(abscissa_label, matlIndex, patch) ) {
         new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
       } else {
@@ -720,7 +720,7 @@ void
 CQMOM::sched_solveCQMOMInversion312( const LevelP& level, SchedulerP& sched, int timeSubStep)
 {
   string taskname = "CQMOM:solveCQMOMInversion312";
-  Task* tsk = scinew Task(taskname, this, &CQMOM::solveCQMOMInversion312);
+  Task* tsk = new Task(taskname, this, &CQMOM::solveCQMOMInversion312);
   
   //tsk requires on moment eqns
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
@@ -780,7 +780,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* weight_label = iW->second;
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
       cqmomWeights.push_back(tempCCVar);
     }
@@ -789,7 +789,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
     vector<CCVariable<double>* > cqmomAbscissas;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* abscissa_label = iA->second;
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
       cqmomAbscissas.push_back(tempCCVar);
     }
@@ -887,7 +887,7 @@ void
 CQMOM::sched_solveCQMOMInversion213( const LevelP& level, SchedulerP& sched, int timeSubStep)
 {
   string taskname = "CQMOM:solveCQMOMInversion213";
-  Task* tsk = scinew Task(taskname, this, &CQMOM::solveCQMOMInversion213);
+  Task* tsk = new Task(taskname, this, &CQMOM::solveCQMOMInversion213);
   
   //tsk requires on moment eqns
   for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
@@ -941,7 +941,7 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
     vector<CCVariable<double>* > cqmomWeights;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* weight_label = iW->second;
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
       cqmomWeights.push_back(tempCCVar);
     }
@@ -950,7 +950,7 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
     vector<CCVariable<double>* > cqmomAbscissas;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* abscissa_label = iA->second;
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
       cqmomAbscissas.push_back(tempCCVar);
     }

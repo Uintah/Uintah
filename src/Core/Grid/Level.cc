@@ -30,7 +30,6 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/PatchBVH/PatchBVH.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/OS/ProcessInfo.h> // For Memory Check
 #include <Core/Parallel/CrowdMonitor.hpp>
@@ -188,7 +187,7 @@ Level::addPatch( const IntVector & lowIndex,
                  const IntVector & inHighIndex,
                        Grid      * grid )
 {
-  Patch* r = scinew Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex() );
+  Patch* r = new Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex() );
   r->setGrid(grid);
   d_realPatches.push_back(r);
   d_virtualAndRealPatches.push_back(r);
@@ -211,7 +210,7 @@ Level::addPatch( const IntVector & lowIndex,
                        Grid      * grid,
                        int         ID )
 {
-  Patch* r = scinew Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex(), ID );
+  Patch* r = new Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex(), ID );
   r->setGrid(grid);
   d_realPatches.push_back(r);
   d_virtualAndRealPatches.push_back(r);
@@ -623,9 +622,8 @@ bool Level::containsCell(const IntVector& idx) const
 //
 void Level::finalizeLevel()
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
 
-  d_each_patch = scinew PatchSet();
+  d_each_patch = new PatchSet();
   d_each_patch->addReference();
 
   // The compute set requires an array const Patch*, we must copy d_realPatches
@@ -636,7 +634,7 @@ void Level::finalizeLevel()
 
   d_each_patch->addEach(tmp_patches);
 
-  d_all_patches = scinew PatchSet();
+  d_all_patches = new PatchSet();
   d_all_patches->addReference();
   d_all_patches->addAll(tmp_patches);
 
@@ -682,10 +680,9 @@ void Level::finalizeLevel()
 //
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
 
   // set each_patch and all_patches before creating virtual patches
-  d_each_patch = scinew PatchSet();
+  d_each_patch = new PatchSet();
   d_each_patch->addReference();
 
   // The compute set requires an array const Patch*, we must copy d_realPatches
@@ -697,7 +694,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 
   d_each_patch->addEach(tmp_patches);
 
-  d_all_patches = scinew PatchSet();
+  d_all_patches = new PatchSet();
   d_all_patches->addReference();
   d_all_patches->addAll(tmp_patches);
 
@@ -787,13 +784,12 @@ void Level::setBCTypes()
   double rtimes[4]={0};
   double start=Time::currentSeconds();
 
-  MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
 
   if (d_bvh != nullptr){
     delete d_bvh;
   }
 
-  d_bvh = scinew PatchBVH(d_virtualAndRealPatches);
+  d_bvh = new PatchBVH(d_virtualAndRealPatches);
 
   rtimes[0]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
@@ -997,7 +993,7 @@ void Level::setBCTypes()
   if (d_bvh != nullptr){
     delete d_bvh;
   }
-  d_bvh = scinew PatchBVH(d_virtualAndRealPatches);
+  d_bvh = new PatchBVH(d_virtualAndRealPatches);
 
 }
 

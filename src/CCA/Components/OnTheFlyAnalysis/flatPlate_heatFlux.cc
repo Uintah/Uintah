@@ -63,8 +63,8 @@ flatPlate_heatFlux::flatPlate_heatFlux(ProblemSpecP& module_spec,
   d_matl = nullptr;
   d_matl_set = nullptr;
   d_matl_sub = nullptr;
-  v_lb = scinew total_heatRateLabel();
-  M_lb = scinew MPMLabel();
+  v_lb = new total_heatRateLabel();
+  M_lb = new MPMLabel();
 }
 
 //__________________________________
@@ -106,7 +106,7 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
@@ -189,7 +189,7 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
   }
   // put the input variables into the global struct
   // only 1 plane for now
-  plane* p = scinew plane;
+  plane* p = new plane;
   p->startPt = start;
   p->endPt   = end;
   d_plane.push_back(p);
@@ -231,7 +231,7 @@ void flatPlate_heatFlux::scheduleDoAnalysis(SchedulerP& sched,
 					    const LevelP& level)
 {
   cout_doing << "flatPlate_heatFlux::scheduleDoAnalysis " << endl;
-  Task* t = scinew Task("flatPlate_heatFlux::doAnalysis", 
+  Task* t = new Task("flatPlate_heatFlux::doAnalysis", 
                    this,&flatPlate_heatFlux::doAnalysis);
   
   Ghost::GhostType gn = Ghost::None;

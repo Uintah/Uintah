@@ -54,7 +54,6 @@
 
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 
 #include <math.h>
@@ -240,7 +239,7 @@ void ViscoPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ViscoPlastic* ViscoPlastic::clone()
 {
-  return scinew ViscoPlastic(*this);
+  return new ViscoPlastic(*this);
 }
 
 void
@@ -785,7 +784,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       double C_p = matl->getSpecificHeat();
 
       // Set up the PlasticityState
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       state->strainRate = pStrainRate_new[idx];
 //       state->plasticStrainRate = epdot;
 //       state->plasticStrain = ep;
@@ -1235,7 +1234,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       double C_p = matl->getSpecificHeat();
 
 //       Set up the PlasticityState
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       state->strainRate = pStrainRate_new[idx];
       state->plasticStrainRate = 0.0;
       state->plasticStrain = pPlasticStrain[idx];
@@ -1614,7 +1613,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       //Matrix3 devStressOld = oldStress - One*pressure;
       
       // Set up the PlasticityState
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       state->strainRate = pStrainRate_new;
       state->plasticStrainRate = 0.0;
       state->plasticStrain = pPlasticStrain[idx];

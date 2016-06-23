@@ -25,7 +25,6 @@
 #include <Core/Grid/GIMPInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 
 using namespace Uintah;
@@ -49,7 +48,7 @@ GIMPInterpolator::~GIMPInterpolator()
 
 GIMPInterpolator* GIMPInterpolator::clone(const Patch* patch)
 {
-  return scinew GIMPInterpolator(patch);
+  return new GIMPInterpolator(patch);
 }
     
 void GIMPInterpolator::findCellAndWeights(const Point& pos,

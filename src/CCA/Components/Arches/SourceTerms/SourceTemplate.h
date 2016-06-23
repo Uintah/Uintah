@@ -61,7 +61,7 @@ public:
       ~Builder(){}; 
 
       CLASSNAME* build()
-      { return scinew CLASSNAME( _name, _shared_state, _required_label_names ); };
+      { return new CLASSNAME( _name, _shared_state, _required_label_names ); };
 
     private: 
 

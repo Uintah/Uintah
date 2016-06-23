@@ -17,7 +17,7 @@ TaskInterface( task_name, matl_index ) {
   _st_O2 = (1.0/0.5)*(_MW_CO / _MW_O2); // stoichiometric g CO / g O2
   _st_H2O = (1.0/1.0)*(_MW_CO / _MW_H2O); // stoichiometric g CO / g H2O
   _disc = 0;
-  _boundary_condition = scinew BoundaryCondition_new( matl_index );
+  _boundary_condition = new BoundaryCondition_new( matl_index );
 
 }
 
@@ -29,7 +29,7 @@ CO::~CO(){
 void
 CO::problemSetup( ProblemSpecP& db ){
 
-  _disc = scinew Discretization_new();
+  _disc = new Discretization_new();
 
   db->getAttribute("label", _CO_model_name);
   _CO_diff_name=_CO_model_name+"_diff";

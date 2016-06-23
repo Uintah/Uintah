@@ -164,7 +164,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_papiErrorCodes.insert(pair<int, string>(-23, "Too many events or attributes"));
   d_papiErrorCodes.insert(pair<int, string>(-24, "Bad combination of features"));
 
-  d_eventValues = scinew long long[d_papiEvents.size()];
+  d_eventValues = new long long[d_papiEvents.size()];
   d_eventSet = PAPI_NULL;
   int retp = -1;
 
@@ -248,7 +248,7 @@ SimulationController::~SimulationController()
   delete d_eventValues;
 #endif
 }
-  
+
 //______________________________________________________________________
 //
 
@@ -289,16 +289,16 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 void
 SimulationController::preGridSetup( void )
 {
-  d_sharedState = scinew SimulationState( d_ups );
+  d_sharedState = new SimulationState( d_ups );
 
   d_sharedState->d_usingLocalFileSystems = d_usingLocalFileSystems;
 
   d_output = dynamic_cast<Output*>(getPort("output"));
-    
+
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   sched->problemSetup(d_ups, d_sharedState);
   d_scheduler = sched;
-    
+
   if( !d_output ){
     cout << "dynamic_cast of 'd_output' failed!\n";
     throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
@@ -309,9 +309,9 @@ SimulationController::preGridSetup( void )
   if( amr_ps ) {
     amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
   }
-  
+
   // Parse time struct
-  d_timeinfo = scinew SimulationTime( d_ups );
+  d_timeinfo = new SimulationTime( d_ups );
   d_sharedState->d_simTime = d_timeinfo;
 
 #ifdef HAVE_VISIT
@@ -330,12 +330,12 @@ SimulationController::gridSetup( void )
   if( d_restarting ) {
     // Create the DataArchive here, and store it, as we use it a few times...
     // We need to read the grid before ProblemSetup, and we can't load all
-    // the data until after problemSetup, so we have to do a few 
+    // the data until after problemSetup, so we have to do a few
     // different DataArchive operations
 
     Dir restartFromDir( d_fromDir );
     Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
-    d_archive = scinew DataArchive( checkpointRestartDir.getName(),
+    d_archive = new DataArchive( checkpointRestartDir.getName(),
                                     d_myworld->myrank(), d_myworld->size() );
 
     vector<int>    indices;
@@ -363,7 +363,7 @@ SimulationController::gridSetup( void )
       d_restartTimestep = indices[0];
     }
     else if (d_restartTimestep == -1 && indices.size() > 0) {
-      d_restartIndex = (unsigned int)(indices.size() - 1); 
+      d_restartIndex = (unsigned int)(indices.size() - 1);
       // reset d_restartTimestep to what it really is
       d_restartTimestep = indices[indices.size() - 1];
     }
@@ -374,7 +374,7 @@ SimulationController::gridSetup( void )
           break;
         }
     }
-      
+
     if (d_restartIndex == (int) indices.size()) {
       // timestep not found
       ostringstream message;
@@ -384,7 +384,7 @@ SimulationController::gridSetup( void )
   }
 
   if( !d_restarting ) {
-    grid = scinew Grid;
+    grid = new Grid;
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
     if( !d_sim ) {
       throw InternalError("No simulation component", __FILE__, __LINE__);
@@ -406,7 +406,7 @@ SimulationController::gridSetup( void )
   if(grid->numLevels() == 0){
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }
-   
+
   // Print out meta data
   if (d_myworld->myrank() == 0){
     grid->printStatistics();
@@ -434,9 +434,9 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   if (d_regridder) {
     d_regridder->problemSetup( d_ups, grid, d_sharedState );
   }
-    
+
   // Initialize load balancer.  Do here since we have the dimensionality in the shared state,
-  // and we want that at initialization time. In addition do it after regridding since we need to 
+  // and we want that at initialization time. In addition do it after regridding since we need to
   // know the minimum patch size that the regridder will create
   d_lb = d_scheduler->getLoadBalancer();
   d_lb->problemSetup( d_ups, grid, d_sharedState );
@@ -462,10 +462,10 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   d_sim->problemSetup(d_ups, restart_prob_spec_for_component, grid, d_sharedState);
 
   if( d_restarting ) {
-    simdbg << "Restarting... loading data\n";    
+    simdbg << "Restarting... loading data\n";
     d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t );
-      
-    // Set prevDelt to what it was in the last simulation.  If in the last 
+
+    // Set prevDelt to what it was in the last simulation.  If in the last
     // sim we were clamping delt based on the values of prevDelt, then
     // delt will be off if it doesn't match.
     d_sharedState->d_prev_delt = d_archive->getOldDelt( d_restartIndex );
@@ -475,7 +475,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
     // (Add +1 because the scheduler will be starting on the next
     // timestep.)
     d_scheduler->setGeneration( d_restartTimestep + 1 );
-      
+
     // If the user wishes to change the delt on a restart....
     if (d_timeinfo->override_restart_delt != 0) {
       double newdelt = d_timeinfo->override_restart_delt;
@@ -499,7 +499,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
 
   // Finalize the shared state/materials
   d_sharedState->finalizeMaterials();
-    
+
   // done after the sim->problemSetup to get defaults into the
   // input.xml, which it writes along with index.xml
   d_output->initializeOutput(d_ups);
@@ -514,7 +514,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
 //
 
 void
-SimulationController::adjustDelT( double& delt, double prev_delt, bool first, double t ) 
+SimulationController::adjustDelT( double& delt, double prev_delt, bool first, double t )
 {
 #if 0
   cout << "maxTime = " << d_timeinfo->maxTime << "\n";
@@ -531,22 +531,22 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
 #endif
 
   delt *= d_timeinfo->delt_factor;
-      
+
   if( delt < d_timeinfo->delt_min ) {
     proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << d_timeinfo->delt_min << '\n';
     delt = d_timeinfo->delt_min;
   }
-  if( !first && 
+  if( !first &&
       d_timeinfo->max_delt_increase < 1.e90 &&
       delt > (1+d_timeinfo->max_delt_increase)*prev_delt) {
-    proc0cout << "WARNING (a): lowering delt from " << delt 
+    proc0cout << "WARNING (a): lowering delt from " << delt
               << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
               << " (maximum increase of " << d_timeinfo->max_delt_increase
               << ")\n";
     delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
   }
   if( t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt ) {
-    proc0cout << "WARNING (b): lowering delt from " << delt 
+    proc0cout << "WARNING (b): lowering delt from " << delt
               << " to maximum: " << d_timeinfo->max_initial_delt
               << " (for initial timesteps)\n";
     delt = d_timeinfo->max_initial_delt;
@@ -561,13 +561,13 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
     double nextOutput = d_output->getNextOutputTime();
     double nextCheckpoint = d_output->getNextCheckpointTime();
     if (nextOutput != 0 && t + delt > nextOutput) {
-      delt = nextOutput - t;       
+      delt = nextOutput - t;
     }
     if (nextCheckpoint != 0 && t + delt > nextCheckpoint) {
       delt = nextCheckpoint - t;
     }
     if (delt != orig_delt) {
-      proc0cout << "WARNING (d): lowering delt from " << orig_delt 
+      proc0cout << "WARNING (d): lowering delt from " << orig_delt
                 << " to " << delt
                 << " to line up with output/checkpoint time\n";
     }
@@ -638,7 +638,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   double avg_highwater = runTimeStats.getAverage(SimulationState::SCIMemoryHighwater);
   unsigned long max_highwater =
       static_cast<unsigned long>(runTimeStats.getMaximum(SimulationState::SCIMemoryHighwater));
-    
+
   // Sum up the average time for overhead related components. These
   // same values are used in SimulationState::getOverheadTime.
   double overhead_time =
@@ -657,10 +657,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
      runTimeStats.getAverage(SimulationState::TaskGlobalCommTime) +
      runTimeStats.getAverage(SimulationState::TaskWaitCommTime) +
      runTimeStats.getAverage(SimulationState::TaskWaitThreadTime));
-  
+
   // Calculate percentage of time spent in overhead.
   double percent_overhead = overhead_time / total_time;
-  
+
   //set the overhead sample
   if( d_n > 2 ) { // Ignore the first 3 samples, they are not good samples.
     d_sharedState->overhead[d_sharedState->overheadIndex] = percent_overhead;
@@ -676,12 +676,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       weight += d_sharedState->overheadWeights[i];
     }
 
-    d_sharedState->overheadAvg = overhead/weight; 
+    d_sharedState->overheadAvg = overhead/weight;
     d_sharedState->overheadIndex =
       (d_sharedState->overheadIndex+1) % OVERHEAD_WINDOW;
 
     // Increase overhead size if needed.
-  } 
+  }
 
   // calculate mean/std dev
   //double stdDev = 0;
@@ -694,11 +694,11 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     //d_sumOfWallTimeSquares += pow(walltime,2);
 
     //alpha=2/(N+1)
-    float alpha = 2.0 / (min(d_n-2,AVERAGE_WINDOW)+1);  
+    float alpha = 2.0 / (min(d_n-2,AVERAGE_WINDOW)+1);
     d_movingAverage = alpha*walltime + (1-alpha) * d_movingAverage;
     mean = d_movingAverage;
   }
-  
+
   /*
     if (d_n > 3) {
     // divide by n-2 and not n, because we wait till n>2 to keep track
@@ -716,7 +716,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     for (unsigned int i=0; i<runTimeStats.size(); i++)
     {
       SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
-      
+
       if (runTimeStats[e] > 0)
       {
         istats << "rank: " << d_myworld->myrank() << " "
@@ -725,7 +725,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	       << runTimeStats[e] << "\n";
       }
     }
-  } 
+  }
 
   if( d_myworld->myrank() == 0 )
   {
@@ -742,7 +742,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
     ostringstream message;
     message << "Time="        << time
-            << " (timestep "  << timestep 
+            << " (timestep "  << timestep
             << "), delT="     << delt
             << walltime;
     message << "Memory Use = ";
@@ -775,7 +775,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       for (unsigned int i=0; i<runTimeStats.size(); ++i)
       {
 	SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
-	
+
 	if (runTimeStats.getMaximum(e) > 0)
 	{
 	  stats << "  " << left << setw(19)<< runTimeStats.getName(e)
@@ -787,7 +787,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 		<< 100*(1-(runTimeStats.getAverage(e)/runTimeStats.getMaximum(e))) << "\n";
 	}
       }
-      
+
       if( d_n > 2 && !std::isnan(d_sharedState->overheadAvg) ) {
         stats << "  Percent Time in overhead:"
               << d_sharedState->overheadAvg*100 <<  "\n";
@@ -858,7 +858,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 void
 SimulationController::getMemoryStats ( int timestep, bool create )
 {
-  unsigned long memUse, highwater, maxMemUse;
+  // TODO implement: DJS
+  std::cerr << "Warning: not implmented, need to attached to new Allocator" << std::endl;
+
+  unsigned long memUse = 0, highwater = 0, maxMemUse = 0;
   d_scheduler->checkMemoryUse( memUse, highwater, maxMemUse );
 
   d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryUsed ] =
@@ -867,65 +870,6 @@ SimulationController::getMemoryStats ( int timestep, bool create )
     maxMemUse;
   d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryHighwater ] =
     highwater;
-
-  if( ProcessInfo::isSupported(ProcessInfo::MEM_SIZE) )
-    d_sharedState->d_runTimeStats[ SimulationState::MemoryUsed ] =
-      ProcessInfo::getMemoryUsed();
-  if( ProcessInfo::isSupported(ProcessInfo::MEM_RSS) )
-    d_sharedState->d_runTimeStats[ SimulationState::MemoryResident ] =
-      ProcessInfo::getMemoryResident();
-
-  // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
-  if ( getenv( "MALLOC_PERPROC" ) )
-  {
-    ostream* mallocPerProcStream = nullptr;
-    char* filenamePrefix = getenv( "MALLOC_PERPROC" );
-
-    if ( !filenamePrefix || strlen( filenamePrefix ) == 0 )
-    {
-      mallocPerProcStream = &dbg;
-    }
-    else
-    {
-      char filename[256];
-      sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
-
-      if ( create )
-      {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
-      }
-      else
-      {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::app );
-      }
-
-      if ( !mallocPerProcStream )
-      {
-        delete mallocPerProcStream;
-        mallocPerProcStream = &dbg;
-      }
-    }
-
-    *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
-    *mallocPerProcStream << "Timestep " << timestep << "   ";
-
-    if( ProcessInfo::isSupported(ProcessInfo::MEM_SIZE) )
-      *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
-    if( ProcessInfo::isSupported(ProcessInfo::MEM_RSS) )
-      *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
-
-    *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
-#ifndef DISABLE_SCI_MALLOC
-    *mallocPerProcStream << "Sci_Malloc_Memuse "    << memUse << "   ";
-    *mallocPerProcStream << "Sci_Malloc_MaxMemuse " << maxMemUse << "   ";
-    *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
-#endif
-    *mallocPerProcStream << "\n";
-
-    if ( mallocPerProcStream != &dbg ) {
-      delete mallocPerProcStream;
-    }
-  }
 }
 
 //______________________________________________________________________
@@ -966,5 +910,5 @@ SimulationController::getPAPIStats( )
   }
 #endif
 }
-  
+
 } // namespace Uintah

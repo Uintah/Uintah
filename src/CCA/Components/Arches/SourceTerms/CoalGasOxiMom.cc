@@ -49,7 +49,7 @@ void
 CoalGasOxiMom::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "CoalGasOxiMom::eval";
-  Task* tsk = scinew Task(taskname, this, &CoalGasOxiMom::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &CoalGasOxiMom::computeSource, timeSubStep);
 
   if (timeSubStep == 0) {
     tsk->computes(_src_label);
@@ -172,7 +172,7 @@ CoalGasOxiMom::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CoalGasOxiMom::initialize";
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasOxiMom::initialize);
+  Task* tsk = new Task(taskname, this, &CoalGasOxiMom::initialize);
 
   tsk->computes(_src_label);
 

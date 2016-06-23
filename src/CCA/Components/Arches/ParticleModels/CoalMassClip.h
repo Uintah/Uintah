@@ -55,7 +55,7 @@ public:
       ~Builder(){}
 
       CoalMassClip* build()
-      { return scinew CoalMassClip( _task_name, _matl_index, _N ); }
+      { return new CoalMassClip( _task_name, _matl_index, _N ); }
 
       private: 
 

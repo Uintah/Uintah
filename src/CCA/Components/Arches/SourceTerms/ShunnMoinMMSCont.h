@@ -48,7 +48,7 @@ public:
       ~Builder(){}; 
 
       ShunnMoinMMSCont* build()
-      { return scinew ShunnMoinMMSCont( _name, _shared_state, _required_label_names, _type ); };
+      { return new ShunnMoinMMSCont( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

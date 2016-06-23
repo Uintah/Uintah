@@ -50,8 +50,8 @@ SimpleBurnCriteria::SimpleBurnCriteria(ProblemSpecP& ps)
   proc0cout << "Switching criteria:  \tSimpleBurn, reactant matl: " 
             << d_material << " Threshold tempterature " << d_temperature << endl;
 
-  Mlb  = scinew MPMLabel();
-  MIlb = scinew MPMICELabel();
+  Mlb  = new MPMLabel();
+  MIlb = new MPMICELabel();
 }
 
 SimpleBurnCriteria::~SimpleBurnCriteria()
@@ -72,9 +72,9 @@ void SimpleBurnCriteria::problemSetup(const ProblemSpecP& ps,
 void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   printSchedule(level,dbg,"Switching Criteria:SimpleBurnCriteria::scheduleSwitchTest");
-  Task* t = scinew Task("switchTest", this, &SimpleBurnCriteria::switchTest);
+  Task* t = new Task("switchTest", this, &SimpleBurnCriteria::switchTest);
 
-  MaterialSubset* one_matl = scinew MaterialSubset();
+  MaterialSubset* one_matl = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   

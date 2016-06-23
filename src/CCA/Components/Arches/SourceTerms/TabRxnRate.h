@@ -47,7 +47,7 @@ public:
       ~Builder(){}; 
 
       TabRxnRate* build()
-      { return scinew TabRxnRate( _name, _shared_state, _required_label_names, _type ); };
+      { return new TabRxnRate( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

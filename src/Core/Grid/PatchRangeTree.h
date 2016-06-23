@@ -24,7 +24,6 @@
 
 #include <Core/Containers/RangeTree.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>

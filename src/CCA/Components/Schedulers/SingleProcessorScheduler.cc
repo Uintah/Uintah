@@ -29,7 +29,6 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/LoadBalancer.h>
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
@@ -58,7 +57,7 @@ SingleProcessorScheduler::~SingleProcessorScheduler()
 SchedulerP
 SingleProcessorScheduler::createSubScheduler()
 {
-  SingleProcessorScheduler * subsched = scinew SingleProcessorScheduler( d_myworld, m_outPort_, this );
+  SingleProcessorScheduler * subsched = new SingleProcessorScheduler( d_myworld, m_outPort_, this );
   UintahParallelPort       * lbp      = getPort("load balancer");
   subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;

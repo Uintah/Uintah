@@ -94,7 +94,7 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_recompile_taskgraph = false;
 
   //lagrangian particles:
-  _particlesHelper = scinew ArchesParticlesHelper();
+  _particlesHelper = new ArchesParticlesHelper();
   _particlesHelper->sync_with_arches(this);
 
 }
@@ -134,7 +134,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 {
 
   d_sharedState= sharedState;
-  ArchesMaterial* mat= scinew ArchesMaterial();
+  ArchesMaterial* mat= new ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   _arches_spec = db;
@@ -165,12 +165,12 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   //==============NEW TASK STUFF
   //build the factories
-  boost::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
-  boost::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
-  boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
-  boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
-  boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
+  boost::shared_ptr<UtilityFactory> UtilF(new UtilityFactory());
+  boost::shared_ptr<TransportFactory> TransF(new TransportFactory());
+  boost::shared_ptr<InitializeFactory> InitF(new InitializeFactory());
+  boost::shared_ptr<ParticleModelFactory> PartModF(new ParticleModelFactory());
+  boost::shared_ptr<LagrangianParticleFactory> LagF(new LagrangianParticleFactory());
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(new PropertyModelFactoryV2());
 
   _task_factory_map.clear();
   _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -208,7 +208,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("recompileTaskgraph",  d_recompile_taskgraph,false);
 
   // physical constant
-  d_physicalConsts = scinew PhysicalConstants();
+  d_physicalConsts = new PhysicalConstants();
   const ProblemSpecP db_root = db->getRootNode();
   d_physicalConsts->problemSetup(db_root);
 
@@ -223,7 +223,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   NonlinearSolver::NLSolverBuilder* builder;
   if ( db->findBlock("ExplicitSolver") ) {
 
-    builder = scinew ExplicitSolver::Builder( d_sharedState,
+    builder = new ExplicitSolver::Builder( d_sharedState,
                                               d_MAlab,
                                               d_physicalConsts,
                                               _task_factory_map,
@@ -232,7 +232,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   } else if ( db->findBlock("KokkosSolver")) {
 
-    builder = scinew KokkosSolver::Builder( d_sharedState, _task_factory_map, d_myworld );
+    builder = new KokkosSolver::Builder( d_sharedState, _task_factory_map, d_myworld );
 
   } else {
 
@@ -300,7 +300,7 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   //=========== END NEW TASK INTERFACE ==============================
-  _bcHelperMap[level->getID()] = scinew ArchesBCHelper( level, sched, matls );
+  _bcHelperMap[level->getID()] = new ArchesBCHelper( level, sched, matls );
 
   d_nlSolver->set_bchelper( &_bcHelperMap );
 

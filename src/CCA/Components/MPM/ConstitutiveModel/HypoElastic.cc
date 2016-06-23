@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -39,7 +38,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 
@@ -89,7 +87,7 @@ void HypoElastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 HypoElastic* HypoElastic::clone()
 {
-  return scinew HypoElastic(*this);
+  return new HypoElastic(*this);
 }
 
 void HypoElastic::initializeCMData(const Patch* patch,

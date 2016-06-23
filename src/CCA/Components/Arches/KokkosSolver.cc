@@ -63,7 +63,7 @@ void
 KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
 {
   // primitive variable initialization
-  Task* tsk = scinew Task( "KokkosSolver::computeStableTimeStep",this,
+  Task* tsk = new Task( "KokkosSolver::computeStableTimeStep",this,
                            &KokkosSolver::computeStableTimeStep);
 
   tsk->computes( m_sharedState->get_delt_label(), level.get_rep() );
@@ -102,7 +102,7 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   bool is_restart = false;
 
   //boundary condition
-  m_bcHelper = scinew WBCHelper( level, sched, matls );
+  m_bcHelper = new WBCHelper( level, sched, matls );
   m_bcHelper->parse_boundary_conditions();
   sched_checkBCs( sched, level );
 
@@ -210,7 +210,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
 
 void
 KokkosSolver::sched_checkBCs( SchedulerP& sched, const LevelP& level ){
-  Task* tsk = scinew Task("KokkosSolver::checkBCs", this,
+  Task* tsk = new Task("KokkosSolver::checkBCs", this,
                           &KokkosSolver::checkBCs);
   sched->addTask(tsk, level->eachPatch(), m_sharedState->allArchesMaterials());
 }

@@ -36,7 +36,6 @@
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/Weibull.h>
 #include <iostream>
 #include <string>
@@ -143,7 +142,7 @@ void NonLocalDruckerPrager::outputProblemSpec(ProblemSpecP& ps,bool output_cm_ta
 
 NonLocalDruckerPrager* NonLocalDruckerPrager::clone()
 {
-  return scinew NonLocalDruckerPrager(*this);
+  return new NonLocalDruckerPrager(*this);
 }
 
 void 

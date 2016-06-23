@@ -104,7 +104,7 @@ namespace WasatchCore{
         strTsrMagTag = tagNames.straintensormag;
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
-          factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
+          factory.register_expression( new StrTsrMagT(strTsrMagTag,
                                                          tagNames.strainxx,tagNames.strainyx,tagNames.strainzx,
                                                          tagNames.strainyy,tagNames.strainzy,
                                                          tagNames.strainzz) );
@@ -117,7 +117,7 @@ namespace WasatchCore{
         vremanTsrMagTag = tagNames.vremantensormag;
         if( !factory.have_entry( vremanTsrMagTag ) ){
           typedef VremanTensorMagnitude<SVolField,XVolField,YVolField,ZVolField>::Builder VremanTsrMagT;
-          factory.register_expression( scinew VremanTsrMagT(vremanTsrMagTag, velTags ) );
+          factory.register_expression( new VremanTsrMagT(vremanTsrMagTag, velTags ) );
         }
       }
         break;
@@ -127,7 +127,7 @@ namespace WasatchCore{
         strTsrMagTag = tagNames.straintensormag;
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
-          factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
+          factory.register_expression( new StrTsrMagT(strTsrMagTag,
                                                          tagNames.strainxx,tagNames.strainyx,tagNames.strainzx,
                                                          tagNames.strainyy,tagNames.strainzy,
                                                          tagNames.strainzz) );
@@ -137,7 +137,7 @@ namespace WasatchCore{
         waleTsrMagTag = tagNames.waletensormag;
         if( !factory.have_entry( waleTsrMagTag ) ){
           typedef WaleTensorMagnitude<SVolField,XVolField,YVolField,ZVolField>::Builder waleStrTsrMagT;
-          factory.register_expression( scinew waleStrTsrMagT(waleTsrMagTag, velTags ) );
+          factory.register_expression( new waleStrTsrMagT(waleTsrMagTag, velTags ) );
         }
       }
         break;
@@ -156,7 +156,7 @@ namespace WasatchCore{
         if( !factory.have_entry( dynSmagCoefTag )&&
             !factory.have_entry( strTsrMagTag )     ){
           typedef DynamicSmagorinskyCoefficient<SVolField,XVolField,YVolField,ZVolField>::Builder dynSmagConstT;
-          factory.register_expression( scinew dynSmagConstT(dynamicSmagTagList,
+          factory.register_expression( new dynSmagConstT(dynamicSmagTagList,
                                                             velTags,
                                                             densTag,
                                                             isConstDensity) );
@@ -180,8 +180,8 @@ namespace WasatchCore{
       // and comment out the "exOp_->apply_to_field(result)" line at the end
       // of the evaluate method.
       typedef TurbulentViscosity::Builder TurbViscT;
-      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
-//      const Expr::ExpressionID turbViscID = factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
+      factory.register_expression( new TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
+//      const Expr::ExpressionID turbViscID = factory.register_expression( new TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
 //      factory.cleave_from_parents(turbViscID);
     }
   }
@@ -300,7 +300,7 @@ namespace WasatchCore{
     typedef typename StrainHelper<FaceFieldT>::Vel1T Vel1T;  // type of velocity component 1
     typedef typename StrainHelper<FaceFieldT>::Vel2T Vel2T;  // type of velocity component 2
     typedef typename Strain< FaceFieldT, Vel1T, Vel2T >::Builder StrainT;
-    return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag ) );
+    return factory.register_expression( new StrainT( strainTag, vel1Tag, vel2Tag ) );
   }
   
   template< typename FaceFieldT, typename DirT >
@@ -311,7 +311,7 @@ namespace WasatchCore{
                Expr::ExpressionFactory& factory )
   {
     typedef typename CollocatedStrain< FaceFieldT, DirT >::Builder StrainT;
-    return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag ) );
+    return factory.register_expression( new StrainT( strainTag, vel1Tag, vel2Tag ) );
   }
 
 
@@ -426,7 +426,7 @@ namespace WasatchCore{
       typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, MomT,   FluxT >::type  MomInterpOp;
       typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
       typedef typename ConvectiveFlux<MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
-      return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
+      return factory.register_expression( new ConvFlux( fluxTag, momTag, advelTag ) );
     }
     else{
       typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
@@ -436,7 +436,7 @@ namespace WasatchCore{
                                             typename OperatorTypeBuilder<Interpolant,MomT,FluxT>::type, // scalar interp type
                                             typename OperatorTypeBuilder<Interpolant,AdvelT,FluxT>::type  // velocity interp type
                                             >::Builder ConvFluxLim;
-      return factory.register_expression( scinew ConvFluxLim( fluxTag, momTag, advelTag, convInterpMethod, volFracTag ) );
+      return factory.register_expression( new ConvFluxLim( fluxTag, momTag, advelTag, convInterpMethod, volFracTag ) );
     }
   }
 
@@ -699,7 +699,7 @@ namespace WasatchCore{
           
           // we need to create two expressions
           const Expr::Tag tkeTempTag("TotalKE_temp", Expr::STATE_NONE);
-          factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
+          factory.register_expression(new typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
                                                                                                                  this->velTags_[0],this->velTags_[1],this->velTags_[2] ),true);
           
           ReductionHelper::self().add_variable<SpatialOps::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
@@ -707,7 +707,7 @@ namespace WasatchCore{
       }
       else if( !factory.have_entry( TagNames::self().kineticEnergy ) ){ // calculate local, pointwise kinetic energy
         const Expr::ExpressionID keID = factory.register_expression(
-                                                                    scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder(
+                                                                    new typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder(
                                                                                                                                                     TagNames::self().kineticEnergy, this->velTags_[0],this->velTags_[1],this->velTags_[2] ), true);
         graphHelper.rootIDs.insert( keID );
       }

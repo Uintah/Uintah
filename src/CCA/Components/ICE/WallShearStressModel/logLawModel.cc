@@ -107,7 +107,7 @@ void logLawModel::sched_Initialize(SchedulerP& sched,
 {
   printSchedule(level,dbg,"logLawModel::schedInitialize");
   
-  Task* t = scinew Task("logLawModel::Initialize",
+  Task* t = new Task("logLawModel::Initialize",
                   this, &logLawModel::Initialize);
 
   t->computes(d_roughnessLabel);

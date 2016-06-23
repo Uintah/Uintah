@@ -173,7 +173,7 @@ namespace WasatchCore{
       
       info[PRIMITIVE_VARIABLE] = solnVarTag_;
       
-      return factory.register_expression( scinew RHSBuilder( rhsTag_, info, Expr::TagList(), densTag_, false, true, Expr::Tag() ) );
+      return factory.register_expression( new RHSBuilder( rhsTag_, info, Expr::TagList(), densTag_, false, true, Expr::Tag() ) );
     }
 
     //----------------------------------------------------------------------------

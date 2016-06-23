@@ -23,7 +23,6 @@
  */
 
 #include <Core/GeometryPiece/UniformGrid.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <map>
 

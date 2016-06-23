@@ -62,7 +62,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           ExtentRxn* build()
-          { return scinew ExtentRxn( _name, _shared_state ); };
+          { return new ExtentRxn( _name, _shared_state ); };
 
         private: 
 

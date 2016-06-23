@@ -28,7 +28,6 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Malloc/Allocator.h>
 //#include <iostream>
 
 using namespace Uintah;
@@ -36,12 +35,12 @@ using namespace Uintah;
 
 ImplicitCM::ImplicitCM()
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 }
 
 ImplicitCM::ImplicitCM(const ImplicitCM* cm)
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 }
 
 ImplicitCM::~ImplicitCM()

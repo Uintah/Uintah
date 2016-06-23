@@ -73,7 +73,7 @@ void IdealGasMP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 IdealGasMP* IdealGasMP::clone()
 {
-  return scinew IdealGasMP(*this);
+  return new IdealGasMP(*this);
 }
 
 void IdealGasMP::initializeCMData(const Patch* patch,

@@ -95,7 +95,7 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel( SchedulerP& sched,
 {
   string taskname =  "TurbulenceModelPlaceholder::ReTurbSubmodel" +
   timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &TurbulenceModelPlaceholder::reComputeTurbSubmodel,
                           timelabels);
   

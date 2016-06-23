@@ -474,7 +474,7 @@ SchedulerP
 UnifiedScheduler::createSubScheduler()
 {
   UintahParallelPort * lbp      = getPort("load balancer");
-  UnifiedScheduler   * subsched = scinew UnifiedScheduler( d_myworld, m_outPort_, this );
+  UnifiedScheduler   * subsched = new UnifiedScheduler( d_myworld, m_outPort_, this );
 
   subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;

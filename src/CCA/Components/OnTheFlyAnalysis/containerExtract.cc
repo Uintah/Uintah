@@ -90,7 +90,7 @@ containerExtract::containerExtract(ProblemSpecP& module_spec,
   d_prob_spec = module_spec;
   d_dataArchiver = dataArchiver;
   d_matl_set = 0;
-  ps_lb = scinew containerExtractLabel();
+  ps_lb = new containerExtractLabel();
 }
 
 //__________________________________
@@ -139,7 +139,7 @@ void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();                               
   
@@ -166,7 +166,7 @@ void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
                     object_spec = object_spec->findNextBlock("geom_object")) {
                     
     // put input variables into the global struct
-    container* c = scinew container;
+    container* c = new container;
     
     object_spec->getAttributes(attribute);
     string name = attribute["name"];
@@ -269,7 +269,7 @@ void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
             __FILE__, __LINE__);
       }
       
-      extractVarLabel* evl = scinew extractVarLabel;
+      extractVarLabel* evl = new extractVarLabel;
       evl->vl = label;
       evl->mode = fxmode;
 
@@ -348,7 +348,7 @@ void containerExtract::scheduleInitialize(SchedulerP& sched,
                                      const LevelP& level)
 {
   cout_doing << "containerExtract::scheduleInitialize " << endl;
-  Task* t = scinew Task("containerExtract::initialize", 
+  Task* t = new Task("containerExtract::initialize", 
                   this, &containerExtract::initialize);
   
   t->computes(ps_lb->lastWriteTimeLabel);
@@ -469,84 +469,84 @@ void containerExtract::initialize(const ProcessorGroup*,
           case INTERIOR:
             if (!(c.x() <= max.x() && c.y() <= max.y() && c.z() <= max.z()
                   && c.x() >= min.x() && c.y() >= min.y() && c.z() >= min.z())) break;
-            cnt->extractCells.push_back(scinew extractCell(exmode, NONE, c, cnt->vls[evl]->vl)); 
+            cnt->extractCells.push_back(new extractCell(exmode, NONE, c, cnt->vls[evl]->vl)); 
             break;
 
           case SURFACE:
             if (iswest  && c.x() < max.x())
-              cnt->extractCells.push_back(scinew extractCell(exmode, WEST , c + IntVector(1,0,0), cnt->vls[evl]->vl));
+              cnt->extractCells.push_back(new extractCell(exmode, WEST , c + IntVector(1,0,0), cnt->vls[evl]->vl));
             if (iseast  && c.x() > min.x())
-              cnt->extractCells.push_back(scinew extractCell(exmode, EAST , c - IntVector(1,0,0), cnt->vls[evl]->vl));
+              cnt->extractCells.push_back(new extractCell(exmode, EAST , c - IntVector(1,0,0), cnt->vls[evl]->vl));
             if (issouth && c.y() < max.y())
-              cnt->extractCells.push_back(scinew extractCell(exmode, SOUTH, c + IntVector(0,1,0), cnt->vls[evl]->vl));
+              cnt->extractCells.push_back(new extractCell(exmode, SOUTH, c + IntVector(0,1,0), cnt->vls[evl]->vl));
             if (isnorth && c.y() > min.y())
-              cnt->extractCells.push_back(scinew extractCell(exmode, NORTH, c - IntVector(0,1,0), cnt->vls[evl]->vl));
+              cnt->extractCells.push_back(new extractCell(exmode, NORTH, c - IntVector(0,1,0), cnt->vls[evl]->vl));
             if (isbot   && c.z() < max.z())
-              cnt->extractCells.push_back(scinew extractCell(exmode, BOTTOM,c + IntVector(0,0,1), cnt->vls[evl]->vl));
+              cnt->extractCells.push_back(new extractCell(exmode, BOTTOM,c + IntVector(0,0,1), cnt->vls[evl]->vl));
             if (istop   && c.z() > min.z())
-              cnt->extractCells.push_back(scinew extractCell(exmode, TOP  , c - IntVector(0,0,1), cnt->vls[evl]->vl));
+              cnt->extractCells.push_back(new extractCell(exmode, TOP  , c - IntVector(0,0,1), cnt->vls[evl]->vl));
             break;
 
           case NET:
             if (iswest  && c.x() < max.x())
-              cnt->extractCells.push_back(scinew extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("htfluxRadX")));
+              cnt->extractCells.push_back(new extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("htfluxRadX")));
             if (iseast  && c.x() > min.x())
-              cnt->extractCells.push_back(scinew extractCell(exmode, EAST , c /*cf faceextract*/, VarLabel::find("htfluxRadX")));
+              cnt->extractCells.push_back(new extractCell(exmode, EAST , c /*cf faceextract*/, VarLabel::find("htfluxRadX")));
             if (issouth && c.y() < max.y())
-              cnt->extractCells.push_back(scinew extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("htfluxRadY")));
+              cnt->extractCells.push_back(new extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("htfluxRadY")));
             if (isnorth && c.y() > min.y())
-              cnt->extractCells.push_back(scinew extractCell(exmode, NORTH, c /*cf faceextract*/, VarLabel::find("htfluxRadY")));
+              cnt->extractCells.push_back(new extractCell(exmode, NORTH, c /*cf faceextract*/, VarLabel::find("htfluxRadY")));
             if (isbot   && c.z() < max.z())
-              cnt->extractCells.push_back(scinew extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("htfluxRadZ")));
+              cnt->extractCells.push_back(new extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("htfluxRadZ")));
             if (istop   && c.z() > min.z())
-              cnt->extractCells.push_back(scinew extractCell(exmode, TOP  , c /*cf faceextract*/, VarLabel::find("htfluxRadZ")));
+              cnt->extractCells.push_back(new extractCell(exmode, TOP  , c /*cf faceextract*/, VarLabel::find("htfluxRadZ")));
             break;
 
           case INCIDENT:
             if (iswest  && c.x() < max.x())
-              cnt->extractCells.push_back(scinew extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("radiationFluxWIN")));
+              cnt->extractCells.push_back(new extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("radiationFluxWIN")));
             if (iseast  && c.x() > min.x())
-              cnt->extractCells.push_back(scinew extractCell(exmode, EAST , c - IntVector(1,0,0), VarLabel::find("radiationFluxEIN")));
+              cnt->extractCells.push_back(new extractCell(exmode, EAST , c - IntVector(1,0,0), VarLabel::find("radiationFluxEIN")));
             if (issouth && c.y() < max.y())
-              cnt->extractCells.push_back(scinew extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("radiationFluxSIN")));
+              cnt->extractCells.push_back(new extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("radiationFluxSIN")));
             if (isnorth && c.y() > min.y())
-              cnt->extractCells.push_back(scinew extractCell(exmode, NORTH, c - IntVector(0,1,0), VarLabel::find("radiationFluxNIN")));
+              cnt->extractCells.push_back(new extractCell(exmode, NORTH, c - IntVector(0,1,0), VarLabel::find("radiationFluxNIN")));
             if (isbot   && c.z() < max.z())
-              cnt->extractCells.push_back(scinew extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("radiationFluxBIN")));
+              cnt->extractCells.push_back(new extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("radiationFluxBIN")));
             if (istop   && c.z() > min.z())
-              cnt->extractCells.push_back(scinew extractCell(exmode, TOP  , c - IntVector(0,0,1), VarLabel::find("radiationFluxTIN")));
+              cnt->extractCells.push_back(new extractCell(exmode, TOP  , c - IntVector(0,0,1), VarLabel::find("radiationFluxTIN")));
             break;
 
           case VELOCITY:
             if (iswest  && c.x() < max.x()) {
-              cnt->extractCells.push_back(scinew extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("newCCUVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("newCCVVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("newCCWVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("newCCUVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("newCCVVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, WEST , c + IntVector(1,0,0), VarLabel::find("newCCWVelocity")));
             }
             if (iseast  && c.x() > min.x()) {
-              cnt->extractCells.push_back(scinew extractCell(exmode, EAST , c - IntVector(1,0,0), VarLabel::find("newCCUVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, EAST , c - IntVector(1,0,0), VarLabel::find("newCCVVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, EAST , c - IntVector(1,0,0), VarLabel::find("newCCWVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, EAST , c - IntVector(1,0,0), VarLabel::find("newCCUVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, EAST , c - IntVector(1,0,0), VarLabel::find("newCCVVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, EAST , c - IntVector(1,0,0), VarLabel::find("newCCWVelocity")));
             }
             if (issouth && c.y() < max.y()) {
-              cnt->extractCells.push_back(scinew extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("newCCUVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("newCCVVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("newCCWVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("newCCUVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("newCCVVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, SOUTH, c + IntVector(0,1,0), VarLabel::find("newCCWVelocity")));
             }
             if (isnorth && c.y() > min.y()) {
-              cnt->extractCells.push_back(scinew extractCell(exmode, NORTH, c - IntVector(0,1,0), VarLabel::find("newCCUVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, NORTH, c - IntVector(0,1,0), VarLabel::find("newCCVVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, NORTH, c - IntVector(0,1,0), VarLabel::find("newCCWVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, NORTH, c - IntVector(0,1,0), VarLabel::find("newCCUVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, NORTH, c - IntVector(0,1,0), VarLabel::find("newCCVVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, NORTH, c - IntVector(0,1,0), VarLabel::find("newCCWVelocity")));
             }
             if (isbot   && c.z() < max.z()) {
-              cnt->extractCells.push_back(scinew extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("newCCUVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("newCCVVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("newCCWVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("newCCUVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("newCCVVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, BOTTOM,c + IntVector(0,0,1), VarLabel::find("newCCWVelocity")));
             }
             if (istop   && c.z() > min.z()) {
-              cnt->extractCells.push_back(scinew extractCell(exmode, TOP  , c - IntVector(0,0,1), VarLabel::find("newCCUVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, TOP  , c - IntVector(0,0,1), VarLabel::find("newCCVVelocity")));
-              cnt->extractCells.push_back(scinew extractCell(exmode, TOP  , c - IntVector(0,0,1), VarLabel::find("newCCWVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, TOP  , c - IntVector(0,0,1), VarLabel::find("newCCUVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, TOP  , c - IntVector(0,0,1), VarLabel::find("newCCVVelocity")));
+              cnt->extractCells.push_back(new extractCell(exmode, TOP  , c - IntVector(0,0,1), VarLabel::find("newCCWVelocity")));
             }
             break;
 
@@ -598,7 +598,7 @@ void containerExtract::scheduleDoAnalysis(SchedulerP& sched,
                                      const LevelP& level)
 {
   cout_doing << "containerExtract::scheduleDoAnalysis " << endl;
-  Task* t = scinew Task("containerExtract::doAnalysis", 
+  Task* t = new Task("containerExtract::doAnalysis", 
                    this,&containerExtract::doAnalysis);
                      
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);

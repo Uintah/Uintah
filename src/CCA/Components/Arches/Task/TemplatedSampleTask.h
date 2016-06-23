@@ -27,7 +27,7 @@ public:
       ~Builder(){}
 
       TemplatedSampleTask* build()
-      { return scinew TemplatedSampleTask<T>( _task_name, _matl_index ); }
+      { return new TemplatedSampleTask<T>( _task_name, _matl_index ); }
 
       private:
 

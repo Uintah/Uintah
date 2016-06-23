@@ -28,7 +28,7 @@ public:
       ~Builder(){}
 
       WaveFormInit* build()
-      { return scinew WaveFormInit<T>( _task_name, _matl_index, _var_name ); }
+      { return new WaveFormInit<T>( _task_name, _matl_index, _var_name ); }
 
       private:
 

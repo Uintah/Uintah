@@ -33,7 +33,7 @@ public:
       ~Builder(){}
 
       TaskAlgebra* build()
-      { return scinew TaskAlgebra<IT1, IT2, DT>( _task_name, _matl_index ); }
+      { return new TaskAlgebra<IT1, IT2, DT>( _task_name, _matl_index ); }
 
       private:
 

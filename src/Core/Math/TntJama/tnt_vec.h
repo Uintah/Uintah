@@ -94,7 +94,7 @@ class Vector
         // v_[] is the internal contiguous array, it is still 0-offset
         //
         assert(v_ == nullptr);
-        v_ = scinew T[N];
+        v_ = new T[N];
         assert(v_  != nullptr);
         vm1_ = v_-1;
         n_ = N;

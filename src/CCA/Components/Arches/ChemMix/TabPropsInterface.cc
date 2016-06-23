@@ -175,7 +175,7 @@ TabPropsInterface::sched_getState( const LevelP& level,
   string taskname = "TabPropsInterface::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_substep, initialize_me, modify_ref_den );
+  Task* tsk = new Task(taskname, this, &TabPropsInterface::getState, time_substep, initialize_me, modify_ref_den );
 
   // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {

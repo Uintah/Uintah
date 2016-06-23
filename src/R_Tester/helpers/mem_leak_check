@@ -43,20 +43,20 @@ if [ $retval = "0" ]; then
 fi
 
 #__________________________________
-echo "Checking $TEST for scinew memory leaks"
-grep '\.' $MALLOC_STATS > $TMPDIR/scinew_malloc_stats
+echo "Checking $TEST for new memory leaks"
+grep '\.' $MALLOC_STATS > $TMPDIR/new_malloc_stats
 retval=$?
 
 if [ $retval = "0" ]; then
   echo "***Memory leaks found***"
-  echo "Here are the object allocated with scinew but not deleted."
+  echo "Here are the object allocated with new but not deleted."
   echo
-  cat $TMPDIR/scinew_malloc_stats
+  cat $TMPDIR/new_malloc_stats
   exit 1
 fi
 
 
-echo "Memory leak test passed -- no scinew memory leaks found"
+echo "Memory leak test passed -- no new memory leaks found"
 if [ ! -f $COMPARISON_MALLOC_STATS ]; then
   echo "Storing $MALLOC_STATS in $COMPARISON_MALLOC_STATS"
   cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
