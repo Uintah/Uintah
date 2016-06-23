@@ -1,0 +1,158 @@
+%.......................................................................
+%  Define some latex commands to reduce the length of the equations
+%......................................................................
+\newcommand{\pd}[2]{\ensuremath{\frac{\partial#1}{\partial#2}}  }
+\newcommand{\pbox}[1]{\ensuremath{\parbox[b]{.27\linewidth}{ \scriptsize \textsf {#1}}}  }
+\newcommand{\pboxsmall}[1]{\ensuremath{\parbox[c]{.2\linewidth}{\scriptsize{#1}}}  }
+\newcommand{\graybox}[1]{\psboxit{box .7 setgray fill}{\fbox{#1}} }
+\newcommand{\half}          {\ensuremath{\tiny{\frac{1}{2}}}}
+%
+%.......................................................................
+%  SINGLE MATEERIAL
+%......................................................................
+%..............................
+%  no time superscript
+%..............................                
+\newcommand{\U}             {{\vec{U}}}                    
+\newcommand{\uo}            {\ensuremath{\vec{U}_o}}                  
+\newcommand{\delt}          {\ensuremath{\Delta{t}} }                 
+\newcommand{\delx}          {\ensuremath{\Delta{x}} }                 
+\newcommand{\dely}          {\ensuremath{\Delta{y}} }                 
+\newcommand{\delz}          {\ensuremath{\Delta{z}} }
+\newcommand{\delV}          {\ensuremath{\Delta{V}} }                 
+\newcommand{\rhoo}          {\ensuremath{\rho_o}}
+\newcommand{\rr}            {\ensuremath{\mathbf{r}}   }                     
+\newcommand{\sumarea}       {\ensuremath{\sum_{i=1}^{n}}} 
+\newcommand{\XCC}           {\ensuremath{\frac{\delx}{2}}}
+\newcommand{\YCC}           {\ensuremath{\frac{\dely}{2}}}
+\newcommand{\ZCC}           {\ensuremath{\frac{\delz}{2}}}
+\newcommand{\angler}        {\ensuremath{\langle\mathbf{r}\rangle}   }        
+%
+%..............................
+%  time n quantities
+%..............................
+\newcommand{\un}            {\ensuremath{\vec{U}^{n}}}
+\newcommand{\unc}           {\ensuremath{\vec{U}^{n^{c}}}}               
+\newcommand{\Tnc}           {\ensuremath{T^{n^{c}}}}                     
+\newcommand{\pnc}           {\ensuremath{p^{n^c}} }                      
+\newcommand{\en}            {\ensuremath{e^{n}}}                         
+\newcommand{\mnc}           {\ensuremath{m^{n^{c}}}}                     
+\newcommand{\Vnf}           {\ensuremath{V^{n^{f}}}} 
+\newcommand{\Vn}            {\ensuremath{V^{n}} }                    
+\newcommand{\mnf}           {\ensuremath{m^{n^{f}}}}                
+\newcommand{\unf}           {\ensuremath{\vec{U}^{n^{f}}}}          
+\newcommand{\rhonf}         {\ensuremath{\rho^{n^{f}}}}             
+\newcommand{\rhonc}         {\ensuremath{\rho^{n^{c}}}}             
+\newcommand{\rhoncl}        {\ensuremath{\rho^{n^{c}}_r}}           
+\newcommand{\spvol}         {\ensuremath{ \upsilon^{n^{c}} } }
+\newcommand{\uvelnc}        {\ensuremath{ u^{n^{c}} } }
+\newcommand{\vvelnc}        {\ensuremath{ v^{n^{c}} } }
+\newcommand{\wvelnc}        {\ensuremath{ w^{n^{c}} } }
+\newcommand{\momnc}         {\ensuremath{(m\vec{U})^{n^{c}} } }
+\newcommand{\engnc}         {\ensuremath{E^{n^{c}} } }
+%..............................
+%  n quantities I,J,K
+%..............................
+\newcommand{\unIJK}         {\ensuremath{u^{n}_{i,j,k}}}
+\newcommand{\TnIJK}         {\ensuremath{T^{n}_{i,j,k}}}
+\newcommand{\cvIJK}         {\ensuremath{c_{v_{i,j,k}}}}
+\newcommand{\uncIJK}        {\ensuremath{u^{n^{c}}_{i,j,k}}}
+\newcommand{\vnIJK}         {\ensuremath{v^{n}_{i,j,k}}}
+\newcommand{\VnIJK}         {\ensuremath{V^{n}_{i,j,k}}}
+\newcommand{\vncIJK}        {\ensuremath{v^{n^{c}}_{i,j,k}}}
+\newcommand{\wnIJK}         {\ensuremath{w^{n}_{i,j,k}}}
+\newcommand{\wncIJK}        {\ensuremath{w^{n^{c}}_{i,j,k}}}
+\newcommand{\uijkl}         {\ensuremath{ u^{*^{f}}_{{i,j,k,L}}}}
+\newcommand{\uijkr}         {\ensuremath{ u^{*^{f}}_{{i,j,k,R}}}}
+\newcommand{\vijkt}         {\ensuremath{ v^{*^{f}}_{{i,j,k,T}}}}
+\newcommand{\vijkb}         {\ensuremath{ v^{*^{f}}_{{i,j,k,B}}}}
+\newcommand{\wijkf}         {\ensuremath{ w^{*^{f}}_{{i,j,k,FR}}}}
+\newcommand{\wijkbk}        {\ensuremath{ w^{*^{f}}_{{i,j,k,BK}}}}
+\newcommand{\rhonIJK}       {\ensuremath{\rho^{n}_{i,j,k}}}
+%
+%..............................
+%  n + 1 quantities
+%..............................
+\newcommand{\nadv}          {\text{\tiny{n+1}}}                             
+\newcommand{\unnL}          {\ensuremath{\vec{U}^{\nadv^{L}}}}              
+\newcommand{\unnf}          {\ensuremath{\vec{U}^{\nadv^{{f}}}}}          
+\newcommand{\unnc}          {\ensuremath{\vec{U}^{\nadv^{c}}}}      
+\newcommand{\VnnL}          {\ensuremath{V^{\nadv^{L}}}}
+\newcommand{\uvelstar}      {\ensuremath{ u^{\nadv^{*^{f}}}}  }             
+\newcommand{\vvelstar}      {\ensuremath{ v^{\nadv^{*^{f}}}}  }             
+\newcommand{\wvelstar}      {\ensuremath{ w^{\nadv^{*^{f}}}}  }             
+\newcommand{\TnnL}          {\ensuremath{ T^{\nadv^{L}}}  }
+\newcommand{\Tnnc}          {\ensuremath{ T^{\nadv^{c}}}  }
+\newcommand{\ustar}         {\ensuremath{\vec{U}^{\nadv^{*^{f}}}}}          
+\newcommand{\udummy}        {\ensuremath{\hat{ \vec{U} }^{\nadv^{f}}  } }   
+\newcommand{\pstar}         {\ensuremath{p^{\nadv^{*^{f}}}}}                
+\newcommand{\pnnLc}         {\ensuremath{p^{\nadv^{L^c}}} }                 
+\newcommand{\rhonnc}        {\ensuremath{\rho^{\nadv{^{c}}}}}
+\newcommand{\rhonnL}        {\ensuremath{\rho^{\nadv{^{L}}}}} 
+\newcommand{\rhonnf}        {\ensuremath{\rho^{\nadv{^{f}}}}}          
+\newcommand{\delpc}         {\ensuremath{ \Delta p^{\nadv^{c}}  } }         
+\newcommand{\momnnL}        {\ensuremath{(m\vec{U})^{\nadv^{L}} } }
+\newcommand{\momnnc}        {\ensuremath{(m\vec{U})^{\nadv^{c}} } }
+\newcommand{\massnnc}       {\ensuremath{m^{\nadv^{c}} } }
+\newcommand{\massnnL}       {\ensuremath{m^{\nadv^{L}} } }
+\newcommand{\massnnLf}      {\ensuremath{m^{\nadv^{L}^{f}} } }
+\newcommand{\engnnc}        {\ensuremath{E^{\nadv^{c}} } }
+\newcommand{\engnnL}        {\ensuremath{e^{\nadv^{L}} } }
+\newcommand{\volfracnn}     {\ensuremath{\theta^{\nadv} } }
+\newcommand{\delmomnn}      {\ensuremath{\Delta(m\vec{U})^{\nadv} } }  
+\newcommand{\delengnn}      {\ensuremath{\Delta(mT)^{\nadv} } } 
+\newcommand{\delmassnn}     {\ensuremath{\Delta(m)^{\nadv} } }
+%          
+%..............................
+%  n + 1 quantities, i,j 
+%..............................
+\newcommand{\VnnLIJK}       {\ensuremath{V^{\nadv^{L}}_{i,j,k}}}
+\newcommand{\unnLIJK}       {\ensuremath{u^{\nadv^{L}}_{i,j,k}}}
+\newcommand{\vnnLIJK}       {\ensuremath{v^{\nadv^{L}}_{i,j,k}}}
+\newcommand{\wnnLIJK}       {\ensuremath{w^{\nadv^{L}}_{i,j,k}}}
+\newcommand{\rhonnLIJK}     {\ensuremath{\rho^{\nadv^{L}}_{i,j,k}}}
+\newcommand{\massnnLIJK}     {\ensuremath{m^{\nadv^{L}}_{i,j,k}}}
+\newcommand{\ennLIJK}     {\ensuremath{e^{\nadv^{L}}_{i,j,k}}}
+
+\newcommand{\unnFIJK}       {\ensuremath{u^{\nadv^{*^{f}}}_{i,j,k}}}
+\newcommand{\vnnFIJK}       {\ensuremath{v^{\nadv^{*^{f}}}_{i,j,k}}}
+\newcommand{\wnnFIJK}       {\ensuremath{w^{\nadv^{*^{f}}}_{i,j,k}}}
+
+%
+%......................................................................
+%  MULTIMATEERIAL
+%......................................................................
+\newcommand{\um}            {\ensuremath{\vec{U}_{m}}}                  
+\newcommand{\rhom}          {\ensuremath{\rho_m}}                       
+%
+%..............................
+%  n quantities
+%..............................
+\newcommand{\Vnm}           {\ensuremath{V^{n}_{m}}}                    
+\newcommand{\massnm}        {\ensuremath{m^{n}_{m}}}                    
+\newcommand{\unm}           {\ensuremath{\vec{U}^{n}_{m}}}
+\newcommand{\unLm}          {\ensuremath{\vec{U}^{n^{L}}_{m}}}              
+\newcommand{\Tnm}           {\ensuremath{T^{n}_{m}}}
+\newcommand{\TnLm}          {\ensuremath{T^{n^{L}}_{m}}}                    
+\newcommand{\engnm}         {\ensuremath{e^{n}_{m}}} 
+\newcommand{\rhonm}         {\ensuremath{\rho^{n}_{m}}}
+\newcommand{\momnm}         {\ensuremath{(m\vec{U})^{n}_{m} } }
+%                   
+%..............................
+%  n+1 quantities 
+%..............................
+\newcommand{\unnm}          {\ensuremath{ \vec{U}^{\nadv}_{m}}  }
+\newcommand{\unnLm}         {\ensuremath{\vec{U}^{\nadv^{L}}_{m}}}
+\newcommand{\Tnnm}          {\ensuremath{ T^{\nadv}_{m}}  }
+\newcommand{\TnnLm}         {\ensuremath{T^{\nadv^{L}}_{m}}}
+\newcommand{\alpham}        {\ensuremath{\alpha_m}}                     
+\newcommand{\VnnLm}         {\ensuremath{V^{\nadv^{L}}_{m}}}            
+\newcommand{\rhonnLm}       {\ensuremath{\rho^{\nadv^{L}}_{m}}}
+\newcommand{\ustarm}        {\ensuremath{\vec{U}^{\nadv^{*^{f}}}_{m}}}
+\newcommand{\momnnm}        {\ensuremath{(m\vec{U})^{\nadv}_{m} } }
+\newcommand{\momnnLm}       {\ensuremath{(m\vec{U})^{\nadv^{L}}_{m} } }
+\newcommand{\massnnm}       {\ensuremath{m^{\nadv}_{m} } }
+\newcommand{\massnnLm}      {\ensuremath{m^{\nadv^{L}}_{m} } }
+\newcommand{\engnnLm}       {\ensuremath{(m c_v T)^{\nadv^{L}}_m } }
+\newcommand{\engnnm}        {\ensuremath{(m c_v T)^{\nadv}_m } }           
+%

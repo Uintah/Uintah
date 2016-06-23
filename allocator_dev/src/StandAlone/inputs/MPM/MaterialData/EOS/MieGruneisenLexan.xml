@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Lexan (Polycarbonate) -->
+<!-- 
+    From: 
+          Steinberg, D.J. Equation of State and Strength Properties of Selected Materials.
+           UCRL-MA-106439: Change 1, Feb. 1996.
+-->
+<Uintah_Include>
+  <equation_of_state type="mie_gruneisen">
+    <C_0> 1933.0   </C_0>
+    <Gamma_0>0.61  </Gamma_0>
+    <S_alpha>3.49  </S_alpha>
+    <S_2>   -8.2   </S_2>
+    <S_3>    9.6   </S_3>
+    <!-- <b>  0.0 </b> -->
+  </equation_of_state>
+</Uintah_Include>
