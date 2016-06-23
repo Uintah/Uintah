@@ -34,6 +34,9 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
+
+#include <sci_defs/visit_defs.h>
+
 #include <sys/stat.h>
 #include <dirent.h>
 #include <iostream>
@@ -48,7 +51,7 @@ using namespace std;
 //  setenv SCI_DEBUG "VORTICITY_DBG_COUT:+" 
 static DebugStream cout_doing("VORTICITY_DOING_COUT", false);
 static DebugStream cout_dbg("VORTICITY_DBG_COUT", false);
-//______________________________________________________________________              
+//______________________________________________________________________
 vorticity::vorticity(ProblemSpecP& module_spec,
                      SimulationStateP& sharedState,
                      Output* dataArchiver)
@@ -60,6 +63,8 @@ vorticity::vorticity(ProblemSpecP& module_spec,
   d_matl_set = 0;
   v_lb = scinew vorticityLabel();
   I_lb  = scinew ICELabel();
+
+  required = false;
 }
 
 //__________________________________
@@ -98,13 +103,18 @@ void vorticity::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set->addAll(m);
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
+
+#ifdef HAVE_VISIT
+  if( sharedState->getVisIt() ) {
+    required = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
 void vorticity::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level)
 {
-  return;  // do nothing
 }
 
 void vorticity::initialize(const ProcessorGroup*, 
@@ -131,6 +141,14 @@ void vorticity::scheduleDoAnalysis(SchedulerP& sched,
   
   t->requires(Task::NewDW, I_lb->vel_CCLabel, d_matl_sub, gac,1);
   t->computes(v_lb->vorticityLabel, d_matl_sub);
+
+#ifdef HAVE_VISIT
+  if( required )
+  {
+    Ghost::GhostType  gn = Ghost::None;
+    t->requires(Task::OldDW, v_lb->vorticityLabel, d_matl_sub, gn, 0);
+  }
+#endif    
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -152,7 +170,7 @@ void vorticity::doAnalysis(const ProcessorGroup* pg,
                << "Doing doAnalysis (vorticity)\t\t\t\tL-"
                << level->getIndex()
                << " patch " << patch->getGridIndex()<< endl;
-                
+
     Ghost::GhostType gac = Ghost::AroundCells;
     
     CCVariable<Vector> vorticity;
@@ -161,9 +179,9 @@ void vorticity::doAnalysis(const ProcessorGroup* pg,
     int indx = d_matl->getDWIndex();
     new_dw->get(vel_CC,               I_lb->vel_CCLabel,    indx,patch,gac, 1);
     new_dw->allocateAndPut(vorticity, v_lb->vorticityLabel, indx,patch);
-    
+  
     vorticity.initialize(Vector(0.0));
-    
+
     //__________________________________
     // cell spacing
     Vector dx = patch->dCell();

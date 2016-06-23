@@ -303,35 +303,30 @@ visit_handle visit_SimGetMetaData(void *cbdata)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 3);
-//          AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3);
               }
               // 9 -> tensor 
               else if (vartype.find("Matrix3") != std::string::npos)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_TENSOR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 9);
-//          AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9);
               }
               // 7 -> vector
               else if (vartype.find("Stencil7") != std::string::npos)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 7);
-//          AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 7);
               }
               // 4 -> vector
               else if (vartype.find("Stencil4") != std::string::npos)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 4);
-//          AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 4);
               }
               // scalar
               else 
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 1);
-//          AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
               }
 
               VisIt_SimulationMetaData_addVariable(md, vmd);

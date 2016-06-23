@@ -98,7 +98,7 @@ WARNING
     //__________________________________
     //  container to hold
     struct Qstats{
-      std::string  name;
+//      std::string  name;
       bool computeRstess;
       int matl;
       VarLabel* Q_Label;
@@ -145,6 +145,7 @@ WARNING
       }
 
       void print(){
+	const std::string name = Q_Label->getName();
         std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
       };
       
@@ -155,7 +156,7 @@ WARNING
     bool d_isReynoldsStressInitialized; // have the sum label been initialized for the RS terms
     bool d_computeReynoldsStress;       // on/off switch
     int  d_RS_matl;                     // material index used for Reynolds Shear Stress variables
-    VarLabel* d_velPrimeLabel;          // u'v', v'w', w'u'
+    VarLabel* d_velPrime_Label;         // u'v', v'w', w'u'
     VarLabel* d_velSum_Label;           // sum(u'v'), sum(v'w'), sum(w'u')              over timesteps
     VarLabel* d_velMean_Label;          // sum(u'v')/N, sum(v'w')/N, sum(w'u')/N        over timesteps where N = number of timesteps
 
@@ -243,9 +244,8 @@ WARNING
     MaterialSet* d_matlSet;
     const MaterialSubset* d_matSubSet;
 
+    bool required;
   };
-
-
 }
 
 #endif

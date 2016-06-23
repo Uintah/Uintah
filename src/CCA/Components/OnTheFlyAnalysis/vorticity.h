@@ -126,6 +126,8 @@ WARNING
     const Material* d_matl;
     MaterialSet* d_matl_set;
     const MaterialSubset* d_matl_sub;
+
+    bool required;
   };
 }
 

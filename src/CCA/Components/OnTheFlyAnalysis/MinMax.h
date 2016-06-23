@@ -140,7 +140,15 @@ GENERAL INFORMATION
     double d_startTime;
     double d_stopTime;
     
-    std::vector<SimulationState::analysisVar> d_analyzeVars;
+    struct varProperties {
+      VarLabel* label;
+      VarLabel* reductionMinLabel;
+      VarLabel* reductionMaxLabel;
+      int matl;
+      int level;
+    };
+     
+    std::vector<varProperties> d_analyzeVars;
     
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
