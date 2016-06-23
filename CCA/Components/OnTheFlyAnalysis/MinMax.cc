@@ -78,8 +78,8 @@ MinMax::MinMax(ProblemSpecP& module_spec,
   d_sharedState = sharedState;
   d_prob_spec = module_spec;
   d_dataArchiver = dataArchiver;
-  d_matl_set = 0;
-  d_zero_matl = 0;
+  d_matl_set = nullptr;
+  d_zero_matl = nullptr;
   d_lb = scinew MinMaxLabel();
 }
 
@@ -265,18 +265,24 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
       meMin = VarLabel::create( VLmin, minvec_vartype::getTypeDescription() );
     }    
 
-    SimulationState::analysisVar me;
-    me.analysisType = SimulationState::MinMax;
+    varProperties me;
     me.label = label;
     me.matl  = matl;
     me.level = level;
     me.reductionMaxLabel = meMax;
     me.reductionMinLabel = meMin;
-    
     d_analyzeVars.push_back(me);
+  
 #ifdef HAVE_VISIT
     if( sharedState->getVisIt() ) {
-      d_sharedState->d_analysisVars.push_back(me);
+      SimulationState::analysisVar aVar;
+      aVar.name = label->getName();
+      aVar.matl  = matl;
+      aVar.level = level;
+      aVar.labels.push_back( meMin );
+      aVar.labels.push_back( meMax );
+    
+      d_sharedState->d_analysisVars.push_back(aVar);
     }
 #endif
   }

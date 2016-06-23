@@ -31,13 +31,15 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/SimulationController/SimulationController.h>
-#include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 
 #include <Core/Grid/Material.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
 
+#include <CCA/Ports/Output.h>
+
 #define ALL_LEVELS 99
+#define FINEST_LEVEL -1 
 
 static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 
@@ -165,78 +167,122 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
     int numLevels = gridP->numLevels();
     
     VisItUI_setValueS( "MinMaxVariableGroupBox", "SHOW_WIDGET", 1);
-    
+
+    unsigned int row = 0;
+
     for( unsigned int i=0; i<analysisVars.size(); ++i )
     {
-      if( analysisVars[i].analysisType == SimulationState::MinMax )
-      {
-        SimulationState::analysisVar minMaxVar = analysisVars[i];
+      SimulationState::analysisVar analysisVar = analysisVars[i];
       
-        double varMin = 0, varMax = 0;
+      double varMin = 0, varMax = 0, varSum = 0;
         
-        // Set level info
-        for (int l=0; l<numLevels; ++l)
-        {
-          if( minMaxVar.level != ALL_LEVELS &&
-              minMaxVar.level != l )
-            continue;
-          
+      // Set level info
+      for (int l=0; l<numLevels; ++l)
+      {
+	if( (analysisVar.level == ALL_LEVELS) ||
+	    (analysisVar.level == FINEST_LEVEL && analysisVar.level == numLevels - 1) ||
+	    (analysisVar.level == l) )
+	{
           LevelP levelP = gridP->getLevel(l);
           Level *level = levelP.get_rep();
           
-          std::stringstream name;
-          name << "L-" << l << "/"
-               << minMaxVar.label->getName()
-               << "/" << minMaxVar.matl;
-          
-          VisItUI_setTableValueS("MinMaxVariableTable",
-                                 i, 0, name.str().c_str(), 0);
-          // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
-          // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
-          
-          // double
-          if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
-              TypeDescription::double_type )
-          {
-            min_vartype var_min;
-            max_vartype var_max;
-            
-            dw->get(var_min, minMaxVar.reductionMinLabel, level );
-            dw->get(var_max, minMaxVar.reductionMaxLabel, level );
-            varMin = var_min;
-            varMax = var_max;
-            
-            VisItUI_setTableValueD("MinMaxVariableTable", i, 1, varMin,  0);
-            VisItUI_setTableValueD("MinMaxVariableTable", i, 2, varMax,  0);
-          }
+          VisItUI_setTableValueS("AnalysisVariableTable", row, 0, analysisVar.name.c_str(), 0);
+          VisItUI_setTableValueI("AnalysisVariableTable", row, 1, analysisVar.matl, 0);
+	  VisItUI_setTableValueI("AnalysisVariableTable", row, 2, l, 0);
 
-          // Vector
-          else if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
+	  for( unsigned int j=0; j<analysisVar.labels.size(); ++j )
+	  {
+	    const VarLabel* label = analysisVar.labels[j];
+	    
+	    if( label->typeDescription()->isReductionVariable() )
+	    {
+	      ReductionVariableBase* var =
+		dynamic_cast<ReductionVariableBase*>( label->typeDescription()->createInstance() );
+	    
+	      int sendcount;
+	      MPI_Datatype senddatatype = MPI_DATATYPE_NULL;
+	      MPI_Op sendop = MPI_OP_NULL;
+	      var->getMPIInfo( sendcount, senddatatype, sendop );
+
+	      if( sendop == MPI_MIN )
+	      {
+		VisItUI_setTableValueS("AnalysisVariableTable", row, 3+j*2, "Min", 0);
+		
+	  	if( label->typeDescription()->getSubType()->getType() ==
+	  	    TypeDescription::double_type )
+	  	{
+	  	  min_vartype var_min;            
+	  	  dw->get(var_min, label, level );
+	  	  varMin = var_min;
+            
+	  	  VisItUI_setTableValueD("AnalysisVariableTable", row, 4+j*2, varMin, 0);
+	  	}
+	  	else if( label->typeDescription()->getSubType()->getType() ==
                    TypeDescription::Vector )
-          {
-            minvec_vartype var_min;
-            maxvec_vartype var_max;
-            
-            dw->get(var_min, minMaxVar.reductionMinLabel, level );
-            dw->get(var_max, minMaxVar.reductionMaxLabel, level );
-          
-            varMin = ((Vector) var_min).length();
-            varMax = ((Vector) var_max).length();
+	  	{
+	  	  minvec_vartype var_min;		  
+	  	  dw->get(var_min, label, level );
+	  	  varMin = ((Vector) var_min).length();
+		  
+	  	  VisItUI_setTableValueV("AnalysisVariableTable", row, 4+j*2,
+	  				 ((Vector) var_min).x(),
+	  				 ((Vector) var_min).y(),
+	  				 ((Vector) var_min).z(), 0);    
+	  	}
 
-            VisItUI_setTableValueV("MinMaxVariableTable", i, 1,
-                                   ((Vector) var_min).x(),
-                                   ((Vector) var_min).y(),
-                                   ((Vector) var_min).z(), 0);
-            VisItUI_setTableValueV("MinMaxVariableTable", i, 2,
-                                   ((Vector) var_max).x(),
-                                   ((Vector) var_max).y(),
-                                   ((Vector) var_max).z(), 0);    
-          }
-        
-          visit_SetStripChartValue( sim, name.str(), varMin );
-          visit_SetStripChartValue( sim, name.str()+"_Min", varMin );
-          visit_SetStripChartValue( sim, name.str()+"_Max", varMax );
+	  	visit_SetStripChartValue( sim, analysisVar.name, varMin );
+	  	visit_SetStripChartValue( sim, analysisVar.name+"_Min", varMin );
+	      }
+	      else if( sendop == MPI_MAX )
+	      {
+		VisItUI_setTableValueS("AnalysisVariableTable", row, 3+j*2, "Max", 0);
+		
+	  	if( label->typeDescription()->getSubType()->getType() ==
+	  	    TypeDescription::double_type )
+	  	{
+	  	  max_vartype var_max;
+	  	  dw->get(var_max, label, level );
+	  	  varMax = var_max;
+            
+	  	  VisItUI_setTableValueD("AnalysisVariableTable", row, 4+j*2, varMax, 0);
+	  	}
+	  	else if( label->typeDescription()->getSubType()->getType() ==
+                   TypeDescription::Vector )
+	  	{
+	  	  maxvec_vartype var_max;
+	  	  dw->get(var_max, label, level );
+	  	  varMax = ((Vector) var_max).length();
+		  
+	  	  VisItUI_setTableValueV("AnalysisVariableTable", row, 4+j*2,
+	  				 ((Vector) var_max).x(),
+	  				 ((Vector) var_max).y(),
+	  				 ((Vector) var_max).z(), 0);    
+	  	}
+
+	  	visit_SetStripChartValue( sim, analysisVar.name+"_Max", varMax );
+	      }
+	      else if( sendop == MPI_SUM )
+	      {
+		VisItUI_setTableValueS("AnalysisVariableTable", row, 3+j*2, "Sum", 0);
+		
+	  	if( label->typeDescription()->getSubType()->getType() ==
+	  	    TypeDescription::double_type )
+	  	{
+	  	  sum_vartype var_sum;
+	  	  dw->get(var_sum, label, level );
+	  	  varSum = var_sum;
+            
+	  	  VisItUI_setTableValueD("AnalysisVariableTable", row, 4+j*2, varSum, 0);
+	  	}
+
+	  	visit_SetStripChartValue( sim, analysisVar.name, varSum );
+	  	visit_SetStripChartValue( sim, analysisVar.name+"_Sum", varSum );
+	      }
+	    }
+	  }
         }
+
+	++row;
       }
     }
   }

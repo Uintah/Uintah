@@ -34,6 +34,8 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <sys/stat.h>
 #include <dirent.h>
 #include <iostream>
@@ -49,7 +51,7 @@ using namespace std;
 //  setenv SCI_DEBUG "FLATPLATE_HEATFLUX_DBG_COUT:+" 
 static DebugStream cout_doing("FLATPLATE_HEATFLUX_DOING_COUT", false);
 static DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
-//______________________________________________________________________              
+//______________________________________________________________________
 flatPlate_heatFlux::flatPlate_heatFlux(ProblemSpecP& module_spec,
                                        SimulationStateP& sharedState,
                                        Output* dataArchiver)
@@ -58,7 +60,9 @@ flatPlate_heatFlux::flatPlate_heatFlux(ProblemSpecP& module_spec,
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
-  d_matl_set = 0;
+  d_matl = nullptr;
+  d_matl_set = nullptr;
+  d_matl_sub = nullptr;
   v_lb = scinew total_heatRateLabel();
   M_lb = scinew MPMLabel();
 }
@@ -94,7 +98,8 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("flatPlate_heatFlux:couldn't get output port", __FILE__, __LINE__);
   }
   
-  v_lb->total_heatRateLabel = VarLabel::create("total_heatRate",  sum_vartype::getTypeDescription());
+  v_lb->total_heatRateLabel =
+    VarLabel::create("total_heatRate", sum_vartype::getTypeDescription());
 
   // determine which material index to compute
   d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
@@ -189,6 +194,17 @@ void flatPlate_heatFlux::problemSetup(const ProblemSpecP& prob_spec,
   p->endPt   = end;
   d_plane.push_back(p);
   
+#ifdef HAVE_VISIT
+  if( sharedState->getVisIt() ) {
+    SimulationState::analysisVar aVar;
+    aVar.name = M_lb->gHeatFluxLabel->getName();
+    aVar.matl  = d_matl->getDWIndex();
+    aVar.level = -1;
+    aVar.labels.push_back( v_lb->total_heatRateLabel );
+    
+    d_sharedState->d_analysisVars.push_back(aVar);
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -212,7 +228,7 @@ void flatPlate_heatFlux::restartInitialize()
 
 //______________________________________________________________________
 void flatPlate_heatFlux::scheduleDoAnalysis(SchedulerP& sched,
-                                   const LevelP& level)
+					    const LevelP& level)
 {
   cout_doing << "flatPlate_heatFlux::scheduleDoAnalysis " << endl;
   Task* t = scinew Task("flatPlate_heatFlux::doAnalysis", 

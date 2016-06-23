@@ -382,7 +382,7 @@
        </column>
       </widget>
      </widget>
-     <widget class="QGroupBox" name="MinMaxVariableGroupBox">
+     <widget class="QGroupBox" name="AnalysisVariableGroupBox">
       <property name="geometry">
        <rect>
         <x>260</x>
@@ -392,9 +392,9 @@
        </rect>
       </property>
       <property name="title">
-       <string>Min/Max Variables</string>
+       <string>Analysis Variables</string>
       </property>
-      <widget class="QTableWidget" name="MinMaxVariableTable">
+      <widget class="QTableWidget" name="AnalysisVariableTable">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -410,12 +410,12 @@
        </column>
        <column>
         <property name="text">
-         <string>Min</string>
+         <string>Material</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>Max</string>
+         <string>Level</string>
         </property>
        </column>
       </widget>

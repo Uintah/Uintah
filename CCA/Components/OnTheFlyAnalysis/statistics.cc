@@ -32,6 +32,9 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
+
+#include <sci_defs/visit_defs.h>
+
 #include <iostream>
 #include <cstdio>
 #include <iomanip>
@@ -67,6 +70,7 @@ statistics::statistics(ProblemSpecP& module_spec,
   d_RS_matl     = -9;
   d_computeReynoldsStress = false;
 
+  required = false;
 }
 
 //__________________________________
@@ -83,7 +87,7 @@ statistics::~statistics()
     VarLabel::destroy( Q.Qsum_Label );
     VarLabel::destroy( Q.Qsum2_Label );
     VarLabel::destroy( Q.Qmean_Label );
-    VarLabel::destroy( Q.Qmean_Label );
+    VarLabel::destroy( Q.Qmean2_Label );
     VarLabel::destroy( Q.Qvariance_Label );
 
     if( d_doHigherOrderStats ){
@@ -95,7 +99,7 @@ statistics::~statistics()
   }
 
   if ( d_computeReynoldsStress ){
-    VarLabel::destroy( d_velPrimeLabel );
+    VarLabel::destroy( d_velPrime_Label );
     VarLabel::destroy( d_velSum_Label  );
     VarLabel::destroy( d_velMean_Label  );
   }
@@ -223,7 +227,6 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     //__________________________________
     // create the labels for this variable
     Qstats Q;
-    Q.name    = name;
     Q.matl    = matl;
     Q.Q_Label = label;
     Q.subtype = subtype;
@@ -295,7 +298,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   //  computeReynoldsStress with this Var?
   if ( d_computeReynoldsStress){
     const TypeDescription* td = CCVariable<Vector>::getTypeDescription();
-    d_velPrimeLabel  = VarLabel::create( "uv_vw_wu_prime", td);
+    d_velPrime_Label = VarLabel::create( "uv_vw_wu_prime", td);
     d_velSum_Label   = VarLabel::create( "sum_uv_vw_wu",   td);
     d_velMean_Label  = VarLabel::create( "mean_uv_vw_wu",  td);
   }
@@ -310,11 +313,10 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats& Q = d_Qstats[i];
-      const string name = Q.name;
       int timestep;
-      st_ps->require( name.c_str(), timestep  );
+      st_ps->require( Q.Q_Label->getName().c_str(), timestep  );
       Q.setStart(timestep);
-      proc0cout <<  "         " << name << "\t\t startTimestep: " << timestep << endl;                   
+      proc0cout <<  "         " << Q.Q_Label->getName() << "\t\t startTimestep: " << timestep << endl;                   
       
     }
   }
@@ -333,6 +335,11 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   d_matSubSet = d_matlSet->getUnion();
   proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
   
+#ifdef HAVE_VISIT
+  if( sharedState->getVisIt() ) {
+    required = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -451,14 +458,14 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
       t->computes ( Q.Qsum_Label );
       t->computes ( Q.Qsum2_Label );
       addTask = true;
-      proc0cout << "    Statistics: Adding lowOrder computes for " << Q.name << endl;
+      proc0cout << "    Statistics: Adding lowOrder computes for " << Q.Q_Label->getName() << endl;
     }
 
     if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
       t->computes ( Q.Qsum3_Label );
       t->computes ( Q.Qsum4_Label );
       addTask = true;
-      proc0cout << "    Statistics: Adding highOrder computes for " << Q.name << endl;
+      proc0cout << "    Statistics: Adding highOrder computes for " << Q.Q_Label->getName() << endl;
     }
   }
 
@@ -545,8 +552,7 @@ void statistics::outputProblemSpec( ProblemSpecP& root_ps)
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     Qstats Q = d_Qstats[i];
-    const string name = Q.name;
-    st_ps->appendElement( name.c_str(), Q.getStart() );
+    st_ps->appendElement( Q.Q_Label->getName().c_str(), Q.getStart() );
   }
 }
 
@@ -575,6 +581,15 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     t->requires( Task::OldDW, Q.Qsum_Label,  matSubSet, gn, 0 );
     t->requires( Task::OldDW, Q.Qsum2_Label, matSubSet, gn, 0 );
 
+#ifdef HAVE_VISIT
+    if( required )
+    {
+      t->requires( Task::OldDW, Q.Qmean_Label,  matSubSet, gn, 0 );
+      t->requires( Task::OldDW, Q.Qmean2_Label, matSubSet, gn, 0 );
+      t->requires( Task::OldDW, Q.Qvariance_Label, matSubSet, gn, 0 );
+    }
+#endif
+    
     t->computes ( Q.Qsum_Label,       matSubSet );
     t->computes ( Q.Qsum2_Label,      matSubSet );
     t->computes ( Q.Qmean_Label,      matSubSet );
@@ -587,6 +602,16 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
 
       t->requires( Task::OldDW, Q.Qsum3_Label, matSubSet, gn, 0 );
       t->requires( Task::OldDW, Q.Qsum4_Label, matSubSet, gn, 0 );
+
+#ifdef HAVE_VISIT
+      if( required )
+      {
+	t->requires( Task::OldDW, Q.Qmean3_Label,  matSubSet, gn, 0 );
+	t->requires( Task::OldDW, Q.Qmean4_Label, matSubSet, gn, 0 );
+	t->requires( Task::OldDW, Q.Qskewness_Label, matSubSet, gn, 0 );
+	t->requires( Task::OldDW, Q.Qkurtosis_Label, matSubSet, gn, 0 );
+      }
+#endif
 
       t->computes ( Q.Qsum3_Label,     matSubSet );
       t->computes ( Q.Qsum4_Label,     matSubSet );
@@ -609,7 +634,16 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     matSubSet->addReference();
 
     t->requires( Task::OldDW, d_velSum_Label,  matSubSet, gn, 0 );
-    t->computes ( d_velPrimeLabel,   matSubSet );
+
+#ifdef HAVE_VISIT
+    if( required )
+    {
+      t->requires( Task::OldDW, d_velPrime_Label, matSubSet, gn, 0 );
+      t->requires( Task::OldDW, d_velMean_Label,  matSubSet, gn, 0 );
+    }
+#endif
+
+    t->computes ( d_velPrime_Label,  matSubSet );
     t->computes ( d_velSum_Label,    matSubSet );
     t->computes ( d_velMean_Label,   matSubSet );
     if(matSubSet && matSubSet->removeReference()){
@@ -744,7 +778,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
     //__________________________________
     //  debugging
     if ( c == d_monitorCell ){
-      cout << "  stats:  " << d_monitorCell <<  setw(10)<< Q.name << " nTimestep: " << nTimesteps
+      cout << "  stats:  " << d_monitorCell <<  setw(10)<< Q.Q_Label->getName() << " nTimestep: " << nTimesteps
            <<"\t topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
            << " d_startTimestep: " << d_startTimeTimestep
            <<"\t Q_var: " << me
@@ -823,9 +857,9 @@ void statistics::computeReynoldsStressWrapper( DataWarehouse* old_dw,
     matSubSet->add( Q.matl );
     matSubSet->addReference();
 
-    new_dw->transferFrom(    old_dw, d_velSum_Label,  patches, matSubSet  );
-    allocateAndZero<Vector>( new_dw, d_velPrimeLabel, d_RS_matl, patch );
-    allocateAndZero<Vector>( new_dw, d_velMean_Label, d_RS_matl, patch );
+    new_dw->transferFrom(    old_dw, d_velSum_Label,   patches, matSubSet );
+    allocateAndZero<Vector>( new_dw, d_velPrime_Label, d_RS_matl, patch );
+    allocateAndZero<Vector>( new_dw, d_velMean_Label,  d_RS_matl, patch );
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
@@ -863,7 +897,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
 
   new_dw->allocateAndPut( Qsum,      d_velSum_Label,    matl, patch );
   new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
-  new_dw->allocateAndPut( uv_vw_wu,  d_velPrimeLabel,   matl, patch );
+  new_dw->allocateAndPut( uv_vw_wu,  d_velPrime_Label,  matl, patch );
   
   int ts = d_sharedState->getCurrentTopLevelTimeStep();
   
@@ -894,7 +928,7 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
       cout << "  ReynoldsStress stats:  \n \t \t"<< d_monitorCell << " nTimestep: " << nTimesteps.x()
            <<  " topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
            << " d_startTimeTimestepReynoldsStress: " << d_startTimeTimestepReynoldsStress
-           <<"\n \t \t"<<Q.name<< ": " << vel[c]<< " vel_CC_mean: " << vel_mean[c]
+           <<"\n \t \t"<<Q.Q_Label->getName()<< ": " << vel[c]<< " vel_CC_mean: " << vel_mean[c]
            <<"\n \t \tuv_vw_wu: " << me << ",  uv_vw_wu_sum: " << Qsum[c]<< ",  uv_vw_wu_mean: " << Qmean[c]
            <<"\n \t \tuv_vw_wu_prime: " <<  uv_vw_wu[c] << endl;
     }
@@ -931,13 +965,13 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
   if ( !Q.isInitialized[lowOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
-//    proc0cout << "    Statistics: " << Q.name << " initializing low order sums on patch: " << patch->getID()<<endl;
+//    proc0cout << "    Statistics: " << Q.Q_Label->getName() << " initializing low order sums on patch: " << patch->getID()<<endl;
   }
 
   if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
-//    proc0cout << "    Statistics: " << Q.name << " initializing high order sums on patch: " << patch->getID() << endl;
+//    proc0cout << "    Statistics: " << Q.Q_Label->getName() << " initializing high order sums on patch: " << patch->getID() << endl;
   }
 }
 
