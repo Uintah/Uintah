@@ -3351,9 +3351,24 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         
   esac
   
-  if test ! "$HAVE_MPI"; then
-     echo
-     SCI_MSG_ERROR(one or more of the MPI components is missing.)
+  ########################################################################
+  ## Verify that MPI uses const correctly.. Mira check.
+  AC_MSG_CHECKING(if MPI uses const correctly)
+  cat > mpi_const_test.cc << EOF
+#include <mpi.h>
+inline int Add_error_string( int errorcode , const char *string )
+{
+  return MPI_Add_error_string( errorcode , string );
+}
+EOF
+
+  $CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
+  if test $? != 0; then
+     DEF_MPI_CONST_WORKS="#define MPICONST "
+     AC_MSG_RESULT(no)
+  else
+     DEF_MPI_CONST_WORKS="#define MPICONST const"
+     AC_MSG_RESULT(yes)
   fi
 
   MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
