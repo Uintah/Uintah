@@ -149,27 +149,6 @@ private:
       double ay = Dx.z() * Dx.x();
       double az = Dx.x() * Dx.y();
 
-#ifdef UINTAH_ENABLE_KOKKOS
-      KokkosView3<double> k_phi = phi.getKokkosView();
-      KokkosView3<double> k_rhs = rhs.getKokkosView();
-      KokkosView3<const double> k_old_phi = old_phi.getKokkosView();
-      KokkosView3<const double> k_flux_x = x_flux.getKokkosView();
-      KokkosView3<const double> k_flux_y = y_flux.getKokkosView();
-      KokkosView3<const double> k_flux_z = z_flux.getKokkosView();
-
-      //time update:
-      Uintah::parallel_for( range, [&](int i, int j, int k){
-
-        //add in the convective term
-        k_rhs(i,j,k) = k_rhs(i,j,k) - ( ax * ( k_flux_x(i+1,j,k) - k_flux_x(i,j,k) ) +
-                                        ay * ( k_flux_y(i,j+1,k) - k_flux_y(i,j,k) ) +
-                                        az * ( k_flux_z(i,j,k+1) - k_flux_z(i,j,k) ) );
-
-        k_phi(i,j,k) = k_old_phi(i,j,k) + dt/V * k_rhs(i,j,k);
-
-      });
-#else
-
 #ifdef DO_TIMINGS
       SpatialOps::TimeLogger timer("kokkos_fe_update.out."+*i);
       timer.start("work");
@@ -182,13 +161,11 @@ private:
         rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                     ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                     az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
-
         phi(i,j,k) = old_phi(i,j,k) + dt/V * rhs(i,j,k);
 
       });
 #ifdef DO_TIMINGS
       timer.stop("work");
-#endif
 #endif
 
     }
