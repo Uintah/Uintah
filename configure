@@ -3324,7 +3324,6 @@ fi
 # Check whether --with-mpi was given.
 if test "${with_mpi+set}" = set; then :
   withval=$with_mpi; with_mpi="$withval"
-   sci_required_mpi=yes
 else
   with_mpi=""
 fi
@@ -31417,6 +31416,7 @@ fi
 ##  --  search for mpi  --------------------------------------------------
 
 sci_required_mpi="yes"
+
 if test "$with_mpi" = "built-in"; then
   HAVE_MPI=yes
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for location of mpi.h (as MPI was specified as built-in)" >&5
@@ -31448,29 +31448,6 @@ $as_echo "WARNING: Found bad mpi.h location of: $mpi_h_dir -- nvcc may have issu
 $as_echo "WARNING: Could not determine location of mpi.h -- nvcc may have issues!" >&6; }
   fi
   rm -rf conftest-uintah-mpi*
-
-  ########################################################################
-  ## Verify that MPI uses const correctly.. Mira check.
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking if MPI uses const correctly" >&5
-$as_echo_n "checking if MPI uses const correctly... " >&6; }
-  cat > mpi_const_test.cc << EOF
-#include <mpi.h>
-inline int Add_error_string( int errorcode , const char *string )
-{
-  return MPI_Add_error_string( errorcode , string );
-}
-EOF
-
-  $CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
-  if test $? != 0; then
-     DEF_MPI_CONST_WORKS="#define MPICONST "
-     { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-  else
-     DEF_MPI_CONST_WORKS="#define MPICONST const"
-     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-  fi
 fi
 
 
@@ -32572,11 +32549,15 @@ $as_echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_li
 
   esac
 
-  ########################################################################
-  ## Verify that MPI uses const correctly.. Mira check.
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking if MPI uses const correctly" >&5
+  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
+  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
+fi #end sci_required_mpi
+
+########################################################################
+## Verify that MPI uses const correctly.. Mira check.
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if MPI uses const correctly" >&5
 $as_echo_n "checking if MPI uses const correctly... " >&6; }
-  cat > mpi_const_test.cc << EOF
+cat > mpi_const_test.cc << EOF
 #include <mpi.h>
 inline int Add_error_string( int errorcode , const char *string )
 {
@@ -32584,20 +32565,16 @@ inline int Add_error_string( int errorcode , const char *string )
 }
 EOF
 
-  $CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
-  if test $? != 0; then
-     DEF_MPI_CONST_WORKS="#define MPICONST "
-     { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
+if test $? != 0; then
+   DEF_MPI_CONST_WORKS="#define MPICONST "
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-  else
-     DEF_MPI_CONST_WORKS="#define MPICONST const"
-     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+else
+   DEF_MPI_CONST_WORKS="#define MPICONST const"
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-  fi
-
-  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
-  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
-fi #end sci_required_mpi
+fi
 
 # FIXME: These two defines need to be tested for and set correctly:
 DEF_MPI_MAX_THREADS="#define MPI_MAX_THREADS 64"
