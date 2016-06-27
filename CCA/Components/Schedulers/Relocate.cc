@@ -28,7 +28,6 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/ProgressiveWarning.h>
-#include <sci_algorithm.h>
 
 #include <map>
 #include <mutex>
@@ -36,7 +35,6 @@
 
 #define RELOCATE_TAG            0x3fff
 
-using namespace std;
 using namespace Uintah;
 
 
@@ -90,8 +88,8 @@ namespace Uintah {
   };
 
 
-  ostream& operator<<(ostream& out, const ScatterRecord & r){
-    out.setf(ios::scientific,ios::floatfield);
+  std::ostream& operator<<(std::ostream& out, const ScatterRecord & r){
+    out.setf(std::ios::scientific, std::ios::floatfield);
     out.precision(4);
     out << " Scatter Record, matl: " << r.matl
         << " Level: " << r.levelIndex
@@ -99,12 +97,12 @@ namespace Uintah {
         << " (Particle moving from Patch " << r.fromPatch->getID() 
         << ", to Patch " <<  r.toPatch->getID() << ")"
         << " vectorToNeighbor " << r.vectorToNeighbor;
-    out.setf(ios::scientific ,ios::floatfield);
+    out.setf(std::ios::scientific, std::ios::floatfield);
     return out;
   }
 
 
-  typedef multimap<pair<const Patch*, int>, ScatterRecord*> maptype;
+  typedef std::multimap<std::pair<const Patch*, int>, ScatterRecord*> maptype;
 
 #if 0 // Not used???
   struct CompareScatterRecord {
@@ -127,14 +125,14 @@ namespace Uintah {
   };
 #endif
 
-  typedef vector<const Patch*> patchestype;
+  typedef std::vector<const Patch*> patchestype;
 
   struct MPIScatterProcessorRecord {
     patchestype patches;
     void sortPatches();
   };
 
-  typedef map<int, MPIScatterProcessorRecord*> procmaptype;
+  typedef std::map<int, MPIScatterProcessorRecord*> procmaptype;
 
 
   struct MPIRecvBuffer {
@@ -147,7 +145,7 @@ namespace Uintah {
     {
     }
   };
-  typedef map<pair<const Patch*, int>, MPIRecvBuffer*> recvmaptype;
+  typedef std::map<std::pair<const Patch*, int>, MPIRecvBuffer*> recvmaptype;
 
   class MPIScatterRecords {
   public:
@@ -179,7 +177,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
                                      LoadBalancer* lb,
                                      const LevelP& coarsestLevelwithParticles,
                                      const VarLabel* posLabel,
-                                     const vector<vector<const VarLabel*> >& otherLabels,
+                                     const std::vector<std::vector<const VarLabel*> >& otherLabels,
                                      const MaterialSet* matls)
 {
   //In this version of the relocation algorithm, the user provides a list of varlabels that require
@@ -193,10 +191,10 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   destroyMe_.push_back(posPostRelocLabel);
   
   // create a vector of post relocation variables
-  vector<vector<const VarLabel*> > postRelocOtherLabels;
+  std::vector<std::vector<const VarLabel*> > postRelocOtherLabels;
   // fill the list of post relocation variables
   for (size_t m = 0; m < otherLabels.size(); m++) {
-    vector<const VarLabel*> tmp;
+    std::vector<const VarLabel*> tmp;
     postRelocOtherLabels.push_back(tmp);
     for (size_t p = 0; p < otherLabels[m].size(); p++) {
       const VarLabel* pVarLabel = otherLabels[m][p];
@@ -300,9 +298,9 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
                                      LoadBalancer* lb,
                                      const LevelP& coarsestLevelwithParticles,
                                      const VarLabel* old_posLabel,
-                                     const vector<vector<const VarLabel*> >& old_labels,
+                                     const std::vector<std::vector<const VarLabel*> >& old_labels,
                                      const VarLabel* new_posLabel,
-                                     const vector<vector<const VarLabel*> >& new_labels,
+                                     const std::vector<std::vector<const VarLabel*> >& new_labels,
                                      const VarLabel* particleIDLabel,
                                      const MaterialSet* matls)
 {
@@ -387,8 +385,11 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 }
 //______________________________________________________________________
 //
-void MPIScatterRecords::saveRecv(const Patch* to, int matl,
-                                 char* databuf, int datasize, int numParticles)
+void MPIScatterRecords::saveRecv(const Patch* to,
+                                 int matl,
+                                 char* databuf,
+                                 int datasize,
+                                 int numParticles)
 {
   recvmaptype::key_type key(to, matl);
   recvmaptype::iterator iter = recvs.find(key);
@@ -405,7 +406,7 @@ void MPIScatterRecords::saveRecv(const Patch* to, int matl,
 //
 MPIRecvBuffer* MPIScatterRecords::findRecv(const Patch* to, int matl)
 {
-  recvmaptype::iterator iter = recvs.find(make_pair(to, matl));
+  recvmaptype::iterator iter = recvs.find(std::make_pair(to, matl));
   if(iter == recvs.end()){
     return 0;
   }else{
@@ -424,7 +425,7 @@ ScatterRecord* MPIScatterRecords::findOrInsertRecord(const Patch* fromPatch,
   IntVector vectorToNeighbor = toPatch->getExtraCellLowIndex() - fromPatch->getExtraCellLowIndex();
   const Patch* realToPatch = toPatch->getRealPatch();
   
-  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realToPatch, matl));
+  std::pair<maptype::iterator, maptype::iterator> pr = records.equal_range(std::make_pair(realToPatch, matl));
   
   //__________________________________
   // loop over all scatter records
@@ -444,7 +445,7 @@ ScatterRecord* MPIScatterRecords::findOrInsertRecord(const Patch* fromPatch,
   //  all records
   ScatterRecord* rec = scinew ScatterRecord(fromPatch, toPatch, matl, curLevelIndex);
   rec->send_pset = scinew ParticleSubset(0, -1, 0);
-  records.insert(maptype::value_type(make_pair(realToPatch, matl), rec));
+  records.insert(maptype::value_type(std::make_pair(realToPatch, matl), rec));
   return rec;
 }
 //______________________________________________________________________
@@ -460,7 +461,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* fromPatch,
   const Patch* realToPatch = toPatch->getRealPatch();
   const Patch* realFromPatch = fromPatch->getRealPatch();
 
-  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realToPatch, matl));
+  std::pair<maptype::iterator, maptype::iterator> pr = records.equal_range(std::make_pair(realToPatch, matl));
   
   //__________________________________
   // loop over all scatter records
@@ -490,7 +491,7 @@ static bool ComparePatches(const Patch* p1, const Patch* p2)
 //
 void MPIScatterProcessorRecord::sortPatches()
 {
-  sort(patches.begin(), patches.end(), ComparePatches);
+  std::sort(patches.begin(), patches.end(), ComparePatches);
 }
 //______________________________________________________________________
 //
@@ -580,7 +581,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     Uintah::MPI::Pack_size(1, MPI_INT, pg->getComm(), &psize);
     int sendsize  = psize; // One for the count of active patches
     int numactive = 0;
-    vector<int> datasizes;
+    std::vector<int> datasizes;
     
     for(patchestype::iterator it = procRecord->patches.begin(); it != procRecord->patches.end(); it++){
       const Patch* toPatch = *it;
@@ -591,8 +592,8 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
         int numVars = (int)reloc_old_labels[m].size();
         int numParticles = 0;
         
-        pair<maptype::iterator, maptype::iterator> pr;
-        pr = scatter_records->records.equal_range(make_pair(toPatch, matl));
+        std::pair<maptype::iterator, maptype::iterator> pr;
+        pr = scatter_records->records.equal_range(std::make_pair(toPatch, matl));
   
         for(;pr.first != pr.second; pr.first++){
           numactive++;
@@ -637,8 +638,8 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
         int matl = matls->get(m);
         int numVars = (int)reloc_old_labels[m].size();
 
-        pair<maptype::iterator, maptype::iterator> pr;
-        pr = scatter_records->records.equal_range(make_pair(toPatch, matl));
+        std::pair<maptype::iterator, maptype::iterator> pr;
+        pr = scatter_records->records.equal_range(std::make_pair(toPatch, matl));
   
         for(;pr.first != pr.second; pr.first++){
           int patchid = toPatch->getID();
@@ -688,9 +689,9 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     MPI_Request rid;
     int to=iter->first;
     
-    mpidbg << pg->myrank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << endl;
+    mpidbg << pg->myrank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << std::endl;
     Uintah::MPI::Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG, pg->getComm(), &rid);
-    mpidbg << pg->myrank() << " done Sending relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << endl;
+    mpidbg << pg->myrank() << " done Sending relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << std::endl;
     
     sendbuffers.push_back(buf);
     sendrequests.push_back(rid);
@@ -721,10 +722,10 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
-    mpidbg << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
+    mpidbg << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << std::endl;
     Uintah::MPI::Recv(recvbuffers[idx], size, MPI_PACKED, iter->first, RELOCATE_TAG, pg->getComm(), &status);
 
-    mpidbg << pg->myrank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
+    mpidbg << pg->myrank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << std::endl;
     // Partially unpack
     int position=0;
     int numrecords;
@@ -765,7 +766,7 @@ void Relocate::finalizeCommunication()
 {
   // Wait to make sure that all of the sends completed
   int numsends = (int)sendrequests.size();
-  vector<MPI_Status> statii(numsends);
+  std::vector<MPI_Status> statii(numsends);
   Uintah::MPI::Waitall(numsends, &sendrequests[0], &statii[0]);
 
   // delete the buffers
@@ -785,7 +786,7 @@ void Relocate::finalizeCommunication()
 }
 //______________________________________________________________________
 //
-const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLevel)
+const Patch* findFinePatch(const Uintah::Point& pos, const Patch* guess, Level* fineLevel)
 {
   if (guess && guess->containsPointInExtraCells(pos)){
     return guess;
@@ -795,7 +796,7 @@ const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLeve
 }
 //______________________________________________________________________
 //
-const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarseLevel)
+const Patch* findCoarsePatch(const Uintah::Point& pos, const Patch* guess, Level* coarseLevel)
 {
   if (guess && guess->containsPointInExtraCells(pos)){
     return guess;
@@ -836,7 +837,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
   
   // put patch neighbors into a std::set this will automatically
   // delete any duplicate patch entries
-  set<const Patch*> neighborSet;
+  std::set<const Patch*> neighborSet;
   
   //__________________________________
   // current level
@@ -896,7 +897,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
 
   //__________________________________
   // put the neighborSet into a selectType variable.
-  for (set<const Patch*>::iterator iter = neighborSet.begin();iter != neighborSet.end();++iter) {
+  for (std::set<const Patch*>::iterator iter = neighborSet.begin();iter != neighborSet.end();++iter) {
     const Patch* neighbor = *iter;
     AllNeighborPatches.push_back(neighbor);
   }
@@ -1091,8 +1092,8 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
         int matl = matls->get(m);
         
         int numVars = (int)reloc_old_labels[m].size();
-        vector<const Patch*> fromPatches;
-        vector<ParticleSubset*> subsets;
+        std::vector<const Patch*> fromPatches;
+        std::vector<ParticleSubset*> subsets;
         
         ParticleSubset* keep_pset = keep_psets(p, m);
         ASSERT(keep_pset != 0);
@@ -1120,7 +1121,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
         MPIRecvBuffer* recvs = scatter_records.findRecv(toPatch, matl);
         
         // create a map for the new particles
-        map<const VarLabel*, ParticleVariableBase*>* newParticles_map = 0;
+        std::map<const VarLabel*, ParticleVariableBase*>* newParticles_map = 0;
         newParticles_map = new_dw->getNewParticleState(matl, toPatch);
         bool adding_new_particles = false;
         
@@ -1183,14 +1184,14 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
           //__________________________________
           // particle position
           // Merge local portion
-          vector<ParticleVariableBase*> invars(subsets.size());
+          std::vector<ParticleVariableBase*> invars(subsets.size());
           for(int i=0;i<(int)numOldVariables;i++){
             invars[i]=new_dw->getParticleVariable(reloc_old_posLabel, matl, fromPatches[i]);
           }
           
           if(newParticles_map){
             // bulletproofing
-            map<const VarLabel*, ParticleVariableBase*>::iterator piter;
+            std::map<const VarLabel*, ParticleVariableBase*>::iterator piter;
             piter = newParticles_map->find(reloc_new_posLabel);
             
             if(piter == newParticles_map->end()){
@@ -1210,7 +1211,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
           
           //__________________________________
           // other particle variables
-          vector<ParticleVariableBase*> vars(numVars);
+          std::vector<ParticleVariableBase*> vars(numVars);
           
           for(int v=0;v<numVars;v++){
             const VarLabel* label = reloc_old_labels[m][v];
@@ -1222,7 +1223,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
             
             if(newParticles_map){
               // bulletproofing
-              map<const VarLabel*, ParticleVariableBase*>::iterator piter;
+              std::map<const VarLabel*, ParticleVariableBase*>::iterator piter;
               piter = newParticles_map->find(reloc_new_labels[m][v]);
               
               if(piter == newParticles_map->end()) {
@@ -1316,7 +1317,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
     if(pg->myrank() == 0){
       ASSERTEQ(alltotal[1], alltotal[2]);
       if(alltotal[0] != 0){
-        cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
+        std::cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << std::endl;
       }
     }
   }
@@ -1538,8 +1539,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         int matl = matls->get(m);
         
         int numVars = (int)reloc_old_labels[m].size();
-        vector<const Patch*> fromPatches;
-        vector<ParticleSubset*> subsets;
+        std::vector<const Patch*> fromPatches;
+        std::vector<ParticleSubset*> subsets;
         
         ParticleSubset* keep_pset = keep_psets(p, m);
         ASSERT(keep_pset != 0);
@@ -1641,7 +1642,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           //__________________________________
           // particle position
           // Merge local portion
-          vector<ParticleVariableBase*> invars(subsets.size());
+          std::vector<ParticleVariableBase*> invars(subsets.size());
           for(int i=0;i<(int)numOldVariables;i++){
             invars[i]=new_dw->getParticleVariable(reloc_old_posLabel, matl, fromPatches[i]);
           }
@@ -1672,7 +1673,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 
           //__________________________________
           // other particle variables
-          vector<ParticleVariableBase*> vars(numVars);
+          std::vector<ParticleVariableBase*> vars(numVars);
           
           for(int v=0;v<numVars;v++){
             const VarLabel* label = reloc_old_labels[m][v];
@@ -1780,7 +1781,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     if(pg->myrank() == 0){
       ASSERTEQ(alltotal[1], alltotal[2]);
       if(alltotal[0] != 0){
-        cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
+        std::cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << std::endl;
       }
     }
   }
