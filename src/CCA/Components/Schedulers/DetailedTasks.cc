@@ -47,7 +47,6 @@
 #include <mutex>
 
 #include <sci_defs/config_defs.h>
-#include <sci_algorithm.h>
 #include <sci_defs/cuda_defs.h>
 
 namespace {
@@ -627,11 +626,11 @@ DetailedTasks::addScrubCount( const VarLabel* var,
     result = scinew ScrubItem(var, matlindex, patch, dw);
     (first ? first->scrubCountTable_ : scrubCountTable_).insert(result);
   }
-  result->count++;
+  result->m_count++;
   if (scrubout.active() && (var->getName() == dbgScrubVar || dbgScrubVar == "")
       && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1)) {
     scrubout << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/" << patch->getID() << "/" << matlindex
-             << "/" << *var << ": " << result->count << std::endl;
+             << "/" << *var << ": " << result->m_count << std::endl;
   }
 }
 
@@ -675,7 +674,7 @@ DetailedTasks::getScrubCount( const VarLabel* label,
   ScrubItem key(label, matlIndex, patch, dw);
   ScrubItem* result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
   if (result) {
-    count = result->count;
+    count = result->m_count;
     return true;
   }
   else {
@@ -737,8 +736,8 @@ DetailedTasks::createScrubCounts()
     scrubout << Parallel::getMPIRank() << " DW/Patch/Matl/Label\tCount\n";
     for (FastHashTableIter<ScrubItem> iter(&(first ? first->scrubCountTable_ : scrubCountTable_)); iter.ok(); ++iter) {
       const ScrubItem* rec = iter.get_key();
-      scrubout << rec->dw << '/' << (rec->patch ? rec->patch->getID() : 0) << '/' << rec->matl << '/' << rec->label->getName()
-               << "\t\t" << rec->count << '\n';
+      scrubout << rec->m_dw << '/' << (rec->m_patch ? rec->m_patch->getID() : 0) << '/' << rec->m_matl << '/' << rec->m_label->getName()
+               << "\t\t" << rec->m_count << '\n';
     }
     scrubout << Parallel::getMPIRank() << " end scrub counts\n";
   }

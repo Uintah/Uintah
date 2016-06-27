@@ -2524,14 +2524,6 @@ EOF
   esac
 AC_SUBST(EXCEPTIONS_CRASH_DEF)
 
-##  --  search for scisock --------------------------------------
-
-AC_SUBST(SCISOCK_LIB_FLAG)
-AC_SUBST(SCISOCK_LIB_DIR_FLAG)
-AC_SUBST(INC_SCISOCK_H)
-
-
-sci_defs_files="$sci_defs_files include/sci_defs/scisock_testdefs.h"
 
 ##  --  search for the fortran library  ----------------------------------
 # Always check for fortran, since we now always try to enable blas
