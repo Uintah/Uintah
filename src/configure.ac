@@ -303,8 +303,7 @@ SCI_ARG_WITH(pokitt,
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
-  [with_mpi="$withval"
-   sci_required_mpi=yes],
+  [with_mpi="$withval"],
   [with_mpi=""])
   
 SCI_ARG_WITH(mpi_lib,
@@ -3123,6 +3122,7 @@ fi
 ##  --  search for mpi  --------------------------------------------------
 
 sci_required_mpi="yes"
+
 if test "$with_mpi" = "built-in"; then
   HAVE_MPI=yes
   AC_MSG_CHECKING(for location of mpi.h (as MPI was specified as built-in))
@@ -3150,26 +3150,6 @@ EOF
     AC_MSG_RESULT(WARNING: Could not determine location of mpi.h -- nvcc may have issues!)
   fi
   rm -rf conftest-uintah-mpi*
-
-  ########################################################################
-  ## Verify that MPI uses const correctly.. Mira check.
-  AC_MSG_CHECKING(if MPI uses const correctly)
-  cat > mpi_const_test.cc << EOF
-#include <mpi.h>
-inline int Add_error_string( int errorcode , const char *string )
-{
-  return MPI_Add_error_string( errorcode , string );
-}
-EOF
-
-  $CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
-  if test $? != 0; then
-     DEF_MPI_CONST_WORKS="#define MPICONST "
-     AC_MSG_RESULT(no)
-  else
-     DEF_MPI_CONST_WORKS="#define MPICONST const"
-     AC_MSG_RESULT(yes)
-  fi
 fi
 
 
@@ -3343,10 +3323,14 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         
   esac
   
-  ########################################################################
-  ## Verify that MPI uses const correctly.. Mira check.
-  AC_MSG_CHECKING(if MPI uses const correctly)
-  cat > mpi_const_test.cc << EOF
+  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
+  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
+fi #end sci_required_mpi
+
+########################################################################
+## Verify that MPI uses const correctly.. Mira check.
+AC_MSG_CHECKING(if MPI uses const correctly)
+cat > mpi_const_test.cc << EOF
 #include <mpi.h>
 inline int Add_error_string( int errorcode , const char *string )
 {
@@ -3354,18 +3338,14 @@ inline int Add_error_string( int errorcode , const char *string )
 }
 EOF
 
-  $CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
-  if test $? != 0; then
-     DEF_MPI_CONST_WORKS="#define MPICONST "
-     AC_MSG_RESULT(no)
-  else
-     DEF_MPI_CONST_WORKS="#define MPICONST const"
-     AC_MSG_RESULT(yes)
-  fi
-
-  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
-  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
-fi #end sci_required_mpi
+$CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
+if test $? != 0; then
+   DEF_MPI_CONST_WORKS="#define MPICONST "
+   AC_MSG_RESULT(no)
+else
+   DEF_MPI_CONST_WORKS="#define MPICONST const"
+   AC_MSG_RESULT(yes)
+fi
 
 # FIXME: These two defines need to be tested for and set correctly:
 DEF_MPI_MAX_THREADS="#define MPI_MAX_THREADS 64"
