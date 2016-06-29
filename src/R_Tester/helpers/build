@@ -49,8 +49,11 @@ if [ "$OS" = "Linux" ]; then
 
     COMMON="       --with-mpi=/usr/installed/openmpi \\
       --with-cuda=/usr/local/cuda-7.5 \\
+      --with-boost=/usr \\
       --enable-gencode=35 \\
-      --enable-ray-scatter\\"
+      --enable-ray-scatter \\
+      --enable-all-components \\
+      --enable-wasatch_3p \\"
 
     ENV="       CC=gcc-4.8 \\
        CXX=g++-4.8 \\
