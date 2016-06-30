@@ -420,7 +420,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     # timer
     test_timer = time() - test_time0
-    print( "Test Timer:",strftime("%H:%M:%S",gmtime(test_timer)) )
+    print( "Test Timer: %s" % strftime("%H:%M:%S",gmtime(test_timer)) )
     
     # If the test passed put an svn revision stamp in the goldstandard
     # user root is running the cronjob
@@ -475,7 +475,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     print( "Some tests failed" )
     
   comp_timer = time() - comp_time0
-  print( "Component Timer:",strftime("%H:%M:%S",gmtime(comp_timer)) )
+  print( "Component Timer: %s" % strftime("%H:%M:%S",gmtime(comp_timer)) )
   return failcode
 
 #______________________________________________________________________
