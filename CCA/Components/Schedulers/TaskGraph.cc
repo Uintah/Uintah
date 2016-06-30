@@ -1302,8 +1302,10 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
                   m_detailed_tasks->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor,
                       task, req, patch,
                       matl, from_l, from_h, DetailedDep::SubsequentIterations);
-                  detaileddbg << m_proc_group->myrank() << "   Adding condition reqs for " << *req->m_var << " task : " << *creator
-                              << "  to " << *task << "\n";
+                  if (detaileddbg.active()) {
+                    detaileddbg << m_proc_group->myrank() << "   Adding condition reqs for " << *req->m_var
+                                << " task : " << *creator << "  to " << *task << "\n";
+                  }
                 }
               }
               m_detailed_tasks->possiblyCreateDependency(creator, comp, fromNeighbor,
@@ -1336,8 +1338,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
           DetailedTask* creator = creators[i];
           if (task->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && task->getAssignedResourceIndex() == me) {
             task->addInternalDependency(creator, req->m_var);
-            detaileddbg << m_proc_group->myrank() << "   Created reduction dependency between " << *task << " and " << *creator
-                        << "\n";
+            if (detaileddbg.active()) {
+              detaileddbg << m_proc_group->myrank() << "   Created reduction dependency between " << *task << " and " << *creator << "\n";
+            }
           }
         }
       }
@@ -1610,7 +1613,9 @@ CompTable::findReductionComps(       Task::Dependency           * req
       if (p->m_comp->m_task->getSortedOrder() > bestSortedOrder) {
         creators.clear();
         bestSortedOrder = p->m_comp->m_task->getSortedOrder();
-        detaileddbg << pg->myrank() << "          New Best Sorted Order: " << bestSortedOrder << "!\n";
+        if (detaileddbg.active()) {
+          detaileddbg << pg->myrank() << "          New Best Sorted Order: " << bestSortedOrder << "!\n";
+        }
       }
       if (detaileddbg.active()) {
         detaileddbg << pg->myrank() << "          Adding comp from: " << p->m_comp->m_task->getName() << ", order="
