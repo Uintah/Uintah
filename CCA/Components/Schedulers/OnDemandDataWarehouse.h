@@ -332,14 +332,13 @@ class OnDemandDataWarehouse : public DataWarehouse {
                            const IntVector& high,
                            bool useBoundaryCells = true);
 
-    virtual void getRegion(GridVariableBase&,
+    virtual void getRegionModifiable(GridVariableBase&,
                            const VarLabel*,
                            int matlIndex,
                            const Level* level,
                            const IntVector& low,
                            const IntVector& high,
-                           bool useBoundaryCells = true,
-                           bool onlyNeedAllocatedSpace = false);
+                           bool useBoundaryCells = true);
 
     virtual void copyOut(GridVariableBase& var,
                          const VarLabel* label,
