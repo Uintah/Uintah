@@ -2352,273 +2352,147 @@ OnDemandDataWarehouse::getRegion(       constGridVariableBase& constVar,
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getRegion(Grid Variable):" + label->getName());
 
   GridVariableBase* var = constVar.cloneType();
-  var->allocate(low, high);
-  Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
-  IntVector adjustment = IntVector(1, 1, 1);
-  if (basis == Patch::XFaceBased) {
-    adjustment = IntVector(1, 0, 0);
-  }
-  else if (basis == Patch::YFaceBased) {
-    adjustment = IntVector(0, 1, 0);
-  }
-  else if (basis == Patch::ZFaceBased) {
-    adjustment = IntVector(0, 0, 1);
-  }
+  getRegionModifiable( *var, label, matlIndex, level, low, high, useBoundaryCells);
 
-  Patch::selectType patches;
-
-  // if in AMR and one node intersects from another patch and that patch is missing
-  // ignore the error instead of throwing an exception
-  // (should only be for node-based vars)
-  std::vector<const Patch*> missing_patches;
-
-  // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
-  // selectPatches doesn't detect
-  IntVector tmpLow(low - adjustment);
-  IntVector tmpHigh(high + adjustment);
-  level->selectPatches(tmpLow, tmpHigh, patches);
-
-  int totalCells = 0;
-  for (int i = 0; i < patches.size(); i++) {
-    const Patch* patch = patches[i];
-    IntVector l, h;
-
-    // the caller should determine whether or not he wants extra cells.
-    // It will matter in AMR cases with corner-aligned patches
-    if (useBoundaryCells) {
-      l = Max(patch->getExtraLowIndex(basis, label->getBoundaryLayer()), low);
-      h = Min(patch->getExtraHighIndex(basis, label->getBoundaryLayer()), high);
-    }
-    else {
-      l = Max(patch->getLowIndex(basis), low);
-      h = Min(patch->getHighIndex(basis), high);
-    }
-
-    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z()) {
-      continue;
-    }
-    std::vector<Variable*> varlist;
-    d_varDB.getlist(label, matlIndex, patch, varlist);
-    GridVariableBase* v = nullptr;
-
-    for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
-      if (rit == varlist.end()) {
-        v = nullptr;
-        break;
-      }
-      v = dynamic_cast<GridVariableBase*>(*rit);
-      //verify that the variable is valid and matches the dependencies requirements.
-      if ((v != nullptr) && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh()) {  //find a completed region
-        break;
-      }
-    }
-
-    // just like a "missing patch": got data on this patch, but it either corresponds to a different
-    // region or is incomplete"
-    if (v == nullptr) {
-      missing_patches.push_back(patch->getRealPatch());
-      continue;
-    }
-
-    GridVariableBase* tmpVar = var->cloneType();
-    tmpVar->copyPointer(*v);
-
-    if (patch->isVirtual()) {
-      // if patch is virtual, it is probably a boundary layer/extra cell that has been requested (from AMR)
-      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
-      tmpVar->offset(patch->getVirtualOffset());
-    }
-    try {
-      var->copyPatch(tmpVar, l, h);
-    }
-    catch (InternalError& e) {
-      std::cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h << " actual patch "
-           << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) << " var range: " << tmpVar->getLow() << " "
-           << tmpVar->getHigh() << std::endl;
-      throw e;
-    }
-    delete tmpVar;
-    IntVector diff(h - l);
-    totalCells += diff.x() * diff.y() * diff.z();
-  }  // patches loop
-
-  IntVector diff(high - low);
-
-#ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
-  //__________________________________
-  //  This is not a valid check on non-cubic domains
-  if (diff.x() * diff.y() * diff.z() > totalCells && missing_patches.size() > 0) {
-    std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-         << ", for patch(es): ";
-
-    for (size_t i = 0; i < missing_patches.size(); i++) {
-      std::cout << *missing_patches[i] << " ";
-    }
-
-    std::cout << std::endl << " Original region: " << low << " " << high << std::endl;
-    std::cout << " copied cells: " << totalCells << " requested cells: " << diff.x() * diff.y() * diff.z() << std::endl;
-    std::cout << "  *** If the computational domain is non-cubic, (L-shaped or necked down)  you can remove this bulletproofing" << std::endl;
-    throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
-  }
-#endif
-  if (dbg.active()) {
-    cerrLock.lock();
-    dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-        << " For region: " << low << " " << high << "  has been gotten" << std::endl;
-    cerrLock.unlock();
-  }
-
-  ASSERT(diff.x() * diff.y() * diff.z() <= totalCells);
-
-  constVar = *dynamic_cast<GridVariableBase*>(var);
+  constVar = *var;
   delete var;
+
+
 }
 
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::getRegion(       GridVariableBase& var,
+OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
                                   const VarLabel*         label,
                                         int               matlIndex,
                                   const Level*            level,
                                   const IntVector&        low,
                                   const IntVector&        high,
-                                        bool              useBoundaryCells, /*=true*/
-                                        bool              onlyNeedAllocatedSpace /*=false*/)
+                                        bool              useBoundaryCells)
 {
-  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getRegion(Grid Variable):" + label->getName());
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getRegionModifiable(Grid Variable):" + label->getName());
 
-  var.allocate(low, high);
-  if (onlyNeedAllocatedSpace) {
-    //For GPU runs needing a D2H transfer.  This allows for the space to be created, but we don't fill it with host side
-    //data, we just leave it as empty space which will be filled by the D2H copy call.
-    return;
-  }
-  Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
+    var.allocate(low, high);
+    Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
-  IntVector adjustment = IntVector(1, 1, 1);
-  if (basis == Patch::XFaceBased) {
-    adjustment = IntVector(1, 0, 0);
-  }
-  else if (basis == Patch::YFaceBased) {
-    adjustment = IntVector(0, 1, 0);
-  }
-  else if (basis == Patch::ZFaceBased) {
-    adjustment = IntVector(0, 0, 1);
-  }
-
-  Patch::selectType patches;
-
-  // if in AMR and one node intersects from another patch and that patch is missing
-  // ignore the error instead of throwing an exception
-  // (should only be for node-based vars)
-  std::vector<const Patch*> missing_patches;
-
-  // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
-  // selectPatches doesn't detect
-  IntVector tmpLow(low - adjustment);
-  IntVector tmpHigh(high + adjustment);
-  level->selectPatches(tmpLow, tmpHigh, patches);
-
-  int totalCells = 0;
-  for (int i = 0; i < patches.size(); i++) {
-    const Patch* patch = patches[i];
-    IntVector l, h;
-
-    // the caller should determine whether or not he wants extra cells.
-    // It will matter in AMR cases with corner-aligned patches
-    if (useBoundaryCells) {
-      l = Max(patch->getExtraLowIndex(basis, label->getBoundaryLayer()), low);
-      h = Min(patch->getExtraHighIndex(basis, label->getBoundaryLayer()), high);
+    IntVector adjustment = IntVector(1, 1, 1);
+    if (basis == Patch::XFaceBased) {
+      adjustment = IntVector(1, 0, 0);
     }
-    else {
-      l = Max(patch->getLowIndex(basis), low);
-      h = Min(patch->getHighIndex(basis), high);
+    else if (basis == Patch::YFaceBased) {
+      adjustment = IntVector(0, 1, 0);
+    }
+    else if (basis == Patch::ZFaceBased) {
+      adjustment = IntVector(0, 0, 1);
     }
 
-    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z()) {
-      continue;
-    }
-    std::vector<Variable*> varlist;
+    Patch::selectType patches;
 
-    {
-      varDB_monitor varDB_lock{ Uintah::CrowdMonitor<varDB_tag>::READER };
+    // if in AMR and one node intersects from another patch and that patch is missing
+    // ignore the error instead of throwing an exception
+    // (should only be for node-based vars)
+    std::vector<const Patch*> missing_patches;
 
+    // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
+    // selectPatches doesn't detect
+    IntVector tmpLow(low - adjustment);
+    IntVector tmpHigh(high + adjustment);
+    level->selectPatches(tmpLow, tmpHigh, patches);
+
+    int totalCells = 0;
+    for (int i = 0; i < patches.size(); i++) {
+      const Patch* patch = patches[i];
+      IntVector l, h;
+
+      // the caller should determine whether or not he wants extra cells.
+      // It will matter in AMR cases with corner-aligned patches
+      if (useBoundaryCells) {
+        l = Max(patch->getExtraLowIndex(basis, label->getBoundaryLayer()), low);
+        h = Min(patch->getExtraHighIndex(basis, label->getBoundaryLayer()), high);
+      }
+      else {
+        l = Max(patch->getLowIndex(basis), low);
+        h = Min(patch->getHighIndex(basis), high);
+      }
+
+      if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z()) {
+        continue;
+      }
+      std::vector<Variable*> varlist;
       d_varDB.getlist(label, matlIndex, patch, varlist);
-    }
+      GridVariableBase* v = nullptr;
 
-    GridVariableBase* v = nullptr;
-
-    for (std::vector<Variable*>::reverse_iterator rit = varlist.rbegin();; ++rit) {
-      if (rit == varlist.rend()) {
-        v = nullptr;
-        break;
+      for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
+        if (rit == varlist.end()) {
+          v = nullptr;
+          break;
+        }
+        v = dynamic_cast<GridVariableBase*>(*rit);
+        //verify that the variable is valid and matches the dependencies requirements.
+        if ((v != nullptr) && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh()) {  //find a completed region
+          break;
+        }
       }
-      v = dynamic_cast<GridVariableBase*>(*rit);
-      //verify that the variable is valid and matches the dependencies requirements.
-      if ((v != nullptr) && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh()) {  //find a completed region
-        break;
+
+      // just like a "missing patch": got data on this patch, but it either corresponds to a different
+      // region or is incomplete"
+      if (v == nullptr) {
+        missing_patches.push_back(patch->getRealPatch());
+        continue;
       }
+
+      GridVariableBase* tmpVar = var.cloneType();
+      tmpVar->copyPointer(*v);
+
+      if (patch->isVirtual()) {
+        // if patch is virtual, it is probably a boundary layer/extra cell that has been requested (from AMR)
+        // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
+        tmpVar->offset(patch->getVirtualOffset());
+      }
+      try {
+        var.copyPatch(tmpVar, l, h);
+      }
+      catch (InternalError& e) {
+        std::cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h << " actual patch "
+             << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) << " var range: " << tmpVar->getLow() << " "
+             << tmpVar->getHigh() << std::endl;
+        throw e;
+      }
+      delete tmpVar;
+      IntVector diff(h - l);
+      totalCells += diff.x() * diff.y() * diff.z();
+    }  // patches loop
+
+    IntVector diff(high - low);
+
+  #ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
+    //__________________________________
+    //  This is not a valid check on non-cubic domains
+    if (diff.x() * diff.y() * diff.z() > totalCells && missing_patches.size() > 0) {
+      std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+           << ", for patch(es): ";
+
+      for (size_t i = 0; i < missing_patches.size(); i++) {
+        std::cout << *missing_patches[i] << " ";
+      }
+
+      std::cout << std::endl << " Original region: " << low << " " << high << std::endl;
+      std::cout << " copied cells: " << totalCells << " requested cells: " << diff.x() * diff.y() * diff.z() << std::endl;
+      std::cout << "  *** If the computational domain is non-cubic, (L-shaped or necked down)  you can remove this bulletproofing" << std::endl;
+      throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
+    }
+  #endif
+    if (dbg.active()) {
+      cerrLock.lock();
+      dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+          << " For region: " << low << " " << high << "  has been gotten" << std::endl;
+      cerrLock.unlock();
     }
 
-    // just like a "missing patch": got data on this patch, but it either corresponds to a different
-    // region or is incomplete"
-    if (v == nullptr) {
-      missing_patches.push_back(patch->getRealPatch());
-      continue;
-    }
+    ASSERT(level->totalCells() <= totalCells );
 
-    GridVariableBase* tmpVar = var.cloneType();
-    tmpVar->copyPointer(*v);
-
-    if (patch->isVirtual()) {
-      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
-      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
-      tmpVar->offset(patch->getVirtualOffset());
-    }
-    try {
-      var.copyPatch(tmpVar, l, h);
-    }
-    catch (InternalError& e) {
-      std::cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h << " actual patch "
-                << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) << " var range: " << tmpVar->getLow() << " "
-                << tmpVar->getHigh() << std::endl;
-      throw e;
-    }
-    delete tmpVar;
-    IntVector diff(h - l);
-    totalCells += diff.x() * diff.y() * diff.z();
-
-  }  // patches loop
-
-  IntVector diff(high - low);
-
-#ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
-  //__________________________________
-  //  Not valid for non-cubic domains
-  if (diff.x() * diff.y() * diff.z() > totalCells && missing_patches.size() > 0) {
-    std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-              << ", for patch(es): ";
-    for (size_t i = 0; i < missing_patches.size(); i++) {
-      std::cout << *missing_patches[i] << " ";
-    }
-    std::cout << std::endl << " Original region: " << low << " " << high << std::endl;
-    std::cout << " copied cells: " << totalCells << " requested cells: " << diff.x() * diff.y() * diff.z() << std::endl;
-    throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
-  }
-#endif
-  if (dbg.active()) {
-    coutLock.lock();
-    dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-        << " For region: " << low << " " << high << "  has been gotten" << std::endl;
-    coutLock.unlock();
-  }
-
-  ASSERT(diff.x() * diff.y() * diff.z() <= totalCells);
-
-//  constVar = *dynamic_cast<GridVariableBase*>(var);
-//  delete var;
 }
 
 //______________________________________________________________________
@@ -3092,7 +2966,6 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
   }
   else {
     IntVector dn = high - low;
-    long total = dn.x() * dn.y() * dn.z();
 
     Patch::selectType neighbors;
     IntVector lowIndex, highIndex;
