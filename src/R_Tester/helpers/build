@@ -52,7 +52,7 @@ if [ "$OS" = "Linux" ]; then
       --with-boost=/usr \\
       --enable-gencode=35 \\
       --enable-ray-scatter \\
-      --enable-all-components \\
+      --enable-arches \\
       --enable-wasatch_3p \\"
 
     ENV="       CC=gcc-4.8 \\
