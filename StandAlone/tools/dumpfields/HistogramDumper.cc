@@ -111,7 +111,7 @@ namespace Uintah {
     vector<int> mats;
     for(int l=0;l<=0;l++) {
       LevelP level = grid->getLevel(l);
-      for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
+      for(Level::const_patch_iterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
         const Patch* patch = *iter;
         ConsecutiveRangeSet matls= da_->queryMaterials(fieldname, patch, index_);
         for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
@@ -164,7 +164,7 @@ namespace Uintah {
             int matl = *mit;
             
             LevelP level = grid->getLevel(0);
-            for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
+            for(Level::const_patch_iterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
               const Patch* patch = *iter;
               
               if(td->getType()==Uintah::TypeDescription::CCVariable) {

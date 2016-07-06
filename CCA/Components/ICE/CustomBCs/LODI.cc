@@ -123,7 +123,7 @@ void Lodi_maxMach_patchSubset(const LevelP& level,
   //__________________________________
   // Iterate over all patches on this levels
   vector<const Patch*> p[Patch::numFaces];
-  for(Level::const_patchIterator iter = level->patchesBegin();
+  for(Level::const_patch_iterator iter = level->patchesBegin();
                                  iter != level->patchesEnd(); iter++){
     const Patch* patch = *iter;
     

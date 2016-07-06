@@ -110,7 +110,7 @@ namespace Uintah {
     // count the materials
     for(int l=0;l<=0;l++) { // FIXME: only first level
       LevelP level = grid->getLevel(l);
-      for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
+      for(Level::const_patch_iterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
         const Patch* patch = *iter;
         ConsecutiveRangeSet matls= da_->queryMaterials(fieldname, patch, index_);
         for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
@@ -140,7 +140,7 @@ namespace Uintah {
         }
       }
     
-      for(Level::const_patchIterator iter = level->patchesBegin();
+      for(Level::const_patch_iterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
       

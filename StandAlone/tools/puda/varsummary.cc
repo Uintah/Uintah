@@ -558,7 +558,7 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
         if( !clf.be_brief ) {
           cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << endl;
         }
-        for(Level::const_patchIterator iter = level->patchesBegin();
+        for(Level::const_patch_iterator iter = level->patchesBegin();
             iter != level->patchesEnd(); iter++){
           const Patch* patch = *iter;
           if( !clf.be_brief ) {

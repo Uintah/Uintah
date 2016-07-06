@@ -99,7 +99,7 @@ Uintah::ICE_momentum( DataArchive * da, CommandLineFlags & clf )
       Vector totalCV_mom ( 0.0 );
       double ICE_TotalMass   = 0.0;
       
-      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+      for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
         const Patch* patch = *iter;
         int matl = clf.matl;
@@ -136,7 +136,7 @@ Uintah::ICE_momentum( DataArchive * da, CommandLineFlags & clf )
       }
       
       
-      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+      for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
         const Patch* patch = *iter;
         Vector dx = patch->dCell();

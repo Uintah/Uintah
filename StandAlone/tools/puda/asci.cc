@@ -93,7 +93,7 @@ Uintah::asci( DataArchive *   da,
       GridP grid = da->queryGrid(t);
       int l=0;
       LevelP level = grid->getLevel(l);
-      Level::const_patchIterator iter = level->patchesBegin();
+      Level::const_patch_iterator iter = level->patchesBegin();
       const Patch* patch = *iter;
 		
 		

@@ -735,7 +735,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
                      LevelP level,
                      int timestep)
 {
-  Level::const_patchIterator iter;
+  Level::const_patch_iterator iter;
   for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
     const Patch* patch = *iter;
 
@@ -1189,7 +1189,7 @@ buildPatchMap( LevelP                 level,
   patchMap.resize(low, high);
   patchMap.initialize(0);
 
-  Level::const_patchIterator iter;
+  Level::const_patch_iterator iter;
   for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
     const Patch* patch = *iter;
 
@@ -1513,7 +1513,7 @@ main(int argc, char** argv)
           ConsecutiveRangeSet matls;
 
           bool first = true;
-          Level::const_patchIterator iter;
+          Level::const_patch_iterator iter;
 
           //__________________________________
           //  bulletproofing does the variable exist in both DAs on this timestep?
@@ -1622,8 +1622,8 @@ main(int argc, char** argv)
             }
 
 
-            Level::const_patchIterator iter2 = level2->patchesBegin();
-            for(Level::const_patchIterator iter = level->patchesBegin();
+            Level::const_patch_iterator iter2 = level2->patchesBegin();
+            for(Level::const_patch_iterator iter = level->patchesBegin();
                 iter != level->patchesEnd(); iter++, iter2++){
 
               const Patch* patch  = *iter;
@@ -1813,7 +1813,7 @@ main(int argc, char** argv)
             }
           });
 
-          Level::const_patchIterator iter;
+          Level::const_patch_iterator iter;
 
           for(iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
             const Patch* patch = *iter;

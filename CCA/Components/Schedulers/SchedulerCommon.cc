@@ -1481,7 +1481,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           //make refinePatchSets from patch ids
           set<int> allPatchIDset(allPatchIDs.begin(), allPatchIDs.end());
 
-          for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); ++iter) {
+          for (Level::patch_iterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); ++iter) {
             Patch* newPatch = *iter;
             if (allPatchIDset.find(newPatch->getID()) != allPatchIDset.end()) {
               refinePatchSets[L]->add(newPatch);

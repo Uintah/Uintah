@@ -259,7 +259,7 @@ RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
   if (d_myworld->size() > 1) {
     int thisproc = false;
     int allprocs;
-    for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+    for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       // here we assume that the per-patch has been set
       PerPatch<PatchFlagP> flaggedPatchCells;
       if (lb_->getPatchwiseProcessorAssignment(*iter) == d_myworld->myrank()) {
@@ -275,7 +275,7 @@ RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
     return allprocs;
   }
   else {
-    for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+    for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       // here we assume that the per-patch has been set
       PerPatch<PatchFlagP> flaggedPatchCells;
       newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
@@ -524,7 +524,7 @@ RegridderCommon::GetFlaggedCells(const GridP& oldGrid, int levelIdx, DataWarehou
 
   // This could be a problem because of extra cells.
 
-  for (Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++) {
+  for (Level::patch_iterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++) {
     const Patch* patch = *patchIter;
     minIdx = Min(minIdx, patch->getExtraCellLowIndex());
     maxIdx = Max(maxIdx, patch->getExtraCellHighIndex());
@@ -548,7 +548,7 @@ RegridderCommon::GetFlaggedCells(const GridP& oldGrid, int levelIdx, DataWarehou
   // This is only a first step, getting the dilation cells in serial.
   // This is a HUGE memory waste.
 
-  for (Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++) {
+  for (Level::patch_iterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++) {
     const Patch* patch = *patchIter;
     IntVector l(patch->getExtraCellLowIndex());
     IntVector h(patch->getExtraCellHighIndex());

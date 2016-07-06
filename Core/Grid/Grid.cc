@@ -1323,7 +1323,7 @@ namespace Uintah
       out << "  Level " << level->getID() 
           << ", indx: "<< level->getIndex()
           << " has " << level->numPatches() << " patch(es)" << endl;
-      for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+      for ( Level::patch_iterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
         const Patch* patch = *patchIter;
         out <<"    "<< *patch << endl;
       }
@@ -1347,8 +1347,8 @@ Grid::operator==( const Grid & othergrid ) const
       
     // do the patches have the same number of cells and
     // cover the same physical domain?  
-    Level::const_patchIterator iter = level->patchesBegin();
-    Level::const_patchIterator otheriter = otherlevel->patchesBegin();
+    Level::const_patch_iterator iter = level->patchesBegin();
+    Level::const_patch_iterator otheriter = otherlevel->patchesBegin();
     for (; iter != level->patchesEnd(); iter++, otheriter++) {
       const Patch* patch = *iter;
       const Patch* otherpatch = *otheriter;
@@ -1390,7 +1390,7 @@ bool Grid::isSimilar(const Grid& othergrid) const
     int a1=0,a2=0;
 
     //fill deques
-    Level::const_patchIterator iter;
+    Level::const_patch_iterator iter;
     for(iter=l1->patchesBegin(); iter!=l1->patchesEnd();iter++)
     {
       const Patch* patch=*iter;

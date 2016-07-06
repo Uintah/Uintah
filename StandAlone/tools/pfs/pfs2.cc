@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
           delete [] pimg;
 
           // loop over all patches
-          for(Level::const_patchIterator iter = level->patchesBegin();
+          for(Level::const_patch_iterator iter = level->patchesBegin();
               iter != level->patchesEnd(); iter++){
             const Patch* patch = *iter;
             unsigned int pid = patch->getID();

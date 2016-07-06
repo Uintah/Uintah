@@ -48,6 +48,7 @@
 #include <cstring>
 #include <iomanip>
 #include <mutex>
+#include <thread>
 
 #define USE_PACKING
 

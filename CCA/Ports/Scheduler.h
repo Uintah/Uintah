@@ -22,9 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-
-#ifndef UINTAH_HOMEBREW_SCHEDULER_H
-#define UINTAH_HOMEBREW_SCHEDULER_H
+#ifndef CCA_PORTS_SCHEDULER_H
+#define CCA_PORTS_SCHEDULER_H
 
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -34,10 +33,10 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
 
-#include <map>
 #include <list>
-#include <string>
+#include <map>
 #include <set>
+#include <string>
 #include <vector>
 
 
@@ -71,8 +70,6 @@ KEYWORDS
 DESCRIPTION
 
   
-WARNING
-  
 ****************************************/
 
 class Scheduler : public UintahParallelPort {
@@ -91,7 +88,10 @@ class Scheduler : public UintahParallelPort {
 
     virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state ) = 0;
 
-    virtual void checkMemoryUse( unsigned long& memuse, unsigned long& highwater, unsigned long& maxMemUse ) = 0;
+    virtual void checkMemoryUse( unsigned long & memuse
+                               , unsigned long & highwater
+                               , unsigned long & maxMemUse
+                               ) = 0;
     
     virtual void setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
 
@@ -101,7 +101,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual void initialize( int numOldDW = 1, int numNewDW = 1 ) = 0;
 
-    virtual void setParentDWs( DataWarehouse* parent_old_dw, DataWarehouse* parent_new_dw ) = 0;
+    virtual void setParentDWs( DataWarehouse * parent_old_dw, DataWarehouse * parent_new_dw ) = 0;
 
     virtual void clearMappings() = 0;
 
@@ -139,7 +139,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual DataWarehouse* get_dw( int idx ) = 0;
 
-    virtual DataWarehouse* getLastDW(void) = 0;
+    virtual DataWarehouse* getLastDW() = 0;
 
     virtual bool isOldDW( int idx ) const = 0;
 
@@ -147,35 +147,38 @@ class Scheduler : public UintahParallelPort {
 
     virtual void logMemoryUse() = 0;
       
-    virtual void advanceDataWarehouse( const GridP& grid, bool initialization = false ) = 0;
+    virtual void advanceDataWarehouse( const GridP & grid, bool initialization = false ) = 0;
 
     virtual void fillDataWarehouses( const GridP& grid) = 0;
 
-    virtual void replaceDataWarehouse( int index, const GridP& grid, bool initialization = false ) = 0;
+    virtual void replaceDataWarehouse( int index, const GridP & grid, bool initialization = false ) = 0;
 
     virtual void setRestartable( bool restartable ) = 0;
     
-    virtual bool isRestartInitTimestep()=0;
+    virtual bool isRestartInitTimestep() = 0;
 
 //        protected:
 
-    virtual void setPositionVar(const VarLabel* posLabel) = 0;
+    virtual void setPositionVar( const VarLabel * posLabel ) = 0;
     
-    virtual void scheduleParticleRelocation( const LevelP& coarsestLevelwithParticles,
-                                             const VarLabel* posLabel,
-                                             const std::vector<std::vector<const VarLabel*> >& labels,
-                                             const VarLabel* new_posLabel,
-                                             const std::vector<std::vector<const VarLabel*> >& new_labels,
-                                             const VarLabel* particleIDLabel,
-                                             const MaterialSet* matls) = 0;
+    virtual void scheduleParticleRelocation( const LevelP                                     & coarsestLevelwithParticles
+                                           , const VarLabel                                   * posLabel
+                                           , const std::vector<std::vector<const VarLabel*> > & labels
+                                           , const VarLabel                                   * new_posLabel
+                                           , const std::vector<std::vector<const VarLabel*> > & new_labels
+                                           , const VarLabel* particleIDLabel
+                                           , const MaterialSet* matls
+                                           ) = 0;
 
-    virtual void scheduleParticleRelocation( const LevelP& level,
-                                             const VarLabel* posLabel,
-                                             const std::vector<std::vector<const VarLabel*> >& labels,
-                                             const VarLabel* new_posLabel,
-                                             const std::vector<std::vector<const VarLabel*> >& new_labels,
-                                             const VarLabel* particleIDLabel,
-                                             const MaterialSet* matls, int w) = 0;
+    virtual void scheduleParticleRelocation( const LevelP                                     & level
+                                           , const VarLabel                                   * posLabel
+                                           , const std::vector<std::vector<const VarLabel*> > & labels
+                                           , const VarLabel                                   * new_posLabel
+                                           , const std::vector<std::vector<const VarLabel*> > & new_labels
+                                           , const VarLabel                                   * particleIDLabel
+                                           , const MaterialSet                                * matls
+                                           , int w
+                                           ) = 0;
 
     //////////
     // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
@@ -186,16 +189,16 @@ class Scheduler : public UintahParallelPort {
                                              const MaterialSet* matls ) = 0;
 
     //! Schedule copying data to new grid after regridding
-    virtual void scheduleAndDoDataCopy( const GridP& grid,
-                                              SimulationInterface* sim) = 0;
+    virtual void scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim ) = 0;
 
 
-    virtual void overrideVariableBehavior( const std::string & var,
-                                                 bool          treatAsOld,
-                                                 bool          copyData,
-                                                 bool          noScrub,
-                                                 bool          notCopyData,
-                                                 bool          noCheckpoint ) = 0;
+    virtual void overrideVariableBehavior( const std::string & var
+                                         ,       bool          treatAsOld
+                                         ,       bool          copyData
+                                         ,       bool          noScrub
+                                         ,       bool          notCopyData
+                                         ,       bool          noCheckpoint
+                                         ) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
@@ -203,22 +206,21 @@ class Scheduler : public UintahParallelPort {
     // ghost cells as well (requestedLow, requestedHigh) for each of the
     // patches.  Required and requested will be the same if requestedNumGCells = 0.
     virtual const std::vector<const Patch*>*
-    
-    getSuperPatchExtents( const VarLabel* label,
-                                int matlIndex,
-                          const Patch* patch,
-                                Ghost::GhostType requestedGType,
-                                int requestedNumGCells,
-                                IntVector& requiredLow,
-                                IntVector& requiredHigh,
-                                IntVector& requestedLow,
-                                IntVector& requestedHigh) const = 0;
+    getSuperPatchExtents( const VarLabel         * label
+                        ,       int                matlIndex
+                        , const Patch            * patch
+                        ,       Ghost::GhostType   requestedGType
+                        ,       int                requestedNumGCells
+                        ,       IntVector        & requiredLow
+                        ,       IntVector        & requiredHigh
+                        ,       IntVector        & requestedLow
+                        ,       IntVector        & requestedHigh
+                        ) const = 0;
 
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
-    typedef std::map< std::string, std::list<int> > VarLabelMaterialMap;
-
+    using VarLabelMaterialMap = std::map< std::string, std::list<int> >;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
 
     virtual int getMaxGhost()       = 0;
@@ -229,15 +231,19 @@ class Scheduler : public UintahParallelPort {
 
     virtual bool isCopyDataTimestep() = 0;
 
-    virtual void setInitTimestep(bool) = 0;
+    virtual void setInitTimestep( bool ) = 0;
 
-    virtual void setRestartInitTimestep(bool) = 0;
+    virtual void setRestartInitTimestep( bool ) = 0;
 
   private:
 
-    Scheduler(const Scheduler&);
-    Scheduler& operator=(const Scheduler&);
+    // eliminate copy, assignment and move
+    Scheduler( const Scheduler & )            = delete;
+    Scheduler& operator=( const Scheduler & ) = delete;
+    Scheduler( Scheduler && )                 = delete;
+    Scheduler& operator=( Scheduler && )      = delete;
 };
+
 } // End namespace Uintah
 
-#endif
+#endif // CCA_PORTS_SCHEDULER_H

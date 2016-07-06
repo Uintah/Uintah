@@ -197,7 +197,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   }
 
   //level 0 does not change so just copy the patches over.
-  for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++) {
+  for (Level::const_patch_iterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++) {
     tiles[0].push_back(computeTileIndex((*p)->getCellLowIndex(),d_tileSize[0]));
   }
 
@@ -397,7 +397,7 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   //calculate the patch size on level 0
   IntVector patch_size(0,0,0);
 
-  for(Level::patchIterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
+  for(Level::patch_iterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
   {
     IntVector size=(*patch)->getCellHighIndex()-(*patch)->getCellLowIndex();
     if( patch_size == IntVector(0,0,0) ) {
