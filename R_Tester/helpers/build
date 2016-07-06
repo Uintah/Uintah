@@ -53,6 +53,8 @@ if [ "$OS" = "Linux" ]; then
       --enable-gencode=35 \\
       --enable-ray-scatter \\
       --enable-arches \\
+      --enable-ice \\
+      --enable-mpm \\
       --enable-wasatch_3p \\"
 
     ENV="       CC=gcc-4.8 \\
