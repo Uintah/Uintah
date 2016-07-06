@@ -235,7 +235,7 @@ void printStress(DataArchive* da,
           if (numFound == partID.size()-1) break;
 
           LevelP level = grid->getLevel(l);
-          Level::const_patchIterator iter = level->patchesBegin(); 
+          Level::const_patch_iterator iter = level->patchesBegin(); 
           int patchIndex = 0;
 
           // Loop thru all the patches

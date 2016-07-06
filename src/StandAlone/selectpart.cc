@@ -214,7 +214,7 @@ void printParticleID(DataArchive* da, int mat,
     LevelP level = grid->getLevel(l);
 
     // Loop thru all the patches
-    Level::const_patchIterator iter = level->patchesBegin(); 
+    Level::const_patch_iterator iter = level->patchesBegin(); 
     int patchIndex = 0;
     for(; iter != level->patchesEnd(); iter++){
       const Patch* patch = *iter;

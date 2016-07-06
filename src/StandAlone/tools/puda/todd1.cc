@@ -90,7 +90,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
       double MPM_TotalIntEng = 0.0;
       double MPM_TotalMass   = 0.0;
       
-      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+      for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
         const Patch* patch = *iter;
         
@@ -119,7 +119,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
       double ICE_TotalIntEng = 0.0;
       double ICE_TotalMass   = 0.0;
       
-      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+      for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
         const Patch* patch = *iter;
         Vector dx = patch->dCell();
@@ -163,7 +163,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
       }
       
       
-      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+      for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
         const Patch* patch = *iter;
         Vector dx = patch->dCell();

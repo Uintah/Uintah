@@ -361,7 +361,7 @@ main( int argc, char *argv[] )
 
       //__________________________________
       // Iterate over the patches
-      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+      for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
         const Patch* patch = *iter;
 
         printf( "Looking at patch:\n");

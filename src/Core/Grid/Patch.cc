@@ -102,7 +102,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   //set the level index
   d_patchState.levelIndex=realPatch->d_patchState.levelIndex;
 
-  for (Level::const_patchIterator iter = getLevel()->allPatchesBegin(); iter != getLevel()->allPatchesEnd(); iter++) {
+  for (Level::const_patch_iterator iter = getLevel()->allPatchesBegin(); iter != getLevel()->allPatchesEnd(); iter++) {
     if ((*iter)->d_realPatch == d_realPatch) {
       ++index;
       if (++numVirtualPatches >= 27)

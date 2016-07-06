@@ -1534,7 +1534,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 
         //__________________________________
         //  output patch information
-        Level::const_patchIterator iter;
+        Level::const_patch_iterator iter;
 
         procOnLevel[l].resize(d_myworld->size());
 

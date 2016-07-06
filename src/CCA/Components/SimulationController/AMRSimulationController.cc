@@ -957,7 +957,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
                  << ", indx: "<< level->getIndex()
                  << " has " << level->numPatches() << " patch(es)" << endl;
             
-          for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+          for ( Level::patch_iterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
             const Patch* patch = *patchIter;
             amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
                    << ": box=" << patch->getExtraBox()
