@@ -2302,6 +2302,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
             || type == TypeDescription::SFCZVariable) {
 
           // TODO, not correct if scratch ghost is used?
+          GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(curDependency->m_var->typeDescription()->createInstance());
 
           // Get variable size. Scratch computes means we need to factor that in when computing the size.
           IntVector lowIndex, highIndex;
@@ -2315,6 +2316,25 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           size_t memSize = (highIndex.x() - lowIndex.x())
               * (highIndex.y() - lowIndex.y())
               * (highIndex.z() - lowIndex.z()) * elementDataSize;
+
+          // Even though it's only on the device, we to create space for the var on the host.
+          // This makes it easy in case we ever need to perform any D2Hs.
+          // TODO: This seems a bit clunky.  Many simulations don't seem to need it,
+          but Wasatch's BasicScalarTransportEquation.ups crashes without it.
+          const bool finalized = dw->isFinalized();
+          if (finalized) {
+           dw->unfinalize();
+          }
+
+          dw->allocateAndPut(*gridVar, curDependency->m_var, matlID, patch, curDependency->m_gtype, curDependency->m_num_ghost_cells);
+
+          if (finalized) {
+           dw->refinalize();
+          }
+
+          delete gridVar;
+          gridVar = nullptr;
+
 
           dtask->getDeviceVars().add(patch, matlID, levelID, false, host_size, memSize, elementDataSize, low, curDependency,
                                      curDependency->m_gtype, curDependency->m_num_ghost_cells, deviceIndex, nullptr,
