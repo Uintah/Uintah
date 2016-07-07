@@ -2320,7 +2320,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           // Even though it's only on the device, we to create space for the var on the host.
           // This makes it easy in case we ever need to perform any D2Hs.
           // TODO: This seems a bit clunky.  Many simulations don't seem to need it,
-          but Wasatch's BasicScalarTransportEquation.ups crashes without it.
+          //  but Wasatch's BasicScalarTransportEquation.ups (and many other Wasatch tests) crashe without it.
           const bool finalized = dw->isFinalized();
           if (finalized) {
            dw->unfinalize();
