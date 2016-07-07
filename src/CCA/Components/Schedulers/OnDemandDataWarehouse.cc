@@ -2465,12 +2465,16 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
       totalCells += diff.x() * diff.y() * diff.z();
     }  // patches loop
 
+
+    //Now do some bulletproofing
     IntVector diff(high - low);
+
+    long requestedCells = level->getTotalSimulationCellsInRegion(low, high);
 
   #ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
     //__________________________________
     //  This is not a valid check on non-cubic domains
-    if (diff.x() * diff.y() * diff.z() > totalCells && missing_patches.size() > 0) {
+    if (requestedCells > totalCells && missing_patches.size() > 0) {
       std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
            << ", for patch(es): ";
 
@@ -2479,8 +2483,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
       }
 
       std::cout << std::endl << " Original region: " << low << " " << high << std::endl;
-      std::cout << " copied cells: " << totalCells << " requested cells: " << diff.x() * diff.y() * diff.z() << std::endl;
-      std::cout << "  *** If the computational domain is non-cubic, (L-shaped or necked down)  you can remove this bulletproofing" << std::endl;
+      std::cout << " copied cells: " << totalCells << " requested cells: " << requestedCells << std::endl;
       throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
     }
   #endif
@@ -2491,7 +2494,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
       cerrLock.unlock();
     }
 
-    ASSERT(level->totalCells() <= totalCells );
+    ASSERT(requestedCells <= totalCells );
 
 }
 
