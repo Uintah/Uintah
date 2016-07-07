@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_FaceVelocities_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 
 namespace Uintah{
 

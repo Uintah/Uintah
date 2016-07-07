@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_KScalarRHS_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <spatialops/util/TimeLogger.h>
@@ -67,13 +67,13 @@ public:
 
 private:
 
-    typedef typename VariableHelper<T>::ConstType CT;
-    typedef typename VariableHelper<T>::XFaceType FXT;
-    typedef typename VariableHelper<T>::YFaceType FYT;
-    typedef typename VariableHelper<T>::ZFaceType FZT;
-    typedef typename VariableHelper<T>::ConstXFaceType CFXT;
-    typedef typename VariableHelper<T>::ConstYFaceType CFYT;
-    typedef typename VariableHelper<T>::ConstZFaceType CFZT;
+    typedef typename GridTools::VariableHelper<T>::ConstType CT;
+    typedef typename GridTools::VariableHelper<T>::XFaceType FXT;
+    typedef typename GridTools::VariableHelper<T>::YFaceType FYT;
+    typedef typename GridTools::VariableHelper<T>::ZFaceType FZT;
+    typedef typename GridTools::VariableHelper<T>::ConstXFaceType CFXT;
+    typedef typename GridTools::VariableHelper<T>::ConstYFaceType CFYT;
+    typedef typename GridTools::VariableHelper<T>::ConstZFaceType CFZT;
 
     std::string _D_name;
     std::string _x_velocity_name;
@@ -291,7 +291,7 @@ private:
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       T& phi = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn] ));
-      typedef typename VariableHelper<T>::ConstType CT;
+      typedef typename GridTools::VariableHelper<T>::ConstType CT;
       CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( _eqn_names[ieqn] ));
 
       phi.copyData(old_phi);

@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_WaveFormInit_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 
 namespace Uintah{
 
@@ -76,7 +76,7 @@ private:
     double _min_sq;
     double _max_sq;
 
-    typedef typename VariableHelper<T>::ConstType CT;
+    typedef typename GridTools::VariableHelper<T>::ConstType CT;
 
   };
 

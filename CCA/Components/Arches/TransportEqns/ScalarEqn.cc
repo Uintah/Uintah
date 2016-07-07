@@ -10,7 +10,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Containers/StaticArray.h>
 #include <fstream>
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <spatialops/util/TimeLogger.h>
 
