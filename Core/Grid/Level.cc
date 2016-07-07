@@ -387,6 +387,35 @@ Level::totalCells() const
 
 //______________________________________________________________________
 //
+long
+Level::getTotalSimulationCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
+//Not all simulations are cubic.  Some simulations might be L shaped, or T shaped, or + shaped, etc.
+//It is not enough to simply do a high - low to figure out the amount of simulation cells.  We instead
+//need to go all patches and see if they exist in this range.  If so, add up their cells.
+//This process is similar to how d_totalCells is computed in Level::finalizeLevel().
+
+
+  //compute the number of cells in the level
+  long cellsInRegion =0;
+  for(int i=0; i<(int)m_real_patches.size(); i++){
+    IntVector patchLow =  m_real_patches[i]->getExtraCellLowIndex();
+    IntVector patchHigh =  m_real_patches[i]->getExtraCellHighIndex();
+    if (lowIndex.x() <= patchLow.x() &&
+        lowIndex.y() <= patchLow.y() &&
+        lowIndex.z() <= patchLow.z() &&
+        highIndex.x() >= patchHigh.x() &&
+        highIndex.y() >= patchHigh.y() &&
+        highIndex.z() >= patchHigh.z()){
+      //This simulation patch is inside the region.  Add up its cells.
+      cellsInRegion+=m_real_patches[i]->getNumExtraCells();
+    }
+  }
+
+  return cellsInRegion;
+}
+
+//______________________________________________________________________
+//
 IntVector
 Level::nCellsPatch_max() const       // used by PIDX
 {

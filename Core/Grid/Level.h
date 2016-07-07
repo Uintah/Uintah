@@ -156,6 +156,7 @@ public:
       
   int numPatches() const;
   long totalCells() const;
+  long getTotalSimulationCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const;
   IntVector nCellsPatch_max() const;
 
   void getSpatialRange( BBox & b ) const { b.extend(m_spatial_range); };
