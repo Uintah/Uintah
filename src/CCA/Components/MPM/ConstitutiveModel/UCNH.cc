@@ -1169,7 +1169,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      cout << "idx = " << idx << endl;
+      // cout << "idx = " << idx << endl;
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
@@ -1177,7 +1177,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       Jinc    = pDefGradInc.Determinant();
       defGrad = pDefGrad_new[idx];
 
-      cout << "idx1 = " << idx << endl;
+      // cout << "idx1 = " << idx << endl;
       // 1) Get the volumetric part of the deformation
       // 2) Compute the deformed volume and new density
       J               = defGrad.Determinant();
@@ -1205,9 +1205,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
       // Compute the trial elastic part of the volume preserving 
       // part of the left Cauchy-Green deformation tensor
-      cout << "idx1a = " << idx << endl;
+      // cout << "idx1a = " << idx << endl;
       bElBarTrial = fBar*bElBar[idx]*fBar.Transpose();
-      cout << "idx1b = " << idx << endl;
+      // cout << "idx1b = " << idx << endl;
       if(!d_usePlasticity){
         double cubeRootJ      = cbrt(J);
         double Jtothetwothirds= cubeRootJ*cubeRootJ;
@@ -1217,7 +1217,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       IEl   = onethird*bElBarTrial.Trace();
       muBar = IEl*shear;
 
-      cout << "idx2 = " << idx << endl;
+      // cout << "idx2 = " << idx << endl;
       
       // tauDevTrial is equal to the shear modulus times dev(bElBar)
       // Compute ||tauDevTrial||
@@ -1256,7 +1256,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;
 
-      cout << "idx3 = " << idx << endl;
+      // cout << "idx3 = " << idx << endl;
       if( d_useDamage){
         pDamage_new[idx] = pDamage[idx];
         // Modify the stress if particle has failed/damaged
