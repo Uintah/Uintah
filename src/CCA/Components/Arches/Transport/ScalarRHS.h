@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_ScalarRHS_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <spatialops/util/TimeLogger.h>
 
 namespace Uintah{

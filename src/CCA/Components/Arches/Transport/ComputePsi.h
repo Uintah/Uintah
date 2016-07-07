@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_ComputePsi_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <spatialops/util/TimeLogger.h>
@@ -95,13 +95,13 @@ private:
     std::map<std::string, LIMITER> _name_to_limiter_map;
 
     typedef std::vector<std::string> SV;
-    typedef typename VariableHelper<T>::ConstType CT;
-    typedef typename VariableHelper<T>::XFaceType XFaceT;
-    typedef typename VariableHelper<T>::YFaceType YFaceT;
-    typedef typename VariableHelper<T>::ZFaceType ZFaceT;
-    typedef typename VariableHelper<T>::ConstXFaceType ConstXFaceT;
-    typedef typename VariableHelper<T>::ConstYFaceType ConstYFaceT;
-    typedef typename VariableHelper<T>::ConstZFaceType ConstZFaceT;
+    typedef typename GridTools::VariableHelper<T>::ConstType CT;
+    typedef typename GridTools::VariableHelper<T>::XFaceType XFaceT;
+    typedef typename GridTools::VariableHelper<T>::YFaceType YFaceT;
+    typedef typename GridTools::VariableHelper<T>::ZFaceType ZFaceT;
+    typedef typename GridTools::VariableHelper<T>::ConstXFaceType ConstXFaceT;
+    typedef typename GridTools::VariableHelper<T>::ConstYFaceType ConstYFaceT;
+    typedef typename GridTools::VariableHelper<T>::ConstZFaceType ConstZFaceT;
 
 
 
@@ -124,7 +124,7 @@ private:
 
       eqn_db->getAttribute("label", scalar_name);
 
-      if ( eqn_db->findBlock("convection" )){ 
+      if ( eqn_db->findBlock("convection" )){
         eqn_db->findBlock("convection")->getAttribute("scheme",limiter);
 
         ConvectionHelper* conv_helper;

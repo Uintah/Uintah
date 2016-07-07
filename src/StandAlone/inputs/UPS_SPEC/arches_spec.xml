@@ -21,6 +21,10 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'variable_math'">
 
+          <!-- <grid type=...> represents the variable type. -->
+          <grid                         spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'CC, FX, FY, FZ'"/>
+
           <!-- variable math options -->
           <!-- the op of the basic unit operation -->
           <!-- DIVIDE_CONST_VARIABLE: constant / grid variable -->

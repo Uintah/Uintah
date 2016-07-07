@@ -2,7 +2,7 @@
 #define Uintah_Component_Arches_KFEUpdate_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <spatialops/util/TimeLogger.h>
 
@@ -64,13 +64,13 @@ protected:
 
 private:
 
-    typedef typename VariableHelper<T>::ConstType CT;
-    typedef typename VariableHelper<T>::XFaceType FXT;
-    typedef typename VariableHelper<T>::YFaceType FYT;
-    typedef typename VariableHelper<T>::ZFaceType FZT;
-    typedef typename VariableHelper<T>::ConstXFaceType CFXT;
-    typedef typename VariableHelper<T>::ConstYFaceType CFYT;
-    typedef typename VariableHelper<T>::ConstZFaceType CFZT;
+    typedef typename GridTools::VariableHelper<T>::ConstType CT;
+    typedef typename GridTools::VariableHelper<T>::XFaceType FXT;
+    typedef typename GridTools::VariableHelper<T>::YFaceType FYT;
+    typedef typename GridTools::VariableHelper<T>::ZFaceType FZT;
+    typedef typename GridTools::VariableHelper<T>::ConstXFaceType CFXT;
+    typedef typename GridTools::VariableHelper<T>::ConstYFaceType CFYT;
+    typedef typename GridTools::VariableHelper<T>::ConstZFaceType CFZT;
 
     std::vector<std::string> _eqn_names;
 
@@ -132,7 +132,7 @@ private:
     const double V = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
-    typedef typename VariableHelper<T>::ConstType CT;
+    typedef typename GridTools::VariableHelper<T>::ConstType CT;
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
