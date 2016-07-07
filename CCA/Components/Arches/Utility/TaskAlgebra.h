@@ -136,6 +136,10 @@ private:
       op_db->require("dep", new_op.dep);
       op_db->require("ind1", new_op.ind1);
 
+      //get the algebriac expression
+      std::string value;
+      op_db->getAttribute( "type", value );
+
       new_op.use_constant = false;
       if ( op_db->findBlock("ind2")){
         op_db->require("ind2", new_op.ind2);
@@ -143,15 +147,13 @@ private:
         op_db->require("constant", new_op.constant);
         new_op.use_constant = true;
       } else {
-        std::stringstream msg;
-        msg << "Error: Must specify either a constant or a second independent " <<
-        "variable for the algrebra utility" << std::endl;
-        throw ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+        if (value != "EXP"){
+          std::stringstream msg;
+          msg << "Error: Must specify either a constant or a second independent " <<
+          "variable for the algrebra utility for user defined operation labeled: "<< label << std::endl;
+          throw ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+        }
       }
-
-      //get the algebriac expression
-      std::string value;
-      op_db->getAttribute( "type", value );
 
       if ( value == "ADD" ) {
         new_op.expression_type = ADD;
