@@ -221,10 +221,10 @@ void Task::requires(WhichDW dw,
     if (numGhostCells > m_max_fine_ghost_cells) {
       m_max_fine_ghost_cells = numGhostCells;
     }
-  } else {
-    if (numGhostCells > m_max_ghost_cells) {
-      m_max_ghost_cells = numGhostCells;
-    }
+  }
+
+  if (numGhostCells > m_max_ghost_cells) {
+    m_max_ghost_cells = numGhostCells;
   }
 
   if (level_offset > m_max_level_offset) {
