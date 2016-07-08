@@ -22,8 +22,10 @@ if ( ! -e "$component-short.log" ) then
 
 endif
 
+/bin/rm .tmp
 grep -i  failed $component-short.log > .tmp
-set failedTests = `cut -f2 -d: tmp | uniq` 
+set failedTests = `cut -f2 -d: .tmp | uniq` 
+
 
 foreach X ( $failedTests[*] )
   set me = "*.uda"
