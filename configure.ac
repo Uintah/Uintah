@@ -4198,7 +4198,7 @@ if test "$with_spatialops"; then
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
 
-  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
+  SPATIALOPS_LIB_FLAG="-lspatialops"
 
   HAVE_SPATIALOPS="yes"
 fi
