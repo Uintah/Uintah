@@ -4051,7 +4051,7 @@ if test "$with_boost" -o "$with_boost_library"; then
 
   if test "$with_boost" -a "$with_boost" != "/usr"; then
      # If with_boost points to /usr, then we don't need to explicitly point to it...
-     INC_BOOST_H="-I$with_boost/include"
+     INC_BOOST_H="-isystem $with_boost/include"
      if test "$IS_STATIC_BUILD" != "yes"; then
         BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
      fi
