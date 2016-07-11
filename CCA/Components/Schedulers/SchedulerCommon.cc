@@ -729,6 +729,11 @@ SchedulerCommon::addTask(       Task        * task,
     maxGhost = task->m_max_ghost_cells;
   }
 
+  // max fine ghost cells (for both Task and SchedulerCommon) is for the very specific multi-level RMCRT case (data onion specifically),
+  // where there may be a limited halo on the fine, CFD mesh, but a global halo (SHRT_MAX) requirement for arbitrarily
+  // many coarse levels beneath this.
+  // NOTE: all other components use uniform ghost cells across levels, and only use "max-ghost", not "max-fine-ghost"
+  //       - RMCRT is a specific case.
   if (task->m_max_fine_ghost_cells > maxFineGhost) {
     maxFineGhost = task->m_max_fine_ghost_cells;
   }
@@ -1025,7 +1030,6 @@ SchedulerCommon::getSuperPatchExtents( const VarLabel*        label,
   SuperPatch::Region requiredExtents = connectedPatchGroup->getRegion();
 
   // expand to cover the entire connected patch group
-  bool containsGivenPatch = false;
   for (unsigned int i = 0; i < connectedPatchGroup->getBoxes().size(); i++) {
     // get the minimum extents containing both the expected ghost cells
     // to be needed and the given ghost cells.
@@ -1049,12 +1053,8 @@ SchedulerCommon::getSuperPatchExtents( const VarLabel*        label,
     SuperPatch::Region requestedRegion = SuperPatch::Region(requestedLow, requestedHigh);
     requestedExtents = requestedExtents.enclosingRegion(requestedRegion);
 
-    if (memberPatch == patch) {
-      containsGivenPatch = true;
-    }
+    ASSERT(memberPatch == patch);
   }
-
-  ASSERT(containsGivenPatch);
 
   requiredLow = requiredExtents.low_;
   requiredHigh = requiredExtents.high_;
