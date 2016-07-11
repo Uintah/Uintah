@@ -551,35 +551,11 @@ SCI_ARG_ENABLE(largesos,
   [largesos="$enableval"],
   [largesos=${largesos='no'}])
   
-SCI_ARG_ENABLE(sci-malloc,
-  AC_HELP_STRING(--enable-sci-malloc,
-                 Use SCI memory allocation/deallocation checks.  Note: you cannot use sci-malloc-trace at the same time.),
-  [enable_sci_malloc="$enableval"],
-  [enable_sci_malloc=${enable_sci_malloc='no'}])
-  
-SCI_ARG_ENABLE(memory-init,
-  AC_HELP_STRING(--enable-memory-initialization=8_bit_number,
-                 Force all new'd and malloc'd memory to be initialied to the value given - defaults to 127.),
-  [enable_memory_initialization="$enableval"],
-  [enable_memory_initialization=${enable_memory_initialization='no'}])
-  
-SCI_ARG_WITH(MallocTrace,
-  AC_HELP_STRING(--with-MallocTrace=DIR,
-                 Use MallocTrace library.  Note: you cannot use sci-malloc at the same time.),
-  [with_malloc_trace="$withval"],
-  [with_malloc_trace=""])
-  
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
                  Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.)),
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=""])
-  
-SCI_ARG_ENABLE(scinew-line-numbers,
-  AC_HELP_STRING(--enable-scinew-line-numbers,
-                 Have SCI malloc store the file and line that calls 'scinew'),
-  [enable_scinew_line_numbers="yes"],
-  [enable_scinew_line_numbers="no"])
   
 SCI_ARG_ENABLE(throw-level,
   AC_HELP_STRING(--enable-throw-level=N,
@@ -669,36 +645,6 @@ BUILD_WASATCH_FOR_ARCHES=no
 if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
   BUILD_WASATCH_FOR_ARCHES=yes
 fi
-
-if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
-   AC_MSG_ERROR( You cannot use both --with-MallocTrace and --enable-sci-malloc! )
-fi
-
-if test "$enable_memory_initialization" != "no"; then
-   DEF_MEMORY_INIT="#define INITIALIZE_MEMORY"
-   if test "$enable_memory_initialization" = "yes"; then
-      memory_init=127
-   else
-      val=$enable_memory_initialization
-      if test $val -lt 128 -a $val -gt 0; then
-         memory_init=$val
-      else
-         AC_MSG_ERROR( --enable-memory-initialization's value must be from 0 to 127. )
-      fi
-   fi
-   DEF_MEMORY_INIT_NUMBER="#define MEMORY_INIT_NUMBER $memory_init"
-fi
-
-AC_SUBST(DEF_MEMORY_INIT)
-AC_SUBST(DEF_MEMORY_INIT_NUMBER)
-sci_defs_files="$sci_defs_files Core/Malloc/testmem_init.h"
-
-if test "$enable_rpath" = "no"; then
-   AC_MSG_WARN(You have removed the rpath flag from some libraries.)
-   AC_MSG_WARN(This may have unpredictable affects.)
-   AC_MSG_WARN(Do not do this unless you really know what you are doing.)
-fi
-
 
 ##  --------------------------------------------------------------------
 ##  Save off the arguments to configure...
@@ -980,15 +926,9 @@ case $host in
            yosemite_plus=yes
         fi
 
-	SO_OR_ARCHIVE_EXTENSION=dylib
+	      SO_OR_ARCHIVE_EXTENSION=dylib
 
-        if test "$enable_sci_malloc" = "yes"; then
-           AC_MSG_ERROR(sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force)
-           enable_sci_malloc="no"
-        elif test "$enable_sci_malloc" = "force"; then
-           enable_sci_malloc="yes"
-        fi
-	;;
+	      ;;
 	
      *)
 	SO_OR_ARCHIVE_EXTENSION=so 
@@ -1004,33 +944,8 @@ fi
 
 LARGESOS=$largesos
 
-if test "$enable_sci_malloc" = "yes"; then
-  SCI_MALLOC_ON="yes"
-  DEF_MALLOC=""
-else
-  SCI_MALLOC_ON="no"
-  DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
-fi
-
-if test "$with_malloc_trace" ; then
-  if test "$IS_OSX" = "yes"; then
-      AC_MSG_ERROR(Malloc trace is not supported on Mac OSX...)
-  fi
-fi
-
-if test "$enable_scinew_line_numbers" = "yes"; then
-  DEF_MALLOC_LINENUMBERS="#define USE_TAG_LINENUM 1"
-else
-  DEF_MALLOC_LINENUMBERS=""
-fi
-
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(LARGESOS)
-
-AC_SUBST(SCI_MALLOC_ON)
-AC_SUBST(DEF_MALLOC)
-AC_SUBST(DEF_MALLOC_LINENUMBERS)
-sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)
 AC_SUBST(THROW_LEVEL)
@@ -1207,45 +1122,6 @@ AC_SUBST(SOFLAGS)
 AC_SUBST(IS_STATIC_BUILD)
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 
-##  --  search for MallocTrace ------------------------
-
-if test "$with_malloc_trace"; then
-  if test "$with_malloc_trace" = "yes"; then
-    AC_MSG_ERROR( --with-malloc_trace=DIR requires a Directory be provided. )
-  else
-    AC_MSG_CHECKING(for MallocTrace files (For now we are just verifying the existence of lib and .h files)) 
-    if test ! -d $with_malloc_trace; then
-      AC_MSG_ERROR( '$with_malloc_trace' directory does not exist. )
-    fi
-    if test "$IS_STATIC_BUILD" = "yes"; then
-       if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
-       	  AC_MSG_ERROR( '$with_malloc_trace/lib/libMallocTrace.a' does not exist. )
-       fi
-    else
-	if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-      	   AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
-    	fi
-    fi
-    if test ! -f $with_malloc_trace/include/MallocTrace.h; then
-      AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
-    fi
-    AC_MSG_RESULT(yes)
-    DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
-    INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    if test "$IS_STATIC_BUILD" = "yes"; then
-       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
-    else								     
-       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
-    fi
-    MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
-    MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
-  fi
-fi
-AC_SUBST(DEF_MALLOC_TRACE)
-AC_SUBST(INC_MALLOC_TRACE_H)
-AC_SUBST(MALLOC_TRACE_LIB_FLAG)
-AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
-AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
 
 #########################################################################
 ##
@@ -1967,8 +1843,6 @@ AC_SUBST(RT_LIB_FLAG)
 MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 
 ##  --  check for the required thread library  ---------------------------
-
-SOCKET_LIBRARY=""
 
 case $host in
   *)
@@ -3259,8 +3133,9 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         
   esac
   
-  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
-  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
+  MPI_LIB_FLAG="$MPI_LIB_FLAG"
+  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG"
+  
 fi #end sci_required_mpi
 
 ########################################################################
@@ -3370,7 +3245,7 @@ else
                       $_sci_inc,
                       petsc petscvec petscmat petscdm petscsnes petscts petscksp,
                       $_sci_lib_dir,
-                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                       ,
                       optional)
 
@@ -3393,7 +3268,7 @@ else
                             $_sci_inc,
                             $the_libs,
                             $_sci_lib_dir,
-                            $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                             ,
                             optional)
                # bail if a suitable library is found
@@ -4371,7 +4246,7 @@ else
             SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                         HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
                         $_sci_lib,
-                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                         ,
                         optional)
 
@@ -4379,7 +4254,7 @@ else
            SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                            HYPRE,
                            $_sci_lib,
-                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                            ,
                            optional)
 

@@ -52,8 +52,8 @@ ifeq ($(HAVE_CUDA),yes)
   DLINK_FILES += Core/Util/GPU.o
 endif
 
-PSELIBS := Core/Containers Core/Exceptions Core/Malloc
+PSELIBS := Core/Containers Core/Exceptions
 
-LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY) $(CUDA_LIBRARY)
+LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

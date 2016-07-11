@@ -87,7 +87,6 @@
 #include <Core/Util/Time.h>
 
 #include <sci_defs/hypre_defs.h>
-#include <sci_defs/malloc_defs.h>
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
 #include <sci_defs/cuda_defs.h>
@@ -119,13 +118,6 @@
 
 using namespace Uintah;
 using namespace std;
-
-#if defined( USE_LENNY_HACK )
-  // See Core/Malloc/Allocator.cc for more info.
-  namespace Uintah {
-    extern void shutdown();
-  };
-#endif
 
 // Used to sync cerr so it is readable when output by multiple threads
 extern std::mutex cerrLock;
