@@ -98,59 +98,73 @@ echo   "------------------------------------------------------------------"
 run "cd $BASE_BUILD_DIR/Wasatch3P"
 run "mkdir -p src"
 run "mkdir -p install"
-run "rm -rf install/*"
+#run "rm -rf install/*"
 
 ############################################################################
 # SpatialOps
 
 run "cd src"
-run "rm -rf SpatialOps"
-run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git SpatialOps"
+needsrecompile=true
+if [ -d "SpatialOps" ]; then
+    run "cd SpatialOps"
+    if ! git diff-index --quiet HEAD --; then
+      echo "updating SpatialOps..."
+      run "git pull"
+    else
+      needsrecompile=false
+    fi
+    run "cd .."
+else
+  run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git SpatialOps"
+  run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
+fi
 if test ! -z $SPATIAL_OPS_TAG ; then
     run "cd SpatialOps"
     run "git reset --hard $SPATIAL_OPS_TAG"
     run "cd .."
 fi
-run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
+
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
 
-# begin debugging
-run "pwd"
-run "ls -l"
-run "which cmake"
-run "cmake --version"
-# end debugging
-
-INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
-
-run \
-"cmake \
-  $DEBUG \
-  $STATIC \
-  $CUDA \
-  $THREADS \
-  -DENABLE_TESTS=OFF \
-  -DENABLE_EXAMPLES=OFF \
-  $BOOST_FLAGS \
-  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
-  -DCMAKE_CXX_FLAGS="-fPIC" \
-  .."
-
-run "make -j4 install"
-
-if test "$6" = "yes"; then
-
-  # Building with CUDA - Hack the SpatialOps installed NeboOperators.h file to cast the 2nd arg of pow to a double.
-  echo ""
-  echo ""
-  echo "WARNING: Hacking NeboOperators.h to cast 2nd parameter of std::pow() to be a double!"
-  echo ""
-  echo ""
-  run "mv $INSTALL_HERE/include/spatialops/NeboOperators.h $INSTALL_HERE/include/spatialops/NeboOperators.h.orig"
-  run "sed -r -e 's,(std::pow.*)operand2_,\1(double)operand2_,' $INSTALL_HERE/include/spatialops/NeboOperators.h.orig > NeboOperators.h.tmp"
-  run "sed -r -e 's,(std::pow.*)exp_,\1(double)exp_,' NeboOperators.h.tmp > $INSTALL_HERE/include/spatialops/NeboOperators.h"
-  run "rm NeboOperators.h.tmp"
-
+if [ "$needsrecompile" = true ]; then
+  # begin debugging
+  run "pwd"
+  run "ls -l"
+  run "which cmake"
+  run "cmake --version"
+  # end debugging
+  
+  INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
+  
+  run \
+  "cmake \
+    $DEBUG \
+    $STATIC \
+    $CUDA \
+    $THREADS \
+    -DENABLE_TESTS=OFF \
+    -DENABLE_EXAMPLES=OFF \
+    $BOOST_FLAGS \
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+    -DCMAKE_CXX_FLAGS="-fPIC" \
+    .."
+  
+  run "make -j4 install"
+  
+  if test "$6" = "yes"; then
+  
+    # Building with CUDA - Hack the SpatialOps installed NeboOperators.h file to cast the 2nd arg of pow to a double.
+    echo ""
+    echo ""
+    echo "WARNING: Hacking NeboOperators.h to cast 2nd parameter of std::pow() to be a double!"
+    echo ""
+    echo ""
+    run "mv $INSTALL_HERE/include/spatialops/NeboOperators.h $INSTALL_HERE/include/spatialops/NeboOperators.h.orig"
+    run "sed -r -e 's,(std::pow.*)operand2_,\1(double)operand2_,' $INSTALL_HERE/include/spatialops/NeboOperators.h.orig > NeboOperators.h.tmp"
+    run "sed -r -e 's,(std::pow.*)exp_,\1(double)exp_,' NeboOperators.h.tmp > $INSTALL_HERE/include/spatialops/NeboOperators.h"
+    run "rm NeboOperators.h.tmp"
+  
+  fi
 fi
 
 run "cd ../../.."  # back to Wasatch3P
@@ -159,100 +173,145 @@ run "cd ../../.."  # back to Wasatch3P
 # ExprLib
 
 run "cd src"
-run "rm -rf ExprLib"
-run "env GIT_SSL_NO_VERIFY=true git clone --depth 20 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
+needsrecompile=true
+if [ -d "ExprLib" ]; then
+    run "cd ExprLib"
+    if ! git diff-index --quiet HEAD --; then
+       echo "updating ExprLib..."
+       run "git pull"
+    else
+       needsrecompile=false
+    fi
+    run "cd .."
+else
+    run "env GIT_SSL_NO_VERIFY=true git clone --depth 20 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
+    run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
+fi
 if test ! -z $EXPR_LIB_TAG ; then
     run "cd ExprLib"
     run "git reset --hard $EXPR_LIB_TAG"
     run "cd .."
 fi
-run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
 
-INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/ExprLib
-SPATIAL_OPS_INSTALL_DIR=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
+if [ "$needsrecompile" = true ]; then
+  INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/ExprLib
+  SPATIAL_OPS_INSTALL_DIR=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
+  
+  run                  \
+  "cmake               \
+    $DEBUG             \
+    $STATIC            \
+    \
+    -DENABLE_TESTS=OFF \
+    -DBUILD_GUI=OFF    \
+    \
+    -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
+    \
+    $BOOST_FLAGS \
+    \
+    -DENABLE_UINTAH=ON \
+    \
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}            \
+    -DCMAKE_CXX_FLAGS="-fPIC"                         \
+    .."
+  
+  run "make -j4 install"
+fi
 
-run                  \
-"cmake               \
-  $DEBUG             \
-  $STATIC            \
-  \
-  -DENABLE_TESTS=OFF \
-  -DBUILD_GUI=OFF    \
-  \
-  -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
-  \
-  $BOOST_FLAGS \
-  \
-  -DENABLE_UINTAH=ON \
-  \
-  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}            \
-  -DCMAKE_CXX_FLAGS="-fPIC"                         \
-  .."
-
-run "make -j4 install"
 run "cd ../../.."  # back to Wasatch3P
 
 ############################################################################
 # TabProps
 
 run "cd src"
-run "rm -rf TabProps"
-run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git TabProps"
+needsrecompile=true
+if [ -d "TabProps" ]; then
+    run "cd TabProps"
+    if ! git diff-index --quiet HEAD --; then
+      echo "updating TabProps"
+      run "git pull"
+    else
+      needsrecompile=false
+    fi
+    run "cd .."
+else
+    run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git TabProps"
+    run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
+fi
 if test ! -z $TAB_PROPS_TAG ; then
     run "cd TabProps"
     run "git reset --hard $TAB_PROPS_TAG"
     run "cd .."
 fi
-run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
 
-INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/TabProps
+if [ "$needsrecompile" = true ]; then
+  
+  INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/TabProps
+  
+  run \
+  "cmake \
+    $DEBUG \
+    $STATIC \
+    -DTabProps_PREPROCESSOR=OFF \
+    -DTabProps_UTILS=OFF \
+    -DTabProps_ENABLE_TESTING=OFF \
+    $BOOST_FLAGS \
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+    -DCMAKE_CXX_FLAGS=-fPIC \
+    .."
+  
+  run "make -j4 install"
+fi
 
-run \
-"cmake \
-  $DEBUG \
-  $STATIC \
-  -DTabProps_PREPROCESSOR=OFF \
-  -DTabProps_UTILS=OFF \
-  -DTabProps_ENABLE_TESTING=OFF \
-  $BOOST_FLAGS \
-  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
-  -DCMAKE_CXX_FLAGS=-fPIC \
-  .."
-
-run "make -j4 install"
 run "cd ../../.."  # back to Wasatch3P
 
 ############################################################################
 # RadProps
 
 run "cd src"
-run "rm -rf RadProps"
-run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git RadProps"
+needsrecompile=true
+if [ -d "RadProps" ]; then
+    run "cd RadProps"
+    if ! git diff-index --quiet HEAD --; then
+      echo "updating RadProps..."
+      run "git pull"
+    else
+      needsrecompile=false
+    fi
+    run "cd .."
+else
+   run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git RadProps"
+   run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
+fi
 if test ! -z $RAD_PROPS_TAG ; then
     run "cd RadProps"
     run "git reset --hard $RAD_PROPS_TAG"
     run "cd .."
 fi
-run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
+
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
 
-INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/RadProps
+if [ "$needsrecompile" = true ]; then
+  
+  INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/RadProps
+  
+  run \
+  "cmake \
+    $DEBUG \
+    $STATIC \
+    -DRadProps_ENABLE_TESTING=OFF \
+    -DRadProps_ENABLE_PREPROCESSOR=OFF \
+    $BOOST_FLAGS \
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+    -DCMAKE_CXX_FLAGS=-fPIC \
+    -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \
+    .."
+  
+  run "make -j4 install"
+fi
 
-run \
-"cmake \
-  $DEBUG \
-  $STATIC \
-  -DRadProps_ENABLE_TESTING=OFF \
-  -DRadProps_ENABLE_PREPROCESSOR=OFF \
-  $BOOST_FLAGS \
-  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
-  -DCMAKE_CXX_FLAGS=-fPIC \
-  -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \
-  .."
-
-run "make -j4 install"
 run "cd ../../.."  # back to Wasatch3P
 
 ############################################################################
