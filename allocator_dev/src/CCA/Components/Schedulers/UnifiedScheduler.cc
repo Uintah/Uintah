@@ -48,6 +48,7 @@
 #include <cstring>
 #include <iomanip>
 #include <mutex>
+#include <thread>
 
 #define USE_PACKING
 
@@ -2221,7 +2222,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
             if (uses_SHRT_MAX) {
               IntVector domainLo_EC, domainHi_EC;
               level->findCellIndexRange(domainLo_EC, domainHi_EC); // including extraCells
-              dw->getRegion(*gridVar, curDependency->m_var, matlID, level, domainLo_EC, domainHi_EC, true);
+              dw->getRegionModifiable(*gridVar, curDependency->m_var, matlID, level, domainLo_EC, domainHi_EC, true);
             } else {
               dw->getGridVar(*gridVar, curDependency->m_var, matlID, patch, curDependency->m_gtype, curDependency->m_num_ghost_cells);
             }
@@ -2301,9 +2302,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
             || type == TypeDescription::SFCZVariable) {
 
           // TODO, not correct if scratch ghost is used?
-
-          GridVariableBase* gridVar =
-              dynamic_cast<GridVariableBase*>(curDependency->m_var->typeDescription()->createInstance());
+          GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(curDependency->m_var->typeDescription()->createInstance());
 
           // Get variable size. Scratch computes means we need to factor that in when computing the size.
           IntVector lowIndex, highIndex;
@@ -2320,22 +2319,22 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
           // Even though it's only on the device, we to create space for the var on the host.
           // This makes it easy in case we ever need to perform any D2Hs.
-          // TODO: Is this even needed?  InitiateD2H seems to create the var when it's needed host side.
-          // So what happens if we remove this?
-          // I know it crashes if this is removed, but it seems like that crash should be fixed
+          // TODO: This seems a bit clunky.  Many simulations don't seem to need it,
+          //  but Wasatch's BasicScalarTransportEquation.ups (and many other Wasatch tests) crashe without it.
           const bool finalized = dw->isFinalized();
           if (finalized) {
-            dw->unfinalize();
+           dw->unfinalize();
           }
 
           dw->allocateAndPut(*gridVar, curDependency->m_var, matlID, patch, curDependency->m_gtype, curDependency->m_num_ghost_cells);
 
           if (finalized) {
-            dw->refinalize();
+           dw->refinalize();
           }
 
           delete gridVar;
           gridVar = nullptr;
+
 
           dtask->getDeviceVars().add(patch, matlID, levelID, false, host_size, memSize, elementDataSize, low, curDependency,
                                      curDependency->m_gtype, curDependency->m_num_ghost_cells, deviceIndex, nullptr,
@@ -3594,7 +3593,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                   dw->unfinalize();
                 }
                 if (uses_SHRT_MAX) {
-                  dw->getRegion(*gridVar, dependantVar->m_var, matlID, level, host_low, host_high, true, true);
+                  gridVar->allocate(host_low, host_high);
                 } else {
                   dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, gtype, numGhostCells);
                 }
@@ -3643,7 +3642,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                     if (finalized) {
                       dw->unfinalize();
                     }
-                    dw->getRegion(*gridVar, dependantVar->m_var, matlID, level, host_low, host_high, true);
+                    gridVar->allocate(host_low, host_high);
                     if (finalized) {
                       dw->refinalize();
                     }

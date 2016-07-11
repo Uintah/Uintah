@@ -4,10 +4,10 @@
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/NeboStencilBuilder.h>
 #include <CCA/Components/Arches/Directives.h>
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <spatialops/util/TimeLogger.h>
 
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <spatialops/util/TimeLogger.h>
 
 using namespace Uintah;

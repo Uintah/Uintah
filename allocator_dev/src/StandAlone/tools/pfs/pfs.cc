@@ -201,7 +201,7 @@ main(int argc, char *argv[])
               }
               
               source.close();
-              for(Level::const_patchIterator iter = level->patchesBegin();
+              for(Level::const_patch_iterator iter = level->patchesBegin();
                   iter != level->patchesEnd(); iter++){
                 const Patch* patch = *iter;
                 int pid = patch->getID();

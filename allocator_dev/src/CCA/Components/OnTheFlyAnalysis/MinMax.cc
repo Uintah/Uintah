@@ -276,7 +276,7 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
 #ifdef HAVE_VISIT
     if( sharedState->getVisIt() ) {
       SimulationState::analysisVar aVar;
-      aVar.name = label->getName();
+      aVar.name  = label->getName();
       aVar.matl  = matl;
       aVar.level = level;
       aVar.labels.push_back( meMin );
@@ -791,8 +791,8 @@ void MinMax::findMinMax( DataWarehouse*  new_dw,
   const VarLabel* meMin = VarLabel::find( VLmin );
   const VarLabel* meMax = VarLabel::find( VLmax );
 
-  new_dw->put(  ReductionVariable<Ttype, Reductions::Max<Ttype> >(maxQ), meMax,  level );
-  new_dw->put(  ReductionVariable<Ttype, Reductions::Min<Ttype> >(minQ), meMin,  level );
+  new_dw->put( ReductionVariable<Ttype, Reductions::Max<Ttype> >(maxQ), meMax, level );
+  new_dw->put( ReductionVariable<Ttype, Reductions::Min<Ttype> >(minQ), meMin, level );
 }
 
 //______________________________________________________________________

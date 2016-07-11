@@ -474,7 +474,7 @@ int main(int argc, char *argv[])
 
         //__________________________________
         //  Write out the pts file for this patch and matl        
-        for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+        for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
           const Patch* patch = *iter;
 
           unsigned int patchID = patch->getID();

@@ -1309,80 +1309,79 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   if (L_indx != maxLevels) {     // only schedule on the finest level
     return;
   }
-  std::string taskname = "";
+
   Task* tsk = nullptr;
+  std::string taskname = "";
 
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
 
-    if(radCalc_freq != 1){                // FIXME
-       ostringstream warn;
-       warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
+    if (radCalc_freq != 1) {                // FIXME
+      ostringstream warn;
+      warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
 
-
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-      tsk = new Task( taskname, this, &Ray::rayTraceDataOnionGPU< double >,
-                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
+      tsk = new Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>,
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
     } else {
-      tsk = new Task( taskname, this, &Ray::rayTraceDataOnionGPU< float >,
-                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+      tsk = new Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>,
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
     }
     tsk->usesDevice(true);
   } else {                                // CPU
     taskname = "Ray::rayTrace_dataOnion";
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = new Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw,
-                        radCalc_freq);
-    }
-    else {
-      tsk = new Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw,
-                        radCalc_freq);
+      tsk = new Task(taskname, this, &Ray::rayTrace_dataOnion<double>,
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
+    } else {
+      tsk = new Task(taskname, this, &Ray::rayTrace_dataOnion<float>,
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
     }
   }
 
-  printSchedule(level,dbg,taskname);
+  printSchedule(level, dbg, taskname);
 
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
-  #define allPatches 0
-  #define allMatls 0
-  Ghost::GhostType  gac  = Ghost::AroundCells;
+  Ghost::GhostType         gac  = Ghost::AroundCells;
 
   // finest level:
   if ( d_whichROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
 
     int maxElem = Max( d_halo.x(), d_halo.y(), d_halo.z() );
-    tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem);
-    tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem);
-    tsk->requires( celltype_dw , d_cellTypeLabel , gac, maxElem);
+    tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
+    tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, maxElem );
   } else {                                        // we don't know the number of ghostCells so get everything
-    tsk->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX);
-    tsk->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX);
-    tsk->requires( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX);
+    tsk->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX );
+    tsk->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX );
+    tsk->requires( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX );
   }
 
   // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
   if (!(Uintah::Parallel::usingDevice())) {
     // needed for carry Forward
-    tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
-    tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+    tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
+    tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
   }
 
 
-  if( d_whichROI_algo == dynamic ){
-    tsk->requires(Task::NewDW, d_ROI_LoCellLabel);
-    tsk->requires(Task::NewDW, d_ROI_HiCellLabel);
+  if (d_whichROI_algo == dynamic) {
+    tsk->requires( Task::NewDW, d_ROI_LoCellLabel );
+    tsk->requires( Task::NewDW, d_ROI_HiCellLabel );
   }
 
-  // coarser level
-  int nCoarseLevels = maxLevels;
-  for (int l=1; l<=nCoarseLevels; ++l){
-    tsk->requires(abskg_dw,    d_abskgLabel,    allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
-    tsk->requires(sigma_dw,    d_sigmaT4Label,  allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
-    tsk->requires(celltype_dw, d_cellTypeLabel, allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
-    proc0cout << "WARNING: RMCRT High communication costs on level:" << l
-              << ".  Variables from every patch on this level are communicated to every patch on the finest level."<< endl;
+  // declare requires for all coarser levels
+  for (int l = 0; l < maxLevels; ++l) {
+    int offset = maxLevels - l;
+    tsk->requires(abskg_dw,    d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX);
+    tsk->requires(sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX);
+    tsk->requires(celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX);
+
+    proc0cout << "WARNING: RMCRT High communication costs on level: " << l
+              << ".  Variables from every patch on this level are communicated to every patch on the finest level."
+              << std::endl;
   }
 
   if( modifies_divQ ){
@@ -1391,7 +1390,6 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->modifies( d_radiationVolqLabel );
 
   } else {
-
     tsk->computes( d_divQLabel );
     tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );

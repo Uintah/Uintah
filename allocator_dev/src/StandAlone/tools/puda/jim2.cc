@@ -74,7 +74,7 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
     double total_mass=0.;
       LevelP level = grid->getLevel(grid->numLevels()-1);
       cout << "Level: " << grid->numLevels() - 1 <<  endl;
-      for(Level::const_patchIterator iter = level->patchesBegin();
+      for(Level::const_patch_iterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
         int matl = clf.matl;

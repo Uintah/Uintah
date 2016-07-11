@@ -44,9 +44,7 @@ SRCS += \
         $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/UnifiedScheduler.cc         \
-        $(SRCDIR)/Util.cc                     \
-        \
-        $(SRCDIR)/templates.cc
+        $(SRCDIR)/Util.cc
         
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPUDataWarehouse.cu         \

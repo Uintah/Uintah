@@ -94,7 +94,12 @@ public:
   virtual ~DataWarehouse();
       
   virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const = 0;
+  virtual bool exists(const VarLabel*, int matlIndex, const Level*) const = 0;
 
+  virtual ReductionVariableBase* getReductionVariable( const VarLabel*,
+						       int matlIndex,
+						       const Level* ) const = 0;
+  
   // Returns a (const) pointer to the grid.  This pointer can then be
   // used to (for example) get the number of levels in the grid.
   virtual const Grid * getGrid() = 0;

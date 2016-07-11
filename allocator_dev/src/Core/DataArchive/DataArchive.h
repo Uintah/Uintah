@@ -614,7 +614,7 @@ private:
 
         switch (type->getType()) {
         case TypeDescription::CCVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsCell(loc)) {
               patch = *iter;
@@ -625,7 +625,7 @@ private:
           break;
 
         case TypeDescription::NCVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsNode(loc)) {
               patch = *iter;
@@ -634,7 +634,7 @@ private:
           }
           break;
         case TypeDescription::SFCXVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCX(loc)) {
               patch = *iter;
@@ -643,7 +643,7 @@ private:
           }
           break;
         case TypeDescription::SFCYVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCY(loc)) {
               patch = *iter;
@@ -652,7 +652,7 @@ private:
           }
           break;
         case TypeDescription::SFCZVariable:
-          for (Level::const_patchIterator iter = level->patchesBegin();
+          for (Level::const_patch_iterator iter = level->patchesBegin();
                (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
             if ((*iter)->containsSFCZ(loc)) {
               patch = *iter;

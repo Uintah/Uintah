@@ -171,6 +171,8 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
 #ifdef HAVE_CUDA
     cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
+    cerr << "-gpucheck            : returns 1 if sus was compiled with CUDA and there is a GPU available. \n";
+    cerr << "                     : returns 2 if sus was not compiled with CUDA or there are no GPUs available. \n";
     cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
     cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     cerr << "-local_filesystem    : If using MPI, use this flag if each node has a local disk.\n";
