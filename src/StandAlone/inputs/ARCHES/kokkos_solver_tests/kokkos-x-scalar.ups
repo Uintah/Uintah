@@ -12,8 +12,8 @@
   <Time>
     <maxTime>100.</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.01</delt_min>
-    <delt_max>0.01</delt_max>
+    <delt_min>1e-2</delt_min>
+    <delt_max>1e-2</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
     <max_Timesteps>50</max_Timesteps>
   </Time>
@@ -22,10 +22,12 @@
     <filebase>kokkos.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="phi-up"/>
-    <save label="phi-sb"/>
-    <save label="phi-vl"/>
-    <save label="phi-roe"/>
+    <!--<save label="phi-up"/>-->
+    <!--<save label="phi-sb"/>-->
+    <!--<save label="phi-vl"/>-->
+    <!--<save label="phi-roe"/>-->
+    <save label="phi-diff"/>
+    <save label="phi-diff_rhs"/>
     <save label="uVel"/>
     <save label="vVel"/>
     <save label="wVel"/>
@@ -115,7 +117,7 @@
         </model>
         <model label="uVel" type="constant_property">
           <grid type="FX"/>
-          <value>1.</value>
+          <value>0.1</value>
         </model>
         <model label="vVel" type="constant_property">
           <grid type="FY"/>
@@ -140,43 +142,57 @@
       </PropertyModelsV2>
 
       <KScalarTransport>
-        <eqn label="phi-up" type="CC">
-          <convection scheme="upwind" />
-          <diffusion/>
+        <eqn_group label="CCFields"
+                   type="CC">
+
+          <eqn label="phi-diff">
+            <diffusion/>
+            <convection scheme="upwind"/>
+          </eqn>
+
           <diffusion_coef label="gamma"/>
-          <velocity xlabel="uVel"
+          <velocity  xlabel="uVel"
                     ylabel="vVel"
                     zlabel="wVel"/>
-        </eqn>
-        <eqn label="phi-sb" type="CC">
-          <convection scheme="superbee" />
-          <diffusion/>
-          <diffusion_coef label="gamma"/>
-          <velocity xlabel="uVel"
-                    ylabel="vVel"
-                    zlabel="wVel"/>
-        </eqn>
-        <eqn label="phi-vl" type="CC">
-          <convection scheme="vanleer" />
-          <diffusion/>
-          <diffusion_coef label="gamma"/>
-          <velocity xlabel="uVel"
-                    ylabel="vVel"
-                    zlabel="wVel"/>
-        </eqn>
-        <eqn label="phi-roe" type="CC">
-          <convection scheme="roe" />
-          <diffusion/>
-          <diffusion_coef label="gamma"/>
-          <velocity xlabel="uVel"
-                    ylabel="vVel"
-                    zlabel="wVel"/>
-        </eqn>
+
+        </eqn_group>
+        <!--<eqn label="phi-up" type="CC">-->
+          <!--<convection scheme="upwind" />-->
+          <!--<diffusion/>-->
+          <!--<diffusion_coef label="gamma"/>-->
+          <!--<velocity xlabel="uVel"-->
+                    <!--ylabel="vVel"-->
+                    <!--zlabel="wVel"/>-->
+        <!--</eqn>-->
+        <!--<eqn label="phi-sb" type="CC">-->
+          <!--<convection scheme="superbee" />-->
+          <!--<diffusion/>-->
+          <!--<diffusion_coef label="gamma"/>-->
+          <!--<velocity xlabel="uVel"-->
+                    <!--ylabel="vVel"-->
+                    <!--zlabel="wVel"/>-->
+        <!--</eqn>-->
+        <!--<eqn label="phi-vl" type="CC">-->
+          <!--<convection scheme="vanleer" />-->
+          <!--<diffusion/>-->
+          <!--<diffusion_coef label="gamma"/>-->
+          <!--<velocity xlabel="uVel"-->
+                    <!--ylabel="vVel"-->
+                    <!--zlabel="wVel"/>-->
+        <!--</eqn>-->
+        <!--<eqn label="phi-roe" type="CC">-->
+          <!--<convection scheme="roe" />-->
+          <!--<diffusion/>-->
+          <!--<diffusion_coef label="gamma"/>-->
+          <!--<velocity xlabel="uVel"-->
+                    <!--ylabel="vVel"-->
+                    <!--zlabel="wVel"/>-->
+        <!--</eqn>-->
       </KScalarTransport>
 
       <Initialization>
-        <task task_label="phi_initializer-up"
-              variable_label="phi-up"
+        <task task_label="phi_initializer-diff"
+              variable_label="phi-diff"
               type="wave">
               <wave type="square">
                 <grid type="CC"/>
@@ -187,42 +203,54 @@
                         offset="0.0"/>
               </wave>
         </task>
-        <task task_label="phi_initializer-sb"
-              variable_label="phi-sb"
-              type="wave">
-              <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX"/>
-                <square min="0.0"
-                        max=".50"
-                        f="1.0"
-                        offset="0.0"/>
-              </wave>
-        </task>
-        <task task_label="phi_initializer-vl"
-              variable_label="phi-vl"
-              type="wave">
-              <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX"/>
-                <square min="0.0"
-                        max=".50"
-                        f="1.0"
-                        offset="0.0"/>
-              </wave>
-        </task>
-        <task task_label="phi_initializer-roe"
-              variable_label="phi-roe"
-              type="wave">
-              <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX"/>
-                <square min="0.0"
-                        max=".50"
-                        f="1.0"
-                        offset="0.0"/>
-              </wave>
-        </task>
+        <!--<task task_label="phi_initializer-up"-->
+              <!--variable_label="phi-up"-->
+              <!--type="wave">-->
+              <!--<wave type="square">-->
+                <!--<grid type="CC"/>-->
+                <!--<independent_variable label="gridX"/>-->
+                <!--<square min="0.0"-->
+                        <!--max=".50"-->
+                        <!--f="1.0"-->
+                        <!--offset="0.0"/>-->
+              <!--</wave>-->
+        <!--</task>-->
+        <!--<task task_label="phi_initializer-sb"-->
+              <!--variable_label="phi-sb"-->
+              <!--type="wave">-->
+              <!--<wave type="square">-->
+                <!--<grid type="CC"/>-->
+                <!--<independent_variable label="gridX"/>-->
+                <!--<square min="0.0"-->
+                        <!--max=".50"-->
+                        <!--f="1.0"-->
+                        <!--offset="0.0"/>-->
+              <!--</wave>-->
+        <!--</task>-->
+        <!--<task task_label="phi_initializer-vl"-->
+              <!--variable_label="phi-vl"-->
+              <!--type="wave">-->
+              <!--<wave type="square">-->
+                <!--<grid type="CC"/>-->
+                <!--<independent_variable label="gridX"/>-->
+                <!--<square min="0.0"-->
+                        <!--max=".50"-->
+                        <!--f="1.0"-->
+                        <!--offset="0.0"/>-->
+              <!--</wave>-->
+        <!--</task>-->
+        <!--<task task_label="phi_initializer-roe"-->
+              <!--variable_label="phi-roe"-->
+              <!--type="wave">-->
+              <!--<wave type="square">-->
+                <!--<grid type="CC"/>-->
+                <!--<independent_variable label="gridX"/>-->
+                <!--<square min="0.0"-->
+                        <!--max=".50"-->
+                        <!--f="1.0"-->
+                        <!--offset="0.0"/>-->
+              <!--</wave>-->
+        <!--</task>-->
       </Initialization>
 
       <KokkosSolver>

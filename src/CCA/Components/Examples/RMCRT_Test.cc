@@ -902,8 +902,8 @@ void RMCRT_Test::areGridsEqual( const GridP& uda_grid,
 
   // do the patches have the same number of cells and
   // cover the same physical domain?
-  Level::const_patchIterator iter      = level->patchesBegin();
-  Level::const_patchIterator otheriter = otherlevel->patchesBegin();
+  Level::const_patch_iterator iter      = level->patchesBegin();
+  Level::const_patch_iterator otheriter = otherlevel->patchesBegin();
   for (; iter != level->patchesEnd(); iter++, otheriter++) {
     const Patch* patch = *iter;
     const Patch* otherpatch = *otheriter;

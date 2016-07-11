@@ -103,13 +103,11 @@ SchedulerCommon::SchedulerCommon( const ProcessorGroup* myworld,
   d_isRestartInitTimestep = false;
 
   m_locallyComputedPatchVarMap = new LocallyComputedPatchVarMap;
-  reloc_new_posLabel_ = 0;
+  reloc_new_posLabel_ = nullptr;
 
-  // TODO replace after MiraDDT problem is debugged (APH - 03/24/15)
-  maxGhost = 0;
+  maxGhost       = 0;
+  maxFineGhost   = 0;
   maxLevelOffset = 0;
-//  m_max_ghost_cells.clear();
-//  maxLevelOffsets.clear();
 }
 
 //______________________________________________________________________
@@ -691,45 +689,26 @@ SchedulerCommon::addTask(       Task        * task,
   // Save the DW map
   task->setMapping(dwmap);
 
-  // if (d_myworld->myrank() == 1 || d_myworld->myrank() == d_myworld->size()-1)
-  schedulercommon_dbg << d_myworld->myrank() << " adding Task: " << task->getName() << ", # patches: "
-                      << (patches ? patches->size() : 0) << ", # matls: " << (matls ? matls->size() : 0) << endl;
+  if (schedulercommon_dbg.active()) {
+    schedulercommon_dbg << d_myworld->myrank() << " adding Task: " << task->getName() << ", # patches: "
+                        << (patches ? patches->size() : 0) << ", # matls: " << (matls ? matls->size() : 0) << endl;
+  }
 
   graphs[graphs.size()-1]->addTask(task, patches, matls);
   numTasks_++;
 
-  // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
   if (task->m_max_ghost_cells > maxGhost) {
     maxGhost = task->m_max_ghost_cells;
   }
+
+  if (task->m_max_fine_ghost_cells > maxFineGhost) {
+    maxFineGhost = task->m_max_fine_ghost_cells;
+  }
+
   if (task->m_max_level_offset > maxLevelOffset){
     maxLevelOffset = task->m_max_level_offset;
   }
-  // get the current level for the specified PatchSet to determine m_max_ghost_cells and maxLevelOffset
-  //   don't check these for output and restart tasks - patch and material sets are null then
-//  if (patches && matls) {
-//    int levelIndex = patches->getSubset(0)->get(0)->getLevel()->getIndex();
-//
-//    // initialize or update max ghost cells for the current level
-//    std::map<int, int>::iterator mgc_iter;
-//    mgc_iter = m_max_ghost_cells.find(levelIndex);
-//    if (mgc_iter == m_max_ghost_cells.end()) {
-//      m_max_ghost_cells.insert(std::pair<int, int>(levelIndex, 0));
-//    }
-//    else if (task->m_max_ghost_cells > mgc_iter->second) {
-//      mgc_iter->second = task->m_max_ghost_cells;
-//    }
-//
-//    // initialize or update max level offset for the current level
-//    std::map<int, int>::iterator mlo_iter;
-//    mlo_iter = maxLevelOffsets.find(levelIndex);
-//    if (mlo_iter == maxLevelOffsets.end()) {
-//      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, 0));
-//    }
-//    else if (task->maxLevelOffset > mlo_iter->second) {
-//      mlo_iter->second = task->maxLevelOffset;
-//    }
-//  }
+
 
   // add to init-requires.  These are the vars which require from the OldDW that we'll
   // need for checkpointing, switching, and the like.
@@ -865,11 +844,9 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
   d_computedVars.clear();
   numTasks_ = 0;
 
-  // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
-  maxGhost = 0;
+  maxGhost       = 0;
+  maxFineGhost   = 0;
   maxLevelOffset = 0;
-//  m_max_ghost_cells.clear();
-//  maxLevelOffsets.clear();
 
   reductionTasks.clear();
   addTaskGraph(NormalTaskGraph);
@@ -1452,7 +1429,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           //make refinePatchSets from patch ids
           set<int> allPatchIDset(allPatchIDs.begin(), allPatchIDs.end());
 
-          for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); ++iter) {
+          for (Level::patch_iterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); ++iter) {
             Patch* newPatch = *iter;
             if (allPatchIDset.find(newPatch->getID()) != allPatchIDset.end()) {
               refinePatchSets[L]->add(newPatch);

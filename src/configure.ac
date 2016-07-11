@@ -258,13 +258,6 @@ SCI_ARG_WITH(blas,
    sci_required_blas=yes],
   [with_blas=""])
   
-SCI_ARG_WITH(electric_fence,
-  AC_HELP_STRING(--with-electric-fence=DIR,
-                 Use Electric Fence (Memory Tracking) library in DIR),
-  [with_electric_fence="$withval"
-   sci_required_electric_fence=yes],
-  [with_electric_fence=""])
-  
 SCI_ARG_WITH(lapack,
   AC_HELP_STRING(--with-lapack=DIR, 
                  Use the lapack installation in DIR),
@@ -303,8 +296,7 @@ SCI_ARG_WITH(pokitt,
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
-  [with_mpi="$withval"
-   sci_required_mpi=yes],
+  [with_mpi="$withval"],
   [with_mpi=""])
   
 SCI_ARG_WITH(mpi_lib,
@@ -2524,14 +2516,6 @@ EOF
   esac
 AC_SUBST(EXCEPTIONS_CRASH_DEF)
 
-##  --  search for scisock --------------------------------------
-
-AC_SUBST(SCISOCK_LIB_FLAG)
-AC_SUBST(SCISOCK_LIB_DIR_FLAG)
-AC_SUBST(INC_SCISOCK_H)
-
-
-sci_defs_files="$sci_defs_files include/sci_defs/scisock_testdefs.h"
 
 ##  --  search for the fortran library  ----------------------------------
 # Always check for fortran, since we now always try to enable blas
@@ -2646,29 +2630,6 @@ if test "$with_fortran" = no; then
   msg="Though Fortran is not being used, assuming FORTRAN_UNDERSCORE=end for Core/Math/sci_lapack.cc..."
   add_important_warning "$msg"
 fi
-
-##  --  Electric Fence  -------------------------------------
-
-if test "$with_electric_fence"; then
-
-  if test "$with_electric_fence" = "yes"; then
-    SCI_TRY_LINK(ELECTRIC_FENCE,
-                 electric fence library,,,
-                 efence,
-                 ,,,
-                 required)
-  else
-    SCI_TRY_LINK(ELECTRIC_FENCE,
-                 electric fence library,,,
-                 efence,$with_electric_fence,
-                 ,,
-                 specific)
-  fi
-fi
-
-AC_SUBST(HAVE_ELECTRIC_FENCE)
-AC_SUBST(ELECTRIC_FENCE_LIB_FLAG)
-AC_SUBST(ELECTRIC_FENCE_LIB_DIR_FLAG)
 
 ##  --  search for acml (optimized blas/lapack) stuff  -------------------------------------
 
@@ -3131,6 +3092,7 @@ fi
 ##  --  search for mpi  --------------------------------------------------
 
 sci_required_mpi="yes"
+
 if test "$with_mpi" = "built-in"; then
   HAVE_MPI=yes
   AC_MSG_CHECKING(for location of mpi.h (as MPI was specified as built-in))
@@ -3158,26 +3120,6 @@ EOF
     AC_MSG_RESULT(WARNING: Could not determine location of mpi.h -- nvcc may have issues!)
   fi
   rm -rf conftest-uintah-mpi*
-
-  ########################################################################
-  ## Verify that MPI uses const correctly.. Mira check.
-  AC_MSG_CHECKING(if MPI uses const correctly)
-  cat > mpi_const_test.cc << EOF
-#include <mpi.h>
-inline int Add_error_string( int errorcode , const char *string )
-{
-  return MPI_Add_error_string( errorcode , string );
-}
-EOF
-
-  $CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
-  if test $? != 0; then
-     DEF_MPI_CONST_WORKS="#define MPICONST "
-     AC_MSG_RESULT(no)
-  else
-     DEF_MPI_CONST_WORKS="#define MPICONST const"
-     AC_MSG_RESULT(yes)
-  fi
 fi
 
 
@@ -3351,10 +3293,14 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         
   esac
   
-  ########################################################################
-  ## Verify that MPI uses const correctly.. Mira check.
-  AC_MSG_CHECKING(if MPI uses const correctly)
-  cat > mpi_const_test.cc << EOF
+  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
+  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
+fi #end sci_required_mpi
+
+########################################################################
+## Verify that MPI uses const correctly.. Mira check.
+AC_MSG_CHECKING(if MPI uses const correctly)
+cat > mpi_const_test.cc << EOF
 #include <mpi.h>
 inline int Add_error_string( int errorcode , const char *string )
 {
@@ -3362,18 +3308,14 @@ inline int Add_error_string( int errorcode , const char *string )
 }
 EOF
 
-  $CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
-  if test $? != 0; then
-     DEF_MPI_CONST_WORKS="#define MPICONST "
-     AC_MSG_RESULT(no)
-  else
-     DEF_MPI_CONST_WORKS="#define MPICONST const"
-     AC_MSG_RESULT(yes)
-  fi
-
-  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
-  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
-fi #end sci_required_mpi
+$CC $INC_MPI_H -c mpi_const_test.cc > /dev/null 2>&1
+if test $? != 0; then
+   DEF_MPI_CONST_WORKS="#define MPICONST "
+   AC_MSG_RESULT(no)
+else
+   DEF_MPI_CONST_WORKS="#define MPICONST const"
+   AC_MSG_RESULT(yes)
+fi
 
 # FIXME: These two defines need to be tested for and set correctly:
 DEF_MPI_MAX_THREADS="#define MPI_MAX_THREADS 64"
@@ -4226,7 +4168,7 @@ if test "$with_spatialops"; then
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
 
-  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
+  SPATIALOPS_LIB_FLAG="-lspatialops"
 
   HAVE_SPATIALOPS="yes"
 fi

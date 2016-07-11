@@ -61,15 +61,15 @@ static DebugStream lbout( "LBOut", false );
 ParticleLoadBalancer::ParticleLoadBalancer( const ProcessorGroup * myworld ) :
   LoadBalancerCommon(myworld)
 {
-  d_lbInterval = 0.0;
-  d_lastLbTime = 0.0;
+  m_lb_interval = 0.0;
+  m_last_lb_time = 0.0;
   d_lbTimestepInterval = 0;
   d_lastLbTimestep = 0;
-  d_checkAfterRestart = false;
+  m_check_after_restart = false;
   d_pspec = 0;
 
-  d_assignmentBasePatch = -1;
-  d_oldAssignmentBasePatch = -1;
+  m_assignment_base_patch = -1;
+  m_old_assignment_base_patch = -1;
 }
 
 ParticleLoadBalancer::~ParticleLoadBalancer()
@@ -97,7 +97,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
   vector<int> recvcounts(numProcs,0); // init the counts to 0
   int totalsize = 0;
 
-  DataWarehouse* dw = d_scheduler->get_dw(0);
+  DataWarehouse* dw = m_scheduler->get_dw(0);
   if (dw == 0)
     return;
 
@@ -137,9 +137,9 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
       for (int i = 0; i < oldPatches.size(); i++) {
         const Patch* oldPatch = oldPatches[i];
 
-        recvcounts[d_processorAssignment[oldPatch->getGridIndex()]]++;
+        recvcounts[m_processor_assignment[oldPatch->getGridIndex()]]++;
         totalsize++;
-        if (d_processorAssignment[oldPatch->getGridIndex()] == myrank) {
+        if (m_processor_assignment[oldPatch->getGridIndex()] == myrank) {
           IntVector low, high;
           //loop through the materials and add up the particles
           // the main difference between this and the above portion is that we need to grab the portion of the patch
@@ -151,7 +151,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
           if (dw) {
             //loop through the materials and add up the particles
             //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-            for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+            for (int m = 0; m < m_shared_state->getNumMatls(); m++) {
               ParticleSubset* psubset = 0;
               if (dw->haveParticleSubset(m, oldPatch, low, high))
                 psubset = dw->getParticleSubset(m, oldPatch, low, high);
@@ -186,7 +186,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
     if ( d_myworld->myrank() == 0) {
       for (unsigned i = 0; i < recvbuf.size(); i++) {
         PatchInfo& spi = recvbuf[i];
-        num_particles[spi.id] += spi.numParticles;
+        num_particles[spi.m_id] += spi.m_num_particles;
       }
     }
     // combine all the subpatches results
@@ -196,7 +196,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
   else {
     for (unsigned i = 0; i < subpatchParticles.size(); i++) {
       PatchInfo& spi = subpatchParticles[i];
-      num_particles[spi.id] += spi.numParticles;
+      num_particles[spi.m_id] += spi.m_num_particles;
     }
   }
 
@@ -228,7 +228,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
     particles[l].resize(grid->getLevel(l)->numPatches());
     particles[l].assign(grid->getLevel(l)->numPatches(),0);
   }
-  if (d_processorAssignment.size() == 0)
+  if (m_processor_assignment.size() == 0)
     return; // if we haven't been through the LB yet, don't try this.
 
   if (d_myworld->myrank() == 0)
@@ -243,7 +243,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
   // get how many particles were each patch had at the end of the last timestep
   //   gather from each proc - based on the last location
 
-  DataWarehouse* dw = d_scheduler->get_dw(0);
+  DataWarehouse* dw = m_scheduler->get_dw(0);
   if (dw == 0)
     return;
 
@@ -254,18 +254,18 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
   // along with the patch number in particleList
   for(int l=0;l<grid->numLevels();l++) {
     const LevelP& level = grid->getLevel(l);
-    for (Level::const_patchIterator iter = level->patchesBegin(); 
+    for (Level::const_patch_iterator iter = level->patchesBegin(); 
         iter != level->patchesEnd(); iter++) {
       Patch *patch = *iter;
       int id = patch->getGridIndex();
-      if (d_processorAssignment[id] != myrank)
+      if (m_processor_assignment[id] != myrank)
         continue;
       int thisPatchParticles = 0;
 
       if (dw) {
         //loop through the materials and add up the particles
         //   go through all materials since getting an MPMMaterial correctly would depend on MPM
-        for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+        for (int m = 0; m < m_shared_state->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch))
             thisPatchParticles += dw->getParticleSubset(m, patch)->numParticles();
         }
@@ -287,8 +287,8 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
     //sort(sorted_processorAssignment.begin(), sorted_processorAssignment.end());
     vector<PatchInfo> all_particles(num_patches);
 
-    for (int i = 0; i < (int)d_processorAssignment.size(); i++) {
-      recvcounts[d_processorAssignment[i]]+=sizeof(PatchInfo);
+    for (int i = 0; i < (int)m_processor_assignment.size(); i++) {
+      recvcounts[m_processor_assignment[i]]+=sizeof(PatchInfo);
     }
 
     for (unsigned i = 1; i < displs.size(); i++) {
@@ -301,17 +301,17 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
     if (dbg.active() && d_myworld->myrank() == 0) {
       for (unsigned i = 0; i < all_particles.size(); i++) {
         PatchInfo& pi = all_particles[i];
-        dbg << d_myworld->myrank() << "  Post gather index " << i << ": " << pi.id << " numP : " << pi.numParticles << endl;
+        dbg << d_myworld->myrank() << "  Post gather index " << i << ": " << pi.m_id << " numP : " << pi.m_num_particles << endl;
       }
     }
     for (int i = 0; i < num_patches; i++) {
-      num_particles[all_particles[i].id] = all_particles[i].numParticles;
+      num_particles[all_particles[i].m_id] = all_particles[i].m_num_particles;
     }
   }
   else {
     for (int i = 0; i < num_patches; i++)
     {
-      num_particles[particleList[i].id] = particleList[i].numParticles;
+      num_particles[particleList[i].m_id] = particleList[i].m_num_particles;
     }
   }
 
@@ -504,7 +504,7 @@ bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
       int patch=particlePatches[p];
       int proc=assignments[p];
       //set assignment
-      d_tempAssignment[patch]=proc;
+      m_temp_assignment[patch]=proc;
       //update procCosts (using cellCost)
       procCosts[proc]+=cellCosts[l][patch];
     }
@@ -519,7 +519,7 @@ bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
       int patch=cellPatches[p];
       int proc=assignments[p];
       //set assignment
-      d_tempAssignment[patch]=proc;
+      m_temp_assignment[patch]=proc;
     }
 
   }
@@ -557,7 +557,7 @@ double ParticleLoadBalancer::computeImbalance(const vector<vector<double> >& cos
 
     for(int p=0;p<(int)costs[l].size();p++,i++)
     {
-      tempProcCosts[l][d_tempAssignment[i]] += costs[l][p];
+      tempProcCosts[l][m_temp_assignment[i]] += costs[l][p];
     }
   }
 #if 0
@@ -610,8 +610,8 @@ double ParticleLoadBalancer::computePercentImprovement(const vector<vector<doubl
 
     for(int p=0;p<(int)costs[l].size();p++,i++)
     {
-      currentProcCosts[l][d_processorAssignment[i]] += costs[l][p];
-      tempProcCosts[l][d_tempAssignment[i]] += costs[l][p];
+      currentProcCosts[l][m_processor_assignment[i]] += costs[l][p];
+      tempProcCosts[l][m_temp_assignment[i]] += costs[l][p];
     }
   }
   
@@ -668,8 +668,8 @@ bool
 ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
                                     const GridP& grid)
 {
-  double time = d_sharedState->getElapsedTime();
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  double time = m_shared_state->getElapsedTime();
+  int timestep = m_shared_state->getCurrentTopLevelTimeStep();
 
   bool do_check = false;
 #if 1
@@ -677,15 +677,15 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     d_lastLbTimestep = timestep;
     do_check = true;
   }
-  else if (d_lbInterval != 0 && time >= d_lastLbTime + d_lbInterval) {
-    d_lastLbTime = time;
+  else if (m_lb_interval != 0 && time >= m_last_lb_time + m_lb_interval) {
+    m_last_lb_time = time;
     do_check = true;
   }
-  else if (time == 0 || d_checkAfterRestart) {
+  else if (time == 0 || m_check_after_restart) {
     // do AFTER initialization timestep too (no matter how much init regridding),
     // so we can compensate for new particles
     do_check = true;
-    d_checkAfterRestart = false;
+    m_check_after_restart = false;
   }
 #endif
 
@@ -698,8 +698,8 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     return true;
   }
   else {
-    d_oldAssignment = d_processorAssignment;
-    d_oldAssignmentBasePatch = d_assignmentBasePatch;
+    m_old_assignment = m_processor_assignment;
+    m_old_assignment_base_patch = m_assignment_base_patch;
     return false;
   }
 } 
@@ -712,7 +712,7 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
     
   vector<vector<int> > num_particles;
 
-  DataWarehouse* olddw = d_scheduler->get_dw(0);
+  DataWarehouse* olddw = m_scheduler->get_dw(0);
   bool on_regrid = olddw != 0 && grid != olddw->getGrid();
 
   //collect the number of particles on each processor into num_particles
@@ -782,18 +782,18 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
     if (state != LoadBalancer::check) {
       force = true;
       if (d_lbTimestepInterval != 0) {
-        d_lastLbTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+        d_lastLbTimestep = m_shared_state->getCurrentTopLevelTimeStep();
       }
-      else if (d_lbInterval != 0) {
-        d_lastLbTime = d_sharedState->getElapsedTime();
+      else if (m_lb_interval != 0) {
+        m_last_lb_time = m_shared_state->getElapsedTime();
       }
     }
-    d_oldAssignment = d_processorAssignment;
-    d_oldAssignmentBasePatch = d_assignmentBasePatch;
+    m_old_assignment = m_processor_assignment;
+    m_old_assignment_base_patch = m_assignment_base_patch;
     
     bool dynamicAllocate = false;
     //temp assignment can be set if the regridder has already called the load balancer
-    if(d_tempAssignment.empty())
+    if(m_temp_assignment.empty())
     {
       int num_patches = 0;
       for(int l=0;l<grid->numLevels();l++){
@@ -801,7 +801,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
         num_patches += level->numPatches();
       }
     
-      d_tempAssignment.resize(num_patches);
+      m_temp_assignment.resize(num_patches);
       dynamicAllocate = loadBalanceGrid(grid, force); 
     }
     else  //regridder has called dynamic load balancer so we must dynamically Allocate
@@ -812,27 +812,27 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
     if (dynamicAllocate || state != LoadBalancer::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
-      d_processorAssignment = d_tempAssignment;
-      d_assignmentBasePatch = (*grid->getLevel(0)->patchesBegin())->getID();
+      m_processor_assignment = m_temp_assignment;
+      m_assignment_base_patch = (*grid->getLevel(0)->patchesBegin())->getID();
 
       if (state == init) {
         // set it up so the old and new are in same place
-        d_oldAssignment = d_processorAssignment;
-        d_oldAssignmentBasePatch = d_assignmentBasePatch;
+        m_old_assignment = m_processor_assignment;
+        m_old_assignment_base_patch = m_assignment_base_patch;
       }
         
       if (lb.active()) {
         int myrank = d_myworld->myrank();
         if (myrank == 0) {
           LevelP curLevel = grid->getLevel(0);
-          Level::const_patchIterator iter = curLevel->patchesBegin();
+          Level::const_patch_iterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
           
-          for (size_t i = 0; i < d_processorAssignment.size(); i++) {
-            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getNumExtraCells() << " low:" << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() <<"\n";
+          for (size_t i = 0; i < m_processor_assignment.size(); i++) {
+            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << m_processor_assignment[i] << " (old " << m_old_assignment[i] << ") patch size: "  << (*iter)->getNumExtraCells() << " low:" << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() <<"\n";
             IntVector range = ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex());
             iter++;
-            if (iter == curLevel->patchesEnd() && i+1 < d_processorAssignment.size()) {
+            if (iter == curLevel->patchesEnd() && i+1 < m_processor_assignment.size()) {
               curLevel = curLevel->getFinerLevel();
               iter = curLevel->patchesBegin();
             }
@@ -841,7 +841,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
       }
     }
   }
-  d_tempAssignment.resize(0);
+  m_temp_assignment.resize(0);
   
   // logic to setting flag
   int flag = LoadBalancer::check;
@@ -851,7 +851,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate( grid, flag );
-  d_sharedState->d_runTimeStats[SimulationState::LoadBalancerTime] += Time::currentSeconds() - start;
+  m_shared_state->d_runTimeStats[SimulationState::LoadBalancerTime] += Time::currentSeconds() - start;
   return changed;
 }
 
@@ -882,14 +882,14 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
   }
 
   d_lbTimestepInterval = timestepInterval;
-  d_doSpaceCurve = spaceCurve;
+  m_do_space_curve = spaceCurve;
   d_lbThreshold = threshold;
 
-  ASSERT(d_sharedState->getNumDims()>0 || d_sharedState->getNumDims()<4);
+  ASSERT(m_shared_state->getNumDims()>0 || m_shared_state->getNumDims()<4);
   //set curve parameters that do not change between timesteps
-  d_sfc.SetNumDimensions(d_sharedState->getNumDims());
-  d_sfc.SetMergeMode(1);
-  d_sfc.SetCleanup(BATCHERS);
-  d_sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
+  m_sfc.SetNumDimensions(m_shared_state->getNumDims());
+  m_sfc.SetMergeMode(1);
+  m_sfc.SetCleanup(BATCHERS);
+  m_sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 }
 

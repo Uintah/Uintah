@@ -337,7 +337,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
   ASSERT(matlIndex >= -1);
   int idx = keys->lookup(label, matlIndex, dom);
 #if 0
-  if (vars.count(v)==0) {  // scrub not found
+  if (vars.m_count(v)==0) {  // scrub not found
     ostringstream msgstr;
     msgstr << label->getName() << ", matl " << matlIndex
     << ", patch/level " << dom->getID()
@@ -377,9 +377,9 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
       else {
         if (result) {
           if (add)
-            __sync_add_and_fetch(&(scrubs[keyiter->second]), result->count);
+            __sync_add_and_fetch(&(scrubs[keyiter->second]), result->m_count);
           else {
-            if (!__sync_bool_compare_and_swap(&(scrubs[keyiter->second]), 0, result->count)) {
+            if (!__sync_bool_compare_and_swap(&(scrubs[keyiter->second]), 0, result->m_count)) {
               SCI_THROW(InternalError("initializing non-zero scrub counter", __FILE__, __LINE__));
             }
           }

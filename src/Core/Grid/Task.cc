@@ -108,12 +108,13 @@ Task::initialize()
     m_dwmap[i] = Task::InvalidDW;
   }
 
-  m_sorted_order    = -1;
+  m_sorted_order = -1;
   m_phase        = -1;
   m_comm         = -1;
 
-  m_max_ghost_cells  = 0;
-  m_max_level_offset = 0;
+  m_max_ghost_cells      = 0;
+  m_max_fine_ghost_cells = 0;
+  m_max_level_offset     = 0;
 }
 
 //______________________________________________________________________
@@ -216,9 +217,16 @@ void Task::requires(WhichDW dw,
   Dependency* dep = new Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom, matls_dom, gtype, numGhostCells,
                                       level_offset);
 
+  if (level_offset == 0) {
+    if (numGhostCells > m_max_fine_ghost_cells) {
+      m_max_fine_ghost_cells = numGhostCells;
+    }
+  }
+
   if (numGhostCells > m_max_ghost_cells) {
     m_max_ghost_cells = numGhostCells;
   }
+
   if (level_offset > m_max_level_offset) {
     m_max_level_offset = level_offset;
   }

@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_CONVECTIONHELPER_h
 #define Uintah_Component_Arches_CONVECTIONHELPER_h
 
-#include <CCA/Components/Arches/DiscretizationTools.h>
+#include <CCA/Components/Arches/GridTools.h>
 
 /** @class ConvectionHelper
     @author J. Thornock
@@ -49,13 +49,13 @@ namespace Uintah {
   template <typename T>
   struct IntegrateFlux{
 
-    typedef typename VariableHelper<T>::ConstType CT;
-    typedef typename VariableHelper<T>::XFaceType FXT;
-    typedef typename VariableHelper<T>::YFaceType FYT;
-    typedef typename VariableHelper<T>::ZFaceType FZT;
-    typedef typename VariableHelper<T>::ConstXFaceType CFXT;
-    typedef typename VariableHelper<T>::ConstYFaceType CFYT;
-    typedef typename VariableHelper<T>::ConstZFaceType CFZT;
+    typedef typename GridTools::VariableHelper<T>::ConstType CT;
+    typedef typename GridTools::VariableHelper<T>::XFaceType FXT;
+    typedef typename GridTools::VariableHelper<T>::YFaceType FYT;
+    typedef typename GridTools::VariableHelper<T>::ZFaceType FZT;
+    typedef typename GridTools::VariableHelper<T>::ConstXFaceType CFXT;
+    typedef typename GridTools::VariableHelper<T>::ConstYFaceType CFYT;
+    typedef typename GridTools::VariableHelper<T>::ConstZFaceType CFZT;
 
     IntegrateFlux(T& rhs, CFXT& flux_x,
                   CFYT& flux_y, CFZT& flux_z,
@@ -104,13 +104,13 @@ namespace Uintah {
   template <typename T>
   struct ComputeConvectiveFlux{
 
-    typedef typename VariableHelper<T>::ConstType CT;
-    typedef typename VariableHelper<T>::XFaceType FXT;
-    typedef typename VariableHelper<T>::YFaceType FYT;
-    typedef typename VariableHelper<T>::ZFaceType FZT;
-    typedef typename VariableHelper<T>::ConstXFaceType CFXT;
-    typedef typename VariableHelper<T>::ConstYFaceType CFYT;
-    typedef typename VariableHelper<T>::ConstZFaceType CFZT;
+    typedef typename GridTools::VariableHelper<T>::ConstType CT;
+    typedef typename GridTools::VariableHelper<T>::XFaceType FXT;
+    typedef typename GridTools::VariableHelper<T>::YFaceType FYT;
+    typedef typename GridTools::VariableHelper<T>::ZFaceType FZT;
+    typedef typename GridTools::VariableHelper<T>::ConstXFaceType CFXT;
+    typedef typename GridTools::VariableHelper<T>::ConstYFaceType CFYT;
+    typedef typename GridTools::VariableHelper<T>::ConstZFaceType CFZT;
 
     ComputeConvectiveFlux( CT& phi,
                            CFXT& u, CFYT& v, CFZT& w,
@@ -210,7 +210,7 @@ namespace Uintah {
 
     void operator()(int i, int j, int k) const {
       throw InvalidValue(
-        "Error: No implementation of this limiter type or direction in DiscretizationTools.h",
+        "Error: No implementation of this limiter type or direction in GridTools.h",
         __FILE__, __LINE__);
     }
 
@@ -327,9 +327,9 @@ namespace Uintah {
   template<typename GT>
   struct StaggeredCellConvection {
 
-    typedef typename VariableHelper<GT>::ConstType constGT;
-    typedef typename VariableHelper<GT>::ConstYFaceType constYF;
-    typedef typename VariableHelper<GT>::ConstZFaceType constZF;
+    typedef typename GridTools::VariableHelper<GT>::ConstType constGT;
+    typedef typename GridTools::VariableHelper<GT>::ConstYFaceType constYF;
+    typedef typename GridTools::VariableHelper<GT>::ConstZFaceType constZF;
 
     StaggeredCellConvection( constGT& phi, GT& rhs, constGT& u, constYF& v, constZF& w ):
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -338,7 +338,7 @@ namespace Uintah {
     phi(phi), rhs(rhs), u(u), v(v), w(w)
 #endif
     {
-      VariableHelper<GT> var_help;
+      GridTools::VariableHelper<GT> var_help;
       dir = var_help.dir;
       ioff = var_help.ioff;
       joff = var_help.joff;
@@ -392,7 +392,7 @@ namespace Uintah {
     constYF& v;
     constZF& w;
 #endif
-    DIR dir;
+    GridTools::DIR dir;
     int ioff;
     int joff;
     int koff;

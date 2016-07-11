@@ -39,10 +39,25 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "variable_math" ){
 
-        //Assume all SVOl for now:
-        //otherwise would need to determine or parse for the variable types
-        typedef SpatialOps::SVolField SVol;
-        TaskInterface::TaskBuilder* tsk = new TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
+        std::string grid_type="NA";
+        if ( db_util->findBlock("grid").get_rep() != 0 ){
+          db_util->findBlock("grid")->getAttribute("type", grid_type);
+        } else {
+          throw InvalidValue("Error: variable_math must specify a grid variable type", __FILE__, __LINE__);
+        }
+
+        TaskInterface::TaskBuilder* tsk;
+        if ( grid_type == "CC" ){
+          tsk = new TaskAlgebra<CCVariable<double> >::Builder(name, 0);
+        } else if ( grid_type == "FX" ){
+          tsk = new TaskAlgebra<SFCXVariable<double> >::Builder(name, 0);
+        } else if ( grid_type == "FY" ){
+          tsk = new TaskAlgebra<SFCYVariable<double> >::Builder(name, 0);
+        } else if ( grid_type == "FZ" ){
+          tsk = new TaskAlgebra<SFCZVariable<double> >::Builder(name, 0);
+        } else {
+          throw InvalidValue("Error: grid_type not recognized.",__FILE__,__LINE__);
+        }
         register_task(name, tsk);
 
       } else {
@@ -74,16 +89,26 @@ UtilityFactory::add_task( ProblemSpecP& db ){
 
       if ( type == "variable_math" ){
 
-        //Assume all SVOl for now:
-        //otherwise would need to determine or parse for the variable types
-        typedef SpatialOps::SVolField SVol;
-        TaskInterface::TaskBuilder* tsk_builder = new TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
-        register_task(name, tsk_builder);
+        std::string grid_type="NA";
+        if ( db_util->findBlock("grid").get_rep() != 0 ){
+          db_util->findBlock("grid")->getAttribute("type", grid_type);
+        } else {
+          throw InvalidValue("Error: variable_math must specify a grid variable type", __FILE__, __LINE__);
+        }
 
-        //also must build it here:
-        // TaskInterface* tsk = retrieve_task(name);
-        // tsk->problemSetup(db_util);
-        // tsk->create_local_labels();
+        TaskInterface::TaskBuilder* tsk;
+        if ( grid_type == "CC" ){
+          tsk = new TaskAlgebra<CCVariable<double> >::Builder(name, 0);
+        } else if ( grid_type == "FX" ){
+          tsk = new TaskAlgebra<SFCXVariable<double> >::Builder(name, 0);
+        } else if ( grid_type == "FY" ){
+          tsk = new TaskAlgebra<SFCYVariable<double> >::Builder(name, 0);
+        } else if ( grid_type == "FZ" ){
+          tsk = new TaskAlgebra<SFCZVariable<double> >::Builder(name, 0);
+        } else {
+          throw InvalidValue("Error: grid_type not recognized.",__FILE__,__LINE__);
+        }
+        register_task(name, tsk);
 
       } else {
 

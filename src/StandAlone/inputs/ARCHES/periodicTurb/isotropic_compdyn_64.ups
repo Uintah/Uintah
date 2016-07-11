@@ -67,8 +67,6 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-
-      <set_initial_vel_condition inputfile="cbc64_uvw_arches.gz"/>
       <Turbulence model="compdynamicprocedure"/>
 
       <Properties>

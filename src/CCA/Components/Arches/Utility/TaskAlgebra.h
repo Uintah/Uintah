@@ -3,14 +3,14 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
-#include <spatialops/structured/FVStaggered.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah{
 
   //IT is the independent variable type
   //DT is the dependent variable type
-  template <typename IT1, typename IT2, typename DT>
+  template <typename T>
   class TaskAlgebra : public TaskInterface {
 
 public:
@@ -18,8 +18,8 @@ public:
     enum EXPR {ADD, SUBTRACT, MULTIPLY, DIVIDE, DIVIDE_CONST_VARIABLE,
                DIVIDE_VARIABLE_CONST, POW, EXP};
 
-    TaskAlgebra<IT1, IT2, DT>( std::string task_name, int matl_index );
-    ~TaskAlgebra<IT1, IT2, DT>();
+    TaskAlgebra<T>( std::string task_name, int matl_index );
+    ~TaskAlgebra<T>();
 
     void problemSetup( ProblemSpecP& db );
 
@@ -33,7 +33,7 @@ public:
       ~Builder(){}
 
       TaskAlgebra* build()
-      { return new TaskAlgebra<IT1, IT2, DT>( _task_name, _matl_index ); }
+      { return new TaskAlgebra<T>( _task_name, _matl_index ); }
 
       private:
 
@@ -74,6 +74,8 @@ protected:
 
 private:
 
+  typedef typename GridTools::VariableHelper<T>::ConstType CT;
+
   struct Operation{
 
     bool create_new_variable;
@@ -103,18 +105,18 @@ private:
   };
 
   // Class Implmentations --------------------------------------------------------------------------
-  template <typename IT1, typename IT2, typename DT>
-  TaskAlgebra<IT1, IT2, DT>::TaskAlgebra( std::string task_name, int matl_index) :
+  template <typename T>
+  TaskAlgebra<T>::TaskAlgebra( std::string task_name, int matl_index) :
   TaskInterface( task_name, matl_index )
   {}
 
-  template <typename IT1, typename IT2, typename DT>
-  TaskAlgebra<IT1, IT2, DT>::~TaskAlgebra()
+  template <typename T>
+  TaskAlgebra<T>::~TaskAlgebra()
   {}
 
   // Problem Setup ---------------------------------------------------------------------------------
-  template <typename IT1, typename IT2, typename DT>
-  void TaskAlgebra<IT1, IT2, DT>::problemSetup( ProblemSpecP& db ){
+  template <typename T>
+  void TaskAlgebra<T>::problemSetup( ProblemSpecP& db ){
 
     for ( ProblemSpecP op_db=db->findBlock("op"); op_db != 0; op_db=op_db->findNextBlock("op") ){
 
@@ -134,6 +136,10 @@ private:
       op_db->require("dep", new_op.dep);
       op_db->require("ind1", new_op.ind1);
 
+      //get the algebriac expression
+      std::string value;
+      op_db->getAttribute( "type", value );
+
       new_op.use_constant = false;
       if ( op_db->findBlock("ind2")){
         op_db->require("ind2", new_op.ind2);
@@ -141,15 +147,13 @@ private:
         op_db->require("constant", new_op.constant);
         new_op.use_constant = true;
       } else {
-        std::stringstream msg;
-        msg << "Error: Must specify either a constant or a second independent " <<
-        "variable for the algrebra utility" << std::endl;
-        throw ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+        if (value != "EXP"){
+          std::stringstream msg;
+          msg << "Error: Must specify either a constant or a second independent " <<
+          "variable for the algrebra utility for user defined operation labeled: "<< label << std::endl;
+          throw ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+        }
       }
-
-      //get the algebriac expression
-      std::string value;
-      op_db->getAttribute( "type", value );
 
       if ( value == "ADD" ) {
         new_op.expression_type = ADD;
@@ -191,54 +195,53 @@ private:
   }
 
   // Local variable creation -----------------------------------------------------------------------
-  template <typename IT1, typename IT2, typename DT>
-  void TaskAlgebra<IT1, IT2, DT>::create_local_labels(){
+  template <typename T>
+  void TaskAlgebra<T>::create_local_labels(){
 
-    for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
+    for ( auto iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
 
-        register_new_variable<DT>(iter->second.dep);
+        register_new_variable<T>(iter->second.dep);
 
       }
     }
   }
 
   // Initialize ------------------------------------------------------------------------------------
-  template <typename IT1, typename IT2, typename DT>
-  void TaskAlgebra<IT1, IT2, DT>::register_initialize(
+  template <typename T>
+  void TaskAlgebra<T>::register_initialize(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-    for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
+    for ( auto iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
 
         register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry );
 
       }
     }
-
   }
 
-  template <typename IT1, typename IT2, typename DT>
-  void TaskAlgebra<IT1, IT2, DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                        SpatialOps::OperatorDatabase& opr ){
-
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTFP;
+  template <typename T>
+  void TaskAlgebra<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                                   SpatialOps::OperatorDatabase& opr ){
 
     for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
 
-        DTFP dep = tsk_info->get_so_field<DT>(iter->second.dep);
-        *dep <<= 0.0;
+        T& dep = *(tsk_info->get_uintah_field<T>(iter->second.dep));
+        Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+        Uintah::parallel_for( range, [&](int i, int j, int k){
 
+          dep(i,j,k) = 0.;
+
+        });
       }
     }
   }
 
   // Timestep initialize ---------------------------------------------------------------------------
-  template <typename IT1, typename IT2, typename DT>
-  void TaskAlgebra<IT1, IT2, DT>::register_timestep_init(
+  template <typename T>
+  void TaskAlgebra<T>::register_timestep_init(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
     for ( typename OPMAP::iterator iter = all_operations.begin();
@@ -252,28 +255,28 @@ private:
     }
   }
 
-  template <typename IT1, typename IT2, typename DT>
-  void TaskAlgebra<IT1, IT2, DT>::timestep_init(
+  template <typename T>
+  void TaskAlgebra<T>::timestep_init(
     const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
-
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTFP;
 
     for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
 
-        DTFP dep = tsk_info->get_so_field<DT>(iter->second.dep);
-        *dep <<= 0.0;
+        T& dep = *(tsk_info->get_uintah_field<T>(iter->second.dep));
+        Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+        Uintah::parallel_for( range, [&](int i, int j, int k){
 
+          dep(i,j,k) = 0.;
+
+        });
       }
     }
   }
 
   // Timestep work ---------------------------------------------------------------------------------
-  template <typename IT1, typename IT2, typename DT>
-  void TaskAlgebra<IT1, IT2, DT>::register_timestep_eval(
+  template <typename T>
+  void TaskAlgebra<T>::register_timestep_eval(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
     const int time_substep ){
 
@@ -311,52 +314,59 @@ private:
           req_variables.push_back(op_iter->second.ind2);
         }
       }
-
     }
   }
 
-  template <typename IT1, typename IT2, typename DT>
-  void TaskAlgebra<IT1, IT2, DT>::eval(
+  template <typename T>
+  void TaskAlgebra<T>::eval(
     const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
-
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTFP;
-    typedef SpatialOps::SpatFldPtr<IT1> IT1FP;
-    typedef SpatialOps::SpatFldPtr<IT2> IT2FP;
 
     for (STRVEC::iterator iter = order.begin(); iter != order.end(); iter++){
 
       typename OPMAP::iterator op_iter = all_operations.find(*iter);
 
-      DTFP dep = tsk_info->get_so_field<DT>(op_iter->second.dep);
-      IT1FP ind1 = tsk_info->get_const_so_field<IT1>(op_iter->second.ind1);
+      T& dep = *(tsk_info->get_uintah_field<T>(op_iter->second.dep));
+      CT& ind1 = *(tsk_info->get_const_uintah_field<CT>(op_iter->second.ind1));
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
       if ( op_iter->second.use_constant ){
 
         switch ( op_iter->second.expression_type ){
           case ADD:
-            *dep <<= op_iter->second.constant + *ind1;
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = op_iter->second.constant + ind1(i,j,k);
+            });
             break;
           case SUBTRACT:
-            *dep <<= *ind1 - op_iter->second.constant;
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = ind1(i,j,k) - op_iter->second.constant;
+            });
             break;
           case MULTIPLY:
-            *dep <<= *ind1 * op_iter->second.constant;
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = ind1(i,j,k) * op_iter->second.constant;
+            });
             break;
           case DIVIDE_VARIABLE_CONST:
-            *dep <<= *ind1 / op_iter->second.constant;
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = ind1(i,j,k) / op_iter->second.constant;
+            });
             break;
           case DIVIDE_CONST_VARIABLE:
-            *dep <<= cond( *ind1 != 0, op_iter->second.constant / *ind1 )
-                          ( 0.0 );
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = (ind1(i,j,k) == 0) ? 0.0 : op_iter->second.constant / ind1(i,j,k);
+            });
             break;
           case POW:
-            *dep <<= pow(*ind1, op_iter->second.constant);
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = std::pow(ind1(i,j,k),op_iter->second.constant);
+            });
             break;
           case EXP:
-            *dep <<= exp(op_iter->second.constant);
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = std::exp(ind1(i,j,k));
+            });
             break;
           default:
             throw InvalidValue("Error: TaskAlgebra not supported.",__FILE__,__LINE__);
@@ -364,27 +374,33 @@ private:
 
       } else {
 
-        IT2FP ind2 = tsk_info->get_const_so_field<IT2>(op_iter->second.ind2);
+        CT& ind2 = *(tsk_info->get_const_uintah_field<CT>(op_iter->second.ind2));
 
         switch ( op_iter->second.expression_type ){
           case ADD:
-            *dep <<= *ind1 + *ind2;
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = ind1(i,j,k) + ind2(i,j,k);
+            });
             break;
           case SUBTRACT:
-            *dep <<= *ind1 - *ind2;
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = ind1(i,j,k) - ind2(i,j,k);
+            });
             break;
           case MULTIPLY:
-            *dep <<= *ind1 * *ind2;
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = ind1(i,j,k) * ind2(i,j,k);
+            });
             break;
           case DIVIDE:
-            *dep <<= cond( *ind2 != 0, *ind1 / *ind2 )
-                          ( 0.0 );
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = ind2(i,j,k) == 0 ? 0.0 : ind1(i,j,k) / ind2(i,j,k);
+            });
             break;
           case POW:
-            *dep <<= pow(*ind1, *ind2);
-            break;
-          case EXP:
-            *dep <<= exp(*ind1);
+            Uintah::parallel_for(range, [&](int i, int j, int k){
+              dep(i,j,k) = std::pow(ind1(i,j,k), ind2(i,j,k));
+            });
             break;
           default:
             throw InvalidValue("Error: TaskAlgebra not supported.",__FILE__,__LINE__);

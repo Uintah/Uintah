@@ -141,7 +141,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
@@ -288,7 +288,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
@@ -338,7 +338,7 @@ int main(int argc, char** argv)
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patch_iterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 

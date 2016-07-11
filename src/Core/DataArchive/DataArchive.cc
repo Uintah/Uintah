@@ -977,7 +977,7 @@ DataArchive::findPatchAndIndex( const GridP            grid,
 //     const LevelP level = grid->getLevel(level_nr);
     const LevelP level = grid->getLevel(levelIndex);
 
-    for (Level::const_patchIterator iter = level->patchesBegin();
+    for (Level::const_patch_iterator iter = level->patchesBegin();
          (iter != level->patchesEnd()) && (patch == nullptr); iter++) {
       if( *iter == local ) continue;
       ParticleVariable<long64> var;
