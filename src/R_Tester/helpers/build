@@ -29,7 +29,7 @@ if [ "$OS" = "Linux" ]; then
      
   #_________________
   #  machine specific variables
-  if [ "$MACHINE" == "rt" ]; then
+  if [ "$MACHINE" == "uintah-build" ]; then
     COMMON="      --with-boost=/usr/  \\
      --enable-all-components \\
      --enable-wasatch_3p \\
