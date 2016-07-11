@@ -32,11 +32,6 @@ OBJS := $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS)))     \
         $(patsubst %.l,%.$(OBJEXT),$(filter %.l,$(SRCS)))     \
         $(patsubst %.y,%.$(OBJEXT),$(filter %.y,$(SRCS)))
 
-# We always link against the internal Dataflow malloc
-ifneq ($(IS_WIN),yes)
-  PSELIBS := $(PSELIBS) $(MALLOCLIB)
-endif
-
 ifneq ($(REPOSITORY_FLAGS),)
   REPOSITORIES_$(PROGRAM) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository_$(notdir $(PROGRAM)) $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
 endif

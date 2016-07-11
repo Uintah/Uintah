@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
 #include <sci_defs/gperftools_defs.h>
 
 #include <CCA/Components/SimulationController/AMRSimulationController.h>

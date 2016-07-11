@@ -49,7 +49,7 @@ PSELIBS := \
 	Core/Containers  \
 	Core/Util        
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(SOCKET_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 #HAVE_PIDX
 ifeq ($(HAVE_PIDX),yes)

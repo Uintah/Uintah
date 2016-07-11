@@ -820,11 +820,6 @@ ZOLTAN_LIB_DIR_FLAG
 ZOLTAN_LIB_FLAG
 INC_ZOLTAN_H
 DEF_ZOLTAN
-MALLOC_TRACE_LIB_MPI_FLAG
-MALLOC_TRACE_LIB_DIR_FLAG
-MALLOC_TRACE_LIB_FLAG
-INC_MALLOC_TRACE_H
-DEF_MALLOC_TRACE
 SO_OR_ARCHIVE_EXTENSION
 IS_STATIC_BUILD
 SOFLAGS
@@ -848,9 +843,6 @@ OGL_ERR_MACRO
 DEBUG
 THROW_LEVEL
 ASSERTION_LEVEL
-DEF_MALLOC_LINENUMBERS
-DEF_MALLOC
-SCI_MALLOC_ON
 LARGESOS
 NOPRINTDIR
 IS_BGQ
@@ -863,8 +855,6 @@ EXEEXT
 ac_ct_CC
 DEF_OSX
 IS_OSX
-DEF_MEMORY_INIT_NUMBER
-DEF_MEMORY_INIT
 host_os
 host_vendor
 host_cpu
@@ -978,11 +968,7 @@ enable_output_avg_walltime
 enable_ray_scatter
 enable_gencode
 enable_largesos
-enable_sci_malloc
-enable_memory_init
-with_MallocTrace
 enable_assertion_level
-enable_scinew_line_numbers
 enable_throw_level
 enable_rpath
 enable_arches
@@ -1641,17 +1627,9 @@ Optional Features:
 --enable-gencode        Specify compute capability for GPU code generation
                           (allowable values: 20, 21, 30, 35)
 --enable-largesos       Build one .so per directory
---enable-sci-malloc     Use SCI memory allocation/deallocation checks. Note:
-                          you cannot use sci-malloc-trace at the same time.
---enable-memory-initialization=8_bit_number
-                          Force all new'd and malloc'd memory to be initialied
-                          to the value given - defaults to 127.
 --enable-assertion-level=N
                           Use assertion level N (0-3) (Where 0 turns off
                           assertions, and 3 turns on all assertions.)
---enable-scinew-line-numbers
-                          Have SCI malloc store the file and line that calls
-                          'scinew'
 --enable-throw-level=N  Use throw level N (0-3)
 --enable-rpath          Set a default runtime library search path
 --enable-arches         Turn on the Arches component - and Radiation Model.
@@ -1715,8 +1693,6 @@ Optional Packages:
                           installation.
 --with-pidx=DIR         Turn on ViSUS Parallel IDX support. Point to PIDX
                           installation.
---with-MallocTrace=DIR  Use MallocTrace library. Note: you cannot use
-                          sci-malloc at the same time.
 
 Some influential environment variables:
   CC          C compiler command
@@ -3875,44 +3851,6 @@ fi
 
 
 
-  # Check whether --enable-sci-malloc was given.
-if test "${enable_sci_malloc+set}" = set; then :
-  enableval=$enable_sci_malloc; enable_sci_malloc="$enableval"
-else
-  enable_sci_malloc=${enable_sci_malloc='no'}
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-sci-malloc --disable-sci-malloc"
-
-
-
-  # Check whether --enable-memory-init was given.
-if test "${enable_memory_init+set}" = set; then :
-  enableval=$enable_memory_init; enable_memory_initialization="$enableval"
-else
-  enable_memory_initialization=${enable_memory_initialization='no'}
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-memory-init --disable-memory-init"
-
-
-
-
-# Check whether --with-MallocTrace was given.
-if test "${with_MallocTrace+set}" = set; then :
-  withval=$with_MallocTrace; with_malloc_trace="$withval"
-else
-  with_malloc_trace=""
-fi
-
-  sci_arg_with_list="$sci_arg_with_list --with-MallocTrace --without-MallocTrace"
-  if test -n "$MallocTrace" -a ! -e "$MallocTrace"; then
-    as_fn_error $? "The file or directory parameter ($MallocTrace) specified for --with-MallocTrace does not exist!  Please verify that the path and file are correct." "$LINENO" 5
-  fi
-
-
-
-
   # Check whether --enable-assertion-level was given.
 if test "${enable_assertion_level+set}" = set; then :
   enableval=$enable_assertion_level; enable_assertion_level="$enableval"
@@ -3921,17 +3859,6 @@ else
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-assertion-level --disable-assertion-level"
-
-
-
-  # Check whether --enable-scinew-line-numbers was given.
-if test "${enable_scinew_line_numbers+set}" = set; then :
-  enableval=$enable_scinew_line_numbers; enable_scinew_line_numbers="yes"
-else
-  enable_scinew_line_numbers="no"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-scinew-line-numbers --disable-scinew-line-numbers"
 
 
 
@@ -4057,39 +3984,6 @@ BUILD_WASATCH_FOR_ARCHES=no
 if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
   BUILD_WASATCH_FOR_ARCHES=yes
 fi
-
-if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
-   as_fn_error $? "You cannot use both --with-MallocTrace and --enable-sci-malloc! " "$LINENO" 5
-fi
-
-if test "$enable_memory_initialization" != "no"; then
-   DEF_MEMORY_INIT="#define INITIALIZE_MEMORY"
-   if test "$enable_memory_initialization" = "yes"; then
-      memory_init=127
-   else
-      val=$enable_memory_initialization
-      if test $val -lt 128 -a $val -gt 0; then
-         memory_init=$val
-      else
-         as_fn_error $? "--enable-memory-initialization's value must be from 0 to 127. " "$LINENO" 5
-      fi
-   fi
-   DEF_MEMORY_INIT_NUMBER="#define MEMORY_INIT_NUMBER $memory_init"
-fi
-
-
-
-sci_defs_files="$sci_defs_files Core/Malloc/testmem_init.h"
-
-if test "$enable_rpath" = "no"; then
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: You have removed the rpath flag from some libraries." >&5
-$as_echo "$as_me: WARNING: You have removed the rpath flag from some libraries." >&2;}
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: This may have unpredictable affects." >&5
-$as_echo "$as_me: WARNING: This may have unpredictable affects." >&2;}
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Do not do this unless you really know what you are doing." >&5
-$as_echo "$as_me: WARNING: Do not do this unless you really know what you are doing." >&2;}
-fi
-
 
 ##  --------------------------------------------------------------------
 ##  Save off the arguments to configure...
@@ -5842,15 +5736,9 @@ case $host in
            yosemite_plus=yes
         fi
 
-	SO_OR_ARCHIVE_EXTENSION=dylib
+	      SO_OR_ARCHIVE_EXTENSION=dylib
 
-        if test "$enable_sci_malloc" = "yes"; then
-           as_fn_error $? "sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force" "$LINENO" 5
-           enable_sci_malloc="no"
-        elif test "$enable_sci_malloc" = "force"; then
-           enable_sci_malloc="yes"
-        fi
-	;;
+	      ;;
 
      *)
 	SO_OR_ARCHIVE_EXTENSION=so
@@ -5866,33 +5754,8 @@ fi
 
 LARGESOS=$largesos
 
-if test "$enable_sci_malloc" = "yes"; then
-  SCI_MALLOC_ON="yes"
-  DEF_MALLOC=""
-else
-  SCI_MALLOC_ON="no"
-  DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
-fi
-
-if test "$with_malloc_trace" ; then
-  if test "$IS_OSX" = "yes"; then
-      as_fn_error $? "Malloc trace is not supported on Mac OSX..." "$LINENO" 5
-  fi
-fi
-
-if test "$enable_scinew_line_numbers" = "yes"; then
-  DEF_MALLOC_LINENUMBERS="#define USE_TAG_LINENUM 1"
-else
-  DEF_MALLOC_LINENUMBERS=""
-fi
 
 
-
-
-
-
-
-sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 
 
@@ -6369,47 +6232,6 @@ else
 fi
 
 
-
-
-
-
-
-##  --  search for MallocTrace ------------------------
-
-if test "$with_malloc_trace"; then
-  if test "$with_malloc_trace" = "yes"; then
-    as_fn_error $? "--with-malloc_trace=DIR requires a Directory be provided. " "$LINENO" 5
-  else
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for MallocTrace files (For now we are just verifying the existence of lib and .h files)" >&5
-$as_echo_n "checking for MallocTrace files (For now we are just verifying the existence of lib and .h files)... " >&6; }
-    if test ! -d $with_malloc_trace; then
-      as_fn_error $? "'$with_malloc_trace' directory does not exist. " "$LINENO" 5
-    fi
-    if test "$IS_STATIC_BUILD" = "yes"; then
-       if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
-       	  as_fn_error $? "'$with_malloc_trace/lib/libMallocTrace.a' does not exist. " "$LINENO" 5
-       fi
-    else
-	if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-      	   as_fn_error $? "'$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. " "$LINENO" 5
-    	fi
-    fi
-    if test ! -f $with_malloc_trace/include/MallocTrace.h; then
-      as_fn_error $? "'$with_malloc_trace/include/MallocTrace.h' does not exist. " "$LINENO" 5
-    fi
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-    DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
-    INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    if test "$IS_STATIC_BUILD" = "yes"; then
-       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
-    else
-       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
-    fi
-    MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
-    MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
-  fi
-fi
 
 
 
@@ -9051,8 +8873,6 @@ _sci_includes=''
 MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 
 ##  --  check for the required thread library  ---------------------------
-
-SOCKET_LIBRARY=""
 
 case $host in
   *)
@@ -31237,8 +31057,9 @@ $as_echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_li
 
   esac
 
-  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
-  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
+  MPI_LIB_FLAG="$MPI_LIB_FLAG"
+  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG"
+
 fi #end sci_required_mpi
 
 ########################################################################
@@ -31432,7 +31253,7 @@ $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
 ## arg 4 : $_sci_inc
 ## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp
 ## arg 6 : $_sci_lib_dir
-## arg 7 : $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
+## arg 7 : $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -31656,7 +31477,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -31890,7 +31711,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc
 ## arg 5 : $the_libs
 ## arg 6 : $_sci_lib_dir
-## arg 7 : $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
+## arg 7 : $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -32114,7 +31935,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -38023,7 +37844,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 4 : $_sci_inc
 ## arg 5 : HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv
 ## arg 6 : $_sci_lib
-## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
+## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -38247,7 +38068,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -38469,7 +38290,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc
 ## arg 5 : HYPRE
 ## arg 6 : $_sci_lib
-## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
+## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -38693,7 +38514,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
