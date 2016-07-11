@@ -396,13 +396,6 @@ SCI_ARG_WITH(zoltan,
    sci_required_zoltan=yes],
   [with_zoltan=""])
   
-SCI_ARG_WITH(tau,
-  AC_HELP_STRING(--with-tau=<tau-makefile>,
-                 Specify a Tau Makefile),
-  [with_tau="$withval"
-   sci_required_tau=yes],
-  [with_tau=""])
-  
 SCI_ARG_WITH(papi,
   AC_HELP_STRING(--with-papi=DIR,
                  Use the papi installation in DIR),
@@ -551,12 +544,6 @@ SCI_ARG_ENABLE(gencode,
                  Specify compute capability for GPU code generation (allowable values: 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
   [cuda_gencode=${gencode='30'}])
-  
-SCI_ARG_ENABLE(exename,
-  AC_HELP_STRING(--enable-exename=<name>,
-                 Use name for executable name instead of the default: scirun),
-  [exename="$enableval"],
-  [exename=${exename='default'}])
   
 SCI_ARG_ENABLE(largesos,
   AC_HELP_STRING(--enable-largesos,
@@ -1015,12 +1002,6 @@ if test "$output_avg_walltime" != "no"; then
   extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
 fi
 
-if test "$exename" = "default"; then
-  EXENAME=scirun
-else
-  EXENAME=$exename
-fi
-
 LARGESOS=$largesos
 
 if test "$enable_sci_malloc" = "yes"; then
@@ -1044,7 +1025,6 @@ else
 fi
 
 AC_SUBST(NOPRINTDIR)
-AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
 
 AC_SUBST(SCI_MALLOC_ON)
@@ -2051,7 +2031,6 @@ case $threads in
 esac      
 
 AC_SUBST(THREAD_LIB_FLAG)
-AC_SUBST(SOCKET_LIB_FLAG)
 AC_SUBST(DEF_THREAD)
 sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 
@@ -2382,19 +2361,6 @@ AC_SUBST(INC_XML2_H)
 ##  ----------  required checks for optional libraries and headers  ------
 ##  ----------------------------------------------------------------------
 
-##  --  search for optional headers  ------------------------------------
-AC_LANG(C++)
-SCI_TRY_LINK(SSTREAM,sstream header,sstream,,,,,,optional)
-
-if test "$HAVE_SSTREAM" = "yes"; then
-   SSTREAM_COMPAT="no"
-else
-   # Use Uintah sstream compatibility files...
-   SSTREAM_COMPAT="yes"
-fi
-
-AC_SUBST(SSTREAM_COMPAT)
-AC_LANG(C)
 
 ##  --  search for gzopen (and related)  ----------------------------------
 
