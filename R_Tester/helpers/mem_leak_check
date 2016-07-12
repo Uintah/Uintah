@@ -9,6 +9,7 @@ HELPERPATH=$6
 
 COMPARISON_MALLOC_STATS="$COMPARE_ROOT/$TEST/$MALLOC_STATS"
 error=1
+HERE=`pwd`
 
 #__________________________________
 # define the stat command
@@ -21,8 +22,8 @@ fi
 
 #__________________________________
 # bulletproofing
-if [ ! -f $MALLOC_STATS ]  && [ ! -f $MALLOC_STATS.0 ]; then
-  echo "The malloc stats file(s) is missing.  Can't perform memory leak test."
+if [ ! -f $MALLOC_STATS ] && [ ! -f $MALLOC_STATS.0 ]; then
+  echo "The malloc_stats file(s) is missing.  Can't perform memory leak test."
   echo "Verify that you've configured with"
   echo "  --enable-sci-malloc"
   exit 5
@@ -35,12 +36,33 @@ retval=$?
 
 if [ $retval = "0" ]; then
   cat $MALLOC_STATS.* > $MALLOC_STATS
-  echo "Merging malloc stats files from multiple processes."
+  echo "Merging malloc stats_files.* from the multiple processes."
   if [ `$STAT_CMD $MALLOC_STATS` = "0" ]; then
     echo "No malloc_stats information found.  Can't do memory leak test."
     exit 5
   fi
 fi
+
+#__________________________________
+#   If the gold standards merged malloc_stats file
+#   doesn't exist then merge the separate files
+GS="$COMPARE_ROOT/$TEST/"
+cd $GS
+if [ ! -f $MALLOC_STATS ] && [ -f $MALLOC_STATS.0 ]; then
+  cd $GS
+  ls $MALLOC_STATS.* >/dev/null 2>&1
+  retval=$?
+
+  if [ $retval = "0" ]; then
+    cat $MALLOC_STATS.* > $MALLOC_STATS
+    echo "Merging the gold standards malloc_stats.* files from the multiple processes."
+    if [ `$STAT_CMD $MALLOC_STATS` = "0" ]; then
+      echo "No gold standard malloc_stats information found.  Can't do memory leak test."
+      exit 5
+    fi
+  fi
+fi
+cd $HERE
 
 #__________________________________
 echo "Checking $TEST for scinew memory leaks"
@@ -55,21 +77,12 @@ if [ $retval = "0" ]; then
   exit 1
 fi
 
-
 echo "Memory leak test passed -- no scinew memory leaks found"
-if [ ! -f $COMPARISON_MALLOC_STATS ]; then
-  echo "Storing $MALLOC_STATS in $COMPARISON_MALLOC_STATS"
-  cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
-  exit -1
-fi
-
-
 
 meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
 percent=`echo $meminfo | cut -d " " -f 1`
 abs=`echo $meminfo | cut -d " " -f 2`
 testHighwater=`echo $meminfo | cut -d " " -f 3`
-
 
 #__________________________________
 if [ $MAKEPLOTS -eq "1" ]; then
@@ -118,10 +131,5 @@ else
   exit 0
 
 fi
-
-
-
-
-
 
 exit $error
