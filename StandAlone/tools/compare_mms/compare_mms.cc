@@ -55,8 +55,8 @@
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
 
-#include <sci_values.h>
-
+#include <cfloat>
+#include <climits>
 #include <iostream>
 #include <string>
 #include <vector>

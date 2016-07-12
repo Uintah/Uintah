@@ -40,9 +40,10 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/XMLUtils.h>
 
+#include <climits>
+#include <cfloat>
 #include <iomanip>
 #include <iostream>
-#include <sci_values.h>
 
 using namespace std;
 using namespace Uintah;
