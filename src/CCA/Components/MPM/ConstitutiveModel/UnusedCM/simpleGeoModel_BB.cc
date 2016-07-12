@@ -41,7 +41,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <sci_values.h>
+#include <climits>
+#include <cfloat>
 #include <iostream>
 #include <errno.h>
 #include <fenv.h>

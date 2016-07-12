@@ -25,7 +25,9 @@
 
 #include <iostream>
 using std::cout;
-#include <sci_values.h>
+
+#include <cfloat>
+#include <climits>
 
 class Primes {
 public:

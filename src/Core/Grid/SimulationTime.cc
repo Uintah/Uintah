@@ -27,8 +27,8 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/StringUtil.h>
 
-#include <sci_values.h>
-
+#include <cfloat>
+#include <climits>
 #include <string>
 #include <iostream>
 

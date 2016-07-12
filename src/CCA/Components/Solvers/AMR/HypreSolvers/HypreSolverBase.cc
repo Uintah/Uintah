@@ -36,8 +36,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_comp_warn_fixes.h>
-
 using namespace std;
 using namespace Uintah;
 //__________________________________
@@ -204,8 +202,10 @@ namespace Uintah {
       throw InternalError("Unsupported solver type: "+solverType,
                           __FILE__, __LINE__);
     } // switch (solverType)
+
     cout_doing << "newHypreSolver() END (shouldn't be reached)" << "\n";
-    RETURN_0;
+
+    return nullptr;
   }
 //______________________________________________________________________
   SolverType
