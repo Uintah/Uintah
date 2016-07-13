@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-from os import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
+from os import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink,stat,access,getuid
+from os import W_OK
 from time import strftime,time,gmtime,asctime,localtime
 from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
@@ -161,10 +162,19 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   try:
     chdir(compare_root)
   except Exception:
-    # create the gold_standard algo subdir
+    # create the gold_standard component sub-directory
     chdir(gold_standard)
-    mkdir(ALGO)
-    system("chmod -R 775 %s" % ALGO)
+    
+    statinfo = stat(gold_standard)
+    file_uid = statinfo.st_uid
+    my_uid   = getuid()
+
+    # only create component directory if the user is the owner
+    if access(gold_standard, W_OK) and my_uid == file_uid:
+      print( " The directory %s does not exist in the gold standards %s" % ( ALGO, gold_standard) )
+      print( " Now creating it...." )    
+      mkdir(ALGO)
+      system("chmod -R 775 %s" % ALGO)
 
   resultsdir = "%s/%s-results" % (startpath, ALGO)
   chdir(startpath)
