@@ -42,6 +42,13 @@ fi
 cd "${BUILD_DIR}"
 
 TEST_DATA="${BUILD_DIR}/TestData"
+
+#  If the user has set the GOLD_STANDARDS environmental variable
+#  then override
+if [ "$GOLD_STANDARDS" != "" ]; then
+  TEST_DATA="$GOLD_STANDARDS"
+fi 
+
 #__________________________________
 #    - generate the symbolic links
 #    - check for the goldStandards
@@ -68,10 +75,7 @@ if [ ! -d inputs ]; then
   ln -sf ${SRCTOP}/StandAlone/inputs inputs
 fi
 
-if [ -d goldStandard ]; then
-  rm -f goldStandard
-fi
-ln -s "${TEST_DATA}" goldStandard
+ln -sf "${TEST_DATA}" goldStandard
 
 #__________________________________
 # bulletproofing
@@ -198,6 +202,8 @@ fi
 echo ""
 echo ""
 date
+echo "Gold Standards: $TEST_DATA"
+
 let retval=0;
 let c=0;
 for componentTest in $selectedCompTests; do
