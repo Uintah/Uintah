@@ -48,7 +48,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
   #          simRunTime/
   
   HTMLLOG=/home/rt/public_html/Uintah.html
-  WEBLOG=http://155.101.15.100:8050/~rt/Uintah.html
+  WEBLOG=http://155.101.15.100/~rt/Uintah.html
 fi
 
 if test "$MACHINE" = "albion" ; then
