@@ -857,18 +857,15 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 void
 SimulationController::getMemoryStats ( int timestep, bool create )
 {
-  // TODO implement: DJS
-  std::cerr << "Warning: not implmented, need to attached to new Allocator" << std::endl;
+//  // TODO implement: DJS
+//  proc0cout << "Warning: SimulationController::getMemoryStats not implemented, need to attached to new Allocator" << std::endl;
 
   unsigned long memUse = 0, highwater = 0, maxMemUse = 0;
-  d_scheduler->checkMemoryUse( memUse, highwater, maxMemUse );
+  d_scheduler->checkMemoryUse(memUse, highwater, maxMemUse);
 
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryUsed ] =
-    memUse;
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryMaxUsed ] =
-    maxMemUse;
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryHighwater ] =
-    highwater;
+  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryUsed] = memUse;
+  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryMaxUsed] = maxMemUse;
+  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryHighwater] = highwater;
 }
 
 //______________________________________________________________________
