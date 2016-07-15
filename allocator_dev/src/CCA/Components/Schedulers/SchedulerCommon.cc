@@ -143,8 +143,8 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
                                  unsigned long & highwater,
                                  unsigned long & maxMemUse )
 {
-  // TODO: DJS
-  std::cerr << "Warning: Not implemented, need to call process_allocated_bytes and process_high_water_bytes" << std::endl;
+//  // TODO: DJS
+//  proc0cout << "Warning: SchedulerCommon::checkMemoryUse not implemented, need to call process_allocated_bytes and process_high_water_bytes" << std::endl;
 
   highwater = 0;
   memuse    = 0;
