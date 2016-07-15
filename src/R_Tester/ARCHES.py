@@ -98,8 +98,7 @@ NIGHTLYTESTS = [
    ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
-   ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
-   ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux" , ["startFromCheckpoint" , "no_restart"]) , 
+   ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison","do_performance_test"   ]) , 
    ("OFC4c"                             , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ]) , 
@@ -109,11 +108,13 @@ NIGHTLYTESTS = [
    ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
 
-
 # multi-threaded NIGHTLY tests
-   ("rmcrt_bm1_1L_thread"         , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_ML_thread"         , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_DO_thread"         , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
+   ("rmcrt_bm1_1L_thread"               , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   ("rmcrt_bm1_ML_thread"               , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   ("rmcrt_bm1_DO_thread"               , "RMCRT/rmcrt_bm1_DO.ups"                                  , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
+   
+   # The regrid test should be last.  It needs a checkpoint.  If you move it up the stack and run local_RT NIGHTLYTESTS then not all tests will run
+   ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux"  , ["startFromCheckpoint" , "no_restart"])
 ]
 
 # Tests that are run during local regression testing
