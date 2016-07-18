@@ -604,6 +604,13 @@ SCI_ARG_ENABLE(arches,
   [BUILD_ARCHES="no"
    DEF_ARCHES=["#define NO_ARCHES"]])
 
+SCI_ARG_ENABLE(fvm,
+  AC_HELP_STRING(--enable-fvm,
+                 Turn on the FVM component.),
+  [BUILD_FVM="yes"],
+  [BUILD_FVM="no"
+   DEF_FVM=["#define NO_FVM"]])
+
 SCI_ARG_ENABLE(ice,
   AC_HELP_STRING(--enable-ice,
                  Turn on the Ice component.),
@@ -630,10 +637,12 @@ SCI_ARG_ENABLE(all_components,
                  Turn on the all components.),
   [use_all_components="yes"
    BUILD_ARCHES="yes"
+   BUILD_FVM="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
+   DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
@@ -649,6 +658,7 @@ DEF_MODELS_RADIATION=
 
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
+           "$enable_fvm"              = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
@@ -656,6 +666,7 @@ if test "$use_all_components" = "yes" -a          \
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
 if test "$BUILD_ARCHES"  != "yes"              -a   \
+        "$BUILD_FVM"     != "yes"              -a   \
         "$BUILD_ICE"     != "yes"              -a   \
         "$BUILD_MPM"     != "yes"              -a   \
         "$BUILD_WASATCH" != "yes"; then
@@ -1118,6 +1129,9 @@ fi
 if test "$USE_ARCHES" != ""; then
    AC_MSG_ERROR( USE_ARCHES is deprecated.  Please use --enable-arches. )
 fi
+if test "$USE_FVM" != ""; then
+   AC_MSG_ERROR( USE_FVM is deprecated.  Please use --enable-fvm. )
+fi
 if test "$USE_ICE" != ""; then
    AC_MSG_ERROR( USE_ICE is deprecated.  Please use --enable-ice. )
 fi
@@ -1143,6 +1157,7 @@ fi
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
 AC_SUBST(BUILD_ARCHES)
+AC_SUBST(BUILD_FVM)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
@@ -1150,6 +1165,7 @@ AC_SUBST(BUILD_WASATCH)
 AC_SUBST(BUILD_WASATCH_FOR_ARCHES)
 
 AC_SUBST(DEF_ARCHES)
+AC_SUBST(DEF_FVM)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_NO_FORTRAN)

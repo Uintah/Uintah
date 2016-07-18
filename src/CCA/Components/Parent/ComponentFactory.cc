@@ -70,6 +70,10 @@
 #  include <CCA/Components/Wasatch/Wasatch.h>
 #endif
 
+#ifndef NO_FVM
+#include <CCA/Components/FVM/ElectrostaticSolve.h>
+#endif
+
 #include <iosfwd>
 #include <string>
 
@@ -167,6 +171,13 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
 #else
   turned_off_options += "MPMARCHES ";
+#endif
+#ifndef NO_FVM
+  if (sim_comp == "electrostatic_solver"){
+	  return scinew ElectrostaticSolve(world);
+  }
+#else
+  turned_off_options += "FVM ";
 #endif
   if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(world);
