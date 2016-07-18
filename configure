@@ -837,12 +837,14 @@ DEF_MODELS_RADIATION
 DEF_NO_FORTRAN
 DEF_MPM
 DEF_ICE
+DEF_FVM
 DEF_ARCHES
 BUILD_WASATCH_FOR_ARCHES
 BUILD_WASATCH
 BUILD_MPM
 BUILD_MODELS_RADIATION
 BUILD_ICE
+BUILD_FVM
 BUILD_ARCHES
 OGL_ERR_MACRO
 DEBUG
@@ -986,6 +988,7 @@ enable_scinew_line_numbers
 enable_throw_level
 enable_rpath
 enable_arches
+enable_fvm
 enable_ice
 enable_mpm
 enable_wasatch
@@ -1655,6 +1658,7 @@ Optional Features:
 --enable-throw-level=N  Use throw level N (0-3)
 --enable-rpath          Set a default runtime library search path
 --enable-arches         Turn on the Arches component - and Radiation Model.
+--enable-fvm            Turn on the FVM component.
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
 --enable-wasatch        Turn on the Wasatch component.
@@ -3973,6 +3977,18 @@ fi
 
 
 
+  # Check whether --enable-fvm was given.
+if test "${enable_fvm+set}" = set; then :
+  enableval=$enable_fvm; BUILD_FVM="yes"
+else
+  BUILD_FVM="no"
+   DEF_FVM="#define NO_FVM"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-fvm --disable-fvm"
+
+
+
   # Check whether --enable-ice was given.
 if test "${enable_ice+set}" = set; then :
   enableval=$enable_ice; BUILD_ICE="yes"
@@ -4013,10 +4029,12 @@ fi
 if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
    BUILD_ARCHES="yes"
+   BUILD_FVM="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
+   DEF_FVM=
    DEF_ICE=
    DEF_MPM=
    DEF_WASATCH=
@@ -4037,6 +4055,7 @@ DEF_MODELS_RADIATION=
 
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
+           "$enable_fvm"              = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
@@ -4044,6 +4063,7 @@ if test "$use_all_components" = "yes" -a          \
    as_fn_error $? "Please do not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
 fi
 if test "$BUILD_ARCHES"  != "yes"              -a   \
+        "$BUILD_FVM"     != "yes"              -a   \
         "$BUILD_ICE"     != "yes"              -a   \
         "$BUILD_MPM"     != "yes"              -a   \
         "$BUILD_WASATCH" != "yes"; then
@@ -6045,6 +6065,9 @@ fi
 if test "$USE_ARCHES" != ""; then
    as_fn_error $? "USE_ARCHES is deprecated.  Please use --enable-arches. " "$LINENO" 5
 fi
+if test "$USE_FVM" != ""; then
+   as_fn_error $? "USE_FVM is deprecated.  Please use --enable-fvm. " "$LINENO" 5
+fi
 if test "$USE_ICE" != ""; then
    as_fn_error $? "USE_ICE is deprecated.  Please use --enable-ice. " "$LINENO" 5
 fi
@@ -6068,6 +6091,8 @@ if test "$with_fortran" = no; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
 
 
 

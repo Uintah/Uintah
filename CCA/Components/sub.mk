@@ -68,6 +68,10 @@ ifeq ($(BUILD_ARCHES),yes)
 	endif
 endif
 
+ifeq ($(BUILD_FVM),yes)
+  FVM :=$(SRCDIR)/FVM
+endif
+
 SUBDIRS := \
         $(MPM)                         \
         $(ICE)                         \
@@ -75,6 +79,7 @@ SUBDIRS := \
         $(ARCHES)                      \
         $(MPMARCHES)                   \
         $(WASATCH)                     \
+        $(FVM)                         \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \
