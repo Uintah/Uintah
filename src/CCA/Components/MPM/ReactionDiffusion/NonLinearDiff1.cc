@@ -219,11 +219,11 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1_preReloc, pset);
   new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel_preReloc,  pset);
 
-  double non_lin_comp;
-  double D;
+  double non_lin_comp = 0.0;
+  double D = 0.0;
   double timestep = 1.0e99;
-  double pressure;
-  double concentration;
+  double pressure = 0.0;
+  double concentration = 0.0;
 
   if(d_use_diff_curve){
     if(current_time1 > d_time_point2){

@@ -166,7 +166,7 @@ void ElectrostaticSolve::timeAdvance(const ProcessorGroup* pg,
     double a_n = dx.x() * dx.z(); double a_s = dx.x() * dx.z();
     double a_e = dx.y() * dx.z(); double a_w = dx.y() * dx.z();
     double a_t = dx.x() * dx.y(); double a_b = dx.x() * dx.y();
-    double vol = dx.x() * dx.y() * dx.z();
+    // double vol = dx.x() * dx.y() * dx.z();
 
     double n = a_n / dx.y(); double s = a_s / dx.y();
     double e = a_e / dx.x(); double w = a_w / dx.x();
@@ -202,7 +202,6 @@ void ElectrostaticSolve::timeAdvance(const ProcessorGroup* pg,
       new_dw->allocateAndPut(A,   ccESPotentialMatrix, matl, patch);
       new_dw->allocateAndPut(rhs, ccRHS_ESPotential,    matl, patch);
 
-      int count = 0;
       // iterate over cells;
       for(CellIterator iter(low_idx, high_idx); !iter.done(); iter++){
         IntVector c = *iter;
