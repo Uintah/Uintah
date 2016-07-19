@@ -80,6 +80,15 @@ fi
 /bin/rm -f goldStandard
 ln -sf "${TEST_DATA}" goldStandard
 
+
+# if the user has set the path to the checkpoints directory create a symbolic link
+# The checkpoints dir is needed for some restart tests
+if [ "$RT_CHECKPOINTS" != "" ]; then
+  echo " Creating symbolic link: ln -sf ${RT_CHECKPOINTS} CheckPoints"
+  ln -sf "${RT_CHECKPOINTS}" CheckPoints
+fi
+
+
 #__________________________________
 # bulletproofing
 if [ ! -d "$TEST_DATA" ]; then
