@@ -71,6 +71,11 @@ endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
+ifeq ($(HAVE_HYPRE),yes)
+   LIBS := $(LIBS) $(HYPRE_LIBRARY)
+   INCLUDES += $(HYPRE_INCLUDE)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 
