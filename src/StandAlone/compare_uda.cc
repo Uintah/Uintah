@@ -108,6 +108,14 @@ usage(const std::string& badarg, const std::string& progname)
   cerr << "  -dont_sort               (Don't sort the variable names before comparing them)";
   cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
        << "      for a comparison to fail.\n\n";
+  cerr << "  Exit values:\n";
+  cerr << "    -1:      Comparison failed, variable type not supported.\n";
+  cerr << "     0:      Comparison passed.\n";
+  cerr << "     1:      Error in input parameters.\n"; 
+  cerr << "     2:      Comparison failed, tolerances exceeded. \n";
+  cerr << "     5:      The uda directories may not be compared.\n";
+
+  
   Parallel::exitAll(1);
 }
 
