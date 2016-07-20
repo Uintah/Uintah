@@ -383,7 +383,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     list = callback(test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism)
 
     inputxml = path.basename(input(test))
-    system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
+    system("cp %s/%s %s > /dev/null 2>&1" % (inputsdir, input(test), inputxml))
     symlink(inputpath, "inputs")
 
     #__________________________________
