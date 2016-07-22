@@ -120,23 +120,24 @@ LINE: while(<FILE>){
     }
     print OUT " )\n{\n";
     foreach $a (@args) {
-      ($type, $tmpltype, $name) = &parsearg($a);
-      if(&knownvartype($type)){
-        print OUT "  auto $name\_range = $name.range();\n";
-        print OUT "  int $name\_low_x = $name\_range.begin(0);\n";
-        print OUT "  int $name\_low_y = $name\_range.begin(1);\n";
-        print OUT "  int $name\_low_z = $name\_range.begin(2);\n";
-        print OUT "  int $name\_high_x = $name\_range.end(0) - 1;\n";
-        print OUT "  int $name\_high_y = $name\_range.end(1) - 1;\n";
-        print OUT "  int $name\_high_z = $name\_range.end(2) - 1;\n";
-      } elsif(&knownarraytype($type)){
-        if($type eq "OffsetArray1"){
-          print OUT "  int $name\_low = $name.low();\n";
-          print OUT "  int $name\_high = $name.high();\n";
-        } else {
-          print OUT "  int $name\_size = $name.size();\n";
-        }
-      }
+	($type, $tmpltype, $name) = &parsearg($a);
+	if(&knownvartype($type)){
+	    print OUT "  Uintah::IntVector $name\_low = $name.getWindow()->getOffset();\n";
+	    print OUT "  Uintah::IntVector $name\_high = $name.getWindow()->getData()->size() + $name\_low - Uintah::IntVector(1, 1, 1);\n";
+	    if($fortran_underscore){
+		foreach $d ("x", "y", "z") {
+		    print OUT "  int $name\_low_$d = $name\_low.$d();\n";
+		    print OUT "  int $name\_high_$d = $name\_high.$d();\n";
+		}
+	    }
+	} elsif(&knownarraytype($type)){
+	    if($type eq "OffsetArray1"){
+		print OUT "  int $name\_low = $name.low();\n";
+		print OUT "  int $name\_high = $name.high();\n";
+	    } else {
+		print OUT "  int $name\_size = $name.size();\n";
+	    }
+	}
     }
     print OUT "  ";
     if($ret != "void"){
