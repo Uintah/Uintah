@@ -341,9 +341,6 @@ public:
     }
   }
 
-protected:
-  Array3& operator=(const Array3& copy);
-
 private:
   Array3Window<T>* d_window{nullptr};
 #if defined(UINTAH_ENABLE_KOKKOS)

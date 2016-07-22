@@ -211,7 +211,7 @@ WARNING
       }
     }
 
-    virtual RefCounted* getRefCounted() { return this->getWindow(); }
+    virtual RefBase* getRefBase() { return this->d_window; }
 
   protected:
     GridVariable(const GridVariable<T>& copy) : Array3<T>(copy) {}
@@ -245,7 +245,7 @@ template<class T>
   void GridVariable<T>::allocate( const IntVector& lowIndex,
                                   const IntVector& highIndex )
   {
-    if(this->getWindow())
+    if(this->d_window)
       SCI_THROW(InternalError("Allocating a Gridvariable that "
                           "is apparently already allocated!", __FILE__, __LINE__));
     this->resize(lowIndex, highIndex);
@@ -257,8 +257,8 @@ template<class T>
                            const IntVector& lowIndex,
                            const IntVector& highIndex)
   {
-    if (this->getWindow()->getData() == src.getWindow()->getData() &&
-        this->getWindow()->getOffset() == src.getWindow()->getOffset()) {
+    if (this->d_window->getData() == src.d_window->getData() &&
+        this->d_window->getOffset() == src.d_window->getOffset()) {
       // No copy needed
       return;
     }
@@ -291,7 +291,7 @@ template<class T>
   {
     low=this->getLowIndex();
     high=this->getHighIndex();
-    dataLow = this->getWindow()->getOffset();
+    dataLow = this->d_window->getOffset();
     siz=this->size();
     strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
                         (int)(sizeof(T)*siz.y()*siz.x()));
