@@ -55,7 +55,7 @@ namespace Uintah {
 
 CLASS
 ParticleVariable
-
+  
 Short description...
 
 GENERAL INFORMATION
@@ -74,9 +74,9 @@ Particle_Variable
 
 DESCRIPTION
 Long description...
-
+  
 WARNING
-
+  
 ****************************************/
 
 template<class T>
@@ -88,7 +88,7 @@ public:
   virtual ~ParticleVariable();
   ParticleVariable(ParticleSubset* pset);
   ParticleVariable(ParticleData<T>*, ParticleSubset* pset);
-
+      
     //////////
     // Insert Documentation Here:
   static const TypeDescription* getTypeDescription();
@@ -98,7 +98,7 @@ public:
   void resync() {
     d_pdata->resize(getParticleSubset()->numParticles());
   }
-
+      
   //////////
   // Insert Documentation Here:
   virtual ParticleVariableBase* clone();
@@ -112,18 +112,18 @@ public:
   { return new constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>();
   }
 
-
+  
   void copyData(const ParticleVariable<T>& src);
   virtual void copyData(const ParticleVariableBase* src)
   { copyData(castFromBase(src)); }
-
+  
   //////////
   // Insert Documentation Here:
   inline T& operator[](particleIndex idx) {
     ASSERTRANGE(idx, 0, (particleIndex)d_pdata->size);
     return d_pdata->data[idx];
   }
-
+      
   //////////
   // Insert Documentation Here:
   inline const T& operator[](particleIndex idx) const {
@@ -145,12 +145,12 @@ public:
                       const std::vector<ParticleSubset*> &subsets,
                       const std::vector<ParticleVariableBase*> &srcs,
                       const std::vector<const Patch*>& /*srcPatches*/,
-                      particleIndex extra = 0);
+                      particleIndex extra = 0);  
   virtual void gather(ParticleSubset* dest,
                       const std::vector<ParticleSubset*> &subsets,
                       const std::vector<ParticleVariableBase*> &srcs,
                       particleIndex extra = 0);
-
+  
   virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
                          const ProcessorGroup* pg, ParticleSubset* pset);
   virtual void packMPI(void* buf, int bufsize, int* bufpos,
@@ -166,13 +166,13 @@ public:
                           const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat);
   virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h,
                        ProblemSpecP varnode);
-
+  
   virtual void readNormal(std::istream& in, bool swapBytes);
   virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode);
-
+  
   virtual void* getBasePointer() const;
   virtual const TypeDescription* virtualGetTypeDescription() const;
-  virtual RefBase* getRefBase() {
+  virtual RefCounted* getRefCounted() {
     return d_pdata;
   }
   virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
@@ -239,27 +239,27 @@ private:
     }
     return td;
   }
-
+   
   template<class T>
   Variable*
   ParticleVariable<T>::maker()
   {
     return new ParticleVariable<T>();
   }
-
+   
   template<class T>
   ParticleVariable<T>::ParticleVariable()
     : ParticleVariableBase(0), d_pdata(0)
   {
   }
-
+   
   template<class T>
   ParticleVariable<T>::~ParticleVariable()
   {
     if(d_pdata && d_pdata->removeReference())
       delete d_pdata;
   }
-
+   
   template<class T>
   ParticleVariable<T>::ParticleVariable(ParticleSubset* pset)
     : ParticleVariableBase(pset)
@@ -267,7 +267,7 @@ private:
     d_pdata=new ParticleData<T>(pset->numParticles());
     d_pdata->addReference();
   }
-
+   
   template<class T>
   void ParticleVariable<T>::allocate(int totalParticles)
   {
@@ -295,7 +295,7 @@ private:
     d_pdata = new ParticleData<T>(pset->numParticles());
     d_pdata->addReference();
   }
-
+   
   template<class T>
   ParticleVariableBase*
   ParticleVariable<T>::clone()
@@ -305,7 +305,7 @@ private:
   const ParticleVariableBase*
   ParticleVariable<T>::clone() const
   { return new ParticleVariable<T>(*this); }
-
+   
   template<class T>
   ParticleVariableBase*
   ParticleVariable<T>::cloneSubset(ParticleSubset* pset)
@@ -341,7 +341,7 @@ private:
     if(d_pdata)
       d_pdata->addReference();
   }
-
+   
   template<class T>
   ParticleVariable<T>::ParticleVariable(const ParticleVariable<T>& copy)
     : ParticleVariableBase(copy), d_pdata(copy.d_pdata)
@@ -349,7 +349,7 @@ private:
     if(d_pdata)
       d_pdata->addReference();
   }
-
+   
   template<class T>
   void
   ParticleVariable<T>::copyPointer(ParticleVariable<T>& copy)
@@ -363,7 +363,7 @@ private:
         d_pdata->addReference();
     }
   }
-
+   
   template<class T>
   void
   ParticleVariable<T>::copyPointer(Variable& copy)
@@ -373,7 +373,7 @@ private:
       SCI_THROW(TypeMismatchException("Type mismatch in particle variable", __FILE__, __LINE__));
     copyPointer(*c);
   }
-
+  
   // specialization for T=Point
   template <>
    void ParticleVariable<Point>::gather(ParticleSubset* pset,
@@ -421,21 +421,21 @@ template<class T>
     }
     ASSERT(dstiter+extra == pset->end());
   }
-
+  
   template<class T>
   void*
   ParticleVariable<T>::getBasePointer() const
   {
     return &d_pdata->data[0];
   }
-
+  
   template<class T>
   const TypeDescription*
   ParticleVariable<T>::virtualGetTypeDescription() const
   {
     return getTypeDescription();
   }
-
+  
   template<class T>
   void
   ParticleVariable<T>::unpackMPI(void* buf, int bufsize, int* bufpos,
@@ -455,7 +455,7 @@ template<class T>
       SCI_THROW(InternalError("packMPI not finished\n", __FILE__, __LINE__));
     }
   }
-
+  
   // specialized for T=Point
   template<>
    void
@@ -567,7 +567,7 @@ template<class T>
     }
     return true;
   }
-
+  
   template<class T>
   void
   ParticleVariable<T>::readNormal(std::istream& in, bool swapBytes)
@@ -628,7 +628,7 @@ template<class T>
   public:
     constParticleVariable()
       : constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>() {}
-
+    
     constParticleVariable(const ParticleVariable<T>& copy)
       : constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>(copy) {}
 

@@ -27,7 +27,9 @@
 #include <Core/Grid/Variables/constVariableBase.h>
 #include <Core/Util/Assert.h>
 
-#include <Core/Grid/Variables/Array3.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+  #include <Core/Grid/Variables/Array3.h>
+#endif // end UINTAH_ENABLE_KOKKOS
 
 namespace Uintah {
 
@@ -144,13 +146,6 @@ WARNING
       return this->rep_(i,j,k);
     }
 
-    inline const Array3Window<T>* getWindow() const {
-      return this->rep_.getWindow();
-    }
-
-    BlockRange range() const {
-      return this->rep_.range();
-    }
 
     virtual const TypeDescription* virtualGetTypeDescription() const
     { return this->rep_.virtualGetTypeDescription(); }
