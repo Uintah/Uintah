@@ -567,18 +567,18 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     MALLOCSTATS = "-x MALLOC_STATS"
 
   MPIHEAD="%s -np" % MPIRUN       #default
-
+  
   # pass in environmental variables to mpirun
   if environ['OS'] == "Linux":
     MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
 
                                    # openmpi
-  rc = system("mpirun -x TERM echo 'hello' > /dev/null 2>&1")
+  rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
     MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
 
                                    #  mvapich
-  rc = system("mpirun -genvlist TERM echo 'hello' > /dev/null 2>&1")
+  rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
     MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE -np" % MPIRUN
 
