@@ -28,11 +28,11 @@ fi
 
 if test "$6" = "yes"; then
   # Building with CUDA
-  THREADS="-DENABLE_THREADS=OFF"
+  THREADS="-DENABLE_THREADS=ON -DNTHREADS=1"
   if [[ `hostname` = titan* ]]; then
     CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" -DCUDA_HOST_COMPILER=/opt/gcc/4.9.0/bin/g++"
   else
-    CUDA="-DENABLE_CUDA=ON -DENABLE_THREADS=OFF"
+    CUDA="-DENABLE_CUDA=ON"
   fi
 else
   # Building without CUDA
@@ -109,7 +109,7 @@ if [ -d "SpatialOps" ]; then
     run "cd SpatialOps"
     if ! git diff-index --quiet HEAD --; then
       echo "updating SpatialOps..."
-      run "git pull"
+      run "env GIT_SSL_NO_VERIFY=true git pull"
     else
       needsrecompile=false
     fi
@@ -178,7 +178,7 @@ if [ -d "ExprLib" ]; then
     run "cd ExprLib"
     if ! git diff-index --quiet HEAD --; then
        echo "updating ExprLib..."
-       run "git pull"
+       run "env GIT_SSL_NO_VERIFY=true git pull"
     else
        needsrecompile=false
     fi
@@ -230,7 +230,7 @@ if [ -d "TabProps" ]; then
     run "cd TabProps"
     if ! git diff-index --quiet HEAD --; then
       echo "updating TabProps"
-      run "git pull"
+      run "env GIT_SSL_NO_VERIFY=true git pull"
     else
       needsrecompile=false
     fi
@@ -276,7 +276,7 @@ if [ -d "RadProps" ]; then
     run "cd RadProps"
     if ! git diff-index --quiet HEAD --; then
       echo "updating RadProps..."
-      run "git pull"
+      run "env GIT_SSL_NO_VERIFY=true git pull"
     else
       needsrecompile=false
     fi

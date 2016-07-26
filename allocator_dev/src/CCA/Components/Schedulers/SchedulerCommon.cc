@@ -411,7 +411,7 @@ handleError(       int     errorPosition,
   bool reported = (*varToReportedMap)[ variableName ];
   if( !reported ) {
     (*varToReportedMap)[ variableName ] = true;
-    cout << errorMessage << "\n";
+ //   cout << errorMessage << "\n";
     return true;
   }
   return false;
@@ -446,7 +446,7 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
 
   for (int i = 0; i < (int) trackingVars_.size(); i++) {
     bool printedVarName = false;
-
+        
     // that DW may not have been mapped....
     if (dt->getTask()->mapDataWarehouse(trackingDWs_[i]) < 0 ||
         dt->getTask()->mapDataWarehouse(trackingDWs_[i]) >= (int) dws.size()) {
@@ -548,8 +548,8 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
                << ") because it does not exist in DW.\n"
                << "            Patch is: " << *patch << "\n";
           if( handleError( 5, mesg.str(), trackingVars_[i] ) ) {
-            cout << "         DW contains (material: " << m << ")\n";
-            dw->print();
+            //cout << "         DW contains (material: " << m << ")\n";
+            //dw->print();
           }
           continue;
         }
@@ -610,10 +610,6 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
 
         if (!printedVarName) {
           cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << ", DW " << dw->getID() << ", Patch " << patch->getID() << ", Matl " << m << endl;
-
-          if (trackingVars_[i] == "rho_CC") {
-            cout << "  RHO: " << dw->getID() << " original input " << trackingDWs_[i] << endl;
-          }
         }
 
         switch (td->getSubType()->getType()) {
@@ -621,10 +617,10 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
         {
           GridVariable<double>* var = dynamic_cast<GridVariable<double>*>(v);
 
-          for (int z = start.z(); z < end.z(); z++) {
-            for (int y = start.y(); y < end.y(); y++) {
+          for (int z = start.z(); z < end.z()+1; z++) {            // add 1 to high to include x+,y+,z+ extraCells
+            for (int y = start.y(); y < end.y()+1; y++) {
               cout << d_myworld->myrank() << "  ";
-              for (int x = start.x(); x < end.x(); x++) {
+              for (int x = start.x(); x < end.x()+1; x++) {
                 IntVector c(x,y,z);
                 cout << " " << c << ": " << (*var)[c];
               }
@@ -638,10 +634,10 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
         {
           GridVariable<Vector>* var = dynamic_cast<GridVariable<Vector>*>(v);
 
-          for (int z = start.z(); z < end.z(); z++) {
-            for (int y = start.y(); y < end.y(); y++) {
+          for (int z = start.z(); z < end.z()+1; z++) {            // add 1 to high to include x+,y+,z+ extraCells
+            for (int y = start.y(); y < end.y()+1; y++) {
               cout << d_myworld->myrank() << "  ";
-              for (int x = start.x(); x < end.x(); x++) {
+              for (int x = start.x(); x < end.x()+1; x++) {
                 IntVector c(x,y,z);
                 cout << " " << c << ": " << (*var)[c];
               }
@@ -701,6 +697,11 @@ SchedulerCommon::addTask(       Task        * task,
     maxGhost = task->m_max_ghost_cells;
   }
 
+  // max fine ghost cells (for both Task and SchedulerCommon) is for the very specific multi-level RMCRT case (data onion specifically),
+  // where there may be a limited halo on the fine, CFD mesh, but a global halo (SHRT_MAX) requirement for arbitrarily
+  // many coarse levels beneath this.
+  // NOTE: all other components use uniform ghost cells across levels, and only use "max-ghost", not "max-fine-ghost"
+  //       - RMCRT is a specific case.
   if (task->m_max_fine_ghost_cells > maxFineGhost) {
     maxFineGhost = task->m_max_fine_ghost_cells;
   }
@@ -996,7 +997,6 @@ SchedulerCommon::getSuperPatchExtents( const VarLabel*        label,
   SuperPatch::Region requiredExtents = connectedPatchGroup->getRegion();
 
   // expand to cover the entire connected patch group
-  bool containsGivenPatch = false;
   for (unsigned int i = 0; i < connectedPatchGroup->getBoxes().size(); i++) {
     // get the minimum extents containing both the expected ghost cells
     // to be needed and the given ghost cells.
@@ -1020,12 +1020,8 @@ SchedulerCommon::getSuperPatchExtents( const VarLabel*        label,
     SuperPatch::Region requestedRegion = SuperPatch::Region(requestedLow, requestedHigh);
     requestedExtents = requestedExtents.enclosingRegion(requestedRegion);
 
-    if (memberPatch == patch) {
-      containsGivenPatch = true;
-    }
+    ASSERT(memberPatch == patch);
   }
-
-  ASSERT(containsGivenPatch);
 
   requiredLow = requiredExtents.low_;
   requiredHigh = requiredExtents.high_;

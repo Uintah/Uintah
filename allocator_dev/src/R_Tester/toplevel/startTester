@@ -32,13 +32,13 @@ ID=`date +%m%d%y`
 
 MACHINE=`hostname`
 
-if [ "$MACHINE" == "rt" ]; then
-  COMMON_GROUP="uintah"
-  BUILD_DIR=/home/csafe-tester/"$OS"
-  TEST_DATA=/home/csafe-tester/"$OS"/TestData
-  TEMP_DIR=/home/csafe-tester/"$OS"
-  SCRIPT_DIR=/home/csafe-tester/scripts
-  CHECKPOINTS=/home/csafe-tester/CheckPoints
+if [ "$MACHINE" == "uintah-build" ]; then
+  COMMON_GROUP="users"
+  BUILD_DIR=/home/rt/"$OS"
+  TEST_DATA=/home/rt/"$OS"/TestData
+  TEMP_DIR=/home/rt/"$OS"
+  SCRIPT_DIR=/home/rt/scripts
+  CHECKPOINTS=/home/rt/CheckPoints
   
   # Where the webpage will be, and init webpage
   # Note you need the following directory structure:
@@ -47,8 +47,8 @@ if [ "$MACHINE" == "rt" ]; then
   #          Memory/
   #          simRunTime/
   
-  HTMLLOG=/home/csafe-tester/public_html/Uintah.html
-  WEBLOG=http://155.98.58.231:8050/~csafe-tester/Uintah.html
+  HTMLLOG=/home/rt/public_html/Uintah.html
+  WEBLOG=http://155.101.15.100/~rt/Uintah.html
 fi
 
 if test "$MACHINE" = "albion" ; then

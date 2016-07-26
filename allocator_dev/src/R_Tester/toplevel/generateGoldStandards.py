@@ -1,16 +1,12 @@
 #! /usr/bin/env python
 
-import os
+import os 
 
 # bulletproofing
 if os.sys.version_info <= (2,7):
   print( "" )
   print( "ERROR: Your python version [" + str( os.sys.version_info ) + "] is too old.\n" + \
-        "       You must use version 2.7 or greater (but NOT version 3.x!). \n" + \
-        "       If you're using either ember or updraft please add the following to your shell rc script: \n" + \
-        "           csh/tcsh:  source /uufs/chpc.utah.edu/sys/pkg/python/2.6.5/etc/python.csh \n" + \
-        "           bash:      source /uufs/chpc.utah.edu/sys/pkg/python/2.6.5/etc/python.sh\n\n" )
-  print( "" )
+        "       You must use version 2.7 or greater (but NOT version 3.x!). \n" )
   exit( 1 )
 
 import shutil
@@ -19,6 +15,7 @@ import socket
 import resource
 import subprocess # needed to accurately get return codes
 
+from os import system
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
@@ -184,7 +181,8 @@ def generateGS() :
         print( "ERROR:generateGoldStandards.py ")
         print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
         print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
-        exit (1)
+        exit (1)    
+        
     print( "Using mpirun: %s " % MPIRUN )
     print( "If this is not the correct MPIRUN, please indicate the desired one with the MPIRUN environment variable" )
         
@@ -213,33 +211,15 @@ def generateGS() :
                 print( "Goodbye." )
                 print( "" )
                 exit( 0 )
-    #
-    # !!!FIXME!!!: if svn fails to run, or returns differences, then
-    # ask the user what they want to do.  This is not complete yet!!!
-    ##############################################################
-
-    ##############################################################
-    # !!!FIXME!!!: Determine if configVars has changed... if not, let the user
-    # know this...
-    #
-    #configVars = options.build_directory + "/configVars.mk"
-    #shutil.copy( configVars, "." )
-    ##############################################################
-
-    ##############################################################
-    # !!!FIXME!!!:
-    # - Determine if/where mpirun is...
-    # - Determine if sus was built with MPI...
-    # - Determine (ask the user?) if the (sus) binary is up to date.
-    ##############################################################
 
     allComponentsTests = options.test_file
-    
     
     # parse the inputs which are in the form ( <component>:<test> )
     components      = []          # list that contains each test name
     componentTests  = []          # contains the name list of tests to run
     
+    
+    #______________________________________________________________________
     for component in allComponentsTests :
       me = component.split(':')
       c = me[0]
@@ -395,12 +375,24 @@ def generateGS() :
 
             SVN_FLAGS = " -svnStat -svnDiff "
             #SVN_FLAGS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
+            
+            # adjustments for openmpi and mvapich
+            # openmpi
+            rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
+            if rc == 0:
+              MPIHEAD="%s %s -x SCI_SIGNALMODE" % (MPIRUN, MALLOC_FLAG)
 
+            # mvapich
+            rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
+            if rc == 0:
+              MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE" % MPIRUN    
+      
+      
             if np > 1.0 :
                 np = int( np )
-                mpirun = "%s -np %s  " % (MPIRUN,np)
+                my_mpirun = "%s -np %s  " % (MPIHEAD, np)
 
-                command = mpirun + MALLOC_FLAG + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
+                command = my_mpirun + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
             else :
                 command = sus + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " >  sus_log.txt 2>&1" 
 
