@@ -29,7 +29,7 @@ if [ "$OS" = "Linux" ]; then
      
   #_________________
   #  machine specific variables
-  if [ "$MACHINE" == "rt" ]; then
+  if [ "$MACHINE" == "uintah-build" ]; then
     COMMON="      --with-boost=/usr/  \\
      --enable-all-components \\
      --enable-wasatch_3p \\
@@ -42,10 +42,6 @@ if [ "$OS" = "Linux" ]; then
   
   #_________________
   if [ "$MACHINE" == "cyrus.mech.utah.edu" ]; then
-
-    OPT_CONFIGURE="    --enable-64bit \\
-        --enable-assertion-level=0 \\
-       '--enable-optimize=-O2 -mfpmath=sse' \\"
 
     COMMON="       --with-mpi=/usr/installed/openmpi \\
       --with-cuda=/usr/local/cuda-7.5 \\

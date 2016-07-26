@@ -40,7 +40,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-#include <sci_values.h>
+#include <climits>
+#include <cfloat>
 #include <iostream>
 #include <errno.h>
 #include <fenv.h>

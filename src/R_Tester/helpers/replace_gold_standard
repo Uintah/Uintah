@@ -27,6 +27,8 @@ do_perf="false"
 do_input="false"
 do_checkpoint="false"
 
+unalias -a         # unalias any commands
+
 #__________________________________
 # Machine specific variables
 MACHINE=`hostname`
@@ -161,7 +163,7 @@ if [[ "$do_uda" = "true"|| "$do_all" = "true" ]]; then
     failcode="0"
     echo -n "Replacing $testname udas ... "
     rm -rf $gold_standard_dir/$testname/*.uda
-    rm -rf $gold_standard_dir/$testname/sus.log.txt
+    rm -f $gold_standard_dir/$testname/sus.log.txt
     
     if [ $? != "0" ]; then
       failcode="1"
@@ -243,7 +245,7 @@ if [[ "$do_mem" = "true" || "$do_all" = "true" ]]; then
     failcode="0"
     echo "Replacing $testname memory results"
     
-    rm $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
+    rm -f $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
     
     if [ $? != "0" ]; then
       failcode="1"
@@ -276,7 +278,7 @@ if  [[ "$do_perf" = "true" || "$do_all" = "true" ]]; then
     failcode="0"
     echo "Replacing $testname performance results"
     
-    rm $gold_standard_dir/$testname/*timestamp > /dev/null 2>&1
+    rm -f $gold_standard_dir/$testname/*timestamp > /dev/null 2>&1
     
     if [ $? != "0" ]; then
       failcode="1"

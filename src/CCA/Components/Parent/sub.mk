@@ -53,6 +53,7 @@ PSELIBS := \
         $(ICE)                             \
         $(MPM)                             \
         $(MPMICE)                          \
+        $(FVM)                             \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/ReduceUda            \
         $(COMPONENTS)/ProblemSpecification \

@@ -81,6 +81,10 @@ ifeq ($(BUILD_ARCHES),yes)
   ARCHES_LIBS        = $(COMPONENTS)/Arches
 endif
 
+ifeq ($(BUILD_FVM),yes)
+  FVM_LIB            = CCA/Components/FVM
+endif
+
 ifeq ($(BUILD_MPM),yes)
   MPM_LIB            = CCA/Components/MPM
   ifeq ($(BUILD_ICE),yes)
@@ -132,6 +136,7 @@ ALL_PSE_LIBS =                              \
         $(ARCHES_LIBS)                      \
         $(ARCHES_SUB_LIBS)                  \
         $(MPMARCHES_LIB)                    \
+        $(FVM_LIB)                          \
         $(MPM_LIB)                          \
         $(ICE_LIB)                          \
         $(MPMICE_LIB)                       \
@@ -152,6 +157,7 @@ ALL_STATIC_PSE_LIBS =                   \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
     $(MPMARCHES_LIB)                    \
+    $(FVM_LIB)                          \
     $(MPM_LIB)                          \
     $(ICE_LIB)                          \
     $(MPMICE_LIB)                       \

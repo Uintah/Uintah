@@ -29,26 +29,11 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/ICE
+SRCDIR   := CCA/Components/FVM
 
-SRCS       += $(SRCDIR)/ICE.cc \
-       $(SRCDIR)/AMRICE.cc \
-       $(SRCDIR)/ICEMaterial.cc \
-       $(SRCDIR)/Diffusion.cc \
-       $(SRCDIR)/BoundaryCond.cc \
-       $(SRCDIR)/impICE.cc \
-       $(SRCDIR)/impAMRICE.cc \
-       $(SRCDIR)/customInitialize.cc   \
-       $(SRCDIR)/ExchangeCoefficients.cc   	
-       
-SUBDIRS := $(SRCDIR)/EOS \
-       $(SRCDIR)/Advection \
-       $(SRCDIR)/CustomBCs \
-       $(SRCDIR)/SpecificHeatModel \
-       $(SRCDIR)/WallShearStressModel \
-       $(SRCDIR)/TurbulenceModel
+SRCS       += $(SRCDIR)/ElectrostaticSolve.cc 	
 
-include $(SCIRUN_SCRIPTS)/recurse.mk          
+#include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
        CCA/Components/OnTheFlyAnalysis \
@@ -65,16 +50,8 @@ PSELIBS := \
        Core/ProblemSpec                \
        Core/Util                       
 
-ifeq ($(OS_NAME),Darwin)
-  PSELIBS += CCA/Components/MPM
-endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
-
-ifeq ($(HAVE_HYPRE),yes)
-   LIBS := $(LIBS) $(HYPRE_LIBRARY)
-   INCLUDES += $(HYPRE_INCLUDE)
-endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

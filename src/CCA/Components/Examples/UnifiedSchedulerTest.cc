@@ -300,8 +300,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(DetailedTask* task,
                                        patchNodeHighIndex,
                                        domainLow,
                                        domainHigh,
-                                       ((GPUDataWarehouse*)old_TaskGpuDW)->getdevice_ptr(),
-                                       ((GPUDataWarehouse*)new_TaskGpuDW)->getdevice_ptr());
+                                       (GPUDataWarehouse*)old_TaskGpuDW,
+                                       (GPUDataWarehouse*)new_TaskGpuDW);
 
       // residual is automatically "put" with the D2H copy of the GPUReductionVariable
       // new_dw->put(sum_vartype(residual), residual_label);

@@ -1,23 +1,26 @@
 import os,sys
 
-def build(num):
-        os.system('make cleanreally')
-        os.system('make cleanreally')
-	make_command='make -j' + str(num)
-	make=os.system(make_command)
+#______________________________________________________________________
+#  This script is called by the buildbot machinery and compiles uintah
+#______________________________________________________________________
 
-	if make > 0:
-               sys.exit(1) 
-               
-        return make
+def compileUintah(num):
+    
+    print "Executing: make cleanreally twice"
+    os.system('make cleanreally')
+    os.system('make cleanreally')
 
-machine_name = os.uname()[1]
+    print "Executing: make -j %s" % str(num)
+    make_command='make -j' + str(num)
+    make=os.system(make_command)
 
-if machine_name == 'inferno':
-	os.system('../src/scripts/pump_make.sh')
-else:
-	build(sys.argv[1])
+    if make > 0:
+      sys.exit(1) 
+      
+    return make
 
+#__________________________________
+compileUintah(sys.argv[1])
 os.system('make link_inputs')
 
 exit

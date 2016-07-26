@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-from os import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
+from os import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink,stat,access,getuid
+from os import W_OK
 from time import strftime,time,gmtime,asctime,localtime
 from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
@@ -161,10 +162,19 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   try:
     chdir(compare_root)
   except Exception:
-    # create the gold_standard algo subdir
+    # create the gold_standard component sub-directory
     chdir(gold_standard)
-    mkdir(ALGO)
-    system("chmod -R 775 %s" % ALGO)
+    
+    statinfo = stat(gold_standard)
+    file_uid = statinfo.st_uid
+    my_uid   = getuid()
+
+    # only create component directory if the user is the owner
+    if access(gold_standard, W_OK) and my_uid == file_uid:
+      print( " The directory %s does not exist in the gold standards %s" % ( ALGO, gold_standard) )
+      print( " Now creating it...." )    
+      mkdir(ALGO)
+      system("chmod -R 775 %s" % ALGO)
 
   resultsdir = "%s/%s-results" % (startpath, ALGO)
   chdir(startpath)
@@ -373,7 +383,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     list = callback(test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism)
 
     inputxml = path.basename(input(test))
-    system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
+    system("cp %s/%s %s > /dev/null 2>&1" % (inputsdir, input(test), inputxml))
     symlink(inputpath, "inputs")
 
     #__________________________________
@@ -557,18 +567,18 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     MALLOCSTATS = "-x MALLOC_STATS"
 
   MPIHEAD="%s -np" % MPIRUN       #default
-
+  
   # pass in environmental variables to mpirun
   if environ['OS'] == "Linux":
     MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
 
                                    # openmpi
-  rc = system("mpirun -x TERM echo 'hello' > /dev/null 2>&1")
+  rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
     MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
 
                                    #  mvapich
-  rc = system("mpirun -genvlist TERM echo 'hello' > /dev/null 2>&1")
+  rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
     MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE -np" % MPIRUN
 

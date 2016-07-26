@@ -369,6 +369,7 @@
                                                 impm, mpm,
                                                 mpmarches, 
                                                 mpmf, mpmice, amrmpm, wasatch, reduce_uda,
+                                                electrostatic_solver,
                                                 advectslabs,
                                                 unifiedschedulertest,poissongpu1,poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,
@@ -772,6 +773,7 @@
 
     <include href="ice_spec.xml"        section="AMR/ICE" />
     <include href="mpm_spec.xml"        section="AMR/MPM" />
+    <include href="fvm_spec.xml"        section="AMR/FVM" />
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                           attribute1="type REQUIRED STRING 'Tiled, SingleLevel'" >
@@ -902,6 +904,7 @@
                                            attribute1="add OPTIONAL BOOLEAN" >
     <include href="mpm_spec.xml" section="MaterialProperties/MPM" />
     <include href="ice_spec.xml" section="MaterialProperties/ICE" />
+    <include href="fvm_spec.xml" section="MaterialProperties/FVM" />
 
   </MaterialProperties>
   
@@ -917,6 +920,10 @@
   <Solver                     spec="OPTIONAL NO_DATA" 
                                 attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
 
+
+  <!--  FVM           -->
+  <include href="fvm_spec.xml" section="Uintah_specification/FVM" />
+         
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->
   
