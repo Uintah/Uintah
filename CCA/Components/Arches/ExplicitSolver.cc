@@ -3999,11 +3999,6 @@ ExplicitSolver::getCCVelocities(const ProcessorGroup*,
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
       CellIterator iter=patch->getFaceIterator(face, MEC);
 
-      IntVector lo = iter.begin();
-      int i = lo.x();
-      int j = lo.y();
-      int k = lo.z();
-
       Vector one_or_zero = Vector(1,1,1) - Abs(f_dir.asVector());
       // one_or_zero: faces x-+   (0,1,1)
       //                    y-+   (1,0,1)
@@ -4011,6 +4006,10 @@ ExplicitSolver::getCCVelocities(const ProcessorGroup*,
 
       for(; !iter.done(); iter++) {
         IntVector c = *iter;
+
+        int i = c.x();
+        int j = c.y();
+        int k = c.z();
 
         IntVector idxU(i+1,j,k);
         IntVector idxV(i,j+1,k);
