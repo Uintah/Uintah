@@ -416,7 +416,7 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec,
 // The following routine is designed to only print out a given error
 // once per error type per variable.  handleError is used by
 // printTrackedVars() with each type of error ('errorPosition')
-// condition specifically enumerated (by an integer running from 0 to 7).
+// condition specifically enumerated (by an integer running from 0 to 5).
 //
 // Returns true if the error message is displayed.
 //
@@ -425,7 +425,7 @@ handleError(       int     errorPosition,
              const string& errorMessage,
              const string& variableName )
 {
-  static vector< map<string,bool> * > errorsReported( 8 );
+  static vector< map<string,bool> * > errorsReported( 5 );
 
   map<string, bool> * varToReportedMap = errorsReported[ errorPosition ];
 
@@ -437,10 +437,32 @@ handleError(       int     errorPosition,
   bool reported = (*varToReportedMap)[ variableName ];
   if( !reported ) {
     (*varToReportedMap)[ variableName ] = true;
- //   cout << errorMessage << "\n";
+    cout << errorMessage << "\n";
     return true;
   }
   return false;
+}
+
+//______________________________________________________________________
+// printTrackedValues
+template< class T >
+void  SchedulerCommon::printTrackedValues( GridVariable<T>* var,
+                                           const IntVector& start,         
+                                           const IntVector& end )          
+{
+  for (int z = start.z(); z < end.z()+1; z++) {            // add 1 to high to include x+,y+,z+ extraCells
+    for (int y = start.y(); y < end.y()+1; y++) {
+    
+      cout << d_myworld->myrank() << "  ";
+    
+      for (int x = start.x(); x < end.x()+1; x++) {
+        IntVector c(x,y,z);
+        cout << " " << c << ": " << (*var)[c];
+      }
+      cout << endl;
+    }
+    cout << endl;
+  }
 }
 
 //______________________________________________________________________
@@ -489,13 +511,6 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
     OnDemandDataWarehouseP dw = dws[dt->getTask()->mapDataWarehouse(trackingDWs_[i])];
 
     if (dw == 0) { // old on initialization timestep
-      ostringstream mesg;
-
-      mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i] 
-           << ") because DW is nullptr.  Requested DW was: " 
-           << dt->getTask()->mapDataWarehouse(trackingDWs_[i]) << "\n";
-
-      handleError( 1, mesg.str(), trackingVars_[i] );
       continue;
     }
 
@@ -522,8 +537,8 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
     if (!label) {
       ostringstream mesg;
       mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
-           << ") because label is nullptr.\n";
-      handleError( 2, mesg.str(), trackingVars_[i] );
+           << ") because the label could not be found.\n";
+      handleError( 1, mesg.str(), trackingVars_[i] );
       continue;
     }
 
@@ -534,7 +549,7 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
       ostringstream mesg;
       mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
            << ") because patch is non-standard.\n";
-      handleError( 3, mesg.str(), trackingVars_[i] );
+      handleError( 2, mesg.str(), trackingVars_[i] );
       continue;
     }
     
@@ -544,12 +559,6 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
 
       const Patch* patch = patches->get(p);
       if (trackingPatchID_ != -1 && trackingPatchID_ != patch->getID()) {
-        ostringstream mesg;
-        mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
-             << ") because patch ID does not match.\n" 
-             << "            (Error only printed once.)\n"
-             << "         Tracking Patch ID: " << trackingPatchID_ << ", patch id: " << patch->getID() << "\n";
-        handleError( 4, mesg.str(), trackingVars_[i] );
         continue;
       }
 
@@ -573,31 +582,29 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
           mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i] 
                << ") because it does not exist in DW.\n"
                << "            Patch is: " << *patch << "\n";
-          if( handleError( 5, mesg.str(), trackingVars_[i] ) ) {
+          if( handleError( 3, mesg.str(), trackingVars_[i] ) ) {
             //cout << "         DW contains (material: " << m << ")\n";
             //dw->print();
           }
           continue;
         }
-        if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z())) {
-          ostringstream mesg;
-          mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i] 
-               << ") because the start is greater than the end location:\n"
-               << "start: " << start << "\n"
-               << "end: " << start << "\n";
-          handleError( 6, mesg.str(), trackingVars_[i] );
+        
+        if ( !(start.x() < end.x() && start.y() < end.y() && start.z() < end.z()) ) {
           continue;
         }
-        if (td->getSubType()->getType() != TypeDescription::double_type &&
-            td->getSubType()->getType() != TypeDescription::Vector) {
+        
+        const TypeDescription::Type subType = td->getSubType()->getType();
+        if (subType != TypeDescription::double_type &&
+            subType != TypeDescription::int_type &&
+            subType != TypeDescription::Vector) {
 
-          // Only allow *Variable<double> and *Variable<Vector> for now.
+          // Only allow *Variable<double>, *Variable<int> and *Variable<Vector> for now.
           ostringstream mesg;
           mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
                << ") because its type is not supported:\n"
                << "             " << td->getName() << "\n";
 
-          handleError( 7, mesg.str(), trackingVars_[i] );
+          handleError( 4, mesg.str(), trackingVars_[i] );
           continue;
         }
 
@@ -638,39 +645,23 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
           cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << ", DW " << dw->getID() << ", Patch " << patch->getID() << ", Matl " << m << endl;
         }
             
-        switch (td->getSubType()->getType()) {
-        case TypeDescription::double_type: 
+        switch (subType) {
+        case TypeDescription::double_type:
         {
           GridVariable<double>* var = dynamic_cast<GridVariable<double>*>(v);
-          
-          for (int z = start.z(); z < end.z()+1; z++) {            // add 1 to high to include x+,y+,z+ extraCells
-            for (int y = start.y(); y < end.y()+1; y++) {
-              cout << d_myworld->myrank() << "  ";
-              for (int x = start.x(); x < end.x()+1; x++) {
-                IntVector c(x,y,z);
-                cout << " " << c << ": " << (*var)[c];
-              }
-              cout << endl;
-            }
-            cout << endl;
-          }
+          printTrackedValues<double>( var, start, end );
         }
         break;
-        case TypeDescription::Vector: 
+        case TypeDescription::int_type:
+        {
+          GridVariable<int>* var = dynamic_cast<GridVariable<int>*>(v);
+          printTrackedValues<int>( var, start, end );
+        }
+        break;
+        case TypeDescription::Vector:
         {
           GridVariable<Vector>* var = dynamic_cast<GridVariable<Vector>*>(v);
-          
-          for (int z = start.z(); z < end.z()+1; z++) {            // add 1 to high to include x+,y+,z+ extraCells
-            for (int y = start.y(); y < end.y()+1; y++) {
-              cout << d_myworld->myrank() << "  ";
-              for (int x = start.x(); x < end.x()+1; x++) {
-                IntVector c(x,y,z);
-                cout << " " << c << ": " << (*var)[c];
-              }
-              cout << endl;
-            }
-            cout << endl;
-          }
+          printTrackedValues<Vector>( var, start, end );
         }
         break;
         default: break;
