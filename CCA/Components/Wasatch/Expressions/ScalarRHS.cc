@@ -92,6 +92,9 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 
     srcTags_( srcTags )
 {
+  const Expr::Tag srcTag = resolve_field_tag( SOURCE_TERM, fieldTags );
+  if( srcTag != Expr::Tag() ) srcTags_.push_back( srcTag );
+
   if( !strongForm_ ){
     if( phiTag_ == Expr::Tag() ){
       std::ostringstream msg;
