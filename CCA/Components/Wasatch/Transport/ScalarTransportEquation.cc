@@ -366,7 +366,7 @@ namespace WasatchCore{
   void ScalarTransportEquation<FieldT>::
   apply_boundary_conditions( const GraphHelper& graphHelper,
                              WasatchBCHelper& bcHelper )
-  {            
+  {
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
