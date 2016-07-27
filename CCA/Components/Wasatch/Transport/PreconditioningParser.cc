@@ -35,6 +35,10 @@
 #include <expression/ExprLib.h>
 #include <expression/Expression.h>
 
+#ifdef HAVE_POKITT
+#include <pokitt/CanteraObjects.h>
+#endif
+
 namespace WasatchCore {
 
 
@@ -53,7 +57,9 @@ namespace WasatchCore {
    *   \f[
    *     - \frac{\partial p}{\partial x_i} + \left(1 - \frac{1}{\alpha^2}\right) \frac{\partial p}{\partial x_i} = - \frac{1}{\alpha^2} \frac{\partial p}{\partial x_i}
    *   \f]
-   *
+   * For further details, see Wang, Y., & Trouvé, A. (2004). Artificial acoustic
+   *  stiffness reduction in fully compressible, direct numerical simulation of combustion.
+   *  Combust. Theory Modelling, 8(3), 633–660.
    */
   template< typename MomDirT >
   class ArtCompPGSPressure : public Expr::Expression<SVolField>
@@ -124,6 +130,9 @@ namespace WasatchCore {
     *   \f[
     *     (1 - \frac{1}{\alpha^2}) u_j \frac{\partial p}{\partial x_j}
     *   \f]
+    *  For further details, see Wang, Y., & Trouvé, A. (2004). Artificial acoustic
+    *  stiffness reduction in fully compressible, direct numerical simulation of combustion.
+    *  Combust. Theory Modelling, 8(3), 633–660.
     */
    class ArtCompPGSEnergy : public Expr::Expression<SVolField>
    {
@@ -231,6 +240,10 @@ namespace WasatchCore {
     *    \f[
     *     q_j = - k \frac{\partial T}{\partial x_j}
     *    \f]
+    *
+    *  For further details, see Wang, Y., & Trouvé, A. (2004). Artificial acoustic
+    *  stiffness reduction in fully compressible, direct numerical simulation of combustion.
+    *  Combust. Theory Modelling, 8(3), 633–660.
     */
    template< typename VolFieldT >
    class ArtCompASREnergy : public Expr::Expression<VolFieldT>
@@ -239,10 +252,15 @@ namespace WasatchCore {
      typedef typename SpatialOps::FaceTypes<VolFieldT>::YFace YFace;
      typedef typename SpatialOps::FaceTypes<VolFieldT>::ZFace ZFace;
 
-     DECLARE_FIELDS( VolFieldT, xvel_, yvel_, zvel_, visc_, dil_, p_ )
+     DECLARE_FIELDS( VolFieldT, xvel_, yvel_, zvel_, visc_, dil_, p_, mw_, cp_, temp_ )
      DECLARE_FIELDS( XFace, strainxx_, strainxy_, strainxz_, diffFluxX_ )
      DECLARE_FIELDS( YFace, strainyx_, strainyy_, strainyz_, diffFluxY_ )
      DECLARE_FIELDS( ZFace, strainzx_, strainzy_, strainzz_, diffFluxZ_ )
+     DECLARE_VECTOR_OF_FIELDS( VolFieldT, specEnthalpies_ )
+     DECLARE_VECTOR_OF_FIELDS( VolFieldT, specRxnRates_ )
+     DECLARE_VECTOR_OF_FIELDS( XFace, xSpecFluxes_ )
+     DECLARE_VECTOR_OF_FIELDS( YFace, ySpecFluxes_ )
+     DECLARE_VECTOR_OF_FIELDS( ZFace, zSpecFluxes_ )
 
      const bool doX_, doY_, doZ_;
      const double alpha_;
@@ -291,12 +309,18 @@ namespace WasatchCore {
 
      ArtCompASREnergy( const Expr::Tag& xvelTag, const Expr::Tag& yvelTag, const Expr::Tag& zvelTag,
                        const Expr::Tag& diffFluxXTag, const Expr::Tag& diffFluxYTag, const Expr::Tag& diffFluxZTag,
-                       const Expr::Tag viscTag,
+                       const Expr::Tag& viscTag,
                        const Expr::Tag& dilataionTag,
                        const Expr::Tag& pressureTag,
                        const Expr::Tag& strainxxTag, const Expr::Tag& strainyxTag, const Expr::Tag& strainzxTag,
                        const Expr::Tag& strainxyTag, const Expr::Tag& strainyyTag, const Expr::Tag& strainzyTag,
                        const Expr::Tag& strainxzTag, const Expr::Tag& strainyzTag, const Expr::Tag& strainzzTag,
+                       const Expr::Tag& mwTag, const Expr::Tag& cpTag, const Expr::Tag& tempTag,
+                       const Expr::TagList& specEnthTags,
+                       const Expr::TagList& xSpecDiffFluxTags,
+                       const Expr::TagList& ySpecDiffFluxTags,
+                       const Expr::TagList& zSpecDiffFluxTags,
+                       const Expr::TagList& specRxnTags,
                        const double alpha )
      : Expr::Expression<VolFieldT>(),
        doX_   ( xvelTag != Expr::Tag() ),
@@ -331,6 +355,31 @@ namespace WasatchCore {
          if( doX_ ) strainxz_ = this->template create_field_request<XFace>( strainxzTag );
          if( doY_ ) strainyz_ = this->template create_field_request<YFace>( strainyzTag );
        }
+
+       if( cpTag != Expr::Tag() ){
+         mw_   = this->template create_field_request<VolFieldT>( mwTag   );
+         cp_   = this->template create_field_request<VolFieldT>( cpTag   );
+#        ifdef HAVE_POKITT
+         temp_ = this->template create_field_request<VolFieldT>( tempTag );
+         this->template create_field_vector_request<VolFieldT>( specEnthTags, specEnthalpies_ );
+         if( doX_ ){
+           assert( xSpecDiffFluxTags.size() == CanteraObjects::number_species() );
+           this->template create_field_vector_request<XFace>( xSpecDiffFluxTags, xSpecFluxes_ );
+         }
+         if( doY_ ){
+           this->template create_field_vector_request<YFace>( ySpecDiffFluxTags, ySpecFluxes_ );
+           assert( ySpecDiffFluxTags.size() == CanteraObjects::number_species() );
+         }
+         if( doZ_ ){
+           this->template create_field_vector_request<ZFace>( zSpecDiffFluxTags, zSpecFluxes_ );
+           assert( zSpecDiffFluxTags.size() == CanteraObjects::number_species() );
+         }
+         if( specRxnTags.size() > 0 ){
+           assert( specRxnTags.size() == CanteraObjects::number_species() );
+           this->template create_field_vector_request<VolFieldT>( specRxnTags, specRxnRates_ );
+         }
+#        endif
+       }
      }
 
    public:
@@ -338,7 +387,8 @@ namespace WasatchCore {
      class Builder : public Expr::ExpressionBuilder
      {
        const Expr::TagList velTags_, diffFluxTags_;
-       const Expr::Tag viscTag_, dilTag_, pressureTag_;
+       const Expr::Tag viscTag_, dilTag_, pressureTag_, mwTag_, cpTag_, tempTag_;
+       const Expr::TagList specEnthTags_, xSpecDiffFluxTags_, ySpecDiffFluxTags_, zSpecDiffFluxTags_, specRxnTags_;
        const Expr::Tag strainxxTag_, strainyxTag_, strainzxTag_;
        const Expr::Tag strainxyTag_, strainyyTag_, strainzyTag_;
        const Expr::Tag strainxzTag_, strainyzTag_, strainzzTag_;
@@ -357,6 +407,14 @@ namespace WasatchCore {
                  const Expr::Tag& strainxxTag, const Expr::Tag& strainyxTag, const Expr::Tag& strainzxTag, // X-momentum
                  const Expr::Tag& strainxyTag, const Expr::Tag& strainyyTag, const Expr::Tag& strainzyTag, // Y-momentum
                  const Expr::Tag& strainxzTag, const Expr::Tag& strainyzTag, const Expr::Tag& strainzzTag, // Z-momentum
+                 const Expr::Tag& mwTag,
+                 const Expr::Tag& cpTag, // if empty, we will assume \gamma=cp/cv = 1.4 and get cp from that.
+                 const Expr::Tag& tempTag,
+                 const Expr::TagList& specEnthTags,
+                 const Expr::TagList& xSpecDiffFluxTags,
+                 const Expr::TagList& ySpecDiffFluxTags,
+                 const Expr::TagList& zSpecDiffFluxTags,
+                 const Expr::TagList& specRxnTags,
                  const double alpha,
                  const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
         : ExpressionBuilder( resultTag, nghost ),
@@ -364,7 +422,13 @@ namespace WasatchCore {
           diffFluxTags_( diffFluxTags),
           viscTag_     ( viscTag ),
           dilTag_      ( dilataionTag ),
-          pressureTag_ (pressureTag),
+          pressureTag_ ( pressureTag ),
+          mwTag_       ( mwTag ),
+          cpTag_       ( cpTag ),
+          tempTag_     ( tempTag ),
+          specEnthTags_( specEnthTags ),
+          xSpecDiffFluxTags_( xSpecDiffFluxTags ), ySpecDiffFluxTags_( ySpecDiffFluxTags ), zSpecDiffFluxTags_( zSpecDiffFluxTags ),
+          specRxnTags_ ( specRxnTags ),
           strainxxTag_ ( strainxxTag ), strainyxTag_( strainyxTag ), strainzxTag_( strainzxTag ),
           strainxyTag_ ( strainxyTag ), strainyyTag_( strainyyTag ), strainzyTag_( strainzyTag ),
           strainxzTag_ ( strainxzTag ), strainyzTag_( strainyzTag ), strainzzTag_( strainzzTag ),
@@ -380,7 +444,10 @@ namespace WasatchCore {
                                                   viscTag_, dilTag_, pressureTag_,
                                                   strainxxTag_, strainyxTag_, strainzxTag_,
                                                   strainxyTag_, strainyyTag_, strainzyTag_,
-                                                  strainxzTag_, strainyzTag_, strainzzTag_, alpha_ );
+                                                  strainxzTag_, strainyzTag_, strainzzTag_,
+                                                  mwTag_, cpTag_, tempTag_, specEnthTags_,
+                                                  xSpecDiffFluxTags_, ySpecDiffFluxTags_, zSpecDiffFluxTags_,
+                                                  specRxnTags_, alpha_ );
         }
 
      };  /* end of Builder class */
@@ -423,10 +490,18 @@ namespace WasatchCore {
        const VolFieldT& dil  = dil_ ->field_ref();
        const VolFieldT& p    = p_   ->field_ref();
 
-       // jcs gamma should be computed in general - not hard coded here.
-       const double gamma = 1.4;
        const double scale1 = 1.0 - 1.0/(alpha_*alpha_);
-       const double scale2 = gamma/(gamma-1.0);
+
+       SpatialOps::SpatFldPtr<VolFieldT> scale2 = SpatialOps::SpatialFieldStore::get<VolFieldT>( p );
+       if( cp_ ){
+         const double gasConstant = 8314.459848;  // universal R = J/(kmol K).
+         // scale2 is gamma/(gamma-1), which is also equal to (cp*MW/R)
+         *scale2 <<= cp_->field_ref() * mw_->field_ref() / gasConstant;
+       }
+       else{
+         const double gamma = 1.4;  // assume diatomic gas, for which gamma=1.4.
+         *scale2 <<= gamma/(gamma-1.0);  // jcs note this is also equal to (c_p*MW/R)
+       }
 
        if( doX_ && doY_ && doZ_ ){
 
@@ -448,7 +523,7 @@ namespace WasatchCore {
          const YFace& diffFluxY = diffFluxY_->field_ref();
          const ZFace& diffFluxZ = diffFluxZ_->field_ref();
 
-         result <<= scale1 * scale2 * p * dil
+         result <<= scale1 * *scale2 * p * dil
              - scale1 * 2.0 * visc
                * (  (*xFluxInterpOp_) ( (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * (*ddx_)(xvel) + strainxy * (*ddx_)(yvel) + strainxz * (*ddx_)(zvel) )
                   + (*yFluxInterpOp_) (  strainyx * (*ddy_)(xvel) + (strainyy - 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*ddy_)(yvel) + strainyz * (*ddy_)(zvel) )
@@ -503,7 +578,7 @@ namespace WasatchCore {
            result <<= result - (*zFluxInterpOp_) ( (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*ddz_)(zvel) );
          }
 
-         result <<= scale1 * scale2 * p * dil - scale1 * 2.0 * visc * result;
+         result <<= scale1 * *scale2 * p * dil - scale1 * 2.0 * visc * result;
          if( doX_ ){
            const XFace& diffFluxX = diffFluxX_->field_ref();
            result <<= result + scale1 * (*divX_)(diffFluxX);
@@ -517,6 +592,50 @@ namespace WasatchCore {
            result <<= result + scale1 * (*divZ_)(diffFluxZ);
          }
        }
+
+       // sum in species terms as appropriate
+#      ifdef HAVE_POKITT
+       if( cp_ ){
+         const VolFieldT& mw   = mw_  ->field_ref();
+         const VolFieldT& cp   = cp_  ->field_ref();
+         const VolFieldT& temp = temp_->field_ref();
+         const std::vector<double>& specMW = CanteraObjects::molecular_weights();
+         const int nspec = CanteraObjects::number_species();
+         if( doX_ && doY_ && doZ_ ){
+           for( int i=0; i<nspec; ++i ){
+             const VolFieldT& hi = specEnthalpies_[i]->field_ref();
+             if( specRxnRates_.size() == nspec ){
+               result <<= result + scale1 * ( hi - mw * cp * temp / specMW[i] )
+                                 * (
+                                     -(*divX_)( xSpecFluxes_[i]->field_ref() )
+                                     -(*divY_)( ySpecFluxes_[i]->field_ref() )
+                                     -(*divZ_)( zSpecFluxes_[i]->field_ref() )
+                                     +specRxnRates_[i]->field_ref()
+                                   );
+             }
+             else{
+               result <<= result + scale1 * ( hi - mw * cp * temp / specMW[i] )
+                                 * (
+                                     -(*divX_)( xSpecFluxes_[i]->field_ref() )
+                                     -(*divY_)( ySpecFluxes_[i]->field_ref() )
+                                     -(*divZ_)( zSpecFluxes_[i]->field_ref() )
+                                   );
+             }
+           }
+         }
+         else{
+           for( int i=0; i<nspec; ++i ){
+             const VolFieldT& hi = specEnthalpies_[i]->field_ref();
+             // reuse scale2 from above
+             (*scale2) <<= scale1 * ( hi - mw * cp * temp / specMW[i] );
+             if( doX_ ) result <<= result - (*scale2) * (*divX_)( xSpecFluxes_[i]->field_ref() );
+             if( doY_ ) result <<= result - (*scale2) * (*divY_)( ySpecFluxes_[i]->field_ref() );
+             if( doZ_ ) result <<= result - (*scale2) * (*divZ_)( zSpecFluxes_[i]->field_ref() );
+             if( specRxnRates_.size() == nspec ) result <<= result + (*scale2) * specRxnRates_[i]->field_ref();
+           }
+         } // 1D or 2D
+       } // species terms
+#      endif
      }
    };
 
@@ -633,10 +752,27 @@ namespace WasatchCore {
     asrParams->getAttribute( "coef", alpha );
     const TagNames& tags = TagNames::self();
     Expr::TagList diffFluxTags;
+    Expr::TagList xSpecFluxTags, ySpecFluxTags, zSpecFluxTags, specRxnTags, specEnthTags;
+    Expr::Tag cpTag; // empty tag is special for ASR - uses gamma=1.4.
 #   ifdef HAVE_POKITT
-    if( wasatchSpec_->findBlock("SpeciesTransportEquations") ){
+    cpTag = tags.heatCapacity;
+    Uintah::ProblemSpecP speciesSpec = wasatchSpec_->findBlock("SpeciesTransportEquations");
+    if( speciesSpec ){
       // names for the energy diffusive flux change when we are doing species transport (uggh)
       diffFluxTags = Expr::tag_list( tags.xHeatFlux, tags.yHeatFlux, tags.zHeatFlux );
+
+      for( int i=0; i<CanteraObjects::number_species(); ++i ){
+        const std::string specName = CanteraObjects::species_name(i);
+        specEnthTags.push_back( Expr::Tag( specName+"_"+tags.enthalpy.name(), Expr::STATE_NONE ) );
+        xSpecFluxTags.push_back( Expr::Tag( specName + tags.diffusiveflux + "X", Expr::STATE_NONE ) );
+        ySpecFluxTags.push_back( Expr::Tag( specName + tags.diffusiveflux + "Y", Expr::STATE_NONE ) );
+        zSpecFluxTags.push_back( Expr::Tag( specName + tags.diffusiveflux + "Z", Expr::STATE_NONE ) );
+      }
+      if( speciesSpec->findBlock("DetailedKinetics") ){
+        for( int i=0; i<CanteraObjects::number_species(); ++i ){
+          specRxnTags.push_back( Expr::Tag( "rr_"+CanteraObjects::species_name(i), Expr::STATE_NONE ) );
+        }
+      }
     }
     else
 #   endif
@@ -650,16 +786,14 @@ namespace WasatchCore {
     const Expr::Tag asrEnergyTag( "ASR_Energy", Expr::STATE_NONE );
 
     typedef ArtCompASREnergy<SpatialOps::SVolField>::Builder ASR;
-    factory_->register_expression( scinew ASR( asrEnergyTag,
-                                               vel_tags(),
-                                               diffFluxTags,
-                                               viscTag,
-                                               tags.dilatation,
-                                               tags.pressure,
+    factory_->register_expression( scinew ASR( asrEnergyTag, vel_tags(), diffFluxTags,
+                                               viscTag, tags.dilatation, tags.pressure,
                                                tags.strainxx, tags.strainyx, tags.strainzx,
                                                tags.strainxy, tags.strainyy, tags.strainzy,
                                                tags.strainxz, tags.strainyz, tags.strainzz,
-                                               alpha ) );
+                                               tags.mixMW, cpTag, tags.temperature, specEnthTags,
+                                               xSpecFluxTags, ySpecFluxTags, zSpecFluxTags,
+                                               specRxnTags, alpha ) );
     std::string totEnerg;
     wasatchSpec_->findBlock("EnergyEquation")->get("SolutionVariable",totEnerg);
     factory_->attach_dependency_to_expression( asrEnergyTag,

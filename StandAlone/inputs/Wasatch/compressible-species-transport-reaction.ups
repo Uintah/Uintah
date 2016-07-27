@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Test species transport</title>
+    <title>1D Species transport with reaction</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -90,10 +90,11 @@
       </ConvectiveFlux>
       <DetailedKinetics/>
     </SpeciesTransportEquations>
+       
   </Wasatch>
 
   <Time>
-    <maxTime>2e-5</maxTime>
+    <maxTime>5e-6</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1e-7</delt_min>
     <delt_max>1e-7</delt_max>
@@ -101,10 +102,10 @@
   </Time>
 
   <DataArchiver>
-    <filebase>species-transport.uda</filebase>
-    <outputTimestepInterval>20</outputTimestepInterval>
+    <filebase>compressible-species-transport-reaction.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="3.0e-6"/>
+    <checkpoint cycle="2" interval="2.0e-6"/>
     <compression>gzip</compression>
     <save label="H2"/>
     <save label="HO2"/>

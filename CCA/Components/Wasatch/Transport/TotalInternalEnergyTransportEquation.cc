@@ -42,6 +42,7 @@
 #include <pokitt/thermo/Enthalpy.h>
 #include <pokitt/transport/HeatFlux.h>
 #include <pokitt/transport/ThermalCondMix.h>
+#include <pokitt/thermo/HeatCapacity_Cp.h>
 #endif
 
 namespace WasatchCore {
@@ -479,6 +480,7 @@ namespace WasatchCore {
       massFracTags_.push_back( Expr::Tag( CanteraObjects::species_name(i), Expr::STATE_NONE ) );
     }
 #   endif
+
     const TagNames& tags = TagNames::self();
     Expr::ExpressionFactory& solnFactory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
@@ -498,6 +500,8 @@ namespace WasatchCore {
                                                            primVarTag_,
                                                            kineticEnergyTag_,
                                                            oldTempTag ) );
+      typedef pokitt::HeatCapacity_Cp<SVolField>::Builder Cp;
+      solnFactory.register_expression( new Cp( tags.heatCapacity, temperatureTag, massFracTags_ ) );
     }
     else
 #   endif
@@ -642,17 +646,20 @@ namespace WasatchCore {
           const std::string dir(1,*it);
           if( dir == "X" ){
             typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<MyFieldT>::XFace >::Builder XFlux;
-            factory.register_expression( scinew XFlux( tagNames.xHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, xSpecFluxTags ) );
+            const Expr::ExpressionID id = factory.register_expression( scinew XFlux( tagNames.xHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, xSpecFluxTags ) );
+            factory.cleave_from_children( id );
             info[DIFFUSIVE_FLUX_X] = tagNames.xHeatFlux;
           }
           else if( dir == "Y" ){
             typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<MyFieldT>::YFace >::Builder YFlux;
-            factory.register_expression( scinew YFlux( tagNames.yHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, ySpecFluxTags ) );
+            const Expr::ExpressionID id = factory.register_expression( scinew YFlux( tagNames.yHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, ySpecFluxTags ) );
+            factory.cleave_from_children( id );
             info[DIFFUSIVE_FLUX_Y] = tagNames.yHeatFlux;
           }
           else if( dir == "Z" ){
             typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<MyFieldT>::ZFace >::Builder ZFlux;
-            factory.register_expression( scinew ZFlux( tagNames.zHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, zSpecFluxTags ) );
+            const Expr::ExpressionID id = factory.register_expression( scinew ZFlux( tagNames.zHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, zSpecFluxTags ) );
+            factory.cleave_from_children( id );
             info[DIFFUSIVE_FLUX_Z] = tagNames.zHeatFlux;
           }
         }
