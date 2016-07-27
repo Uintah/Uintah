@@ -74,10 +74,7 @@ namespace WasatchCore{
     
     // species related variables
     const Expr::Tag
-    species,
-    rhoyi,
-    xSpeciesDiffFlux, ySpeciesDiffFlux, zSpeciesDiffFlux,
-    mixtureFraction;
+    mixMW;
     
     // thermochemistry related variables
     const Expr::Tag

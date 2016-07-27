@@ -61,7 +61,7 @@ namespace WasatchCore {
       turbulenceInputParams->get("EddyViscosityCoefficient",turbParams.eddyViscCoef);
 
     // get the turbulent Schmidt Number
-    turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbSchmidt, 1.0);
+    turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbSchmidt, 0.7);
 
     // get the turbulent Prandtl number
     turbulenceInputParams->getWithDefault("TurbulentPrandtl",turbParams.turbPrandtl, 0.7 );

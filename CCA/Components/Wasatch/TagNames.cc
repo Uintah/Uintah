@@ -62,6 +62,9 @@ namespace WasatchCore{
   kineticEnergy      ("KineticEnergy",      Expr::STATE_NONE ),
   totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
   
+  // species related variables
+  mixMW( "Mixture_MW", Expr::STATE_NONE ),
+
   // momentum related variables
   pressure  ( "pressure",   Expr::STATE_NONE ),
   dilatation( "dilatation", Expr::STATE_NONE ),

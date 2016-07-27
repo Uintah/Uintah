@@ -795,7 +795,44 @@
       </SourceTermExpression>
 
     </TransportEquation>
+    
+    <!-- ================================================================================== -->
+    <!-- Species Transport Equations.  These require PoKiTT and Cantera -->          
+    <SpeciesTransportEquations> 
 
+      <CanteraInputFile spec="REQUIRED STRING"/>
+      <CanteraGroup     spec="OPTIONAL STRING"/>
+ 
+      <Temperature spec="REQUIREDQUIRED NO_DATA"> 
+        <NameTag spec="REQUIRED"/>
+      </Temperature>
+         
+      <ConvectiveFlux spec="MULTIPLE"/>
+      
+      <DiffusiveFlux  spec="MULTIPLE" 
+                      attribute1="direction REQUIRED STRING 'X,Y,Z,XY,XZ,YZ,XYZ'" > 
+        <!-- For constant Lewis numbers, Le_i=1 unless otherwise specified below -->                                                                                                                                                                                                                                                            
+        <LewisNumber spec="OPTIONAL NO_DATA">
+          <Species spec="MULTIPLE NO_DATA" 
+                   attribute1="name REQUIRED STRING"
+                   attribute2="value REQUIRED DOUBLE" />
+          <ThermalConductivity spec="REQUIRED NO_DATA"> 
+            <NameTag spec="REQUIRED"/> 
+          </ThermalConductivity>
+          <HeatCapacity spec="REQUIRED NO_DATA"> 
+            <NameTag spec="REQUIRED"/>
+          </HeatCapacity>         
+        </LewisNumber>
+        
+        <!-- Mixture-averaged transport for all species diffusive fluxes -->
+        <MixtureAveraged/>
+ <!-- jcs what about the turbulent terms?  Turbulent Sc or something...? -->       
+      </DiffusiveFlux>
+
+      <DetailedKinetics/>
+      
+    </SpeciesTransportEquations>
+    
     <!-- Radiation model -->
     <Radiation spec="OPTIONAL NO_DATA"
                children1="ONE_OF( CHILD SimpleEmission, DiscreteOrdinates )" >

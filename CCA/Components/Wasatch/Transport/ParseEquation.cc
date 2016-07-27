@@ -24,6 +24,7 @@
  */
 
 //-- Wasatch Includes --//
+#include <sci_defs/wasatch_defs.h>
 #include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
@@ -42,6 +43,9 @@
 #include "EquationBase.h"
 #include "MomentTransportEquation.h"
 #include "EnthalpyTransportEquation.h"
+#ifdef HAVE_POKITT
+#include "SpeciesTransportEquation.h"
+#endif
 
 //-- includes for the expressions built here --//
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
@@ -147,6 +151,32 @@ namespace WasatchCore{
   
   //==================================================================
   
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_species_equations( Uintah::ProblemSpecP params,
+                           const TurbulenceParameters& turbParams,
+                           const Expr::Tag& densityTag,
+                           GraphCategories& gc )
+  {
+#   ifdef HAVE_POKITT
+    if( turbParams.turbModelName != TurbulenceParameters::NOTURBULENCE ){
+      // jcs We should at least include convective closure (turbulent diffusive flux)
+      //     Source term closure is a much more challenging issue.
+      throw Uintah::ProblemSetupException( "Turbulent closure is not yet supported for species transport", __FILE__, __LINE__ );
+    }
+    return setup_species_equations( params,
+                                    turbParams,
+                                    densityTag,
+                                    parse_nametag( params->findBlock("Temperature") ),
+                                    gc );
+#   else
+    // nothing to do - return empty equation set.
+    std::vector<EqnTimestepAdaptorBase*> eqns;
+    return eqns;
+#   endif
+  }
+
+  //==================================================================
+
   std::vector<EqnTimestepAdaptorBase*>
   parse_scalability_test( Uintah::ProblemSpecP params,
                          GraphCategories& gc )
