@@ -150,12 +150,13 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
-  ("compressible-bubble-2d", "compressible-bubble-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-bubble-2d-PGS", "compressible-bubble-2d-AC-PGS.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-bubble-2d-ASR", "compressible-bubble-2d-AC-ASR.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
+  ("compressible-bubble-2d",        "compressible-bubble-2d.ups",          4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-bubble-2d-PGS",    "compressible-bubble-2d-AC-PGS.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-bubble-2d-ASR",    "compressible-bubble-2d-AC-ASR.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
   ("compressible-flow-test-3d-bcs", "compressible-flow-test-3d-bcs.ups",   8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-2d-bcs", "compressible-flow-test-2d-bcs.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-1d-bcs", "compressible-flow-test-1d-bcs.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
+#  ("species-transport",             "species-transport.ups",               1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
   ("dual-time-exponential-decay", "dual-time-exp-dcay.ups",   1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("dual-time-scalar-example", "dual-time-scalar-example.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("dual-time-compressible-flow-test-1d", "dual-time-compressible-flow-test-1d.ups",  2,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
@@ -283,15 +284,15 @@ DUALTIMETESTS=[
 
 
 COMPRESSIBLETESTS=[
-  ("compressible-bubble-2d", "compressible-bubble-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-bubble-2d-PGS", "compressible-bubble-2d-AC-PGS.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-bubble-2d-ASR", "compressible-bubble-2d-AC-ASR.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
-  ("compressible-flow-test-3d-bcs", "compressible-flow-test-3d-bcs.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-flow-test-2d-bcs", "compressible-flow-test-2d-bcs.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-flow-test-1d-bcs", "compressible-flow-test-1d-bcs.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
-  ("compressible-flow-test-3d", "compressible-flow-test-3d.ups",   8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-flow-test-2d", "compressible-flow-test-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-flow-test-1d", "compressible-flow-test-1d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
+  ("compressible-bubble-2d",        "compressible-bubble-2d.ups",         4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-bubble-2d-PGS",    "compressible-bubble-2d-AC-PGS.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-bubble-2d-ASR",    "compressible-bubble-2d-AC-ASR.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
+  ("compressible-flow-test-3d-bcs", "compressible-flow-test-3d-bcs.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-flow-test-2d-bcs", "compressible-flow-test-2d-bcs.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-flow-test-1d-bcs", "compressible-flow-test-1d-bcs.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
+  ("compressible-flow-test-3d",     "compressible-flow-test-3d.ups",      8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-flow-test-2d",     "compressible-flow-test-2d.ups",      4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-flow-test-1d",     "compressible-flow-test-1d.ups",      4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
 ]
 
 TURBULENCETESTS =[

@@ -30,6 +30,7 @@
 #ifndef TotalInternalEnergy_Transport_Equation_H_
 #define TotalInternalEnergy_Transport_Equation_H_
 
+#include <sci_defs/wasatch_defs.h>
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
 
 namespace WasatchCore {
@@ -54,6 +55,7 @@ namespace WasatchCore {
     /**
      *  \brief Construct a TotalInternalEnergyTransportEquation
      *  \param e0Name the name for the total internal energy
+     *  \param wasatchSpec the block from the input file for Wasatch.
      *  \param energyEqnSpec the block from the input file specifying the transport equation.
      *  \param gc
      *  \param densityTag a tag containing density
@@ -66,6 +68,7 @@ namespace WasatchCore {
      *  \param turbulenceParams
      */
     TotalInternalEnergyTransportEquation( const std::string e0Name,
+                                          Uintah::ProblemSpecP wasatchSpec,
                                           Uintah::ProblemSpecP energyEqnSpec,
                                           GraphCategories& gc,
                                           const Expr::Tag& densityTag,
@@ -86,8 +89,12 @@ namespace WasatchCore {
 
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 
+    Uintah::ProblemSpecP wasatchSpec_;
     const Expr::Tag kineticEnergyTag_, temperatureTag_, pressureTag_;
     const Expr::TagList velTags_, bodyForceTags_;
+#   ifdef HAVE_POKITT
+    Expr::TagList massFracTags_;
+#   endif
   };
 
 } /* namespace WasatchCore */

@@ -61,15 +61,15 @@ namespace WasatchCore{
     double dualTimeTolerance;
     double dualTimeds;
 
-    TimeIntegrator(TimeIntegratorEnum theTimeIntEnum)
-    : timeIntEnum(theTimeIntEnum)    
+    TimeIntegrator( const TimeIntegratorEnum theTimeIntEnum )
+    : timeIntEnum( theTimeIntEnum )
     {
       initialize();
     }
 
     TimeIntegrator(const std::string& timeIntName)
     : timeIntEnum( (timeIntName == "RK2SSP") ? RK2SSP : ( (timeIntName == "RK3SSP") ? RK3SSP : FE ) ),
-      name(timeIntName)
+      name( timeIntName )
     {
       initialize();
     }
@@ -105,8 +105,8 @@ namespace WasatchCore{
       dualTimeTolerance  = 1.0e-8;
     }
     
-    void has_dual_time(const bool hasDT) { hasDualTime = hasDT; }
-    bool has_dual_time(){ return hasDualTime;}
+    inline void has_dual_time( const bool hasDT ) { hasDualTime = hasDT; }
+    inline bool has_dual_time(){ return hasDualTime; }
   };
 
 } // namespace WasatchCore

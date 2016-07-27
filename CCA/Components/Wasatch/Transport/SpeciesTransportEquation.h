@@ -34,10 +34,11 @@
 #include <sci_defs/wasatch_defs.h>
 
 #ifndef HAVE_POKITT
+// kill compilation if we don't have pokitt.
 #error Species transport requires PoKiTT.
 #endif
 
-#include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 
 namespace WasatchCore{
@@ -65,7 +66,7 @@ class SpeciesTransportEquation : public TransportEquation
   const int specNum_;
   const Expr::Tag primVarTag_;
   const Expr::Tag densityTag_, temperatureTag_, mmwTag_;
-  int nspec_;
+  const int nspec_;
   Expr::TagList yiTags_;
 
 

@@ -88,8 +88,7 @@ namespace WasatchCore{
     // define the primitive variable and solution variable tags and trap errors
     std::string form = "strong"; // default to strong form
     // get attribute for form. if none provided, then use default    
-    if (params->findAttribute("form"))
-      params->getAttribute("form",form);
+    if( params->findAttribute("form") ) params->getAttribute("form",form);
 
     isStrong_ = (form == "strong") ? true : false;
     const bool existPrimVar = params->findBlock("PrimitiveVariable");

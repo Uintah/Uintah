@@ -79,8 +79,7 @@ namespace WasatchCore{
     // thermochemistry related variables
     const Expr::Tag
     heatCapacity,
-    thermalConductivity,
-    viscosity;
+    thermalConductivity;
     
     // momentum related variables
     const Expr::Tag

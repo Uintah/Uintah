@@ -52,24 +52,21 @@ namespace WasatchCore{
     
     const Expr::Tag xVelTag_, yVelTag_, zVelTag_;
     const Expr::Tag densTag_, temperatureTag_, pressureTag_, mixMWTag_;
-    const double gasConstant_;
   public:
     ContinuityTransportEquation( const Expr::Tag densityTag,
                                  const Expr::Tag temperatureTag,
                                  const Expr::Tag mixMWTag,
-                                 const double gasConstant,
                                  GraphCategories& gc,
                                  const Expr::Tag xvel,
                                  const Expr::Tag yvel,
                                  const Expr::Tag zvel )
     : TransportEquation( gc, densityTag.name(), NODIR, false /* variable density */ ),
-    xVelTag_( xvel ),
-    yVelTag_( yvel ),
-    zVelTag_( zvel ),
-    densTag_       ( densityTag     ),
-    temperatureTag_( temperatureTag ),
-    mixMWTag_      ( mixMWTag       ),
-    gasConstant_( gasConstant )
+      xVelTag_( xvel ),
+      yVelTag_( yvel ),
+      zVelTag_( zvel ),
+      densTag_       ( densityTag     ),
+      temperatureTag_( temperatureTag ),
+      mixMWTag_      ( mixMWTag       )
     {
       setup();
     }
@@ -230,7 +227,6 @@ namespace WasatchCore{
                                            const Expr::Tag densityTag,
                                            const Expr::Tag temperatureTag,
                                            const Expr::Tag mixMWTag,
-                                           const double gasConstant,
                                            const Expr::Tag bodyForceTag,
                                            const Expr::Tag srcTermTag,
                                            GraphCategories& gc,
@@ -240,13 +236,13 @@ namespace WasatchCore{
     ~CompressibleMomentumTransportEquation();
 
     void setup_boundary_conditions( WasatchBCHelper& bcHelper,
-                                   GraphCategories& graphCat );
+                                    GraphCategories& graphCat );
 
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           WasatchBCHelper& bcHelper );
+                                            WasatchBCHelper& bcHelper );
 
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                   WasatchBCHelper& bcHelper );
+                                    WasatchBCHelper& bcHelper );
 
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory )
     {
@@ -263,8 +259,8 @@ namespace WasatchCore{
         const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
         const Expr::TagList theTagList( tag_list( this->thisVelTag_, rhoTag ) );
         icFactory.register_expression( new ExprAlgbr::Builder( this->initial_condition_tag(),
-                                                                       theTagList,
-                                                                       ExprAlgbr::PRODUCT ) );
+                                                               theTagList,
+                                                               ExprAlgbr::PRODUCT ) );
       }
       
       // multiply the initial condition by the volume fraction for embedded geometries
@@ -275,9 +271,9 @@ namespace WasatchCore{
         const Expr::TagList theTagList( tag_list( this->thisVolFracTag_ ) );
         Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE );
         icFactory.register_expression( new ExprAlgbr::Builder( modifierTag,
-                                                                       theTagList,
-                                                                       ExprAlgbr::PRODUCT,
-                                                                       true ) );
+                                                               theTagList,
+                                                               ExprAlgbr::PRODUCT,
+                                                               true ) );
         icFactory.attach_modifier_expression( modifierTag, this->initial_condition_tag() );
       }
       return icFactory.get_id( this->initial_condition_tag() );

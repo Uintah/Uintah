@@ -36,6 +36,14 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 
+#ifdef HAVE_POKITT
+#include <pokitt/thermo/InternalEnergy.h>
+#include <pokitt/thermo/Temperature.h>
+#include <pokitt/thermo/Enthalpy.h>
+#include <pokitt/transport/HeatFlux.h>
+#include <pokitt/transport/ThermalCondMix.h>
+#endif
+
 namespace WasatchCore {
 
    //============================================================================
@@ -60,41 +68,46 @@ namespace WasatchCore {
   template< typename FieldT >
   class TemperaturePurePerfectGas : public Expr::Expression<FieldT>
   {
-    DECLARE_FIELDS( FieldT, totalInternalEnergy_, kineticEnergy_ )
+    DECLARE_FIELDS( FieldT, totalInternalEnergy_, kineticEnergy_, mmw_ )
 
     TemperaturePurePerfectGas( const Expr::Tag& totalInternalEnergyTag,
-                               const Expr::Tag& kineticEnergyTag )
+                               const Expr::Tag& kineticEnergyTag,
+                               const Expr::Tag& mixMWTag )
       : Expr::Expression<FieldT>()
     {
       this->set_gpu_runnable( true );
 
       totalInternalEnergy_ = this->template create_field_request<FieldT>( totalInternalEnergyTag );
       kineticEnergy_       = this->template create_field_request<FieldT>( kineticEnergyTag       );
+      mmw_                 = this->template create_field_request<FieldT>( mixMWTag               );
     }
 
   public:
 
     class Builder : public Expr::ExpressionBuilder
     {
-      const Expr::Tag totalInternalEnergyTag_, kineticEnergyTag_;
+      const Expr::Tag totalInternalEnergyTag_, kineticEnergyTag_, mmwTag_;
     public:
       /**
        *  @brief Build a TemperaturePurePerfectGas expression
        *  @param resultTag the tag for the temperature (K)
        *  @param totalInternalEnergyTag the total specific internal energy, \f$e_T\f$.
        *  @oaram kineticEnergyTag the specific kinetic energy, \f$\mathbf{u}\cdot\mathbf{u}/2\f$.
+       *  @oaram mixMWTag the mixture molecular weight, (kg/kmol or g/mol).
        */
       Builder( const Expr::Tag& resultTag,
                const Expr::Tag& totalInternalEnergyTag,
                const Expr::Tag& kineticEnergyTag,
+               const Expr::Tag& mixMWTag,
                const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
         : ExpressionBuilder( resultTag, nghost ),
           totalInternalEnergyTag_( totalInternalEnergyTag ),
-          kineticEnergyTag_      ( kineticEnergyTag       )
+          kineticEnergyTag_      ( kineticEnergyTag       ),
+          mmwTag_                ( mixMWTag               )
       {}
 
       Expr::ExpressionBase* build() const{
-        return new TemperaturePurePerfectGas( totalInternalEnergyTag_,kineticEnergyTag_ );
+        return new TemperaturePurePerfectGas( totalInternalEnergyTag_,kineticEnergyTag_,mmwTag_ );
       }
 
     };  /* end of Builder class */
@@ -105,8 +118,9 @@ namespace WasatchCore {
     {
       const FieldT& totalInternalEnergy = totalInternalEnergy_->field_ref();
       const FieldT& kineticEnergy       = kineticEnergy_      ->field_ref();
-      const double gasConstant = 8.314459848/0.028966;  // universal R = J/(mol K). Specific R* = R/Mw = J/k
-      this->value() <<= 2.0/(5.0*gasConstant) * ( totalInternalEnergy - kineticEnergy ); // total internal energy = J/Kg (per unit mass)
+      const FieldT& mixMW               = mmw_                ->field_ref();
+      const double gasConstant = 8314.459848;  // universal R = J/(kmol K).
+      this->value() <<= 2.0/5.0 * mixMW/gasConstant * ( totalInternalEnergy - kineticEnergy ); // total internal energy = J/kg (per unit mass)
     }
 
   };
@@ -123,11 +137,12 @@ namespace WasatchCore {
   class TotalInternalEnergy_PurePerfectGas_IC
    : public Expr::Expression<FieldT>
   {
-    DECLARE_FIELDS( FieldT, temperature_, xvel_, yvel_, zvel_ )
+    DECLARE_FIELDS( FieldT, temperature_, mmw_, xvel_, yvel_, zvel_ )
     const bool doX_, doY_, doZ_;
 
     TotalInternalEnergy_PurePerfectGas_IC( const Expr::Tag& temperatureTag,
-                                           const Expr::TagList& velTags )
+                                           const Expr::TagList& velTags,
+                                           const Expr::Tag& mixMWTag )
       : Expr::Expression<FieldT>(),
         doX_( velTags[0] != Expr::Tag() ),
         doY_( velTags[1] != Expr::Tag() ),
@@ -136,6 +151,7 @@ namespace WasatchCore {
       this->set_gpu_runnable( true );
 
       temperature_ = this->template create_field_request<FieldT>( temperatureTag );
+      mmw_         = this->template create_field_request<FieldT>( mixMWTag       );
 
       if( doX_ ) xvel_ = this->template create_field_request<FieldT>( velTags[0] );
       if( doY_ ) yvel_ = this->template create_field_request<FieldT>( velTags[1] );
@@ -147,7 +163,7 @@ namespace WasatchCore {
 
     class Builder : public Expr::ExpressionBuilder
     {
-      const Expr::Tag temperatureTag_;
+      const Expr::Tag temperatureTag_, mmwTag_;
       const Expr::TagList velTags_;
     public:
       /**
@@ -157,16 +173,18 @@ namespace WasatchCore {
       Builder( const Expr::Tag& resultTag,
                const Expr::Tag& temperatureTag,
                const Expr::TagList& velTags,
+               const Expr::Tag& mixMWTag,
                const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
         : ExpressionBuilder( resultTag, nghost ),
           temperatureTag_( temperatureTag ),
+          mmwTag_( mixMWTag ),
           velTags_( velTags )
       {
         assert( velTags.size() == 3 );
       }
 
       Expr::ExpressionBase* build() const{
-        return new TotalInternalEnergy_PurePerfectGas_IC<FieldT>( temperatureTag_,velTags_ );
+        return new TotalInternalEnergy_PurePerfectGas_IC<FieldT>( temperatureTag_,velTags_,mmwTag_ );
       }
 
     };  /* end of Builder class */
@@ -178,17 +196,18 @@ namespace WasatchCore {
       FieldT& result = this->value();
 
       const FieldT& temperature = temperature_->field_ref();
+      const FieldT& mmw         = mmw_        ->field_ref();
 
-      const double gasConstant = 8.314459848/0.028966;  // Universal R = J/(mol K). Specific R* = R/Mw = J/(Kg K)
+      const double gasConstant = 8314.459848;  // Universal R = J/(kmol K)
 
       if( doX_ && doY_ && doZ_ ){
         const FieldT& xvel = xvel_->field_ref();
         const FieldT& yvel = yvel_->field_ref();
         const FieldT& zvel = zvel_->field_ref();
-        result <<= 5.0*gasConstant/2.0 * temperature + 0.5 * ( xvel*xvel + yvel*yvel + zvel*zvel );
+        result <<= 5.0/2.0 * gasConstant/mmw * temperature + 0.5 * ( xvel*xvel + yvel*yvel + zvel*zvel );
       }
       else{
-        result <<= 5.0*gasConstant/2.0 * temperature;
+        result <<= 5.0/2.0 * gasConstant/mmw * temperature;
         if( doX_ ){
           const FieldT& xvel = xvel_->field_ref();
           result <<= result + 0.5 * xvel * xvel;
@@ -430,6 +449,7 @@ namespace WasatchCore {
 
   TotalInternalEnergyTransportEquation::
   TotalInternalEnergyTransportEquation( const std::string e0Name,
+                                        Uintah::ProblemSpecP wasatchSpec,
                                         Uintah::ProblemSpecP energyEqnSpec,
                                         GraphCategories& gc,
                                         const Expr::Tag& densityTag,
@@ -446,12 +466,19 @@ namespace WasatchCore {
                                           false, /* variable density */
                                           turbulenceParams,
                                           false /* don't call setup */ ),
+      wasatchSpec_( wasatchSpec ),
       kineticEnergyTag_( "kinetic energy", Expr::STATE_NONE ),
       temperatureTag_( temperatureTag ),
       pressureTag_( TagNames::self().pressure ),
       velTags_( velTags ),
       bodyForceTags_(bodyForceTags)
   {
+#   ifdef HAVE_POKITT
+    massFracTags_.clear();
+    for( int i=0; i<CanteraObjects::number_species(); ++i ){
+      massFracTags_.push_back( Expr::Tag( CanteraObjects::species_name(i), Expr::STATE_NONE ) );
+    }
+#   endif
     const TagNames& tags = TagNames::self();
     Expr::ExpressionFactory& solnFactory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
@@ -461,9 +488,23 @@ namespace WasatchCore {
 
     //----------------------------------------------------------
     // temperature calculation
-    typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
-    solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_ ) );
-
+#   ifdef HAVE_POKITT
+    if( wasatchSpec->findBlock("SpeciesTransportEquations") ){
+      const Expr::Tag oldTempTag( temperatureTag.name(), Expr::STATE_N );
+      solnFactory.register_expression( scinew Expr::PlaceHolder<SVolField>::Builder(oldTempTag) );
+      typedef pokitt::TemperatureFromE0<MyFieldT>::Builder Temperature;
+      solnFactory.register_expression( scinew Temperature( temperatureTag,
+                                                           massFracTags_,
+                                                           primVarTag_,
+                                                           kineticEnergyTag_,
+                                                           oldTempTag ) );
+    }
+    else
+#   endif
+    {
+      typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
+      solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_, tags.mixMW ) );
+    }
     //----------------------------------------------------------
     // viscous dissipation
     typedef ViscousDissipation<MyFieldT>::Builder ViscDissip;
@@ -532,16 +573,26 @@ namespace WasatchCore {
   TotalInternalEnergyTransportEquation::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-        // initial condition for total internal energy
-    typedef TotalInternalEnergy_PurePerfectGas_IC<SVolField>::Builder SimpleEnergyIC;
-    icFactory.register_expression( scinew SimpleEnergyIC( primVarTag_, temperatureTag_, velTags_ ) );
-    
+    // initial condition for total internal energy
+#   ifdef HAVE_POKITT
+    if( wasatchSpec_->findBlock("SpeciesTransportEquations") ){
+      typedef pokitt::TotalInternalEnergy<MyFieldT>::Builder EnergyIC;
+      icFactory.register_expression( scinew EnergyIC( primVarTag_,
+                                                      temperatureTag_,
+                                                      massFracTags_,
+                                                      velTags_ ) );
+    }
+    else
+#   endif
+    {
+      typedef TotalInternalEnergy_PurePerfectGas_IC<SVolField>::Builder SimpleEnergyIC;
+      icFactory.register_expression( scinew SimpleEnergyIC( primVarTag_, temperatureTag_, velTags_, TagNames::self().mixMW ) );
+    }
     typedef ExprAlgebra<SVolField> ExprAlgbr;
-    const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
-    const Expr::TagList theTagList( tag_list( primVarTag_, rhoTag ) );
+    const Expr::Tag rhoTag( densityTag_.name(), Expr::STATE_NONE );
     return icFactory.register_expression( new ExprAlgbr::Builder( this->initial_condition_tag(),
-                                                          theTagList,
-                                                          ExprAlgbr::PRODUCT ) );
+                                                                  tag_list( primVarTag_, rhoTag ),
+                                                                  ExprAlgbr::PRODUCT ) );
   }
 
   //---------------------------------------------------------------------------
@@ -552,15 +603,74 @@ namespace WasatchCore {
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     
-    for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
-         diffFluxParams != 0;
-         diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
-    {
-      setup_diffusive_velocity_expression<MyFieldT>( diffFluxParams,
+#   ifdef HAVE_POKITT
+    Uintah::ProblemSpecP speciesParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
+    if( speciesParams ){
+      if( params_->findBlock("DiffusiveFlux") ){
+        std::ostringstream msg;
+        msg << "ERROR: When using species transport, the energy diffusive flux will be automatically calculated.\n"
+            << "       Do not specify it in your input file." << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      const TagNames& tagNames = TagNames::self();
+      Expr::TagList specEnthTags, xSpecFluxTags, ySpecFluxTags, zSpecFluxTags;
+      for( int i=0; i<CanteraObjects::number_species(); ++i ){
+        const std::string specName = CanteraObjects::species_name(i);
+        specEnthTags.push_back( Expr::Tag( specName+"_"+tagNames.enthalpy.name(), Expr::STATE_NONE ) );
+        xSpecFluxTags.push_back( Expr::Tag( specName + tagNames.diffusiveflux + "X", Expr::STATE_NONE ) );
+        ySpecFluxTags.push_back( Expr::Tag( specName + tagNames.diffusiveflux + "Y", Expr::STATE_NONE ) );
+        zSpecFluxTags.push_back( Expr::Tag( specName + tagNames.diffusiveflux + "Z", Expr::STATE_NONE ) );
+
+        typedef pokitt::SpeciesEnthalpy<MyFieldT>::Builder SpecEnth;
+        factory.register_expression( scinew SpecEnth( specEnthTags[i], temperatureTag_, i ) );
+      }
+
+      typedef pokitt::ThermalConductivity<MyFieldT>::Builder ThermCond;
+      factory.register_expression( scinew ThermCond( tagNames.thermalConductivity,
                                                      temperatureTag_,
-                                                     turbDiffTag_,
-                                                     factory,
-                                                     info );
+                                                     massFracTags_,
+                                                     tagNames.mixMW ) );
+
+      // trigger creation of diffusive flux expression from species diffusive flux spec to determine which directions are active.
+      for( Uintah::ProblemSpecP diffFluxParams=speciesParams->findBlock("DiffusiveFlux");
+          diffFluxParams != 0;
+          diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
+      {
+        std::string direction;
+        diffFluxParams->getAttribute("direction",direction);
+        for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
+          const std::string dir(1,*it);
+          if( dir == "X" ){
+            typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<MyFieldT>::XFace >::Builder XFlux;
+            factory.register_expression( scinew XFlux( tagNames.xHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, xSpecFluxTags ) );
+            info[DIFFUSIVE_FLUX_X] = tagNames.xHeatFlux;
+          }
+          else if( dir == "Y" ){
+            typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<MyFieldT>::YFace >::Builder YFlux;
+            factory.register_expression( scinew YFlux( tagNames.yHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, ySpecFluxTags ) );
+            info[DIFFUSIVE_FLUX_Y] = tagNames.yHeatFlux;
+          }
+          else if( dir == "Z" ){
+            typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<MyFieldT>::ZFace >::Builder ZFlux;
+            factory.register_expression( scinew ZFlux( tagNames.zHeatFlux, temperatureTag_, tagNames.thermalConductivity, specEnthTags, zSpecFluxTags ) );
+            info[DIFFUSIVE_FLUX_Z] = tagNames.zHeatFlux;
+          }
+        }
+      }
+    }
+    else
+#   endif
+    {
+      for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
+          diffFluxParams != 0;
+          diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
+      {
+        setup_diffusive_velocity_expression<MyFieldT>( diffFluxParams,
+                                                       temperatureTag_,
+                                                       turbDiffTag_,
+                                                       factory,
+                                                       info );
+      }
     }
   }
 

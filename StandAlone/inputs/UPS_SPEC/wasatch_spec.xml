@@ -25,6 +25,23 @@
 
        <!-- specify an expression for the diffusive flux -->
        <NameTag                spec="OPTIONAL" />
+       
+ 
+       <!-- For constant Lewis numbers, Le_i=1 unless otherwise specified below.  ONLY USE FOR SPECIES TRANSPORT! -->                                                                                                                                                                                                                                                            
+       <LewisNumber spec="OPTIONAL NO_DATA">
+         <Species spec="MULTIPLE NO_DATA" 
+                  attribute1="name REQUIRED STRING"
+                  attribute2="value REQUIRED DOUBLE" />
+         <ThermalConductivity spec="REQUIRED NO_DATA"> 
+           <NameTag spec="REQUIRED"/> 
+         </ThermalConductivity>
+         <HeatCapacity spec="REQUIRED NO_DATA"> 
+           <NameTag spec="REQUIRED"/>
+         </HeatCapacity>         
+       </LewisNumber>
+       
+       <!-- Mixture-averaged transport for all species diffusive fluxes.  ONLY USE FOR SPECIES TRANSPORT! -->
+       <MixtureAveraged spec="OPTIONAL NO_DATA"/>
     </DiffusiveFlux>
 
     <!-- ================================================================================== -->            
@@ -67,27 +84,28 @@
                                 ExponentialVortex,LambsDipole,TimeDerivative,
                                 RayleighTaylor, BurnsChristonAbskg, GeometryBased, ParticlePositionIC, Bubbles)" >
                                        
-      <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
-      <NameTag            spec="REQUIRED" />
-      <Constant           spec="OPTIONAL DOUBLE" />
+      <TaskList      spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag       spec="REQUIRED" />
+      <Constant      spec="OPTIONAL DOUBLE" />
 
 
       <ParticlePositionIC spec="OPTIONAL NO_DATA"
                           attribute1="coordinate REQUIRED STRING 'X,Y,Z'"
                           attribute2="bounds REQUIRED STRING 'SPECIFIED, PATCHBASED'"
                           children1="ONE_OF(CHILD Uniform,Random, Geometry)">
-          <Bounds spec="OPTIONAL NO_DATA" need_applies_to="bounds SPECIFIED"
-                                    attribute1="low REQUIRED DOUBLE"
-                                    attribute2="high REQUIRED DOUBLE"/>                                                                                                   
+          <Bounds spec="OPTIONAL NO_DATA"
+                  need_applies_to="bounds SPECIFIED"
+                  attribute1="low REQUIRED DOUBLE"
+                  attribute2="high REQUIRED DOUBLE"/>                                                                                                   
           <Uniform spec="OPTIONAL NO_DATA"
-                                           attribute1="transversedir OPTIONAL BOOLEAN">        
+                   attribute1="transversedir OPTIONAL BOOLEAN">        
           </Uniform>
           <Random spec="OPTIONAL NO_DATA"
-                                          attribute1="seed REQUIRED INTEGER"/>
+                  attribute1="seed REQUIRED INTEGER"/>
           
           <Geometry      spec="OPTIONAL NO_DATA"
-                                                                                          attribute1="seed REQUIRED INTEGER"> <!-- this is the outside value -->
-                          <geom_object  spec="MULTIPLE"/>
+                         attribute1="seed REQUIRED INTEGER"> <!-- this is the outside value -->
+          <geom_object  spec="MULTIPLE"/>
           </Geometry>
 
       </ParticlePositionIC>
@@ -532,11 +550,11 @@
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
                           attribute1="type  REQUIRED STRING 'GENERAL, CENTERED'">
-                                <Centered         spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
+        <Centered         spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
                           attribute1="x0 REQUIRED DOUBLE"
                           attribute2="f0 REQUIRED DOUBLE"
                           attribute3="h REQUIRED DOUBLE"/>
-                                <General          spec="OPTIONAL NO_DATA" need_applies_to="type GENERAL"
+        <General          spec="OPTIONAL NO_DATA" need_applies_to="type GENERAL"
                           attribute1="a REQUIRED DOUBLE"
                           attribute2="b REQUIRED DOUBLE"
                           attribute3="c REQUIRED DOUBLE"/>                          
@@ -798,38 +816,15 @@
     
     <!-- ================================================================================== -->
     <!-- Species Transport Equations.  These require PoKiTT and Cantera -->          
-    <SpeciesTransportEquations> 
+    <SpeciesTransportEquations spec="OPTIONAL NO_DATA"> 
 
       <CanteraInputFile spec="REQUIRED STRING"/>
       <CanteraGroup     spec="OPTIONAL STRING"/>
  
-      <Temperature spec="REQUIREDQUIRED NO_DATA"> 
-        <NameTag spec="REQUIRED"/>
-      </Temperature>
-         
       <ConvectiveFlux spec="MULTIPLE"/>
+      <DiffusiveFlux  spec="MULTIPLE"/>
       
-      <DiffusiveFlux  spec="MULTIPLE" 
-                      attribute1="direction REQUIRED STRING 'X,Y,Z,XY,XZ,YZ,XYZ'" > 
-        <!-- For constant Lewis numbers, Le_i=1 unless otherwise specified below -->                                                                                                                                                                                                                                                            
-        <LewisNumber spec="OPTIONAL NO_DATA">
-          <Species spec="MULTIPLE NO_DATA" 
-                   attribute1="name REQUIRED STRING"
-                   attribute2="value REQUIRED DOUBLE" />
-          <ThermalConductivity spec="REQUIRED NO_DATA"> 
-            <NameTag spec="REQUIRED"/> 
-          </ThermalConductivity>
-          <HeatCapacity spec="REQUIRED NO_DATA"> 
-            <NameTag spec="REQUIRED"/>
-          </HeatCapacity>         
-        </LewisNumber>
-        
-        <!-- Mixture-averaged transport for all species diffusive fluxes -->
-        <MixtureAveraged/>
- <!-- jcs what about the turbulent terms?  Turbulent Sc or something...? -->       
-      </DiffusiveFlux>
-
-      <DetailedKinetics/>
+      <DetailedKinetics spec="OPTIONAL NO_DATA"/>
       
     </SpeciesTransportEquations>
     
@@ -932,7 +927,7 @@
                            attribute8="x1   OPTIONAL STRING 'X, Y, Z'"
                            attribute9="x2   OPTIONAL STRING 'X, Y, Z'">
       <DiffusionCoefficient spec="REQUIRED NO_DATA"> <!-- This automatically creates an expression for the diffusion coefficient -->
-        <NameTag               spec="REQUIRED" />
+        <NameTag            spec="REQUIRED" />
       </DiffusionCoefficient>
       <Scalar           spec="REQUIRED STRING"/> <!-- input -->      
       <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
@@ -1047,6 +1042,7 @@
       
       <Viscosity              spec="OPTIONAL NO_DATA">
         <NameTag              spec="REQUIRED" />
+        <FromPoKiTT           spec="OPTIONAL NO_DATA" />       
       </Viscosity>
       
       <Pressure               spec="OPTIONAL NO_DATA">
@@ -1058,7 +1054,11 @@
           </ReferencePressure>
           <!-- solvability will ALWAYS be enforced on periodic problems -->
           <EnforceSolvability spec="OPTIONAL NO_DATA"/>          
-          <!-- Enforce the use of the full 3D laplacian in the construction of the pressure coefficient matrix. This affects all 2D momentum transport cases. 3D Laplacian is turned on by default for all cases. To turned it off set the following to false. For 3D cases, the code will always use a 3D Laplacian regardless of the value set here -->
+          <!-- Enforce the use of the full 3D laplacian in the construction of the pressure coefficient matrix.
+               This affects all 2D momentum transport cases. 3D Laplacian is turned on by default for all cases. 
+               To turned it off set the following to false. For 3D cases, the code will always use a 3D Laplacian
+               regardless of the value set here
+             -->
           <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/>          
           <Parameters         spec="OPTIONAL NO_DATA">      
             <criteria         spec="OPTIONAL STRING 'Absolute absolute Relative relative'" />                     
@@ -1084,12 +1084,7 @@
     <EnergyEquation spec="OPTIONAL NO_DATA">      
      <SolutionVariable     spec="REQUIRED STRING"/>
      <PrimitiveVariable    spec="REQUIRED STRING"/>
-     <Temperature  spec="REQUIRED NO_DATA"> 
-         <NameTag        spec="REQUIRED"/> 
-     </Temperature>
-     <MolecularWeight  spec="REQUIRED NO_DATA"> 
-         <NameTag        spec="REQUIRED"/> 
-     </MolecularWeight>        
+     <!-- only specify diffusive flux for cases where species transport is not active -->       
      <DiffusiveFlux  spec="MULTIPLE"/>        
      <ConvectiveFlux spec="MULTIPLE"/>
    </EnergyEquation>    

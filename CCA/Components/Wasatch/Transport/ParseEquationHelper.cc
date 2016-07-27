@@ -166,9 +166,9 @@ namespace WasatchCore{
   
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
-                                        const Expr::Tag& solnVarTag,
-                                        Expr::ExpressionFactory& factory,
-                                        FieldTagInfo& info )
+                                         const Expr::Tag& solnVarTag,
+                                         Expr::ExpressionFactory& factory,
+                                         FieldTagInfo& info )
   {
     Expr::Tag convFluxTag, advVelocityTag, advVelocityCorrectedTag;
     
@@ -187,11 +187,11 @@ namespace WasatchCore{
     if( nameTagParam ) convFluxTag = parse_nametag( nameTagParam );
     
     setup_convective_flux_expression<FieldT>( dir,
-                                             solnVarTag, convFluxTag,
-                                             get_conv_interp_method(interpMethod),
-                                             advVelocityTag,
-                                             factory,
-                                             info );
+                                              solnVarTag, convFluxTag,
+                                              get_conv_interp_method(interpMethod),
+                                              advVelocityTag,
+                                              factory,
+                                              info );
   }
   
   //-----------------------------------------------------------------
@@ -348,10 +348,10 @@ namespace WasatchCore{
   
   template< typename FieldT>
   void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
-                                           const Expr::Tag primVarTag,
-                                           const Expr::Tag turbDiffTag,
-                                           Expr::ExpressionFactory& factory,
-                                           FieldTagInfo& info )
+                                            const Expr::Tag primVarTag,
+                                            const Expr::Tag turbDiffTag,
+                                            Expr::ExpressionFactory& factory,
+                                            FieldTagInfo& info )
   {
     typedef typename FaceTypes<FieldT>::XFace XFaceT;
     typedef typename FaceTypes<FieldT>::YFace YFaceT;

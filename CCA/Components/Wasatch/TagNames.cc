@@ -54,16 +54,24 @@ namespace WasatchCore{
   zzvolcoord( "ZZVOL", Expr::STATE_NONE ),
   
   // energy related variables
-  temperature        ( "Temperature"       , Expr::STATE_NONE ),
-  absorption         ( "AbsCoef"           , Expr::STATE_NONE ),
-  radiationsource    ( "RadiationSource"   , Expr::STATE_NONE ),
-  radvolq            ( "radiationVolq"     , Expr::STATE_NONE ),
-  radvrflux          ( "VRFlux"            , Expr::STATE_NONE ),
-  kineticEnergy      ("KineticEnergy",      Expr::STATE_NONE ),
+  temperature        ( "Temperature"      , Expr::STATE_NONE ),
+  absorption         ( "AbsCoef"          , Expr::STATE_NONE ),
+  radiationsource    ( "RadiationSource"  , Expr::STATE_NONE ),
+  radvolq            ( "radiationVolq"    , Expr::STATE_NONE ),
+  radvrflux          ( "VRFlux"           , Expr::STATE_NONE ),
+  kineticEnergy      ("KineticEnergy"     , Expr::STATE_NONE ),
   totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
+  enthalpy           ( "enthalpy"         , Expr::STATE_NONE ),
+  xHeatFlux          ( "HeatFlux_X"       , Expr::STATE_NONE ),
+  yHeatFlux          ( "HeatFlux_Y"       , Expr::STATE_NONE ),
+  zHeatFlux          ( "HeatFlux_Z"       , Expr::STATE_NONE ),
   
   // species related variables
   mixMW( "Mixture_MW", Expr::STATE_NONE ),
+
+  // thermochemistry related variables
+  heatCapacity       ( "heat_capacity",        Expr::STATE_NONE ),
+  thermalConductivity( "thermal_conductivity", Expr::STATE_NONE ),
 
   // momentum related variables
   pressure  ( "pressure",   Expr::STATE_NONE ),
