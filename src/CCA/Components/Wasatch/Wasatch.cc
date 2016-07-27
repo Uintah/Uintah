@@ -441,6 +441,7 @@ namespace WasatchCore{
         
         if( densityParams->findBlock("NameTag") ){
           densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+          if( Wasatch::flow_treatment() == WasatchCore::COMPRESSIBLE ) densityTag.reset_context(Expr::STATE_DYNAMIC);
           isConstDensity = false;
         }
         else{

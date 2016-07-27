@@ -58,11 +58,10 @@ namespace WasatchCore{
     DECLARE_FIELDS( FieldT, density_, temperature_, mixMW_ )
     
     IdealGasPressure( const Expr::Tag& densityTag,
-                     const Expr::Tag& temperatureTag,
-                     const Expr::Tag& mixMWTag,
-                     const double gasConstant )
+                      const Expr::Tag& temperatureTag,
+                      const Expr::Tag& mixMWTag )
     : Expr::Expression<FieldT>(),
-    gasConstant_( gasConstant )
+      gasConstant_( 8314.459848 )  // gas constant J/(kmol K)
     {
       this->set_gpu_runnable(true);
       density_     = this->template create_field_request<FieldT>( densityTag     );
@@ -75,7 +74,6 @@ namespace WasatchCore{
     class Builder : public Expr::ExpressionBuilder
     {
       const Expr::Tag densityTag_, temperatureTag_, mixMWTag_;
-      const double gasConstant_;
     public:
       /**
        *  @brief Build a IdealGasPressure expression
@@ -85,17 +83,15 @@ namespace WasatchCore{
                const Expr::Tag& densityTag,
                const Expr::Tag& temperatureTag,
                const Expr::Tag& mixMWTag,
-               const double gasConstant,
                const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
       : ExpressionBuilder( resultTag, nghost ),
         densityTag_( densityTag ),
         temperatureTag_( temperatureTag ),
-        mixMWTag_( mixMWTag ),
-        gasConstant_( gasConstant )
+        mixMWTag_( mixMWTag )
       {}
       
       Expr::ExpressionBase* build() const{
-        return new IdealGasPressure<FieldT>( densityTag_, temperatureTag_, mixMWTag_, gasConstant_ );
+        return new IdealGasPressure<FieldT>( densityTag_, temperatureTag_, mixMWTag_ );
       }
       
     };  /* end of Builder class */
@@ -122,18 +118,16 @@ namespace WasatchCore{
    *  \brief Calculates initial condition for the density given an initial pressure and temperature.
    */
   template< typename FieldT >
-  class Density_IC
-  : public Expr::Expression<FieldT>
+  class Density_IC : public Expr::Expression<FieldT>
   {
     const double gasConstant_;
     DECLARE_FIELDS( FieldT, temperature_, pressure_, mixMW_ )
     
     Density_IC( const Expr::Tag& temperatureTag,
-               const Expr::Tag& pressureTag,
-               const Expr::Tag& mixMWTag,
-               const double gasConstant )
+                const Expr::Tag& pressureTag,
+                const Expr::Tag& mixMWTag )
     : Expr::Expression<FieldT>(),
-      gasConstant_( gasConstant )
+      gasConstant_( 8314.459848 ) // gas constant J/(kmol K)
     {
       this->set_gpu_runnable(true);
       temperature_ = this->template create_field_request<FieldT>( temperatureTag );
@@ -145,7 +139,6 @@ namespace WasatchCore{
     
     class Builder : public Expr::ExpressionBuilder
     {
-      const double gasConstant_;
       const Expr::Tag temperatureTag_, pressureTag_, mixMWTag_;
     public:
       /**
@@ -153,27 +146,25 @@ namespace WasatchCore{
        *  @param resultTag the tag for the value that this expression computes
        */
       Builder( const Expr::Tag& resultTag,
-              const Expr::Tag& temperatureTag,
-              const Expr::Tag& pressureTag,
-              const Expr::Tag& mixMWTag,
-              const double gasConstant,
-              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
+               const Expr::Tag& temperatureTag,
+               const Expr::Tag& pressureTag,
+               const Expr::Tag& mixMWTag,
+               const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
       : ExpressionBuilder( resultTag, nghost ),
-        gasConstant_   ( gasConstant    ),
         temperatureTag_( temperatureTag ),
         pressureTag_   ( pressureTag    ),
         mixMWTag_      ( mixMWTag       )
       {}
       
       Expr::ExpressionBase* build() const{
-        return new Density_IC<FieldT>( temperatureTag_,pressureTag_,mixMWTag_,gasConstant_ );
+        return new Density_IC<FieldT>( temperatureTag_,pressureTag_,mixMWTag_ );
       }
     };  /* end of Builder class */
     
     ~Density_IC(){}
     
     void evaluate(){
-      this->value() <<=  ( pressure_->field_ref() * mixMW_->field_ref() )/( gasConstant_ * temperature_->field_ref() );
+      this->value() <<= ( pressure_->field_ref() * mixMW_->field_ref() )/( gasConstant_ * temperature_->field_ref() );
     }
   };
 
@@ -187,8 +178,7 @@ namespace WasatchCore{
     return exprFactory.register_expression( scinew DensIC( initial_condition_tag(),
                                                            temperatureTag_,
                                                            TagNames::self().pressure,
-                                                           mixMWTag_,
-                                                           gasConstant_) );
+                                                           mixMWTag_ ) );
   }
 
 
@@ -202,7 +192,6 @@ namespace WasatchCore{
                                          const Expr::Tag densityTag,
                                          const Expr::Tag temperatureTag,
                                          const Expr::Tag mixMWTag,
-                                         const double gasConstant,
                                          const Expr::Tag bodyForceTag,
                                          const Expr::Tag srcTermTag,
                                          GraphCategories& gc,
@@ -228,12 +217,12 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
     typedef IdealGasPressure<FieldT>::Builder Pressure;
-    if (!factory.have_entry(TagNames::self().pressure)) {
-      factory.register_expression( scinew Pressure( TagNames::self().pressure,
-                                                    densityTag,
-                                                    temperatureTag,
-                                                    mixMWTag,
-                                                    gasConstant ) );
+    if( !factory.have_entry(TagNames::self().pressure) ){
+      const Expr::ExpressionID pid = factory.register_expression( scinew Pressure( TagNames::self().pressure,
+                                                                                   densityTag,
+                                                                                   temperatureTag,
+                                                                                   mixMWTag ) );
+      factory.cleave_from_parents( pid );
     }
     setup();
   }
@@ -241,22 +230,21 @@ namespace WasatchCore{
   //----------------------------------------------------------------------------
   
   template <typename MomDirT>
-  Expr::ExpressionID  CompressibleMomentumTransportEquation<MomDirT>::
+  Expr::ExpressionID
+  CompressibleMomentumTransportEquation<MomDirT>::
   setup_rhs( FieldTagInfo&,
              const Expr::TagList& srcTags )
   {
-    
     const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
     Expr::Tag volFracTag = vNames.vol_frac_tag<FieldT>();
     
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
 
     typedef typename MomRHS<SVolField, MomDirT>::Builder RHS;
-    const Expr::ExpressionID rhsID = factory.register_expression( scinew RHS( this->rhsTag_,
-                                                   this->pressureTag_,
-                                                   rhs_part_tag(this->solnVarTag_),
-                                                   volFracTag ) );
-    return rhsID;
+    return factory.register_expression( scinew RHS( this->rhsTag_,
+                                                    this->pressureTag_,
+                                                    rhs_part_tag(this->solnVarTag_),
+                                                    volFracTag ) );
   }
 
   //----------------------------------------------------------------------------
@@ -269,14 +257,14 @@ namespace WasatchCore{
   template <typename MomDirT>
   void CompressibleMomentumTransportEquation<MomDirT>::
   setup_boundary_conditions( WasatchBCHelper& bcHelper,
-                                 GraphCategories& graphCat )
+                             GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
-    Expr::ExpressionFactory& initFactory = *(graphCat[INITIALIZATION]->exprFactory);
+    Expr::ExpressionFactory& initFactory   = *(graphCat[INITIALIZATION  ]->exprFactory);
     
     const TagNames& tagNames = TagNames::self();
     //
-    // Add dummy modifiers on all patches. This is used to inject new dpendencies across all patches.
+    // Add dummy modifiers on all patches. This is used to inject new dependencies across all patches.
     // Those new dependencies result for example from complicated boundary conditions added in this
     // function. NOTE: whenever you want to add a new complex boundary condition, please use this
     // functionality to inject new dependencies across patches.
@@ -315,7 +303,7 @@ namespace WasatchCore{
       
       const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
       
-      // variable density: add bcopiers on all boundaries
+      // variable density: add bccopiers on all boundaries
       if( !this->is_constant_density() ){
         // if we are solving a variable density problem, then set bcs on density estimate rho*
         const Expr::Tag rhoStarTag = tagNames.make_star(this->densityTag_); // get the tagname of rho*
@@ -367,6 +355,8 @@ namespace WasatchCore{
         case VELOCITY:
         case OUTFLOW:
         case OPEN:
+        case USER:
+        default:
         {
           std::ostringstream msg;
           msg << "ERROR: VELOCITY, OPEN, and OUTFLOW boundary conditions are not currently supported for compressible flows in Wasatch. " << bndName
@@ -374,14 +364,6 @@ namespace WasatchCore{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
           break;
         }
-        case USER:
-        {
-          // pass through the list of user specified BCs that are relevant to this transport equation
-          break;
-        }
-          
-        default:
-          break;
       } // SWITCH BOUNDARY TYPE
     } // BOUNDARY LOOP
   }
@@ -389,7 +371,7 @@ namespace WasatchCore{
   template <typename MomDirT>
   void CompressibleMomentumTransportEquation<MomDirT>::
   apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                         WasatchBCHelper& bcHelper )
+                                     WasatchBCHelper& bcHelper )
   {
     const Category taskCat = INITIALIZATION;
     
@@ -418,7 +400,7 @@ namespace WasatchCore{
   template <typename MomDirT>
   void CompressibleMomentumTransportEquation<MomDirT>::
   apply_boundary_conditions( const GraphHelper& graphHelper,
-                                 WasatchBCHelper& bcHelper )
+                             WasatchBCHelper& bcHelper )
   {
     const Category taskCat = ADVANCE_SOLUTION;
     // set bcs for momentum - use the TIMEADVANCE expression

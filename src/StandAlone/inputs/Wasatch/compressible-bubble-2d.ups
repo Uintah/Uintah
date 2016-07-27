@@ -12,12 +12,12 @@
       <NameTag name="density"/>
     </Density>
 
-  <TimeIntegrator>RK3SSP</TimeIntegrator>
-  <BasicExpression type="SVOL">
-     <TaskList>advance_solution</TaskList>
-     <NameTag name="gravity" />
-     <Constant>-9.81</Constant>
-  </BasicExpression>
+    <TimeIntegrator>RK3SSP</TimeIntegrator>
+    <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="gravity" />
+       <Constant>-9.81</Constant>
+    </BasicExpression>
     
     <!-- Set the initial condition expression for pressure - currently pressure has to be name pressure -->
     <BasicExpression type="SVOL">
@@ -29,14 +29,14 @@
     <!-- Set the molecular weight - needed both on initial condition and advance solution -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="MW"/>
-      <Constant>0.028966</Constant>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="MW"/>
-      <Constant>0.028966</Constant>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition expression for mixture fraction -->
@@ -58,7 +58,7 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f01" state="STATE_NONE"/>
+      <NameTag name="f01"/>
       <ExprAlgebra algebraicOperation="PRODUCT">
         <!-- specify the list of tags of the source expressions -->
         <NameTag name="f0"/>
@@ -74,11 +74,11 @@
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="T" state="STATE_NONE"/>
+      <NameTag name="Temperature"/>
       <ExprAlgebra algebraicOperation="SUM">
         <!-- specify the list of tags of the source expressions -->
-        <NameTag name="f01" state="STATE_NONE"/>
-        <NameTag name="f3" state="STATE_NONE"/>
+        <NameTag name="f01"/>
+        <NameTag name="f3"/>
       </ExprAlgebra>
     </BasicExpression>
     
@@ -119,10 +119,6 @@
     <EnergyEquation>
       <SolutionVariable>rhoet</SolutionVariable>
       <PrimitiveVariable>et</PrimitiveVariable>
-      <Temperature><NameTag name="T"/></Temperature>
-      <MolecularWeight>
-        <NameTag name="MW"/>
-      </MolecularWeight>
       <DiffusiveFlux direction="XY" coefficient="0.03"/>
       <ConvectiveFlux direction="X" method="VANLEER">
         <AdvectiveVelocity>
@@ -158,7 +154,7 @@
     <save label="x-mom"/>
     <save label="y-mom"/>
     <save label="u"/>
-    <save label="T"/>
+    <save label="Temperature"/>
     <save label="v"/>
     <save label="density"/>
     <save label="rhoet"/>
@@ -180,7 +176,7 @@
 
       <Level>
       <Box label="1">
-        <lower>[0.0,   0.0,0.0]</lower>
+        <lower>[0.0,   0.0,  0.0 ]</lower>
         <upper>[0.25,  0.25, 0.25]</upper>
         <resolution>[64,64,1]</resolution>
         <patches>[2,2,1]</patches>

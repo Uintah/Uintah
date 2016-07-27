@@ -54,6 +54,8 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
   typedef typename FaceTypes<FieldT>::YFace YFaceT;
   typedef typename FaceTypes<FieldT>::ZFace ZFaceT;
 
+  bool isFirstDirection = true;
+
   for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
        diffFluxParams != 0;
        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
@@ -62,8 +64,6 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
 
     std::string direction;
     diffFluxParams->getAttribute("direction",direction);
-
-    bool isFirstDirection = true;
 
     for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
       const std::string dir(1,*it);
@@ -86,7 +86,7 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
       info[fs] = diffFluxTags[specNum_];
 
       // Turbulent diffusive flux
-      {
+      if( turbParams_.turbModelName != TurbulenceParameters::NOTURBULENCE ){
         const Expr::Tag turbFluxTag( "turb_diff_flux_"+primVarTag_.field_name(), Expr::STATE_NONE );
         if( direction == "X" ){
           typedef TurbDiffFlux<XFaceT>::Builder TurbFlux;
@@ -103,8 +103,6 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
 
         factory.attach_modifier_expression( turbFluxTag, diffFluxTags[specNum_] );
       }
-
-
 
       if( specNum_ != 0 ) continue; // the rest only gets done once since we build all fluxes into one expression
 
@@ -127,15 +125,15 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
         const Expr::Tag thermCondTag = parse_nametag( lewisParams->findBlock("ThermalConductivity") );
         const Expr::Tag cpTag        = parse_nametag( lewisParams->findBlock("HeatCapacity"       ) );
 
-        if( direction == "X" ){
+        if( dir == "X" ){
           typedef LewisNumberDiffFluxes<XFaceT>::Builder DiffFlux;
           factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags_, thermCondTag, cpTag ) );
         }
-        else if( direction == "Y" ){
+        else if( dir == "Y" ){
           typedef LewisNumberDiffFluxes<YFaceT>::Builder DiffFlux;
           factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags_, thermCondTag, cpTag ) );
         }
-        else if( direction == "Z" ){
+        else if( dir == "Z" ){
           typedef LewisNumberDiffFluxes<ZFaceT>::Builder DiffFlux;
           factory.register_expression( scinew DiffFlux( diffFluxTags, lewisNumbers, yiTags_, thermCondTag, cpTag ) );
         }
@@ -149,8 +147,6 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
       // Mixture averaged
       else if( mixAvgParams ){
 
-        const Expr::Tag pressureTag = parse_nametag( lewisParams->findBlock("Pressure") );
-
         Expr::TagList diffCoeffTags;
         for( int i=0; i<nspec_; ++i ){
           diffCoeffTags.push_back( Expr::Tag( CanteraObjects::species_name(i) + "_diff_coeff", Expr::STATE_NONE) );
@@ -159,18 +155,19 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
         // isotropic diffusion coefficients - only register once.
         if( isFirstDirection ){
           typedef pokitt::DiffusionCoeff<FieldT>::Builder DiffCoeff;
-          factory.register_expression( scinew DiffCoeff( diffCoeffTags, temperatureTag_, pressureTag, yiTags_, tagNames.mixMW ) );
+          factory.register_expression( scinew DiffCoeff( diffCoeffTags, temperatureTag_, tagNames.pressure, yiTags_, tagNames.mixMW ) );
+          isFirstDirection = false;
         }
 
-        if( direction == "X" ){
+        if( dir == "X" ){
           typedef pokitt::SpeciesDiffFlux<XFaceT>::Builder DiffFlux;
           factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags_, densityTag_, tagNames.mixMW, diffCoeffTags ) );
         }
-        else if( direction == "Y" ){
+        else if( dir == "Y" ){
           typedef pokitt::SpeciesDiffFlux<YFaceT>::Builder DiffFlux;
           factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags_, densityTag_, tagNames.mixMW, diffCoeffTags ) );
         }
-        else if( direction == "Z" ){
+        else if( dir == "Z" ){
           typedef pokitt::SpeciesDiffFlux<ZFaceT>::Builder DiffFlux;
           factory.register_expression( scinew DiffFlux( diffFluxTags, yiTags_, densityTag_, tagNames.mixMW, diffCoeffTags ) );
         }
@@ -184,11 +181,7 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
         throw Uintah::ProblemSetupException( "Unsupported specification for species diffusive flux expression\n", __FILE__, __LINE__ );
       }
 
-      isFirstDirection = false;
-
     } // loop over direction
-
-    // jcs need to augment these with the turbulent diffusivity...
   }
 }
 

@@ -181,10 +181,10 @@ template< typename FieldT >
 DensFromMixfrac<FieldT>::
 Builder::Builder( const InterpT& rhoEval,
                   const Expr::TagList& resultsTag,
-                 const Expr::Tag& rhoOldTag,
+                  const Expr::Tag& rhoOldTag,
                   const Expr::Tag& rhoFTag,
-                 const double rtol,
-                 const unsigned maxIter)
+                  const double rtol,
+                  const unsigned maxIter)
   : ExpressionBuilder( resultsTag ),
     rhoEval_  (rhoEval.clone() ),
     rhoOldTag_(rhoOldTag       ),
@@ -192,8 +192,6 @@ Builder::Builder( const InterpT& rhoEval,
     rtol_     (rtol            ),
     maxIter_  (maxIter         )
 {}
-
-
 
 //===================================================================
 

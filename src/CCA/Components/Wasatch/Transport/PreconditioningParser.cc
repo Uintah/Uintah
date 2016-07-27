@@ -22,6 +22,7 @@
  * IN THE SOFTWARE.
  */
 
+#include <sci_defs/wasatch_defs.h>
 #include <CCA/Components/Wasatch/Transport/PreconditioningParser.h>
 
 #include <CCA/Components/Wasatch/ParseTools.h>
@@ -630,12 +631,21 @@ namespace WasatchCore {
   {
     double alpha = 10.0;
     asrParams->getAttribute( "coef", alpha );
-
     const TagNames& tags = TagNames::self();
-    const Expr::Tag temperatureTag = parse_nametag( wasatchSpec_->findBlock("EnergyEquation")->findBlock("Temperature")->findBlock("NameTag") );
-    const Expr::TagList diffFluxTags = tag_list( Expr::Tag( temperatureTag.name() + "_diffVelocity_X", Expr::STATE_NONE ),
-                                                 Expr::Tag( temperatureTag.name() + "_diffVelocity_Y", Expr::STATE_NONE ),
-                                                 Expr::Tag( temperatureTag.name() + "_diffVelocity_Z", Expr::STATE_NONE ) );
+    Expr::TagList diffFluxTags;
+#   ifdef HAVE_POKITT
+    if( wasatchSpec_->findBlock("SpeciesTransportEquations") ){
+      // names for the energy diffusive flux change when we are doing species transport (uggh)
+      diffFluxTags = Expr::tag_list( tags.xHeatFlux, tags.yHeatFlux, tags.zHeatFlux );
+    }
+    else
+#   endif
+    {
+      const std::string& temperature = tags.temperature.name();
+      diffFluxTags = Expr::tag_list( Expr::Tag( temperature + "_diffVelocity_X", Expr::STATE_NONE ),
+                                     Expr::Tag( temperature + "_diffVelocity_Y", Expr::STATE_NONE ),
+                                     Expr::Tag( temperature + "_diffVelocity_Z", Expr::STATE_NONE ) );
+    }
     const Expr::Tag viscTag = parse_nametag( wasatchSpec_->findBlock("MomentumEquations")->findBlock("Viscosity")->findBlock("NameTag") );
     const Expr::Tag asrEnergyTag( "ASR_Energy", Expr::STATE_NONE );
 

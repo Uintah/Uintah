@@ -54,8 +54,7 @@ SpeciesTransportEquation::setup_source_terms( FieldTagInfo& info, Expr::TagList&
     }
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef pokitt::ReactionRates<FieldT>::Builder RxnRates;
-    const int nghost = 0;
-    factory.register_expression( scinew RxnRates( srcTags, temperatureTag_, densityTag_, yiTags_, mmwTag_, nghost ) );
+    factory.register_expression( scinew RxnRates( srcTags, temperatureTag_, densityTag_, yiTags_, mmwTag_ ) );
   }
 
   info[SOURCE_TERM] = Expr::Tag( "rr_"+primVarTag_.name(), Expr::STATE_NONE );
