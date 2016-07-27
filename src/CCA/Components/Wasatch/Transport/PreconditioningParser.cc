@@ -357,8 +357,8 @@ namespace WasatchCore {
        }
 
        if( cpTag != Expr::Tag() ){
-         mw_   = this->template create_field_request<VolFieldT>( mwTag   );
-         cp_   = this->template create_field_request<VolFieldT>( cpTag   );
+         mw_   = this->template create_field_request<VolFieldT>( mwTag );
+         cp_   = this->template create_field_request<VolFieldT>( cpTag );
 #        ifdef HAVE_POKITT
          temp_ = this->template create_field_request<VolFieldT>( tempTag );
          this->template create_field_vector_request<VolFieldT>( specEnthTags, specEnthalpies_ );
@@ -755,9 +755,9 @@ namespace WasatchCore {
     Expr::TagList xSpecFluxTags, ySpecFluxTags, zSpecFluxTags, specRxnTags, specEnthTags;
     Expr::Tag cpTag; // empty tag is special for ASR - uses gamma=1.4.
 #   ifdef HAVE_POKITT
-    cpTag = tags.heatCapacity;
     Uintah::ProblemSpecP speciesSpec = wasatchSpec_->findBlock("SpeciesTransportEquations");
     if( speciesSpec ){
+      cpTag = tags.heatCapacity;
       // names for the energy diffusive flux change when we are doing species transport (uggh)
       diffFluxTags = Expr::tag_list( tags.xHeatFlux, tags.yHeatFlux, tags.zHeatFlux );
 
