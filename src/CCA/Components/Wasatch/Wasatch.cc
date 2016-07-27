@@ -27,6 +27,7 @@
 
 //-- Uintah framework includes --//
 #include <sci_defs/uintah_defs.h>
+#include <sci_defs/wasatch_defs.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -583,6 +584,15 @@ namespace WasatchCore{
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
       adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
+    }
+
+    //
+    // Build species transport equations
+    //
+    Uintah::ProblemSpecP specEqnParams = wasatchSpec_->findBlock("SpeciesTransportEquations");
+    if( specEqnParams ){
+      EquationAdaptors specEqns = parse_species_equations( specEqnParams, turbParams, densityTag, graphCategories_ );
+      adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
     }
 
     //

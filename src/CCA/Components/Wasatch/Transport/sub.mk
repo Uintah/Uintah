@@ -41,6 +41,15 @@ CUDA_ENABLED_SRCS :=                        \
      PreconditioningParser					\
      TotalInternalEnergyTransportEquation   
 
+ifeq ($(HAVE_POKITT),yes)
+# the species transport equation is broken into
+# pieces because of long compilation times.
+   CUDA_ENABLED_SRCS += 					\
+		SpeciesTransportEquation			\
+		SpeciesTransportEquation_diffusion	\
+		SpeciesTransportEquation_reaction
+endif
+
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
    # this sub.mk) are copied to the binary side and renamed with a .cu
@@ -68,6 +77,7 @@ SRCS +=                                                \
         $(SRCDIR)/ScalarTransportEquation.cc           \
         $(SRCDIR)/TransportEquation.cc                 \
         $(SRCDIR)/ParseEquationHelper.cc
+
 
 ########################################################################
 #

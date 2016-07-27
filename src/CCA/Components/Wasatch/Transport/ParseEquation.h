@@ -116,6 +116,11 @@ namespace WasatchCore{
                                Uintah::SimulationStateP& sharedState,
                                std::set<std::string>& persistentFields );
 
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_species_equations( Uintah::ProblemSpecP params,
+                           const TurbulenceParameters& turbParams,
+                           const Expr::Tag& densityTag,
+                           GraphCategories& gc );
 
   /**
    *  \brief Build mms source terms and parse them properly to the RHS's
