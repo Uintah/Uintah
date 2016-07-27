@@ -5,7 +5,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+
   <Wasatch>
         
     <Density method="COMPRESSIBLE">
