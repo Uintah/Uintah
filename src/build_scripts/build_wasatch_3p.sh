@@ -16,6 +16,9 @@ BASE_BUILD_DIR=$1
 BOOST_LIBRARY=$2
 BOOST_INCLUDE=$3
 
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse origin/master)
+
 if test $4 != "no"; then
   DEBUG="-DCMAKE_BUILD_TYPE=Debug"
 fi
@@ -107,11 +110,14 @@ run "cd src"
 needsrecompile=true
 if [ -d "SpatialOps" ]; then
     run "cd SpatialOps"
-    if ! git diff-index --quiet HEAD --; then
+    run "git remote update"
+    
+    if [ $LOCAL = $REMOTE ]; then
+        echo "SpatialOps is current - not rebuilding"
+        needsrecompile=false
+    else
       echo "updating SpatialOps..."
       run "env GIT_SSL_NO_VERIFY=true git pull"
-    else
-      needsrecompile=false
     fi
     run "cd .."
 else
@@ -176,11 +182,13 @@ run "cd src"
 needsrecompile=true
 if [ -d "ExprLib" ]; then
     run "cd ExprLib"
-    if ! git diff-index --quiet HEAD --; then
-       echo "updating ExprLib..."
-       run "env GIT_SSL_NO_VERIFY=true git pull"
+    run "git remote update"
+    if [ $LOCAL = $REMOTE ]; then
+        echo "ExprLib is current - not rebuilding"
+        needsrecompile=false
     else
-       needsrecompile=false
+      echo "updating ExprLib..."
+      run "env GIT_SSL_NO_VERIFY=true git pull"
     fi
     run "cd .."
 else
@@ -228,11 +236,13 @@ run "cd src"
 needsrecompile=true
 if [ -d "TabProps" ]; then
     run "cd TabProps"
-    if ! git diff-index --quiet HEAD --; then
-      echo "updating TabProps"
-      run "env GIT_SSL_NO_VERIFY=true git pull"
+    run "git remote update"
+    if [ $LOCAL = $REMOTE ]; then
+        echo "TabProps is current - not rebuilding"
+        needsrecompile=false
     else
-      needsrecompile=false
+      echo "updating TabProps..."
+      run "env GIT_SSL_NO_VERIFY=true git pull"
     fi
     run "cd .."
 else
@@ -274,11 +284,13 @@ run "cd src"
 needsrecompile=true
 if [ -d "RadProps" ]; then
     run "cd RadProps"
-    if ! git diff-index --quiet HEAD --; then
+    run "git remote update"
+    if [ $LOCAL = $REMOTE ]; then
+        echo "RadProps is current - not rebuilding"
+        needsrecompile=false
+    else
       echo "updating RadProps..."
       run "env GIT_SSL_NO_VERIFY=true git pull"
-    else
-      needsrecompile=false
     fi
     run "cd .."
 else
