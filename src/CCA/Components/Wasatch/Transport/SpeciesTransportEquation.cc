@@ -224,7 +224,29 @@ void
 SpeciesTransportEquation::apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                                              WasatchBCHelper& bcHelper )
 {
-// jcs to do...
+  const Category taskCat = INITIALIZATION;
+
+  Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+
+  // multiply the initial condition by the volume fraction for embedded geometries
+  const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+  if( vNames.has_embedded_geometry() ) {
+
+    //create modifier expression
+    typedef ExprAlgebra<FieldT> ExprAlgbr;
+    const Expr::TagList theTagList = tag_list( vNames.vol_frac_tag<SVolField>() );
+    const Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
+    factory.register_expression( new typename ExprAlgbr::Builder( modifierTag,
+                                                                  theTagList,
+                                                                  ExprAlgbr::PRODUCT,
+                                                                  true ) );
+
+    factory.attach_modifier_expression( modifierTag, initial_condition_tag() );
+  }
+
+  if( factory.have_entry(initial_condition_tag()) ){
+    bcHelper.apply_boundary_condition<FieldT>( initial_condition_tag(), taskCat );
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -233,7 +255,9 @@ void
 SpeciesTransportEquation::apply_boundary_conditions( const GraphHelper& graphHelper,
                                                      WasatchBCHelper& bcHelper )
 {
-  // jcs to do...
+  const Category taskCat = ADVANCE_SOLUTION;
+  bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+  bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 }
 
 //------------------------------------------------------------------------------
