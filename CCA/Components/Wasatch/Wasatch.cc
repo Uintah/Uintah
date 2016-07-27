@@ -519,16 +519,27 @@ namespace WasatchCore{
     if( !linSolver_ ){
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     }
-    else if( linSolver_ ){
+    else{
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
-      const bool needPressureSolve = wasatchSpec_->findBlock("MomentumEquations") && !(wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
-      Wasatch::need_pressure_solve(needPressureSolve);
-      if ( (linSolver_->getName()).compare("hypre") != 0 && needPressureSolve) {
-        std::ostringstream msg;
-        msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
-        << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
-        << std::endl;
-        throw std::runtime_error( msg.str() );
+      const bool hasMomentum = wasatchSpec_->findBlock("MomentumEquations");
+      if( hasMomentum ){
+        std::string densMethod;
+        wasatchSpec_->findBlock("Density")->getAttribute("method",densMethod);
+        const bool isCompressible = densMethod == "COMPRESSIBLE";
+
+        bool needPressureSolve = true;
+        if( wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve") ) needPressureSolve = false;
+        if( isCompressible ) needPressureSolve = false;
+
+        Wasatch::need_pressure_solve( needPressureSolve );
+
+        if( needPressureSolve && (linSolver_->getName()).compare("hypre") != 0 ){
+          std::ostringstream msg;
+          msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
+              << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
+              << std::endl;
+          throw std::runtime_error( msg.str() );
+        }
       }
     }
     

@@ -4,7 +4,6 @@
     <title>Compressible flow in 1D</title>
   </Meta>
   <SimulationComponent type="wasatch"/>
-  <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>
     <Density method="COMPRESSIBLE">

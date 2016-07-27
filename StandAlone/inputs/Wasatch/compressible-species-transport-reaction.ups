@@ -5,9 +5,6 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-  
-  <!-- jcs not sure why we should need this when we don't use hypre for compressible simulations... -->
-  <Solver type="hypre" />
     
   <Wasatch>
 
