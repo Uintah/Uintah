@@ -33,6 +33,8 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   } else {
     throw ProblemSetupException("Error: DepositionVelocity.cc time-averaging start time not specified.", __FILE__, __LINE__);
   }
+  db->getWithDefault("relaxation_coe",_relaxation_coe,0.05);
+
   db->getWithDefault("ash_density",_user_specified_rho,-1.0);
   _d.push_back(IntVector(1,0,0)); // cell center located +x
   _d.push_back(IntVector(-1,0,0)); // cell center located -x
@@ -312,10 +314,16 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           if (_averaging_update){
             d_velocity_rs_start[c]=d_velocity_rs[c];
           }
-          if (current_time > _t_ave_start){
-            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / std::max(1e-8,(current_time-_t_ave_start));
-            deposit_velocity[c] =  vel_i_ave; // add the contribution per particle.
-          }
+          
+          //          if (current_time > _t_ave_start){
+          //            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / std::max(1e-8,(current_time-_t_ave_start));
+
+          //to use relaxation strategy to update the deposition velocity calculation
+          //          }
+
+          deposit_velocity[c] =  (1-_relaxation_coe)*deposit_velocity[c] + _relaxation_coe * d_velocity; // add the contribution per particle.
+
+
         }// if there is a deposition flux
       } // wall or intrusion cell-type
     } // cell loop

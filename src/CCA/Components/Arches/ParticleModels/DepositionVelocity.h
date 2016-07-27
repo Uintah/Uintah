@@ -84,6 +84,7 @@ private:
       double _t_ave_start; // sim time to start time averaging.
       double _new_time;
       double _user_specified_rho;
+      double _relaxation_coe;
 
   };
 }

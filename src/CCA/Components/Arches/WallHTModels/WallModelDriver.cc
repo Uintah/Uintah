@@ -389,6 +389,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
             d_hat_rs[*c]=d_hat_rs[*c] + deposit_thickness[*c]*vars.delta_t; 
             if (vars.averaging_update){
               d_hat_rs_start[*c]=d_hat_rs[*c];
+              /////// d_hat_rs[*c] = 0.0;
             }
           } else {
             deposit_thickness[*c] = 0.0;
@@ -997,11 +998,11 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                
               R_wall = wi.dy / wi.k; 
               
-              if (vars.time < vars.t_ave_start) {
-                vars.deposit_thickness[c] = wi.dy_dep_init;
-              } else {
+              //              if (vars.time < vars.t_ave_start) {
+              //                vars.deposit_thickness[c] = wi.dy_dep_init;
+              //              } else {
                 vars.deposit_thickness[c] = vars.ave_deposit_velocity[c] * wi.t_sb;
-              }
+                //              }
 
               vars.deposit_thickness[c] = min(vars.deposit_thickness[c],wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
               
@@ -1029,9 +1030,11 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 vars.d_hat_rs_start[c]=vars.d_hat_rs[c];
               }
               double d_ave;
-              if (vars.time > vars.t_ave_start){
-                vars.deposit_thickness[c] = (vars.d_hat_rs[c] - vars.d_hat_rs_start[c] ) / std::max(1e-8,(vars.time-vars.t_ave_start));  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
-              }
+              //              if (vars.time > vars.t_ave_start){
+              //                vars.deposit_thickness[c] = (vars.d_hat_rs[c] - vars.d_hat_rs_start[c] ) / std::max(1e-8,(vars.time-vars.t_ave_start));  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
+              //              }
+              
+              vars.deposit_thickness[c] = (1-wi.relax) * vars.deposit_thickness_old[c] + wi.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
 
               R_d = vars.deposit_thickness[c] / wi.k_deposit; 
               R_tot = R_wall + R_d; // total thermal resistance
