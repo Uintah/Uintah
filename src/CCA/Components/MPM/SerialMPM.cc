@@ -3006,7 +3006,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       if(time<=tmin) {
           s=smin;
       } else if(time>=tmax) {
-          s=smax;
+          s=smax-1;
       } else {
         while (smax>smin+1) {
           int smid = (smin+smax)/2;
