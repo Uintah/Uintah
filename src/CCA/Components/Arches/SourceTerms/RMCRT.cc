@@ -14,9 +14,6 @@ static DebugStream dbg("RMCRT", false);
 
 /*______________________________________________________________________
           TO DO:
-
- - Allow the user to select between double or float RMCRT, see _FLT_DBL
-
  ______________________________________________________________________*/
 
 RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
@@ -35,9 +32,8 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
 
   _src_label = VarLabel::create( src_name,  CCVariable<double>::getTypeDescription() );
 
-  _FLT_DBL = TypeDescription::double_type;        // HARDWIRED: double;
-
-   _RMCRT = scinew Ray( _FLT_DBL );
+  _FLT_DBL = TypeDescription::double_type;
+  _RMCRT   = nullptr;
 
   //Declare the source type:
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
@@ -106,6 +102,18 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   if (!rmcrt_ps){
     throw ProblemSetupException("ERROR:  RMCRT_radiation, the xml tag <RMCRT> was not found", __FILE__, __LINE__);
   }
+  
+  // Are we using floats for all-to-all variables
+  map<string,string> type;
+  rmcrt_ps->getAttributes(type);
+
+  string isFloat = type["type"];
+
+  if( isFloat == "float" ){
+    _FLT_DBL = TypeDescription::float_type;
+  } 
+  
+  _RMCRT = scinew Ray( _FLT_DBL );
 
 
   _RMCRT->setBC_onOff( false );
