@@ -1460,7 +1460,7 @@
 
 
             <!-- RMCRT -->
-            <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
+            <RMCRT                       spec="OPTIONAL NO_DATA" attribute1="type OPTIONAL STRING 'float, double'" need_applies_to="type rmcrt_radiation" >
               <randomSeed                spec="OPTIONAL BOOLEAN"/>
               <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
               <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>
