@@ -37,9 +37,10 @@
 #include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/Time.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #  include <Kokkos_Core.hpp>
@@ -65,28 +66,24 @@ struct recv_tag{};
 using  recv_monitor = Uintah::CrowdMonitor<recv_tag>;
 
 std::mutex g_lb_mutex;                // load balancer lock
-std::mutex g_wait_times_mutex;         // MPI wait times lock
+std::mutex g_wait_times_mutex;        // MPI wait times lock
+
+Dout g_dbg(          "MPIScheduler_DBG",        false );
+Dout g_send_timings( "SendTiming",              false );
+Dout g_reductions(   "ReductionTasks",          false );
+
+DebugStream g_time_out( "MPIScheduler_TimingsOut", false );
+
+double CurrentWaitTime = 0;
 
 }
 
+Dout g_task_order( "TaskOrder", false );
+Dout g_task_dbg(   "TaskDBG",   false );
+Dout g_mpi_dbg(    "MPIDBG",    false );
 
-// Used to sync cout/cerr so it is readable when output by multiple threads
-extern std::mutex coutLock;
-extern std::mutex cerrLock;
-
-static DebugStream dbg(          "MPIScheduler_DBG",        false );
-static DebugStream dbgst(        "SendTiming",              false );
-static DebugStream timeout(      "MPIScheduler_TimingsOut", false );
-static DebugStream reductionout( "ReductionTasks",          false );
-
-DebugStream taskorder(     "TaskOrder", false );
-DebugStream waitout(       "WaitTimes", false );
-DebugStream execout(       "ExecTimes", false );
-DebugStream taskdbg(       "TaskDBG",   false );
-DebugStream taskLevel_dbg( "TaskLevel", false );
-DebugStream mpidbg(        "MPIDBG",    false );
-
-static double CurrentWaitTime = 0;
+DebugStream g_wait_out( "WaitTimes", false );
+DebugStream g_exec_out( "ExecTimes", false );
 
 std::map<std::string, double> waittimes;
 std::map<std::string, double> exectimes;
@@ -108,9 +105,9 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 
   m_last_time = Time::currentSeconds();
 
-  reloc_new_posLabel_ = 0;
+  reloc_new_posLabel_ = nullptr;
 
-  if (timeout.active()) {
+  if (g_time_out.active()) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     m_timings_stats.open(filename);
@@ -139,8 +136,9 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 //______________________________________________________________________
 //
 void
-MPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
-                                  SimulationStateP& state )
+MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
+                          ,       SimulationStateP & state
+                          )
 {
   SchedulerCommon::problemSetup(prob_spec, state);
 }
@@ -149,7 +147,7 @@ MPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 //
 MPIScheduler::~MPIScheduler()
 {
-  if (timeout.active()) {
+  if (g_time_out.active()) {
     m_timings_stats.close();
     if (d_myworld->myrank() == 0) {
       m_avg_stats.close();
@@ -207,11 +205,7 @@ MPIScheduler::verifyChecksum()
     // Spatial tasks don't count against the global checksum
     checksum -= numSpatialTasks;
 
-    if (mpidbg.active()) {
-      coutLock.lock();
-      mpidbg << d_myworld->myrank() << " (Uintah::MPI::Allreduce) Checking checksum of " << checksum << '\n';
-      coutLock.unlock();
-    }
+    DOUT(g_mpi_dbg, "Rank-" <<  d_myworld->myrank() << " (Uintah::MPI::Allreduce) Checking checksum of " << checksum);
 
     int result_checksum;
     Uintah::MPI::Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
@@ -223,21 +217,18 @@ MPIScheduler::verifyChecksum()
       Uintah::MPI::Abort(d_myworld->getComm(), 1);
     }
 
-    if (mpidbg.active()) {
-      coutLock.lock();
-      mpidbg << d_myworld->myrank() << " (Uintah::MPI::Allreduce) Check succeeded\n";
-      coutLock.unlock();
-    }
+    DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " (Uintah::MPI::Allreduce) Check succeeded");
   }
 #endif
 }
 
 //______________________________________________________________________
 //
-void MPIScheduler::initiateTask( DetailedTask* dtask,
-                                 bool          only_old_recvs,
-                                 int           abort_point,
-                                 int           iteration )
+void MPIScheduler::initiateTask( DetailedTask * dtask
+                               , bool           only_old_recvs
+                               , int            abort_point
+                               , int            iteration
+                               )
 {
   postMPIRecvs(dtask, only_old_recvs, abort_point, iteration);
 
@@ -252,11 +243,7 @@ void MPIScheduler::initiateTask( DetailedTask* dtask,
 void
 MPIScheduler::initiateReduction( DetailedTask* dtask )
 {
-  if (reductionout.active() && d_myworld->myrank() == 0) {
-    coutLock.lock();
-    reductionout << "Running Reduction Task: " << dtask->getName() << std::endl;
-    coutLock.unlock();
-  }
+  DOUT(g_reductions, "Rank-" << d_myworld->myrank() << " Running Reduction Task: " << dtask->getName());
 
   double reducestart = Time::currentSeconds();
 
@@ -273,11 +260,12 @@ MPIScheduler::initiateReduction( DetailedTask* dtask )
 //______________________________________________________________________
 //
 void
-MPIScheduler::runTask( DetailedTask* dtask,
-                       int           iteration,
-                       int           thread_id /*=0*/ )
+MPIScheduler::runTask( DetailedTask * dtask
+                     , int            iteration
+                     , int            thread_id /* = 0 */
+                     )
 {
-  if (waitout.active()) {
+  if (g_wait_out) {
     g_wait_times_mutex.lock();
     waittimes[dtask->getTask()->getName()] += CurrentWaitTime;
     CurrentWaitTime = 0;
@@ -304,7 +292,7 @@ MPIScheduler::runTask( DetailedTask* dtask,
 
   g_lb_mutex.lock();
   {
-    if (execout.active()) {
+    if (g_exec_out.active()) {
       exectimes[dtask->getTask()->getName()] += total_task_time;
     }
 
@@ -372,19 +360,16 @@ MPIScheduler::runReductionTask( DetailedTask* dtask )
 //______________________________________________________________________
 //
 void
-MPIScheduler::postMPISends( DetailedTask* dtask,
-                            int           iteration,
-                            int           thread_id  /*=0*/ )
+MPIScheduler::postMPISends( DetailedTask * dtask
+                          , int            iteration
+                          , int            thread_id  /* = 0 */
+                          )
 {
   double sendstart = Time::currentSeconds();
-  bool dbg_active = dbg.active();
 
   int me = d_myworld->myrank();
-  if (dbg_active) {
-    cerrLock.lock();
-    dbg << "Rank-" << me << " postMPISends - task " << *dtask << '\n';
-    cerrLock.unlock();
-  }
+
+  DOUT(g_dbg, "Rank-" << me << " postMPISends - task " << *dtask);
 
   int numSend = 0;
   int volSend = 0;
@@ -408,43 +393,29 @@ MPIScheduler::postMPISends( DetailedTask* dtask,
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
           && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
         // See comment in DetailedDep about CommCondition
-        if (dbg_active) {
-          cerrLock.lock();
-          dbg << "Rank-" << me << "   Ignoring conditional send for " << *req << "\n";
-          cerrLock.unlock();
-        }
+        DOUT(g_dbg, "Rank-" << me << "   Ignoring conditional send for " << *req);
         continue;
       }
 
       // if we send/recv to an output task, don't send/recv if not an output timestep
-      if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_oport->isOutputTimestep()
-          && !m_oport->isCheckpointTimestep()) {
-        if (dbg_active) {
-          cerrLock.lock();
-          dbg << "Rank-" << me << "   Ignoring non-output-timestep send for " << *req << "\n";
-          cerrLock.unlock();
-        }
+      if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_oport->isOutputTimestep() && !m_oport->isCheckpointTimestep()) {
+        DOUT(g_dbg, "Rank-" << me << "   Ignoring non-output-timestep send for " << *req);
         continue;
       }
 
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
-      if (dbg_active) {
-        cerrLock.lock();
-        {
-          dbg << "Rank-" << me << " --> sending " << *req << ", ghost type: " << "\""
-              << Ghost::getGhostTypeName(req->req->m_gtype) << "\", " << "num req ghost "
-              << Ghost::getGhostTypeName(req->req->m_gtype) << ": " << req->req->m_num_ghost_cells
-              << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->m_gtype)
-              << ", from dw " << dw->getID() << '\n';
-        }
-        cerrLock.unlock();
-      }
+
+      DOUT(g_dbg, "Rank-" << me << " --> sending " << *req << ", ghost type: " << "\""
+               << Ghost::getGhostTypeName(req->req->m_gtype) << "\", " << "num req ghost "
+               << Ghost::getGhostTypeName(req->req->m_gtype) << ": " << req->req->m_num_ghost_cells
+               << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->m_gtype)
+               << ", from dw " << dw->getID());
 
       // the load balancer is used to determine where data was in the old dw on the prev timestep -
       // pass it in if the particle data is on the old dw
       const VarLabel* posLabel;
       OnDemandDataWarehouse* posDW;
-      LoadBalancer* lb = 0;
+      LoadBalancer* lb = nullptr;
 
       if( !reloc_new_posLabel_ && m_parent_scheduler ) {
         posDW = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
@@ -485,12 +456,8 @@ MPIScheduler::postMPISends( DetailedTask* dtask,
       mpibuff.get_type(buf, count, datatype);
 #endif
 
-      if (mpidbg.active()) {
-        cerrLock.lock();
-        mpidbg << "Rank-" << me << " Posting send for message number " << batch->messageTag << " to   rank-" << to << ", length: " << count
-               << " (bytes)\n";
-        cerrLock.unlock();
-      }
+      DOUT(g_mpi_dbg, "Rank-" << me << " Posting send for message number " << batch->messageTag << " to   rank-"
+                   << to << ", length: " << count << " (bytes)");;
 
       m_num_messages++;
       numSend++;
@@ -519,17 +486,12 @@ MPIScheduler::postMPISends( DetailedTask* dtask,
   mpi_info_[TotalSend] += dsend;
 
   size_t sends_size = m_sends.size();
-  if (dbgst.active() && sends_size > 0) {
+  if (g_send_timings && sends_size > 0) {
     if (d_myworld->myrank() == d_myworld->size() / 2) {
-      if (dbgst.active()) {
-        cerrLock.lock();
-        dbgst << " Rank-" << d_myworld->myrank()
-              << " Time: " << Time::currentSeconds()
-              << " , NumSend= " << sends_size
-              << " , VolSend: " << volSend
-              << std::endl;
-        cerrLock.unlock();
-      }
+        DOUT(true, " Rank-" << d_myworld->myrank()
+                << " Time: " << Time::currentSeconds()
+                << " , NumSend= " << sends_size
+                << " , VolSend: " << volSend);
     }
   }
 }  // end postMPISends();
@@ -537,8 +499,7 @@ MPIScheduler::postMPISends( DetailedTask* dtask,
 //______________________________________________________________________
 //
 struct CompareDep {
-    bool operator()( DependencyBatch* a,
-                     DependencyBatch* b )
+    bool operator()( DependencyBatch* a, DependencyBatch* b )
     {
       return a->messageTag < b->messageTag;
     }
@@ -546,18 +507,16 @@ struct CompareDep {
 
 //______________________________________________________________________
 //
-void MPIScheduler::postMPIRecvs( DetailedTask* dtask,
-                                 bool          only_old_recvs,
-                                 int           abort_point,
-                                 int           iteration )
+void MPIScheduler::postMPIRecvs( DetailedTask * dtask
+                               , bool           only_old_recvs
+                               , int            abort_point
+                               , int            iteration
+                               )
 {
   double recvstart = Time::currentSeconds();
-  bool dbg_active = dbg.active();
 
-  if (dbg_active) {
-    cerrLock.lock();
-    dbg << "Rank-" << d_myworld->myrank() << " postMPIRecvs - task " << *dtask << '\n';
-    cerrLock.unlock();
+  if (g_dbg) {
+    DOUT(true, "Rank-" << d_myworld->myrank() << " postMPIRecvs - task " << *dtask);
   }
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_COMM) {
@@ -591,20 +550,17 @@ void MPIScheduler::postMPIRecvs( DetailedTask* dtask,
 
       dtask->incrementExternalDepCount();
       if (!batch->makeMPIRequest()) {
-        if (dbg_active) {
-          cerrLock.lock();
-          dbg << "Someone else already receiving it\n";
-          cerrLock.unlock();
-        }
+        DOUT(g_dbg, "Someone else already receiving it");
         continue;
       }
 
       if (only_old_recvs) {
-        if (dbg_active) {
-          dbg << "abort analysis: " << batch->fromTask->getTask()->getName() << ", so="
-              << batch->fromTask->getTask()->getSortedOrder() << ", abort_point=" << abort_point << '\n';
-          if (batch->fromTask->getTask()->getSortedOrder() <= abort_point)
-            dbg << "posting MPI recv for pre-abort message " << batch->messageTag << '\n';
+
+        DOUT(g_dbg, "abort analysis: " << batch->fromTask->getTask()->getName() << ", so="
+                 << batch->fromTask->getTask()->getSortedOrder() << ", abort_point=" << abort_point);
+
+        if (batch->fromTask->getTask()->getSortedOrder() <= abort_point) {
+          DOUT(g_dbg, "posting MPI recv for pre-abort message " << batch->messageTag);
         }
         if (!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
           continue;
@@ -630,31 +586,20 @@ void MPIScheduler::postMPIRecvs( DetailedTask* dtask,
             && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
 
           // See comment in DetailedDep about CommCondition
-          if (dbg_active) {
-            cerrLock.lock();
-            dbg << "Rank-" << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << std::endl;
-          }
+          DOUT(g_dbg, "Rank-" << d_myworld->myrank() << "   Ignoring conditional receive for " << *req);
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_oport->isOutputTimestep()
-            && !m_oport->isCheckpointTimestep()) {
-          cerrLock.lock();
-          dbg << "Rank-" << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req << std::endl;
-          cerrLock.unlock();
+        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_oport->isOutputTimestep() && !m_oport->isCheckpointTimestep()) {
+          DOUT(g_dbg, "Rank-" << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req);
           continue;
         }
-        if (dbg_active) {
-          cerrLock.lock();
-          {
-            dbg << "Rank-" << d_myworld->myrank() << " <-- receiving " << *req << ", ghost type: " << "\""
-                << Ghost::getGhostTypeName(req->req->m_gtype) << "\", " << "num req ghost "
-                << Ghost::getGhostTypeName(req->req->m_gtype) << ": " << req->req->m_num_ghost_cells
-                << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->m_gtype)
-                << ", into dw " << dw->getID() << '\n';
-          }
-          cerrLock.unlock();
-        }
+
+        DOUT(g_dbg, "Rank-" << d_myworld->myrank() << " <-- receiving " << *req
+                  << ", ghost type: " << "\"" << Ghost::getGhostTypeName(req->req->m_gtype)
+                  << "\", " << "num req ghost " << Ghost::getGhostTypeName(req->req->m_gtype) << ": " << req->req->m_num_ghost_cells
+                  << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->m_gtype)
+                  << ", into dw " << dw->getID());
 
         OnDemandDataWarehouse* posDW;
 
@@ -705,12 +650,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask* dtask,
         int from = batch->fromTask->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
 
-        if (mpidbg.active()) {
-        cerrLock.lock();
-        mpidbg << "Rank-" << d_myworld->myrank() << " Posting recv for message number " << batch->messageTag << " from rank-" << from
-               << ", length: " << count << " (bytes)\n";
-        cerrLock.unlock();
-        }
+        DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " Posting recv for message number " << batch->messageTag
+                     << " from rank-" << from << ", length: " << count << " (bytes)");
 
 
         //---------------------------------------------------------------------------
@@ -744,7 +685,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* dtask,
 
 //______________________________________________________________________
 //
-void MPIScheduler::processMPIRecvs(int how_much)
+void MPIScheduler::processMPIRecvs( int test_type )
 {
   if (m_recvs.size() == 0) {
     return;
@@ -763,7 +704,7 @@ void MPIScheduler::processMPIRecvs(int how_much)
   {
     recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
 
-    switch (how_much) {
+    switch (test_type) {
 
       case TEST :
         comm_iter = m_recvs.find_any(test_request);
@@ -807,8 +748,9 @@ void MPIScheduler::processMPIRecvs(int how_much)
 //
 
 void
-MPIScheduler::execute( int tgnum     /* = 0 */,
-                       int iteration /* = 0 */ )
+MPIScheduler::execute( int tgnum     /* = 0 */
+                     , int iteration /* = 0 */
+                     )
 {
   ASSERTRANGE(tgnum, 0, (int )graphs.size());
   TaskGraph* tg = graphs[tgnum];
@@ -825,9 +767,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 
   if (dts == 0) {
     if (d_myworld->myrank() == 0) {
-      cerrLock.lock();
-      std::cerr << "MPIScheduler skipping execute, no tasks\n";
-      cerrLock.unlock();
+      DOUT(true, "MPIScheduler skipping execute, no tasks");
     }
     return;
   }
@@ -840,7 +780,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if (timeout.active()) {
+  if (g_time_out.active()) {
     m_labels.clear();
     m_times.clear();
     //emitTime("time since last execute");
@@ -858,11 +798,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 
   int numTasksDone = 0;
 
-  if (dbg.active()) {
-    cerrLock.lock();
-    dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)\n";
-    cerrLock.unlock();
-  }
+  DOUT(g_dbg, me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
   bool abort = false;
   int abort_point = 987654;
@@ -891,48 +827,44 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     //unsigned long memuse, highwater, maxMemUse;
     //checkMemoryUse( memuse, highwater, maxMemUse );
 
-    DetailedTask * task = dts->getNextInternalReadyTask();
+    DetailedTask * dtask = dts->getNextInternalReadyTask();
 
     numTasksDone++;
 
-    if (taskorder.active()) {
-      taskorder << d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: "
-                << numTasksDone << std::endl;
+    DOUT(g_task_order,
+         "Rank-" << d_myworld->myrank() << " Running task static order: " << dtask->getStaticOrder() << " , scheduled order: " << numTasksDone);
+
+    if (g_task_dbg) {
+      DOUT(true, "Rank-" << me << " Initiating task: " << dtask->getTask()->getName() << "\t" << *dtask);
+      // TODO: fix printTask to use DOUT - APH 08/01/16
+//      printTask(taskdbg, task);
     }
 
-    if (taskdbg.active()) {
-      taskdbg << me << " Initiating task:  \t";
-      printTask(taskdbg, task);
-      taskdbg << '\n';
-    }
-
-    if (task->getTask()->getType() == Task::Reduction) {
+    if (dtask->getTask()->getType() == Task::Reduction) {
       if (!abort) {
-        initiateReduction(task);
+        initiateReduction(dtask);
       }
     }
     else {
-      initiateTask(task, abort, abort_point, iteration);
+      initiateTask(dtask, abort, abort_point, iteration);
       processMPIRecvs(WAIT_ALL);
       ASSERT(m_recvs.size() == 0);
-      runTask(task, iteration);
+      runTask(dtask, iteration);
 
-      if (taskdbg.active()) {
-        taskdbg << d_myworld->myrank() << " Completed task:  \t";
-        printTask(taskdbg, task);
-        taskdbg << '\n';
-        printTaskLevels(d_myworld, taskLevel_dbg, task);
+      if (g_task_dbg) {
+        DOUT(true, "Rank-" << d_myworld->myrank() << " Completed task: " << dtask->getTask()->getName() << "\t" << *dtask);
       }
     }
 
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       abort = true;
-      abort_point = task->getTask()->getSortedOrder();
-      dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
+      abort_point = dtask->getTask()->getSortedOrder();
+
+      DOUT(g_dbg, "Aborting timestep after task: " << *dtask->getTask());
     }
   } // end while( numTasksDone < ntasks )
 
-  if (timeout.active()) {
+  if (g_time_out.active()) {
     emitTime("MPI send time", mpi_info_[TotalSendMPI]);
     emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
     emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
@@ -997,15 +929,11 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 
   finalizeTimestep();
 
-  if ( !m_parent_scheduler && (execout.active() || timeout.active() || waitout.active()) ) {  // only do on toplevel scheduler
+  if ( !m_parent_scheduler && (g_exec_out.active() || g_time_out.active() || g_wait_out.active()) ) {  // only do on toplevel scheduler
     outputTimingStats("MPIScheduler");
   }
 
-  if (dbg.active()) {
-    coutLock.lock();
-    dbg << me << " MPIScheduler finished\n";
-    coutLock.unlock();
-  }
+  DOUT(g_dbg, me << " MPIScheduler finished");
 }
 
 //______________________________________________________________________
@@ -1021,8 +949,7 @@ MPIScheduler::emitTime( const char* label )
 //______________________________________________________________________
 //
 void
-MPIScheduler::emitTime( const char*  label,
-                              double dt )
+MPIScheduler::emitTime( const char*  label, double dt )
 {
    m_labels.push_back(label);
    m_times.push_back(dt);
@@ -1031,7 +958,7 @@ MPIScheduler::emitTime( const char*  label,
 //______________________________________________________________________
 //
 void
-MPIScheduler::outputTimingStats(const char* label)
+MPIScheduler::outputTimingStats( const char* label )
 {
   // add number of cells, patches, and particles
   int numCells = 0, numParticles = 0;
@@ -1125,15 +1052,15 @@ MPIScheduler::outputTimingStats(const char* label)
   }
 
   if (me == 0) {
-    timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
-    timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
-    timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n";
+    g_time_out << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
+    g_time_out << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
+    g_time_out << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n";
   }
 
   double time = Time::currentSeconds();
   m_last_time = time;
 
-  if (execout.active()) {
+  if (g_exec_out.active()) {
     static int count = 0;
 
     // only output the exec times every 10 timesteps
@@ -1158,7 +1085,7 @@ MPIScheduler::outputTimingStats(const char* label)
     }
   }
 
-  if (waitout.active()) {
+  if (g_wait_out.active()) {
     static int count = 0;
 
     // only output the exec times every 10 timesteps

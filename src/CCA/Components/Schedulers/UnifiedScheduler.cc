@@ -34,8 +34,8 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/CommunicationList.hpp>
-#include <Core/Util/Time.h>
 #include <Core/Util/DOUT.hpp>
+#include <Core/Util/Time.h>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -59,11 +59,11 @@ using namespace Uintah;
 extern std::mutex coutLock;
 extern std::mutex cerrLock;
 
-extern DebugStream taskdbg;
-extern DebugStream waitout;
-extern DebugStream execout;
-extern DebugStream taskorder;
-extern DebugStream taskLevel_dbg;
+extern DebugStream g_task_dbg;
+extern DebugStream g_task_order;
+
+extern DebugStream g_wait_out;
+extern DebugStream g_exec_out;
 
 extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
@@ -497,7 +497,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
                          , Task::CallBackEvent   event
                          )
 {
-  if (waitout.active()) {
+  if (g_wait_out.active()) {
     g_wait_times_lock.lock();
     {
       waittimes[task->getTask()->getName()] += Unified_CurrentWaitTime;
@@ -532,7 +532,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
 
     g_lb_lock.lock();
     {
-      if (execout.active()) {
+      if (g_exec_out.active()) {
         exectimes[task->getTask()->getName()] += total_task_time;
       }
 
@@ -844,7 +844,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   finalizeTimestep();
 
-  if ( (execout.active() || emit_timings) && !m_parent_scheduler) {  // only do on toplevel scheduler
+  if ( (g_exec_out.active() || emit_timings) && !m_parent_scheduler) {  // only do on toplevel scheduler
     outputTimingStats("UnifiedScheduler");
   }
 
@@ -866,13 +866,9 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
 
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;
-  if (taskorder.active()) {
-    if (d_myworld->myrank() == d_myworld->size() / 2) {
-      coutLock.lock();
-      taskorder << myRankThread() << " Running task static order: " << dtask->getStaticOrder()
-                << ", scheduled order: " << numTasksDone << std::endl;
-      coutLock.unlock();
-    }
+
+  if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
+    DOUT(true, myRankThread() << " Running task static order: " << dtask->getStaticOrder() << ", scheduled order: " << numTasksDone);
   }
 
   // Update the count of this phase consumed.
@@ -881,12 +877,8 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
   // See if we've consumed all tasks on this phase, if so, go to the next phase.
   while (m_phase_tasks[currphase] == m_phase_tasks_done[currphase] && currphase + 1 < numPhases) {
     currphase++;
-    if (taskdbg.active()) {
-      coutLock.lock();
-      taskdbg << myRankThread() << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
-              << m_phase_tasks[currphase] << std::endl;
-      coutLock.unlock();
-    }
+    DOUT(g_task_dbg, myRankThread() << " switched to task phase " << currphase << ", total phase "
+                  << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
 }
 
@@ -1005,11 +997,9 @@ UnifiedScheduler::runTasks( int thread_id )
         initTask = m_detailed_tasks->getNextInternalReadyTask();
         if (initTask != nullptr) {
           if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
-            if (taskdbg.active()) {
-              coutLock.lock();
-              taskdbg << myRankThread() <<  " Task internal ready 1 " << *initTask << std::endl;
-              coutLock.unlock();
-            }
+
+            DOUT(g_task_dbg, myRankThread() <<  " Task internal ready 1 " << *initTask);
+
             m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
             ASSERT(initTask->getRequires().size() == 0)
             initTask = nullptr;
@@ -1162,25 +1152,16 @@ UnifiedScheduler::runTasks( int thread_id )
 
     if (initTask != nullptr) {
       initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration);
-      if (taskdbg.active()) {
-        coutLock.lock();
-        {
-          taskdbg << myRankThread() << " Task internal ready 2 " << *initTask
-                  << " deps needed: "
-                  << initTask->getExternalDepCount()
-                  << std::endl;
-        }
-        coutLock.unlock();
-      }
+
+      DOUT(g_task_dbg, myRankThread() << " Task internal ready 2 " << *initTask << " deps needed: " << initTask->getExternalDepCount());
+
       initTask->markInitiated();
       initTask->checkExternalDepCount();
     }
-    else if (readyTask != nullptr) {
-      if (taskdbg.active()) {
-        coutLock.lock();
-        taskdbg << myRankThread() << " Task external ready " << *readyTask << std::endl;
-        coutLock.unlock();
-      }
+    else if (readyTask) {
+
+      DOUT(g_task_dbg, myRankThread() << " Task external ready " << *readyTask)
+
       if (readyTask->getTask()->getType() == Task::Reduction) {
         initiateReduction(readyTask);
       }
@@ -1301,7 +1282,6 @@ UnifiedScheduler::runTasks( int thread_id )
 #endif
           // run CPU task.
           runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
-          printTaskLevels(d_myworld, taskLevel_dbg, readyTask);
 #ifdef HAVE_CUDA
         }
 #endif
