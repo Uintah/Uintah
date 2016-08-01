@@ -41,6 +41,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Time.h>
 
 #include <mutex>
@@ -87,7 +88,7 @@ extern std::mutex cerrLock;
 extern std::mutex coutLock;
 
 extern DebugStream mixedDebug;
-extern DebugStream mpidbg;
+extern Dout g_mpi_dbg;
 
 static DebugStream dbg(         "DetailedTasks", false);
 static DebugStream scrubout(    "Scrubbing",     false);
@@ -1513,22 +1514,14 @@ bool DetailedTask::addInternalRequires(DependencyBatch* req)
 void
 DetailedTask::checkExternalDepCount()
 {
-  if (mpidbg.active()) {
-    cerrLock.lock();
-    mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: " << externalDependencyCount_
-           << " internal deps: " << numPendingInternalDependencies << "\n";
-    cerrLock.unlock();
-  }
+  DOUT(g_mpi_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
+               << " external deps: " << externalDependencyCount_ << " internal deps: " << numPendingInternalDependencies);
 
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
     {
       external_ready_monitor external_ready_lock { Uintah::CrowdMonitor<external_ready_tag>::WRITER };
-      if (mpidbg.active()) {
-        cerrLock.lock();
-        mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-               << " MPI requirements satisfied, placing into external ready queue\n";
-        cerrLock.unlock();
-      }
+      DOUT(g_mpi_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
+                   << " MPI requirements satisfied, placing into external ready queue");
 
       if (externallyReady_ == false) {
         taskGroup->mpiCompletedTasks_.push(this);

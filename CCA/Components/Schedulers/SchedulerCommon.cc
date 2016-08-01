@@ -845,8 +845,6 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
     delete graphs[i];
   }
 
-  numParticleGhostCells_ = 0;
-
   graphs.clear();
 
   d_initRequires.clear();
@@ -864,7 +862,6 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
 
 //______________________________________________________________________
 //
-
 void
 SchedulerCommon::setParentDWs( DataWarehouse* parent_old_dw,
                                DataWarehouse* parent_new_dw )

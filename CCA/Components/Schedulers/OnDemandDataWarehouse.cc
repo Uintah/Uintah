@@ -55,6 +55,7 @@
 #include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
@@ -112,7 +113,7 @@ static DebugStream warn(       "OnDemandDataWarehouse_warn", true  );
 static DebugStream particles(  "DWParticles",                false );
 static DebugStream particles2( "DWParticles2",               false );
 
-extern DebugStream mpidbg;
+extern Dout g_mpi_dbg;
 
 struct ParticleSend : public RefCounted {
   int numParticles;
@@ -1027,17 +1028,11 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
     coutLock.unlock();
   }
 
-  if( mpidbg.active() ) {
-    mpidbg << "Rank-" << d_myworld->myrank() << " allreduce, name " << label->getName() << " level "
-           << (level ? level->getID() : -1) << std::endl;
-  }
+  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " allreduce, name " << label->getName() << " level " << (level ? level->getID() : -1));
 
   int error = Uintah::MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
 
-  if( mpidbg.active() ) {
-    mpidbg << "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level "
-           << (level ? level->getID() : -1) << std::endl;
-  }
+  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level " << (level ? level->getID() : -1));
 
   if( mixedDebug.active() ) {
     coutLock.lock();
@@ -1046,9 +1041,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
   }
 
   if( error ) {
-    cerrLock.lock();
-    std::cerr << "reduceMPI: Uintah::MPI::Allreduce error: " << error << "\n";
-    cerrLock.unlock();
+    DOUT(true, "reduceMPI: Uintah::MPI::Allreduce error: " << error);
     SCI_THROW( InternalError("reduceMPI: MPI error", __FILE__, __LINE__) );
   }
 

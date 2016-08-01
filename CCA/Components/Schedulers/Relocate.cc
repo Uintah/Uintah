@@ -27,6 +27,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <map>
@@ -42,7 +43,8 @@ using namespace Uintah;
 extern std::mutex  cerrLock;
 
 extern DebugStream mixedDebug;
-extern DebugStream mpidbg;
+extern Dout g_mpi_dbg;
+
 static DebugStream coutdbg("RELOCATE_DBG", false);
 
 Relocate::Relocate()
@@ -689,9 +691,11 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     MPI_Request rid;
     int to=iter->first;
     
-    mpidbg << pg->myrank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << std::endl;
+    DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to ");
+
     Uintah::MPI::Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG, pg->getComm(), &rid);
-    mpidbg << pg->myrank() << " done Sending relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << std::endl;
+
+    DOUT(g_mpi_dbg, "Rank-" << " done Sending relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to);
     
     sendbuffers.push_back(buf);
     sendrequests.push_back(rid);
@@ -722,10 +726,13 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
-    mpidbg << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << std::endl;
+
+    DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first);
+
     Uintah::MPI::Recv(recvbuffers[idx], size, MPI_PACKED, iter->first, RELOCATE_TAG, pg->getComm(), &status);
 
-    mpidbg << pg->myrank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << std::endl;
+    DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first);
+
     // Partially unpack
     int position=0;
     int numrecords;
@@ -1310,9 +1317,9 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
     // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
     //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
     if (pg->size() > 1) {
-      mpidbg << pg->myrank() << " Relocate reduce\n";
+      DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Relocate reduce");
       Uintah::MPI::Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
-      mpidbg << pg->myrank() << " Done Relocate reduce\n";
+      DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Done Relocate reduce");
     }
     if(pg->myrank() == 0){
       ASSERTEQ(alltotal[1], alltotal[2]);
@@ -1774,9 +1781,9 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
     //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
     if (pg->size() > 1) {
-      mpidbg << pg->myrank() << " Relocate reduce\n";
+      DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Relocate reduce");
       Uintah::MPI::Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
-      mpidbg << pg->myrank() << " Done Relocate reduce\n";
+      DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Done Relocate reduce");
     }
     if(pg->myrank() == 0){
       ASSERTEQ(alltotal[1], alltotal[2]);

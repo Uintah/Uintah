@@ -37,9 +37,6 @@
 
 using namespace Uintah;
 
-extern DebugStream taskdbg;
-extern DebugStream taskLevel_dbg;
-
 static DebugStream dbg("SingleProcessorScheduler", false);
 
 SingleProcessorScheduler::SingleProcessorScheduler( const ProcessorGroup           * myworld,
@@ -104,32 +101,6 @@ SingleProcessorScheduler::execute( int tgnum     /*=0*/,
     plain_old_dws[i] = dws[i].get_rep();
   }
 
-  if (dbg.active()) {
-    dbg << "Executing " << ntasks << " tasks, ";
-    for (int i = 0; i < numOldDWs; i++) {
-      dbg << "from DWs: ";
-      if (dws[i]) {
-        dbg << dws[i]->getID() << ", ";
-      }
-      else {
-        dbg << "Null, ";
-      }
-    }
-    if (dws.size() - numOldDWs > 1) {
-      dbg << "intermediate DWs: ";
-      for (unsigned int i = numOldDWs; i < dws.size() - 1; i++) {
-        dbg << dws[i]->getID() << ", ";
-      }
-    }
-    if (dws[dws.size() - 1]) {
-      dbg << " to DW: " << dws[dws.size() - 1]->getID();
-    }
-    else {
-      dbg << " to DW: Null";
-    }
-    dbg << "\n";
-  }
-
   makeTaskGraphDoc(dts);
 
   dts->initializeScrubs(dws, dwmap);
@@ -138,9 +109,6 @@ SingleProcessorScheduler::execute( int tgnum     /*=0*/,
     double start = Time::currentSeconds();
     DetailedTask* task = dts->getTask(i);
 
-    taskdbg << d_myworld->myrank() << " SPS: Initiating: ";
-    printTask(taskdbg, task);
-    taskdbg << '\n';
 
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -154,21 +122,11 @@ SingleProcessorScheduler::execute( int tgnum     /*=0*/,
 
     task->done(dws);
 
-    if (taskdbg.active()) {
-      taskdbg << d_myworld->myrank() << " SPS: Completed:  ";
-      printTask(taskdbg, task);
-      taskdbg << '\n';
-      printTaskLevels(d_myworld, taskLevel_dbg, task);
-    }
 
     double delT = Time::currentSeconds() - start;
     if (dws[dws.size() - 1] && dws[dws.size() - 1]->timestepAborted()) {
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
       break;
-    }
-
-    if (dbg.active()) {
-      dbg << "Completed task: " << *task->getTask() << " (" << delT << " seconds)\n";
     }
 
     emitNode(task, start, delT, delT);

@@ -76,7 +76,7 @@ class MPIScheduler : public SchedulerCommon {
 
   public:
 
-    MPIScheduler( const ProcessorGroup* myworld, const Output* oport, MPIScheduler* parentScheduler = 0 );
+            MPIScheduler( const ProcessorGroup* myworld, const Output* oport, MPIScheduler* parentScheduler = 0 );
 
     virtual ~MPIScheduler();
 
@@ -86,7 +86,7 @@ class MPIScheduler : public SchedulerCommon {
 
     virtual SchedulerP createSubScheduler();
 
-    virtual void processMPIRecvs( int how_much );
+    virtual void processMPIRecvs( int test_type );
 
             void postMPISends( DetailedTask* dtask, int iteration, int thread_id = 0 );
 
@@ -114,10 +114,10 @@ class MPIScheduler : public SchedulerCommon {
         double max_volume;
 
         // do SUM and MAX reduction for numMessages and messageVolume
-        Uintah::MPI::Reduce(&m_num_messages,   &total_messages, 1, MPI_UNSIGNED, MPI_SUM, 0, d_myworld->getComm());
-        Uintah::MPI::Reduce(&m_message_volume, &total_volume,   1, MPI_DOUBLE,   MPI_SUM, 0, d_myworld->getComm());
-        Uintah::MPI::Reduce(&m_num_messages,   &max_messages,   1, MPI_UNSIGNED, MPI_MAX, 0, d_myworld->getComm());
-        Uintah::MPI::Reduce(&m_message_volume, &max_volume,     1, MPI_DOUBLE,   MPI_MAX, 0, d_myworld->getComm());
+        Uintah::MPI::Reduce(&m_num_messages  , &total_messages, 1, MPI_UNSIGNED, MPI_SUM, 0, d_myworld->getComm());
+        Uintah::MPI::Reduce(&m_message_volume, &total_volume  , 1, MPI_DOUBLE  , MPI_SUM, 0, d_myworld->getComm());
+        Uintah::MPI::Reduce(&m_num_messages  , &max_messages  , 1, MPI_UNSIGNED, MPI_MAX, 0, d_myworld->getComm());
+        Uintah::MPI::Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE  , MPI_MAX, 0, d_myworld->getComm());
 
         if( d_myworld->myrank() == 0 ) {
           mpi_stats << "MPIStats: Num Messages (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages << std::endl;
@@ -126,40 +126,39 @@ class MPIScheduler : public SchedulerCommon {
       }
     }
 
-    // timing statistics to test the mpi functionality
-    enum TimingStat
-    {
-      TotalReduce = 0,
-      TotalSend,
-      TotalRecv,
-      TotalTask,
-      TotalReduceMPI,
-      TotalSendMPI,
-      TotalRecvMPI,
-      TotalTestMPI,
-      TotalWaitMPI,
-      MAX_TIMING_STATS
-    };
-
-    ReductionInfoMapper< TimingStat, double > mpi_info_;
-    
     void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
-
-    MPIScheduler*       m_parent_scheduler;
 
     // Performs the reduction task. (In threaded schedulers, a single worker thread will execute this.)
     virtual void initiateReduction( DetailedTask* dtask );
 
-    enum {
-      TEST,
-      WAIT_ONCE,
-      WAIT_ALL
+    // timing statistics to test the MPI functionality
+    enum TimingStat {
+        TotalReduce = 0
+      , TotalSend
+      , TotalRecv
+      , TotalTask
+      , TotalReduceMPI
+      , TotalSendMPI
+      , TotalRecvMPI
+      , TotalTestMPI
+      , TotalWaitMPI
+      , MAX_TIMING_STATS
     };
+    
+    enum {
+        TEST
+      , WAIT_ONCE
+      , WAIT_ALL
+    };
+
+    ReductionInfoMapper< TimingStat, double > mpi_info_;
+
+    MPIScheduler* m_parent_scheduler{nullptr};
 
 
   protected:
 
-    virtual void initiateTask( DetailedTask* dtask, bool only_old_recvs, int abort_point, int iteration );
+    virtual void initiateTask( DetailedTask * dtask, bool only_old_recvs, int abort_point, int iteration );
 
     virtual void verifyChecksum();
 

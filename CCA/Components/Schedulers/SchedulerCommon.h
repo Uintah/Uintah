@@ -253,7 +253,11 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void finalizeNodes( int process=0 );
 
-    enum { PRINT_BEFORE_COMM = 1, PRINT_BEFORE_EXEC = 2, PRINT_AFTER_EXEC = 4 };
+    enum {
+        PRINT_BEFORE_COMM = 1
+      , PRINT_BEFORE_EXEC = 2
+      , PRINT_AFTER_EXEC  = 4
+    };
 
     template< class T >
     void    printTrackedValues( GridVariable<T>* var,
@@ -304,8 +308,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     int                        trackingLevel_;
     IntVector                  trackingStartIndex_;
     IntVector                  trackingEndIndex_;
-    int                        numParticleGhostCells_;
-    Ghost::GhostType           particleGhostType_;
 
     // so we can manually copy vars between AMR levels
     std::set<std::string> copyDataVars_;
@@ -323,11 +325,14 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // do not checkpoint these variables
     std::set<std::string> notCheckpointVars_;
 
+
   private:
 
-    // Disable copy and assignment
-    SchedulerCommon( const SchedulerCommon& );
-    SchedulerCommon& operator=( const SchedulerCommon& );
+    // eliminate copy, assignment and move
+    SchedulerCommon( const SchedulerCommon & )            = delete;
+    SchedulerCommon& operator=( const SchedulerCommon & ) = delete;
+    SchedulerCommon( SchedulerCommon && )                 = delete;
+    SchedulerCommon& operator=( SchedulerCommon && )      = delete;
 
     // Maximum memory use as sampled across a given timestep.
     unsigned long d_maxMemUse;
