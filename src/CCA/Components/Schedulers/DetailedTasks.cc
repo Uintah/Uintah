@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/Schedulers/DetailedTasks.h>
-#include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
@@ -95,7 +94,6 @@ static DebugStream scrubout(    "Scrubbing",     false);
 static DebugStream messagedbg(  "MessageTags",   false);
 static DebugStream internaldbg( "InternalDeps",  false);
 static DebugStream dwdbg(       "DetailedDWDBG", false);
-static DebugStream waitout(     "WaitTimes",     false);
 
 // for debugging - set the var name to watch one in the scrubout
 static std::string dbgScrubVar   = "";
@@ -2338,10 +2336,8 @@ DependencyBatch::received( const ProcessorGroup * pg )
     }
     cerrLock.unlock();
   }
-  if (waitout.active()) {
-    //add the time waiting on MPI to the wait times per from task
-    waittimes[fromTask->getTask()->getName()] += CommRecMPI::WaitTimePerMessage;
-  }
+
+
   //set all the toVars to valid, meaning the mpi has been completed
   for (std::vector<Variable*>::iterator iter = toVars.begin(); iter != toVars.end(); iter++) {
     (*iter)->setValid();
@@ -2357,7 +2353,7 @@ DependencyBatch::received( const ProcessorGroup * pg )
   //clear the variables that have outstanding MPI as they are completed now.
   toVars.clear();
 
-  // TODO APH - Figure this out and clean up (01/31/15)
+  // TODO APH - Figure this out and clean up (07/27/16)
 #if 0
   if (!receiveListeners_.empty()) {
     // only needed when multiple tasks need a batch

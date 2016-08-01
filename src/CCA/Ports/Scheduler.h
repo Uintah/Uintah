@@ -225,8 +225,6 @@ class Scheduler : public UintahParallelPort {
 
     virtual int getMaxGhost() = 0;
 
-    virtual int getMaxFineGhost() = 0;
-
     virtual int getMaxLevelOffset() = 0;
 
     virtual bool isCopyDataTimestep() = 0;

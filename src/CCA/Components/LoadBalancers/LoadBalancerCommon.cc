@@ -555,11 +555,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
     LevelP level = grid->getLevel(l);
 
     // get the max ghost cells to consider for neighborhood creation
-
-    // This is for the very specific multi-level RMCRT case (data onion specifically), where there may be a limited halo
-    // on the fine, CFD mesh, but a global halo (SHRT_MAX) requirement for arbitrarily many coarse levels beneath this.
-    // NOTE: all other components use uniform ghost cells across levels, so RMCRT is a specific case.
-    int maxGhost = ( (l == num_levels - 1) && (m_scheduler->getMaxGhost() == SHRT_MAX) ) ? m_scheduler->getMaxFineGhost() : m_scheduler->getMaxGhost();
+    int maxGhost = m_scheduler->getMaxGhost();
 
     for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
@@ -685,10 +681,8 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
         continue;
       }
 
-      // This is for the very specific multi-level RMCRT case (data onion specifically), where there may be a limited halo
-      // on the fine, CFD mesh, but a global halo (SHRT_MAX) requirement for arbitrarily many coarse levels beneath this.
       // NOTE: all other components use uniform ghost cells across levels, so RMCRT is a specific case.
-      int maxGhost = ( (l == num_levels - 1) && (m_scheduler->getMaxGhost() == SHRT_MAX) ) ? m_scheduler->getMaxFineGhost() : m_scheduler->getMaxGhost();
+      int maxGhost = m_scheduler->getMaxGhost();
       IntVector ghost(maxGhost, maxGhost, maxGhost);
 
       LevelP oldLevel = oldGrid->getLevel(l);

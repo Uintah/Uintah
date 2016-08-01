@@ -107,7 +107,6 @@ SchedulerCommon::SchedulerCommon( const ProcessorGroup* myworld,
   reloc_new_posLabel_ = nullptr;
 
   maxGhost       = 0;
-  maxFineGhost   = 0;
   maxLevelOffset = 0;
 }
 
@@ -716,15 +715,6 @@ SchedulerCommon::addTask(       Task        * task,
     maxGhost = task->m_max_ghost_cells;
   }
 
-  // max fine ghost cells (for both Task and SchedulerCommon) is for the very specific multi-level RMCRT case (data onion specifically),
-  // where there may be a limited halo on the fine, CFD mesh, but a global halo (SHRT_MAX) requirement for arbitrarily
-  // many coarse levels beneath this.
-  // NOTE: all other components use uniform ghost cells across levels, and only use "max-ghost", not "max-fine-ghost"
-  //       - RMCRT is a specific case.
-  if (task->m_max_fine_ghost_cells > maxFineGhost) {
-    maxFineGhost = task->m_max_fine_ghost_cells;
-  }
-
   if (task->m_max_level_offset > maxLevelOffset){
     maxLevelOffset = task->m_max_level_offset;
   }
@@ -865,7 +855,6 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
   numTasks_ = 0;
 
   maxGhost       = 0;
-  maxFineGhost   = 0;
   maxLevelOffset = 0;
 
   reductionTasks.clear();

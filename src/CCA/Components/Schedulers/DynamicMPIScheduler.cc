@@ -59,12 +59,12 @@ DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
   if (dynamicmpi_timeout.active()) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
-    timingStats.open(filename);
+    m_timings_stats.open(filename);
     if (d_myworld->myrank() == 0) {
       sprintf(filename, "timingStats.avg");
-      avgStats.open(filename);
+      m_avg_stats.open(filename);
       sprintf(filename, "timingStats.max");
-      maxStats.open(filename);
+      m_max_stats.open(filename);
     }
   }
 }
@@ -74,10 +74,10 @@ DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
 DynamicMPIScheduler::~DynamicMPIScheduler()
 {
   if (dynamicmpi_timeout.active()) {
-    timingStats.close();
+    m_timings_stats.close();
     if (d_myworld->myrank() == 0) {
-      avgStats.close();
-      maxStats.close();
+      m_avg_stats.close();
+      m_max_stats.close();
     }
   }
 }
@@ -199,8 +199,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   if(dynamicmpi_timeout.active()) {
-    d_labels.clear();
-    d_times.clear();
+    m_labels.clear();
+    m_times.clear();
     //emitTime("time since last execute");
   }
 
@@ -425,8 +425,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
 
     double time = Time::currentSeconds();
-    double totalexec = time - d_lasttime;
-    d_lasttime = time;
+    double totalexec = time - m_last_time;
+    m_last_time = time;
 
     emitTime("Other excution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
@@ -436,8 +436,25 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
-  sends_[0].waitall(d_myworld);
-  ASSERT(sends_[0].numRequests() == 0);
+
+  //---------------------------------------------------------------------------
+  // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
+  //---------------------------------------------------------------------------
+  // wait on all pending requests
+  auto ready_request = [](CommRequest const& r)->bool { return r.wait(); };
+  while ( m_sends.size() != 0u ) {
+    CommRequestPool::iterator comm_sends_iter;
+    if ( (comm_sends_iter = m_sends.find_any(ready_request)) ) {
+      m_sends.erase(comm_sends_iter);
+    } else {
+      // TODO - make this a sleep? APH 07/20/16
+    }
+  }
+  //---------------------------------------------------------------------------
+
+  ASSERT(m_sends.size() == 0);
+  ASSERT(m_recvs.size() == 0);
+
 
   if (restartable && tgnum == (int)graphs.size() - 1) {
     // Copy the restart flag to all processors
@@ -457,7 +474,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   finalizeTimestep();
   
 
-  if( ( execout.active() || dynamicmpi_timeout.active() ) && !parentScheduler_ ) {  // only do on toplevel scheduler
+  if( ( execout.active() || dynamicmpi_timeout.active() ) && !m_parent_scheduler ) {  // only do on toplevel scheduler
     outputTimingStats("DynamicMPIScheduler");
   }
 

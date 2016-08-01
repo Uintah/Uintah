@@ -113,7 +113,6 @@ Task::initialize()
   m_comm         = -1;
 
   m_max_ghost_cells      = 0;
-  m_max_fine_ghost_cells = 0;
   m_max_level_offset     = 0;
 }
 
@@ -214,17 +213,8 @@ void Task::requires(WhichDW dw,
     return;  // no materials, no dependency
   }
 
-  Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom, matls_dom, gtype, numGhostCells,
-                                      level_offset);
-
-  // m_max_fine_ghost_cells is for the very specific multi-level RMCRT case (data onion specifically), where there may be a limited halo
-  // on the fine, CFD mesh, but a global halo (SHRT_MAX) requirement for arbitrarily many coarse levels beneath this.
-  // NOTE: all other components use uniform ghost cells across levels, so RMCRT is a specific case.
-  if (level_offset == 0) {
-    if (numGhostCells > m_max_fine_ghost_cells) {
-      m_max_fine_ghost_cells = numGhostCells;
-    }
-  }
+  Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom,
+                                      matls_dom, gtype, numGhostCells, level_offset);
 
   if (numGhostCells > m_max_ghost_cells) {
     m_max_ghost_cells = numGhostCells;

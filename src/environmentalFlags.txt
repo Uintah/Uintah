@@ -65,16 +65,6 @@ DynamicMPI_TimingsOut      SCI_DEBUG     Outputs fine-grained communication timi
 DynamicMPI_QueueLength     SCI_DEBUG     Prints the average task queue length
 
 
-ThreadedMPIScheduler Related:
-__________________________________
-ThreadedMPI_DBG                 SCI_DEBUG     Prints general debugging information
-ThreadedMPI_TimingsOut          SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
-                                                e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
-ThreadedMPI_QueueLength         SCI_DEBUG     Prints the average task queue length
-ThreadedMPI_ThreadDBG           SCI_DEBUG     Prints thread pinning information
-ThreadedMPI_CompactAffinity     SCI_DEBUG     Binds the main thread to core <nthreads-1> and TaskWorkers to core <Uintah thread id>
-                                                NOTE: This is ENABLED by default. This affinity pattern is modeled after OpenMP's compact 
-                                                      affinity, which binds threads incrementally across logical cores. 
 
 UnifiedScheduler Related:
 __________________________________

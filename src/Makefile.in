@@ -396,11 +396,6 @@ distclean:: clean
 
 objs: $(CLEANOBJS)
 
-cleantau:
-	rm -f Uintah/CCA/Components/Schedulers/MPIScheduler.$(OBJEXT)
-	rm -f Uintah/CCA/Components/Schedulers/ThreadPool.$(OBJEXT)
-	rm -f Uintah/StandAlone/sus.$(OBJEXT)
-
 cleanVisIt:
 	@echo "Removing udaReaderMTMD directory,"
 	rm -rf VisIt/udaReaderMTMD

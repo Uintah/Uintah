@@ -45,7 +45,7 @@ public:
     if (m_type == READER) {
       std::unique_lock<std::mutex>(s_mutex);
       s_count.fetch_add(1, std::memory_order_relaxed);
-          }
+    }
     else {
       s_mutex.lock();
 //       spin_wait( s_count.fetch( std::memory_order_relaxed) != 0 );
