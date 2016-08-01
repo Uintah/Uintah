@@ -27,7 +27,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/DependencyException.h>
-#include <CCA/Components/Schedulers/IncorrectAllocation.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 

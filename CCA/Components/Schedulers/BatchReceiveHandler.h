@@ -22,22 +22,31 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
+#define CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
+
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace Uintah {
 
 class BatchReceiveHandler {
 
 public:
-  BatchReceiveHandler( DependencyBatch* batch )          : batch_(batch) {}
+  BatchReceiveHandler(DependencyBatch* batch)
+    : batch_(batch) {}
 
-  BatchReceiveHandler( const BatchReceiveHandler& copy ) : batch_(copy.batch_) {}
+  BatchReceiveHandler(const BatchReceiveHandler& copy)
+    : batch_(copy.batch_) {}
   
-  void finishedCommunication( const ProcessorGroup* pg )  { batch_->received(pg); }
+  void finishedCommunication(const ProcessorGroup* pg)
+  { batch_->received(pg); }
 
 private:
   DependencyBatch* batch_;
   
 };
 
-} // end namespace Uintah
+} // namespace Uintah
+
+#endif // CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H

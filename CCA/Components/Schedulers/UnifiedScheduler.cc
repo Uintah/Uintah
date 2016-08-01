@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Parallel/CommunicationList.hpp>
 #include <Core/Util/Time.h>
 #include <Core/Util/DOUT.hpp>
 
@@ -98,6 +99,8 @@ namespace {
 
 std::mutex g_main_io_mutex{};
 std::mutex g_scheduler_mutex{};
+std::mutex g_lb_lock{};                // load balancer lock
+std::mutex g_wait_times_lock{};        // MPI wait times lock
 
 } // namespace
 
@@ -287,12 +290,12 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
   if (unified_timeout.active()) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
-    timingStats.open(filename);
+    m_timings_stats.open(filename);
     if (d_myworld->myrank() == 0) {
       sprintf(filename, "timingStats.%d.max", d_myworld->size());
-      maxStats.open(filename);
+      m_max_stats.open(filename);
       sprintf(filename, "timingStats.%d.avg", d_myworld->size());
-      avgStats.open(filename);
+      m_avg_stats.open(filename);
     }
   }
 }
@@ -303,10 +306,10 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
 UnifiedScheduler::~UnifiedScheduler()
 {
   if (unified_timeout.active()) {
-    timingStats.close();
+    m_timings_stats.close();
     if (d_myworld->myrank() == 0) {
-      maxStats.close();
-      avgStats.close();
+      m_max_stats.close();
+      m_avg_stats.close();
     }
   }
 #ifdef HAVE_CUDA
@@ -495,12 +498,12 @@ UnifiedScheduler::runTask( DetailedTask*         task
                          )
 {
   if (waitout.active()) {
-    waittimesLock.lock();
+    g_wait_times_lock.lock();
     {
       waittimes[task->getTask()->getName()] += Unified_CurrentWaitTime;
       Unified_CurrentWaitTime = 0;
     }
-    waittimesLock.unlock();
+    g_wait_times_lock.unlock();
   }
 
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
@@ -527,7 +530,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
     double total_task_time = Time::currentSeconds() - task_start_time;
     // -------------------------< end task execution timing >-------------------------
 
-    dlbLock.lock();
+    g_lb_lock.lock();
     {
       if (execout.active()) {
         exectimes[task->getTask()->getName()] += total_task_time;
@@ -543,7 +546,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
         }
       }
     }
-    dlbLock.unlock();
+    g_lb_lock.unlock();
   }
 
   // For CPU and postGPU task runs, post MPI sends and call task->done;
@@ -605,18 +608,29 @@ UnifiedScheduler::runTask( DetailedTask*         task
     double test_start_time = Time::currentSeconds();
 
     if (Uintah::Parallel::usingMPI()) {
-      // This is per thread, no lock needed.
-      sends_[thread_id].testsome(d_myworld);
+      //---------------------------------------------------------------------------
+      // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
+      //---------------------------------------------------------------------------
+
+      // TODO - need to add a find handle (TLS)
+      auto ready_request = [](CommRequest const& r)->bool { return r.test(); };
+      CommRequestPool::iterator comm_sends_iter = m_sends.find_any(ready_request);
+      if (comm_sends_iter) {
+        MPI_Status status;
+        comm_sends_iter->finishedCommunication(d_myworld, status);
+        m_sends.erase(comm_sends_iter);
+      }
+      //-----------------------------------
     }
 
     mpi_info_[TotalTestMPI] += Time::currentSeconds() - test_start_time;
     // -------------------------< end MPI test timing >-------------------------
 
     // Add subscheduler timings to the parent scheduler and reset subscheduler timings
-    if (parentScheduler_) {
+    if (m_parent_scheduler) {
       for (size_t i = 0; i < mpi_info_.size(); ++i) {
         MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
-        parentScheduler_->mpi_info_[e] += mpi_info_[e];
+        m_parent_scheduler->mpi_info_[e] += mpi_info_[e];
       }
       mpi_info_.reset(0);
     }
@@ -628,7 +642,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
 //
 void
 UnifiedScheduler::execute( int tgnum       /* = 0 */
-                         ,  int iteration  /* = 0 */
+                         , int iteration   /* = 0 */
                          )
 {
   // copy data timestep must be single threaded for now
@@ -665,8 +679,8 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   bool emit_timings = unified_timeout.active();
   if (emit_timings) {
-    d_labels.clear();
-    d_times.clear();
+    m_labels.clear();
+    m_labels.clear();
   }
 
   //  // TODO - determine if this TG output code is even working correctly (APH - 06/09/16)
@@ -750,6 +764,27 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
 
 
+  //---------------------------------------------------------------------------
+  // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
+  //---------------------------------------------------------------------------
+  // wait on all pending requests
+  auto ready_request = [](CommRequest const& r)->bool { return r.wait(); };
+  CommRequestPool::handle find_handle;
+  while ( m_sends.size() != 0u ) {
+    CommRequestPool::iterator comm_sends_iter;
+    if ( (comm_sends_iter = m_sends.find_any(find_handle, ready_request)) ) {
+      find_handle = comm_sends_iter;
+      m_sends.erase(comm_sends_iter);
+    } else {
+      // TODO - make this a sleep? APH 07/20/16
+    }
+  }
+  //---------------------------------------------------------------------------
+
+  ASSERT(m_sends.size() == 0);
+  ASSERT(m_recvs.size() == 0);
+
+
   if (unified_queuelength.active()) {
     float lengthsum = 0;
     totaltasks += m_num_tasks;
@@ -776,10 +811,10 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
 
   double time = Time::currentSeconds();
-  double totalexec = time - d_lasttime;
-  d_lasttime = time;
+  double totalexec = time - m_last_time;
+  m_last_time = time;
 
-  emitTime("Other excution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
+  emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
 
   // compute the net timings
   if (d_sharedState != 0) {
@@ -809,7 +844,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   finalizeTimestep();
 
-  if ( (execout.active() || emit_timings) && !parentScheduler_) {  // only do on toplevel scheduler
+  if ( (execout.active() || emit_timings) && !m_parent_scheduler) {  // only do on toplevel scheduler
     outputTimingStats("UnifiedScheduler");
   }
 
@@ -863,10 +898,12 @@ UnifiedScheduler::runTasks( int thread_id )
 
   while( m_num_tasks_done < m_num_tasks ) {
 
+//    std::cout << "recv_list size(): " << m_recvs.size() << std::endl;
+//    std::cout << "send_list size(): " << m_sends.size() << std::endl;
+
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask = nullptr;
 
-    int pendingMPIMsgs = 0;
     bool havework = false;
 
 #ifdef HAVE_CUDA
@@ -1104,8 +1141,7 @@ UnifiedScheduler::runTasks( int thread_id )
        * Otherwise there's nothing to do but process MPI recvs.
        */
       else {
-        pendingMPIMsgs = pendingMPIRecvs();
-        if (pendingMPIMsgs > 0) {
+        if (m_recvs.size() != 0u) {
           havework = true;
           break;
         }
@@ -1271,14 +1307,13 @@ UnifiedScheduler::runTasks( int thread_id )
 #endif
       }
     }
-    else if (pendingMPIMsgs > 0) {
-      processMPIRecvs(TEST);
-    }
     else {
-      // This can only happen when all tasks have finished.
-      ASSERT(m_num_tasks_done == m_num_tasks);
+      if (m_recvs.size() != 0u) {
+        processMPIRecvs(TEST);
+      }
     }
   }  //end while (numTasksDone < ntasks)
+  ASSERT(m_num_tasks_done == m_num_tasks);
 }
 
 
@@ -4179,7 +4214,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
         if (req->toTasks.front()->getTask()->getType() == Task::Output
-            && !oport_->isOutputTimestep() && !oport_->isCheckpointTimestep()) {
+            && !m_oport->isOutputTimestep() && !m_oport->isCheckpointTimestep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             gpu_stats << myRankThread()
@@ -4197,9 +4232,9 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         // pass it in if the particle data is on the old dw
         LoadBalancer* lb = 0;
 
-        if (!reloc_new_posLabel_ && parentScheduler_) {
+        if (!reloc_new_posLabel_ && m_parent_scheduler) {
           posDW = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-          posLabel = parentScheduler_->reloc_new_posLabel_;
+          posLabel = m_parent_scheduler->reloc_new_posLabel_;
         } else {
           // on an output task (and only on one) we require particle variables from the NewDW
           if (req->toTasks.front()->getTask()->getType() == Task::Output) {
@@ -4239,7 +4274,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep() && !oport_->isCheckpointTimestep()) {
+        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_oport->isOutputTimestep() && !m_oport->isCheckpointTimestep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
@@ -4272,9 +4307,9 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         // pass it in if the particle data is on the old dw
         LoadBalancer* lb = 0;
 
-        if (!reloc_new_posLabel_ && parentScheduler_) {
+        if (!reloc_new_posLabel_ && m_parent_scheduler) {
           posDW    = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-          posLabel = parentScheduler_->reloc_new_posLabel_;
+          posLabel = m_parent_scheduler->reloc_new_posLabel_;
         } else {
           // on an output task (and only on one) we require particle variables from the NewDW
           if (req->toTasks.front()->getTask()->getType() == Task::Output) {
