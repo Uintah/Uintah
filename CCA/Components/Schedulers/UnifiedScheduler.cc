@@ -2493,117 +2493,122 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
               std::cerr << "ERROR: GPU variable's device pointer was nullptr" << std::endl;
               throw ProblemSetupException("ERROR: GPU variable's device pointer was nullptr", __FILE__, __LINE__);
             }
-            cudaStream_t* stream = dtask->getCudaStreamForThisTask(whichGPU);
-            OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
-            switch (it->second.m_dep->m_var->typeDescription()->getType()) {
-              case TypeDescription::PerPatch : {
-                if (it->second.m_dest == GpuUtilities::sameDeviceSameMpiRank) {
 
-                  CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, dynamic_cast<PerPatchBase*>(it->second.m_var)->getBasePointer(),
-                                                    it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
-                  delete it->second.m_var;
-                }
-                break;
-              }
-              case TypeDescription::ReductionVariable : {
-                if (it->second.m_dest == GpuUtilities::sameDeviceSameMpiRank) {
+            if (it->second.m_dest == GpuUtilities::sameDeviceSameMpiRank) {
 
-                  CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, dynamic_cast<ReductionVariableBase*>(it->second.m_var)->getBasePointer(),
-                                                    it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
-                  delete it->second.m_var;
+              //See if we get to be the thread that performs the H2D copy.
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << myRankThread()
+                            << " prepareDeviceVars() - Checking if we should copy"
+                            << " data for variable " << it->first.m_label
+                            << " patch: " << it->first.m_patchID
+                            << " material: " << it->first.m_matlIndx
+                            << " level: " << it->first.m_levelIndx
+                            << " staging: " << it->second.m_staging;
+                  if (it->second.m_staging) {
+                    gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
+                              << ") and size (" << size.x() << ", " << size.y() << ", " << size.z();
+                  }
+                  gpu_stats << " destination enum is " << it->second.m_dest
+                            << std::endl;
                 }
-                break;
+                cerrLock.unlock();
               }
-              case TypeDescription::CCVariable :
-              case TypeDescription::NCVariable :
-              case TypeDescription::SFCXVariable :
-              case TypeDescription::SFCYVariable :
-              case TypeDescription::SFCZVariable : {
-                if (gpu_stats.active()) {
-                  cerrLock.lock();
-                  {
-                    gpu_stats << myRankThread()
-                              << " prepareDeviceVars() - Checking for copy" << whichGPU
-                              << " data for variable " << it->first.m_label
-                              << " patch: " << it->first.m_patchID
-                              << " material: " << it->first.m_matlIndx
-                              << " level: " << it->first.m_levelIndx
-                              << " staging: " << it->second.m_staging;
-                    if (it->second.m_staging) {
-                      gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
-                                << ") and size (" << size.x() << ", " << size.y() << ", " << size.z();
+
+
+              bool performCopy = false;
+              if (!it->second.m_staging) {
+                performCopy = gpudw->testAndSetCopyingIntoGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID,
+                                                              it->first.m_matlIndx, it->first.m_levelIndx);
+              }
+              else {
+                performCopy = gpudw->testAndSetCopyingIntoGPUStaging(it->second.m_dep->m_var->getName().c_str(),
+                                                                     it->first.m_patchID, it->first.m_matlIndx,
+                                                                     it->first.m_levelIndx,
+                                                                     make_int3(low.x(), low.y(), low.z()),
+                                                                     make_int3(size.x(), size.y(), size.z()));
+              }
+
+              if (performCopy) {
+
+                //We're doing the H2D copy.  Get the host pointer.
+                //Get the host pointer
+                void* host_ptr = nullptr;
+
+                switch (it->second.m_dep->m_var->typeDescription()->getType()) {
+                  case TypeDescription::PerPatch : {
+                      host_ptr = dynamic_cast<PerPatchBase*>(it->second.m_var)->getBasePointer();
                     }
-                    gpu_stats << " destination enum is " << it->second.m_dest
-                              << std::endl;
+                    break;
+                  case TypeDescription::ReductionVariable : {
+                      host_ptr = dynamic_cast<ReductionVariableBase*>(it->second.m_var)->getBasePointer();
+                    }
+                    break;
+                  case TypeDescription::CCVariable :
+                  case TypeDescription::NCVariable :
+                  case TypeDescription::SFCXVariable :
+                  case TypeDescription::SFCYVariable :
+                  case TypeDescription::SFCZVariable : {
+                      host_ptr = dynamic_cast<GridVariableBase*>(it->second.m_var)->getBasePointer();
+                    }
+                    break;
+                  default : {
+                    cerrLock.lock();
+                    {
+                      std::cerr << "Variable " << it->second.m_dep->m_var->getName()
+                                << " is of a type that is not supported on GPUs yet."
+                                << std::endl;
+                    }
+                    cerrLock.unlock();
                   }
-                  cerrLock.unlock();
                 }
-                if (it->second.m_dest == GpuUtilities::sameDeviceSameMpiRank) {
-                  bool performCopy = false;
-                  if (!it->second.m_staging) {
-                    performCopy = gpudw->testAndSetCopyingIntoGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID,
-                                                                  it->first.m_matlIndx, it->first.m_levelIndx);
-                  }
-                  else {
-                    performCopy = gpudw->testAndSetCopyingIntoGPUStaging(it->second.m_dep->m_var->getName().c_str(),
-                                                                         it->first.m_patchID, it->first.m_matlIndx,
-                                                                         it->first.m_levelIndx,
-                                                                         make_int3(low.x(), low.y(), low.z()),
-                                                                         make_int3(size.x(), size.y(), size.z()));
-                  }
-                  if (performCopy) {
-                    if (gpu_stats.active()) {
-                      cerrLock.lock();
-                      {
-                        gpu_stats << myRankThread()
-                                  << " prepareDeviceVars() - Copying into GPU #" << whichGPU
-                                  << " data for variable " << it->first.m_label
-                                  << " patch: " << it->first.m_patchID
-                                  << " material: " << it->first.m_matlIndx
-                                  << " level: " << it->first.m_levelIndx
-                                  << " staging: " << it->second.m_staging;
-                        if (it->second.m_staging) {
-                          gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
-                                    << ") and size (" << size.x() << ", " << size.y() << ", " << size.z();
-                        }
-                        gpu_stats << " from host address " << dynamic_cast<GridVariableBase*>(it->second.m_var)->getBasePointer()
-                                  << " to device address " << device_ptr << " into REQUIRES GPUDW "
-                                  << std::endl;
+
+                if (host_ptr && device_ptr) {
+                  if (gpu_stats.active()) {
+                    cerrLock.lock();
+                    {
+                      gpu_stats << myRankThread()
+                                << " prepareDeviceVars() - Copying into GPU #" << whichGPU
+                                << " data for variable " << it->first.m_label
+                                << " patch: " << it->first.m_patchID
+                                << " material: " << it->first.m_matlIndx
+                                << " level: " << it->first.m_levelIndx
+                                << " staging: " << it->second.m_staging;
+                      if (it->second.m_staging) {
+                        gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
+                                  << ") and size (" << size.x() << ", " << size.y() << ", " << size.z();
                       }
-                      cerrLock.unlock();
+                      gpu_stats << " from host address " << host_ptr
+                                << " to device address " << device_ptr << " into REQUIRES GPUDW "
+                                << std::endl;
                     }
-                    CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, dynamic_cast<GridVariableBase*>(it->second.m_var)->getBasePointer(),
-                                                      it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
-
-                    // Tell this task that we're managing the copies for this variable.
-                    dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
-                                                                      DeviceGridVariableInfo>(it->first, it->second));
+                    cerrLock.unlock();
                   }
 
+                  //Perform the copy!
+                  cudaStream_t* stream = dtask->getCudaStreamForThisTask(whichGPU);
+                  OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
+                  CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
+
+                  // Tell this task that we're managing the copies for this variable.
+
+                  dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
+                                                                DeviceGridVariableInfo>(it->first, it->second));
                   // Now that this requires grid variable is copied onto the device,
                   // we no longer need to hold onto this particular reference of the host side
                   // version of it.  So go ahead and remove our reference to it.
                   delete it->second.m_var;
                 }
-                else if (it->second.m_dest == GpuUtilities::anotherDeviceSameMpiRank || it->second.m_dest == GpuUtilities::anotherMpiRank) {
-                  // We're not performing a host to GPU copy.  This is just prepare a staging var.
-                  // So it is a a gpu normal var to gpu staging var copy.
-                  // It is to prepare for upcoming GPU to host (MPI) or GPU to GPU copies.
-                  // Tell this task that we're managing the copies for this variable.
-                  dtask->getVarsBeingCopiedByTask().getMap().insert(
+              }
+            } else if (it->second.m_dest == GpuUtilities::anotherDeviceSameMpiRank || it->second.m_dest == GpuUtilities::anotherMpiRank) {
+              // We're not performing a host to GPU copy.  This is just prepare a staging var.
+              // So it is a a gpu normal var to gpu staging var copy.
+              // It is to prepare for upcoming GPU to host (MPI) or GPU to GPU copies.
+              // Tell this task that we're managing the copies for this variable.
+              dtask->getVarsBeingCopiedByTask().getMap().insert(
                       std::pair<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>(it->first, it->second));
-                }
-              }
-                break;
-              default : {
-                cerrLock.lock();
-                {
-                  std::cerr << "Variable " << it->second.m_dep->m_var->getName()
-                            << " is of a type that is not supported on GPUs yet."
-                            << std::endl;
-                }
-                cerrLock.unlock();
-              }
             }
           }
         }
@@ -2995,7 +3000,8 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
           return false;
         }
       } else {
-        // it doesn't have ghost cells
+        // If it's a gridvar, then we just don't have the ghost cells processed yet by another thread
+        // If it's another type of variable, something went wrong, it should have been marked as valid previously.
         if (!(gpudw->isValidOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
           return false;
         }
