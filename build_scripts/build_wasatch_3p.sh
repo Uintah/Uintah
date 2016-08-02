@@ -11,7 +11,7 @@
 # $5 - whether Uintah is being built with static libraries or not ...
 # $6 - whether Uintah is being built with CUDA
 #
-
+export GIT_SSL_NO_VERIFY=true
 BASE_BUILD_DIR=$1
 BOOST_LIBRARY=$2
 BOOST_INCLUDE=$3
@@ -117,11 +117,11 @@ if [ -d "SpatialOps" ]; then
         needsrecompile=false
     else
       echo "updating SpatialOps..."
-      run "env GIT_SSL_NO_VERIFY=true git pull"
+      run "git pull"
     fi
     run "cd .."
 else
-  run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git SpatialOps"
+  run "git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git SpatialOps"
   run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
 fi
 if test ! -z $SPATIAL_OPS_TAG ; then
@@ -188,11 +188,11 @@ if [ -d "ExprLib" ]; then
         needsrecompile=false
     else
       echo "updating ExprLib..."
-      run "env GIT_SSL_NO_VERIFY=true git pull"
+      run "git pull"
     fi
     run "cd .."
 else
-    run "env GIT_SSL_NO_VERIFY=true git clone --depth 20 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
+    run "git clone --depth 20 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
     run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
 fi
 if test ! -z $EXPR_LIB_TAG ; then
@@ -242,11 +242,11 @@ if [ -d "TabProps" ]; then
         needsrecompile=false
     else
       echo "updating TabProps..."
-      run "env GIT_SSL_NO_VERIFY=true git pull"
+      run "git pull"
     fi
     run "cd .."
 else
-    run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git TabProps"
+    run "git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git TabProps"
     run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
 fi
 if test ! -z $TAB_PROPS_TAG ; then
@@ -290,11 +290,11 @@ if [ -d "RadProps" ]; then
         needsrecompile=false
     else
       echo "updating RadProps..."
-      run "env GIT_SSL_NO_VERIFY=true git pull"
+      run "git pull"
     fi
     run "cd .."
 else
-   run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git RadProps"
+   run "git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git RadProps"
    run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
 fi
 if test ! -z $RAD_PROPS_TAG ; then
@@ -332,6 +332,6 @@ echo ""
 echo "Done Building Wasatch Thirdparty Libraries."
 echo "------------------------------------------------------------------"
 echo ""
-
+export GIT_SSL_NO_VERIFY=false
 # Return 0 == success
 exit 0
