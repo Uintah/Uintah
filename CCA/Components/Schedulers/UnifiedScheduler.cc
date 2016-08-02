@@ -55,6 +55,13 @@
 
 using namespace Uintah;
 
+#ifdef HAVE_CUDA
+  DebugStream gpu_stats(              "Unified_GPUStats"     , false );
+  DebugStream use_single_device(      "Unified_SingleDevice" , false );
+  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
+  DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
+#endif
+
 // sync cout/cerr so they are readable when output by multiple threads
 extern std::mutex coutLock;
 extern std::mutex cerrLock;
@@ -75,8 +82,6 @@ static double Unified_CurrentWaitTime = 0;
 static DebugStream unified_dbg(             "Unified_DBG",             false);
 static DebugStream unified_timeout(         "Unified_TimingsOut",      false);
 static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
-static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
-static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 
 
 #ifdef HAVE_CUDA
