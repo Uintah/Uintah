@@ -39,9 +39,9 @@ using namespace Uintah;
 extern std::mutex      coutLock;
 extern std::mutex      cerrLock;
 
-extern DebugStream     g_task_dbg;
-extern DebugStream     g_task_order;
-extern DebugStream     g_exec_out;
+extern Dout         g_task_dbg;
+extern Dout         g_task_order;
+extern DebugStream  g_exec_out;
 
 static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
 static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
