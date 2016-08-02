@@ -82,6 +82,7 @@ void
 CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 {
 
+
   ProblemSpecP db = params;
   const ProblemSpecP params_root = db->getRootNode();
 
@@ -201,6 +202,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     for ( ProblemSpecP db_species = db_Smith->findBlock( "species" ); db_species != 0; db_species = db_species->findNextBlock( "species" ) ){
       std::string new_species; 
       new_species = db_species->getNodeValue(); 
+      d_fieldLabels->add_species(new_species);
       _species_names.push_back(new_species); 
       _NUM_species += 1; 
     }
@@ -281,27 +283,6 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     }
   }
   
-  // get gas phase temperature label 
-  if (VarLabel::find("temperature")) {
-    _gas_temperature_varlabel = VarLabel::find("temperature");
-  } else {
-    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase temperature.",__FILE__,__LINE__);
-  }
-  // get species labels 
-  for (int l=0; l<_NUM_species; l++) {
-    if (VarLabel::find(_species_names[l])) {
-      VarLabel * _species_varlabel_temp = VarLabel::find(_species_names[l]);
-      _species_varlabels.push_back(_species_varlabel_temp);
-    } else {
-      throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase oxidizer.",__FILE__,__LINE__);
-    }
-  }
-  // get gas phase mixture_molecular_weight label 
-  if (VarLabel::find("mixture_molecular_weight")) {
-    _MW_varlabel = VarLabel::find("mixture_molecular_weight");
-  } else {
-    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase mixture_molecular_weight.",__FILE__,__LINE__);
-  }
 
 #ifdef HAVE_VISIT
   static bool initialized = false;
@@ -333,6 +314,8 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     initialized = true;
   }
 #endif
+
+
 }
 
 
@@ -405,6 +388,30 @@ CharOxidationSmith::initVars( const ProcessorGroup * pc,
 void 
 CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
+
+
+  // get gas phase temperature label 
+  if (VarLabel::find("temperature")) {
+    _gas_temperature_varlabel = VarLabel::find("temperature");
+  } else {
+    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase temperature.",__FILE__,__LINE__);
+  }
+  // get species labels 
+  for (int l=0; l<_NUM_species; l++) {
+    if (VarLabel::find(_species_names[l])) {
+      VarLabel * _species_varlabel_temp = VarLabel::find(_species_names[l]);
+      _species_varlabels.push_back(_species_varlabel_temp);
+    } else {
+      throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase oxidizer.",__FILE__,__LINE__);
+    }
+  }
+  // get gas phase mixture_molecular_weight label 
+  if (VarLabel::find("mixture_molecular_weight")) {
+    _MW_varlabel = VarLabel::find("mixture_molecular_weight");
+  } else {
+    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase mixture_molecular_weight.",__FILE__,__LINE__);
+  }
+
 
   std::string taskname = "CharOxidationSmith::computeModel";
   Task* tsk = scinew Task(taskname, this, &CharOxidationSmith::computeModel, timeSubStep );
