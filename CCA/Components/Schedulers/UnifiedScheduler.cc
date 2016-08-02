@@ -2576,11 +2576,13 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                                 << " material: " << it->first.m_matlIndx
                                 << " level: " << it->first.m_levelIndx
                                 << " staging: " << it->second.m_staging;
+
                       if (it->second.m_staging) {
                         gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
                                   << ") and size (" << size.x() << ", " << size.y() << ", " << size.z();
                       }
-                      gpu_stats << " from host address " << host_ptr
+                      gpu_stats << " total variable size " << it->second.m_varMemSize
+                                << " from host address " << host_ptr
                                 << " to device address " << device_ptr << " into REQUIRES GPUDW "
                                 << std::endl;
                     }
@@ -2590,6 +2592,11 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   //Perform the copy!
                   cudaStream_t* stream = dtask->getCudaStreamForThisTask(whichGPU);
                   OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
+                  if (it->second.m_varMemSize == 0) {
+                    printf("ERROR: For variable %s patch %d material %d level %d staging %s attempting to copy zero bytes to the GPU.\n",
+                        it->first.m_label.c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx, it->second.m_staging ? "true" : "false" );
+                    SCI_THROW(InternalError("Attempting to copy zero bytes to the GPU.  That shouldn't happen.", __FILE__, __LINE__));
+                  }
                   CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
 
                   // Tell this task that we're managing the copies for this variable.
