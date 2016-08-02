@@ -32,6 +32,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <stdio.h>
 #include <cstring>
+#include <memory>
 
 namespace Uintah {
 
@@ -63,12 +64,11 @@ WARNING
   
 ****************************************/
 
-   // 'T' should be a Handle to be something that's RefCounted.
-   // Otherwise, do your own memory management...
+   // Uses C++11's shared_ptr to handle memory management.
    template<class T> class PerPatch : public PerPatchBase {
    public:
-      inline PerPatch() {}
-      inline PerPatch(T value) : value(value) {}
+      inline PerPatch() : value(std::make_shared<T>()){}
+      inline PerPatch(T value) : value(std::make_shared<T>(value)) {}
 
       virtual void copyPointer(Variable&);
 
@@ -79,15 +79,15 @@ WARNING
       static const TypeDescription* getTypeDescription();
 
       inline operator T () const {
-         return value;
+         return *value;
       }
 
       inline T& get() {
-         return value;
+         return *value;
       }
 
       inline const T& get() const {
-         return value;
+         return *value;
       }
 
       void setData(const T&);
@@ -97,8 +97,8 @@ WARNING
       virtual void getSizeInfo(std::string& elems, unsigned long& totsize, void*& ptr) const
       {
         elems = "1";
-        totsize = sizeof(T);
-        ptr = (void*)&value;
+        totsize = getDataSize();
+        ptr = getBasePointer();
       }
 
       virtual size_t getDataSize() const {
@@ -106,7 +106,8 @@ WARNING
       }
 
       virtual void* getBasePointer() const {
-        return (void*)&value;
+        return value.get();
+        //return (void*)&value;
       }
 
       virtual bool copyOut(void* dst) const {
@@ -119,7 +120,7 @@ WARNING
    private:
 
       static TypeDescription* td;
-      T value;
+      std::shared_ptr<T> value;
       static Variable* maker();
 
    }; // end class PerPatch
@@ -248,7 +249,7 @@ WARNING
       void
       PerPatch<T>::setData(const T& val)
       {
-        value = val;
+        value = std::make_shared<T>(val);
       }
 } // End namespace Uintah
 

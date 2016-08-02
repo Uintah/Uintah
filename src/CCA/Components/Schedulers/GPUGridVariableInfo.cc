@@ -75,6 +75,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(       Variable         * var
                                               ,       DeviceVarDest      dest
                                               ,       bool               staging
                                               ,       size_t             sizeOfDataType
+                                              ,       size_t             varMemSize
                                               ,       int                matlIndx
                                               ,       int                levelIndx
                                               , const Patch            * patchPointer
@@ -85,7 +86,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(       Variable         * var
   , m_dest{dest}
   , m_staging{staging}
   , m_sizeOfDataType{sizeOfDataType}
-  , m_varMemSize{0}
+  , m_varMemSize{varMemSize}
   , m_matlIndx{matlIndx}
   , m_levelIndx{levelIndx}
   , m_patchPointer{patchPointer}
@@ -256,7 +257,7 @@ DeviceGridVariables::add( const Patch            * patchPointer
 
     }
 
-    DeviceGridVariableInfo tmp(var, dest, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    DeviceGridVariableInfo tmp(var, dest, false, sizeOfDataType, varMemSize, matlIndx, levelIndx, patchPointer, dep, whichGPU);
     vars.insert(TupleVariableMap::value_type(lpmld, tmp));
   }
   else {
@@ -380,7 +381,7 @@ DeviceGridVariables::addTaskGpuDWVar( const Patch            * patchPointer
 
   // TODO: The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?
   // Should contiguous arrays be organized by task???
-  DeviceGridVariableInfo tmp(nullptr, GpuUtilities::unknown, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+  DeviceGridVariableInfo tmp(nullptr, GpuUtilities::unknown, false, sizeOfDataType, 0, matlIndx, levelIndx, patchPointer, dep, whichGPU);
   vars.insert( TupleVariableMap::value_type( lpmld, tmp ) );
   if (gpu_stats.active()) {
     cerrLock.lock();
@@ -494,7 +495,7 @@ DeviceGridVariables::addVarToBeGhostReady( const std::string      & taskName
   LabelPatchMatlLevelDW lpmld(dep->m_var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
   std::pair<TupleVariableMultiMap::iterator, TupleVariableMultiMap::iterator> ret = vars.equal_range(lpmld);
   if (ret.first == ret.second) {
-    DeviceGridVariableInfo tmp(nullptr, GpuUtilities::unknown, false, 0, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    DeviceGridVariableInfo tmp(nullptr, GpuUtilities::unknown, false, 0, 0, matlIndx, levelIndx, patchPointer, dep, whichGPU);
     vars.insert(TupleVariableMap::value_type(lpmld, tmp));
     if (gpu_stats.active()) {
       cerrLock.lock();

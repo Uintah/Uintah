@@ -209,6 +209,7 @@ public:
                         ,       DeviceVarDest      dest
                         ,       bool               staging
                         ,       size_t             sizeOfDataType
+                        ,       size_t             varMemSize
                         ,       int                matlIndx
                         ,       int                levelIndx
                         , const Patch            * patchPointer
