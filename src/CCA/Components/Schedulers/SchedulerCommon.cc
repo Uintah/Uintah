@@ -69,8 +69,7 @@ using namespace Uintah;
 using namespace std;
 
 static DebugStream schedulercommon_dbg("SchedulerCommon_DBG", false);
-extern DebugStream use_single_device;
-extern DebugStream simulate_multiple_gpus;
+
 // for calculating memory usage when sci-malloc is disabled.
 char* SchedulerCommon::start_addr = nullptr;
 

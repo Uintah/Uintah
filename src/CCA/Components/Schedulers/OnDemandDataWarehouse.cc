@@ -101,11 +101,9 @@ extern std::mutex coutLock;
 extern DebugStream mixedDebug;
 
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/UnifiedScheduler.h>
   extern DebugStream use_single_device;
   extern DebugStream simulate_multiple_gpus;
   extern DebugStream gpudbg;
-  extern DebugStream testing123;
 #endif
 
 static DebugStream dbg(        "OnDemandDataWarehouse",      false );
