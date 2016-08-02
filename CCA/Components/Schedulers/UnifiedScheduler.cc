@@ -66,8 +66,8 @@ using namespace Uintah;
 extern std::mutex coutLock;
 extern std::mutex cerrLock;
 
-extern DebugStream g_task_dbg;
-extern DebugStream g_task_order;
+extern Dout g_task_dbg;
+extern Dout g_task_order;
 
 extern DebugStream g_wait_out;
 extern DebugStream g_exec_out;
@@ -873,7 +873,7 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
   numTasksDone++;
 
   if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
-    DOUT(true, myRankThread() << " Running task static order: " << dtask->getStaticOrder() << ", scheduled order: " << numTasksDone);
+    DOUT(g_task_dbg, myRankThread() << " Running task static order: " << dtask->getStaticOrder() << ", scheduled order: " << numTasksDone);
   }
 
   // Update the count of this phase consumed.
@@ -894,9 +894,6 @@ UnifiedScheduler::runTasks( int thread_id )
 {
 
   while( m_num_tasks_done < m_num_tasks ) {
-
-//    std::cout << "recv_list size(): " << m_recvs.size() << std::endl;
-//    std::cout << "send_list size(): " << m_sends.size() << std::endl;
 
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask = nullptr;
