@@ -3450,13 +3450,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
       uVel[c]  = value.x();
-      uVel[cp] = value.x();
+      uVel[cin] = value.x();
 
-      vVel[c] = 2.*value.y() - vVel[cp];
-      wVel[c] = 2.*value.z() - wVel[cp];
+      vVel[c] = 2.*value.y() - vVel[cin];
+      wVel[c] = 2.*value.z() - wVel[cin];
 
     }
 
@@ -3466,13 +3466,14 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cec = *bound_ptr + insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
-      uVel[cp]  = value.x();
+      uVel[cec]  = value.x();
       uVel[c]   = value.x();
 
-      vVel[c] = 2.0*value.y() - vVel[cp];
-      wVel[c] = 2.0*value.z() - wVel[cp];
+      vVel[c] = 2.0*value.y() - vVel[cin];
+      wVel[c] = 2.0*value.z() - wVel[cin];
 
     }
     break;
@@ -3481,13 +3482,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
       vVel[c] = value.y();
-      vVel[cp] = value.y();
+      vVel[cin] = value.y();
 
-      uVel[c] = 2.0 * value.x() - uVel[cp];
-      wVel[c] = 2.0 * value.z() - wVel[cp];
+      uVel[c] = 2.0 * value.x() - uVel[cin];
+      wVel[c] = 2.0 * value.z() - wVel[cin];
 
     }
     break;
@@ -3496,13 +3497,14 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cec = *bound_ptr + insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
-      vVel[cp] = value.y();
+      vVel[cec] = value.y();
       vVel[c] = value.y();
 
-      uVel[c] = 2.0 * value.x() - uVel[cp];
-      wVel[c] = 2.0 * value.z() - wVel[cp];
+      uVel[c] = 2.0 * value.x() - uVel[cin];
+      wVel[c] = 2.0 * value.z() - wVel[cin];
 
     }
     break;
@@ -3511,13 +3513,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
       wVel[c] = value.z();
-      wVel[cp] = value.z();
+      wVel[cin] = value.z();
 
-      uVel[c] = 2.0 * value.x() - uVel[cp];
-      vVel[c] = 2.0 * value.y() - vVel[cp];
+      uVel[c] = 2.0 * value.x() - uVel[cin];
+      vVel[c] = 2.0 * value.y() - vVel[cin];
 
     }
     break;
@@ -3526,13 +3528,14 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr - insideCellDir;
+      IntVector cec = *bound_ptr + insideCellDir;
+      IntVector cin = *bound_ptr - insideCellDir;
 
-      wVel[cp] = value.z();
+      wVel[cec] = value.z();
       wVel[c] = value.z();
 
-      uVel[c] = 2.0 * value.x() - uVel[cp];
-      vVel[c] = 2.0 * value.y() - vVel[cp];
+      uVel[c] = 2.0 * value.x() - uVel[cin];
+      vVel[c] = 2.0 * value.y() - vVel[cin];
 
     }
     break;
