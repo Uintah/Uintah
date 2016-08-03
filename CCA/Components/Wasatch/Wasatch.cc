@@ -189,6 +189,11 @@ namespace WasatchCore{
       delete cellType_;
     }
     if( doParticles_ ) delete particlesHelper_;
+    
+    Uintah::VarLabel::destroy(dtLabel_);
+    Uintah::VarLabel::destroy(tLabel_);
+    Uintah::VarLabel::destroy(tStepLabel_);
+    Uintah::VarLabel::destroy(rkStageLabel_);
   }
 
   //--------------------------------------------------------------------
@@ -1047,7 +1052,7 @@ namespace WasatchCore{
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
-      	task->computes( sharedState_->get_delt_label(),
+      task->computes( sharedState_->get_delt_label(),
                       level.get_rep() );
       //              materials_->getUnion() );
       // jcs why can't we specify a material here?  It doesn't seem to be working if I do.
@@ -1098,9 +1103,9 @@ namespace WasatchCore{
     // set the error norm in the dw for each patch
     for( int ip=0; ip<patches->size(); ++ip ){
       // grab the convergence measure computed by the dual time integrator
-      Uintah::PerPatch<double*> val_;
+      Uintah::PerPatch<double> val_;
       subNewDW->get(val_, convLabel, 0, patches->get(ip));
-      const double val = *val_;
+      const double val = val_.get();
       subNewDW->put(Uintah::max_vartype(val), convMeasureLabel);
     }
   }
@@ -1122,7 +1127,7 @@ namespace WasatchCore{
       
       // updates the current time. This should happen on the outer timestep since time will be
       // frozen in the dual time iteration
-      scheduleUpdateCurrentTime(level, sched, 1);
+//      scheduleUpdateCurrentTime(level, subsched_, 1);
 
       // if we are in dual time, then the TimeAdvance will drive the dual time integrator
       Uintah::Task* dualTimeTask = scinew Uintah::Task("Wasatch::dualTimeAdvance",
@@ -1133,6 +1138,14 @@ namespace WasatchCore{
 
       // we need the "outer" timestep for this temporary example
       dualTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
+      
+      Expr::TagList timeTags;
+      timeTags.push_back( TagNames::self().time     );
+      timeTags.push_back( TagNames::self().dt     );
+      timeTags.push_back( TagNames::self().timestep );
+      timeTags.push_back( TagNames::self().rkstage  );
+      typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  PlcHolder;
+      advSolGraphHelper->exprFactory->register_expression(scinew PlcHolder::Builder(timeTags));
 
       //============================================================================================
       // to get all the task dependencies in a jif, create a dummy subscheduler and
@@ -1146,7 +1159,8 @@ namespace WasatchCore{
       dummySched->mapDataWarehouse(Uintah::Task::ParentNewDW, 1);
       dummySched->mapDataWarehouse(Uintah::Task::OldDW, 2);
       dummySched->mapDataWarehouse(Uintah::Task::NewDW, 3);
-
+      
+      scheduleUpdateCurrentTime(level, dummySched, 1);
       create_dual_timestepper_on_patches( perproc_patches, materials_, level, dummySched );
       Uintah::GridP grid = level->getGrid();
       dummySched->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
@@ -1161,6 +1175,8 @@ namespace WasatchCore{
       const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = dummySched->getComputedVars();
       for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it)
       {
+        std::string varname = (*it)->getName();
+        if (varname == "dt" || varname == "rkstage" || varname == "timestep" || varname == "time" )  continue;
         dualTimeTask->computes(*it);
       }
 
@@ -1210,7 +1226,6 @@ namespace WasatchCore{
       }
       proc0cout << "------------------------------------------------" << std::endl;
       
-      proc0cout << "compiling dual time subscheduler... \n";
       // create and schedule the Wasatch RHS tasks as well as the DT integrators
       subsched_->clearMappings();
       
@@ -1219,6 +1234,8 @@ namespace WasatchCore{
       subsched_->mapDataWarehouse(Uintah::Task::OldDW, 2);
       subsched_->mapDataWarehouse(Uintah::Task::NewDW, 3);
 
+      scheduleUpdateCurrentTime(level, subsched_, 1);
+      
       // create all the Wasatch RHS tasks for the transport equations
       create_dual_timestepper_on_patches( level->eachPatch(), materials_, level, subsched_);
       
@@ -1226,6 +1243,8 @@ namespace WasatchCore{
       scheduleComputeDualTimeResidual(level, subsched_);
       
       subsched_->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
+      
+      proc0cout << "compiling dual time subscheduler... \n";
       subsched_->compile();
 
     } else {
@@ -1373,12 +1392,14 @@ namespace WasatchCore{
     
     //__________________________________
     //  turn off parentDW scrubbing
+    
+    subsched_->setParentDWs(parentOldDW, parentNewDW);
+    
     DataWarehouse::ScrubMode parentOldDWScrubMode =
                              parentOldDW->setScrubbing(DataWarehouse::ScrubNone);
     DataWarehouse::ScrubMode parentNewDWScrubMode =
                              parentNewDW->setScrubbing(DataWarehouse::ScrubNone);
     
-    subsched_->setParentDWs(parentOldDW, parentNewDW);
     subsched_->clearMappings();
     subsched_->mapDataWarehouse(Uintah::Task::ParentOldDW, 0);
     subsched_->mapDataWarehouse(Uintah::Task::ParentNewDW, 1);
@@ -1387,6 +1408,9 @@ namespace WasatchCore{
 
     DataWarehouse* subOldDW = subsched_->get_dw(2);
     DataWarehouse* subNewDW = subsched_->get_dw(3);
+
+    DataWarehouse* parOldDW = subsched_->get_dw(0);
+    DataWarehouse* parNewDW = subsched_->get_dw(1);
 
     //__________________________________
     //  Move data from parentOldDW to subSchedNewDW.
@@ -1398,7 +1422,7 @@ namespace WasatchCore{
         subNewDW->transferFrom(parentOldDW, *it, patches, matls, true);
       }
     }
-
+    
     subsched_->advanceDataWarehouse(grid);
 
     //__________________
@@ -1411,6 +1435,9 @@ namespace WasatchCore{
     do {
       subOldDW = subsched_->get_dw(2);
       subNewDW = subsched_->get_dw(3);
+      
+      parOldDW = subsched_->get_dw(0);
+      parNewDW = subsched_->get_dw(1);
 
       for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
       {
@@ -1442,7 +1469,9 @@ namespace WasatchCore{
     {
       if (!(*it)->typeDescription()->isReductionVariable()) // avoid reduction vars
       {
-        parentNewDW->transferFrom(subNewDW, *it, patches, matls);
+        std::string varname = (*it)->getName();
+        if (varname == "dt" || varname == "time" || varname == "rkstage" || varname == "timestep") continue;
+        parentNewDW->transferFrom(subNewDW, *it, patches, matls, true);
       }
     }
     
@@ -1468,7 +1497,8 @@ namespace WasatchCore{
       timeTags.push_back( TagNames::self().dt     );
       timeTags.push_back( TagNames::self().timestep );
       timeTags.push_back( TagNames::self().rkstage  );
-      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
+      typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  PlcHolder;
+      timeID = exprFactory.register_expression(scinew PlcHolder::Builder(timeTags));
     }
     else{
       timeID = exprFactory.get_id(TagNames::self().time);
@@ -1487,7 +1517,25 @@ namespace WasatchCore{
                           this,
                           &Wasatch::update_current_time,
                           rkStage );
-      updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
+      updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), sharedState_->get_delt_label() );
+      
+      const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
+      dtLabel_      = Uintah::VarLabel::create( TagNames::self().dt.name(), perPatchTD );
+      tLabel_       = Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD );
+      tStepLabel_   = Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD );
+      rkStageLabel_ = Uintah::VarLabel::create( TagNames::self().rkstage.name(), perPatchTD );
+      if (rkStage < 2) {
+        updateCurrentTimeTask->computes( dtLabel_      );
+        updateCurrentTimeTask->computes( tLabel_       );
+        updateCurrentTimeTask->computes( tStepLabel_   );
+        updateCurrentTimeTask->computes( rkStageLabel_ );
+      } else {
+        updateCurrentTimeTask->modifies( dtLabel_      );
+        updateCurrentTimeTask->modifies( tLabel_       );
+        updateCurrentTimeTask->modifies( tStepLabel_   );
+        updateCurrentTimeTask->modifies( rkStageLabel_ );
+      }
+      
       sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
     }
   }
@@ -1504,23 +1552,30 @@ namespace WasatchCore{
   {
     // grab the timestep
     Uintah::delt_vartype deltat;
-    oldDW->get( deltat, sharedState_->get_delt_label() );
+    Uintah::DataWarehouse* whichDW = has_dual_time() ? oldDW->getOtherDataWarehouse(Uintah::Task::ParentOldDW) : oldDW;
+    whichDW->get( deltat, sharedState_->get_delt_label() );
     const Expr::Tag timeTag = TagNames::self().time;
-    //__________________
-    // loop over patches
-    GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
-    Expr::ExpressionFactory& factory = *gh->exprFactory;
+    double rks = (double) rkStage;
+    double* timeCor = timeIntegrator_.timeCorrection;
+    
+    const double simTime = sharedState_->getElapsedTime();
+    const double timeStep = sharedState_->getCurrentTopLevelTimeStep();
+    
+    typedef Uintah::PerPatch<double> perPatchT;
+    perPatchT dt      (deltat );
+    perPatchT tstep   (timeStep );
+    perPatchT time    (simTime + timeCor[rkStage -1 ] * deltat  );
+    perPatchT rkstage ( rks                                     );
 
-    for( int ip=0; ip<patches->size(); ++ip ){
-      SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(
-                                                                  factory.retrieve_expression( timeTag, patches->get(ip)->getID(), false ) );
-      settimeexpr.set_integrator_stage( rkStage );
-      settimeexpr.set_deltat  ( deltat );
-      settimeexpr.set_time    ( sharedState_->getElapsedTime() );
-      settimeexpr.set_timestep( sharedState_->getCurrentTopLevelTimeStep() );
+    for (int p=0; p < patches->size(); p++){
+      const Uintah::Patch* patch = patches->get(p);
+      newDW->put( dt,      dtLabel_, 0, patch );
+      newDW->put( tstep,   tStepLabel_, 0, patch );
+      newDW->put( time,    tLabel_, 0, patch );
+      newDW->put( rkstage, rkStageLabel_, 0, patch );
     }
   }
-
+  
   //---------------------------------------------------------------------------------
   
   void
@@ -1629,9 +1684,9 @@ namespace WasatchCore{
         // loop over patches
         for( int ip=0; ip<patches->size(); ++ip ){
           // grab the stable timestep value calculated by the StableDT expression
-          Uintah::PerPatch<double*> tempDtP;
+          Uintah::PerPatch<double> tempDtP;
           new_dw->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
-          val = std::min( val, *tempDtP );
+          val = std::min( val, tempDtP.get() );
         }
       }
       else {
