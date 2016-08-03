@@ -16,9 +16,6 @@ BASE_BUILD_DIR=$1
 BOOST_LIBRARY=$2
 BOOST_INCLUDE=$3
 
-LOCAL=$(git rev-parse @)
-REMOTE=$(git rev-parse origin/master)
-
 if test $4 != "no"; then
   DEBUG="-DCMAKE_BUILD_TYPE=Debug"
 fi
@@ -111,6 +108,9 @@ needsrecompile=true
 if [ -d "SpatialOps" ]; then
     run "cd SpatialOps"
     run "git remote update"
+
+    LOCAL=$(git rev-parse @)
+    REMOTE=$(git rev-parse origin/master)
     
     if [ $LOCAL = $REMOTE ]; then
         echo "SpatialOps is current - not rebuilding"
@@ -183,6 +183,10 @@ needsrecompile=true
 if [ -d "ExprLib" ]; then
     run "cd ExprLib"
     run "git remote update"
+
+    LOCAL=$(git rev-parse @)
+    REMOTE=$(git rev-parse origin/master)
+
     if [ $LOCAL = $REMOTE ]; then
         echo "ExprLib is current - not rebuilding"
         needsrecompile=false
@@ -237,6 +241,10 @@ needsrecompile=true
 if [ -d "TabProps" ]; then
     run "cd TabProps"
     run "git remote update"
+
+    LOCAL=$(git rev-parse @)
+    REMOTE=$(git rev-parse origin/master)
+
     if [ $LOCAL = $REMOTE ]; then
         echo "TabProps is current - not rebuilding"
         needsrecompile=false
@@ -285,6 +293,10 @@ needsrecompile=true
 if [ -d "RadProps" ]; then
     run "cd RadProps"
     run "git remote update"
+
+    LOCAL=$(git rev-parse @)
+    REMOTE=$(git rev-parse origin/master)
+
     if [ $LOCAL = $REMOTE ]; then
         echo "RadProps is current - not rebuilding"
         needsrecompile=false
