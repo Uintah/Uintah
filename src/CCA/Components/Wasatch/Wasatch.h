@@ -371,6 +371,8 @@ namespace WasatchCore{
     bool dualTime_;
     bool compileDualTimeSched_;
     
+    Uintah::VarLabel *dtLabel_, *tLabel_, *tStepLabel_, *rkStageLabel_;
+    
     Wasatch( const Wasatch& );            // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
     

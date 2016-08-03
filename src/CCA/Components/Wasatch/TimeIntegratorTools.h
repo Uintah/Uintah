@@ -56,6 +56,7 @@ namespace WasatchCore{
     int nStages;
     double alpha[3];
     double beta[3];
+    double timeCorrection[3];
     bool hasDualTime;
     int dualTimeIterations;
     double dualTimeTolerance;
@@ -103,6 +104,10 @@ namespace WasatchCore{
       hasDualTime        = false;
       dualTimeIterations = 100;
       dualTimeTolerance  = 1.0e-8;
+      
+      timeCorrection[0] = 0.0; // for the first rk stage, the time is t0
+      timeCorrection[1] = 1.0; // for the second rk stage, the time is t0 + dt
+      timeCorrection[2] = 0.5; // for the third rk stage, the time is t0 + 0.5*dt
     }
     
     inline void has_dual_time( const bool hasDT ) { hasDualTime = hasDT; }
