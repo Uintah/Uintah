@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2016 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #include <CCA/Components/Arches/CoalModels/CharOxidationSmith.h>
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
@@ -6,29 +30,30 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
+
+#include <Core/Containers/StaticArray.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
-#include <iostream>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <iomanip>
+#include <iostream>
 #include <numeric>
-#include <Core/Containers/StaticArray.h>
-#include <spatialops/util/TimeLogger.h>
 
 #include <sci_defs/visit_defs.h>
 
-using namespace std;
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
 // Builder:
 CharOxidationSmithBuilder::CharOxidationSmithBuilder( const std::string         & modelName,
-                                                      const vector<std::string> & reqICLabelNames,
-                                                      const vector<std::string> & reqScalarLabelNames,
+                                                      const std::vector<std::string> & reqICLabelNames,
+                                                      const std::vector<std::string> & reqScalarLabelNames,
                                                       ArchesLabel         * fieldLabels,
                                                       SimulationStateP          & sharedState,
                                                       int qn ) :
@@ -47,8 +72,8 @@ ModelBase* CharOxidationSmithBuilder::build() {
 CharOxidationSmith::CharOxidationSmith( std::string modelName, 
                                         SimulationStateP& sharedState,
                                         ArchesLabel* fieldLabels,
-                                        vector<std::string> icLabelNames, 
-                                        vector<std::string> scalarLabelNames,
+                                        std::vector<std::string> icLabelNames,
+                                        std::vector<std::string> scalarLabelNames,
                                         int qn ) 
 : CharOxidation(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
@@ -70,7 +95,7 @@ CharOxidationSmith::CharOxidationSmith( std::string modelName,
 
 CharOxidationSmith::~CharOxidationSmith()
 {
-  for (vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
+  for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
     VarLabel::destroy( *iter );
   }
 }
@@ -325,7 +350,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 void 
 CharOxidationSmith::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CharOxidationSmith::initVars"; 
+  std::string taskname = "CharOxidationSmith::initVars";
   Task* tsk = scinew Task(taskname, this, &CharOxidationSmith::initVars);
 
   tsk->computes(d_modelLabel);
@@ -333,7 +358,7 @@ CharOxidationSmith::sched_initVars( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_particletempLabel);
   tsk->computes(d_surfacerateLabel);
   tsk->computes(d_PO2surfLabel);
-  for (vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
+  for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
     tsk->computes(*iter);
   }
 
@@ -426,7 +451,7 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->computes(d_particletempLabel);
     tsk->computes(d_surfacerateLabel);
     tsk->computes(d_PO2surfLabel);
-    for (vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
+    for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
       tsk->computes(*iter);
     }
     which_dw = Task::OldDW; 
@@ -436,13 +461,13 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->modifies(d_particletempLabel);
     tsk->modifies(d_surfacerateLabel);
     tsk->modifies(d_PO2surfLabel);
-    for (vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
+    for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
       tsk->modifies(*iter);
     }
     which_dw = Task::NewDW; 
   }
 
-  for (vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
+  for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
     tsk->requires( which_dw, *iter, gn, 0 );
   }
   tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 ); 
@@ -491,9 +516,6 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
-    //SpatialOps::TimeLogger my_timer;
-    //my_timer.start("my_total");
-    
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -513,7 +535,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     CCVariable<double> surface_rate;
     CCVariable<double> PO2surf_;
     StaticArray< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
-    dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
+
+    DenseMatrix* dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
      
     DataWarehouse* which_dw; 
     if ( timeSubStep == 0 ){ 
@@ -806,27 +829,26 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         }
         // check to see if reaction rate is oxidizer limited.
         for (int l=0; l<_NUM_reactions; l++) {
-          char_mass_rate = max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w) );// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle. 
+          char_mass_rate = std::max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w) );// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
         }
         // check to see if reaction rate is fuel limited.
         if ( add_rawcoal_birth && add_char_birth ){ 
-          char_mass_rate = max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth[c]/w + rawcoal_birth[c]/w )); // [kg/s/#] equation assumes RC_scaling=Char_scaling
+          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth[c]/w + rawcoal_birth[c]/w )); // [kg/s/#] equation assumes RC_scaling=Char_scaling
         } else { 
-          char_mass_rate = max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] equation assumes RC_scaling=Char_scaling
+          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] equation assumes RC_scaling=Char_scaling
         }
-        char_mass_rate = min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
+        char_mass_rate = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
         char_rate[c] = (char_mass_rate*w)/(_char_scaling_constant*_weight_scaling_constant); // [kg/m^3/s - scaled]
         gas_char_rate[c] = -char_mass_rate*w;// [kg/m^3/s] (negative sign for exchange between solid and gas)
         particle_temp_rate[c] = char_mass_rate*w/_Mh/(1.0+CO_CO2_ratio)*(CO_CO2_ratio*_HF_CO + _HF_CO2)*1000; // [J/s/m^3] -- the *1000 is need to convert J/mole to J/kmole.
         surface_rate[c] = char_mass_rate/p_area;  // in [kg/(s # m^2)]
         PO2surf_[c] = 0.0; // multiple oxidizers, so we are leaving this empty.
 
-      }// else statement 
-    }//end cell loop
+      } // else statement
+    } //end cell loop
   // delete scinew DenseMatrix 
   delete dfdrh; 
-  //my_timer.stop("my_total");
-  }//end patch loop
+  } //end patch loop
 }
 
 inline void 
