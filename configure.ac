@@ -3003,6 +3003,7 @@ if test "$HAVE_LAPACK" != "yes"; then
              LAPACK_LIB_FLAG="$altivec -framework vecLib"
           fi
        fi
+       SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
        ;;
      *)
        SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
