@@ -114,7 +114,11 @@ namespace WasatchCore{
       totalDualTimeIterations_(0),
       timeIntegrator_(TimeIntegrator("FE")),
       subsched_(nullptr),
-      compileDualTimeSched_(true)
+      compileDualTimeSched_(true),
+      dtLabel_     (nullptr),
+      tLabel_      (nullptr),
+      tStepLabel_  (nullptr),
+      rkStageLabel_(nullptr)
   {
     proc0cout << std::endl
               << "-------------------------------------------------------------" << std::endl
@@ -1520,10 +1524,10 @@ namespace WasatchCore{
       updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), sharedState_->get_delt_label() );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
-      dtLabel_      = Uintah::VarLabel::create( TagNames::self().dt.name(), perPatchTD );
-      tLabel_       = Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD );
-      tStepLabel_   = Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD );
-      rkStageLabel_ = Uintah::VarLabel::create( TagNames::self().rkstage.name(), perPatchTD );
+      dtLabel_      = (!dtLabel_     ) ? Uintah::VarLabel::create( TagNames::self().dt.name(), perPatchTD )       : dtLabel_     ;
+      tLabel_       = (!tLabel_      ) ? Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD )     : tLabel_      ;
+      tStepLabel_   = (!tStepLabel_  ) ? Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD ) : tStepLabel_  ;
+      rkStageLabel_ = (!rkStageLabel_) ? Uintah::VarLabel::create( TagNames::self().rkstage.name(), perPatchTD )  : rkStageLabel_;
       if (rkStage < 2) {
         updateCurrentTimeTask->computes( dtLabel_      );
         updateCurrentTimeTask->computes( tLabel_       );
