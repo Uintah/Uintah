@@ -1358,163 +1358,139 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
   //Go through all toTasks
   for (std::list<DetailedTask*>::const_iterator iter = dep->toTasks.begin(); iter != dep->toTasks.end(); ++iter) {
     toTask = (*iter);
+    
+    constHandle<PatchSubset> patches = toTask->getPatches();
+    const int numPatches = patches->size();
+    //const Patch* toPatch = toTask->getPatches()->get(0);
+    //if (toTask->getPatches()->size() > 1) {
+    //  printf("ERROR:\nUnifiedScheduler::prepareGpuDependencies() does not yet support a dependency that has multiple destination patches\n");
+    //  SCI_THROW( InternalError("UnifiedScheduler::prepareGpuDependencies() does not yet support a dependency that has multiple destination patches", __FILE__, __LINE__));
+    //}
+    for (int i = 0; i < numPatches; i++) {
+      const Patch* toPatch = patches->get(i);
+      const int fromresource = dtask->getAssignedResourceIndex();
+      const int toresource = toTask->getAssignedResourceIndex();
 
-    const Patch* toPatch = toTask->getPatches()->get(0);
-    if (toTask->getPatches()->size() > 1) {
-      printf("ERROR:\nUnifiedScheduler::prepareGpuDependencies() does not yet support a dependency that has multiple destination patches\n");
-      SCI_THROW( InternalError("UnifiedScheduler::prepareGpuDependencies() does not yet support a dependency that has multiple destination patches", __FILE__, __LINE__));
-    }
-    const int fromresource = dtask->getAssignedResourceIndex();
-    const int toresource = toTask->getAssignedResourceIndex();
+      const int fromDeviceIndex = GpuUtilities::getGpuIndexForPatch(fromPatch);
 
-    const int fromDeviceIndex = GpuUtilities::getGpuIndexForPatch(fromPatch);
+      // for now, assume that task will only work on one device
+      const int toDeviceIndex = GpuUtilities::getGpuIndexForPatch(toTask->getPatches()->get(0));
 
-    // for now, assume that task will only work on one device
-    const int toDeviceIndex = GpuUtilities::getGpuIndexForPatch(toTask->getPatches()->get(0));
-
-    if ((fromresource == toresource) && (fromDeviceIndex == toDeviceIndex)) {
-      // don't handle GPU -> same GPU same node here
-      continue;
-    }
-
-    GPUDataWarehouse* gpudw = nullptr;
-    if (fromDeviceIndex != -1) {
-      gpudw = dw->getGPUDW(fromDeviceIndex);
-      if (!gpudw->isValidOnGPU(label->d_name.c_str(), fromPatch->getID(), matlIndx, levelID)) {
+      if ((fromresource == toresource) && (fromDeviceIndex == toDeviceIndex)) {
+        // don't handle GPU -> same GPU same node here
         continue;
       }
-    } else {
-      SCI_THROW(
-          InternalError("Device index not found for "+label->getFullName(matlIndx, fromPatch), __FILE__, __LINE__));
-    }
 
-    switch (label->typeDescription()->getType()) {
-      case TypeDescription::ParticleVariable: {
+      GPUDataWarehouse* gpudw = nullptr;
+      if (fromDeviceIndex != -1) {
+        gpudw = dw->getGPUDW(fromDeviceIndex);
+        if (!gpudw->isValidOnGPU(label->d_name.c_str(), fromPatch->getID(), matlIndx, levelID)) {
+          continue;
+        }
+      } else {
+        SCI_THROW(
+            InternalError("Device index not found for "+label->getFullName(matlIndx, fromPatch), __FILE__, __LINE__));
       }
-        break;
-      case TypeDescription::NCVariable:
-      case TypeDescription::CCVariable:
-      case TypeDescription::SFCXVariable:
-      case TypeDescription::SFCYVariable:
-      case TypeDescription::SFCZVariable: {
 
-        // TODO, This compiles a list of regions we need to copy into contiguous arrays.
-        // We don't yet handle a scenario where the ghost cell region is exactly the same
-        // size as the variable, meaning we don't need to create an array and copy to it.
+      switch (label->typeDescription()->getType()) {
+        case TypeDescription::ParticleVariable: {
+        }
+          break;
+        case TypeDescription::NCVariable:
+        case TypeDescription::CCVariable:
+        case TypeDescription::SFCXVariable:
+        case TypeDescription::SFCYVariable:
+        case TypeDescription::SFCZVariable: {
 
-        // We're going to copy the ghost vars from the source variable (already in the GPU) to a destination
-        // array (not yet in the GPU).  So make sure there is a destination.
+          // TODO, This compiles a list of regions we need to copy into contiguous arrays.
+          // We don't yet handle a scenario where the ghost cell region is exactly the same
+          // size as the variable, meaning we don't need to create an array and copy to it.
 
-        // See if we're already planning on making this exact copy.  If so, don't do it again.
-        IntVector host_low, host_high, host_offset, host_size;
-        host_low = dep->low;
-        host_high = dep->high;
-        host_offset = dep->low;
-        host_size = dep->high - dep->low;
-        size_t elementDataSize = OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->m_var->typeDescription()->getSubType()->getType());
+          // We're going to copy the ghost vars from the source variable (already in the GPU) to a destination
+          // array (not yet in the GPU).  So make sure there is a destination.
 
-        // If this staging var already exists, then assume the full ghost cell copying information
-        // has already been set up previously.  (Duplicate dependencies show up by this point, so
-        // just ignore the duplicate).
+          // See if we're already planning on making this exact copy.  If so, don't do it again.
+          IntVector host_low, host_high, host_offset, host_size;
+          host_low = dep->low;
+          host_high = dep->high;
+          host_offset = dep->low;
+          host_size = dep->high - dep->low;
+          size_t elementDataSize = OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->m_var->typeDescription()->getSubType()->getType());
 
-        // NOTE: On the CPU, a ghost cell face may be sent from patch A to patch B, while a ghost cell
-        // edge/line may be sent from patch A to patch C, and the line of data for C is wholly within
-        // the face data for B.
-        // For the sake of preparing for cuda aware MPI, we still want to create two staging vars here,
-        // a contiguous face for B, and a contiguous edge/line for C.
-        if (!(dtask->getDeviceVars().stagingVarAlreadyExists(dep->req->m_var, fromPatch, matlIndx, levelID, host_low, host_size, dep->req->mapDataWarehouse()))) {
+          // If this staging var already exists, then assume the full ghost cell copying information
+          // has already been set up previously.  (Duplicate dependencies show up by this point, so
+          // just ignore the duplicate).
+
+          //TODO, this section should be treated atomically.  Duplicates do happen, and we don't yet handle
+          //if two of the duplicates try to get added to dtask->getDeviceVars().add() simultaneously.
+
+          // NOTE: On the CPU, a ghost cell face may be sent from patch A to patch B, while a ghost cell
+          // edge/line may be sent from patch A to patch C, and the line of data for C is wholly within
+          // the face data for B.
+          // For the sake of preparing for cuda aware MPI, we still want to create two staging vars here,
+          // a contiguous face for B, and a contiguous edge/line for C.
+          if (!(dtask->getDeviceVars().stagingVarAlreadyExists(dep->req->m_var, fromPatch, matlIndx, levelID, host_low, host_size, dep->req->mapDataWarehouse()))) {
 
 
-          // TODO: This host var really should be created last minute only if it's copying data to host.  Not here.
-          GridVariableBase* tempGhostVar = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
-          tempGhostVar->allocate(dep->low, dep->high);
+            // TODO: This host var really should be created last minute only if it's copying data to host.  Not here.
+            GridVariableBase* tempGhostVar = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
+            tempGhostVar->allocate(dep->low, dep->high);
 
-          // Indicate we want a staging array in the device.
-            dtask->getDeviceVars().add(fromPatch, matlIndx, levelID, true, host_size, tempGhostVar->getDataSize(), elementDataSize,
-                                       host_offset, dep->req, Ghost::None, 0, fromDeviceIndex, tempGhostVar, dest);
-          // let this Task GPU DW know about this staging array
-          dtask->getTaskVars().addTaskGpuDWStagingVar(fromPatch, matlIndx, levelID, host_offset, host_size, elementDataSize, dep->req, fromDeviceIndex);
-
-          // Now make sure the Task DW knows about the non-staging variable where the staging variable's data will come from.
-          // Scenarios occur in which the same source region is listed to send to two different patches.
-          // This task doesn't need to know about the same source twice.
-          if (!(dtask->getTaskVars().varAlreadyExists(dep->req->m_var, fromPatch, matlIndx, levelID, dep->req->mapDataWarehouse()))) {
-            // let this Task GPU DW know about the source location.
-            dtask->getTaskVars().addTaskGpuDWVar(fromPatch, matlIndx, levelID, elementDataSize, dep->req, fromDeviceIndex);
-          } else {
-            if (gpu_stats.active()) {
-              cerrLock.lock();
-              {
-                gpu_stats << myRankThread()
-                          << " prepareGpuDependencies - Already had a task GPUDW Var for label " << dep->req->m_var->getName()
-                          << " patch " << fromPatch->getID()
-                          << " matl " << matlIndx
-                          << " level " << levelID
-                          << std::endl;
-              }
-              cerrLock.unlock();
-            }
-          }
-
-          // Handle a GPU-another GPU same device transfer.  We have already queued up the staging array on
-          // source GPU.  Now queue up the staging array on the destination GPU.
-          if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
             // Indicate we want a staging array in the device.
-            // TODO: We don't need a host array, it's going GPU->GPU.  So get rid of tempGhostVar here.
-            dtask->getDeviceVars().add(toPatch, matlIndx, levelID, true, host_size,
-                                       tempGhostVar->getDataSize(), elementDataSize, host_offset,
-                                       dep->req, Ghost::None, 0, toDeviceIndex, tempGhostVar, dest);
+            dtask->getDeviceVars().add(fromPatch, matlIndx, levelID, true, host_size, tempGhostVar->getDataSize(), elementDataSize,
+                                         host_offset, dep->req, Ghost::None, 0, fromDeviceIndex, tempGhostVar, dest);
 
-            // And the task should know of this staging array.
-            dtask->getTaskVars().addTaskGpuDWStagingVar(toPatch, matlIndx, levelID, host_offset, host_size, elementDataSize, dep->req, toDeviceIndex);
+            // let this Task GPU DW know about this staging array
+            dtask->getTaskVars().addTaskGpuDWStagingVar(fromPatch, matlIndx, levelID, host_offset, host_size, elementDataSize, dep->req, fromDeviceIndex);
 
-          }
-
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread()
-                  << " prepareGpuDependencies - Preparing a GPU contiguous ghost cell array ";
-              if (dest == GpuUtilities::anotherMpiRank) {
-                gpu_stats << "to prepare for a later copy from MPI Rank " << fromresource << " to MPI Rank " << toresource;
-              } else if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
-                gpu_stats << "to prepare for a later GPU to GPU copy from on-node device # " << fromDeviceIndex << " to on-node device # " << toDeviceIndex;
-              } else {
-                gpu_stats << "to UNKNOWN ";
+            // Now make sure the Task DW knows about the non-staging variable where the staging variable's data will come from.
+            // Scenarios occur in which the same source region is listed to send to two different patches.
+            // This task doesn't need to know about the same source twice.
+            if (!(dtask->getTaskVars().varAlreadyExists(dep->req->m_var, fromPatch, matlIndx, levelID, dep->req->mapDataWarehouse()))) {
+              // let this Task GPU DW know about the source location.
+              dtask->getTaskVars().addTaskGpuDWVar(fromPatch, matlIndx, levelID, elementDataSize, dep->req, fromDeviceIndex);
+            } else {
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << myRankThread()
+                            << " prepareGpuDependencies - Already had a task GPUDW Var for label " << dep->req->m_var->getName()
+                            << " patch " << fromPatch->getID()
+                            << " matl " << matlIndx
+                            << " level " << levelID
+                            << std::endl;
+                }
+                cerrLock.unlock();
               }
-              gpu_stats << " for " << dep->req->m_var->getName().c_str()
-                  << " from patch " << fromPatch->getID()
-                  << " to patch " << toPatch->getID()
-                  << " between shared low (" << dep->low.x() << ", " << dep->low.y() << ", " << dep->low.z() << ")"
-                  << " and shared high (" << dep->high.x() << ", " << dep->high.y() << ", " << dep->high.z() << ")"
-                  << " and host offset (" << host_offset.x() << ", " << host_offset.y() << ", " << host_offset.z() << ")"
-                  << std::endl;
             }
-            cerrLock.unlock();
-          }
 
-          // we always write this to a "foreign" staging variable. We are going to copying it from the foreign = false var to the foreign = true var.
-          // Thus the patch source and destination are the same, and it's staying on device.
-          IntVector temp(0,0,0);
-          dtask->getGhostVars().add(dep->req->m_var, fromPatch, fromPatch,
-              matlIndx, levelID, false, true, host_offset, host_size, dep->low, dep->high,
-              OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->m_var->typeDescription()->getSubType()->getType()),
-              dep->req->m_var->typeDescription()->getSubType()->getType(),
-              temp,
-              fromDeviceIndex, toDeviceIndex, fromresource, toresource,
-              (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::sameDeviceSameMpiRank);
+            // Handle a GPU-another GPU same device transfer.  We have already queued up the staging array on
+            // source GPU.  Now queue up the staging array on the destination GPU.
+            if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
+              // Indicate we want a staging array in the device.
+              // TODO: We don't need a host array, it's going GPU->GPU.  So get rid of tempGhostVar here.
+              dtask->getDeviceVars().add(toPatch, matlIndx, levelID, true, host_size,
+                                         tempGhostVar->getDataSize(), elementDataSize, host_offset,
+                                         dep->req, Ghost::None, 0, toDeviceIndex, tempGhostVar, dest);
 
+              // And the task should know of this staging array.
+              dtask->getTaskVars().addTaskGpuDWStagingVar(toPatch, matlIndx, levelID, host_offset, host_size, elementDataSize, dep->req, toDeviceIndex);
 
-
-          if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
-            // GPU to GPU copies needs another entry indicating a peer to peer transfer.
+            }
 
             if (gpu_stats.active()) {
               cerrLock.lock();
               {
                 gpu_stats << myRankThread()
-                    << " prepareGpuDependencies - Preparing a GPU to GPU peer copy "
-                    << " for " << dep->req->m_var->getName().c_str()
+                    << " prepareGpuDependencies - Preparing a GPU contiguous ghost cell array ";
+                if (dest == GpuUtilities::anotherMpiRank) {
+                  gpu_stats << "to prepare for a later copy from MPI Rank " << fromresource << " to MPI Rank " << toresource;
+                } else if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
+                  gpu_stats << "to prepare for a later GPU to GPU copy from on-node device # " << fromDeviceIndex << " to on-node device # " << toDeviceIndex;
+                } else {
+                  gpu_stats << "to UNKNOWN ";
+                }
+                gpu_stats << " for " << dep->req->m_var->getName().c_str()
                     << " from patch " << fromPatch->getID()
                     << " to patch " << toPatch->getID()
                     << " between shared low (" << dep->low.x() << ", " << dep->low.y() << ", " << dep->low.z() << ")"
@@ -1525,49 +1501,81 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
               cerrLock.unlock();
             }
 
-            dtask->getGhostVars().add(dep->req->m_var, fromPatch, toPatch,
-               matlIndx, levelID, true, true, host_offset, host_size, dep->low, dep->high,
-               OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->m_var->typeDescription()->getSubType()->getType()),
-               dep->req->m_var->typeDescription()->getSubType()->getType(),
-               temp,
-               fromDeviceIndex, toDeviceIndex, fromresource, toresource,
-               (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherDeviceSameMpiRank);
+            // we always write this to a "foreign" staging variable. We are going to copying it from the foreign = false var to the foreign = true var.
+            // Thus the patch source and destination are the same, and it's staying on device.
+            IntVector temp(0,0,0);
+            dtask->getGhostVars().add(dep->req->m_var, fromPatch, fromPatch,
+                matlIndx, levelID, false, true, host_offset, host_size, dep->low, dep->high,
+                OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->m_var->typeDescription()->getSubType()->getType()),
+                dep->req->m_var->typeDescription()->getSubType()->getType(),
+                temp,
+                fromDeviceIndex, toDeviceIndex, fromresource, toresource,
+                (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::sameDeviceSameMpiRank);
 
-          } else if (dest == GpuUtilities::anotherMpiRank)  {
-            if (gpu_stats.active()) {
-              cerrLock.lock();
-              {
-                gpu_stats << myRankThread()
-                    << " prepareGpuDependencies - Preparing a GPU to host ghost cell copy"
-                    << " for " << dep->req->m_var->getName().c_str()
-                    << " from patch " << fromPatch->getID()
-                    << " to patch " << toPatch->getID()
-                    << " between shared low (" << dep->low.x() << ", " << dep->low.y() << ", " << dep->low.z() << ")"
-                    << " and shared high (" << dep->high.x() << ", " << dep->high.y() << ", " << dep->high.z() << ")"
-                    << " and host offset (" << host_offset.x() << ", " << host_offset.y() << ", " << host_offset.z() << ")"
-                    << std::endl;
+
+
+            if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
+              // GPU to GPU copies needs another entry indicating a peer to peer transfer.
+
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << myRankThread()
+                      << " prepareGpuDependencies - Preparing a GPU to GPU peer copy "
+                      << " for " << dep->req->m_var->getName().c_str()
+                      << " from patch " << fromPatch->getID()
+                      << " to patch " << toPatch->getID()
+                      << " between shared low (" << dep->low.x() << ", " << dep->low.y() << ", " << dep->low.z() << ")"
+                      << " and shared high (" << dep->high.x() << ", " << dep->high.y() << ", " << dep->high.z() << ")"
+                      << " and host offset (" << host_offset.x() << ", " << host_offset.y() << ", " << host_offset.z() << ")"
+                      << std::endl;
+                }
+                cerrLock.unlock();
               }
-              cerrLock.unlock();
-            }
-            dtask->getGhostVars().add(dep->req->m_var, fromPatch, toPatch,
-               matlIndx, levelID, true, true, host_offset, host_size, dep->low, dep->high,
-               OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->m_var->typeDescription()->getSubType()->getType()),
-               dep->req->m_var->typeDescription()->getSubType()->getType(),
-               temp,
-               fromDeviceIndex, toDeviceIndex, fromresource, toresource,
-               (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherMpiRank);
 
+              dtask->getGhostVars().add(dep->req->m_var, fromPatch, toPatch,
+                 matlIndx, levelID, true, true, host_offset, host_size, dep->low, dep->high,
+                 OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->m_var->typeDescription()->getSubType()->getType()),
+                 dep->req->m_var->typeDescription()->getSubType()->getType(),
+                 temp,
+                 fromDeviceIndex, toDeviceIndex, fromresource, toresource,
+                 (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherDeviceSameMpiRank);
+
+            } else if (dest == GpuUtilities::anotherMpiRank)  {
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << myRankThread()
+                      << " prepareGpuDependencies - Preparing a GPU to host ghost cell copy"
+                      << " for " << dep->req->m_var->getName().c_str()
+                      << " from patch " << fromPatch->getID()
+                      << " to patch " << toPatch->getID()
+                      << " between shared low (" << dep->low.x() << ", " << dep->low.y() << ", " << dep->low.z() << ")"
+                      << " and shared high (" << dep->high.x() << ", " << dep->high.y() << ", " << dep->high.z() << ")"
+                      << " and host offset (" << host_offset.x() << ", " << host_offset.y() << ", " << host_offset.z() << ")"
+                      << std::endl;
+                }
+                cerrLock.unlock();
+              }
+              dtask->getGhostVars().add(dep->req->m_var, fromPatch, toPatch,
+                 matlIndx, levelID, true, true, host_offset, host_size, dep->low, dep->high,
+                 OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->m_var->typeDescription()->getSubType()->getType()),
+                 dep->req->m_var->typeDescription()->getSubType()->getType(),
+                 temp,
+                 fromDeviceIndex, toDeviceIndex, fromresource, toresource,
+                 (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherMpiRank);
+
+            }
           }
         }
-      }
-        break;
-      default: {
-        std::cerr << "UnifiedScheduler::prepareGPUDependencies(), unsupported variable type" << std::endl;
+          break;
+        default: {
+          std::cerr << "UnifiedScheduler::prepareGPUDependencies(), unsupported variable type" << std::endl;
+        }
       }
     }
   }
 }
-
 
 //______________________________________________________________________
 //
