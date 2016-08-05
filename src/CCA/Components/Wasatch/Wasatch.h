@@ -269,6 +269,9 @@ namespace WasatchCore{
 
     void scheduleUpdateCurrentTime( const Uintah::LevelP& level,
                              Uintah::SchedulerP&, const int rkStage );
+    
+    void scheduleSetInitialTime( const Uintah::LevelP& level,
+                                   Uintah::SchedulerP& );
 
     void preGridProblemSetup(const Uintah::ProblemSpecP& params,
                              Uintah::GridP& grid,
@@ -422,7 +425,14 @@ namespace WasatchCore{
                         Uintah::DataWarehouse* const oldDW,
                         Uintah::DataWarehouse* const newDW,
                         const int rkStage );
-    
+
+    void
+    set_initial_time( const Uintah::ProcessorGroup* const pg,
+                        const Uintah::PatchSubset* const patches,
+                        const Uintah::MaterialSubset* const materials,
+                        Uintah::DataWarehouse* const oldDW,
+                        Uintah::DataWarehouse* const newDW );
+
     enum PatchsetSelector{
       USE_FOR_TASKS,
       USE_FOR_OPERATORS
