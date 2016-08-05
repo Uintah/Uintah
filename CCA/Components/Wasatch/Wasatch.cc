@@ -76,10 +76,8 @@
 #include <CCA/Components/Wasatch/Expressions/BasicExprBuilder.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 #include <CCA/Components/Wasatch/Expressions/RadiationSource.h>
-#include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 #include <CCA/Components/Wasatch/Expressions/NullExpression.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
-
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Transport/ParseParticleEquations.h>
 #include <CCA/Components/Wasatch/Transport/PreconditioningParser.h>
