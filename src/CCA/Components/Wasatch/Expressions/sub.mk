@@ -51,7 +51,6 @@ CUDA_ENABLED_SRCS :=      \
      ScalabilityTestSrc   \
      ScalarEOSCoupling    \
      ScalarRHS            \
-     SetCurrentTime       \
      SimpleEmission       \
      SolnVarEst           \
      Strain               \

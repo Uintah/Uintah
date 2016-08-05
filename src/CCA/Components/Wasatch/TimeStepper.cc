@@ -26,7 +26,6 @@
 #include <CCA/Components/Wasatch/TimeStepper.h>
 #include <CCA/Components/Wasatch/TaskInterface.h>
 #include <CCA/Components/Wasatch/TagNames.h>
-#include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 #include <CCA/Components/Wasatch/Expressions/TimeAdvance.h>
 
