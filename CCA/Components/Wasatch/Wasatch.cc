@@ -886,13 +886,13 @@ namespace WasatchCore{
     }
 
     //_______________________________________
-    // set the time
+    // set the time at the initial condition
     Expr::TagList timeTags;
     timeTags.push_back( TagNames::self().time     );
-    timeTags.push_back( TagNames::self().dt       );
     timeTags.push_back( TagNames::self().timestep );
-    timeTags.push_back( TagNames::self().rkstage  );
-    exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
+    scheduleSetInitialTime(level, sched);
+    typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  PlcHolder;
+    exprFactory.register_expression( scinew PlcHolder::Builder(timeTags), true );
     
     //_____________________________________________
     // Build the initial condition expression graph
@@ -1480,7 +1480,62 @@ namespace WasatchCore{
     }
     
   }
+
+  //---------------------------------------------------------------------------------
   
+  void
+  Wasatch::scheduleSetInitialTime( const Uintah::LevelP& level,
+                                     Uintah::SchedulerP& sched )
+  {
+    //________________________________________________________
+    // add a task to populate a "field" with the current time.
+    // This is required by the time integrator.
+    Uintah::LoadBalancer* lb = sched->getLoadBalancer();
+    //    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
+    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
+    {
+      // add a task to update current simulation time
+      Uintah::Task* updateCurrentTimeTask =
+      scinew Uintah::Task( "set initial time",
+                          this,
+                          &Wasatch::set_initial_time );
+      
+      const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
+      tLabel_       = (!tLabel_      ) ? Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD )     : tLabel_      ;
+      tStepLabel_   = (!tStepLabel_  ) ? Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD ) : tStepLabel_  ;
+      
+      updateCurrentTimeTask->computes( tLabel_       );
+      updateCurrentTimeTask->computes( tStepLabel_   );
+      
+      sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
+    }
+  }
+  
+  //------------------------------------------------------------------
+  
+  void
+  Wasatch::set_initial_time( const Uintah::ProcessorGroup* const pg,
+                               const Uintah::PatchSubset* const patches,
+                               const Uintah::MaterialSubset* const materials,
+                               Uintah::DataWarehouse* const oldDW,
+                               Uintah::DataWarehouse* const newDW )
+  {
+    // grab the timestep
+    const double simTime = sharedState_->getElapsedTime();
+    const double timeStep = sharedState_->getCurrentTopLevelTimeStep();
+    
+    typedef Uintah::PerPatch<double> perPatchT;
+    perPatchT tstep   ( timeStep );
+    perPatchT time    ( simTime  );
+    
+    for (int p=0; p < patches->size(); p++){
+      const Uintah::Patch* patch = patches->get(p);
+      newDW->put( tstep,   tStepLabel_, 0, patch );
+      newDW->put( time,    tLabel_, 0, patch );
+    }
+  }
+  
+
   //---------------------------------------------------------------------------------
   
   void
