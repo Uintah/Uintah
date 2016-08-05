@@ -154,6 +154,7 @@ HAVE_BLAS      := @HAVE_BLAS@
 HAVE_CBLAS     := @HAVE_CBLAS@
 BLAS_LIBRARY   := @BLAS_LIB_DIR_FLAG@ @BLAS_LIB_FLAG@
 BLAS_INCLUDE   := @INC_BLAS_H@
+HAVE_ACCELERATE	:= @HAVE_ACCELERATE@
 
 # Note: If we are not on an SGI, then LAPACKMP will be the same as
 # LAPACK!

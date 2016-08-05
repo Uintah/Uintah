@@ -2822,7 +2822,6 @@ if test ! "$HAVE_BLAS"; then
     _sci_inc="$with_atlas/include"
     _sci_optional=specific
   fi
-
   case $host in
      *)
        SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
@@ -2878,6 +2877,8 @@ if test "$HAVE_BLAS" != "yes"; then
              CBLAS_H="Accelerate/Accelerate.h"
              HAVE_CBLAS=yes
              DEF_CBLAS="#define HAVE_CBLAS 1"
+             HAVE_ACCELERATE=yes
+             DEF_ACCELERATE="#define HAVE_ACCELERATE 1"
           fi
        else
           SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin,vecLib/cblas.h,
@@ -2891,6 +2892,8 @@ if test "$HAVE_BLAS" != "yes"; then
              CBLAS_H="vecLib/cblas.h"
              HAVE_CBLAS=yes
              DEF_CBLAS="#define HAVE_CBLAS 1"
+	     HAVE_ACCELERATE=yes
+             DEF_ACCELERATE="#define HAVE_ACCELERATE 1"
           fi
        fi
        ;;
@@ -2973,6 +2976,7 @@ AC_SUBST(BLAS_LIB_FLAG)
 AC_SUBST(BLAS_LIB_DIR_FLAG)
 AC_SUBST(DEF_BLAS)
 AC_SUBST(DEF_CBLAS)
+AC_SUBST(DEF_ACCELERATE)
 sci_defs_files="$sci_defs_files include/sci_defs/blas_testdefs.h"
 
 ##  --  search for lapack stuff  -----------------------------------------
@@ -3952,12 +3956,12 @@ if test "$with_boost" -o "$with_boost_library"; then
 
   SCI_TRY_LINK(BOOST,[boost library (mt version) and include headers],$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
 
-  if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
-    if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.a; then
-       AC_MSG_WARN( [Boost was found, but not in the right place... trying again.] )
-       HAVE_BOOST=no
-    fi
-  fi
+  #if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
+  #  if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.a; then
+  #     AC_MSG_WARN( [Boost was found, but not in the right place... trying again.] )
+  #     HAVE_BOOST=no
+  #  fi
+  #fi
 
   if test "$HAVE_BOOST" = "no"; then
      SCI_TRY_LINK(BOOST, boost library (non-mt) and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs,$BOOST_LIBRARY_DIR,,,optional)
