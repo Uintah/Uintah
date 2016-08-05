@@ -746,6 +746,7 @@ LAPACK_LIB_DIR_FLAG
 LAPACK_LIB_FLAG
 DEF_LAPACK
 HAVE_LAPACK
+DEF_ACCELERATE
 DEF_CBLAS
 DEF_BLAS
 BLAS_LIB_DIR_FLAG
@@ -24012,7 +24013,6 @@ if test ! "$HAVE_BLAS"; then
     _sci_inc="$with_atlas/include"
     _sci_optional=specific
   fi
-
   case $host in
      *)
 
@@ -24952,6 +24952,8 @@ _sci_includes=''
              CBLAS_H="Accelerate/Accelerate.h"
              HAVE_CBLAS=yes
              DEF_CBLAS="#define HAVE_CBLAS 1"
+             HAVE_ACCELERATE=yes
+             DEF_ACCELERATE="#define HAVE_ACCELERATE 1"
           fi
        else
 
@@ -25407,6 +25409,8 @@ _sci_includes=''
              CBLAS_H="vecLib/cblas.h"
              HAVE_CBLAS=yes
              DEF_CBLAS="#define HAVE_CBLAS 1"
+	     HAVE_ACCELERATE=yes
+             DEF_ACCELERATE="#define HAVE_ACCELERATE 1"
           fi
        fi
        ;;
@@ -28414,6 +28418,7 @@ _sci_includes=''
 fi # end sci_required_blas
 
 # these are set above by atlas check if atlas check succeeded
+
 
 
 
@@ -36994,13 +36999,12 @@ _sci_includes=''
 
 
 
-  if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
-    if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.a; then
-       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Boost was found, but not in the right place... trying again. " >&5
-$as_echo "$as_me: WARNING: Boost was found, but not in the right place... trying again. " >&2;}
-       HAVE_BOOST=no
-    fi
-  fi
+  #if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
+  #  if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.a; then
+  #     AC_MSG_WARN( [Boost was found, but not in the right place... trying again.] )
+  #     HAVE_BOOST=no
+  #  fi
+  #fi
 
   if test "$HAVE_BOOST" = "no"; then
 
