@@ -94,7 +94,6 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
                           )
   : SchedulerCommon(myworld, oport)
   , m_parent_scheduler{parentScheduler}
-  , m_oport{oport}
 {
 
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -309,7 +308,7 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   postMPISends(dtask, iteration, thread_id);
 
-  dtask->done(m_dws);  // should this be part of task execution time? - APH 09/16/15
+  dtask->done(m_dws);
 
   double teststart = Time::currentSeconds();
 
@@ -382,25 +381,25 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 #else
     BufferInfo mpibuff;
 #endif
+
     // Create the MPI type
     int to = batch->toTasks.front()->getAssignedResourceIndex();
     ASSERTRANGE(to, 0, d_myworld->size());
 
     for (DetailedDep* req = batch->head; req != 0; req = req->next) {
 
+     if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
+         && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
+       // See comment in DetailedDep about CommCondition
+       DOUT(g_dbg, "Rank-" << me << "   Ignoring conditional send for " << *req);
+       continue;
+     }
 
-      if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-          && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
-        // See comment in DetailedDep about CommCondition
-        DOUT(g_dbg, "Rank-" << me << "   Ignoring conditional send for " << *req);
-        continue;
-      }
-
-      // if we send/recv to an output task, don't send/recv if not an output timestep
-      if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_oport->isOutputTimestep() && !m_oport->isCheckpointTimestep()) {
-        DOUT(g_dbg, "Rank-" << me << "   Ignoring non-output-timestep send for " << *req);
-        continue;
-      }
+     // if we send/recv to an output task, don't send/recv if not an output timestep
+     if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+       DOUT(g_dbg, "Rank-" << me << "   Ignoring non-output-timestep send for " << *req);
+       continue;
+     }
 
       OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
 
@@ -589,7 +588,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_oport->isOutputTimestep() && !m_oport->isCheckpointTimestep()) {
+        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
           DOUT(g_dbg, "Rank-" << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req);
           continue;
         }
