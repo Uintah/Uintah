@@ -358,7 +358,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in
     //! copyDataToNewGrid.
-    std::vector<LabelMatlMap> m_label_matls;
+    std::vector<LabelMatlMap>   m_label_matls;
 
     ReductionTasksMap           m_reduction_tasks;
 

@@ -170,8 +170,6 @@ class MPIScheduler : public SchedulerCommon {
 
     void outputTimingStats( const char* label );
 
-    const Output*               m_oport;
-
     CommRequestPool             m_sends{};
     CommRequestPool             m_recvs{};
 
