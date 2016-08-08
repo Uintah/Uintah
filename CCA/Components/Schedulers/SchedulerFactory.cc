@@ -45,7 +45,6 @@ using namespace Uintah;
 // Enable specific schedulers via environment variable
 static DebugStream singleProcessor("SingleProcessorScheduler", false);
 static DebugStream dynamicMPI(     "DynamicMPIScheduler"     , false);
-static DebugStream unified(        "UnifiedScheduler"        , false);
 
 SchedulerCommon*
 SchedulerFactory::create( const ProblemSpecP   & ps,

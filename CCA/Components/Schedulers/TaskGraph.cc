@@ -604,7 +604,7 @@ TaskGraph::nullSort( std::vector<Task*> & tasks )
   for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
     // For all reduction tasks filtering out the one that is not in ReductionTasksMap 
     if ((*iter)->getType() == Task::Reduction) {
-      for (SchedulerCommon::ReductionTasksMap::iterator it = m_scheduler->reductionTasks.begin(); it != m_scheduler->reductionTasks.end(); it++) {
+      for (ReductionTasksMap::iterator it = m_scheduler->m_reduction_tasks.begin(); it != m_scheduler->m_reduction_tasks.end(); it++) {
         if ((*iter) == it->second) {
           (*iter)->setSortedOrder(n++);
           tasks.push_back(*iter);

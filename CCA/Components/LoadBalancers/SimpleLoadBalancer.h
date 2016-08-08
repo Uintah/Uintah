@@ -22,58 +22,70 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SimpleLoadBalancer_H
-#define UINTAH_HOMEBREW_SimpleLoadBalancer_H
+#ifndef CCA_COMPONENTS_LOADBALANCERS_SIMPLELOADBALANCER_H
+#define CCA_COMPONENTS_LOADBALANCERS_SIMPLELOADBALANCER_H
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <Core/Parallel/UintahParallelComponent.h>
-#include <set>
 
 namespace Uintah {
-   /**************************************
-     
-     CLASS
-       SimpleLoadBalancer
-      
-       Short Description...
-      
-     GENERAL INFORMATION
-      
-       SimpleLoadBalancer.h
-      
-       Steven G. Parker
-       Department of Computer Science
-       University of Utah
-      
-       Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-             
-     KEYWORDS
-       SimpleLoadBalancer
-      
-     DESCRIPTION
-       Long description...
-      
-     WARNING
-      
-     ****************************************/
-    
-  class SimpleLoadBalancer : public LoadBalancerCommon {
-  public:
-    SimpleLoadBalancer(const ProcessorGroup* myworld);
-    ~SimpleLoadBalancer();
-    
-    virtual int getPatchwiseProcessorAssignment( const Patch * patch );
 
-    //! The old processor is the same as the current for this load balancer.
-    virtual int getOldProcessorAssignment(       const Patch * patch ) { return getPatchwiseProcessorAssignment( patch ); }
-  private:
-    SimpleLoadBalancer(const SimpleLoadBalancer&);
-    SimpleLoadBalancer& operator=(const SimpleLoadBalancer&);
-    
-   };
-} // End namespace Uintah
+/**************************************
+
+ CLASS
+ SimpleLoadBalancer
+
+ Short Description...
+
+ GENERAL INFORMATION
+
+ SimpleLoadBalancer.h
+
+ Steven G. Parker
+ Department of Computer Science
+ University of Utah
+
+ Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 
 
-#endif
+ KEYWORDS
+ SimpleLoadBalancer
+
+ DESCRIPTION
+ Long description...
+
+ WARNING
+
+ ****************************************/
+
+class SimpleLoadBalancer : public LoadBalancerCommon {
+
+public:
+
+  SimpleLoadBalancer(const ProcessorGroup* myworld);
+
+  ~SimpleLoadBalancer();
+
+  virtual int getPatchwiseProcessorAssignment(const Patch * patch);
+
+  //! The old processor is the same as the current for this load balancer.
+  virtual int getOldProcessorAssignment(const Patch * patch)
+  {
+    return getPatchwiseProcessorAssignment(patch);
+  }
+
+
+private:
+
+  // eliminate copy, assignment and move
+  SimpleLoadBalancer( const SimpleLoadBalancer & )            = delete;
+  SimpleLoadBalancer& operator=( const SimpleLoadBalancer & ) = delete;
+  SimpleLoadBalancer( SimpleLoadBalancer && )                 = delete;
+  SimpleLoadBalancer& operator=( SimpleLoadBalancer && )      = delete;
+
+};
+
+}  // End namespace Uintah
+
+#endif // CCA_COMPONENTS_LOADBALANCERS_SIMPLELOADBALANCER_H
 

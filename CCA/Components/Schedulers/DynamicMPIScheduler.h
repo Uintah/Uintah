@@ -29,8 +29,6 @@
 
 namespace Uintah {
 
-class Task;
-
 /**************************************
 
 CLASS
@@ -71,15 +69,18 @@ class DynamicMPIScheduler : public MPIScheduler {
 
     virtual void execute( int tgnum = 0, int iteration = 0 );
     
-    virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
+    virtual bool useInternalDeps() { return !m_shared_state->isCopyDataTimestep(); }
     
+
   private:
 
-    // Disable copy and assignment
-    DynamicMPIScheduler( const DynamicMPIScheduler& );
-    DynamicMPIScheduler& operator=( const DynamicMPIScheduler& );
+    // eliminate copy, assignment and move
+    DynamicMPIScheduler( const DynamicMPIScheduler & )            = delete;
+    DynamicMPIScheduler& operator=( const DynamicMPIScheduler & ) = delete;
+    DynamicMPIScheduler( DynamicMPIScheduler && )                 = delete;
+    DynamicMPIScheduler& operator=( DynamicMPIScheduler && )      = delete;
 
-    QueueAlg taskQueueAlg_;
+    QueueAlg m_task_queue_alg;
 };
 
 } // End namespace Uintah

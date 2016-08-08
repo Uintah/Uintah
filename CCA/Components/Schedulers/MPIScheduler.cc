@@ -71,8 +71,7 @@ std::mutex g_wait_times_mutex;        // MPI wait times lock
 Dout g_dbg(          "MPIScheduler_DBG",        false );
 Dout g_send_timings( "SendTiming",              false );
 Dout g_reductions(   "ReductionTasks",          false );
-
-DebugStream g_time_out( "MPIScheduler_TimingsOut", false );
+Dout g_time_out(     "MPIScheduler_TimingsOut", false );
 
 double CurrentWaitTime = 0;
 
@@ -81,9 +80,8 @@ double CurrentWaitTime = 0;
 Dout g_task_order( "TaskOrder", false );
 Dout g_task_dbg(   "TaskDBG",   false );
 Dout g_mpi_dbg(    "MPIDBG",    false );
-
-DebugStream g_wait_out( "WaitTimes", false );
-DebugStream g_exec_out( "ExecTimes", false );
+Dout g_wait_out(   "WaitTimes", false );
+Dout g_exec_out(   "ExecTimes", false );
 
 std::map<std::string, double> waittimes;
 std::map<std::string, double> exectimes;
@@ -105,9 +103,9 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 
   m_last_time = Time::currentSeconds();
 
-  reloc_new_posLabel_ = nullptr;
+  m_reloc_new_pos_label = nullptr;
 
-  if (g_time_out.active()) {
+  if (g_time_out) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     m_timings_stats.open(filename);
@@ -147,7 +145,7 @@ MPIScheduler::problemSetup( const ProblemSpecP     & prob_spec
 //
 MPIScheduler::~MPIScheduler()
 {
-  if (g_time_out.active()) {
+  if (g_time_out) {
     m_timings_stats.close();
     if (d_myworld->myrank() == 0) {
       m_avg_stats.close();
@@ -165,9 +163,9 @@ SchedulerP
 MPIScheduler::createSubScheduler()
 {
   UintahParallelPort * lbp      = getPort("load balancer");
-  MPIScheduler       * newsched = scinew MPIScheduler( d_myworld, m_outPort_, this );
+  MPIScheduler       * newsched = scinew MPIScheduler( d_myworld, m_out_port, this );
   newsched->attachPort( "load balancer", lbp );
-  newsched->d_sharedState = d_sharedState;
+  newsched->m_shared_state = m_shared_state;
   return newsched;
 }
 
@@ -185,14 +183,14 @@ MPIScheduler::verifyChecksum()
     //  - make the checksum more sophisticated
     int checksum = 0;
     int numSpatialTasks = 0;
-    for (unsigned i = 0; i < graphs.size(); i++) {
-      checksum += graphs[i]->getTasks().size();
+    for (unsigned i = 0; i < m_task_graphs.size(); i++) {
+      checksum += m_task_graphs[i]->getTasks().size();
 
       // This begins addressing the issue of making the global checksum more sophisticated:
       //   check if any tasks were spatially scheduled - TaskType::Spatial, meaning no computes, requires or modifies
       //     e.g. RMCRT radiometer task, which is not scheduled on all patches
       //          these Spatial tasks won't count toward the global checksum
-      std::vector<Task*> tasks = graphs[i]->getTasks();
+      std::vector<Task*> tasks = m_task_graphs[i]->getTasks();
       std::vector<Task*>::const_iterator tasks_iter = tasks.begin();
       for (; tasks_iter != tasks.end(); ++tasks_iter) {
         Task* task = *tasks_iter;
@@ -205,19 +203,20 @@ MPIScheduler::verifyChecksum()
     // Spatial tasks don't count against the global checksum
     checksum -= numSpatialTasks;
 
-    DOUT(g_mpi_dbg, "Rank-" <<  d_myworld->myrank() << " (Uintah::MPI::Allreduce) Checking checksum of " << checksum);
+    int my_rank = d_myworld->myrank();
+    DOUT(g_mpi_dbg, "Rank-" <<  my_rank << " (Uintah::MPI::Allreduce) Checking checksum of " << checksum);
 
     int result_checksum;
     Uintah::MPI::Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
 
     if (checksum != result_checksum) {
       std::cerr << "Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
-      std::cerr << "  Rank-" << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
+      std::cerr << "  Rank-" << my_rank << " of " << d_myworld->size() - 1 << ": has sum " << checksum
                 << "  and global is " << result_checksum << '\n';
       Uintah::MPI::Abort(d_myworld->getComm(), 1);
     }
 
-    DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " (Uintah::MPI::Allreduce) Check succeeded");
+    DOUT(g_mpi_dbg, "Rank-" << my_rank << " (Uintah::MPI::Allreduce) Check succeeded");
   }
 #endif
 }
@@ -274,17 +273,17 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   double taskstart = Time::currentSeconds();
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
+  if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
-  std::vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (int i = 0; i < (int)dws.size(); i++) {
-    plain_old_dws[i] = dws[i].get_rep();
+  std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
+  for (int i = 0; i < (int)m_dws.size(); i++) {
+    plain_old_dws[i] = m_dws[i].get_rep();
   }
 
-    dtask->doit(d_myworld, dws, plain_old_dws);
+    dtask->doit(d_myworld, m_dws, plain_old_dws);
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+  if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
     printTrackedVars(dtask, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
@@ -292,7 +291,7 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   g_lb_mutex.lock();
   {
-    if (g_exec_out.active()) {
+    if (g_exec_out) {
       exectimes[dtask->getTask()->getName()] += total_task_time;
     }
 
@@ -300,7 +299,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     if (!dtask->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
       mpi_info_[TotalTask] += total_task_time;
-      if (!d_sharedState->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
+      if (!m_shared_state->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
         getLoadBalancer()->addContribution(dtask, total_task_time);
       }
@@ -310,7 +309,7 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   postMPISends(dtask, iteration, thread_id);
 
-  dtask->done(dws);  // should this be part of task execution time? - APH 09/16/15
+  dtask->done(m_dws);  // should this be part of task execution time? - APH 09/16/15
 
   double teststart = Time::currentSeconds();
 
@@ -351,10 +350,10 @@ MPIScheduler::runReductionTask( DetailedTask* dtask )
   const Task::Dependency* mod = dtask->getTask()->getModifies();
   ASSERT(!mod->m_next);
 
-  OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
+  OnDemandDataWarehouse* dw = m_dws[mod->mapDataWarehouse()].get_rep();
   ASSERT(dtask->getTask()->m_comm>=0);
   dw->reduceMPI(mod->m_var, mod->m_reduction_level, mod->m_matls, dtask->getTask()->m_comm);
-  dtask->done(dws);
+  dtask->done(m_dws);
 }
 
 //______________________________________________________________________
@@ -403,7 +402,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
         continue;
       }
 
-      OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+      OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
 
       DOUT(g_dbg, "Rank-" << me << " --> sending " << *req << ", ghost type: " << "\""
                << Ghost::getGhostTypeName(req->req->m_gtype) << "\", " << "num req ghost "
@@ -417,20 +416,20 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       OnDemandDataWarehouse* posDW;
       LoadBalancer* lb = nullptr;
 
-      if( !reloc_new_posLabel_ && m_parent_scheduler ) {
-        posDW = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-        posLabel = m_parent_scheduler->reloc_new_posLabel_;
+      if( !m_reloc_new_pos_label && m_parent_scheduler ) {
+        posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posLabel = m_parent_scheduler->m_reloc_new_pos_label;
       }
       else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-          posDW = dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
+          posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
         }
         else {
-          posDW = dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
+          posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
-        posLabel = reloc_new_posLabel_;
+        posLabel = m_reloc_new_pos_label;
       }
 
       MPIScheduler* top = this;
@@ -490,7 +489,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
     if (d_myworld->myrank() == d_myworld->size() / 2) {
         DOUT(true, " Rank-" << d_myworld->myrank()
                 << " Time: " << Time::currentSeconds()
-                << " , NumSend= " << sends_size
+                << " , NumSend: " << sends_size
                 << " , VolSend: " << volSend);
     }
   }
@@ -519,7 +518,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
     DOUT(true, "Rank-" << d_myworld->myrank() << " postMPIRecvs - task " << *dtask);
   }
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_COMM) {
+  if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_COMM) {
     printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_COMM);
   }
 
@@ -581,7 +580,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
       // Create the MPI type
       for (DetailedDep* req = batch->head; req != 0; req = req->next) {
 
-        OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+        OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
         if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
             && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
 
@@ -606,16 +605,16 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         // the load balancer is used to determine where data was in the old dw on the prev timestep
         // pass it in if the particle data is on the old dw
         LoadBalancer* lb = 0;
-        if (!reloc_new_posLabel_ && m_parent_scheduler) {
-          posDW = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        if (!m_reloc_new_pos_label && m_parent_scheduler) {
+          posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         }
         else {
           // on an output task (and only on one) we require particle variables from the NewDW
           if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-            posDW = dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
+            posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
           }
           else {
-            posDW = dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
+            posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
             lb = getLoadBalancer();
           }
         }
@@ -628,7 +627,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         dw->recvMPI(batch, mpibuff, posDW, req, lb);
 
         if (!req->isNonDataDependency()) {
-          graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
+          m_task_graphs[m_current_task_graph]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, m_dws);
         }
       }
 
@@ -752,15 +751,15 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                      , int iteration /* = 0 */
                      )
 {
-  ASSERTRANGE(tgnum, 0, (int )graphs.size());
-  TaskGraph* tg = graphs[tgnum];
+  ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
+  TaskGraph* tg = m_task_graphs[tgnum];
   tg->setIteration(iteration);
-  currentTG_ = tgnum;
+  m_current_task_graph = tgnum;
 
-  if (graphs.size() > 1) {
+  if (m_task_graphs.size() > 1) {
     // tg model is the multi TG model, where each graph is going to need to
     // have its dwmap reset here (even with the same tgnum)
-    tg->remapTaskDWs(dwmap);
+    tg->remapTaskDWs(m_dwmap);
   }
 
   DetailedTasks* dts = tg->getDetailedTasks();
@@ -773,59 +772,38 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   }
 
   int ntasks = dts->numLocalTasks();
-  dts->initializeScrubs(dws, dwmap);
+  dts->initializeScrubs(m_dws, m_dwmap);
   dts->initTimestep();
 
   for (int i = 0; i < ntasks; i++) {
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if (g_time_out.active()) {
+  if (g_time_out) {
     m_labels.clear();
     m_times.clear();
-    //emitTime("time since last execute");
   }
 
   int me = d_myworld->myrank();
 
-  // TODO determine exactly what this does and at what cost/benefit (APH 01/22/15)
+  // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(dts, me);
-
-  //if(timeout.active())
-  //emitTime("taskGraph output");
 
   mpi_info_.reset( 0 );
 
-  int numTasksDone = 0;
 
   DOUT(g_dbg, me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
-  bool abort = false;
-  int abort_point = 987654;
-
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
-    dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  if (m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != 0) {
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);
   }
 
-  int i = 0;
+  bool abort       = false;
+  int abort_point  = 987654;
+  int numTasksDone = 0;
+  int i            = 0;
   while (numTasksDone < ntasks) {
     i++;
-
-    //
-    // The following checkMemoryUse() is commented out to allow for
-    // maintaining the same functionality as before this commit...
-    // In other words, so that memory highwater checking is only done
-    // at the end of a timestep, and not between tasks... Once the
-    // RT settles down we will uncomment this section and then
-    // memory use checks will occur before every task.
-    //
-    // Note, the results (memuse, highwater, maxMemUse) from the following
-    // checkMemoryUse call are not used... the call, however, records
-    // the maxMemUse for future reference, and that is why we are calling
-    // it.
-    //
-    //unsigned long memuse, highwater, maxMemUse;
-    //checkMemoryUse( memuse, highwater, maxMemUse );
 
     DetailedTask * dtask = dts->getNextInternalReadyTask();
 
@@ -836,8 +814,6 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
     if (g_task_dbg) {
       DOUT(true, "Rank-" << me << " Initiating task: " << dtask->getTask()->getName() << "\t" << *dtask);
-      // TODO: fix printTask to use DOUT - APH 08/01/16
-//      printTask(taskdbg, task);
     }
 
     if (dtask->getTask()->getType() == Task::Reduction) {
@@ -856,7 +832,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       }
     }
 
-    if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
+    if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timestepAborted()){
       abort = true;
       abort_point = dtask->getTask()->getSortedOrder();
 
@@ -864,7 +840,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     }
   } // end while( numTasksDone < ntasks )
 
-  if (g_time_out.active()) {
+  if (g_time_out) {
     emitTime("MPI send time", mpi_info_[TotalSendMPI]);
     emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
     emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
@@ -885,7 +861,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   }
 
   if( !m_parent_scheduler ) { // If this scheduler is the root scheduler...    
-    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
+    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
   }
 
 
@@ -910,26 +886,22 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   ASSERT(m_recvs.size() == 0);
 
 
-//  if(timeout.active()) {
-//    emitTime("final wait");
-//  }
-
-  if (restartable && tgnum == (int)graphs.size() - 1) {
+  if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {
     // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
     Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
     if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
+      m_dws[m_dws.size() - 1]->restartTimestep();
+      if (m_dws[0]) {
+        m_dws[0]->setRestarted();
       }
     }
   }
 
   finalizeTimestep();
 
-  if ( !m_parent_scheduler && (g_exec_out.active() || g_time_out.active() || g_wait_out.active()) ) {  // only do on toplevel scheduler
+  if ( !m_parent_scheduler && (g_exec_out || g_time_out || g_wait_out) ) {  // only do on toplevel scheduler
     outputTimingStats("MPIScheduler");
   }
 
@@ -962,7 +934,7 @@ MPIScheduler::outputTimingStats( const char* label )
 {
   // add number of cells, patches, and particles
   int numCells = 0, numParticles = 0;
-  OnDemandDataWarehouseP dw = dws[dws.size() - 1];
+  OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
   const GridP grid(const_cast<Grid*>(dw->getGrid()));
   const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
   for (int p = 0; p < myPatches->size(); p++) {
@@ -971,7 +943,7 @@ MPIScheduler::outputTimingStats( const char* label )
     numCells += range.x() * range.y() * range.z();
 
     // go through all materials since getting an MPMMaterial correctly would depend on MPM
-    for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+    for (int m = 0; m < m_shared_state->getNumMatls(); m++) {
       if (dw->haveParticleSubset(m, patch))
         numParticles += dw->getParticleSubset(m, patch)->numParticles();
     }
@@ -1033,7 +1005,7 @@ MPIScheduler::outputTimingStats( const char* label )
 
   for (unsigned file = 0; file < files.size(); file++) {
     std::ofstream& out = *files[file];
-    out << "Timestep " << d_sharedState->getCurrentTopLevelTimeStep() << std::endl;
+    out << "Timestep " << m_shared_state->getCurrentTopLevelTimeStep() << std::endl;
     for (int i = 0; i < (int)(*data[file]).size(); i++) {
       out << label << ": " << m_labels[i] << ": ";
       int len = static_cast<int>(strlen(m_labels[i]) + strlen("MPIScheduler: ") + strlen(": "));
@@ -1052,15 +1024,17 @@ MPIScheduler::outputTimingStats( const char* label )
   }
 
   if (me == 0) {
-    g_time_out << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
-    g_time_out << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
-    g_time_out << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n";
+    std::ostringstream message;
+    message << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
+    message << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
+    message << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n";
+    DOUT(g_time_out, message.str());
   }
 
   double time = Time::currentSeconds();
   m_last_time = time;
 
-  if (g_exec_out.active()) {
+  if (g_exec_out) {
     static int count = 0;
 
     // only output the exec times every 10 timesteps
@@ -1072,9 +1046,9 @@ MPIScheduler::outputTimingStats( const char* label )
 
       // Report which timesteps TaskExecTime values have been accumulated over
       fout << "Reported values are cumulative over 10 timesteps ("
-           << d_sharedState->getCurrentTopLevelTimeStep()-9
+           << m_shared_state->getCurrentTopLevelTimeStep()-9
            << " through "
-           << d_sharedState->getCurrentTopLevelTimeStep()
+           << m_shared_state->getCurrentTopLevelTimeStep()
            << ")" << std::endl;
 
       for (std::map<std::string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
@@ -1085,7 +1059,7 @@ MPIScheduler::outputTimingStats( const char* label )
     }
   }
 
-  if (g_wait_out.active()) {
+  if (g_wait_out) {
     static int count = 0;
 
     // only output the exec times every 10 timesteps

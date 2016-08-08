@@ -413,7 +413,7 @@ AMRSimulationController::run()
 
     d_sharedState->d_current_delt = delt;
 
-    // For the first time through the loop print the inital runtime
+    // For the first time through the loop print the initial runtime
     // performance stats. Use a time step of -1 to note that these
     // stats are from before the executeTimestep.
     if( first ) {

@@ -25,6 +25,8 @@
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
+#include <Core/Util/DebugStream.h>
+
 #include <mutex>
 
 extern DebugStream gpu_stats;

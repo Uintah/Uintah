@@ -22,56 +22,60 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_RoundRobinLoadBalancer_H
-#define UINTAH_HOMEBREW_RoundRobinLoadBalancer_H
+#ifndef CCA_COMPONENTS_LOADBALANCERS_ROUNDROBINLOADBALANCER_H
+#define CCA_COMPONENTS_LOADBALANCERS_ROUNDROBINLOADBALANCER_H
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <Core/Parallel/UintahParallelComponent.h>
-#include <set>
 
 namespace Uintah {
-   /**************************************
-     
-     CLASS
-       RoundRobinLoadBalancer
-      
-       Short Description...
-      
-     GENERAL INFORMATION
-      
-       RoundRobinLoadBalancer.h
-      
-       Steven G. Parker
-       Department of Computer Science
-       University of Utah
-      
-       Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-             
-     KEYWORDS
-       RoundRobinLoadBalancer
-      
-     DESCRIPTION
-       Long description...
-      
-     WARNING
-      
-     ****************************************/
-    
-  class RoundRobinLoadBalancer : public LoadBalancerCommon {
-  public:
-    RoundRobinLoadBalancer(const ProcessorGroup* myworld);
-    ~RoundRobinLoadBalancer();
-    
-    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
-    
-  private:
-    RoundRobinLoadBalancer(const RoundRobinLoadBalancer&);
-    RoundRobinLoadBalancer& operator=(const RoundRobinLoadBalancer&);
-    
-   };
-} // End namespace Uintah
+
+/**************************************
+
+CLASS
+ RoundRobinLoadBalancer
 
 
-#endif
+GENERAL INFORMATION
+
+ RoundRobinLoadBalancer.h
+
+ Steven G. Parker
+ Department of Computer Science
+ University of Utah
+
+ Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+
+
+KEYWORDS
+ RoundRobinLoadBalancer
+
+DESCRIPTION
+
+
+ ****************************************/
+
+class RoundRobinLoadBalancer : public LoadBalancerCommon {
+
+public:
+
+  RoundRobinLoadBalancer( const ProcessorGroup * myworld );
+
+  ~RoundRobinLoadBalancer();
+
+  virtual int getPatchwiseProcessorAssignment( const Patch * patch );
+
+private:
+
+  // eliminate copy, assignment and move
+  RoundRobinLoadBalancer( const RoundRobinLoadBalancer & )            = delete;
+  RoundRobinLoadBalancer& operator=( const RoundRobinLoadBalancer & ) = delete;
+  RoundRobinLoadBalancer( RoundRobinLoadBalancer && )                 = delete;
+  RoundRobinLoadBalancer& operator=( RoundRobinLoadBalancer && )      = delete;
+
+};
+
+}  // End namespace Uintah
+
+#endif // CCA_COMPONENTS_LOADBALANCERS_ROUNDROBINLOADBALANCER_H
 

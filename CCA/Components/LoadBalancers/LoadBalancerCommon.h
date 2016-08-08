@@ -62,14 +62,16 @@ DESCRIPTION
 ****************************************/
 
 struct PatchInfo {
+
   PatchInfo(int id, int num_particles)
     : m_id{id}
     , m_num_particles{num_particles}
-    {}
+  {}
+
   PatchInfo() = default;
 
-  int m_id;
-  int m_num_particles;
+  int m_id{0};
+  int m_num_particles{0};
 };
 
 
@@ -103,7 +105,7 @@ public:
 
   LoadBalancerCommon( const ProcessorGroup * myworld );
 
-  ~LoadBalancerCommon();
+  virtual ~LoadBalancerCommon();
 
   virtual int getPatchwiseProcessorAssignment( const Patch * patch );
 
@@ -226,6 +228,7 @@ protected:
   std::vector< Handle<const PatchSet> > m_level_perproc_patchsets;
   Handle< const PatchSet >              m_grid_perproc_patchsets;
   std::vector< Handle<const PatchSet> > m_output_patchsets;
+
 
 private:
 

@@ -39,13 +39,15 @@
 #include <Core/Util/FancyAssert.h>
 
 #include <iosfwd>
+#include <iostream>
 #include <list>
 #include <map>
 #include <sstream>
 #include <vector>
 
 #include <sci_hash_map.h>
-#include <iostream>
+
+
 namespace Uintah {
 
    /**************************************

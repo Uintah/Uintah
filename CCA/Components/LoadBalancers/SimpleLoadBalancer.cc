@@ -37,19 +37,12 @@
 
 using namespace Uintah;
 
-// Debug: Used to sync cerr so it is readable when output by multiple threads
-extern std::mutex cerrLock;
-
-extern Uintah::DebugStream lbDebug;
-
-SimpleLoadBalancer::SimpleLoadBalancer( const ProcessorGroup * myworld ) :
-  LoadBalancerCommon( myworld )
-{
-}
+SimpleLoadBalancer::SimpleLoadBalancer( const ProcessorGroup * myworld )
+  : LoadBalancerCommon( myworld )
+{}
 
 SimpleLoadBalancer::~SimpleLoadBalancer()
-{
-}
+{}
 
 int
 SimpleLoadBalancer::getPatchwiseProcessorAssignment( const Patch * patch )

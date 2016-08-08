@@ -30,10 +30,8 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 
-#include <Core/Grid/Task.h>
-#include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/CommunicationList.hpp>
-#include <Core/Parallel/PackBufferInfo.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/InfoMapper.h>
 
 #include <fstream>
@@ -43,7 +41,11 @@
 
 namespace Uintah {
 
-static DebugStream mpi_stats("MPIStats", false);
+namespace {
+
+Dout mpi_stats("MPIStats", false);
+
+}
 
 class Task;
 
@@ -106,7 +108,7 @@ class MPIScheduler : public SchedulerCommon {
     }
 
     void printMPIStats() {
-      if (mpi_stats.active()) {
+      if (mpi_stats) {
         unsigned int total_messages;
         double total_volume;
 
@@ -120,8 +122,8 @@ class MPIScheduler : public SchedulerCommon {
         Uintah::MPI::Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE  , MPI_MAX, 0, d_myworld->getComm());
 
         if( d_myworld->myrank() == 0 ) {
-          mpi_stats << "MPIStats: Num Messages (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages << std::endl;
-          mpi_stats << "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size() << " (max):" << max_volume << std::endl;
+          DOUT(true, "MPIStats: Num Messages   (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages);
+          DOUT(true, "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size() << " (max):" << max_volume);
         }
       }
     }
