@@ -859,70 +859,62 @@ void
 SimulationController::getMemoryStats ( int timestep, bool create )
 {
   unsigned long memUse, highwater, maxMemUse;
-  d_scheduler->checkMemoryUse( memUse, highwater, maxMemUse );
+  d_scheduler->checkMemoryUse(memUse, highwater, maxMemUse);
 
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryUsed ] =
-    memUse;
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryMaxUsed ] =
-    maxMemUse;
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryHighwater ] =
-    highwater;
+  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryUsed] = memUse;
+  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryMaxUsed] = maxMemUse;
+  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryHighwater] = highwater;
 
-  if( ProcessInfo::isSupported(ProcessInfo::MEM_SIZE) )
-    d_sharedState->d_runTimeStats[ SimulationState::MemoryUsed ] =
-      ProcessInfo::getMemoryUsed();
-  if( ProcessInfo::isSupported(ProcessInfo::MEM_RSS) )
-    d_sharedState->d_runTimeStats[ SimulationState::MemoryResident ] =
-      ProcessInfo::getMemoryResident();
+  if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) {
+    d_sharedState->d_runTimeStats[SimulationState::MemoryUsed] = ProcessInfo::getMemoryUsed();
+  }
 
-  // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
-  if ( getenv( "MALLOC_PERPROC" ) )
-  {
+  if (ProcessInfo::isSupported(ProcessInfo::MEM_RSS)) {
+    d_sharedState->d_runTimeStats[SimulationState::MemoryResident] = ProcessInfo::getMemoryResident();
+  }
+
+  // Get memory stats for each proc if MALLOC_PERPROC is in the environment.
+  if (getenv("MALLOC_PERPROC")) {
     ostream* mallocPerProcStream = nullptr;
-    char* filenamePrefix = getenv( "MALLOC_PERPROC" );
+    char* filenamePrefix = getenv("MALLOC_PERPROC");
 
-    if ( !filenamePrefix || strlen( filenamePrefix ) == 0 )
-    {
+    if (!filenamePrefix || strlen(filenamePrefix) == 0) {
       mallocPerProcStream = &dbg;
     }
-    else
-    {
+    else {
       char filename[256];
-      sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
+      sprintf(filename, "%s.%d", filenamePrefix, d_myworld->myrank());
 
-      if ( create )
-      {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
+      if (create) {
+        mallocPerProcStream = scinew ofstream(filename, ios::out | ios::trunc);
       }
-      else
-      {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::app );
+      else {
+        mallocPerProcStream = scinew ofstream(filename, ios::out | ios::app);
       }
 
-      if ( !mallocPerProcStream )
-      {
+      if (!mallocPerProcStream) {
         delete mallocPerProcStream;
         mallocPerProcStream = &dbg;
       }
     }
 
-    *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
+    *mallocPerProcStream << "Proc " << d_myworld->myrank() << "   ";
     *mallocPerProcStream << "Timestep " << timestep << "   ";
 
-    if( ProcessInfo::isSupported(ProcessInfo::MEM_SIZE) )
-      *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
-    if( ProcessInfo::isSupported(ProcessInfo::MEM_RSS) )
-      *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
+    if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE))
+      *mallocPerProcStream << "Size " << ProcessInfo::getMemoryUsed() << "   ";
+    if (ProcessInfo::isSupported(ProcessInfo::MEM_RSS))
+      *mallocPerProcStream << "RSS " << ProcessInfo::getMemoryResident() << "   ";
 
-    *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
+    *mallocPerProcStream << "Sbrk " << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
 #ifndef DISABLE_SCI_MALLOC
-    *mallocPerProcStream << "Sci_Malloc_Memuse "    << memUse << "   ";
+    *mallocPerProcStream << "Sci_Malloc_Memuse " << memUse << "   ";
     *mallocPerProcStream << "Sci_Malloc_MaxMemuse " << maxMemUse << "   ";
     *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
 #endif
     *mallocPerProcStream << "\n";
 
-    if ( mallocPerProcStream != &dbg ) {
+    if (mallocPerProcStream != &dbg) {
       delete mallocPerProcStream;
     }
   }

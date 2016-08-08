@@ -22,21 +22,20 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Geometry/Vector.h>
 
-#include <iostream>
+#include <Core/Geometry/Vector.h>
 
 using namespace Uintah;
 
-using std::cerr;
-
-DataWarehouse::DataWarehouse(const ProcessorGroup* myworld,
-			     Scheduler* scheduler,
-			     int generation)
-  : d_myworld(myworld), d_scheduler(scheduler), d_generation(generation)
+DataWarehouse::DataWarehouse( const ProcessorGroup * myworld
+                            ,        Scheduler     * scheduler
+                            ,        int             generation
+                            )
+  : d_myworld(myworld)
+  , d_scheduler(scheduler)
+  , d_generation(generation)
 {
 }
 

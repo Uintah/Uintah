@@ -30,22 +30,22 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Time.h>
 
-#include <cstring>
-#include <mutex>
 
 using namespace Uintah;
 
-// Used to sync cout/cerr so it is readable when output by multiple threads
-extern std::mutex      coutLock;
-extern std::mutex      cerrLock;
 
-extern Dout         g_task_dbg;
-extern Dout         g_task_order;
-extern DebugStream  g_exec_out;
+extern Dout g_task_dbg;
+extern Dout g_task_order;
+extern Dout g_exec_out;
 
-static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
-static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
-static DebugStream dynamicmpi_queuelength("DynamicMPI_QueueLength", false);
+
+namespace {
+
+Dout g_dbg(          "DynamicMPI_DBG",         false);
+Dout g_queue_length( "DynamicMPI_QueueLength", false);
+Dout g_timeout(      "DynamicMPI_TimingsOut",  false);
+
+}
 
 
 //______________________________________________________________________
@@ -55,9 +55,9 @@ DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
                                                 DynamicMPIScheduler* parentScheduler )
   : MPIScheduler( myworld, oport, parentScheduler )
 {
-  taskQueueAlg_ =  MostMessages;
+  m_task_queue_alg =  MostMessages;
 
-  if (dynamicmpi_timeout.active()) {
+  if (g_timeout) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     m_timings_stats.open(filename);
@@ -74,7 +74,7 @@ DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
 //
 DynamicMPIScheduler::~DynamicMPIScheduler()
 {
-  if (dynamicmpi_timeout.active()) {
+  if (g_timeout) {
     m_timings_stats.close();
     if (d_myworld->myrank() == 0) {
       m_avg_stats.close();
@@ -100,43 +100,43 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   if (taskQueueAlg == "FCFS") {
-    taskQueueAlg_ = FCFS;
+    m_task_queue_alg = FCFS;
   }
   else if (taskQueueAlg == "Random") {
-    taskQueueAlg_ = Random;
+    m_task_queue_alg = Random;
   }
   else if (taskQueueAlg == "Stack") {
-    taskQueueAlg_ = Stack;
+    m_task_queue_alg = Stack;
   }
   else if (taskQueueAlg == "MostChildren") {
-    taskQueueAlg_ = MostChildren;
+    m_task_queue_alg = MostChildren;
   }
   else if (taskQueueAlg == "LeastChildren") {
-    taskQueueAlg_ = LeastChildren;
+    m_task_queue_alg = LeastChildren;
   }
   else if (taskQueueAlg == "MostAllChildren") {
-    taskQueueAlg_ = MostChildren;
+    m_task_queue_alg = MostChildren;
   }
   else if (taskQueueAlg == "LeastAllChildren") {
-    taskQueueAlg_ = LeastChildren;
+    m_task_queue_alg = LeastChildren;
   }
   else if (taskQueueAlg == "MostL2Children") {
-    taskQueueAlg_ = MostL2Children;
+    m_task_queue_alg = MostL2Children;
   }
   else if (taskQueueAlg == "LeastL2Children") {
-    taskQueueAlg_ = LeastL2Children;
+    m_task_queue_alg = LeastL2Children;
   }
   else if (taskQueueAlg == "MostMessages") {
-    taskQueueAlg_ = MostMessages;
+    m_task_queue_alg = MostMessages;
   }
   else if (taskQueueAlg == "LeastMessages") {
-    taskQueueAlg_ = LeastMessages;
+    m_task_queue_alg = LeastMessages;
   }
   else if (taskQueueAlg == "PatchOrder") {
-    taskQueueAlg_ = PatchOrder;
+    m_task_queue_alg = PatchOrder;
   }
   else if (taskQueueAlg == "PatchOrderRandom") {
-    taskQueueAlg_ = PatchOrderRandom;
+    m_task_queue_alg = PatchOrderRandom;
   }
   else {
     throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
@@ -151,10 +151,10 @@ SchedulerP
 DynamicMPIScheduler::createSubScheduler()
 {
   UintahParallelPort  * lbp      = getPort("load balancer");
-  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_outPort_, this );
-  newsched->d_sharedState = d_sharedState;
+  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_out_port, this );
+  newsched->m_shared_state = m_shared_state;
   newsched->attachPort( "load balancer", lbp );
-  newsched->d_sharedState = d_sharedState;
+  newsched->m_shared_state = m_shared_state;
   return newsched;
 }
 
@@ -164,69 +164,59 @@ void
 DynamicMPIScheduler::execute( int tgnum     /*=0*/,
                               int iteration /*=0*/ )
 {
-  if (d_sharedState->isCopyDataTimestep()) {
+  if (m_shared_state->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
 
-  MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
-
-  ASSERTRANGE(tgnum, 0, (int)graphs.size());
-  TaskGraph* tg = graphs[tgnum];
+  ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
+  TaskGraph* tg = m_task_graphs[tgnum];
   tg->setIteration(iteration);
-  currentTG_ = tgnum;
+  m_current_task_graph = tgnum;
 
-  if (graphs.size() > 1) {
+  if (static_cast<int>(m_task_graphs.size()) > 1) {
     // tg model is the multi TG model, where each graph is going to need to
     // have its dwmap reset here (even with the same tgnum)
-    tg->remapTaskDWs(dwmap);
+    tg->remapTaskDWs(m_dwmap);
   }
 
   DetailedTasks* dts = tg->getDetailedTasks();
 
-  if(dts == 0) {
+  if(!dts) {
     if (d_myworld->myrank() == 0) {
-      std::cerr << "DynamicMPIScheduler skipping execute, no tasks\n";
+      DOUT(true, "DynamicMPIScheduler skipping execute, no tasks");
     }
     return;
   }
   
   int ntasks = dts->numLocalTasks();
-  dts->initializeScrubs(dws, dwmap);
+  dts->initializeScrubs(m_dws, m_dwmap);
   dts->initTimestep();
 
   for (int i = 0; i < ntasks; i++) {
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if(dynamicmpi_timeout.active()) {
+  if(g_timeout) {
     m_labels.clear();
     m_times.clear();
-    //emitTime("time since last execute");
+    emitTime("time since last execute");
   }
 
   int me = d_myworld->myrank();
-  makeTaskGraphDoc(dts, me);
 
-  //if(timeout.active())
-    //emitTime("taskGraph output");
+  // This only happens if "-emit_taskgraphs" is passed to sus
+  makeTaskGraphDoc(dts, me);
 
   mpi_info_.reset( 0 );
 
-  int numTasksDone = 0;
-  bool abort       = false;
-  int  abort_point = 987654;
-
-  int i = 0;
-
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
-    dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  if (m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != 0) {
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);
   }
 
-  // TODO  - figure out if we can remove this #if - APH 09/10/15
 #if 0
   // hook to post all the messages up front
-  if (useDynamicScheduling_ && !d_sharedState->isCopyDataTimestep()) {
+  if (!m_shared_state->isCopyDataTimestep()) {
     // post the receives in advance
     for (int i = 0; i < ntasks; i++) {
       initiateTask( dts->localTask(i), abort, abort_point, iteration );
@@ -238,46 +228,35 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   std::map<int, int> phaseTasks;
   std::map<int, int> phaseTasksDone;
   std::map<int,  DetailedTask *> phaseSyncTask;
-  dts->setTaskPriorityAlg(taskQueueAlg_ );
+  dts->setTaskPriorityAlg(m_task_queue_alg );
 
   for (int i = 0; i < ntasks; i++) {
     phaseTasks[dts->localTask(i)->getTask()->m_phase]++;
   }
   
-  if (dynamicmpi_dbg.active()) {
-    cerrLock.lock();
-    dynamicmpi_dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)";
+  if (g_dbg) {
+    std::ostringstream message;
+    message << "Rank-" << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)";
     for (std::map<int, int>::iterator it = phaseTasks.begin(); it != phaseTasks.end(); it++) {
-      dynamicmpi_dbg << ", phase[" << (*it).first << "] = " << (*it).second;
+      message << ", phase[" << (*it).first << "] = " << (*it).second;
     }
-    dynamicmpi_dbg << std::endl;
-    cerrLock.unlock();
+    DOUT(true, message.str());
   }
 
   static std::vector<int> histogram;
   static int totaltasks;
   std::set<DetailedTask*> pending_tasks;
 
+  int numTasksDone = 0;
+  bool abort       = false;
+  int  abort_point = 987654;
+  int i            = 0;
+
   while( numTasksDone < ntasks ) {
+
     i++;
 
-    // 
-    // The following checkMemoryUse() is commented out to allow for
-    // maintaining the same functionality as before this commit...
-    // In other words, so that memory highwater checking is only done
-    // at the end of a timestep, and not between tasks... Once the
-    // RT settles down we will uncomment this section and then
-    // memory use checks will occur before every task.
-    //
-    // Note, the results (memuse, highwater, maxMemUse) from the following
-    // checkMemoryUse call are not used... the call, however, records
-    // the maxMemUse for future reference, and that is why we are calling
-    // it.
-    //
-    //unsigned long memuse, highwater, maxMemUse;
-    //checkMemoryUse( memuse, highwater, maxMemUse );
-
-    DetailedTask * task = 0;
+    DetailedTask * task = nullptr;
 
     // if we have an internally-ready task, initiate its recvs
     while(dts->numInternalReadyTasks() > 0) { 
@@ -301,7 +280,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       // run a task that has its communication complete
       // tasks get in this queue automatically when their receive count hits 0
       //   in DependencyBatch::received, which is called when a message is delivered.
-      if (dynamicmpi_queuelength.active()) {
+      if (g_queue_length) {
         if ((int)histogram.size() < dts->numExternalReadyTasks() + 1) {
           histogram.resize(dts->numExternalReadyTasks() + 1);
         }
@@ -327,9 +306,10 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     } 
 
     if ((phaseSyncTask.find(currphase) != phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {  //if it is time to run the reduction task
-      if (dynamicmpi_queuelength.active()) {
-        if ((int)histogram.size() < dts->numExternalReadyTasks() + 1)
+      if (g_queue_length) {
+        if ((int)histogram.size() < dts->numExternalReadyTasks() + 1) {
           histogram.resize(dts->numExternalReadyTasks() + 1);
+        }
         histogram[dts->numExternalReadyTasks()]++;
       }
       DetailedTask *reducetask = phaseSyncTask[currphase];
@@ -353,8 +333,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
       numTasksDone++;
       if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
-        DOUT(true,
-             d_myworld->myrank() << " Running task static order: " << reducetask->getStaticOrder() << " , scheduled order: " << numTasksDone);
+        DOUT(true, d_myworld->myrank() << " Running task static order: " << reducetask->getStaticOrder() << " , scheduled order: " << numTasksDone);
       }
       phaseTasksDone[reducetask->getTask()->m_phase]++;
     }
@@ -374,30 +353,27 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       }
     }
 
-    if (!abort && dws[dws.size() - 1] && dws[dws.size() - 1]->timestepAborted()) {
+    if (!abort && m_dws[m_dws.size() - 1] && m_dws[m_dws.size() - 1]->timestepAborted()) {
       // TODO - abort might not work with external queue...
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
-      dynamicmpi_dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
+      DOUT(g_dbg, "Aborting timestep after task: " << *task->getTask());
     }
   } // end while( numTasksDone < ntasks )
 
-  if (dynamicmpi_queuelength.active()) {
+  if (g_queue_length) {
     float lengthsum = 0;
     totaltasks += ntasks;
     for (unsigned int i = 1; i < histogram.size(); i++) {
       lengthsum = lengthsum + i * histogram[i];
     }
-
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
-
     Uintah::MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
-
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
   
-  if (dynamicmpi_timeout.active()) {
+  if (g_timeout) {
     emitTime("MPI send time", mpi_info_[TotalSendMPI]);
     emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
     emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
@@ -417,8 +393,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   // compute the net timings
-  if (d_sharedState != 0) {  // subschedulers don't have a sharedState
-    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
+  if (m_shared_state != 0) {  // subschedulers don't have a sharedState
+    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
   }
 
 
@@ -441,32 +417,27 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   ASSERT(m_recvs.size() == 0);
 
 
-  if (restartable && tgnum == (int)graphs.size() - 1) {
+  if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {
     // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
     Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
+      m_dws[m_dws.size() - 1]->restartTimestep();
+      if (m_dws[0]) {
+        m_dws[0]->setRestarted();
       }
     }
   }
 
   finalizeTimestep();
   
-
-  if( ( g_exec_out.active() || dynamicmpi_timeout.active() ) && !m_parent_scheduler ) {  // only do on toplevel scheduler
+  if( ( g_exec_out || g_timeout ) && !m_parent_scheduler ) {  // only do on toplevel scheduler
     outputTimingStats("DynamicMPIScheduler");
   }
 
-  if( dynamicmpi_dbg.active()) {
-    coutLock.lock();
-    dynamicmpi_dbg << me << " DynamicMPIScheduler finished\n";
-    coutLock.unlock();
-  }
+  DOUT(g_dbg, "Rank-" <<  me << " DynamicMPIScheduler finished executing");
 }
 

@@ -550,7 +550,7 @@ namespace Uintah {
 
     ParticleExchangeVar& getParticleRecvs() { return particleRecvs_; }
     
-    void setTaskPriorityAlg( QueueAlg alg ) { taskPriorityAlg_=alg; }
+    void setTaskPriorityAlg( QueueAlg alg ) { taskPriorityAlg_ = alg; }
 
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
 

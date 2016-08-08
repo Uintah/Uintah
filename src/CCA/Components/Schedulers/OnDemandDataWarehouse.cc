@@ -66,6 +66,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -106,10 +107,16 @@ extern DebugStream mixedDebug;
   extern DebugStream gpudbg;
 #endif
 
-static DebugStream dbg(        "OnDemandDataWarehouse",      false );
-static DebugStream warn(       "OnDemandDataWarehouse_warn", true  );
-static DebugStream particles(  "DWParticles",                false );
-static DebugStream particles2( "DWParticles2",               false );
+namespace {
+
+Dout        g_foreign_dbg("ForeignVariables", false);
+
+DebugStream dbg(        "OnDemandDataWarehouse",      false );
+DebugStream warn(       "OnDemandDataWarehouse_warn", true  );
+DebugStream particles(  "DWParticles",                false );
+DebugStream particles2( "DWParticles2",               false );
+
+}
 
 extern Dout g_mpi_dbg;
 
@@ -886,11 +893,9 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
 
         // set the foreign before the allocate (allocate CAN take multiple P Subsets, but only if it's foreign)
         if( whole_patch_pset ) {
-          MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::recvMPI(whole patch pset):" + label->getName() );
           var->allocate( recvset );
         }
         else {
-          MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::recvMPI:" + label->getName() );
           // don't give this a pset as it could be a conatiner for several
           int allocated_particles = old_dw->d_foreignParticleQuantities[std::make_pair( matlIndex, patch )];
           var->allocate( allocated_particles );
@@ -909,10 +914,9 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
     case TypeDescription::SFCXVariable :
     case TypeDescription::SFCYVariable :
     case TypeDescription::SFCZVariable : {
-      MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::recvMPI(cell variable):" + label->getName() );
+
       //allocate the variable
-      GridVariableBase* var =
-          dynamic_cast<GridVariableBase*>( label->typeDescription()->createInstance() );
+      GridVariableBase* var = dynamic_cast<GridVariableBase*>( label->typeDescription()->createInstance() );
       var->allocate( dep->low, dep->high );
 
       //set the var as foreign
@@ -921,6 +925,14 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
 
       //add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
       batch->addVar( var );
+      IntVector low, high, size;
+      var->getSizes(low, high, size);
+
+      DOUT( g_foreign_dbg, "Rank-" << Parallel::getMPIRank() << "  adding foreign var: " << std::setw(10) << *label << "  patch: "
+                                   << patch->getID() << "  matl: " << matlIndex << "  level: " << patch->getLevel()->getIndex()
+                                   << "  from proc: " << lb->getPatchwiseProcessorAssignment( patch )
+                                   << "  low: " << low << "  high: " << high << " sizes: " << size);
+
       d_varDB.putForeign( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep() );  //put new var in data warehouse
       var->getMPIBuffer( buffer, dep->low, dep->high );
     }

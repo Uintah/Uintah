@@ -34,6 +34,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/CommunicationList.hpp>
+#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Time.h>
 
@@ -62,26 +63,26 @@ using namespace Uintah;
   DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
 #endif
 
-// sync cout/cerr so they are readable when output by multiple threads
-extern std::mutex coutLock;
 extern std::mutex cerrLock;
 
 extern Dout g_task_dbg;
 extern Dout g_task_order;
-
-extern DebugStream g_wait_out;
-extern DebugStream g_exec_out;
+extern Dout g_wait_out;
+extern Dout g_exec_out;
 
 extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
 
-static double Unified_CurrentWaitTime = 0;
+namespace {
 
+Dout g_dbg(         "Unified_DBG"        , false);
+Dout g_timeout(     "Unified_TimingsOut" , false);
+Dout g_queuelength( "Unified_QueueLength", false);
 
-static DebugStream unified_dbg(             "Unified_DBG",             false);
-static DebugStream unified_timeout(         "Unified_TimingsOut",      false);
-static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
+double Unified_CurrentWaitTime = 0;
+
+}
 
 
 #ifdef HAVE_CUDA
@@ -292,7 +293,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
 
 #endif
 
-  if (unified_timeout.active()) {
+  if (g_timeout) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     m_timings_stats.open(filename);
@@ -310,7 +311,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
 //
 UnifiedScheduler::~UnifiedScheduler()
 {
-  if (unified_timeout.active()) {
+  if (g_timeout) {
     m_timings_stats.close();
     if (d_myworld->myrank() == 0) {
       m_max_stats.close();
@@ -483,10 +484,10 @@ SchedulerP
 UnifiedScheduler::createSubScheduler()
 {
   UintahParallelPort * lbp      = getPort("load balancer");
-  UnifiedScheduler   * subsched = scinew UnifiedScheduler( d_myworld, m_outPort_, this );
+  UnifiedScheduler   * subsched = scinew UnifiedScheduler( d_myworld, m_out_port, this );
 
   subsched->attachPort( "load balancer", lbp );
-  subsched->d_sharedState = d_sharedState;
+  subsched->m_shared_state = m_shared_state;
   subsched->m_num_threads = Uintah::Parallel::getNumThreads() - 1;
 
   return subsched;
@@ -502,7 +503,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
                          , Task::CallBackEvent   event
                          )
 {
-  if (g_wait_out.active()) {
+  if (g_wait_out) {
     g_wait_times_lock.lock();
     {
       waittimes[task->getTask()->getName()] += Unified_CurrentWaitTime;
@@ -516,19 +517,19 @@ UnifiedScheduler::runTask( DetailedTask*         task
     // -------------------------< begin task execution timing >-------------------------
     double task_start_time = Time::currentSeconds();
 
-    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
+    if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
     }
 
-    std::vector<DataWarehouseP> plain_old_dws(dws.size());
-    for (int i = 0; i < (int)dws.size(); i++) {
-      plain_old_dws[i] = dws[i].get_rep();
+    std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
+    for (int i = 0; i < (int)m_dws.size(); i++) {
+      plain_old_dws[i] = m_dws[i].get_rep();
     }
 
-    task->doit(d_myworld, dws, plain_old_dws, event);
+    task->doit(d_myworld, m_dws, plain_old_dws, event);
 
 
-    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+    if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
     }
 
@@ -537,7 +538,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
 
     g_lb_lock.lock();
     {
-      if (g_exec_out.active()) {
+      if (g_exec_out) {
         exectimes[task->getTask()->getName()] += total_task_time;
       }
 
@@ -545,7 +546,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
       if (!task->getTask()->getHasSubScheduler()) {
         // add my task time to the total time
         mpi_info_[TotalTask] += total_task_time;
-        if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+        if (!m_shared_state->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
           // add contribution of task execution time to load balancer
           getLoadBalancer()->addContribution(task, total_task_time);
         }
@@ -607,7 +608,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
       task->deleteTaskGpuDataWarehouses();
     }
 #endif
-    task->done(dws);  // should this be timed with taskstart? - BJW
+    task->done(m_dws);  // should this be timed with taskstart? - BJW
 
     // -------------------------< begin MPI test timing >-------------------------
     double test_start_time = Time::currentSeconds();
@@ -651,20 +652,20 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
                          )
 {
   // copy data timestep must be single threaded for now
-  if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
+  if (Uintah::Parallel::usingMPI() && m_shared_state->isCopyDataTimestep()) {
     MPIScheduler::execute( tgnum, iteration );
     return;
   }
 
-  ASSERTRANGE(tgnum, 0, (int )graphs.size());
-  TaskGraph* tg = graphs[tgnum];
+  ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
+  TaskGraph* tg = m_task_graphs[tgnum];
   tg->setIteration(iteration);
-  currentTG_ = tgnum;
+  m_current_task_graph = tgnum;
 
-  if (graphs.size() > 1) {
+  if (m_task_graphs.size() > 1) {
     // tg model is the multi TG model, where each graph is going to need to
     // have its dwmap reset here (even with the same tgnum)
-    tg->remapTaskDWs(dwmap);
+    tg->remapTaskDWs(m_dwmap);
   }
 
   m_detailed_tasks = tg->getDetailedTasks();
@@ -674,7 +675,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     return;
   }
 
-  m_detailed_tasks->initializeScrubs(dws, dwmap);
+  m_detailed_tasks->initializeScrubs(m_dws, m_dwmap);
   m_detailed_tasks->initTimestep();
 
   m_num_tasks = m_detailed_tasks->numLocalTasks();
@@ -682,17 +683,15 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
 
-  bool emit_timings = unified_timeout.active();
-  if (emit_timings) {
+  if (g_timeout) {
     m_labels.clear();
     m_labels.clear();
   }
 
-  //  // TODO - determine if this TG output code is even working correctly (APH - 06/09/16)
-  //  makeTaskGraphDoc(dts, d_myworld->myrank());
-  //  if (useInternalDeps() && emit_timings) {
-  //    emitTime("taskGraph output");
-  //  }
+  int my_rank = d_myworld->myrank();
+
+  // This only happens if "-emit_taskgraphs" is passed to sus
+  makeTaskGraphDoc(m_detailed_tasks, my_rank);
 
   mpi_info_.reset( 0 );
 
@@ -700,8 +699,8 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_abort = false;
   m_abort_point = 987654;
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
-    dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  if (m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != 0) {
+    m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_pos_label, iteration);
   }
 
   m_curr_iteration = iteration;
@@ -720,19 +719,14 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     m_phase_tasks[m_detailed_tasks->localTask(i)->getTask()->m_phase]++;
   }
 
-  if (unified_dbg.active()) {
-    coutLock.lock();
-    {
-      unified_dbg << "\n"
-                  << "Rank-" << d_myworld->myrank() << " Executing " << m_detailed_tasks->numTasks()
-                  << " tasks (" << m_num_tasks << " local)\n" << "Total task phases: " << m_num_phases
-                  << "\n";
-      for (size_t phase = 0; phase < m_phase_tasks.size(); ++phase) {
-        unified_dbg << "Phase: " << phase << " has " << m_phase_tasks[phase] << " total tasks\n";
-      }
-      unified_dbg << std::endl;
+  if (g_dbg) {
+    std::ostringstream message;
+    message << "\n" << "Rank-" << my_rank << " Executing " << m_detailed_tasks->numTasks() << " tasks (" << m_num_tasks
+            << " local)\n" << "Total task phases: " << m_num_phases << "\n";
+    for (size_t phase = 0; phase < m_phase_tasks.size(); ++phase) {
+      message << "Phase: " << phase << " has " << m_phase_tasks[phase] << " total tasks\n";
     }
-    coutLock.unlock();
+    DOUT(true, message.str());
   }
 
   static int totaltasks;
@@ -741,7 +735,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
-  if (!d_sharedState->isCopyDataTimestep()) {
+  if (!m_shared_state->isCopyDataTimestep()) {
     Impl::g_run_tasks = 1;
     for (int i = 1; i < Impl::g_num_threads; ++i) {
       Impl::g_thread_states[i] = Impl::ThreadState::Active;
@@ -757,7 +751,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
-  if (!d_sharedState->isCopyDataTimestep()) {
+  if (!m_shared_state->isCopyDataTimestep()) {
     Impl::g_run_tasks = 0;
 
     Impl::thread_fence();
@@ -790,7 +784,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   ASSERT(m_recvs.size() == 0);
 
 
-  if (unified_queuelength.active()) {
+  if (g_queuelength) {
     float lengthsum = 0;
     totaltasks += m_num_tasks;
     for (unsigned int i = 1; i < m_histogram.size(); i++) {
@@ -804,16 +798,16 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
 
-  emitTime("MPI Send time", mpi_info_[TotalSendMPI]);
-  emitTime("MPI Recv time", mpi_info_[TotalRecvMPI]);
-  emitTime("MPI TestSome time", mpi_info_[TotalTestMPI]);
-  emitTime("MPI Wait time", mpi_info_[TotalWaitMPI]);
-  emitTime("MPI reduce time", mpi_info_[TotalReduceMPI]);
-  emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
-  emitTime("Total recv time", mpi_info_[TotalRecv] - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
-  emitTime("Total task time", mpi_info_[TotalTask]);
+  emitTime("MPI Send time"       , mpi_info_[TotalSendMPI]);
+  emitTime("MPI Recv time"       , mpi_info_[TotalRecvMPI]);
+  emitTime("MPI TestSome time"   , mpi_info_[TotalTestMPI]);
+  emitTime("MPI Wait time"       , mpi_info_[TotalWaitMPI]);
+  emitTime("MPI reduce time"     , mpi_info_[TotalReduceMPI]);
+  emitTime("Total task time"     , mpi_info_[TotalTask]);
   emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
-  emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
+  emitTime("Total send time"     , mpi_info_[TotalSend]   - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
+  emitTime("Total recv time"     , mpi_info_[TotalRecv]   - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
+  emitTime("Total comm time"     , mpi_info_[TotalRecv]   + mpi_info_[TotalSend]    + mpi_info_[TotalReduce]);
 
   double time = Time::currentSeconds();
   double totalexec = time - m_last_time;
@@ -822,40 +816,38 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
 
   // compute the net timings
-  if (d_sharedState != 0) {
+  if (m_shared_state != 0) {
 
-    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
+    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
 
     // TaskRunner threads start at g_runners[1]
     for (int i = 1; i < m_num_threads; ++i) {
-      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += Impl::g_runners[i]->getWaittime();
+      m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] += Impl::g_runners[i]->getWaittime();
     }
   }
 
-  if (restartable && tgnum == (int)graphs.size() - 1) {
+  if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {
     // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
     Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
+      m_dws[m_dws.size() - 1]->restartTimestep();
+      if (m_dws[0]) {
+        m_dws[0]->setRestarted();
       }
     }
   }
 
   finalizeTimestep();
 
-  if ( (g_exec_out.active() || emit_timings) && !m_parent_scheduler) {  // only do on toplevel scheduler
+  if ( (g_exec_out || g_timeout) && !m_parent_scheduler) {  // only do on toplevel scheduler
     outputTimingStats("UnifiedScheduler");
   }
 
-  if (unified_dbg.active()) {
-    unified_dbg << "Rank-" << d_myworld->myrank() << " - UnifiedScheduler finished" << std::endl;
-  }
+  DOUT(g_dbg, "Rank-" << my_rank << " - UnifiedScheduler finished");
 } // end execute()
 
 
@@ -883,7 +875,7 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
   while (m_phase_tasks[currphase] == m_phase_tasks_done[currphase] && currphase + 1 < numPhases) {
     currphase++;
     DOUT(g_task_dbg, myRankThread() << " switched to task phase " << currphase << ", total phase "
-                  << currphase << " tasks = " << m_phase_tasks[currphase]);
+                                    << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
 }
 
@@ -1259,7 +1251,7 @@ UnifiedScheduler::runTasks( int thread_id )
           // which can be even costlier overall.  So we do the check here.)
           // So check everything, except for ouputVariables tasks when it's not an output timestep.
 
-          if ((m_outPort_->isOutputTimestep())
+          if ((m_out_port->isOutputTimestep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             assignDevicesAndStreams(readyTask);
@@ -1715,7 +1707,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
       // For this dependency, get its CPU Data Warehouse and GPU Datawarehouse.
       const int dwIndex = curDependency->mapDataWarehouse();
-      OnDemandDataWarehouseP dw = dws[dwIndex];
+      OnDemandDataWarehouseP dw = m_dws[dwIndex];
       GPUDataWarehouse* gpudw = dw->getGPUDW(deviceIndex);
 
       //Get all size information about this dependency.
@@ -2412,7 +2404,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
         it != varMap.end(); ++it) {
       int whichGPU = it->second.m_whichGPU;
       int dwIndex = it->second.m_dep->mapDataWarehouse();
-      GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(whichGPU);
+      GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
 
       if (it->second.m_staging == isStaging) {
 
@@ -2665,7 +2657,7 @@ UnifiedScheduler::prepareTaskVarsIntoTaskDW( DetailedTask * dtask )
           case TypeDescription::SFCZVariable : {
 
             int dwIndex = it->second.m_dep->mapDataWarehouse();
-            GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(it->second.m_whichGPU);
+            GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(it->second.m_whichGPU);
             int patchID = it->first.m_patchID;
             int matlIndx = it->first.m_matlIndx;
             int levelIndx = it->first.m_levelIndx;
@@ -2839,7 +2831,7 @@ UnifiedScheduler::ghostCellsProcessingReady( DetailedTask * dtask )
     }
     const int matlID = varIter->first.m_matlIndex;
     const int dwIndex = curDependency->mapDataWarehouse();
-    OnDemandDataWarehouseP dw = dws[dwIndex];
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
     GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
     if (curDependency->m_dep_type == Task::Requires) {
       if (curDependency->m_gtype != Ghost::None && curDependency->m_num_ghost_cells > 0) {
@@ -2922,7 +2914,7 @@ UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
     }
     const int matlID = varIter->first.m_matlIndex;
     const int dwIndex = curDependency->mapDataWarehouse();
-    OnDemandDataWarehouseP dw = dws[dwIndex];
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
     GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
     if (curDependency->m_dep_type == Task::Requires) {
       if (gpudw->dwEntryExistsOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID)) {
@@ -3006,7 +2998,7 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
 
     const int matlID = varIter->first.m_matlIndex;
     const int dwIndex = curDependency->mapDataWarehouse();
-    OnDemandDataWarehouseP dw = dws[dwIndex];
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
     GPUDataWarehouse* gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch));
     if (curDependency->m_dep_type == Task::Requires) {
       if (curDependency->m_gtype != Ghost::None && curDependency->m_num_ghost_cells > 0) {
@@ -3054,7 +3046,7 @@ UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
             it != varMap.end(); ++it) {
     int whichGPU = it->second.m_whichGPU;
     int dwIndex = it->second.m_dep->mapDataWarehouse();
-    GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(whichGPU);
+    GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
     if (it->second.m_dep->m_dep_type == Task::Requires) {
       if (!it->second.m_staging) {
         if (gpu_stats.active()) {
@@ -3098,7 +3090,7 @@ UnifiedScheduler::markDeviceGhostsAsValid( DetailedTask * dtask )
   for (auto it = varMap.begin(); it != varMap.end(); ++it) {
     int whichGPU = it->second.m_whichGPU;
     int dwIndex = it->second.m_dep->mapDataWarehouse();
-    GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(whichGPU);
+    GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
 
     // A regular/non staging variable.... if it has a ghost cell
     gpudw->setValidWithGhostsOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
@@ -3123,7 +3115,7 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
     int numPatches = patches->size();
     int numMatls = matls->size();
     int dwIndex = comp->mapDataWarehouse();
-    OnDemandDataWarehouseP dw = dws[dwIndex];
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
     for (int i = 0; i < numPatches; i++) {
       GPUDataWarehouse * gpudw = dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patches->get(i)));
@@ -3157,7 +3149,7 @@ UnifiedScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
             it != varMap.end(); ++it) {
     int whichGPU = it->second.m_whichGPU;
     int dwIndex = it->second.m_dep->mapDataWarehouse();
-    GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(whichGPU);
+    GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
     if (it->second.m_dep->m_dep_type == Task::Requires) {
       if (!it->second.m_staging) {
         if (gpu_stats.active()) {
@@ -3196,7 +3188,7 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
       constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
 
       int dwIndex = comp->mapDataWarehouse();
-      OnDemandDataWarehouseP dw = dws[dwIndex];
+      OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
       void* host_ptr   = nullptr;    // host base pointer to raw data
       void* device_ptr = nullptr;    // device base pointer to raw data
@@ -3262,7 +3254,7 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
                     IntVector host_low, host_high, host_lowOffset, host_highOffset, host_offset, host_size, host_strides;
                     level->computeVariableExtents(type, host_low, host_high);
                     int dwIndex = comp->mapDataWarehouse();
-                    OnDemandDataWarehouseP dw = dws[dwIndex];
+                    OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
                     // It's possible the computes data may contain ghost cells.  But a task needing to get the data
                     // out of the GPU may not know this.  It may just want the var data.
@@ -3485,7 +3477,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
     int numPatches = patches->size();
     int dwIndex = dependantVar->mapDataWarehouse();
-    OnDemandDataWarehouseP dw = dws[dwIndex];
+    OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
     const int patchID = varIter->first.m_patchID;
     const Level* level = getLevel(patches.get_rep());
@@ -3592,7 +3584,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
               }
               host_size = host_high - host_low;
               int dwIndex = dependantVar->mapDataWarehouse();
-              OnDemandDataWarehouseP dw = dws[dwIndex];
+              OnDemandDataWarehouseP dw = m_dws[dwIndex];
 
               // Get/make the host var
               if (gpu_stats.active()) {
@@ -4227,7 +4219,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           continue;
         }
-        OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+        OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
         const VarLabel* posLabel;
         OnDemandDataWarehouse* posDW;
 
@@ -4235,18 +4227,18 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         // pass it in if the particle data is on the old dw
         LoadBalancer* lb = 0;
 
-        if (!reloc_new_posLabel_ && m_parent_scheduler) {
-          posDW = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-          posLabel = m_parent_scheduler->reloc_new_posLabel_;
+        if (!m_reloc_new_pos_label && m_parent_scheduler) {
+          posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+          posLabel = m_parent_scheduler->m_reloc_new_pos_label;
         } else {
           // on an output task (and only on one) we require particle variables from the NewDW
           if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-            posDW = dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
+            posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
           } else {
-            posDW = dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
+            posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
             lb = getLoadBalancer();
           }
-          posLabel = reloc_new_posLabel_;
+          posLabel = m_reloc_new_pos_label;
         }
         // Invoke Kernel to copy this range out of the GPU.
         prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherDeviceSameMpiRank);
@@ -4289,7 +4281,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           continue;
         }
-        OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+        OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
 
         if (gpu_stats.active()) {
           cerrLock.lock();
@@ -4310,18 +4302,18 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         // pass it in if the particle data is on the old dw
         LoadBalancer* lb = 0;
 
-        if (!reloc_new_posLabel_ && m_parent_scheduler) {
-          posDW    = dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-          posLabel = m_parent_scheduler->reloc_new_posLabel_;
+        if (!m_reloc_new_pos_label && m_parent_scheduler) {
+          posDW    = m_dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+          posLabel = m_parent_scheduler->m_reloc_new_pos_label;
         } else {
           // on an output task (and only on one) we require particle variables from the NewDW
           if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-            posDW = dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
+            posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
           } else {
-            posDW = dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
+            posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
             lb    = getLoadBalancer();
           }
-          posLabel = reloc_new_posLabel_;
+          posLabel = m_reloc_new_pos_label;
         }
         // Invoke Kernel to copy this range out of the GPU.
         prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherMpiRank);
@@ -4425,7 +4417,7 @@ UnifiedScheduler::copyAllGpuToGpuDependences( DetailedTask * dtask )
       size_t elementDataSize = it->second.m_xstride;
       size_t memSize = ghostSize.x() * ghostSize.y() * ghostSize.z() * elementDataSize;
       GPUGridVariableBase* device_source_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.m_datatype);
-      OnDemandDataWarehouseP dw = dws[it->first.m_dataWarehouse];
+      OnDemandDataWarehouseP dw = m_dws[it->first.m_dataWarehouse];
       GPUDataWarehouse* gpudw = dw->getGPUDW(it->second.m_sourceDeviceNum);
       gpudw->getStagingVar(*device_source_var,
                  it->first.m_label.c_str(),
@@ -4546,7 +4538,7 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
       //{
 
         GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.m_datatype);
-        OnDemandDataWarehouseP dw = dws[it->first.m_dataWarehouse];
+        OnDemandDataWarehouseP dw = m_dws[it->first.m_dataWarehouse];
         GPUDataWarehouse* gpudw = dw->getGPUDW(it->second.m_sourceDeviceNum);
         gpudw->getStagingVar(*device_var,
                    it->first.m_label.c_str(),
@@ -4629,7 +4621,7 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
 
         GridVariableBase* tempGhostVar = (GridVariableBase*)item.m_var;
 
-        OnDemandDataWarehouseP dw = dws[(const int)it->first.m_dataWarehouse];
+        OnDemandDataWarehouseP dw = m_dws[(const int)it->first.m_dataWarehouse];
 
         //Also get the existing host copy
         GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(it->second.m_label->typeDescription()->createInstance());
