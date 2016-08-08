@@ -50,24 +50,19 @@ using namespace Uintah;
 ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
+  lb = scinew FVMLabel();
+
   solver_parameters = 0;
   delt_ = 0;
   solver = 0;
   mymat_ = 0;
-  ccESPotential = VarLabel::create("cc.esPotential",
-      CCVariable<double>::getTypeDescription());
-  ccESPotentialMatrix = VarLabel::create("cc.esPotentialMatrix",
-        CCVariable<Stencil7>::getTypeDescription());
-  ccRHS_ESPotential = VarLabel::create("cc.rhsEsPotential",
-      CCVariable<double>::getTypeDescription());
+
 }
 //__________________________________
 //
 ElectrostaticSolve::~ElectrostaticSolve()
 {
-  VarLabel::destroy(ccESPotential);
-  VarLabel::destroy(ccESPotentialMatrix);
-  VarLabel::destroy(ccRHS_ESPotential);
+  delete lb;
   delete solver_parameters;
 }
 //__________________________________
@@ -123,14 +118,14 @@ ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("timeAdvance",
                            this, &ElectrostaticSolve::timeAdvance,
                            level, sched.get_rep());
-  task->computes(ccESPotentialMatrix);
-  task->computes(ccRHS_ESPotential);
+  task->computes(lb->ccESPotentialMatrix);
+  task->computes(lb->ccRHS_ESPotential);
 
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
   solver->scheduleSolve(level, sched, sharedState_->allMaterials(), 
-                        ccESPotentialMatrix, Task::NewDW, ccESPotential,
-                        false, ccRHS_ESPotential, Task::NewDW, 0, Task::OldDW,
+                        lb->ccESPotentialMatrix, Task::NewDW, lb->ccESPotential,
+                        false, lb->ccRHS_ESPotential, Task::NewDW, 0, Task::OldDW,
                         solver_parameters,false);
 
 }
@@ -199,8 +194,8 @@ void ElectrostaticSolve::timeAdvance(const ProcessorGroup* pg,
 
       CCVariable<Stencil7> A;
       CCVariable<double> rhs;
-      new_dw->allocateAndPut(A,   ccESPotentialMatrix, matl, patch);
-      new_dw->allocateAndPut(rhs, ccRHS_ESPotential,    matl, patch);
+      new_dw->allocateAndPut(A,   lb->ccESPotentialMatrix, matl, patch);
+      new_dw->allocateAndPut(rhs, lb->ccRHS_ESPotential,    matl, patch);
 
       // iterate over cells;
       for(CellIterator iter(low_idx, high_idx); !iter.done(); iter++){

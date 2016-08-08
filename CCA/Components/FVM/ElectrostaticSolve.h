@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Ports/SolverInterface.h>
+#include <CCA/Components/FVM/FVMLabel.h>
 
 namespace Uintah {
   class SimpleMaterial;
@@ -74,6 +75,10 @@ WARNING
                                                SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                       SchedulerP&);
+
+  protected:
+    FVMLabel* lb;
+
   private:
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, const MaterialSubset* matls,
@@ -89,9 +94,6 @@ WARNING
                      LevelP, Scheduler*);
 
 
-    const VarLabel* ccESPotential;
-    const VarLabel* ccESPotentialMatrix;
-    const VarLabel* ccRHS_ESPotential;
     SimulationStateP sharedState_;
     double delt_;
     SimpleMaterial* mymat_;
