@@ -125,9 +125,9 @@ namespace Uintah{
   template <typename T>
   void Constant<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-    for ( int i = 0; i < _N; i++ ){
+    for ( int ei = 0; ei < _N; ei++ ){
 
-      const std::string name = get_name(i, _base_var_name);
+      const std::string name = get_name(ei, _base_var_name);
       register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
     }
@@ -137,26 +137,25 @@ namespace Uintah{
   void Constant<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                     SpatialOps::OperatorDatabase& opr ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<T> Tptr;
+    for ( int ei = 0; ei < _N; ei++ ){
 
-    for ( int i = 0; i < _N; i++ ){
-      const std::string name = get_name(i, _base_var_name);
-      Tptr model_value = tsk_info->get_so_field<T>(name);
+      const std::string name = get_name(ei, _base_var_name);
+      T& model_value = *(tsk_info->get_uintah_field<T>(name));
 
-      *model_value <<= _const[i];
-
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        model_value(i,j,k) = _const[ei];
+      });
     }
   }
 
   //======TIME STEP INITIALIZATION:
   template <typename T>
   void Constant<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-    for ( int i = 0; i < _N; i++ ){
+    for ( int ei = 0; ei < _N; ei++ ){
 
       //dependent variables(s) or model values
-      const std::string name = get_name(i, _base_var_name);
+      const std::string name = get_name(ei, _base_var_name);
       register_variable( name, ArchesFieldContainer::COMPUTES, variable_registry );
 
     }
@@ -165,19 +164,16 @@ namespace Uintah{
   template <typename T>
   void Constant<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                        SpatialOps::OperatorDatabase& opr ){
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<T> Tptr;
+    for ( int ei = 0; ei < _N; ei++ ){
 
-    for ( int i = 0; i < _N; i++ ){
+      const std::string name = get_name(ei, _base_var_name);
+      T& model_value = *(tsk_info->get_uintah_field<T>(name));
 
-      const std::string name = get_name(i, _base_var_name);
-      Tptr model_value = tsk_info->get_so_field<T>(name);
-
-      *model_value <<= _const[i];
-
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        model_value(i,j,k) = _const[ei];
+      });
     }
-
   }
 
   //======TIME STEP EVALUATION:
