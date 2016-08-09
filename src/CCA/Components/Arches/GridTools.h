@@ -103,7 +103,7 @@ namespace Uintah{ namespace ArchesCore{
     if ( patch->getBCType(Patch::yminus) != Patch::Neighbor ){ \
       low_fy_patch_range += Uintah::IntVector(0,buffer_low,0); \
     } \
-    if ( patch->getBCType(Patch::xplus) != Patch::Neighbor ){ \
+    if ( patch->getBCType(Patch::yplus) != Patch::Neighbor ){ \
       high_fy_patch_range += Uintah::IntVector(0,buffer_high,0); \
     }
 
