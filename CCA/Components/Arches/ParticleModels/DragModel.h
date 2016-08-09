@@ -351,38 +351,7 @@ namespace Uintah{
 
         gas_model_value(i,j,k) = pred_gas_value;
 
-        //gas_model_value(i,j,k) = (diameter(i,j,k) == 0.0) ? 0.0 :  -1.* model_value(i,j,k) * weight(i,j,k) * density(i,j,k) / rhoG(i,j,k) * m_pi/6.0 * diameter(i,j,k) * diameter(i,j,k) * diameter(i,j,k);
-
-        // if ( i==0 && j==0 && k==0 ){
-        //   std::cout << " Re = " << Re << std::endl;
-        //   std::cout << " fDrag =  " << fDrag << std::endl;
-        //   std::cout << " tauP = " << tauP << std::endl;
-        //   std::cout << " pred_model_value = " << pred_model_value << std::endl;
-        //   std::cout << " pred_gas_value = " << pred_gas_value << std::endl;
-        //   std::cout << " ***model_value = " << std::scientific << model_value(i,j,k) << std::endl;
-        //   std::cout << " ***gas value = " << std::scientific << gas_model_value(i,j,k) << std::endl;
-        //   std::cout << "   -- diameter = " << diameter(i,j,k) << std::endl;
-        //   std::cout << "   -- model value = " << model_value(i,j,k) << std::endl;
-        //   std::cout << "   -- weight = " << weight(i,j,k) << std::endl;
-        //   std::cout << "   -- rho = " << density(i,j,k) << std::endl;
-        //   std::cout << "   -- gas_rho = " << rhoG(i,j,k) << std::endl;
-        //   if ( _direction == "x" ){
-        //     std::cout << "   -- velU = " << velU(i,j,k) << std::endl;
-        //     std::cout << "   -- PvelU = " << partVelU(i,j,k) << std::endl;
-        //   }
-        //   if ( _direction == "y" ){
-        //     std::cout << "   -- velV = " << velV(i,j,k) << std::endl;
-        //     std::cout << "   -- PvelV = " << partVelV(i,j,k) << std::endl;
-        //   }
-        //   if ( _direction == "z" ){
-        //     std::cout << "   -- velW = " << velW(i,j,k) << std::endl;
-        //     std::cout << "   -- PvelW = " << partVelW(i,j,k) << std::endl;
-        //   }
-
-        //}
-
       });
-
     }
   }
 }

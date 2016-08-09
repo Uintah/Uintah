@@ -104,12 +104,11 @@ private:
   void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                            SpatialOps::OperatorDatabase& opr ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<T> SVolFP;
-
-    SVolFP field = tsk_info->get_so_field<T>( "templated_variable" );
-    *field <<= 3.2;
+    T& field = *(tsk_info->get_uintah_field<T>( "templated_variable" ));
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      field(i,j,k) = 3.2;
+    });
 
   }
 
@@ -126,13 +125,11 @@ private:
   void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                      SpatialOps::OperatorDatabase& opr ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<T> SVolFP;
-
-    SVolFP field = tsk_info->get_so_field<T>( "templated_variable" );
-
-    *field <<= 24.0;
+    T& field = *(tsk_info->get_uintah_field<T>( "templated_variable" ));
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      field(i,j,k) = 23.4;
+    });
 
   }
 

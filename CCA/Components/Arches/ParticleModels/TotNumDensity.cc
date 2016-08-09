@@ -50,8 +50,8 @@ TotNumDensity::register_initialize( std::vector<ArchesFieldContainer::VariableIn
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
-  for ( int i = 0; i < _Nenv; i++ ){
-    const std::string weight_name  = ParticleTools::append_env( "w", i);
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
+    const std::string weight_name  = ParticleTools::append_env( "w", ienv);
     register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   }
 
@@ -61,27 +61,21 @@ void
 TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                       SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField   SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
 
-  SVolFP num_den = tsk_info->get_so_field<SVolF>( _task_name );
-  SpatialOps::SpatFldPtr<SVolF> sum = SpatialFieldStore::get<SVolF>(*num_den);
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-  *sum <<= 0.0;
 
-  for ( int i = 0; i < _Nenv; i++ ){
+    const std::string weight_name  = ParticleTools::append_env( "w", ienv);
+    constCCVariable<double>& weight   = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( weight_name ));
 
-    const std::string weight_name  = ParticleTools::append_env( "w", i);
-    SVolFP weight   = tsk_info->get_const_so_field<SVolF>( weight_name );
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    *sum <<= *sum + *weight;
+      num_den(i,j,k) += weight(i,j,k);
 
+    });
   }
-
-  *num_den <<= *sum;
-
 }
 
 //
@@ -95,8 +89,8 @@ TotNumDensity::register_timestep_eval( std::vector<ArchesFieldContainer::Variabl
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
-  for ( int i = 0; i < _Nenv; i++ ){
-    const std::string weight_name  = ParticleTools::append_env( "w", i);
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
+    const std::string weight_name  = ParticleTools::append_env( "w", ienv);
     register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
   }
 
@@ -106,25 +100,19 @@ void
 TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField   SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
 
-  SVolFP num_den = tsk_info->get_so_field<SVolF>( _task_name );
-  SpatialOps::SpatFldPtr<SVolF> sum = SpatialFieldStore::get<SVolF>(*num_den);
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-  *sum <<= 0.0;
 
-  for ( int i = 0; i < _Nenv; i++ ){
+    const std::string weight_name  = ParticleTools::append_env( "w", ienv);
+    constCCVariable<double>& weight   = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( weight_name ));
 
-    const std::string weight_name  = ParticleTools::append_env( "w", i);
-    SVolFP weight   = tsk_info->get_const_so_field<SVolF>( weight_name );
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    *sum <<= *sum + *weight;
+      num_den(i,j,k) += weight(i,j,k);
 
+    });
   }
-
-  *num_den <<= *sum;
-
 }
