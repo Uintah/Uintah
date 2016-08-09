@@ -50,8 +50,6 @@
     <save label="surf_in_normY"/>
     <save label="surf_in_normZ"/>
 
-    <save label="gas_solid_interface"/>
-
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -307,7 +305,7 @@
         </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
-            <constant>0</constant> 
+            <constant>0</constant>
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
@@ -317,7 +315,7 @@
           </initialization>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
           <density_label>density</density_label>
-          <variance_coefficient>0.14</variance_coefficient> 
+          <variance_coefficient>0.14</variance_coefficient>
         </model>
         <model type="cc_constant" label="soot">
           <initialization type="constant">
