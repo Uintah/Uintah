@@ -8,7 +8,6 @@
 #include <CCA/Components/Arches/ParticleModels/Constant.h>
 #include <CCA/Components/Arches/ParticleModels/RateDeposition.h>
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
-#include <CCA/Components/Arches/ParticleModels/CoalTemperatureNebo.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionVelocity.h>
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CoalMassClip.h>
@@ -187,14 +186,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "coal_temperature" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew CoalTemperature::Builder(task_name,0,N);
-        register_task( task_name, tsk );
-
-        _coal_models.push_back(task_name);
-        _pre_update_particle_tasks.push_back(task_name);
-
-      } else if ( type == "coal_temperature_nebo" ) {
-
-        TaskInterface::TaskBuilder* tsk = scinew CoalTemperatureNebo::Builder(task_name,0);
         register_task( task_name, tsk );
 
         _coal_models.push_back(task_name);

@@ -12,7 +12,6 @@ SRCDIR := CCA/Components/Arches/ParticleModels
 #
 CUDA_ENABLED_SRCS =           \
          CoalMassClip         \
-         CoalTemperatureNebo  \
          DepositionVelocity   \
          RateDeposition       \
          BodyForce            \

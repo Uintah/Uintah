@@ -41,7 +41,7 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
     if ( var_name == "uVelocitySPBC"
         || var_name == "vVelocitySPBC"
         || var_name == "wVelocitySPBC" ){
-      throw InvalidValue("Error: Cannot average velocities. Try a flux variable instead.",__FILE__,__LINE__); 
+      throw InvalidValue("Error: Cannot average velocities. Try a flux variable instead.",__FILE__,__LINE__);
     }
 
     std::string var_ave_name = var_name + "_running_sum";
@@ -258,9 +258,6 @@ void VariableStats::register_initialize( VIVec& variable_registry ){
 //--------------------------------------------------------------------------------------------------
 void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                 SpatialOps::OperatorDatabase& opr ){
-
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
 
   std::vector<std::string>::iterator i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
