@@ -1516,7 +1516,7 @@
         <model label="temperature_coal" type="coal_temperature"/>
         <model label="number_density" type="total_number_density"/>
         <model label="length" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.5e-05,5.0e-05,1.5e-04]</constant>
         </model>
       </ParticleModels>
