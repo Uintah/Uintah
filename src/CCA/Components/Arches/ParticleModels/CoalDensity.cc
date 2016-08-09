@@ -133,7 +133,7 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
     CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
     constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
-    constCCVariable<double>& rc    = *(tsk_info->get_const_so_field<constCCVariable<double> >( rc_name ));
+    constCCVariable<double>& rc    = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( rc_name ));
 
     //SpatialOps::SpatFldPtr<SVolF> ratio = SpatialFieldStore::get<SVolF>(*rho);
 
@@ -220,7 +220,7 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
     CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
     constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
-    constCCVariable<double>& rc    = *(tsk_info->get_const_so_field<constCCVariable<double> >( rc_name ));
+    constCCVariable<double>& rc    = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( rc_name ));
 
     if ( _const_size ) {
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
