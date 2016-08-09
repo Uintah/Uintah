@@ -272,6 +272,12 @@ protected:
           return _field_container->get_field<T>(name);
         }
 
+        /** @brief Return a UINTAH particle field **/
+        std::tuple<ParticleVariable<double>*, ParticleSubset*>
+          get_uintah_particle_field( const std::string name ){
+          return _field_container->get_uintah_particle_field( name );
+        }
+
         /** @brief Return a SPATIAL field **/
         template <typename T>
         inline SpatialOps::SpatFldPtr<T> get_so_field( const std::string name ){

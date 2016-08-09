@@ -2,11 +2,9 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-#include <spatialops/structured/FVStaggered.h>
-
 #define SMALLNUM 1e-100
 
-using namespace Uintah;
+namespace Uintah{
 
 WallHFVariable::WallHFVariable( std::string task_name, int matl_index, SimulationStateP shared_state ) :
   TaskInterface( task_name, matl_index ), _shared_state(shared_state) {
@@ -68,24 +66,22 @@ void
 WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                             SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
+  CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
+  CCVariable<double>& flux_z = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_z));
+  CCVariable<double>& power  = *(tsk_info->get_uintah_field<CCVariable<double> >(_net_power));
+  CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
+  CCVariable<double>& area   = *(tsk_info->get_uintah_field<CCVariable<double> >(_area));
 
-  SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x);
-  SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y);
-  SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z);
-  SVolFP power  = tsk_info->get_so_field<SVolF>(_net_power);
-  SVolFP total  = tsk_info->get_so_field<SVolF>(_task_name);
-  SVolFP area   = tsk_info->get_so_field<SVolF>(_area);
-
-  *flux_x <<= 0.0;
-  *flux_y <<= 0.0;
-  *flux_z <<= 0.0;
-  *power <<= 0.0;
-  *total <<= 0.0;
-  *area <<= 0.0;
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    flux_x(i,j,k) = 0.0;
+    flux_y(i,j,k) = 0.0;
+    flux_z(i,j,k) = 0.0;
+    power(i,j,k) = 0.0;
+    total(i,j,k) = 0.0;
+    area(i,j,k)= 0.0;
+  });
 
 }
 
@@ -109,24 +105,22 @@ void
 WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                     SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
+  CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
+  CCVariable<double>& flux_z = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_z));
+  CCVariable<double>& power  = *(tsk_info->get_uintah_field<CCVariable<double> >(_net_power));
+  CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
+  CCVariable<double>& area   = *(tsk_info->get_uintah_field<CCVariable<double> >(_area));
 
-  SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x);
-  SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y);
-  SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z);
-  SVolFP power  = tsk_info->get_so_field<SVolF>(_net_power);
-  SVolFP total  = tsk_info->get_so_field<SVolF>(_task_name);
-  SVolFP area   = tsk_info->get_so_field<SVolF>(_area);
-
-  *flux_x <<= 0.0;
-  *flux_y <<= 0.0;
-  *flux_z <<= 0.0;
-  *power <<= 0.0;
-  *total <<= 0.0;
-  *area <<= 0.0;
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    flux_x(i,j,k) = 0.0;
+    flux_y(i,j,k) = 0.0;
+    flux_z(i,j,k) = 0.0;
+    power(i,j,k) = 0.0;
+    total(i,j,k) = 0.0;
+    area(i,j,k)= 0.0;
+  });
 
 }
 
@@ -343,3 +337,4 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   }
 }
+} //namspace Uintah
