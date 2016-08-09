@@ -8,7 +8,7 @@ namespace Uintah{ namespace ArchesCore {
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() ); \
   Uintah::parallel_for( range, [&](int i, int j, int k){ \
     phi(i,j,k) = const; \
-  }); \
+  });
 
 }} //end namespace Uintah::ArchesCore
 #endif

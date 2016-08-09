@@ -10,21 +10,21 @@ namespace Uintah{
 
 public:
 
-    GridInfo( std::string task_name, int matl_index );
-    ~GridInfo();
+    GridInfo( std::string task_name, int matl_index ) : TaskInterface(task_name, matl_index ){}
+    ~GridInfo(){}
 
-    void problemSetup( ProblemSpecP& db );
+    void problemSetup( ProblemSpecP& db ){}
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){};
+                      SpatialOps::OperatorDatabase& opr ){}
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                      SpatialOps::OperatorDatabase& opr );
@@ -33,7 +33,7 @@ public:
                         SpatialOps::OperatorDatabase& opr );
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-               SpatialOps::OperatorDatabase& opr );
+               SpatialOps::OperatorDatabase& opr ){}
 
     void create_local_labels();
 
