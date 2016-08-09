@@ -57,11 +57,11 @@ public:
 
 private:
 
-    bool _use_exact_guess;
-    double _rho0;
-    double _rho1;
-    std::string _f_name;
-    std::vector<std::string> _mass_sources;
+    bool m_use_exact_guess;
+    double m_rho0;
+    double m_rho1;
+    std::string m_f_name;
+    std::vector<std::string> m_mass_sources;
 
 
   };

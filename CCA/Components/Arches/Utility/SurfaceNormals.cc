@@ -88,9 +88,6 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   });
 
   const double noise = 1e-10;
-  std::cout << " PATCH RANGES: " << std::endl;
-  std::cout <<  low_fx_patch_range << std::endl;
-  std::cout << high_fx_patch_range << std::endl;
   //X
   Uintah::parallel_for(Uintah::BlockRange(low_fx_patch_range, high_fx_patch_range), [&](int i, int j, int k){
     n_out_x(i,j,k) = ( vol_fraction(i,j,k) - vol_fraction(i-1,j,k) )
@@ -98,8 +95,6 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     n_in_x(i,j,k) = ( vol_fraction(i-1,j,k) - vol_fraction(i,j,k) ) /
                     std::abs( vol_fraction(i-1,j,k) - vol_fraction(i,j,k) + noise);
   });
-  std::cout <<  low_fy_patch_range << std::endl;
-  std::cout << high_fy_patch_range << std::endl;
   //Y
   Uintah::parallel_for(Uintah::BlockRange(low_fy_patch_range, high_fy_patch_range), [&](int i, int j, int k){
     n_out_y(i,j,k) = ( vol_fraction(i,j,k) - vol_fraction(i,j-1,k) )
@@ -107,8 +102,6 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     n_in_y(i,j,k) = ( vol_fraction(i,j-1,k) - vol_fraction(i,j,k) ) /
                     std::abs( vol_fraction(i,j,k) - vol_fraction(i,j-1,k) + noise);
   });
-  std::cout <<  low_fz_patch_range << std::endl;
-  std::cout << high_fz_patch_range << std::endl;
   //Z
   Uintah::parallel_for(Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range), [&](int i, int j, int k){
     n_out_x(i,j,k) = ( vol_fraction(i,j,k) - vol_fraction(i,j,k-1) )
@@ -116,7 +109,6 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     n_in_x(i,j,k) = ( vol_fraction(i,j,k-1) - vol_fraction(i,j,k) ) /
                     std::abs( vol_fraction(i,j,k-1) - vol_fraction(i,j,k) + noise);
   });
-  std::cout << " the end " << std::endl;
 
 }
 
