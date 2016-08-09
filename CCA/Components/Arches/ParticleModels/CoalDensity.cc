@@ -3,8 +3,6 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-#include <spatialops/structured/FVStaggered.h>
-
 using namespace Uintah;
 
 CoalDensity::CoalDensity( std::string task_name, int matl_index, const int N ) :
@@ -20,7 +18,7 @@ void
 CoalDensity::problemSetup( ProblemSpecP& db ){
 
   db->getWithDefault("const_size",_const_size,true);
-  
+
   const ProblemSpecP db_root = db->getRootNode();
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
 
@@ -113,7 +111,7 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
     register_variable( char_name , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( rho_name  , ArchesFieldContainer::COMPUTES , variable_registry );
-    
+
     if ( !_const_size ) {
       const std::string diameter_name = get_env_name( i, _diameter_base_name );
       register_variable( diameter_name , ArchesFieldContainer::REQUIRES , 0              , ArchesFieldContainer::NEWDW , variable_registry );
@@ -127,49 +125,42 @@ void
 CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                       SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField   SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  for ( int i_env = 0; i_env < _Nenv; i_env++ ){
 
-  for ( int i = 0; i < _Nenv; i++ ){
+    const std::string rho_name  = get_env_name( i_env, _task_name );
+    const std::string char_name = get_env_name( i_env, _char_base_name );
+    const std::string rc_name   = get_env_name( i_env, _rawcoal_base_name );
 
-    const std::string rho_name  = get_env_name( i, _task_name );
-    const std::string char_name = get_env_name( i, _char_base_name );
-    const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
+    CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
+    constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
+    constCCVariable<double>& rc    = *(tsk_info->get_const_so_field<constCCVariable<double> >( rc_name ));
 
-    SVolFP rho   = tsk_info->get_so_field<SVolF>( rho_name );
-    SVolFP cchar = tsk_info->get_const_so_field<SVolF>( char_name );
-    SVolFP rc    = tsk_info->get_const_so_field<SVolF>( rc_name );
-
-    SpatialOps::SpatFldPtr<SVolF> ratio = SpatialFieldStore::get<SVolF>(*rho);
+    //SpatialOps::SpatFldPtr<SVolF> ratio = SpatialFieldStore::get<SVolF>(*rho);
 
     if ( _const_size ) {
-      *ratio <<= ( *cchar + *rc + _init_ash[i] ) / _denom[i];
 
-      *rho <<= cond( *ratio > 1.0, _rhop_o )
-                   ( *ratio < _init_ash[i]/_denom[i], _init_ash[i]/_denom[i] * _rhop_o )
-                   ( *ratio * _rhop_o );
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[i_env] ) / _denom[i_env];
+        rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
+        rho(i,j,k) = (ratio < _init_ash[i_env]/_denom[i_env]) ? _init_ash[i_env]/_denom[i_env] * _rhop_o : ratio * _rhop_o;
+      });
     } else {
-      const std::string diameter_name  = get_env_name( i, _diameter_base_name );
-      SVolFP dp = tsk_info->get_const_so_field<SVolF>( diameter_name );
-      
-      SpatialOps::SpatFldPtr<SVolF> initAsh = SpatialFieldStore::get<SVolF>( *rho );
-      SpatialOps::SpatFldPtr<SVolF> massDry = SpatialFieldStore::get<SVolF>( *rho );
-      SpatialOps::SpatFldPtr<SVolF> denom = SpatialFieldStore::get<SVolF>( *rho );
-      
-      *massDry <<= _pi/6.0 * pow( *dp, 3.0 ) * _rhop_o;
-      *initAsh <<= _ash_mf * *massDry;
-      *denom <<= *initAsh + _char_mf * *massDry + _raw_coal_mf * *massDry;
-      
-      *ratio <<= cond( *denom > 0.0, ( *cchar + *rc + *initAsh) / *denom )
-                     (1.01);
-      
-      *rho <<= cond( *ratio > 1.0, _rhop_o )
-                   ( *ratio < *initAsh/ *denom, *initAsh / *denom * _rhop_o )
-                   ( *ratio * _rhop_o );
-    }
+      const std::string diameter_name  = get_env_name( i_env, _diameter_base_name );
+      constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
 
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
+        const double initAsh = _ash_mf * massDry;
+        const double denom   = initAsh + _char_mf * massDry + _raw_coal_mf * massDry;
+        const double ratio   = (denom > 0.0) ? (cchar(i,j,k) + rc(i,j,k) + initAsh)/denom : 1.01;
+
+        rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
+        rho(i,j,k) = (ratio < initAsh/denom) ? initAsh/denom * _rhop_o : ratio*_rhop_o;
+
+      });
+    }
   }
 }
 
@@ -208,7 +199,7 @@ CoalDensity::register_timestep_eval(
     register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST,
       variable_registry );
     register_variable( rho_name , ArchesFieldContainer::COMPUTES, variable_registry );
-    
+
     if ( !_const_size ) {
       const std::string diameter_name = get_env_name( i, _diameter_base_name );
       register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST , variable_registry );
@@ -221,53 +212,37 @@ void
 CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField   SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  for ( int i_env = 0; i_env < _Nenv; i_env++ ){
 
-  for ( int i = 0; i < _Nenv; i++ ){
+    const std::string rho_name  = get_env_name( i_env, _task_name );
+    const std::string char_name = get_env_name( i_env, _char_base_name );
+    const std::string rc_name   = get_env_name( i_env, _rawcoal_base_name );
 
-    const std::string rho_name  = get_env_name( i, _task_name );
-    const std::string char_name = get_env_name( i, _char_base_name );
-    const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
-
-    SVolFP rho   = tsk_info->get_so_field<SVolF>( rho_name );
-    SVolFP cchar = tsk_info->get_const_so_field<SVolF>( char_name );
-    SVolFP rc    = tsk_info->get_const_so_field<SVolF>( rc_name );
-
-    SpatialOps::SpatFldPtr<SVolF> ratio = SpatialFieldStore::get<SVolF>(*rho);
+    CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
+    constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
+    constCCVariable<double>& rc    = *(tsk_info->get_const_so_field<constCCVariable<double> >( rc_name ));
 
     if ( _const_size ) {
-      *ratio <<= ( *cchar + *rc + _init_ash[i] ) / _denom[i];
-      
-      *rho <<= cond( *ratio > 1.0, _rhop_o )
-                   ( *ratio < _init_ash[i]/_denom[i], _init_ash[i]/_denom[i] * _rhop_o )
-                   ( *ratio * _rhop_o );
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[i_env] ) / _denom[i_env];
+        rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
+        rho(i,j,k) = (ratio < _init_ash[i_env]/_denom[i_env]) ? _init_ash[i_env]/_denom[i_env] * _rhop_o : ratio * _rhop_o;
+      });
     } else {
-      const std::string diameter_name  = get_env_name( i, _diameter_base_name );
-      SVolFP dp = tsk_info->get_const_so_field<SVolF>( diameter_name );
-      
-      SpatialOps::SpatFldPtr<SVolF> initAsh = SpatialFieldStore::get<SVolF>( *rho );
-      SpatialOps::SpatFldPtr<SVolF> massDry = SpatialFieldStore::get<SVolF>( *rho );
-      SpatialOps::SpatFldPtr<SVolF> denom = SpatialFieldStore::get<SVolF>( *rho );
-      
-      *massDry <<= _pi/6.0 * pow( *dp, 3.0 ) * _rhop_o;
-      *initAsh <<= _ash_mf * *massDry;
-      *denom <<= *initAsh + _char_mf * *massDry + _raw_coal_mf * *massDry;
-      
-      *ratio <<= cond( *denom > 0.0, ( *cchar + *rc + *initAsh) / *denom )
-                     (1.01);
-      
-      *rho <<= cond( *ratio > 1.0, _rhop_o )
-                   ( *ratio < *initAsh/ *denom, *initAsh / *denom * _rhop_o )
-                   ( *ratio * _rhop_o );
+      const std::string diameter_name  = get_env_name( i_env, _diameter_base_name );
+      constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
+
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
+        const double initAsh = _ash_mf * massDry;
+        const double denom   = initAsh + _char_mf * massDry + _raw_coal_mf * massDry;
+        const double ratio   = (denom > 0.0) ? (cchar(i,j,k) + rc(i,j,k) + initAsh)/denom : 1.01;
+
+        rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
+        rho(i,j,k) = (ratio < initAsh/denom) ? initAsh/denom * _rhop_o : ratio*_rhop_o;
+      });
     }
-
- //   SVolF::iterator it = ratio->interior_begin();
- //   for (; it != ratio->interior_end(); it++){
- //     std::cout << "ratio= " << *it << std::endl;
- //   }
-
   }
 }
