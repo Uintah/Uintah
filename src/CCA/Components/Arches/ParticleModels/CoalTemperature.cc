@@ -5,20 +5,9 @@
 
 #include <spatialops/structured/FVStaggered.h>
 
+namespace Uintah{
 
-using namespace Uintah;
-using namespace std;
-
-CoalTemperature::CoalTemperature( std::string task_name, int matl_index, const int N ) :
-TaskInterface( task_name, matl_index ), _Nenv(N) {
-
-  _pi = acos(-1.0);
-  _Rgas = 8314.3; // J/K/kmol
-}
-
-CoalTemperature::~CoalTemperature(){
-}
-
+//--------------------------------------------------------------------------------------------------
 void
 CoalTemperature::problemSetup( ProblemSpecP& db ){
 
@@ -98,6 +87,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 CoalTemperature::create_local_labels(){
 
@@ -111,12 +101,7 @@ CoalTemperature::create_local_labels(){
   }
 }
 
-//
-//------------------------------------------------
-//-------------- INITIALIZATION ------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
 CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
@@ -146,6 +131,7 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
@@ -166,11 +152,7 @@ CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info
   }
 }
 
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
+//--------------------------------------------------------------------------------------------------
 void
 CoalTemperature::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
@@ -186,6 +168,7 @@ CoalTemperature::register_timestep_init( std::vector<ArchesFieldContainer::Varia
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
@@ -204,12 +187,8 @@ CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   }
 }
-//
-//------------------------------------------------
-//------------- TIMESTEP WORK --------------------
-//------------------------------------------------
-//
 
+//--------------------------------------------------------------------------------------------------
 void
 CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
@@ -239,27 +218,30 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
   register_variable( _vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST, variable_registry );
 }
 
-
+//--------------------------------------------------------------------------------------------------
 void
 CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
+
   const std::string gas_temperature_name   = _gas_temperature_name;
   constCCVariable<double>& gas_temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name));
-  constCCVariable<double>& vol_frac = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_vol_fraction_name));
+  constCCVariable<double>& vol_frac        = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_vol_fraction_name));
+
   for ( int ix = 0; ix < _Nenv; ix++ ){
-    const std::string temperature_name  = get_env_name( ix, _task_name );
-    const std::string dTdt_name  = get_env_name( ix, _dTdt_base_name );
-    const std::string char_name = get_env_name( ix, _char_base_name );
-    const std::string enthalpy_name = get_env_name( ix, _enthalpy_base_name );
-    const std::string rc_name   = get_env_name( ix, _rawcoal_base_name );
-    const double dt = tsk_info->get_dt(); // this is from the old dw.. so we have [T^t-T^(t-1)]/[t-(t-1)]
+
+    const std::string temperature_name = get_env_name( ix, _task_name );
+    const std::string dTdt_name        = get_env_name( ix, _dTdt_base_name );
+    const std::string char_name        = get_env_name( ix, _char_base_name );
+    const std::string enthalpy_name    = get_env_name( ix, _enthalpy_base_name );
+    const std::string rc_name          = get_env_name( ix, _rawcoal_base_name );
+    const double dt                    = tsk_info->get_dt();
 
 
-    CCVariable<double>& temperature = *(tsk_info->get_uintah_field<CCVariable<double> >(temperature_name));
-    CCVariable<double>& dTdt = *(tsk_info->get_uintah_field<CCVariable<double> >(dTdt_name));
-    constCCVariable<double>& rcmass = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name));
-    constCCVariable<double>& charmass = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name));
-    constCCVariable<double>& enthalpy = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name));
+    CCVariable<double>& temperature         = *(tsk_info->get_uintah_field<CCVariable<double> >(temperature_name));
+    CCVariable<double>& dTdt                = *(tsk_info->get_uintah_field<CCVariable<double> >(dTdt_name));
+    constCCVariable<double>& rcmass         = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name));
+    constCCVariable<double>& charmass       = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name));
+    constCCVariable<double>& enthalpy       = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name));
     constCCVariable<double>& temperatureold = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(temperature_name));
 
     constCCVariable<double>* vdiameter = nullptr;
@@ -267,24 +249,123 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       const std::string diameter_name = get_env_name( ix, _diameter_base_name );
       vdiameter = tsk_info->get_const_uintah_field<constCCVariable<double> >(diameter_name);
     }
+    constCCVariable<double>& diameter = *(vdiameter);
 
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+    Uintah::parallel_for( range, [&](int i, int j, int k){
 
+      int icount   = 0;
+      double delta = 1.0;
+      double tol   = 1.0;
+      double hint  = 0.0;
+      double Ha    = 0.0;
+      double Hc    = 0.0;
+      double H     = 0.0;
+      double f1    = 0.0;
+      double f2    = 0.0;
+      double dT    = 0.0;
 
+      double pT       = temperature(i,j,k);
+      double gT       = gas_temperature(i,j,k);
+      double pT_olddw = temperatureold(i,j,k);
+      double oldpT    = temperature(i,j,k);
+      double RC       = rcmass(i,j,k);
+      double CH       = charmass(i,j,k);
+      double pE       = enthalpy(i,j,k);
 
-      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-      computeCoalTemperature doCoalTemperature(dt, ix,
-                                               gas_temperature,
-                                               vol_frac,
-                                               rcmass,
-                                               charmass,
-                                               enthalpy,
-                                               temperatureold,
-                                               vdiameter,
-                                               temperature,
-                                               dTdt,
-                                               this);
+      double massDry=0.0;
+      double initAsh=0.0;
+      double dp=0.0;
 
-      Uintah::parallel_for( range, doCoalTemperature );
+      if ( vol_frac(i,j,k) < 0.5 ){
 
+        temperature(i,j,k)=gT; // gas temperature
+        dTdt(i,j,k)=(pT-pT_olddw)/dt;
+
+      } else {
+
+        int max_iter=15;
+        int iter =0;
+
+        if ( !_const_size ) {
+
+          dp = diameter(i,j,k);
+          massDry = _pi/6.0 * std::pow( dp, 3.0 ) * _rhop_o;
+          initAsh = massDry * _ash_mf;
+
+        } else {
+
+          initAsh = _init_ash[ix];
+
+        }
+
+        if ( initAsh > 0.0 ) {
+
+          for ( ; iter < max_iter; iter++) {
+            icount++;
+            oldpT = pT;
+
+            // compute enthalpy given Tguess
+            hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+            Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            H = Hc * (RC + CH) + Ha * initAsh;
+            f1 = pE - H;
+
+            // compute enthalpy given Tguess + delta
+            pT = pT + delta;
+            hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+            Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            H = Hc * (RC + CH) + Ha * initAsh;
+            f2 = pE - H;
+
+            // correct temperature
+            dT = f1 * delta / (f2-f1) + delta;
+            pT = pT - dT;    //to add an coefficient for steadness
+
+            // check to see if tolernace has been met
+            tol = std::abs(oldpT - pT);
+
+            if (tol < 0.01 )
+              break;
+
+          }
+
+          if (iter ==max_iter-1 || pT <273.0 || pT > 3500.0 ){
+
+            double pT_low=273;
+            hint = -156.076 + 380/(-1 + exp(380 / pT_low)) + 3600/(-1 + exp(1800 / pT_low));
+            Ha = -202849.0 + _Ha0 + pT_low * (593. + pT_low * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            double H_low = Hc * (RC + CH) + Ha * initAsh;
+            double pT_high=3500;
+            hint = -156.076 + 380/(-1 + exp(380 / pT_high)) + 3600/(-1 + exp(1800 / pT_high));
+            Ha = -202849.0 + _Ha0 + pT_high * (593. + pT_high * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            double H_high = Hc * (RC + CH) + Ha * initAsh;
+
+            if (pE < H_low || pT < 273.0){
+
+              pT = 273.0;
+
+            } else if (pE > H_high || pT > 3500.0) {
+
+              pT = 3500.0;
+
+            }
+          }
+        } else {
+
+          pT = _initial_temperature; //prevent nans when dp & ash = 0.0 in cqmom
+
+        }
+
+        temperature(i,j,k)=pT;
+        dTdt(i,j,k)=(pT-pT_olddw)/dt;
+
+      }
+    });
   }
 }
+} //namespace Uintah

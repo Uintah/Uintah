@@ -3,17 +3,9 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-using namespace Uintah;
+namespace Uintah{
 
-CoalDensity::CoalDensity( std::string task_name, int matl_index, const int N ) :
-TaskInterface( task_name, matl_index ), _Nenv(N) {
-
-  _pi = acos(-1.0);
-}
-
-CoalDensity::~CoalDensity(){
-}
-
+//--------------------------------------------------------------------------------------------------
 void
 CoalDensity::problemSetup( ProblemSpecP& db ){
 
@@ -82,6 +74,7 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 CoalDensity::create_local_labels(){
 
@@ -93,12 +86,7 @@ CoalDensity::create_local_labels(){
   }
 }
 
-//
-//------------------------------------------------
-//-------------- INITIALIZATION ------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
 CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
@@ -121,6 +109,7 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                       SpatialOps::OperatorDatabase& opr ){
@@ -135,7 +124,10 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
     constCCVariable<double>& rc    = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( rc_name ));
 
-    //SpatialOps::SpatFldPtr<SVolF> ratio = SpatialFieldStore::get<SVolF>(*rho);
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      rho(i,j,k) = 0.0;
+    });
 
     if ( _const_size ) {
 
@@ -164,25 +156,7 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   }
 }
 
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
-void
-CoalDensity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-}
-
-void
-CoalDensity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-}
-//
-//------------------------------------------------
-//------------- TIMESTEP WORK --------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
 CoalDensity::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
@@ -208,6 +182,7 @@ CoalDensity::register_timestep_eval(
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 SpatialOps::OperatorDatabase& opr ){
@@ -246,3 +221,4 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     }
   }
 }
+} //namespace Uintah
