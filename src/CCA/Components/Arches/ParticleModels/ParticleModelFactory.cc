@@ -152,23 +152,19 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if  ( type == "constant" ) {
 
         std::string dependent_type;
-        std::string independent_type;
-        db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
-        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
+        if ( db_model->findBlock("grid").get_rep() != 0 ){
+          db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
+        } else {
+          throw InvalidValue("Error: You must specify the <grid> for the constant model", __FILE__, __LINE__);
+        }
 
-        if ( dependent_type == "svol" ){
+        if ( dependent_type == "CC" ){
 
-          if ( independent_type == "svol"){
+          TaskInterface::TaskBuilder* tsk = scinew
+          Constant<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-            TaskInterface::TaskBuilder* tsk = scinew
-            Constant<SVol>::Builder(task_name, 0, model_name, N);
-
-            register_task( task_name, tsk );
-            _pre_update_particle_tasks.push_back(task_name);
-
-          } else {
-            throw InvalidValue("Error: Independent grid type not recognized: "+independent_type,__FILE__,__LINE__);
-          }
+          register_task( task_name, tsk );
+          _pre_update_particle_tasks.push_back(task_name);
 
           //else lagrangian particle type...need to add
         } else {
