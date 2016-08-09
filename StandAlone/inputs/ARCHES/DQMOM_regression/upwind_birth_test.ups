@@ -95,7 +95,7 @@
 
       <ParticleModels>
         <model  label="rho_part" type="constant" >
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.,1.]</constant>
         </model>
       </ParticleModels>

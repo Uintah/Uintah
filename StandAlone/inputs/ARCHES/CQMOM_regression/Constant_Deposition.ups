@@ -295,7 +295,7 @@
       
       <ParticleModels>
         <model label="fStick" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant> [0.25,0.25,0.25,0.25] </constant>
         </model>
       </ParticleModels>

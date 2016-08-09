@@ -158,8 +158,8 @@ namespace Uintah{
   void BodyForce<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                          SpatialOps::OperatorDatabase& opr ){
 
-    for ( int i_env = 0; i_env < m_N; i_env++ ){
-      const std::string name = get_name(i_env, m_base_var_name);
+    for ( int ienv = 0; ienv < m_N; ienv++ ){
+      const std::string name = get_name(ienv, m_base_var_name);
 
       DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -206,12 +206,12 @@ namespace Uintah{
 
     CIT& rhoG = *(tsk_info->get_const_uintah_field<CIT>(m_gas_density_name));
 
-    for ( int i_env = 0; i_env < m_N; i_env++ ){
+    for ( int ienv = 0; ienv < m_N; ienv++ ){
 
-      const std::string name = get_name(i_env, m_base_var_name);
+      const std::string name = get_name(ienv, m_base_var_name);
       DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
 
-      const std::string density_name = get_name( i_env, m_base_density_name );
+      const std::string density_name = get_name( ienv, m_base_density_name );
       CDT& rhoP = *(tsk_info->get_const_uintah_field<CDT>(density_name));
 
 

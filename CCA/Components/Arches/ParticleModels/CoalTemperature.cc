@@ -150,10 +150,10 @@ void
 CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
 
-  for ( int i_env = 0; i_env < _Nenv; i_env++ ){
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-    const std::string temperature_name = get_env_name( i_env, _task_name );
-    const std::string dTdt_name = get_env_name( i_env, _dTdt_base_name );
+    const std::string temperature_name = get_env_name( ienv, _task_name );
+    const std::string dTdt_name = get_env_name( ienv, _dTdt_base_name );
     CCVariable<double>& temperature = *(tsk_info->get_uintah_field<CCVariable<double> >( temperature_name ));
     CCVariable<double>& dTdt = *(tsk_info->get_uintah_field<CCVariable<double> >( dTdt_name ));
 
@@ -190,10 +190,10 @@ void
 CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
 
-  for ( int i_env = 0; i_env < _Nenv; i_env++ ){
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-    const std::string temperature_name  = get_env_name( i_env, _task_name );
-    const std::string temperatureold_name  = get_env_name( i_env, _task_name );
+    const std::string temperature_name  = get_env_name( ienv, _task_name );
+    const std::string temperatureold_name  = get_env_name( ienv, _task_name );
 
     CCVariable<double>& temperature   = *(tsk_info->get_uintah_field<CCVariable<double> >( temperature_name ));
     constCCVariable<double>& temperature_old   = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( temperatureold_name ));

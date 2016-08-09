@@ -1068,42 +1068,42 @@
  
       <ParticleModels>
          <model label="gravityx" type="gravity">
-           <grid dependent_type="svol" independent_type="svol"/>
+           <grid dependent_type="CC" independent_type="CC"/>
            <IC> partUVel </IC>
            <direction> x </direction>
          </model>
 
         <model label="dragx" type="drag">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partUVel </IC>
           <direction> x </direction>
         </model>
  
         <model label="dragy" type="drag">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partVVel </IC>
           <direction> y </direction>
         </model>
         
         <model label="dragz" type="drag">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partWVel </IC>
           <direction> z </direction>
         </model>
 
         <model label="FOWY" type="fowy_devolatilization">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> rawCoal </IC>
           <gas_source_name> eta_source1 </gas_source_name>
         </model>
     
         <model label="charProd" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant> [0.0, 0.0, 0.0, 0.0] </constant>
         </model>
 
         <model label="CharOx" type="shaddix_oxidation">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> charMass </IC>
           <char_production_label> charProd </char_production_label>
           <gas_source_name> eta_source2 </gas_source_name>
@@ -1114,7 +1114,7 @@
         </model>
 
         <model label="shadE" type="shaddix_enthalpy">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partE </IC>
           <char_temprate_label> temp_rate_CharOx </char_temprate_label>
           <surf_rate_label> surf_rate_CharOx </surf_rate_label>
