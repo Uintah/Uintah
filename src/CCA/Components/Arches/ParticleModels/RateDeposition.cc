@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/ParticleModels/RateDeposition.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <Core/Exceptions/ProblemSetupException.h>
