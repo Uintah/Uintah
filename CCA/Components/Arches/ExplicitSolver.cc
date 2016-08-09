@@ -1297,7 +1297,7 @@ void
 ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 {
   // This is necessary because restartInitialize is called from all levels (I think), and arches operates only on the finest level
-  if( level->hasFinerLevel() ){   
+  if( level->hasFinerLevel() ){
     return;
   }
 
@@ -4157,8 +4157,9 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
           ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "YamamotoDevol" ) {
-          ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
+          //ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          //model_factory.register_model( temp_model_name, modelBuilder );
+          throw InvalidValue("Error: YamamotoDevol is not currently supported. The model needs to be updated/fixed. See FOWYDevol as an example.", __FILE__,__LINE__); 
         } else if ( model_type == "CharOxidationShaddix" ) {
           ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
