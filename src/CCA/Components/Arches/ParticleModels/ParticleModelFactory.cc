@@ -245,24 +245,20 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if  ( type == "shaddix_oxidation" ) {
 
         std::string dependent_type;
-        std::string independent_type;
+        //std::string independent_type;
         db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
-        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
+        //db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
 
         if ( dependent_type == "CC" ){
 
-          if ( independent_type == "CC"){
 
-            TaskInterface::TaskBuilder* tsk = scinew
-            ShaddixOxidation<SVol,SVol>::Builder(task_name, 0, model_name, N);
+          TaskInterface::TaskBuilder* tsk = scinew
+          ShaddixOxidation<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
-            register_task( task_name, tsk );
-            _active_tasks.push_back(task_name);
-            _pre_update_particle_tasks.push_back(task_name);
+          register_task( task_name, tsk );
+          _active_tasks.push_back(task_name);
+          _pre_update_particle_tasks.push_back(task_name);
 
-          } else {
-            throw InvalidValue("Error: Independent grid type not recognized: "+independent_type,__FILE__,__LINE__);
-          }
         } else {
           throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
         }
@@ -270,9 +266,9 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if  ( type == "shaddix_enthalpy" ) {
 
         std::string dependent_type;
-        std::string independent_type;
+        //std::string independent_type;
         db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
-        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
+        //db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
 
         if ( dependent_type == "CC" ){
 
