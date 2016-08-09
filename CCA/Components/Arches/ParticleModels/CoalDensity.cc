@@ -139,7 +139,7 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         //the spatialOps implementation. Perhaps use min/max?
         if ( ratio > 1.0 ) {
           rho(i,j,k) = _rhop_o;
-        } else if ( ratio < _init_ash[ienv]/_denom[ienv]){ 
+        } else if ( ratio < _init_ash[ienv]/_denom[ienv]){
           rho(i,j,k) = _init_ash[ienv]/_denom[ienv] * _rhop_o;
         } else {
           rho(i,j,k) = ratio*_rhop_o;
@@ -211,6 +211,11 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
     constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
     constCCVariable<double>& rc    = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( rc_name ));
+    
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      rho(i,j,k) = 0.0;
+    });
 
     if ( _const_size ) {
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -221,7 +226,7 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         //the spatialOps implementation. Perhaps use min/max?
         if ( ratio > 1.0 ) {
           rho(i,j,k) = _rhop_o;
-        } else if ( ratio <_init_ash[ienv]/_denom[ienv]){ 
+        } else if ( ratio <_init_ash[ienv]/_denom[ienv]){
           rho(i,j,k) = _init_ash[ienv]/_denom[ienv] * _rhop_o;
         } else {
           rho(i,j,k) = ratio*_rhop_o;
