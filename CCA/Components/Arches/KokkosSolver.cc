@@ -35,7 +35,7 @@ KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
   const ProcessorGroup* myworld,
   std::map<std::string,
   boost::shared_ptr<TaskFactoryBase> >& task_factory_map)
-  : m_sharedState(shared_state), _task_factory_map(task_factory_map), NonlinearSolver( myworld )
+  : NonlinearSolver( myworld ), m_sharedState(shared_state), _task_factory_map(task_factory_map)
 {}
 
 KokkosSolver::~KokkosSolver(){
@@ -222,9 +222,9 @@ KokkosSolver::checkBCs(const ProcessorGroup*,
                         DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    //const Patch* patch = patches->get(p);
+    //int archIndex = 0; // only one arches material
+    //int indx = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     using std::cout;
 

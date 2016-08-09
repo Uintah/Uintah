@@ -597,7 +597,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         Iterator nu;
         Iterator bound_ptr;
 
-        int totalIVs = d_allIndepVarNames.size();
+        //int totalIVs = d_allIndepVarNames.size();
         int counter = 0;
 
         // use the first IV to get the iterator:
@@ -605,17 +605,16 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         string bc_kind="NotSet";
         double bc_value = 0.0;
         std::string bc_s_value = "NA";
-        bool foundIterator = "false";
         std::string face_name;
 
         getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name );
 
         if ( bc_kind == "FromFile" ){
-          foundIterator =
+          bool foundIterator =
             getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr );
           counter++;
         } else {
-          foundIterator =
+          bool foundIterator =
             getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr );
           counter++;
         }

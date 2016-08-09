@@ -195,9 +195,9 @@ DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 
 void
 DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  
+
   const int FLOW = -1;
-  double current_time = _shared_state->getElapsedTime();
+  //double current_time = _shared_state->getElapsedTime();
   Vector Dx = patch->dCell(); // cell spacing
   double DxDy = Dx.x() * Dx.y();
   double DxDz = Dx.x() * Dx.z();
@@ -216,7 +216,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   double flux = 0.0;
   double rhoi = 0.0;
   double d_velocity = 0.0;
-  double vel_i_ave = 0.0;
+  //double vel_i_ave = 0.0;
   IntVector lowPindex = patch->getCellLowIndex();
   IntVector highPindex = patch->getCellHighIndex();
   //Pad for ghosts
