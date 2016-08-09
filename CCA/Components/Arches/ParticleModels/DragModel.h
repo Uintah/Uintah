@@ -300,6 +300,9 @@ namespace Uintah{
         //an alternative drag law in case its needed later
         //*fDrag <<= 1.0 + 0.15 * pow( (*Re), 0.687 ) + 0.0175* (*Re) / ( 1.0 + 4.25e4 * pow( (*Re), -1.16) ); //valid over all Re
 
+        model_value(i,j,k) = 0.0;
+        gas_model_value(i,j,k) = 0.0;
+        
         if ( _direction=="x" ) {
           model_value(i,j,k) = tauP != 0.0 ? (fDrag) / (tauP) * ( velU(i,j,k) - partVelU(i,j,k) ) : 0.0;
         } else if ( _direction=="y" ) {
