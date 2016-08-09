@@ -76,7 +76,7 @@ private:
     double _min_sq;
     double _max_sq;
 
-    typedef typename GridTools::VariableHelper<T>::ConstType CT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
   };
 

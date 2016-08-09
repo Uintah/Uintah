@@ -95,13 +95,13 @@ private:
     std::map<std::string, LIMITER> _name_to_limiter_map;
 
     typedef std::vector<std::string> SV;
-    typedef typename GridTools::VariableHelper<T>::ConstType CT;
-    typedef typename GridTools::VariableHelper<T>::XFaceType XFaceT;
-    typedef typename GridTools::VariableHelper<T>::YFaceType YFaceT;
-    typedef typename GridTools::VariableHelper<T>::ZFaceType ZFaceT;
-    typedef typename GridTools::VariableHelper<T>::ConstXFaceType ConstXFaceT;
-    typedef typename GridTools::VariableHelper<T>::ConstYFaceType ConstYFaceT;
-    typedef typename GridTools::VariableHelper<T>::ConstZFaceType ConstZFaceT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+    typedef typename ArchesCore::VariableHelper<T>::XFaceType XFaceT;
+    typedef typename ArchesCore::VariableHelper<T>::YFaceType YFaceT;
+    typedef typename ArchesCore::VariableHelper<T>::ZFaceType ZFaceT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType ConstXFaceT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType ConstYFaceT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType ConstZFaceT;
 
 
 

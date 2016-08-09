@@ -74,7 +74,7 @@ protected:
 
 private:
 
-  typedef typename GridTools::VariableHelper<T>::ConstType CT;
+  typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
   struct Operation{
 

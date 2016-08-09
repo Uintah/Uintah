@@ -64,13 +64,13 @@ protected:
 
 private:
 
-    typedef typename GridTools::VariableHelper<T>::ConstType CT;
-    typedef typename GridTools::VariableHelper<T>::XFaceType FXT;
-    typedef typename GridTools::VariableHelper<T>::YFaceType FYT;
-    typedef typename GridTools::VariableHelper<T>::ZFaceType FZT;
-    typedef typename GridTools::VariableHelper<T>::ConstXFaceType CFXT;
-    typedef typename GridTools::VariableHelper<T>::ConstYFaceType CFYT;
-    typedef typename GridTools::VariableHelper<T>::ConstZFaceType CFZT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+    typedef typename ArchesCore::VariableHelper<T>::XFaceType FXT;
+    typedef typename ArchesCore::VariableHelper<T>::YFaceType FYT;
+    typedef typename ArchesCore::VariableHelper<T>::ZFaceType FZT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType CFXT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
     std::vector<std::string> _eqn_names;
 
@@ -132,7 +132,7 @@ private:
     const double V = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
-    typedef typename GridTools::VariableHelper<T>::ConstType CT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 

@@ -12,7 +12,7 @@
 
 **/
 
-namespace GridTools{
+namespace Uintah{ namespace ArchesCore{
 
   enum DIR {XDIR, YDIR, ZDIR};
 
@@ -220,5 +220,5 @@ namespace GridTools{
   private:
 
   };
-} //namespace GridTools
+}} //namespace Uintah::Arches
 #endif
