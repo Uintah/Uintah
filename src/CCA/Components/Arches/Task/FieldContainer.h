@@ -153,7 +153,7 @@ namespace Uintah{
 
         private:
 
-          //this is specialized now...is there a point to specializing it?
+          //this is specialized now...is there a point to not specializing it?
           constParticleVariable<double>* _field;
           const VarLabel* _label;
           int _n_ghosts;
@@ -307,6 +307,47 @@ namespace Uintah{
         this->add_variable(name, icontain);
 
         return field;
+
+      }
+
+      // @brief Get a particle field spatialOps representation of the Uintah field.
+      std::tuple<ParticleVariable<double>*, ParticleSubset*> get_uintah_particle_field( const std::string name ){
+
+        VariableInformation ivar = get_variable_information( name, false );
+        UintahParticleMap::iterator icheck = _particle_map.find(name);
+
+        if ( icheck != _particle_map.end() ){
+          ParticleSubset* subset;
+          if ( _new_dw->haveParticleSubset(_matl_index, _patch) ){
+            subset = _new_dw->getParticleSubset( _matl_index, _patch );
+          } else {
+            subset = _old_dw->getParticleSubset( _matl_index, _patch );
+          }
+          return std::make_tuple(icheck->second.get_field(), subset);
+        }
+
+        /// \TODO Resolve the old_dw vs. new_dw for the particle subset. What does Tony say?
+        ParticleSubset* subset;
+        ParticleVariable<double>* pvar = scinew ParticleVariable<double>;
+
+        if ( _new_dw->haveParticleSubset(_matl_index, _patch) ){
+          subset = _new_dw->getParticleSubset( _matl_index, _patch );
+        } else {
+          subset = _old_dw->getParticleSubset( _matl_index, _patch );
+        }
+
+        if ( ivar.depend == MODIFIES ){
+          _new_dw->getModifiable( *pvar, ivar.label, subset );
+        } else {
+          _new_dw->allocateAndPut( *pvar, ivar.label, subset );
+        }
+
+        ParticleFieldContainer icontain;
+        icontain.set_field(pvar);
+        icontain.set_label(ivar.label);
+        this->add_particle_variable(name, icontain);
+
+        return std::make_tuple(pvar, subset);
 
       }
 
