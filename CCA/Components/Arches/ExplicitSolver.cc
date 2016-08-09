@@ -90,7 +90,6 @@
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 //NEW TASK STUFF
-#include <CCA/Components/Arches/ArchesBCHelper.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/SampleTask.h>
 #include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
@@ -1083,9 +1082,6 @@ ExplicitSolver::initialize( const LevelP& level,
     i->second->schedule_init(level, sched, matls, is_restart);
     i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
   }
-
-  //Sets the helper to the factory and assigns it to each active task
-  i_trans_fac->second->set_bchelper( _bcHelperMap );
 
   //initialize factory
   all_tasks.clear();
@@ -4159,7 +4155,7 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
         } else if ( model_type == "YamamotoDevol" ) {
           //ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           //model_factory.register_model( temp_model_name, modelBuilder );
-          throw InvalidValue("Error: YamamotoDevol is not currently supported. The model needs to be updated/fixed. See FOWYDevol as an example.", __FILE__,__LINE__); 
+          throw InvalidValue("Error: YamamotoDevol is not currently supported. The model needs to be updated/fixed. See FOWYDevol as an example.", __FILE__,__LINE__);
         } else if ( model_type == "CharOxidationShaddix" ) {
           ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );

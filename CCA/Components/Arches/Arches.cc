@@ -24,7 +24,6 @@
 
 //----- Arches.cc ----------------------------------------------
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
-#include <CCA/Components/Arches/ArchesBCHelper.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <Core/IO/UintahZlibUtil.h>
 //NEW TASK INTERFACE STUFF
@@ -116,10 +115,6 @@ Arches::~Arches()
          iter != d_analysisModules.end(); iter++) {
       delete *iter;
     }
-  }
-
-  for( BCHelperMapT::iterator it=_bcHelperMap.begin(); it != _bcHelperMap.end(); ++it ) {
-    delete it->second;
   }
 
   releasePort("solver");
@@ -300,10 +295,6 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   //=========== END NEW TASK INTERFACE ==============================
-  _bcHelperMap[level->getID()] = scinew ArchesBCHelper( level, sched, matls );
-
-  d_nlSolver->set_bchelper( &_bcHelperMap );
-
   d_nlSolver->initialize( level, sched, d_doingRestart );
 
   //______________________
