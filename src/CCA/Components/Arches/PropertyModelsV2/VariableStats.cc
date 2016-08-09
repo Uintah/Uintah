@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
+#include <CCA/Components/Arches/GridTools.h>
 
 typedef SpatialOps::SVolField SVolF;
 typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
@@ -259,49 +260,81 @@ void VariableStats::register_initialize( VIVec& variable_registry ){
 void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                 SpatialOps::OperatorDatabase& opr ){
 
-  std::vector<std::string>::iterator i = _ave_sum_names.begin();
+  auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
   i = _sqr_variable_names.begin();
   for (;i!=_sqr_variable_names.end();i++){
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
   i = _ave_x_flux_sum_names.begin();
   for (;i!=_ave_x_flux_sum_names.end();i++){
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
   i = _ave_y_flux_sum_names.begin();
   for (;i!=_ave_y_flux_sum_names.end();i++){
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
   i = _ave_z_flux_sum_names.begin();
   for (;i!=_ave_z_flux_sum_names.end();i++){
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
   i = _x_flux_sqr_sum_names.begin();
   for (;i!=_x_flux_sqr_sum_names.end();i++){
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
   i = _y_flux_sqr_sum_names.begin();
   for (;i!=_y_flux_sqr_sum_names.end();i++){
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
   i = _z_flux_sqr_sum_names.begin();
   for (;i!=_z_flux_sqr_sum_names.end();i++){
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
 }
@@ -325,11 +358,12 @@ void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManage
   typedef std::vector<std::string> StrVec;
 
   for ( StrVec::iterator i = _new_variables.begin(); i != _new_variables.end(); i++ ){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    SVolFP variable = tsk_info->get_so_field<SVolF>(*i);
-
-    *variable <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 }
 
@@ -397,71 +431,81 @@ void VariableStats::register_timestep_init( VIVec& variable_registry ){
 void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                    SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-
-  std::vector<std::string>::iterator i = _ave_sum_names.begin();
+  auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
   i = _sqr_variable_names.begin();
   for (;i!=_sqr_variable_names.end();i++){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    SVolFP var = tsk_info->get_so_field<SVolF>( *i );
-    *var <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
   i = _ave_x_flux_sum_names.begin();
   for (;i!=_ave_x_flux_sum_names.end();i++){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    XVolFP var = tsk_info->get_so_field<XVolF>( *i );
-    *var <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
   i = _ave_y_flux_sum_names.begin();
   for (;i!=_ave_y_flux_sum_names.end();i++){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    YVolFP var = tsk_info->get_so_field<YVolF>( *i );
-    *var <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 
   i = _ave_z_flux_sum_names.begin();
   for (;i!=_ave_z_flux_sum_names.end();i++){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    ZVolFP var = tsk_info->get_so_field<ZVolF>( *i );
-    *var <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
-
   i = _x_flux_sqr_sum_names.begin();
   for (;i!=_x_flux_sqr_sum_names.end();i++){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    XVolFP var = tsk_info->get_so_field<XVolF>( *i );
-    *var <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
-
   i = _y_flux_sqr_sum_names.begin();
   for (;i!=_y_flux_sqr_sum_names.end();i++){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    YVolFP var = tsk_info->get_so_field<YVolF>( *i );
-    *var <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
-
   i = _z_flux_sqr_sum_names.begin();
   for (;i!=_z_flux_sqr_sum_names.end();i++){
+    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
 
-    ZVolFP var = tsk_info->get_so_field<ZVolF>( *i );
-    *var <<= 0.0;
-
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      var(i,j,k) = 0.0;
+    });
   }
 }
 
@@ -576,124 +620,136 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   //Single variables
   for ( int i = 0; i < N; i++ ){
 
-    SVolFP sum               = tsk_info->get_so_field<SVolF>( _ave_sum_names[i] );
-    SVolFP const var         = tsk_info->get_const_so_field<SVolF>( _base_var_names[i] );
-    SVolFP const old_sum     = tsk_info->get_const_so_field<SVolF>( _ave_sum_names[i] );
-    SVolFP sqr_sum           = tsk_info->get_so_field<SVolF>( _sqr_variable_names[i] );
-    SVolFP const old_sqr_sum = tsk_info->get_const_so_field<SVolF>( _sqr_variable_names[i] );
+    CCVariable<double>& sum              = *(tsk_info->get_uintah_field<CCVariable<double> >( _ave_sum_names[i] ));
+    constCCVariable<double>& var         = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _base_var_names[i] ));
+    constCCVariable<double>& old_sum     = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _ave_sum_names[i] ));
+    CCVariable<double>& sqr_sum          = *(tsk_info->get_uintah_field<CCVariable<double> >( _sqr_variable_names[i] ));
+    constCCVariable<double>& old_sqr_sum = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _sqr_variable_names[i] ));
 
-    *sum <<= *old_sum + dt * (*var);
-    *sqr_sum <<= *old_sqr_sum + dt * (*var) * (*var);
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      sum(i,j,k) = old_sum(i,j,k) + dt * var(i,j,k);
+      sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * var(i,j,k) * var(i,j,k);
+    });
 
   }
 
   if ( !_no_flux ){
 
     //Fluxes
-    XVolFP const u = tsk_info->get_const_so_field<XVolF>( "uVelocitySPBC" );
-    YVolFP const v = tsk_info->get_const_so_field<YVolF>( "vVelocitySPBC" );
-    ZVolFP const w = tsk_info->get_const_so_field<ZVolF>( "wVelocitySPBC" );
-    SVolFP const rho = tsk_info->get_const_so_field<SVolF>( _rho_name );
-
-    const SVtoXV* const ix = opr.retrieve_operator<SVtoXV>();
-    const SVtoYV* const iy = opr.retrieve_operator<SVtoYV>();
-    const SVtoZV* const iz = opr.retrieve_operator<SVtoZV>();
+    constSFCXVariable<double>& u = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( "uVelocitySPBC" ));
+    constSFCYVariable<double>& v = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( "vVelocitySPBC" ));
+    constSFCZVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" ));
+    constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _rho_name ));
 
     //X FLUX
     N = _ave_x_flux_sum_names.size();
-    for ( int i = 0; i < N; i++ ){
+    for ( int iname = 0; iname < N; iname++ ){
 
-      XVolFP sum            = tsk_info->get_so_field<XVolF>( _ave_x_flux_sum_names[i] );
-      XVolFP const old_sum  = tsk_info->get_const_so_field<XVolF>( _ave_x_flux_sum_names[i] );
+      SFCXVariable<double>&          sum  = *(tsk_info->get_uintah_field<SFCXVariable<double> >( _ave_x_flux_sum_names[iname] ));
+      constSFCXVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( _ave_x_flux_sum_names[iname] ));
 
-      XVolFP sqr_sum         = tsk_info->get_so_field<XVolF>( _x_flux_sqr_sum_names[i] );
-      XVolFP const old_sqr_sum = tsk_info->get_const_so_field<XVolF>( _x_flux_sqr_sum_names[i] );
+      SFCXVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCXVariable<double> >( _x_flux_sqr_sum_names[iname] ));
+      constSFCXVariable<double>& old_sqr_sum = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( _x_flux_sqr_sum_names[iname] ));
 
-      SpatialOps::SpatFldPtr<XVolF> flux = SpatialOps::SpatialFieldStore::get<XVolF>(*u);
-      *flux <<= 0.0;
+      if ( _flux_sum_info[iname].do_phi ){
 
-      if ( _flux_sum_info[i].do_phi ){
+        constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
+        GET_FX_BUFFERED_PATCH_RANGE(0,1);
+        Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
+        Uintah::parallel_for(range, [&](int i, int j, int k){
 
-        SVolFP const phi = tsk_info->get_const_so_field<SVolF>( _flux_sum_info[i].phi );
+          const double flux = u(i,j,k)/4. * ( (rho(i,j,k) + rho(i-1,j,k)) * (phi(i,j,k) + phi(i-1,j,k)) );
+          sum(i,j,k)  = old_sum(i,j,k) + dt * flux;
+          sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * ( flux * flux );
 
-        *flux <<= ( (*u) * (*ix)(*rho * *phi) );
-        *sum <<= *old_sum + dt * ( *flux );
-
-        *sqr_sum <<= *old_sqr_sum + dt * ( *flux * *flux );
+        });
 
       } else {
 
-        *flux <<= ( (*ix)(*rho) * (*u) );
+        GET_FX_BUFFERED_PATCH_RANGE(0,1);
+        Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
+        Uintah::parallel_for(range, [&](int i, int j, int k){
 
-        *sum <<= *old_sum + dt * ( *flux );
-
-        *sqr_sum <<= *old_sqr_sum + dt * ( *flux * *flux );
+          const double flux = u(i,j,k) * ( (rho(i,j,k) + rho(i-1,j,k))/2. );
+          sum(i,j,k)  = old_sum(i,j,k) + dt * flux;
+          sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * ( flux * flux );
+        });
 
       }
     }
 
+
     //Y FLUX
     N = _ave_y_flux_sum_names.size();
-    for ( int i = 0; i < N; i++ ){
+    for ( int iname = 0; iname < N; iname++ ){
 
-      YVolFP sum            = tsk_info->get_so_field<YVolF>( _ave_y_flux_sum_names[i] );
-      YVolFP const old_sum  = tsk_info->get_const_so_field<YVolF>( _ave_y_flux_sum_names[i] );
+      SFCYVariable<double>&          sum  = *(tsk_info->get_uintah_field<SFCYVariable<double> >( _ave_y_flux_sum_names[iname] ));
+      constSFCYVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( _ave_y_flux_sum_names[iname] ));
 
-      YVolFP sqr_sum         = tsk_info->get_so_field<YVolF>( _y_flux_sqr_sum_names[i] );
-      YVolFP const old_sqr_sum = tsk_info->get_const_so_field<YVolF>( _y_flux_sqr_sum_names[i] );
+      SFCYVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCYVariable<double> >( _y_flux_sqr_sum_names[iname] ));
+      constSFCYVariable<double>& old_sqr_sum = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( _y_flux_sqr_sum_names[iname] ));
 
-      SpatialOps::SpatFldPtr<YVolF> flux = SpatialOps::SpatialFieldStore::get<YVolF>(*v);
-      *flux <<= 0.0;
+      if ( _flux_sum_info[iname].do_phi ){
 
-      if ( _flux_sum_info[i].do_phi ){
+        constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
+        GET_FY_BUFFERED_PATCH_RANGE(0,1);
+        Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
+        Uintah::parallel_for(range, [&](int i, int j, int k){
 
-        SVolFP const phi = tsk_info->get_const_so_field<SVolF>( _flux_sum_info[i].phi );
+          const double flux = v(i,j,k)/4. * ( (rho(i,j,k) + rho(i,j-1,k)) * (phi(i,j,k) + phi(i,j-1,k)) );
+          sum(i,j,k)  = old_sum(i,j,k) + dt * flux;
+          sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * ( flux * flux );
 
-        *flux <<= ( *v * (*iy)(*rho * *phi) );
-        *sum <<= *old_sum + dt * ( *flux );
-
-        *sqr_sum <<= *old_sqr_sum + dt * ( *flux * *flux );
+        });
 
       } else {
 
-        *flux <<= ( (*iy)(*rho) * (*v) );
+        GET_FY_BUFFERED_PATCH_RANGE(0,1);
+        Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
+        Uintah::parallel_for(range, [&](int i, int j, int k){
 
-        *sum <<= *old_sum + dt * ( *flux );
-
-        *sqr_sum <<= *old_sqr_sum + dt * ( *flux * *flux );
+          const double flux = v(i,j,k) * ( (rho(i,j,k) + rho(i,j-1,k))/2. );
+          sum(i,j,k)  = old_sum(i,j,k) + dt * flux;
+          sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * ( flux * flux );
+        });
 
       }
     }
 
     //Z FLUX
     N = _ave_z_flux_sum_names.size();
-    for ( int i = 0; i < N; i++ ){
+    for ( int iname = 0; iname < N; iname++ ){
 
-      ZVolFP sum            = tsk_info->get_so_field<ZVolF>( _ave_z_flux_sum_names[i] );
-      ZVolFP const old_sum  = tsk_info->get_const_so_field<ZVolF>( _ave_z_flux_sum_names[i] );
+      SFCZVariable<double>&          sum  = *(tsk_info->get_uintah_field<SFCZVariable<double> >( _ave_z_flux_sum_names[iname] ));
+      constSFCZVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( _ave_z_flux_sum_names[iname] ));
 
-      ZVolFP sqr_sum         = tsk_info->get_so_field<ZVolF>( _z_flux_sqr_sum_names[i] );
-      ZVolFP const old_sqr_sum = tsk_info->get_const_so_field<ZVolF>( _z_flux_sqr_sum_names[i] );
+      SFCZVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCZVariable<double> >( _z_flux_sqr_sum_names[iname] ));
+      constSFCZVariable<double>& old_sqr_sum = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( _z_flux_sqr_sum_names[iname] ));
 
-      SpatialOps::SpatFldPtr<ZVolF> flux = SpatialOps::SpatialFieldStore::get<ZVolF>(*w);
-      *flux <<= 0.0;
+      if ( _flux_sum_info[iname].do_phi ){
 
-      if ( _flux_sum_info[i].do_phi ){
+        constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
+        GET_FZ_BUFFERED_PATCH_RANGE(0,1);
+        Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
+        Uintah::parallel_for(range, [&](int i, int j, int k){
 
-        SVolFP const phi = tsk_info->get_const_so_field<SVolF>( _flux_sum_info[i].phi );
+          const double flux = w(i,j,k)/4. * ( (rho(i,j,k) + rho(i,j,k-1)) * (phi(i,j,k) + phi(i,j,k-1)) );
+          sum(i,j,k)  = old_sum(i,j,k) + dt * flux;
+          sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * ( flux * flux );
 
-        *flux <<= ( *w * (*iz)(*rho * *phi) );
-        *sum <<= *old_sum + dt * ( *flux );
-
-        *sqr_sum <<= *old_sqr_sum + dt * ( *flux * *flux );
+        });
 
       } else {
 
-        *flux <<= ( (*iz)(*rho) * *w );
+        GET_FZ_BUFFERED_PATCH_RANGE(0,1);
+        Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
+        Uintah::parallel_for(range, [&](int i, int j, int k){
 
-        *sum <<= *old_sum + dt * ( *flux );
-
-        *sqr_sum <<= *old_sqr_sum + dt * ( *flux * *flux );
+          const double flux = w(i,j,k) * ( (rho(i,j,k) + rho(i,j,k-1))/2. );
+          sum(i,j,k)  = old_sum(i,j,k) + dt * flux;
+          sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * ( flux * flux );
+        });
 
       }
     }
