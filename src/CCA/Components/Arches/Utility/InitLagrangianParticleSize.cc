@@ -1,13 +1,7 @@
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleSize.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 
-#include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-
-
-using namespace Uintah;
-using namespace SpatialOps;
-using SpatialOps::operator *;
+namespace Uintah{
 
 InitLagrangianParticleSize::InitLagrangianParticleSize( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
@@ -72,19 +66,19 @@ InitLagrangianParticleSize::initialize( const Patch* patch, ArchesTaskInfoManage
                         SpatialOps::OperatorDatabase& opr ){
 
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-
-  typedef SpatialOps::SpatFldPtr<Particle::ParticleField> Pptr;
-
-  Pptr dp = tsk_info->get_particle_field(_size_label);
+  ParticleTuple dp_t = tsk_info->get_uintah_particle_field(_size_label);
+  ParticleVariable<double>& dp = *(std::get<0>(dp_t));
+  ParticleSubset* p_subset = std::get<1>(dp_t);
 
   if ( _init_type == "fixed"){
-    *dp <<= _fixed_d;
+    for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+      particleIndex i = *iter;
+      dp[i] = _fixed_d;
+    }
   } else if ( _init_type == "random"){
-    ParticleField& dd = *dp;
-    for ( ParticleField::iterator iter = dd.begin(); iter != dd.end(); iter++ ){
-      *iter = ((double)std::rand()/RAND_MAX)*_max_d;
+    for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+      particleIndex i = *iter;
+      dp[i] = ((double)std::rand()/RAND_MAX)*_max_d;
     }
   }
 
@@ -123,3 +117,4 @@ InitLagrangianParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk
                   SpatialOps::OperatorDatabase& opr ){
 
 }
+} //namespace Uintah

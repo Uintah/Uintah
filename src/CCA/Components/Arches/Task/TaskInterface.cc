@@ -3,11 +3,7 @@
 
 //Uintah Includes:
 
-//3P Includes:
-//#include <boost/foreach.hpp>
-
 using namespace Uintah;
-namespace so = SpatialOps;
 
 typedef ArchesFieldContainer::WHICH_DW WHICH_DW;
 typedef ArchesFieldContainer::VAR_DEPEND VAR_DEPEND;
@@ -363,9 +359,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -404,9 +398,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -447,9 +439,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -485,9 +475,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
 
@@ -523,9 +511,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
 
-    const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
 

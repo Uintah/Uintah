@@ -140,10 +140,6 @@ private:
   void ExampleParticleModel<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                         SpatialOps::OperatorDatabase& opr ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTptr;
-
     for ( int ienv = 0; ienv < _N; ienv++ ){
 
       const std::string name = get_name(ienv, _base_var_name);

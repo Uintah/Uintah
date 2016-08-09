@@ -3,8 +3,6 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-#include <spatialops/structured/FVStaggered.h>
-
 namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------

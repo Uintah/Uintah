@@ -88,7 +88,6 @@ void
 SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                   SpatialOps::OperatorDatabase& opr ){
 
-  //Get spatialops variables for work:
   CCVariable<double>& field   = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
   CCVariable<double>& result  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
   CCVariable<double>& density = *(tsk_info->get_uintah_field<CCVariable<double> >( "density" ));

@@ -1,24 +1,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/GridTools.h>
 
-typedef SpatialOps::SVolField SVolF;
-typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
-typedef SpatialOps::XVolField XVolF;
-typedef SpatialOps::YVolField YVolF;
-typedef SpatialOps::ZVolField ZVolF;
-typedef SpatialOps::SpatFldPtr<XVolF> XVolFP;
-typedef SpatialOps::SpatFldPtr<YVolF> YVolFP;
-typedef SpatialOps::SpatFldPtr<ZVolF> ZVolFP;
-
-//interpolants
-typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant,
-  SVolF, XVolF >::type SVtoXV;
-typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant,
-  SVolF, YVolF >::type SVtoYV;
-typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant,
-  SVolF, ZVolF >::type SVtoZV;
-
-using namespace Uintah;
+namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
 VariableStats::VariableStats( std::string task_name,
@@ -353,8 +336,6 @@ void VariableStats::register_restart_initialize( VIVec& variable_registry ){
 void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                         SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
   typedef std::vector<std::string> StrVec;
 
   for ( StrVec::iterator i = _new_variables.begin(); i != _new_variables.end(); i++ ){
@@ -604,8 +585,6 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                           SpatialOps::OperatorDatabase& opr )
 {
 
-  using SpatialOps::operator *;
-
   const double dt = tsk_info->get_dt();
   std::vector<std::string>::iterator i = _ave_sum_names.begin();
 
@@ -754,4 +733,5 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       }
     }
   }
+}
 }

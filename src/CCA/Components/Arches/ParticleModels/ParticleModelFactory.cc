@@ -68,8 +68,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
       std::string task_name = model_name;
 
-      typedef SpatialOps::SVolField SVol;
-
       if ( type == "simple_rate"){
 
         std::string dependent_type;
