@@ -1154,8 +1154,8 @@
 
             <!-- The grid parameter is used for templated properties -->
             <grid                       spec="REQUIRED NO_DATA"
-                                        attribute1="dependent_type REQUIRED STRING 'CC'"
-                                        attribute2="independent_type REQUIRED STRING 'CC'"
+                                        attribute1="dependent_type REQUIRED STRING 'CC, svol'"
+                                        attribute2="independent_type REQUIRED STRING 'CC, svol'"
                                         need_applies_to="type drag, gravity, constant"/>
 
             <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this model affects -->
@@ -1194,7 +1194,7 @@
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
 
             <!-- drag model -->
-            <direction                  spec="REQUIRED STRING 'x,y,z'"
+            <direction                  spec="REQUIRED STRING 'x,y,z,X,Y,Z'"
                                         need_applies_to="type drag, gravity"/>     <!-- apply this source to which direction -->
 
             <!-- constant property model: set a constant/environment -->

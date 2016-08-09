@@ -626,31 +626,31 @@
 
       <ParticleModels>
          <model label="gravityx" type="gravity">
-           <grid dependent_type="svol" independent_type="svol"/>
+           <grid dependent_type="CC" independent_type="CC"/>
            <IC> partUVel </IC>
            <direction> x </direction>
          </model>
 
         <model label="dragx" type="drag">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partUVel </IC>
           <direction> x </direction>
         </model>
  
         <model label="dragy" type="drag">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partVVel </IC>
           <direction> y </direction>
         </model>
         
         <model label="dragz" type="drag">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partWVel </IC>
           <direction> z </direction>
         </model>
          
         <model label="partRho" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant> [2500.0, 2500.0, 2500.0, 2500.0] </constant>
         </model>
       </ParticleModels>

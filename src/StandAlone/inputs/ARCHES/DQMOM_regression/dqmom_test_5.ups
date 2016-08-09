@@ -94,15 +94,15 @@
 
       <ParticleModels>
         <model label="ux" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.0,1.0,1.0]</constant>
         </model>
         <model label="uy" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.0,1.0,1.0]</constant>
         </model>
         <model label="uz" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.0,1.0,1.0]</constant>
         </model>
       </ParticleModels>

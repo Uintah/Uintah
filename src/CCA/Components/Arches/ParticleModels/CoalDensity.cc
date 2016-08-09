@@ -125,11 +125,11 @@ void
 CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                       SpatialOps::OperatorDatabase& opr ){
 
-  for ( int i_env = 0; i_env < _Nenv; i_env++ ){
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-    const std::string rho_name  = get_env_name( i_env, _task_name );
-    const std::string char_name = get_env_name( i_env, _char_base_name );
-    const std::string rc_name   = get_env_name( i_env, _rawcoal_base_name );
+    const std::string rho_name  = get_env_name( ienv, _task_name );
+    const std::string char_name = get_env_name( ienv, _char_base_name );
+    const std::string rc_name   = get_env_name( ienv, _rawcoal_base_name );
 
     CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
     constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
@@ -141,12 +141,12 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
-        const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[i_env] ) / _denom[i_env];
+        const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / _denom[ienv];
         rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
-        rho(i,j,k) = (ratio < _init_ash[i_env]/_denom[i_env]) ? _init_ash[i_env]/_denom[i_env] * _rhop_o : ratio * _rhop_o;
+        rho(i,j,k) = (ratio < _init_ash[ienv]/_denom[ienv]) ? _init_ash[ienv]/_denom[ienv] * _rhop_o : ratio * _rhop_o;
       });
     } else {
-      const std::string diameter_name  = get_env_name( i_env, _diameter_base_name );
+      const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
       constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -212,11 +212,11 @@ void
 CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 SpatialOps::OperatorDatabase& opr ){
 
-  for ( int i_env = 0; i_env < _Nenv; i_env++ ){
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
-    const std::string rho_name  = get_env_name( i_env, _task_name );
-    const std::string char_name = get_env_name( i_env, _char_base_name );
-    const std::string rc_name   = get_env_name( i_env, _rawcoal_base_name );
+    const std::string rho_name  = get_env_name( ienv, _task_name );
+    const std::string char_name = get_env_name( ienv, _char_base_name );
+    const std::string rc_name   = get_env_name( ienv, _rawcoal_base_name );
 
     CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
     constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
@@ -225,12 +225,12 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     if ( _const_size ) {
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
-        const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[i_env] ) / _denom[i_env];
+        const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / _denom[ienv];
         rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
-        rho(i,j,k) = (ratio < _init_ash[i_env]/_denom[i_env]) ? _init_ash[i_env]/_denom[i_env] * _rhop_o : ratio * _rhop_o;
+        rho(i,j,k) = (ratio < _init_ash[ienv]/_denom[ienv]) ? _init_ash[ienv]/_denom[ienv] * _rhop_o : ratio * _rhop_o;
       });
     } else {
-      const std::string diameter_name  = get_env_name( i_env, _diameter_base_name );
+      const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
       constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
