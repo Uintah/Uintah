@@ -64,7 +64,6 @@ SRCS += $(SRCDIR)/ArchesConstVariables.cc      \
         $(SRCDIR)/ArchesLabel.cc               \
         $(SRCDIR)/ArchesMaterial.cc            \
         $(SRCDIR)/ArchesParticlesHelper.cc     \
-        $(SRCDIR)/ArchesBCHelper.cc            \
         $(SRCDIR)/ArchesVariables.cc           \
         $(SRCDIR)/CellInformation.cc           \
         $(SRCDIR)/CompDynamicProcedure.cc      \

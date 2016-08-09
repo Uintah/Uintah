@@ -49,7 +49,6 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/Handle.h>
-#include <CCA/Components/Wasatch/BCHelper.h>
 #include <string>
 #include <boost/shared_ptr.hpp>
 
@@ -71,13 +70,10 @@ namespace Uintah {
   class MPMArchesLabel;
   class ArchesLabel;
   class ArchesParticlesHelper;
-  class ArchesBCHelper;
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
 public:
-
-  typedef std::map< int, ArchesBCHelper* > BCHelperMapT;
 
   enum DIRNAME { NODIR, XDIR, YDIR, ZDIR };
   enum STENCILNAME { AP, AE, AW, AN, AS, AT, AB };
@@ -182,7 +178,6 @@ private:
   NonlinearSolver* d_nlSolver;
   SimulationStateP d_sharedState;
   const MPMArchesLabel* d_MAlab;
-  BCHelperMapT _bcHelperMap;
   std::vector<AnalysisModule*> d_analysisModules;
   //NEW TASK INTERFACE STUFF:
   std::map<std::string, TaskFactoryBase*> _factory_map;

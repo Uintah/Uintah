@@ -3,7 +3,6 @@
 
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/ArchesBCHelper.h>
 #include <string>
 
 namespace Uintah{
@@ -86,14 +85,6 @@ namespace Uintah{
 
     }
 
-    /** @brief Set the helper to this factory and active tasks **/
-    void set_bchelper( std::map< int, ArchesBCHelper* >* helper ){
-      _bcHelperMap = helper;
-      for ( TaskMap::iterator itsk = _tasks.begin(); itsk != _tasks.end(); itsk++ ){
-        itsk->second->set_bchelper( _bcHelperMap );
-      }
-    }
-
     virtual void add_task( ProblemSpecP& db ){
       //The derived class must do this for each specific factory.
       throw InvalidValue("Error: This factory currently cannot add tasks on the fly.", __FILE__,__LINE__);
@@ -105,9 +96,6 @@ namespace Uintah{
     std::vector<std::string> _active_tasks;       ///< Task which are active
     TypeToTaskMap _type_to_tasks;                 ///< Collects all tasks of a common type
     SimulationStateP _shared_state;               ///< Uintah SharedState
-
-    typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
-    BCHelperMapT _bcHelperMap;
 
   private:
 

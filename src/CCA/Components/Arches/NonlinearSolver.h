@@ -103,9 +103,6 @@ public:
   /** @brief Return the initial dt **/
   inline double get_initial_dt(){ return d_initial_dt; }
 
-  /** @brief Set the helper **/
-  void set_bchelper( std::map< int, ArchesBCHelper* >* helper ){ _bcHelperMap = helper; }
-
 protected:
 
    const ProcessorGroup * d_myworld;
@@ -113,9 +110,6 @@ protected:
 
    double                 d_initial_dt;
    bool                   d_underflow;
-
-   typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
-   BCHelperMapT _bcHelperMap;
 
 private:
 
