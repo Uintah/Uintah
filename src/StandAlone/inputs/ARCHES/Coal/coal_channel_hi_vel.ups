@@ -18,7 +18,6 @@
   </Time>
   <DataArchiver>
     <filebase>coal_channel_hi_vel.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label="residence_time"/>
     <save label="res_source"/>

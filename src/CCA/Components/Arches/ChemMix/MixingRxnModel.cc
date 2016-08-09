@@ -316,7 +316,7 @@ MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
 
-    int totalIVs = d_allIndepVarNames.size();
+    //int totalIVs = d_allIndepVarNames.size();
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
 

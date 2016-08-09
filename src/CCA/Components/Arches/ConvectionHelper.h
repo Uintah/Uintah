@@ -204,7 +204,7 @@ namespace Uintah {
   struct GetPsi{
     GetPsi( const Array3<double>& i_phi, Array3<double>& i_psi, const Array3<double>& i_u,
               const Array3<double>& i_af, const int& i_dir ) :
-             phi(i_phi), psi(i_psi), u(i_u), af(i_af), dir(i_dir),
+             phi(i_phi), u(i_u), af(i_af), psi(i_psi), dir(i_dir),
              huge(1.e10), tiny(1.e-16)
     {}
 

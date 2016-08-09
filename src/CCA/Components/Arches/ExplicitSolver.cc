@@ -1341,14 +1341,11 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
   d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
-
-
 }
 
 void
 ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
 {
-  bool doingRestart = true;
   bool doingRegrid  = true;
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
