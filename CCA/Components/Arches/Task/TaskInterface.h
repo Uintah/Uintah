@@ -1,14 +1,6 @@
 #ifndef Uintah_Component_Arches_TaskInterface_h
 #define Uintah_Component_Arches_TaskInterface_h
 
-#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
-#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
-#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
-
-#include <spatialops/structured/FVStaggered.h>
-#include <spatialops/structured/MemoryWindow.h>
-#include <spatialops/particles/ParticleFieldTypes.h>
-#include <spatialops/particles/ParticleOperatorsImplementation.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -45,6 +37,9 @@ namespace Uintah{
 public:
 
     enum TASK_TYPE { STANDARD_TASK, BC_TASK };
+
+    typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> ParticleTuple;
+    typedef std::tuple<constParticleVariable<double>*, ParticleSubset*> ConstParticleTuple;
 
     /** @brief Default constructor **/
     TaskInterface( std::string take_name, int matl_index );
@@ -272,39 +267,10 @@ protected:
           return _field_container->get_uintah_particle_field( name );
         }
 
-        /** @brief Return a SPATIAL field **/
-        template <typename T>
-        inline SpatialOps::SpatFldPtr<T> get_so_field( const std::string name ){
-          return _field_container->get_so_field<T>(name);
-        }
-
-        /** @brief Return a CONST SPATIAL field **/
-        template <typename T>
-        inline SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name ){
-          return _field_container->get_const_so_field<T>(name);
-        }
-
-        /** @brief Return a CONST SPATIAL field specifying the DW **/
-        template <typename T>
-        inline SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name,
-          ArchesFieldContainer::WHICH_DW which_dw ){
-          return _field_container->get_const_so_field<T>(name, which_dw);
-        }
-
-        /** @brief Return a SPATIAL OPS PARTICLE FIELD **/
-        inline SpatialOps::SpatFldPtr<ParticleField> get_particle_field( const std::string name ){
-          return _field_container->get_so_particle_field(name);
-        }
-
-        /** @brief Return a CONST SPATIAL OPS PARTICLE FIELD **/
-        inline SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name ){
-          return _field_container->get_const_so_particle_field(name);
-        }
-
-        /** @brief Return a CONST SPATIAL OPS PARTICLE FIELD specifying the DW **/
-        inline SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name,
-          ArchesFieldContainer::WHICH_DW which_dw ){
-          return _field_container->get_const_so_particle_field(name, which_dw);
+        /** @brief Return a const UINTAH particle field **/
+        std::tuple<constParticleVariable<double>*, ParticleSubset*>
+          get_const_uintah_particle_field( const std::string name ){
+          return _field_container->get_const_uintah_particle_field( name );
         }
 
         /** @brief Get the current patch ID **/
@@ -377,122 +343,6 @@ protected:
       helper->create_variable( name, _local_labels );
       delete helper;
 
-    }
-
-  };
-
-  template <>
-  struct TaskInterface::RegisterNewVariableHelper<SpatialOps::SpatialField<SpatialOps::SVol, double> >{
-
-    void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels  ){
-      const VarLabel* test = nullptr;
-      test = VarLabel::find( name );
-
-      if ( test == nullptr ){
-
-        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
-                                                 SpatialOps::SpatialField<SpatialOps::SVol, double> >() );
-        local_labels.push_back(label);
-
-      } else {
-
-        std::stringstream msg;
-        msg << "error: VarLabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
-
-      }
-    }
-  };
-
-  template <>
-  struct TaskInterface::RegisterNewVariableHelper<SpatialOps::SpatialField<SpatialOps::XVol, double> >{
-
-    void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels  ){
-      const VarLabel* test = nullptr;
-      test = VarLabel::find( name );
-
-      if ( test == nullptr ){
-
-        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
-                                                 SpatialOps::SpatialField<SpatialOps::XVol, double> >() );
-        local_labels.push_back(label);
-
-      } else {
-
-        std::stringstream msg;
-        msg << "error: VarLabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
-
-      }
-    }
-  };
-
-  template <>
-  struct TaskInterface::RegisterNewVariableHelper<SpatialOps::SpatialField<SpatialOps::YVol, double> >{
-
-    void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels  ){
-      const VarLabel* test = nullptr;
-      test = VarLabel::find( name );
-
-      if ( test == nullptr ){
-
-        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
-                                                 SpatialOps::SpatialField<SpatialOps::YVol, double> >() );
-        local_labels.push_back(label);
-
-      } else {
-
-        std::stringstream msg;
-        msg << "error: VarLabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
-
-      }
-    }
-  };
-
-  template <>
-  struct TaskInterface::RegisterNewVariableHelper<SpatialOps::SpatialField<SpatialOps::ZVol, double> >{
-
-    void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
-      const VarLabel* test = nullptr;
-      test = VarLabel::find( name );
-
-      if ( test == nullptr ){
-
-        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
-                                                 SpatialOps::SpatialField<SpatialOps::ZVol, double> >() );
-        local_labels.push_back(label);
-
-      } else {
-
-        std::stringstream msg;
-        msg << "error: VarLabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
-
-      }
-    }
-  };
-
-  template <>
-  struct TaskInterface::RegisterNewVariableHelper<SpatialOps::Particle::ParticleField>{
-
-    void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
-      const VarLabel* test = nullptr;
-      test = VarLabel::find( name );
-
-      if ( test == nullptr ){
-
-        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
-                                                 SpatialOps::Particle::ParticleField>() );
-        local_labels.push_back(label);
-
-      } else {
-
-        std::stringstream msg;
-        msg << "error: VarLabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
-
-      }
     }
   };
 }

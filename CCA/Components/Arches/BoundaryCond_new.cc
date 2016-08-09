@@ -18,8 +18,6 @@
 
 namespace Uintah{
 
-Uintah::BoundaryCondition_new::PatchToSVolMasks BoundaryCondition_new::patch_svol_masks;
-
 BoundaryCondition_new::BoundaryCondition_new( const int matl_id):
   d_matl_id(matl_id)
 {
@@ -884,112 +882,6 @@ void BoundaryCondition_new::Tabulated::applyBC( const Patch* patch, Patch::FaceT
     }
   }
 }
-
-//new stuff ---------------------------------
-void
-BoundaryCondition_new::sched_create_masks(const LevelP& level, SchedulerP& sched, const MaterialSet* matls)
-{
-
-  Task* tsk = scinew Task( "BoundaryCondition_new::create_masks", this, &BoundaryCondition_new::create_masks);
-  sched->addTask(tsk, level->eachPatch(), matls);
-
-}
-void
-BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw){
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    const int pID = patch->getID();
-
-    std::vector<Patch::FaceType>::const_iterator iter;
-    std::vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-
-    IntVector plow  = patch->getCellLowIndex();
-    IntVector phigh = patch->getCellHighIndex();
-
-    BoundaryCondition_new::NameToSVolMask svol_boundary_faces;
-
-    //Patch boundary face iterator
-    for (iter = bf.begin(); iter !=bf.end(); iter++){
-
-      Patch::FaceType face = *iter;
-
-      IntVector axes = patch->getFaceAxes(face);
-      const BCDataArray* bc_data_array = patch->getBCDataArray(face);
-
-      //get the face direction
-      IntVector insideCellDir = patch->faceDirection(face);
-
-      //get the number of children
-      int numChildren = bc_data_array->getNumberChildren(d_matl_id); //assumed one material
-
-      for (int child = 0; child < numChildren; child++){
-
-        Uintah::BCGeomBase* thisGeom = bc_data_array->getChild(d_matl_id,child);
-
-        const std::string child_name = thisGeom->getBCName();
-        if ( child_name == "NotSet"){
-          int len = 10;
-          char temp_name[len];
-          get_random_name(temp_name, len);
-        }
-
-        Uintah::Iterator bnd_iter;
-        bc_data_array->getCellFaceIterator(d_matl_id, bnd_iter, child);
-
-        //create the mask points:
-        std::vector<SpatialOps::IntVec> face_points;
-        std::vector<SpatialOps::IntVec> extracell_points;
-
-        for ( ;!bnd_iter.done(); bnd_iter++){
-
-          IntVector c = *bnd_iter;
-          IntVector cmod_face  = c - plow - insideCellDir;
-          IntVector cmod_extra = c - plow;
-
-          SpatialOps::IntVec ijk_face(cmod_face.x(),cmod_face.y(),cmod_face.z());
-          SpatialOps::IntVec ijk_extra(cmod_extra.x(),cmod_extra.y(),cmod_extra.z());
-
-          //don't add corner cells
-          if ( cmod_face[axes[1]] >= plow[axes[1]] &&
-               cmod_face[axes[2]] >= plow[axes[2]] &&
-               cmod_face[axes[1]] < phigh[axes[1]] &&
-               cmod_face[axes[2]] < phigh[axes[2]]
-              ) {
-            face_points.push_back(ijk_face);
-            extracell_points.push_back(ijk_extra);
-          }
-
-        }
-
-        //for this child, we need a mask container:
-        BoundaryCondition_new::MaskContainer<SpatialOps::SVolField> mask_cont;
-
-        //put in the points.
-        //WARNING: THIS IS FOR A FIXED NUM OF GHOSTS...WHAT TO DO HERE?
-        //SVOL MASKS:
-        mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::BOUNDARY_FACE );
-        //mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::FIRST_NORMAL_INTERIOR);
-        mask_cont.create_mask( patch, 1, extracell_points, BoundaryCondition_new::BOUNDARY_CELL );
-
-        //svol_boundary_faces.insert(std::make_pair(child_name,mask_cont));
-
-      }
-    }
-
-    //Now put it into perma-storage:
-    if ( svol_boundary_faces.size() > 0 ){
-      BoundaryCondition_new::patch_svol_masks.insert(std::make_pair(pID,svol_boundary_faces));
-    }
-
-  }
-}
-
 
   /** @brief This method sets the boundary value of a scalar to
              a value such that the interpolated value on the face results

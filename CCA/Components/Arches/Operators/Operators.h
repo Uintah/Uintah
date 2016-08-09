@@ -2,17 +2,16 @@
 #define Uintah_Component_Arches_Operators_h
 
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/stencil/StencilBuilder.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
 
-namespace Uintah { 
+namespace Uintah {
 
-  class Operators{ 
+  class Operators{
 
-  public: 
+  public:
 
-    static Operators& self(); 
+    static Operators& self();
 
     struct PatchInfo{
 
@@ -20,25 +19,25 @@ namespace Uintah {
 
     };
 
-    typedef std::map<int, PatchInfo> PatchInfoMap; 
+    typedef std::map<int, PatchInfo> PatchInfoMap;
 
-    PatchInfoMap patch_info_map; 
+    PatchInfoMap patch_info_map;
 
     void create_patch_operators( const LevelP& level, SchedulerP& sched,
-                                       const MaterialSet* matls ); 
+                                       const MaterialSet* matls );
 
-    void set_my_world( const ProcessorGroup* myworld ){ 
+    void set_my_world( const ProcessorGroup* myworld ){
       _myworld = myworld; 
     };
 
-    void delete_patch_set(); 
+    void delete_patch_set();
 
-  private: 
+  private:
 
-    Operators(); 
+    Operators();
 
-    ~Operators(); 
-    const ProcessorGroup* _myworld; 
+    ~Operators();
+    const ProcessorGroup* _myworld;
 
     enum PatchsetSelector{
       USE_FOR_TASKS,
@@ -50,12 +49,9 @@ namespace Uintah {
                                           const Uintah::LevelP& level,
                                           Uintah::SchedulerP& sched );
 
-    std::map<int, Uintah::PatchSet*> _patches_for_operators; 
+    std::map<int, Uintah::PatchSet*> _patches_for_operators;
 
   };
-
-
-
 }
 
 #endif

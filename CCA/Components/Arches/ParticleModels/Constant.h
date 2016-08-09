@@ -3,8 +3,6 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
-#include <spatialops/structured/FVStaggered.h>
-
 //-------------------------------------------------------
 
 /**

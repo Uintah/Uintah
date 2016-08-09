@@ -1818,8 +1818,6 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
 
   sched->addTask(tsk, level->eachPatch(), matls);
 
-  d_newBC->sched_create_masks(level, sched, matls);
-
 }
 void
 BoundaryCondition::setAreaFraction( const ProcessorGroup*,

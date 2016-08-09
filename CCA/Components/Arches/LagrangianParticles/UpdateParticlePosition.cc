@@ -1,13 +1,7 @@
 #include <CCA/Components/Arches/LagrangianParticles/UpdateParticlePosition.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 
-#include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-
-
-using namespace Uintah;
-using namespace SpatialOps;
-using SpatialOps::operator *;
+namespace Uintah{
 
 UpdateParticlePosition::UpdateParticlePosition( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
@@ -46,12 +40,6 @@ UpdateParticlePosition::register_initialize( std::vector<ArchesFieldContainer::V
 void
 UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                         SpatialOps::OperatorDatabase& opr ){
-
-
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-
-
 }
 
 
@@ -66,7 +54,7 @@ UpdateParticlePosition::register_timestep_init( std::vector<ArchesFieldContainer
 
 void
 UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){ 
+                          SpatialOps::OperatorDatabase& opr ){
 }
 
 
@@ -98,26 +86,40 @@ void
 UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                   SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SpatFldPtr<Particle::ParticleField> Pptr;
+  ParticleTuple px_tup = tsk_info->get_uintah_particle_field( _px_name );
+  ParticleTuple py_tup = tsk_info->get_uintah_particle_field( _py_name );
+  ParticleTuple pz_tup = tsk_info->get_uintah_particle_field( _pz_name );
 
-  Pptr px = tsk_info->get_particle_field( _px_name );
-  Pptr py = tsk_info->get_particle_field( _py_name );
-  Pptr pz = tsk_info->get_particle_field( _pz_name );
+  ParticleVariable<double>& px = *(std::get<0>(px_tup));
+  ParticleVariable<double>& py = *(std::get<0>(py_tup));
+  ParticleVariable<double>& pz = *(std::get<0>(pz_tup));
+  ParticleSubset* p_subset = std::get<1>(px_tup);
 
-  const Pptr pu = tsk_info->get_const_particle_field(_u_name);
-  const Pptr pv = tsk_info->get_const_particle_field(_v_name);
-  const Pptr pw = tsk_info->get_const_particle_field(_w_name);
+  ConstParticleTuple pu_tup = tsk_info->get_const_uintah_particle_field(_u_name);
+  ConstParticleTuple pv_tup = tsk_info->get_const_uintah_particle_field(_v_name);
+  ConstParticleTuple pw_tup = tsk_info->get_const_uintah_particle_field(_w_name);
 
-  const Pptr old_px = tsk_info->get_const_particle_field(_px_name);
-  const Pptr old_py = tsk_info->get_const_particle_field(_py_name);
-  const Pptr old_pz = tsk_info->get_const_particle_field(_pz_name);
+  constParticleVariable<double>& pu = *(std::get<0>(pu_tup));
+  constParticleVariable<double>& pv = *(std::get<0>(pv_tup));
+  constParticleVariable<double>& pw = *(std::get<0>(pw_tup));
+
+  ConstParticleTuple old_px_tup = tsk_info->get_const_uintah_particle_field(_px_name);
+  ConstParticleTuple old_py_tup = tsk_info->get_const_uintah_particle_field(_py_name);
+  ConstParticleTuple old_pz_tup = tsk_info->get_const_uintah_particle_field(_pz_name);
+
+  constParticleVariable<double>& old_px = *(std::get<0>(old_px_tup));
+  constParticleVariable<double>& old_py = *(std::get<0>(old_py_tup));
+  constParticleVariable<double>& old_pz = *(std::get<0>(old_pz_tup));
 
   const double dt = tsk_info->get_dt();
 
-  *px <<= *old_px + dt * *pu;
-  *py <<= *old_py + dt * *pv;
-  *pz <<= *old_pz + dt * *pw;
+  for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+    particleIndex i = *iter;
 
+    px[i] = old_px[i] + dt * pu[i];
+    py[i] = old_py[i] + dt * pv[i];
+    pz[i] = old_pz[i] + dt * pw[i];
+
+  }
 }
+} //namespace Uintah

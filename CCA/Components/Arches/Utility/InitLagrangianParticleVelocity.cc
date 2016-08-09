@@ -1,14 +1,7 @@
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleVelocity.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 
-#include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-
-
-using namespace Uintah;
-using namespace SpatialOps;
-using SpatialOps::operator *;
-
+namespace Uintah{
 InitLagrangianParticleVelocity::InitLagrangianParticleVelocity( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
 }
@@ -86,46 +79,52 @@ InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoMa
                         SpatialOps::OperatorDatabase& opr ){
 
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
 
-  typedef SpatialOps::SpatFldPtr<Particle::ParticleField> Pptr;
-  typedef SpatialOps::SpatFldPtr<SpatialOps::XVolField> XVolPtr;
-  typedef SpatialOps::SpatFldPtr<SpatialOps::YVolField> YVolPtr;
-  typedef SpatialOps::SpatFldPtr<SpatialOps::ZVolField> ZVolPtr;
+  ParticleTuple pu_tup = tsk_info->get_uintah_particle_field(_pu_label);
+  ParticleTuple pv_tup = tsk_info->get_uintah_particle_field(_pv_label);
+  ParticleTuple pw_tup = tsk_info->get_uintah_particle_field(_pw_label);
 
-  Pptr up = tsk_info->get_particle_field(_pu_label);
-  Pptr vp = tsk_info->get_particle_field(_pv_label);
-  Pptr wp = tsk_info->get_particle_field(_pw_label);
+  ParticleVariable<double>& pu = *(std::get<0>(pu_tup));
+  ParticleVariable<double>& pv = *(std::get<0>(pv_tup));
+  ParticleVariable<double>& pw = *(std::get<0>(pw_tup));
+  ParticleSubset* p_subset = std::get<1>(pu_tup);
 
-  const Pptr px = tsk_info->get_const_particle_field(_px_label);
-  const Pptr py = tsk_info->get_const_particle_field(_py_label);
-  const Pptr pz = tsk_info->get_const_particle_field(_pz_label);
+  ConstParticleTuple px_tup = tsk_info->get_const_uintah_particle_field(_px_label);
+  ConstParticleTuple py_tup = tsk_info->get_const_uintah_particle_field(_py_label);
+  ConstParticleTuple pz_tup = tsk_info->get_const_uintah_particle_field(_pz_label);
 
-  const Pptr psize = tsk_info->get_const_particle_field(_size_label);
+  constParticleVariable<double>& px = *(std::get<0>(px_tup));
+  constParticleVariable<double>& py = *(std::get<0>(py_tup));
+  constParticleVariable<double>& pz = *(std::get<0>(pz_tup));
 
-  XVolPtr ug = tsk_info->get_const_so_field<SpatialOps::XVolField>("uVelocitySPBC");
-  YVolPtr vg = tsk_info->get_const_so_field<SpatialOps::YVolField>("vVelocitySPBC");
-  ZVolPtr wg = tsk_info->get_const_so_field<SpatialOps::ZVolField>("wVelocitySPBC");
+  ConstParticleTuple psize_tup = tsk_info->get_const_uintah_particle_field(_size_label);
+  constParticleVariable<double>& psize = *(std::get<0>(psize_tup));
 
-  typedef SpatialOps::Particle::CellToParticle<SpatialOps::XVolField> GXtoPT;
-  typedef SpatialOps::Particle::CellToParticle<SpatialOps::YVolField> GYtoPT;
-  typedef SpatialOps::Particle::CellToParticle<SpatialOps::ZVolField> GZtoPT;
+  constSFCXVariable<double>& ug = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uVelocitySPBC"));
+  constSFCYVariable<double>& vg = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vVelocitySPBC"));
+  constSFCZVariable<double>& wg = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wVelocitySPBC"));
 
-  GXtoPT* gx_to_pt = opr.retrieve_operator<GXtoPT>();
-  GYtoPT* gy_to_pt = opr.retrieve_operator<GYtoPT>();
-  GZtoPT* gz_to_pt = opr.retrieve_operator<GZtoPT>();
+  for (auto iter = p_subset->begin(); iter != p_subset->end(); iter++){
+    particleIndex i = *iter;
 
-  //gx_to_pt->set_coordinate_information( &*px, &*py, &*pz, &*size );
-  gx_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), psize.operator->() );
-  gx_to_pt->apply_to_field(*ug, *up);
+    const double x = px[i];
+    const double y = py[i];
+    const double z = pz[i];
 
-  gy_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), psize.operator->() );
-  gy_to_pt->apply_to_field(*vg, *vp);
+    Uintah::Point my_loc(x,y,z);
 
-  gz_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), psize.operator->() );
-  gz_to_pt->apply_to_field(*wg, *wp);
+    //nearest neighbor
+    IntVector idx = patch->getCellIndex(my_loc);
 
+    const double u = ug[idx];
+    const double v = vg[idx];
+    const double w = wg[idx];
+
+    pu[i] = u;
+    pv[i] = v;
+    pw[i] = w;
+
+  }
 }
 
 //
@@ -160,7 +159,6 @@ void
 InitLagrangianParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                   SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
 
 }
+} // namespace Uintah

@@ -3,8 +3,6 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
-#include <spatialops/Nebo.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 namespace Uintah{
 

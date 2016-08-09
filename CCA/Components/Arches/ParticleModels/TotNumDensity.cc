@@ -3,9 +3,7 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-#include <spatialops/structured/FVStaggered.h>
-
-using namespace Uintah;
+namespace Uintah{
 
 TotNumDensity::TotNumDensity( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
@@ -116,3 +114,4 @@ TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     });
   }
 }
+} //namespace Uintah

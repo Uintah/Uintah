@@ -60,8 +60,6 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/MemoryWindow.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 
