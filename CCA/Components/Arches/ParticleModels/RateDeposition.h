@@ -8,7 +8,6 @@ namespace Uintah{
   class Operators;
   class Discretization_new;
   class RateDeposition : public TaskInterface {
-
 public:
 
     RateDeposition( std::string task_name, int matl_index, const int N );
@@ -49,7 +48,6 @@ public:
 
     //Build instructions for this (RateDeposition) class.
     class Builder : public TaskInterface::TaskBuilder {
-
       public:
 
       Builder( std::string task_name, int matl_index, const int N ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N){}
@@ -83,7 +81,6 @@ private:
     std::string _RateDepositionZ_base_name;
     std::string _diameter_base_name;
 
-
     std::string _ProbSurfaceX_name;
     std::string _ProbSurfaceY_name;
     std::string _ProbSurfaceZ_name;
@@ -101,144 +98,39 @@ private:
    std::string  _WallTemperature_name;
     double _pi_div_six;
 
-   template <class faceT, class velT> void
-   compute_prob_stick(  SpatialOps::OperatorDatabase& opr,
-                                       const SpatialOps::SpatFldPtr<velT> normal,
-                                       const SpatialOps::SpatFldPtr<velT> areaFraction,
-                                       SpatialOps::SpatFldPtr<SpatialOps::SVolField> Tvol,
-                                       SpatialOps::SpatFldPtr<SpatialOps::SVolField> MaxTvol,
-                                       SpatialOps::SpatFldPtr<velT> ProbStick );
-
-   template <class faceT, class velT> void
-   flux_compute(  SpatialOps::OperatorDatabase& opr,
-                                  const SpatialOps::SpatFldPtr<velT> normal,
-                                  const SpatialOps::SpatFldPtr<SpatialOps::SVolField> rho,
-                                  const SpatialOps::SpatFldPtr<SpatialOps::SVolField> u,
-                                  const SpatialOps::SpatFldPtr<SpatialOps::SVolField> weg,
-                                  const SpatialOps::SpatFldPtr<SpatialOps::SVolField> dia,
-                                  SpatialOps::SpatFldPtr<velT> flux );
-
-
-  };
-
-  template <class faceT, class velT> void
-  RateDeposition::compute_prob_stick(  SpatialOps::OperatorDatabase& opr,
-                                       const SpatialOps::SpatFldPtr<velT> normal,
-                                       const SpatialOps::SpatFldPtr<velT> areaFraction,
-                                       SpatialOps::SpatFldPtr<SpatialOps::SVolField> Tvol,
-                                       SpatialOps::SpatFldPtr<SpatialOps::SVolField> MaxTvol,
-                                       SpatialOps::SpatFldPtr<velT> ProbStick)
-  { // Urbain model 1981
-     //double CaO=26.49/100;const double MgO=4.47/100; double AlO=14.99/100;const double SiO=38.9/100; //const double alpha=0;
+    //--------------------compute the deposition probability --------------------------------------------------------------
+    inline double compute_prob_stick(double areaFraction,double Tvol,double MaxTvol)
+    {  // Urbain model 1981
+      //double CaO=26.49/100;const double MgO=4.47/100; double AlO=14.99/100;const double SiO=38.9/100; //const double alpha=0;
      double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0;
-    // const double B0=0; const doulbe B1=0; const double B3=0;
-     CaO=CaO/(CaO+MgO+AlO+SiO);AlO=AlO/(CaO+MgO+AlO+SiO);
-     const double alpha=CaO/(AlO+CaO);
+     // const double B0=0; const doulbe B1=0; const double B3=0;
+     double CaOmolar=0.0;               double AlOmolar=0.0;
+     CaOmolar=CaO/(CaO+MgO+AlO+SiO);            AlOmolar=AlO/(CaO+MgO+AlO+SiO);
+     const double alpha=CaOmolar/(AlOmolar+CaOmolar);
      const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
      const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
      const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
      const double B3= 60.7619-153.9276*alpha+211.1616*alpha*alpha;
      const double Bactivational=B0+B1*SiO+B2*SiO*SiO+B3*SiO*SiO*SiO;
      const double Aprepontional=exp(-(0.2693*Bactivational+11.6725));  //const double Bactivational= 47800;
-     const double ReferVisc=10000;
+     const double ReferVisc=10000.0;
 
-    //interp the XVol to XSurf
-    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, velT, faceT>::type InterpVFtoSF;
-    const InterpVFtoSF* const interp_xv_to_xf = opr.retrieve_operator<InterpVFtoSF>();
-    SpatialOps::SpatFldPtr<faceT> normal_face = SpatialOps::SpatialFieldStore::get<faceT>( *normal);
-    SpatialOps::SpatFldPtr<faceT> areaFraction_face = SpatialOps::SpatialFieldStore::get<faceT>( *normal);
-
-    *normal_face <<= (*interp_xv_to_xf)(*normal);
-    *areaFraction_face <<= (*interp_xv_to_xf)(*areaFraction);
-
-    //create some temp variables modeled on ufx
-    SpatialOps::SpatFldPtr<faceT> Tvol_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    SpatialOps::SpatFldPtr<faceT> MaxTvol_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    SpatialOps::SpatFldPtr<faceT> Fmelt_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    SpatialOps::SpatFldPtr<faceT> ProbMelt_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    SpatialOps::SpatFldPtr<faceT> ProbVisc_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    /// @TODO We should remove these later and simply update BC's for computed variables, so that the extra cell values are zero.
-    *Tvol_temp <<= 0.0;
-    *MaxTvol_temp <<= 0.0;
-    *Fmelt_temp <<= 0.0;
-    *ProbMelt_temp <<= 0.0;
-    *ProbVisc_temp <<= 0.0;
-
-    //get upwind (low) interpolant and the flux limiter operator
-    typedef UpwindInterpolant<SpatialOps::SVolField, faceT> Upwind;
-    Upwind* upwind = opr.retrieve_operator<Upwind>();
-
-    //compute the upwind differenced term
-    upwind->set_advective_velocity( *normal_face );
-    upwind->apply_to_field( *MaxTvol, *MaxTvol_temp );
-
-    upwind->set_advective_velocity( *normal_face );
-    upwind->apply_to_field( *Tvol, *Tvol_temp );
-    //interp the XSurf to XVol
-    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, faceT,velT>::type InterpSFtoVF;
-    const InterpSFtoVF* const interp_xf_to_xv = opr.retrieve_operator<InterpSFtoVF>();
-
-   //-----------------------Actual work here----------------------
+  //-----------------------Actual work here----------------------
    // Compute the melting probability
-     *ProbMelt_temp <<= cond(*MaxTvol_temp >= _Tmelt, 1)
-                            (0 );
+    double ProbMelt=0;
+    double ProbVisc=0;
+    double ProbStick=0;
+    double Visc=0;
+    ProbMelt=( MaxTvol >= _Tmelt ? 1:0);
 
    //compute the viscosity probability
-    *ProbVisc_temp <<= 0.1*Aprepontional* max(*Tvol_temp,273.0) * exp(1000*Bactivational /(max(*Tvol_temp,273.0)) );
-    *ProbVisc_temp <<= cond( ReferVisc/(*ProbVisc_temp) > 1, 1  )
-                           ( ReferVisc/(*ProbVisc_temp));
-    *ProbStick <<= (*interp_xf_to_xv)((1-*areaFraction_face) * *ProbVisc_temp * *ProbMelt_temp);
-    *ProbStick<<= min(*ProbStick,1 ) ;
-  }
-  //-------------------------------------------------------------------------------------
-   template <class faceT, class velT> void
-   RateDeposition::flux_compute(  SpatialOps::OperatorDatabase& opr,
-                                  const SpatialOps::SpatFldPtr<velT> normal,
-                                  const SpatialOps::SpatFldPtr<SpatialOps::SVolField> rho,
-                                  const SpatialOps::SpatFldPtr<SpatialOps::SVolField> u,
-                                  const SpatialOps::SpatFldPtr<SpatialOps::SVolField> weg,
-                                  const SpatialOps::SpatFldPtr<SpatialOps::SVolField> dia,
-                                  SpatialOps::SpatFldPtr<velT> flux )
+     Visc = 0.1*Aprepontional* std::max(Tvol,273.0) * exp(1000.0*Bactivational /(std::max(Tvol,273.0)) );
+     ProbVisc = (ReferVisc/(Visc) > 1 ? 1 :  ReferVisc/(Visc) );
+     ProbStick= ((1-areaFraction) * ProbVisc * ProbMelt);
+     return ProbStick;
+     };
+ 
+   };
 
-   {
-        //interp the XVol to XSurf
-    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, velT, faceT>::type InterpVFtoSF;
-    const InterpVFtoSF* const interp_xv_to_xf = opr.retrieve_operator<InterpVFtoSF>();
-    SpatialOps::SpatFldPtr<faceT> normal_face = SpatialOps::SpatialFieldStore::get<faceT>( *normal);
-
-    *normal_face <<= (*interp_xv_to_xf)(*normal);
-
-    //create some temp variables modeled on ufx
-    SpatialOps::SpatFldPtr<faceT> rho_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    SpatialOps::SpatFldPtr<faceT> u_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    SpatialOps::SpatFldPtr<faceT> weg_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    SpatialOps::SpatFldPtr<faceT> dia_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-    /// @TODO We should remove these later and simply update BC's for computed variables, so that the extra cell values are zero.
-    *rho_temp <<= 0.0;
-    *u_temp <<= 0.0;
-    *weg_temp <<= 0.0;
-    *dia_temp <<= 0.0;
-
-    //get upwind (low) interpolant and the flux limiter operator
-    typedef UpwindInterpolant<SpatialOps::SVolField, faceT> Upwind;
-    Upwind* upwind = opr.retrieve_operator<Upwind>();
-
-    //compute the upwind differenced term
-    upwind->set_advective_velocity( *normal_face );
-    upwind->apply_to_field( *rho, *rho_temp );
-    upwind->set_advective_velocity( *normal_face );
-    upwind->apply_to_field( *rho, *rho_temp );
-    upwind->set_advective_velocity( *normal_face );
-    upwind->apply_to_field( *u, *u_temp );
-    upwind->set_advective_velocity( *normal_face );
-    upwind->apply_to_field( *weg, *weg_temp );
-    upwind->set_advective_velocity( *normal_face );
-    upwind->apply_to_field( *dia, *dia_temp );
-   //interp the XSurf to XVol
-    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, faceT,velT>::type InterpSFtoVF;
-    const InterpSFtoVF* const interp_xf_to_xv = opr.retrieve_operator<InterpSFtoVF>();
-    *flux <<= (*interp_xf_to_xv)( *rho_temp * *u_temp * *weg_temp * _pi_div_six * pow(*dia_temp,3) );
-
-   }
 }
 #endif

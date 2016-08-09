@@ -1,30 +1,14 @@
 #include <CCA/Components/Arches/ParticleModels/RateDeposition.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
-#include <spatialops/structured/FVStaggered.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <iostream>
-#include <spatialops/structured/FVStaggered.h>
 #include <iomanip>
 
 using namespace Uintah;
-
-using namespace SpatialOps;
-using SpatialOps::operator *;
-typedef SSurfXField SurfX;
-typedef SSurfYField SurfY;
-typedef SSurfZField SurfZ;
-typedef SVolField  SVolF;
-typedef XVolField  XVolF;
-typedef YVolField  YVolF;
-typedef ZVolField  ZVolF;
-typedef SpatialOps::SpatFldPtr<SpatialOps::SVolField> SVolFP;
-typedef SpatialOps::SpatFldPtr<SpatialOps::XVolField> XVolFP;
-typedef SpatialOps::SpatFldPtr<SpatialOps::YVolField> YVolFP;
-typedef SpatialOps::SpatFldPtr<SpatialOps::ZVolField> ZVolFP;
- 
+//using namespace std;
 
 Uintah::RateDeposition::RateDeposition( std::string task_name, int matl_index, const int N ) :
 TaskInterface( task_name, matl_index ), _Nenv(N) {
@@ -174,65 +158,67 @@ void
 RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                        SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-
-  
-  for ( int i=0; i< _Nenv;i++){
-    const std::string ProbParticleX_name = get_env_name(i, _ProbParticleX_base_name);
-    const std::string ProbParticleY_name = get_env_name(i, _ProbParticleY_base_name);
-    const std::string ProbParticleZ_name = get_env_name(i, _ProbParticleZ_base_name);
+  for ( int e=0; e< _Nenv;e++){
+    const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
+    const std::string ProbParticleY_name = get_env_name(e, _ProbParticleY_base_name);
+    const std::string ProbParticleZ_name = get_env_name(e, _ProbParticleZ_base_name);
  
-    const std::string ProbDepositionX_name = get_env_name(i, _ProbDepositionX_base_name);
-    const std::string ProbDepositionY_name = get_env_name(i, _ProbDepositionY_base_name);
-    const std::string ProbDepositionZ_name = get_env_name(i, _ProbDepositionZ_base_name);
+    const std::string ProbDepositionX_name = get_env_name(e, _ProbDepositionX_base_name);
+    const std::string ProbDepositionY_name = get_env_name(e, _ProbDepositionY_base_name);
+    const std::string ProbDepositionZ_name = get_env_name(e, _ProbDepositionZ_base_name);
    
-    const std::string FluxPx_name = get_env_name(i, _FluxPx_base_name);
-    const std::string FluxPy_name = get_env_name(i, _FluxPy_base_name);
-    const std::string FluxPz_name = get_env_name(i, _FluxPz_base_name);
+    const std::string FluxPx_name = get_env_name(e, _FluxPx_base_name);
+    const std::string FluxPy_name = get_env_name(e, _FluxPy_base_name);
+    const std::string FluxPz_name = get_env_name(e, _FluxPz_base_name);
 
-    const std::string RateDepositionX_name = get_env_name(i, _RateDepositionX_base_name);
-    const std::string RateDepositionY_name = get_env_name(i, _RateDepositionY_base_name);
-    const std::string RateDepositionZ_name = get_env_name(i, _RateDepositionZ_base_name);
-
-    XVolFP FluxPx   =  tsk_info->get_so_field<XVolF>(FluxPx_name);
-    YVolFP FluxPy   =  tsk_info->get_so_field<YVolF>(FluxPy_name);
-    ZVolFP FluxPz   =  tsk_info->get_so_field<ZVolF>(FluxPz_name);
+    const std::string RateDepositionX_name = get_env_name(e, _RateDepositionX_base_name);
+    const std::string RateDepositionY_name = get_env_name(e, _RateDepositionY_base_name);
+    const std::string RateDepositionZ_name = get_env_name(e, _RateDepositionZ_base_name);
+  
+    SFCXVariable<double>& FluxPx   =         *(tsk_info->get_uintah_field<SFCXVariable<double> >(FluxPx_name));
+    SFCYVariable<double>& FluxPy   =         *(tsk_info->get_uintah_field<SFCYVariable<double> >(FluxPy_name));
+    SFCZVariable<double>& FluxPz   =         *(tsk_info->get_uintah_field<SFCZVariable<double> >(FluxPz_name));
  
-    XVolFP ProbParticleX   =  tsk_info->get_so_field<XVolF>(ProbParticleX_name);
-    YVolFP ProbParticleY   =  tsk_info->get_so_field<YVolF>(ProbParticleY_name);
-    ZVolFP ProbParticleZ   =  tsk_info->get_so_field<ZVolF>(ProbParticleZ_name);
-
-    XVolFP ProbDepositionX   =  tsk_info->get_so_field<XVolF>(ProbDepositionX_name);
-    YVolFP ProbDepositionY   =  tsk_info->get_so_field<YVolF>(ProbDepositionY_name);
-    ZVolFP ProbDepositionZ   =  tsk_info->get_so_field<ZVolF>(ProbDepositionZ_name);
-
-    XVolFP RateDepositionX = tsk_info->get_so_field<XVolF>(RateDepositionX_name);
-    YVolFP RateDepositionY = tsk_info->get_so_field<YVolF>(RateDepositionY_name);
-    ZVolFP RateDepositionZ = tsk_info->get_so_field<ZVolF>(RateDepositionZ_name);
-    *RateDepositionX <<= 0.0;
-    *RateDepositionY <<= 0.0;
-    *RateDepositionZ <<= 0.0;
-
-    *ProbParticleX <<= 0.0;
-    *ProbParticleY <<= 0.0;
-    *ProbParticleZ <<= 0.0;
- 
-    *ProbDepositionX <<= 0.0;
-    *ProbDepositionY <<= 0.0;
-    *ProbDepositionZ <<= 0.0;
+    SFCXVariable<double>& ProbParticleX  =   *(tsk_info->get_uintah_field<SFCXVariable<double> >(ProbParticleX_name) );
+    SFCYVariable<double>& ProbParticleY  =   *(tsk_info->get_uintah_field<SFCYVariable<double> >(ProbParticleY_name) );
+    SFCZVariable<double>& ProbParticleZ  =   *(tsk_info->get_uintah_field<SFCZVariable<double> >(ProbParticleZ_name) );
     
-    *FluxPx <<= 0.0;
-    *FluxPy <<= 0.0;
-    *FluxPz <<= 0.0;
-  }
+    SFCXVariable<double>& ProbDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(ProbDepositionX_name) );
+    SFCYVariable<double>& ProbDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(ProbDepositionY_name) );
+    SFCZVariable<double>& ProbDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(ProbDepositionZ_name) );
+ 
+    SFCXVariable<double>& RateDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >( RateDepositionX_name) );
+    SFCYVariable<double>& RateDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >( RateDepositionY_name) );
+    SFCZVariable<double>& RateDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >( RateDepositionZ_name) );
+ 
+  Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    RateDepositionX(i,j,k) = 0.0;
+    RateDepositionY(i,j,k) = 0.0;
+    RateDepositionZ(i,j,k) = 0.0;
 
-  XVolFP ProbSurfaceX = tsk_info->get_so_field<XVolF>(_ProbSurfaceX_name);
-  YVolFP ProbSurfaceY = tsk_info->get_so_field<YVolF>(_ProbSurfaceY_name);
-  ZVolFP ProbSurfaceZ = tsk_info->get_so_field<ZVolF>(_ProbSurfaceZ_name);
-  *ProbSurfaceX <<= 0.0;
-  *ProbSurfaceY <<= 0.0;
-  *ProbSurfaceZ <<= 0.0;
+    ProbParticleX(i,j,k)   = 0.0;
+    ProbParticleY(i,j,k)   = 0.0;
+    ProbParticleZ(i,j,k)   = 0.0;
+ 
+    ProbDepositionX(i,j,k) = 0.0;
+    ProbDepositionY(i,j,k) = 0.0;
+    ProbDepositionZ(i,j,k) = 0.0;
+    
+    FluxPx(i,j,k)  = 0.0;
+    FluxPy(i,j,k)  = 0.0;
+    FluxPz(i,j,k) = 0.0;
+      });
+   }
+    SFCXVariable<double>& ProbSurfaceX =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name) );
+    SFCYVariable<double>& ProbSurfaceY =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(_ProbSurfaceY_name) );
+    SFCZVariable<double>& ProbSurfaceZ =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name) );
+    Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      ProbSurfaceX(i,j,k) = 0.0;
+      ProbSurfaceY(i,j,k) = 0.0;
+      ProbSurfaceZ(i,j,k) = 0.0;
+      });
 }
 //
 //------------------------------------------------
@@ -284,66 +270,71 @@ RateDeposition::register_timestep_init( std::vector<ArchesFieldContainer::Variab
 void
 RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                           SpatialOps::OperatorDatabase& opr ){
-
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-
   
-  for ( int i=0; i< _Nenv;i++){
-    const std::string ProbParticleX_name = get_env_name(i, _ProbParticleX_base_name);
-    const std::string ProbParticleY_name = get_env_name(i, _ProbParticleY_base_name);
-    const std::string ProbParticleZ_name = get_env_name(i, _ProbParticleZ_base_name);
+  for ( int e=0; e< _Nenv;e++){
+    const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
+    const std::string ProbParticleY_name = get_env_name(e, _ProbParticleY_base_name);
+    const std::string ProbParticleZ_name = get_env_name(e, _ProbParticleZ_base_name);
  
-    const std::string ProbDepositionX_name = get_env_name(i, _ProbDepositionX_base_name);
-    const std::string ProbDepositionY_name = get_env_name(i, _ProbDepositionY_base_name);
-    const std::string ProbDepositionZ_name = get_env_name(i, _ProbDepositionZ_base_name);
+    const std::string ProbDepositionX_name = get_env_name(e, _ProbDepositionX_base_name);
+    const std::string ProbDepositionY_name = get_env_name(e, _ProbDepositionY_base_name);
+    const std::string ProbDepositionZ_name = get_env_name(e, _ProbDepositionZ_base_name);
    
-    const std::string FluxPx_name = get_env_name(i, _FluxPx_base_name);
-    const std::string FluxPy_name = get_env_name(i, _FluxPy_base_name);
-    const std::string FluxPz_name = get_env_name(i, _FluxPz_base_name);
+    const std::string FluxPx_name = get_env_name(e, _FluxPx_base_name);
+    const std::string FluxPy_name = get_env_name(e, _FluxPy_base_name);
+    const std::string FluxPz_name = get_env_name(e, _FluxPz_base_name);
 
-    const std::string RateDepositionX_name = get_env_name(i, _RateDepositionX_base_name);
-    const std::string RateDepositionY_name = get_env_name(i, _RateDepositionY_base_name);
-    const std::string RateDepositionZ_name = get_env_name(i, _RateDepositionZ_base_name);
-
-    XVolFP FluxPx   =  tsk_info->get_so_field<XVolF>(FluxPx_name);
-    YVolFP FluxPy   =  tsk_info->get_so_field<YVolF>(FluxPy_name);
-    ZVolFP FluxPz   =  tsk_info->get_so_field<ZVolF>(FluxPz_name);
+    const std::string RateDepositionX_name = get_env_name(e, _RateDepositionX_base_name);
+    const std::string RateDepositionY_name = get_env_name(e, _RateDepositionY_base_name);
+    const std::string RateDepositionZ_name = get_env_name(e, _RateDepositionZ_base_name);
+  
+    SFCXVariable<double>& FluxPx   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(FluxPx_name));
+    SFCYVariable<double>& FluxPy   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(FluxPy_name));
+    SFCZVariable<double>& FluxPz   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(FluxPz_name));
  
-    XVolFP ProbParticleX   =  tsk_info->get_so_field<XVolF>(ProbParticleX_name);
-    YVolFP ProbParticleY   =  tsk_info->get_so_field<YVolF>(ProbParticleY_name);
-    ZVolFP ProbParticleZ   =  tsk_info->get_so_field<ZVolF>(ProbParticleZ_name);
-
-    XVolFP ProbDepositionX   =  tsk_info->get_so_field<XVolF>(ProbDepositionX_name);
-    YVolFP ProbDepositionY   =  tsk_info->get_so_field<YVolF>(ProbDepositionY_name);
-    ZVolFP ProbDepositionZ   =  tsk_info->get_so_field<ZVolF>(ProbDepositionZ_name);
-
-    XVolFP RateDepositionX = tsk_info->get_so_field<XVolF>(RateDepositionX_name);
-    YVolFP RateDepositionY = tsk_info->get_so_field<YVolF>(RateDepositionY_name);
-    ZVolFP RateDepositionZ = tsk_info->get_so_field<ZVolF>(RateDepositionZ_name);
-    *RateDepositionX <<= 0.0;
-    *RateDepositionY <<= 0.0;
-    *RateDepositionZ <<= 0.0;
-
-    *ProbParticleX <<= 0.0;
-    *ProbParticleY <<= 0.0;
-    *ProbParticleZ <<= 0.0;
- 
-    *ProbDepositionX <<= 0.0;
-    *ProbDepositionY <<= 0.0;
-    *ProbDepositionZ <<= 0.0;
+    SFCXVariable<double>& ProbParticleX  =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(ProbParticleX_name) );
+    SFCYVariable<double>& ProbParticleY  =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(ProbParticleY_name) );
+    SFCZVariable<double>& ProbParticleZ  =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(ProbParticleZ_name) );
     
-    *FluxPx <<= 0.0;
-    *FluxPy <<= 0.0;
-    *FluxPz <<= 0.0;
+    SFCXVariable<double>& ProbDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(ProbDepositionX_name) );
+    SFCYVariable<double>& ProbDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(ProbDepositionY_name) );
+    SFCZVariable<double>& ProbDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(ProbDepositionZ_name) );
+ 
+    SFCXVariable<double>& RateDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >( RateDepositionX_name)  );
+    SFCYVariable<double>& RateDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >( RateDepositionY_name) );
+    SFCZVariable<double>& RateDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >( RateDepositionZ_name) );
+  
+    Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+       RateDepositionX(i,j,k) = 0.0;
+       RateDepositionY(i,j,k) = 0.0;
+       RateDepositionZ(i,j,k) = 0.0;
+
+       ProbParticleX(i,j,k)   = 0.0;
+       ProbParticleY(i,j,k)   = 0.0;
+       ProbParticleZ(i,j,k)   = 0.0;
+ 
+       ProbDepositionX(i,j,k) = 0.0;
+       ProbDepositionY(i,j,k) = 0.0;
+       ProbDepositionZ(i,j,k) = 0.0;
+    
+       FluxPx(i,j,k)  = 0.0;
+       FluxPy(i,j,k)  = 0.0;
+       FluxPz(i,j,k) = 0.0;
+      });
+
   }
 
-  XVolFP ProbSurfaceX = tsk_info->get_so_field<XVolF>(_ProbSurfaceX_name);
-  YVolFP ProbSurfaceY = tsk_info->get_so_field<YVolF>(_ProbSurfaceY_name);
-  ZVolFP ProbSurfaceZ = tsk_info->get_so_field<ZVolF>(_ProbSurfaceZ_name);
-  *ProbSurfaceX <<= 0.0;
-  *ProbSurfaceY <<= 0.0;
-  *ProbSurfaceZ <<= 0.0;
+  SFCXVariable<double>& ProbSurfaceX =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name) );
+  SFCYVariable<double>& ProbSurfaceY =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(_ProbSurfaceY_name) );
+  SFCZVariable<double>& ProbSurfaceZ =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name) );
+
+   Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+   Uintah::parallel_for( range, [&](int i, int j, int k){
+      ProbSurfaceX(i,j,k) = 0.0;
+      ProbSurfaceY(i,j,k) = 0.0;
+      ProbSurfaceZ(i,j,k) = 0.0;
+      });
 
 }
 
@@ -357,32 +348,32 @@ RateDeposition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_in
 void
 RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-   for(int i= 0; i< _Nenv; i++){
-      const std::string MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,i);
-      const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,i);
-      const std::string weight_name = ParticleTools::append_env(_weight_base_name ,i);
-      const std::string rho_name = ParticleTools::append_env(_rho_base_name ,i);
-      const std::string diameter_name = ParticleTools::append_env(_diameter_base_name ,i);
+   for(int e= 0; e< _Nenv; e++){
+      const std::string MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,e);
+      const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,e);
+      const std::string weight_name = ParticleTools::append_env(_weight_base_name ,e);
+      const std::string rho_name = ParticleTools::append_env(_rho_base_name ,e);
+      const std::string diameter_name = ParticleTools::append_env(_diameter_base_name ,e);
     
-      const std::string  xvel_name = ParticleTools::append_env(_xvel_base_name ,i);
-      const std::string  yvel_name = ParticleTools::append_env(_yvel_base_name ,i);
-      const std::string  zvel_name = ParticleTools::append_env(_zvel_base_name ,i);
+      const std::string  xvel_name = ParticleTools::append_env(_xvel_base_name ,e);
+      const std::string  yvel_name = ParticleTools::append_env(_yvel_base_name ,e);
+      const std::string  zvel_name = ParticleTools::append_env(_zvel_base_name ,e);
      
-      const std::string ProbParticleX_name = get_env_name(i, _ProbParticleX_base_name);
-      const std::string ProbParticleY_name = get_env_name(i, _ProbParticleY_base_name);
-      const std::string ProbParticleZ_name = get_env_name(i, _ProbParticleZ_base_name);
+      const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
+      const std::string ProbParticleY_name = get_env_name(e, _ProbParticleY_base_name);
+      const std::string ProbParticleZ_name = get_env_name(e, _ProbParticleZ_base_name);
        
-      const std::string ProbDepositionX_name = get_env_name(i, _ProbDepositionX_base_name);
-      const std::string ProbDepositionY_name = get_env_name(i, _ProbDepositionY_base_name);
-      const std::string ProbDepositionZ_name = get_env_name(i, _ProbDepositionZ_base_name);
+      const std::string ProbDepositionX_name = get_env_name(e, _ProbDepositionX_base_name);
+      const std::string ProbDepositionY_name = get_env_name(e, _ProbDepositionY_base_name);
+      const std::string ProbDepositionZ_name = get_env_name(e, _ProbDepositionZ_base_name);
    
-      const std::string FluxPx_name = get_env_name(i, _FluxPx_base_name);
-      const std::string FluxPy_name = get_env_name(i, _FluxPy_base_name);
-      const std::string FluxPz_name = get_env_name(i, _FluxPz_base_name);
+      const std::string FluxPx_name = get_env_name(e, _FluxPx_base_name);
+      const std::string FluxPy_name = get_env_name(e, _FluxPy_base_name);
+      const std::string FluxPz_name = get_env_name(e, _FluxPz_base_name);
   
-      const std::string RateDepositionX_name = get_env_name(i, _RateDepositionX_base_name);
-      const std::string RateDepositionY_name = get_env_name(i, _RateDepositionY_base_name);
-      const std::string RateDepositionZ_name = get_env_name(i, _RateDepositionZ_base_name);
+      const std::string RateDepositionX_name = get_env_name(e, _RateDepositionX_base_name);
+      const std::string RateDepositionY_name = get_env_name(e, _RateDepositionY_base_name);
+      const std::string RateDepositionZ_name = get_env_name(e, _RateDepositionZ_base_name);
 
       register_variable( RateDepositionX_name      , ArchesFieldContainer::MODIFIES , variable_registry );
       register_variable( RateDepositionY_name      , ArchesFieldContainer::MODIFIES , variable_registry );
@@ -432,109 +423,181 @@ RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 void
 RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                  SpatialOps::OperatorDatabase& opr ){
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
 
   // computed probability variables:
-  XVolFP ProbSurfaceX = tsk_info->get_so_field<XVolF>( _ProbSurfaceX_name );
-  YVolFP ProbSurfaceY = tsk_info->get_so_field<YVolF>( _ProbSurfaceY_name );
-  ZVolFP ProbSurfaceZ = tsk_info->get_so_field<ZVolF>( _ProbSurfaceZ_name );
+  SFCXVariable<double>& ProbSurfaceX =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name) );
+  SFCYVariable<double>& ProbSurfaceY =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(_ProbSurfaceY_name) );
+  SFCZVariable<double>& ProbSurfaceZ =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name) );
 
   // constant surface normals 
-  XVolFP const Norm_in_X = tsk_info->get_const_so_field<XVolF>( "surf_in_normX" );
-  YVolFP const Norm_in_Y = tsk_info->get_const_so_field<YVolF>( "surf_in_normY" );
-  ZVolFP const Norm_in_Z = tsk_info->get_const_so_field<ZVolF>( "surf_in_normZ" );
-  XVolFP const Norm_out_X = tsk_info->get_const_so_field<XVolF>( "surf_out_normX" );
-  YVolFP const Norm_out_Y = tsk_info->get_const_so_field<YVolF>( "surf_out_normY" );
-  ZVolFP const Norm_out_Z = tsk_info->get_const_so_field<ZVolF>( "surf_out_normZ" );
-  
+  constSFCXVariable<double>&  Norm_in_X =        *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("surf_in_normX") );
+  constSFCYVariable<double>&  Norm_in_Y =        *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("surf_in_normY") );
+  constSFCZVariable<double>&  Norm_in_Z =        *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("surf_in_normZ") );
+  constSFCXVariable<double>&  Norm_out_X =        *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("surf_out_normX") );
+  constSFCYVariable<double>&  Norm_out_Y =        *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("surf_out_normY") );
+  constSFCZVariable<double>&  Norm_out_Z =        *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("surf_out_normZ") );
+ 
   // constant area fractions 
-  XVolFP const areaFractionX = tsk_info->get_const_so_field<SpatialOps::XVolField>("areaFractionFX");
-  YVolFP const areaFractionY = tsk_info->get_const_so_field<SpatialOps::YVolField>("areaFractionFY");
-  ZVolFP const areaFractionZ = tsk_info->get_const_so_field<SpatialOps::ZVolField>("areaFractionFZ");
+  constSFCXVariable<double>&  areaFractionX =   *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("areaFractionFX") );
+  constSFCYVariable<double>&  areaFractionY =   *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("areaFractionFY") );
+  constSFCZVariable<double>&  areaFractionZ =   *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("areaFractionFZ") );
 
   // constant gas temperature 
-  SVolFP WallTemperature = tsk_info->get_const_so_field<SVolF>("temperature");
+  constCCVariable<double>&   WallTemperature =  *(tsk_info->get_const_uintah_field<constCCVariable<double> >("temperature"));
+
+ //Compute the probability of sticking for each face using the wall temperature.
+  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+ 
+     const double areaX_temp= areaFractionX(i,j,k);      
+     const double areaY_temp = areaFractionY(i,j,k);      
+     const double areaZ_temp = areaFractionZ(i,j,k);
+
+      double Prob_self=0.0;                 
+      double Prob_near=0.0;               
+       
+     const double T_temp   = WallTemperature(i,j,k);     
+     const double MaxT_temp= WallTemperature(i,j,k);
+
+   // X direction
+     {   Prob_self= compute_prob_stick( areaX_temp, T_temp,MaxT_temp);
+         Prob_near= compute_prob_stick( areaX_temp, WallTemperature(i-1,j,k),WallTemperature(i-1,j,k));
   
-  //Compute the probability of sticking for each face using the wall temperature.
-  compute_prob_stick<SpatialOps::SSurfXField, SpatialOps::XVolField>( opr,Norm_out_X,areaFractionX,WallTemperature,WallTemperature, ProbSurfaceX );
-  compute_prob_stick<SpatialOps::SSurfYField, SpatialOps::YVolField>( opr,Norm_out_Y,areaFractionY,WallTemperature,WallTemperature, ProbSurfaceY );
-  compute_prob_stick<SpatialOps::SSurfZField, SpatialOps::ZVolField>( opr,Norm_out_Z,areaFractionZ,WallTemperature,WallTemperature, ProbSurfaceZ );
+        ProbSurfaceX(i,j,k) =    Norm_out_X(i,j,k)>0 ? Prob_near: Prob_self;
+     }
+     
+    // Y direction
+    {   Prob_self= compute_prob_stick( areaY_temp, T_temp,MaxT_temp);
+        Prob_near= compute_prob_stick( areaY_temp, WallTemperature(i,j-1,k),WallTemperature(i,j-1,k));
+  
+        ProbSurfaceY(i,j,k) =    Norm_out_Y(i,j,k)>0 ? Prob_near: Prob_self;
+     }
+   // Z direction
+     {  Prob_self= compute_prob_stick( areaZ_temp, T_temp,MaxT_temp);
+        Prob_near= compute_prob_stick( areaZ_temp, WallTemperature(i,j,k-1),WallTemperature(i,j,k-1));
+  
+        ProbSurfaceZ(i,j,k) =    Norm_out_Z(i,j,k)>0 ? Prob_near: Prob_self;
+     }
+  });
 
-  for(int i=0; i<_Nenv; i++){
-     const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,i);
-    const std::string  MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,i);
-    const std::string weight_name = ParticleTools::append_env(_weight_base_name ,i);
-    const std::string rho_name = ParticleTools::append_env(_rho_base_name ,i);
-    const std::string diameter_name = ParticleTools::append_env(_diameter_base_name ,i);
+  for(int e=0; e<_Nenv; e++){
+    const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,e);
+    const std::string MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,e);
+    const std::string weight_name = ParticleTools::append_env(_weight_base_name ,e);
+    const std::string rho_name = ParticleTools::append_env(_rho_base_name ,e);
+    const std::string diameter_name = ParticleTools::append_env(_diameter_base_name ,e);
 
-    const std::string xvel_name = ParticleTools::append_env(_xvel_base_name ,i);
-    const std::string yvel_name = ParticleTools::append_env(_yvel_base_name ,i);
-    const std::string zvel_name = ParticleTools::append_env(_zvel_base_name ,i);
+    const std::string xvel_name = ParticleTools::append_env(_xvel_base_name ,e);
+    const std::string yvel_name = ParticleTools::append_env(_yvel_base_name ,e);
+    const std::string zvel_name = ParticleTools::append_env(_zvel_base_name ,e);
     
-    const std::string ProbParticleX_name = get_env_name(i, _ProbParticleX_base_name);
-    const std::string ProbParticleY_name = get_env_name(i, _ProbParticleY_base_name);
-    const std::string ProbParticleZ_name = get_env_name(i, _ProbParticleZ_base_name);
+    const std::string ProbParticleX_name = get_env_name(e, _ProbParticleX_base_name);
+    const std::string ProbParticleY_name = get_env_name(e, _ProbParticleY_base_name);
+    const std::string ProbParticleZ_name = get_env_name(e, _ProbParticleZ_base_name);
     
-    const std::string ProbDepositionX_name = get_env_name(i, _ProbDepositionX_base_name);
-    const std::string ProbDepositionY_name = get_env_name(i, _ProbDepositionY_base_name);
-    const std::string ProbDepositionZ_name = get_env_name(i, _ProbDepositionZ_base_name);
+    const std::string ProbDepositionX_name = get_env_name(e, _ProbDepositionX_base_name);
+    const std::string ProbDepositionY_name = get_env_name(e, _ProbDepositionY_base_name);
+    const std::string ProbDepositionZ_name = get_env_name(e, _ProbDepositionZ_base_name);
  
-    const std::string FluxPx_name = get_env_name(i, _FluxPx_base_name);
-    const std::string FluxPy_name = get_env_name(i, _FluxPy_base_name);
-    const std::string FluxPz_name = get_env_name(i, _FluxPz_base_name);
+    const std::string FluxPx_name = get_env_name(e, _FluxPx_base_name);
+    const std::string FluxPy_name = get_env_name(e, _FluxPy_base_name);
+    const std::string FluxPz_name = get_env_name(e, _FluxPz_base_name);
  
-    const std::string RateDepositionX_name = get_env_name(i, _RateDepositionX_base_name);
-    const std::string RateDepositionY_name = get_env_name(i, _RateDepositionY_base_name);
-    const std::string RateDepositionZ_name = get_env_name(i, _RateDepositionZ_base_name);
-    
-    XVolFP RateDepositionX   = tsk_info->get_so_field<XVolF>( RateDepositionX_name   );
-    YVolFP RateDepositionY   = tsk_info->get_so_field<YVolF>( RateDepositionY_name   );
-    ZVolFP RateDepositionZ   = tsk_info->get_so_field<ZVolF>( RateDepositionZ_name   );
+    const std::string RateDepositionX_name = get_env_name(e, _RateDepositionX_base_name);
+    const std::string RateDepositionY_name = get_env_name(e, _RateDepositionY_base_name);
+    const std::string RateDepositionZ_name = get_env_name(e, _RateDepositionZ_base_name);
+
+    SFCXVariable<double>& FluxPx   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(FluxPx_name));
+    SFCYVariable<double>& FluxPy   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(FluxPy_name));
+    SFCZVariable<double>& FluxPz   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(FluxPz_name));
  
-    SVolFP MaxParticleTemperature = tsk_info->get_const_so_field<SVolF>(MaxParticleTemperature_name);
-    SVolFP ParticleTemperature = tsk_info->get_const_so_field<SVolF>(ParticleTemperature_name);
-    SVolFP weight = tsk_info->get_const_so_field<SVolF>(weight_name);
-    SVolFP rho = tsk_info->get_const_so_field<SVolF>(rho_name);
-    SVolFP diameter = tsk_info->get_const_so_field<SVolF>(diameter_name);
-
-
-    SVolFP xvel = tsk_info->get_const_so_field<SVolF>(xvel_name);
-    SVolFP yvel = tsk_info->get_const_so_field<SVolF>(yvel_name);
-    SVolFP zvel = tsk_info->get_const_so_field<SVolF>(zvel_name);
+    SFCXVariable<double>& ProbParticleX  =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(ProbParticleX_name) );
+    SFCYVariable<double>& ProbParticleY  =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(ProbParticleY_name) );
+    SFCZVariable<double>& ProbParticleZ  =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(ProbParticleZ_name) );
     
-    XVolFP FluxPx = tsk_info->get_so_field<XVolF>(FluxPx_name);
-    YVolFP FluxPy = tsk_info->get_so_field<YVolF>(FluxPy_name);
-    ZVolFP FluxPz = tsk_info->get_so_field<ZVolF>(FluxPz_name);
-   
-    XVolFP ProbParticleX   =  tsk_info->get_so_field<XVolF>(ProbParticleX_name);
-    YVolFP ProbParticleY   =  tsk_info->get_so_field<YVolF>(ProbParticleY_name);
-    ZVolFP ProbParticleZ   =  tsk_info->get_so_field<ZVolF>(ProbParticleZ_name);
+    SFCXVariable<double>& ProbDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(ProbDepositionX_name) );
+    SFCYVariable<double>& ProbDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(ProbDepositionY_name) );
+    SFCZVariable<double>& ProbDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(ProbDepositionZ_name) );
+ 
+    SFCXVariable<double>& RateDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >( RateDepositionX_name)  );
+    SFCYVariable<double>& RateDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >( RateDepositionY_name) );
+    SFCZVariable<double>& RateDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >( RateDepositionZ_name) );
+
+    constCCVariable<double>&  MaxParticleTemperature  =  *(tsk_info->get_const_uintah_field<constCCVariable<double> >( MaxParticleTemperature_name) );
+    constCCVariable<double>&  ParticleTemperature  =     *(tsk_info->get_const_uintah_field<constCCVariable<double> >( ParticleTemperature_name) );
+    constCCVariable<double>&  weight  =                  *(tsk_info->get_const_uintah_field<constCCVariable<double> >( weight_name) );
+    constCCVariable<double>&  rho              =         *(tsk_info->get_const_uintah_field<constCCVariable<double> >( rho_name) );
+    constCCVariable<double>&  diameter         =         *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name) );
     
-    XVolFP ProbDepositionX   =  tsk_info->get_so_field<XVolF>(ProbDepositionX_name);
-    YVolFP ProbDepositionY   =  tsk_info->get_so_field<YVolF>(ProbDepositionY_name);
-    ZVolFP ProbDepositionZ   =  tsk_info->get_so_field<ZVolF>(ProbDepositionZ_name);
+    constCCVariable<double>& xvel   =  *(tsk_info->get_const_uintah_field<constCCVariable<double> >( xvel_name) );
+    constCCVariable<double>& yvel   =  *(tsk_info->get_const_uintah_field<constCCVariable<double> >( yvel_name) );
+    constCCVariable<double>& zvel   =  *(tsk_info->get_const_uintah_field<constCCVariable<double> >( zvel_name) );
 
     //Compute the probability of sticking for each particle using particle temperature.
-    compute_prob_stick<SpatialOps::SSurfXField, SpatialOps::XVolField>( opr,Norm_in_X,areaFractionX,ParticleTemperature,MaxParticleTemperature, ProbParticleX );
-    *ProbDepositionX <<= 0.5* (*ProbParticleX +(*ProbParticleX * *ProbParticleX + 4*(1-*ProbParticleX) * *ProbSurfaceX ));
-    flux_compute<SpatialOps::SSurfXField, SpatialOps::XVolField>( opr,Norm_in_X,rho,xvel,weight,diameter,FluxPx );
-    *RateDepositionX <<= cond( *FluxPx * *Norm_out_X > 0.0, 0.0 )
-                             ( *FluxPx* *ProbDepositionX );
-    
-    compute_prob_stick<SpatialOps::SSurfYField, SpatialOps::YVolField>( opr,Norm_in_Y,areaFractionY,ParticleTemperature, MaxParticleTemperature, ProbParticleY );
-    *ProbDepositionY <<= 0.5* (*ProbParticleY +(*ProbParticleY * *ProbParticleY + 4*(1-*ProbParticleY) * *ProbSurfaceY ));
-    flux_compute<SpatialOps::SSurfYField, SpatialOps::YVolField>( opr,Norm_in_Y,rho,yvel,weight,diameter,FluxPy );
-    *RateDepositionY <<= cond( *FluxPy * *Norm_out_Y > 0.0, 0.0 )
-                             ( *FluxPy* *ProbDepositionY );
-    
-    compute_prob_stick<SpatialOps::SSurfZField, SpatialOps::ZVolField>( opr,Norm_in_Z,areaFractionZ,ParticleTemperature, MaxParticleTemperature, ProbParticleZ );
-    *ProbDepositionZ <<= 0.5* (*ProbParticleZ +(*ProbParticleZ * *ProbParticleZ + 4*(1-*ProbParticleZ) * *ProbSurfaceZ ));
-    flux_compute<SpatialOps::SSurfZField, SpatialOps::ZVolField>( opr,Norm_in_Z,rho,zvel,weight,diameter,FluxPz );
-    *RateDepositionZ <<= cond( *FluxPz * *Norm_out_Z > 0.0, 0.0 )
-                             ( *FluxPz* *ProbDepositionZ );
-    
-  }
+   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getExtraCellHighIndex() );
+   Uintah::parallel_for( range, [&](int i, int j, int k){
+     const double areaX_temp= areaFractionX(i,j,k);      
+     const double areaY_temp = areaFractionY(i,j,k);      
+     const double areaZ_temp = areaFractionZ(i,j,k);
+
+     double Prob_self=0.0;                 
+     double Prob_near=0.0;               
+     double flux_self=0.0;
+     double flux_near=0.0;
+
+     const double rho_temp=rho(i,j,k);             
+     const double weight_temp=weight(i,j,k);         
+     const double dia_temp=diameter(i,j,k);
+     const double u_temp=  xvel(i,j,k);           
+     const double v_temp=  yvel(i,j,k);           
+     const double w_temp=  zvel(i,j,k);
+     const double T_temp = ParticleTemperature(i,j,k);
+     const double MaxT_temp= MaxParticleTemperature(i,j,k);
+
+    //--------------------compute the particle flux --------------------------------------------------------------
+   // X direction
+     {   Prob_self= compute_prob_stick( areaX_temp, T_temp,MaxT_temp);
+         Prob_near= compute_prob_stick( areaX_temp, ParticleTemperature(i-1,j,k), MaxParticleTemperature(i-1,j,k));
+         ProbParticleX(i,j,k) =    Norm_in_X(i,j,k)>0 ? Prob_near: Prob_self;
+         ProbDepositionX(i,j,k)= std::min(1.0, 0.5*(ProbParticleX(i,j,k)+(ProbParticleX(i,j,k)*ProbParticleX(i,j,k) +4*(1-ProbParticleX(i,j,k))*ProbSurfaceX(i,j,k))));
+       
+         flux_self=rho_temp*u_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
+         flux_near=rho(i-1,j,k)*xvel(i-1,j,k)*weight(i-1,j,k)*_pi_div_six*pow(diameter(i-1,j,k),3);
+         FluxPx(i,j,k)=          Norm_in_X(i,j,k)>0? flux_near:flux_self;
+         
+         RateDepositionX(i,j,k)= FluxPx(i,j,k)*Norm_in_X(i,j,k)>0.0 ? FluxPx(i,j,k)*ProbDepositionX(i,j,k):0.0;
+     }
+     
+    // Y direction
+     {   Prob_self= compute_prob_stick( areaY_temp, T_temp,MaxT_temp);
+         Prob_near= compute_prob_stick( areaY_temp, ParticleTemperature(i,j-1,k), MaxParticleTemperature(i,j-1,k));
+         ProbParticleY(i,j,k) =    Norm_in_Y(i,j,k)>0 ? Prob_near: Prob_self;
+         ProbDepositionY(i,j,k)= std::min(1.0, 0.5*(ProbParticleY(i,j,k)+(ProbParticleY(i,j,k)*ProbParticleY(i,j,k) +4*(1-ProbParticleY(i,j,k))*ProbSurfaceY(i,j,k))));
+       
+         flux_self=rho_temp*v_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
+         flux_near=rho(i,j-1,k)*yvel(i,j-1,k)*weight(i,j-1,k)*_pi_div_six*pow(diameter(i,j-1,k),3);
+         FluxPy(i,j,k)=          Norm_in_Y(i,j,k)>0? flux_near:flux_self;
+         
+         RateDepositionY(i,j,k)= FluxPy(i,j,k)*Norm_in_Y(i,j,k)>0.0 ? FluxPy(i,j,k)*ProbDepositionY(i,j,k):0.0;
+     }
+ 
+    // Z direction
+     {   Prob_self= compute_prob_stick( areaZ_temp, T_temp,MaxT_temp);
+         Prob_near= compute_prob_stick( areaZ_temp, ParticleTemperature(i,j,k-1), MaxParticleTemperature(i,j,k-1));
+         ProbParticleZ(i,j,k) =    Norm_in_Z(i,j,k)>0 ? Prob_near: Prob_self;
+         ProbDepositionZ(i,j,k)= std::min(1.0, 0.5*(ProbParticleZ(i,j,k)+(ProbParticleZ(i,j,k)*ProbParticleZ(i,j,k) +4*(1-ProbParticleZ(i,j,k))*ProbSurfaceZ(i,j,k))));
+       
+         flux_self=rho_temp*w_temp*weight_temp*_pi_div_six*pow(dia_temp,3);
+         flux_near=rho(i,j,k-1)*zvel(i,j,k-1)*weight(i,j,k-1)*_pi_div_six*pow(diameter(i,j,k-1),3);
+         FluxPz(i,j,k)=        Norm_in_Z(i,j,k)>0? flux_near:flux_self;
+         
+         RateDepositionZ(i,j,k)= FluxPz(i,j,k)*Norm_in_Z(i,j,k)>0.0 ? FluxPz(i,j,k)*ProbDepositionZ(i,j,k):0.0;
+
+     }
+ 
+
+    });  
+  } // end for environment
     
 }
 
@@ -551,9 +614,6 @@ void
 RateDeposition::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                         SpatialOps::OperatorDatabase& opr ){
 
-
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
 
 }
 
