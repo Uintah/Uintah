@@ -228,7 +228,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           if ( independent_type == "CC"){
 
             TaskInterface::TaskBuilder* tsk = scinew
-            FOWYDevol<SVol,SVol>::Builder(task_name, 0, model_name, N);
+            FOWYDevol<CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
             register_task( task_name, tsk );
             _active_tasks.push_back(task_name);
