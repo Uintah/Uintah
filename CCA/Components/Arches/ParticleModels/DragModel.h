@@ -72,7 +72,7 @@ namespace Uintah{
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){};
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
 
@@ -85,7 +85,7 @@ namespace Uintah{
                      SpatialOps::OperatorDatabase& opr );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){};
+                        SpatialOps::OperatorDatabase& opr );
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                SpatialOps::OperatorDatabase& opr );
@@ -130,6 +130,7 @@ namespace Uintah{
   DragModel<IT, DT>::DragModel( std::string task_name, int matl_index,
                                 const std::string base_var_name, const int N ) :
   TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
+    m_pi = std::acos(-1.0);
   }
 
   template <typename IT, typename DT>
@@ -182,7 +183,7 @@ namespace Uintah{
     }
   }
 
-  //======INITIALIZATION:
+  //------------------------------------------------------------------------------------------------
   template <typename IT, typename DT>
   void DragModel<IT, DT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
@@ -214,6 +215,38 @@ namespace Uintah{
     }
   }
 
+  //------------------------------------------------------------------------------------------------
+  template <typename IT, typename DT>
+  void DragModel<IT, DT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+
+    for ( int i = 0; i < _N; i++ ){
+      const std::string name = get_name(i, _base_var_name);
+      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+
+      const std::string gas_name = get_name(i, _base_gas_var_name);
+      register_variable( gas_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    }
+  }
+
+  template <typename IT, typename DT>
+  void DragModel<IT,DT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                                     SpatialOps::OperatorDatabase& opr ){
+
+    for ( int ienv = 0; ienv < _N; ienv++ ){
+      const std::string name = get_name(ienv, _base_var_name);
+      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
+      const std::string gas_name = get_name(ienv, _base_gas_var_name);
+      DT& gas_model_value = *(tsk_info->get_uintah_field<DT>(gas_name));
+
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        model_value(i,j,k) = 0.0;
+        gas_model_value(i,j,k) = 0.0;
+      });
+
+    }
+  }
+
   //======TIME STEP EVALUATION:
   template <typename IT, typename DT>
   void DragModel<IT, DT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
@@ -221,10 +254,10 @@ namespace Uintah{
     for ( int i = 0; i < _N; i++ ){
       //dependent variables(s) or model values
       const std::string name = get_name(i, _base_var_name);
-      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( name, ArchesFieldContainer::MODIFIES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       const std::string gas_name = get_name(i, _base_gas_var_name);
-      register_variable( gas_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( gas_name, ArchesFieldContainer::MODIFIES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       //independent variables
       const std::string diameter_name = get_name( i, _base_diameter_name );
@@ -300,18 +333,53 @@ namespace Uintah{
         //an alternative drag law in case its needed later
         //*fDrag <<= 1.0 + 0.15 * pow( (*Re), 0.687 ) + 0.0175* (*Re) / ( 1.0 + 4.25e4 * pow( (*Re), -1.16) ); //valid over all Re
 
-        model_value(i,j,k) = 0.0;
-        gas_model_value(i,j,k) = 0.0;
-        
+        double pred_model_value = 0.0;
+
         if ( _direction=="x" ) {
-          model_value(i,j,k) = tauP != 0.0 ? (fDrag) / (tauP) * ( velU(i,j,k) - partVelU(i,j,k) ) : 0.0;
+          pred_model_value = tauP != 0.0 ? (fDrag) / (tauP) * ( velU(i,j,k) - partVelU(i,j,k) ) : 0.0;
         } else if ( _direction=="y" ) {
-          model_value(i,j,k) = tauP != 0.0 ? (fDrag) / (tauP) * ( velV(i,j,k) - partVelV(i,j,k) ) : 0.0;
+          pred_model_value = tauP != 0.0 ? (fDrag) / (tauP) * ( velV(i,j,k) - partVelV(i,j,k) ) : 0.0;
         } else if ( _direction=="z" ) {
-          model_value(i,j,k) = tauP != 0.0 ? (fDrag) / (tauP) * ( velW(i,j,k) - partVelW(i,j,k) ) : 0.0;
+          pred_model_value = tauP != 0.0 ? (fDrag) / (tauP) * ( velW(i,j,k) - partVelW(i,j,k) ) : 0.0;
         }
 
-        gas_model_value(i,j,k) = (diameter(i,j,k) != 0.0) ?  - model_value(i,j,k) * weight(i,j,k) * density(i,j,k) / rhoG(i,j,k) * m_pi/6.0 * diameter(i,j,k) * diameter(i,j,k) * diameter(i,j,k) : 0.0;
+        model_value(i,j,k) = pred_model_value;
+
+        double pred_gas_value = -1.* pred_model_value * weight(i,j,k) * density(i,j,k) / rhoG(i,j,k) * m_pi/6.0 * diameter(i,j,k) * diameter(i,j,k) * diameter(i,j,k);
+
+        pred_gas_value = (diameter(i,j,k) == 0.0) ? 0.0 : pred_gas_value;
+
+        gas_model_value(i,j,k) = pred_gas_value;
+
+        //gas_model_value(i,j,k) = (diameter(i,j,k) == 0.0) ? 0.0 :  -1.* model_value(i,j,k) * weight(i,j,k) * density(i,j,k) / rhoG(i,j,k) * m_pi/6.0 * diameter(i,j,k) * diameter(i,j,k) * diameter(i,j,k);
+
+        // if ( i==0 && j==0 && k==0 ){
+        //   std::cout << " Re = " << Re << std::endl;
+        //   std::cout << " fDrag =  " << fDrag << std::endl;
+        //   std::cout << " tauP = " << tauP << std::endl;
+        //   std::cout << " pred_model_value = " << pred_model_value << std::endl;
+        //   std::cout << " pred_gas_value = " << pred_gas_value << std::endl;
+        //   std::cout << " ***model_value = " << std::scientific << model_value(i,j,k) << std::endl;
+        //   std::cout << " ***gas value = " << std::scientific << gas_model_value(i,j,k) << std::endl;
+        //   std::cout << "   -- diameter = " << diameter(i,j,k) << std::endl;
+        //   std::cout << "   -- model value = " << model_value(i,j,k) << std::endl;
+        //   std::cout << "   -- weight = " << weight(i,j,k) << std::endl;
+        //   std::cout << "   -- rho = " << density(i,j,k) << std::endl;
+        //   std::cout << "   -- gas_rho = " << rhoG(i,j,k) << std::endl;
+        //   if ( _direction == "x" ){
+        //     std::cout << "   -- velU = " << velU(i,j,k) << std::endl;
+        //     std::cout << "   -- PvelU = " << partVelU(i,j,k) << std::endl;
+        //   }
+        //   if ( _direction == "y" ){
+        //     std::cout << "   -- velV = " << velV(i,j,k) << std::endl;
+        //     std::cout << "   -- PvelV = " << partVelV(i,j,k) << std::endl;
+        //   }
+        //   if ( _direction == "z" ){
+        //     std::cout << "   -- velW = " << velW(i,j,k) << std::endl;
+        //     std::cout << "   -- PvelW = " << partVelW(i,j,k) << std::endl;
+        //   }
+
+        //}
 
       });
 
