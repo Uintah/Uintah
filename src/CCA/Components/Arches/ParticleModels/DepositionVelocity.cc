@@ -4,8 +4,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 
-#include <spatialops/structured/FVStaggered.h>
-
 using namespace Uintah;
 
 DepositionVelocity::DepositionVelocity( std::string task_name, int matl_index, const int N, SimulationStateP shared_state  ) :
@@ -84,28 +82,26 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
 
 void
 DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    SpatialOps::OperatorDatabase& opr ){
+                                SpatialOps::OperatorDatabase& opr ){
 
-  CCVariable<double>* vdeposit_velocity = tsk_info->get_uintah_field<CCVariable<double> >(_task_name);
-  CCVariable<double>& deposit_velocity = *vdeposit_velocity;
-  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-    IntVector c = *iter;
-    deposit_velocity[c]=0.0;
-  }
-  for ( int i = 0; i < _Nenv; i++ ){
-    const std::string dep_vel_rs = get_env_name(i, _dep_vel_rs_name);
-    const std::string dep_vel_rs_start = get_env_name(i, _dep_vel_rs_start_name);
-    CCVariable<double>* vd_velocity_rs = tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs);
-    CCVariable<double>& d_velocity_rs = *vd_velocity_rs;
-    d_velocity_rs.initialize(0.0);
-    CCVariable<double>* vd_velocity_rs_start = tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs_start);
-    CCVariable<double>& d_velocity_rs_start = *vd_velocity_rs_start;
-    d_velocity_rs_start.initialize(0.0);
-    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      d_velocity_rs[c]=0.0;
-      d_velocity_rs_start[c]=0.0;
-    }
+  CCVariable<double>& deposit_velocity = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    deposit_velocity(i,j,k)=0.0;
+  });
+
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
+
+    const std::string dep_vel_rs = get_env_name(ienv, _dep_vel_rs_name);
+    const std::string dep_vel_rs_start = get_env_name(ienv, _dep_vel_rs_start_name);
+    CCVariable<double>& dep_velocity_rs = *(tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs));
+    CCVariable<double>& dep_velocity_rs_start = *(tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs_start));
+
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      dep_velocity_rs(i,j,k) = 0.0;
+      dep_velocity_rs_start(i,j,k) = 0.0;
+    });
+
   }
 }
 
@@ -119,25 +115,25 @@ DepositionVelocity::register_timestep_init( std::vector<ArchesFieldContainer::Va
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( _task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
+
   for ( int i = 0; i < _Nenv; i++ ){
+
     const std::string dep_vel_rs = get_env_name(i, _dep_vel_rs_name);
     const std::string dep_vel_rs_start = get_env_name(i, _dep_vel_rs_start_name);
     register_variable( dep_vel_rs, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( dep_vel_rs_start, ArchesFieldContainer::COMPUTES, variable_registry );
     register_variable( dep_vel_rs, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
     register_variable( dep_vel_rs_start, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  );
-  }
 
+  }
 }
 
 void
 DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
 
-  CCVariable<double>* vdeposit_velocity = tsk_info->get_uintah_field<CCVariable<double> >(_task_name);
-  CCVariable<double>& deposit_velocity = *vdeposit_velocity;
-  constCCVariable<double>* vdeposit_velocity_old = tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name);
-  constCCVariable<double>& deposit_velocity_old = *vdeposit_velocity_old;
+  CCVariable<double>& deposit_velocity = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
+  constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name));
 
   //const double delta_t = tsk_info->get_dt();
   double current_time = _shared_state->getElapsedTime();
@@ -145,35 +141,37 @@ DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
   if (current_time > _t_ave_start){
     _averaging_update = false;
   }
-  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-    IntVector c = *iter;
-    deposit_velocity[c]=deposit_velocity_old[c];
-  }
 
-  for ( int i = 0; i < _Nenv; i++ ){
-    const std::string dep_vel_rs = get_env_name(i, _dep_vel_rs_name);
-    const std::string dep_vel_rs_start = get_env_name(i, _dep_vel_rs_start_name);
-    CCVariable<double>* vd_velocity_rs = tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs);
-    CCVariable<double>& d_velocity_rs = *vd_velocity_rs;
-    constCCVariable<double>* vd_velocity_rs_old = tsk_info->get_const_uintah_field<constCCVariable<double> >(dep_vel_rs);
-    constCCVariable<double>& d_velocity_rs_old = *vd_velocity_rs_old;
-    CCVariable<double>* vd_velocity_rs_start = tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs_start);
-    CCVariable<double>& d_velocity_rs_start = *vd_velocity_rs_start;
-    constCCVariable<double>* vd_velocity_rs_start_old = tsk_info->get_const_uintah_field<constCCVariable<double> >(dep_vel_rs_start);
-    constCCVariable<double>& d_velocity_rs_start_old = *vd_velocity_rs_start_old;
-    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      d_velocity_rs[c] = d_velocity_rs_old[c];
-      d_velocity_rs_start[c] = d_velocity_rs_start_old[c];
-    }
+
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    deposit_velocity(i,j,k) = deposit_velocity_old(i,j,k);
+  });
+
+  for ( int ienv = 0; ienv < _Nenv; ienv++ ){
+
+    const std::string dep_vel_rs = get_env_name(ienv, _dep_vel_rs_name);
+    const std::string dep_vel_rs_start = get_env_name(ienv, _dep_vel_rs_start_name);
+
+    CCVariable<double>& d_velocity_rs = *(tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs));
+    constCCVariable<double>& d_velocity_rs_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(dep_vel_rs));
+    CCVariable<double>& d_velocity_rs_start = *(tsk_info->get_uintah_field<CCVariable<double> >(dep_vel_rs_start));
+    constCCVariable<double>& d_velocity_rs_start_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(dep_vel_rs_start));
+
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      d_velocity_rs(i,j,k)= d_velocity_rs_old(i,j,k);
+      d_velocity_rs_start(i,j,k) = d_velocity_rs_start_old(i,j,k);
+    });
+
   }
 }
+
 //
 //------------------------------------------------
 //------------- TIMESTEP WORK --------------------
 //------------------------------------------------
 //
-
 void
 DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
