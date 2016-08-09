@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/TotNumDensity.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah{
@@ -56,8 +55,7 @@ TotNumDensity::register_initialize( std::vector<ArchesFieldContainer::VariableIn
 }
 
 void
-TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){
+TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
 
@@ -95,8 +93,7 @@ TotNumDensity::register_timestep_eval( std::vector<ArchesFieldContainer::Variabl
 }
 
 void
-TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                SpatialOps::OperatorDatabase& opr ){
+TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( _task_name ));
 

@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah{
@@ -131,8 +130,7 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    SpatialOps::OperatorDatabase& opr ){
+CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -168,8 +166,7 @@ CoalTemperature::register_timestep_init( std::vector<ArchesFieldContainer::Varia
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    SpatialOps::OperatorDatabase& opr ){
+CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -218,8 +215,7 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    SpatialOps::OperatorDatabase& opr ){
+CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const std::string gas_temperature_name   = _gas_temperature_name;
   constCCVariable<double>& gas_temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name));

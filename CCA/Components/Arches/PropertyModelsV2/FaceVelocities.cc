@@ -51,8 +51,7 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry ){
   }
 }
 
-void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info,
-                              SpatialOps::OperatorDatabase& opr ){
+void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
 
 
   CCVariable<double>&   ucell_xvel = *(tsk_info->get_uintah_field<CCVariable<double> >("ucell_xvel"));
@@ -88,8 +87,7 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
   register_variable(m_w_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry);
 }
 
-void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                           SpatialOps::OperatorDatabase& opr ){
+void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constSFCXVariable<double>& uVel = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(m_u_vel_name));
   constSFCYVariable<double>& vVel = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(m_v_vel_name));

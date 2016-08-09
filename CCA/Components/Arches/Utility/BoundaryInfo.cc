@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/Utility/BoundaryInfo.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
 using namespace Uintah;
 
@@ -42,9 +41,7 @@ BoundaryInfo::register_initialize( VarInfoVecT& variable_registry ){
 }
 
 void
-BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-}
+BoundaryInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 //
 //------------------------------------------------
@@ -65,11 +62,7 @@ BoundaryInfo::register_timestep_init( VarInfoVecT& variable_registry ){
 }
 
 void
-BoundaryInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-
-
-}
+BoundaryInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 //
 //------------------------------------------------
 //------------- TIMESTEP WORK --------------------
@@ -83,6 +76,4 @@ BoundaryInfo::register_timestep_eval( VarInfoVecT& variable_registry,
 }
 
 void
-BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                SpatialOps::OperatorDatabase& opr ){
-}
+BoundaryInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}

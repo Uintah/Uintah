@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/Task/SampleTask.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
 using namespace Uintah;
 
@@ -28,10 +27,7 @@ SampleTask::register_timestep_init( std::vector<ArchesFieldContainer::VariableIn
 }
 
 void
-SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-
-}
+SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 
 //
@@ -50,8 +46,7 @@ SampleTask::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 }
 
 void
-SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
+SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& field  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
   CCVariable<double>& result = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
@@ -85,8 +80,7 @@ SampleTask::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 void
-SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& field   = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
   CCVariable<double>& result  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));

@@ -2,7 +2,6 @@
 #define Uintah_Component_Arches_FOWYDevol_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
@@ -72,17 +71,13 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                     SpatialOps::OperatorDatabase& opr ){};
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                    SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                       SpatialOps::OperatorDatabase& opr );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-              SpatialOps::OperatorDatabase& opr );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   private:
 
@@ -216,8 +211,7 @@ namespace Uintah{
   }
 
   template <typename T>
-  void FOWYDevol<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                    SpatialOps::OperatorDatabase& opr ){
+  void FOWYDevol<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -251,9 +245,7 @@ namespace Uintah{
   }
 
   template <typename T>
-  void FOWYDevol<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                       SpatialOps::OperatorDatabase& opr ){
-  }
+  void FOWYDevol<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
   //======TIME STEP EVALUATION:
   template <typename T>
@@ -292,8 +284,7 @@ namespace Uintah{
   }
 
   template <typename T>
-  void FOWYDevol<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                              SpatialOps::OperatorDatabase& opr ) {
+  void FOWYDevol<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 

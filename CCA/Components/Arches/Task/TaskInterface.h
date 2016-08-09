@@ -2,7 +2,6 @@
 #define Uintah_Component_Arches_TaskInterface_h
 
 #include <CCA/Components/Arches/Task/FieldContainer.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -287,24 +286,19 @@ protected:
     }; //End ArchesTaskInfoManager
 
     /** @brief The actual work done within the derived class **/
-    virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr,
-                             SpatialOps::OperatorDatabase& opr ) = 0;
+    virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
     /** @brief The actual work done within the derived class **/
-    virtual void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr,
-                                     SpatialOps::OperatorDatabase& opr ) {}
+    virtual void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ){}
 
     /** @brief Work done at the top of a timestep **/
-    virtual void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr,
-                                SpatialOps::OperatorDatabase& opr ) = 0;
+    virtual void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
     /** @brief The actual work done within the derived class **/
-    virtual void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr,
-                       SpatialOps::OperatorDatabase& opr ) = 0;
+    virtual void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
     /** @brief The actual work done within the derived class for computing the boundary conditions **/
-    virtual void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr,
-                              SpatialOps::OperatorDatabase& opr ) = 0;
+    virtual void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
     std::string                  _task_name;
     const int                    _matl_index;

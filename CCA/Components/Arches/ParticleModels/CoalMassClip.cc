@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/CoalMassClip.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
@@ -36,9 +35,7 @@ CoalMassClip::register_initialize( std::vector<ArchesFieldContainer::VariableInf
 }
 
 void
-CoalMassClip::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){
-}
+CoalMassClip::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 //
 //------------------------------------------------
@@ -50,9 +47,7 @@ CoalMassClip::register_timestep_init( std::vector<ArchesFieldContainer::Variable
 }
 
 void
-CoalMassClip::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-}
+CoalMassClip::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 //
 //------------------------------------------------
 //------------- TIMESTEP WORK --------------------
@@ -75,8 +70,7 @@ CoalMassClip::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
 }
 
 void
-CoalMassClip::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                SpatialOps::OperatorDatabase& opr ){
+CoalMassClip::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ei = 0; ei < _Nenv; ei++ ){
 

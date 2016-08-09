@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah{
@@ -111,8 +110,7 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){
+CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -199,8 +197,7 @@ CoalDensity::register_timestep_eval(
 
 //--------------------------------------------------------------------------------------------------
 void
-CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                SpatialOps::OperatorDatabase& opr ){
+CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -211,7 +208,7 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
     constCCVariable<double>& cchar = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( char_name ));
     constCCVariable<double>& rc    = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( rc_name ));
-    
+
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       rho(i,j,k) = 0.0;

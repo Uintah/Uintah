@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/KokkosTools.h>
 
 namespace Uintah{
@@ -59,8 +58,7 @@ DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::Variabl
 
 //--------------------------------------------------------------------------------------------------
 void
-DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
+DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   CCVariable<double>& rho = *(tsk_info->get_uintah_field<CCVariable<double> >("new_densityGuess"));
@@ -79,8 +77,7 @@ DensityPredictor::register_timestep_init( std::vector<ArchesFieldContainer::Vari
 
 //--------------------------------------------------------------------------------------------------
 void
-DensityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
+DensityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& rho = *(tsk_info->get_uintah_field<CCVariable<double> >("new_densityGuess"));
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
@@ -113,8 +110,7 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 
 //--------------------------------------------------------------------------------------------------
 void
-DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& rho_guess = *(tsk_info->get_uintah_field<CCVariable<double> >( "new_densityGuess"));
   CCVariable<double>& rho_guess_a = *(tsk_info->get_uintah_field<CCVariable<double> >( "densityGuess"));

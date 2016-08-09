@@ -3,44 +3,39 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
-namespace Uintah{ 
+namespace Uintah{
 
-  class Operators; 
-  class UpdateParticleSize : public TaskInterface { 
+  class UpdateParticleSize : public TaskInterface {
 
-public: 
+public:
 
-    UpdateParticleSize( std::string task_name, int matl_index ); 
-    ~UpdateParticleSize(); 
+    UpdateParticleSize( std::string task_name, int matl_index );
+    ~UpdateParticleSize();
 
-    void problemSetup( ProblemSpecP& db ); 
+    void problemSetup( ProblemSpecP& db );
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ); 
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ); 
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){}; 
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                      SpatialOps::OperatorDatabase& opr ){}; 
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                     SpatialOps::OperatorDatabase& opr );
-    
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                        SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-               SpatialOps::OperatorDatabase& opr ); 
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels(){}
 
-    //Build instructions for this (UpdateParticleSize) class. 
-    class Builder : public TaskInterface::TaskBuilder { 
+    //Build instructions for this (UpdateParticleSize) class.
+    class Builder : public TaskInterface::TaskBuilder {
 
-      public: 
+      public:
 
       Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
       ~Builder(){}
@@ -48,25 +43,25 @@ public:
       UpdateParticleSize* build()
       { return scinew UpdateParticleSize( _task_name, _matl_index ); }
 
-      private: 
+      private:
 
-      std::string _task_name; 
-      int _matl_index; 
+      std::string _task_name;
+      int _matl_index;
 
     };
 
-private: 
+private:
 
-    std::string _px_name; 
-    std::string _py_name; 
-    std::string _pz_name; 
+    std::string _px_name;
+    std::string _py_name;
+    std::string _pz_name;
 
-    std::string _u_name; 
-    std::string _v_name; 
-    std::string _w_name; 
+    std::string _u_name;
+    std::string _v_name;
+    std::string _w_name;
 
-    std::string _size_name; 
-  
+    std::string _size_name;
+
   };
 }
-#endif 
+#endif
