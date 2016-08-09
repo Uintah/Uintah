@@ -150,20 +150,18 @@ void
 CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField   SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  for ( int i_env = 0; i_env < _Nenv; i_env++ ){
 
-  for ( int i = 0; i < _Nenv; i++ ){
+    const std::string temperature_name = get_env_name( i_env, _task_name );
+    const std::string dTdt_name = get_env_name( i_env, _dTdt_base_name );
+    CCVariable<double>& temperature = *(tsk_info->get_uintah_field<CCVariable<double> >( temperature_name ));
+    CCVariable<double>& dTdt = *(tsk_info->get_uintah_field<CCVariable<double> >( dTdt_name ));
 
-    const std::string temperature_name = get_env_name( i, _task_name );
-    SVolFP temperature = tsk_info->get_so_field<SVolF>( temperature_name );
-    const std::string dTdt_name = get_env_name( i, _dTdt_base_name );
-    SVolFP dTdt = tsk_info->get_so_field<SVolF>( dTdt_name );
-
-    *temperature <<= _initial_temperature;
-    *dTdt <<= 0.0;
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      temperature(i,j,k) = _initial_temperature;
+      dTdt(i,j,k) = 0.0;
+    });
 
   }
 }
@@ -192,20 +190,18 @@ void
 CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField   SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  for ( int i_env = 0; i_env < _Nenv; i_env++ ){
 
-  for ( int i = 0; i < _Nenv; i++ ){
+    const std::string temperature_name  = get_env_name( i_env, _task_name );
+    const std::string temperatureold_name  = get_env_name( i_env, _task_name );
 
-    const std::string temperature_name  = get_env_name( i, _task_name );
-    const std::string temperatureold_name  = get_env_name( i, _task_name );
+    CCVariable<double>& temperature   = *(tsk_info->get_uintah_field<CCVariable<double> >( temperature_name ));
+    constCCVariable<double>& temperature_old   = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( temperatureold_name ));
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      temperature(i,j,k) = temperature_old(i,j,k);
+    });
 
-    SVolFP temperature   = tsk_info->get_so_field<SVolF>( temperature_name );
-    SVolFP temperatureold   = tsk_info->get_const_so_field<SVolF>( temperatureold_name );
-
-    *temperature <<= *temperatureold;
   }
 }
 //
