@@ -37,6 +37,20 @@
     <save label="continuityResidual"/>
     <save label="abskg"/>
     <save label="soot"/>
+    <save label="mixture_fraction_running_sum"/>
+    <save label="mixture_fraction_squared_sum"/>
+    <save label="mf2_flux_running_sum_x"/>
+    <save label="mf2_flux_running_sum_y"/>
+    <save label="mf2_flux_running_sum_z"/>
+    <save label="mf2_flux_squared_sum_x"/>
+    <save label="mf2_flux_squared_sum_y"/>
+    <save label="mf2_flux_squared_sum_z"/>
+    <save label="total_mass_flux_running_sum_x"/>
+    <save label="total_mass_flux_running_sum_y"/>
+    <save label="total_mass_flux_running_sum_z"/>
+    <save label="total_mass_flux_squared_sum_x"/>
+    <save label="total_mass_flux_squared_sum_y"/>
+    <save label="total_mass_flux_squared_sum_z"/>
     <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -350,6 +364,15 @@
           <variance_coefficient>0.14</variance_coefficient> <!-- Warning: not a good default value --> 
         </model>
       </PropertyModels>
+
+      <PropertyModelsV2>
+        <model type="variable_stats" label="balance_stats">
+          <single_variable label="mixture_fraction"/>
+          <flux_variable label="mf2_flux" phi="mixture_fraction_2"/>
+          <flux_variable label="total_mass_flux"/>
+          <density label="density"/>
+        </model>
+      </PropertyModelsV2>
 
       <BoundaryConditions>
         <suppress_corner_recirculation/>
