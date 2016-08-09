@@ -765,7 +765,9 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.2">
+      <!-- originalOFC -->
+      <!-- <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.008"><BCType label="mass_inlet_primary_air" var="MassFlowInlet"> -->
+      <Face circle="x-" radius="0.1" name="secondary_air" origin="0.0 0.3 0.3">
         <BCType label="mass_inlet_primary_air" var="MassFlowInlet">
           <value>0.001828154</value>
         </BCType>
@@ -866,7 +868,9 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      <Face annulus="x-" inner_radius="0.2" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.6">
+      <!-- originalOFC -->
+      <!-- <Face annulus="x-" inner_radius="0.012" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.018"><BCType label="mass_inlet_secondary_air" var="MassFlowInlet"> -->
+      <Face annulus="x-" inner_radius="0.1" name="primary_air" origin="0.0 0.3 0.3" outer_radius="0.2">
         <BCType label="mass_inlet_secondary_air" var="MassFlowInlet">
           <value>0.002078968</value>
         </BCType>
