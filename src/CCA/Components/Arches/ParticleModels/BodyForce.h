@@ -201,8 +201,8 @@ namespace Uintah{
   void BodyForce<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                    SpatialOps::OperatorDatabase& opr ) {
 
-    typedef typename GridTools::VariableHelper<IT>::ConstType CIT;
-    typedef typename GridTools::VariableHelper<DT>::ConstType CDT;
+    typedef typename ArchesCore::VariableHelper<IT>::ConstType CIT;
+    typedef typename ArchesCore::VariableHelper<DT>::ConstType CDT;
 
     CIT& rhoG = *(tsk_info->get_const_uintah_field<CIT>(m_gas_density_name));
 

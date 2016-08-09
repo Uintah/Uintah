@@ -7,9 +7,6 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <spatialops/util/TimeLogger.h>
 
-#include <CCA/Components/Arches/GridTools.h>
-#include <spatialops/util/TimeLogger.h>
-
 using namespace Uintah;
 
 using namespace SpatialOps;

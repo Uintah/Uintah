@@ -116,7 +116,7 @@ private:
   void ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                            SpatialOps::OperatorDatabase& opr ){
 
-    typedef typename GridTools::VariableHelper<T>::ConstType CT;
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     T& property = *(tsk_info->get_uintah_field<T>( _task_name ));
     CT& old_property = *(tsk_info->get_const_uintah_field<CT>( _task_name ));
 
