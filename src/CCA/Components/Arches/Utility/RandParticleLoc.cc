@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/Utility/RandParticleLoc.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
 namespace Uintah {
 //--------------------------------------------------------------------------------------------------
@@ -25,9 +24,7 @@ RandParticleLoc::register_initialize( std::vector<ArchesFieldContainer::Variable
 
 //--------------------------------------------------------------------------------------------------
 void
-RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
-
+RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> PVarTuple;
 

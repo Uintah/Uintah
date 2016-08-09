@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #define SMALLNUM 1e-100
@@ -63,8 +62,7 @@ WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableI
 }
 
 void
-WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                            SpatialOps::OperatorDatabase& opr ){
+WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
@@ -102,8 +100,7 @@ WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::V
 }
 
 void
-WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                    SpatialOps::OperatorDatabase& opr ){
+WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
   CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
@@ -157,8 +154,7 @@ WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 }
 
 void
-WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){
+WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   double sigma=5.67e-8;  //  w / m^2 k^4
 

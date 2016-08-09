@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleVelocity.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
 namespace Uintah{
 InitLagrangianParticleVelocity::InitLagrangianParticleVelocity( std::string task_name, int matl_index ) :
@@ -75,10 +74,7 @@ InitLagrangianParticleVelocity::register_initialize( std::vector<ArchesFieldCont
 }
 
 void
-InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
-
-
+InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple pu_tup = tsk_info->get_uintah_particle_field(_pu_label);
   ParticleTuple pv_tup = tsk_info->get_uintah_particle_field(_pv_label);
@@ -137,10 +133,7 @@ InitLagrangianParticleVelocity::register_timestep_init( std::vector<ArchesFieldC
 }
 
 void
-InitLagrangianParticleVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-
-}
+InitLagrangianParticleVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 
 //
@@ -156,9 +149,6 @@ InitLagrangianParticleVelocity::register_timestep_eval( std::vector<ArchesFieldC
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 void
-InitLagrangianParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+InitLagrangianParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-
-}
 } // namespace Uintah

@@ -205,7 +205,6 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/CoalModels/fortran  \
            $(SRCDIR)/DigitalFilter       \
            $(SRCDIR)/LagrangianParticles \
-           $(SRCDIR)/Operators           \
            $(SRCDIR)/ParticleModels      \
            $(SRCDIR)/PropertyModels      \
            $(SRCDIR)/PropertyModelsV2    \

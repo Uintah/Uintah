@@ -3,11 +3,9 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
 namespace Uintah{
 
-  class Operators;
   class VariableStats : public TaskInterface {
 
 public:
@@ -29,20 +27,15 @@ public:
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep ){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                     SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                             SpatialOps::OperatorDatabase& opr );
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ); 
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-               SpatialOps::OperatorDatabase& opr );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
 

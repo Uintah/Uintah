@@ -240,8 +240,7 @@ void VariableStats::register_initialize( VIVec& variable_registry ){
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                SpatialOps::OperatorDatabase& opr ){
+void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
@@ -333,8 +332,7 @@ void VariableStats::register_restart_initialize( VIVec& variable_registry ){
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                        SpatialOps::OperatorDatabase& opr ){
+void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   typedef std::vector<std::string> StrVec;
 
@@ -409,8 +407,7 @@ void VariableStats::register_timestep_init( VIVec& variable_registry ){
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                   SpatialOps::OperatorDatabase& opr ){
+void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
@@ -581,8 +578,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
 }
 
 //--------------------------------------------------------------------------------------------------
-void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr )
+void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 {
 
   const double dt = tsk_info->get_dt();

@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/Utility/SurfaceNormals.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/GridTools.h>
 
 using namespace Uintah;
@@ -60,8 +59,7 @@ SurfaceNormals::register_initialize( VIVec& variable_registry ){
 }
 
 void
-SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                            SpatialOps::OperatorDatabase& opr ){
+SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){ 
 
   GET_FX_BUFFERED_PATCH_RANGE(0,1)
   GET_FY_BUFFERED_PATCH_RANGE(0,1)
@@ -141,8 +139,7 @@ SurfaceNormals::register_timestep_init( VIVec& variable_registry ){
 }
 
 void
-SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
+SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   SFCXVariable<double>& n_in_x = *(tsk_info->get_uintah_field<SFCXVariable<double> >("surf_in_normX"));
   SFCYVariable<double>& n_in_y = *(tsk_info->get_uintah_field<SFCYVariable<double> >("surf_in_normY"));

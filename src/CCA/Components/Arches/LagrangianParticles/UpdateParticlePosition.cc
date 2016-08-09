@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/LagrangianParticles/UpdateParticlePosition.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
 namespace Uintah{
 
@@ -38,9 +37,7 @@ UpdateParticlePosition::register_initialize( std::vector<ArchesFieldContainer::V
 }
 
 void
-UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
-}
+UpdateParticlePosition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 
 //
@@ -53,10 +50,7 @@ UpdateParticlePosition::register_timestep_init( std::vector<ArchesFieldContainer
 }
 
 void
-UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-}
-
+UpdateParticlePosition::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 //
 //------------------------------------------------
@@ -83,8 +77,7 @@ UpdateParticlePosition::register_timestep_eval( std::vector<ArchesFieldContainer
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 void
-UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+UpdateParticlePosition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple px_tup = tsk_info->get_uintah_particle_field( _px_name );
   ParticleTuple py_tup = tsk_info->get_uintah_particle_field( _py_name );

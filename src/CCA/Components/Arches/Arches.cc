@@ -44,7 +44,6 @@
 #include <CCA/Components/Arches/KokkosSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -103,9 +102,6 @@ Arches::~Arches()
   delete d_nlSolver;
   delete d_physicalConsts;
   delete _particlesHelper;
-
-  Operators& opr = Operators::self();
-  opr.delete_patch_set();
 
   if(d_analysisModules.size() != 0) {
     std::vector<AnalysisModule*>::iterator iter;
@@ -283,10 +279,6 @@ Arches::scheduleInitialize(const LevelP& level,
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
   //=========== NEW TASK INTERFACE ==============================
-  Operators& opr = Operators::self();
-  opr.set_my_world( d_myworld );
-  opr.create_patch_operators( level, sched, matls );
-
   if ( _doLagrangianParticles ) {
     _particlesHelper->set_materials(d_sharedState->allArchesMaterials());
     _particlesHelper->schedule_initialize(level, sched);
@@ -381,10 +373,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   if (d_doingRestart  ) {
 
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
-
-    Operators& opr = Operators::self();
-    opr.set_my_world( d_myworld );
-    opr.create_patch_operators( level, sched, matls );
 
     if(d_recompile_taskgraph)
     d_nlSolver->sched_restartInitializeTimeAdvance(level,sched);

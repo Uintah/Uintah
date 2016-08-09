@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/Utility/GridInfo.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
 using namespace Uintah;
 
@@ -25,8 +24,7 @@ GridInfo::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
 
 //--------------------------------------------------------------------------------------------------
 void
-GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){
+GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& gridX = *(tsk_info->get_uintah_field<CCVariable<double> >( "gridX" ));
   CCVariable<double>& gridY = *(tsk_info->get_uintah_field<CCVariable<double> >( "gridY" ));
@@ -65,8 +63,7 @@ GridInfo::register_timestep_init( std::vector<ArchesFieldContainer::VariableInfo
 
 //--------------------------------------------------------------------------------------------------
 void
-GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
+GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){ 
 
   CCVariable<double>& gridX = *(tsk_info->get_uintah_field<CCVariable<double>>( "gridX" ));
   CCVariable<double>& gridY = *(tsk_info->get_uintah_field<CCVariable<double>>( "gridY" ));

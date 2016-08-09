@@ -97,8 +97,7 @@ CO::register_initialize( VIVec& variable_registry ){
 
 
 void
-CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
+CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>* vCO       = tsk_info->get_uintah_field<CCVariable<double> >( _CO_model_name );
   CCVariable<double>* vCO_diff  = tsk_info->get_uintah_field<CCVariable<double> >( _CO_diff_name );
@@ -128,8 +127,7 @@ void CO::register_restart_initialize( VIVec& variable_registry ){
 }
 
 //--------------------------------------------------------------------------------------------------
-void CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                        SpatialOps::OperatorDatabase& opr ){
+void CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 }
 
@@ -147,8 +145,7 @@ void CO::register_timestep_init( VIVec& variable_registry ){
 }
 
 //--------------------------------------------------------------------------------------------------
-void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                   SpatialOps::OperatorDatabase& opr ){
+void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& CO          = *(tsk_info->get_uintah_field<CCVariable<double>>( _CO_model_name ));
   constCCVariable<double>& CO_old = *(tsk_info->get_const_uintah_field<constCCVariable<double>>( _CO_model_name ));
@@ -208,8 +205,7 @@ CO::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformatio
 }
 
 void
-CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   /* This model computes carbon monoxide as a sum of the equilibrum CO and a defect CO.

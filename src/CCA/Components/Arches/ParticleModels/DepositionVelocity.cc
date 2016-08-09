@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/DepositionVelocity.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 
@@ -81,8 +80,7 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
 }
 
 void
-DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                SpatialOps::OperatorDatabase& opr ){
+DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& deposit_velocity = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -129,8 +127,7 @@ DepositionVelocity::register_timestep_init( std::vector<ArchesFieldContainer::Va
 }
 
 void
-DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    SpatialOps::OperatorDatabase& opr ){
+DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& deposit_velocity = *(tsk_info->get_uintah_field<CCVariable<double> >(_task_name));
   constCCVariable<double>& deposit_velocity_old = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name));
@@ -197,8 +194,8 @@ DepositionVelocity::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 }
 
 void
-DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    SpatialOps::OperatorDatabase& opr ){
+DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  
   const int FLOW = -1;
   double current_time = _shared_state->getElapsedTime();
   Vector Dx = patch->dCell(); // cell spacing
@@ -312,7 +309,7 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           if (_averaging_update){
             d_velocity_rs_start[c]=d_velocity_rs[c];
           }
-          
+
           //          if (current_time > _t_ave_start){
           //            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / std::max(1e-8,(current_time-_t_ave_start));
 

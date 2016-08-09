@@ -9,7 +9,6 @@
 
 namespace Uintah{
 
-  class Operators;
   template<typename T>
   class KScalarRHS : public TaskInterface {
 
@@ -32,17 +31,13 @@ public:
     void register_compute_bcs( ArchesVIVector& variable_registry,
                                const int time_substep );
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr );
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                     SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-               SpatialOps::OperatorDatabase& opr );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void create_local_labels();
 
@@ -242,8 +237,7 @@ private:
   }
 
   template <typename T> void
-  KScalarRHS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                         SpatialOps::OperatorDatabase& opr ){
+  KScalarRHS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const int istart = 0;
     const int iend = _eqn_names.size();
@@ -284,8 +278,7 @@ private:
   }
 
   template <typename T> void
-  KScalarRHS<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                            SpatialOps::OperatorDatabase& opr ){
+  KScalarRHS<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const int istart = 0;
     const int iend = _eqn_names.size();
@@ -338,8 +331,7 @@ private:
   }
 
   template <typename T> void
-  KScalarRHS<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                   SpatialOps::OperatorDatabase& opr ){
+  KScalarRHS<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     Vector Dx = patch->dCell();
     double ax = Dx.y() * Dx.z();
@@ -441,8 +433,7 @@ private:
   }
 
   template <typename T> void
-  KScalarRHS<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-  }
+  KScalarRHS<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){ }
+
 }
 #endif

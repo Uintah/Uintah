@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 
 //Uintah Includes:
 
@@ -374,11 +373,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    eval( patch, tsk_info_mngr, i_opr->second._sodb );
+    eval( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
@@ -416,11 +411,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    compute_bcs( patch, tsk_info_mngr, i_opr->second._sodb );
+    compute_bcs( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
@@ -452,11 +443,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    initialize( patch, tsk_info_mngr, i_opr->second._sodb );
+    initialize( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
@@ -488,11 +475,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    restart_initialize( patch, tsk_info_mngr, i_opr->second._sodb );
+    restart_initialize( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;
@@ -526,11 +509,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
 
-    //get the operator DB for this patch
-    Operators& opr = Operators::self();
-    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
-
-    timestep_init( patch, tsk_info_mngr, i_opr->second._sodb );
+    timestep_init( patch, tsk_info_mngr );
 
     //clean up
     delete tsk_info_mngr;

@@ -77,17 +77,13 @@ protected:
 
     void register_compute_bcs( AVarInfo& variable_registry, const int time_substep ){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){};
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                     SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-               SpatialOps::OperatorDatabase& opr );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
 private:
 
@@ -150,8 +146,8 @@ private:
 
   //This is the work for the task.  First, get the variables. Second, do the work!
   template <typename T>
-  void ComputePsi<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                  SpatialOps::OperatorDatabase& opr ){
+  void ComputePsi<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       XFaceT& psi_x = *(tsk_info->get_uintah_field<XFaceT>(*i+"_x_psi"));
       YFaceT& psi_y = *(tsk_info->get_uintah_field<YFaceT>(*i+"_y_psi"));
@@ -182,8 +178,7 @@ private:
   }
 
   template <typename T>
-  void ComputePsi<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
+  void ComputePsi<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){ 
 
     ConstXFaceT& af_x = *(tsk_info->get_const_uintah_field<ConstXFaceT>("areaFractionX"));
     ConstYFaceT& af_y = *(tsk_info->get_const_uintah_field<ConstYFaceT>("areaFractionY"));

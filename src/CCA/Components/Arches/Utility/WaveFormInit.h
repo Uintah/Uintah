@@ -48,17 +48,13 @@ protected:
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){};
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                     SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-               SpatialOps::OperatorDatabase& opr ){}
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void create_local_labels(){};
 
@@ -136,8 +132,7 @@ private:
   }
 
   template <typename T>
-  void WaveFormInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                        SpatialOps::OperatorDatabase& opr ){
+  void WaveFormInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& dep_field = *(tsk_info->get_uintah_field<T>( _var_name ));
     CT& ind_field = *(tsk_info->get_const_uintah_field<CT>( _ind_var_name ));

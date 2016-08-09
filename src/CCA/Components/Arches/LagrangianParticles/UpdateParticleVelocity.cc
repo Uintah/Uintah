@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/LagrangianParticles/UpdateParticleVelocity.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 
 namespace Uintah{
@@ -34,38 +33,6 @@ UpdateParticleVelocity::problemSetup( ProblemSpecP& db ){
 
 //
 //------------------------------------------------
-//-------------- INITIALIZATION ------------------
-//------------------------------------------------
-//
-
-void
-UpdateParticleVelocity::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-
-}
-
-void
-UpdateParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
-}
-
-
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
-void
-UpdateParticleVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-}
-
-void
-UpdateParticleVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-}
-
-
-//
-//------------------------------------------------
 //------------- TIMESTEP WORK --------------------
 //------------------------------------------------
 //
@@ -85,8 +52,7 @@ UpdateParticleVelocity::register_timestep_eval( std::vector<ArchesFieldContainer
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 void
-UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple pu_t = tsk_info->get_uintah_particle_field( _u_name );
   ParticleTuple pv_t = tsk_info->get_uintah_particle_field( _v_name );

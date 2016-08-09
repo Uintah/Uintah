@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/LagrangianParticles/UpdateParticleSize.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 
 namespace Uintah{
@@ -42,17 +41,11 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 //-------------- INITIALIZATION ------------------
 //------------------------------------------------
 //
+void
+UpdateParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){}
 
 void
-UpdateParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-
-}
-
-void
-UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){
-}
-
+UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 //
 //------------------------------------------------
@@ -65,10 +58,7 @@ UpdateParticleSize::register_timestep_init(
 }
 
 void
-UpdateParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-}
-
+UpdateParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
 //
 //------------------------------------------------
@@ -90,8 +80,7 @@ UpdateParticleSize::register_timestep_eval(
 
 //This is the work for the task.  First, get the variables. Second, do the work!
 void
-UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                  SpatialOps::OperatorDatabase& opr ){
+UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   ParticleTuple pd_t = tsk_info->get_uintah_particle_field( _size_name );
   ParticleVariable<double>& pd = *(std::get<0>(pd_t));

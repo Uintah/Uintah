@@ -3,7 +3,6 @@
 
 //#include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
@@ -68,17 +67,13 @@ namespace Uintah{
 
     void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                     SpatialOps::OperatorDatabase& opr ){};
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                    SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                       SpatialOps::OperatorDatabase& opr ){}
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-              SpatialOps::OperatorDatabase& opr );
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   private:
     //resulting model names
@@ -257,8 +252,7 @@ namespace Uintah{
   }
 
   template <typename T>
-  void ShaddixOxidation<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                            SpatialOps::OperatorDatabase& opr ){
+  void ShaddixOxidation<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     for ( int ienv = 0; ienv < _Nenv; ienv++ ){
 
@@ -342,8 +336,7 @@ namespace Uintah{
   }
 
   template <typename T>
-  void ShaddixOxidation<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                  SpatialOps::OperatorDatabase& opr ) {
+  void ShaddixOxidation<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     //**NOTE: This typedef wasn't behaving properly so I have commented it out for now. Some

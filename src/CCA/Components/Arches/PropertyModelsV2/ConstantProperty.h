@@ -32,20 +32,15 @@ public:
 
     void register_compute_bcs( VIVec& variable_registry, const int time_substep ){}
 
-    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){}
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                     SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                             SpatialOps::OperatorDatabase& opr ){};
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-               SpatialOps::OperatorDatabase& opr ){};
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     //Build instructions for this (ConstantProperty) class.
     class Builder : public TaskInterface::TaskBuilder {
@@ -97,8 +92,7 @@ private:
   }
 
   template <typename T>
-  void ConstantProperty<T>::initialize( const Patch*, ArchesTaskInfoManager* tsk_info,
-                                SpatialOps::OperatorDatabase& opr ){
+  void ConstantProperty<T>::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
 
     T& property = *(tsk_info->get_uintah_field<T>( _task_name ));
 
@@ -113,8 +107,7 @@ private:
   }
 
   template <typename T>
-  void ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                                           SpatialOps::OperatorDatabase& opr ){
+  void ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     T& property = *(tsk_info->get_uintah_field<T>( _task_name ));
