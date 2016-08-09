@@ -4,8 +4,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
-#include <spatialops/structured/FVStaggered.h>
-
 using namespace Uintah;
 
 CoalMassClip::CoalMassClip( std::string task_name, int matl_index, const int N ) :
@@ -80,24 +78,21 @@ void
 CoalMassClip::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
-  typedef SpatialOps::SVolField   SVolF;
-  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+  for ( int ei = 0; ei < _Nenv; ei++ ){
 
-  for ( int i = 0; i < _Nenv; i++ ){
+    const std::string char_name = ParticleTools::append_env( _char_base, ei );
+    const std::string rc_name   = ParticleTools::append_env( _raw_coal_base, ei );
 
-    const std::string char_name = ParticleTools::append_env( _char_base, i );
-    const std::string rc_name   = ParticleTools::append_env( _raw_coal_base, i );
-
-    SVolFP coal_char   = tsk_info->get_so_field<SVolF>( char_name );
-    SVolFP raw_coal    = tsk_info->get_so_field<SVolF>( rc_name );
+    CCVariable<double>& coal_char   = *(tsk_info->get_uintah_field<CCVariable<double> >( char_name ));
+    CCVariable<double>& raw_coal    = *(tsk_info->get_uintah_field<CCVariable<double> >( rc_name ));
 
     CoalHelper& coal_helper = CoalHelper::self();
     CoalHelper::CoalDBInfo& coal_db = coal_helper.get_coal_db();
 
-    *raw_coal  <<= min( max( 0.0, *raw_coal ), coal_db.init_rawcoal[i] );
-    *coal_char <<= max(*coal_char, -1.0* *raw_coal);
-
+    Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+    Uintah::parallel_for( range, [&](int i, int j, int k){
+      raw_coal(i,j,k) = std::min(std::max(0.0, raw_coal(i,j,k)), coal_db.init_rawcoal[ei]);
+      coal_char(i,j,k) = std::max(coal_char(i,j,k), -1.*raw_coal(i,j,k));
+    });
   }
 }
