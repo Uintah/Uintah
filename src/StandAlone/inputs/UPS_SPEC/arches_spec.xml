@@ -1011,28 +1011,6 @@
 
       </LagrangianParticles>
 
-
-      <!-- New Task interface transport for CC-scalars -->
-      <ScalarTransport                  spec="OPTIONAL NO_DATA">
-        <!-- Multiple cell-centered scalars can be added to the simulation -->
-        <eqn                            spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING">
-          <!--If this tag is present, diffusion is computed.-->
-          <diffusion                    spec="OPTIONAL NO_DATA"/>
-          <!-- If this tag is present, convection is computed.
-           The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
-          <convection                   spec="OPTIONAL NO_DATA"
-                                        attribute1="scheme REQUIRED STRING"/>
-          <!-- Clip the scalar to maintain specified low and high bounds -->
-          <clip                         spec="OPTIONAL NO_DATA"
-                                        attribute1="low  REQUIRED DOUBLE"
-                                        attribute2="high REQUIRED DOUBLE"/>
-          <!-- reference a source (defined in the <Sources> block) to add it to the RHS -->
-          <src                          spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"/>
-        </eqn>
-      </ScalarTransport>
-
       <!-- Kokkos scalar -->
       <KScalarTransport                 spec="OPTIONAL NO_DATA">
         <eqn_group                      spec="MULTIPLE NO_DATA"
@@ -1064,14 +1042,6 @@
                                         attribute1="label REQUIRED STRING"/>
         </eqn_group>
       </KScalarTransport>
-
-      <!-- New Task interface for Momentum -->
-      <MomentumTransport                spec="OPTIONAL NO_DATA">
-
-        <convection                     spec="REQUIRED NO_DATA"
-                                        attribute1="scheme REQUIRED STRING 'central'"/>
-
-      </MomentumTransport>
 
       <!-- Initialization tasks -->
       <Initialization                   spec="OPTIONAL NO_DATA">
