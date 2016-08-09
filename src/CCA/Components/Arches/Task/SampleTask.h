@@ -21,10 +21,10 @@ public:
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr );
+                      SpatialOps::OperatorDatabase& opr ){};
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                      SpatialOps::OperatorDatabase& opr );
@@ -35,7 +35,12 @@ public:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                SpatialOps::OperatorDatabase& opr );
 
-    void create_local_labels();
+    void create_local_labels(){
+
+      register_new_variable<CCVariable<double> >("a_sample_field");
+      register_new_variable<CCVariable<double> >("a_result_field");
+
+    };
 
     //Build instructions for this (SampleTask) class.
     class Builder : public TaskInterface::TaskBuilder {
