@@ -1392,6 +1392,7 @@
         <model label="dep_velocity" type="deposition_velocity">
           <t_ave_start>0.02</t_ave_start>
           <ash_density>1000</ash_density>
+          <relaxation_coef>0.05</relaxation_coef>
         </model>
         <model label="number_density" type="total_number_density"/>
         <model label="length" type="constant">
@@ -1801,7 +1802,7 @@
               <initial_deposit_thickness>1.0</initial_deposit_thickness>
               <wall_emissivity>0.8</wall_emissivity>
               <tube_side_T>300</tube_side_T>
-              <relaxation_coef>0.03</relaxation_coef>
+              <relaxation_coef>0.8</relaxation_coef>
               <geom_object>
                 <box>
                   <min>[-200, -200, -200]</min>

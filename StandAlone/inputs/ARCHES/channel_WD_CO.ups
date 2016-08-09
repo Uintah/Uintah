@@ -61,8 +61,8 @@
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[10,0.5,0.5]</upper>
-        <resolution>[50,5,5]</resolution>
+        <upper>[2,0.5,0.5]</upper>
+        <resolution>[20,5,5]</resolution>
         <extraCells>[1,1,1]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
@@ -92,7 +92,7 @@
           <value>298</value>
         </BCType>
       </Face>
-      <Face rectangle="x-" lower="0.0 0.2 0.2" upper="0.0 0.4 0.4" name="fuel">
+      <Face rectangle="x-" lower="0.0 0.1 0.1" upper="0.0 0.4 0.4" name="fuel">
         <BCType var="MassFlowInlet"  label="fuel inlet">
           <value>0.0602</value>
         </BCType>
@@ -162,7 +162,7 @@
           <value>298</value>
         </BCType>
       </Face>
-      <Face rectangle="z-" lower="0.0 0.0 0.0" upper="0.2 0.5 0.0" name="primary1">
+      <Face rectangle="z-" lower="0.0 0.0 0.0" upper="0.4 0.5 0.0" name="primary1">
         <BCType var="MassFlowInlet"  label="primary inlet1">
           <value>0.098</value>
         </BCType>
@@ -185,7 +185,7 @@
           <value>298</value>
         </BCType>
       </Face>
-      <Face rectangle="z+" lower="0.0 0.0 0.5" upper="0.2 0.5 0.5" name="primary2">
+      <Face rectangle="z+" lower="0.0 0.0 0.5" upper="0.4 0.5 0.5" name="primary2">
         <BCType var="MassFlowInlet"  label="primary inlet2">
           <value>0.098</value>
         </BCType>
@@ -497,49 +497,7 @@
         </model>
       </PropertyModelsV2>
 
-      <BoundaryConditions>
-        <intrusions>
-    <intrusion label="box">
-      <geom_object>
-      <union>
-        <box label="box1">
-          <min>[1.0,0.0,0.0]</min>
-          <max>[1.6,0.3,0.5]</max>
-        </box>
-        <box label="box2">
-          <min>[2.0,0.2,0.0]</min>
-          <max>[2.6,0.5,0.5]</max>
-        </box>
-        <box label="box3">
-          <min>[3.0,0.0,0.0]</min>
-          <max>[3.6,0.3,0.5]</max>
-        </box>
-        <box label="box4">
-          <min>[4.0,0.2,0.0]</min>
-          <max>[4.6,0.5,0.5]</max>
-        </box>
-        <box label="box5">
-          <min>[5.0,0.0,0.0]</min>
-          <max>[5.6,0.3,0.5]</max>
-        </box>
-        <box label="box6">
-          <min>[6.0,0.2,0.0]</min>
-          <max>[6.6,0.5,0.5]</max>
-        </box>
-        <box label="box7">
-          <min>[7.0,0.0,0.0]</min>
-          <max>[7.6,0.3,0.5]</max>
-        </box>
-        <box label="box8">
-          <min>[8.0,0.2,0.0]</min>
-          <max>[8.6,0.5,0.5]</max>
-        </box>
-      </union>
-    </geom_object>
-  </intrusion>
-        </intrusions>
-        <suppress_corner_recirculation/>
-      </BoundaryConditions>
+      <BoundaryConditions/>
 
       <ExplicitSolver>
         <PressureSolver>
