@@ -134,8 +134,16 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
         const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / _denom[ienv];
-        rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
-        rho(i,j,k) = (ratio < _init_ash[ienv]/_denom[ienv]) ? _init_ash[ienv]/_denom[ienv] * _rhop_o : ratio * _rhop_o;
+
+        //These if's are not optimal for Kokkos, but they don't change the answers from
+        //the spatialOps implementation. Perhaps use min/max?
+        if ( ratio > 1.0 ) {
+          rho(i,j,k) = _rhop_o;
+        } else if ( ratio < _init_ash[ienv]/_denom[ienv]){ 
+          rho(i,j,k) = _init_ash[ienv]/_denom[ienv] * _rhop_o;
+        } else {
+          rho(i,j,k) = ratio*_rhop_o;
+        }
       });
     } else {
       const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
@@ -148,8 +156,15 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         const double denom   = initAsh + _char_mf * massDry + _raw_coal_mf * massDry;
         const double ratio   = (denom > 0.0) ? (cchar(i,j,k) + rc(i,j,k) + initAsh)/denom : 1.01;
 
-        rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
-        rho(i,j,k) = (ratio < initAsh/denom) ? initAsh/denom * _rhop_o : ratio*_rhop_o;
+        //These if's are not optimal for Kokkos, but they don't change the answers from
+        //the spatialOps implementation. Perhaps use min/max?
+        if ( ratio > 1.0 ) {
+          rho(i,j,k) = _rhop_o;
+        } else if ( ratio < initAsh/denom){
+          rho(i,j,k) = initAsh/denom*_rhop_o;
+        } else {
+          rho(i,j,k) = ratio*_rhop_o;
+        }
 
       });
     }
@@ -201,8 +216,17 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
         const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / _denom[ienv];
-        rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
-        rho(i,j,k) = (ratio < _init_ash[ienv]/_denom[ienv]) ? _init_ash[ienv]/_denom[ienv] * _rhop_o : ratio * _rhop_o;
+
+        //These if's are not optimal for Kokkos, but they don't change the answers from
+        //the spatialOps implementation. Perhaps use min/max?
+        if ( ratio > 1.0 ) {
+          rho(i,j,k) = _rhop_o;
+        } else if ( ratio <_init_ash[ienv]/_denom[ienv]){ 
+          rho(i,j,k) = _init_ash[ienv]/_denom[ienv] * _rhop_o;
+        } else {
+          rho(i,j,k) = ratio*_rhop_o;
+        }
+
       });
     } else {
       const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
@@ -215,8 +239,15 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         const double denom   = initAsh + _char_mf * massDry + _raw_coal_mf * massDry;
         const double ratio   = (denom > 0.0) ? (cchar(i,j,k) + rc(i,j,k) + initAsh)/denom : 1.01;
 
-        rho(i,j,k) = (ratio > 1.0) ? _rhop_o : ratio * _rhop_o;
-        rho(i,j,k) = (ratio < initAsh/denom) ? initAsh/denom * _rhop_o : ratio*_rhop_o;
+        //These if's are not optimal for Kokkos, but they don't change the answers from
+        //the spatialOps implementation. Perhaps use min/max?
+        if ( ratio > 1.0 ) {
+          rho(i,j,k) = _rhop_o;
+        } else if ( ratio < initAsh/denom){
+          rho(i,j,k) = initAsh/denom*_rhop_o;
+        } else {
+          rho(i,j,k) = ratio*_rhop_o;
+        }
       });
     }
   }
