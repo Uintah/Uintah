@@ -31,7 +31,7 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   } else {
     throw ProblemSetupException("Error: DepositionVelocity.cc time-averaging start time not specified.", __FILE__, __LINE__);
   }
-  db->getWithDefault("relaxation_coe",_relaxation_coe,0.05);
+  db->getWithDefault("relaxation_coef",_relaxation_coe,0.05);
 
   db->getWithDefault("ash_density",_user_specified_rho,-1.0);
   _d.push_back(IntVector(1,0,0)); // cell center located +x
