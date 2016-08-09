@@ -2,8 +2,8 @@
 #define Uintah_Component_Arches_ExampleParticleModel_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
-#include <spatialops/structured/FVStaggered.h>
 
 namespace Uintah{
 
@@ -118,7 +118,6 @@ private:
     db->require("A",_A);
     db->require("ER",_ER);
     db->require("m",_m);
-
     db->findBlock("temperature")->getAttribute("label",_temperature_var_name);
     db->findBlock("concentration")->getAttribute("label",_conc_var_name);
 
@@ -145,12 +144,15 @@ private:
     using SpatialOps::operator *;
     typedef SpatialOps::SpatFldPtr<DT> DTptr;
 
-    for ( int i = 0; i < _N; i++ ){
+    for ( int ienv = 0; ienv < _N; ienv++ ){
 
-      const std::string name = get_name(i, _base_var_name);
-      DTptr model_value = tsk_info->get_so_field<DT>(name);
+      const std::string name = get_name(ienv, _base_var_name);
+      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
 
-      *model_value <<= 0.0;
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        model_value(i,j,k) = 0.0;
+      });
 
     }
   }
@@ -171,26 +173,16 @@ private:
   void ExampleParticleModel<IT, DT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
 
-    for ( int i = 0; i < _N; i++ ){
+    for ( int ienv = 0; ienv < _N; ienv++ ){
 
       //dependent variables(s) or model values
-      const std::string name = get_name(i, _base_var_name);
+      const std::string name = get_name(ienv, _base_var_name);
       register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-
-      //independent variable
-      //const std::string temperature_name = get_name( i, _temperature_var_name );
-      //register_variable( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-
-      //const std::string conc_name = get_name( i, _conc_var_name );
-      //register_variable( conc_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
     }
 
-    //temp: remove this after testing:
-    //and uncomment the statements above.
     register_variable( _temperature_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( _conc_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    //end temp:
 
   }
 
@@ -198,31 +190,23 @@ private:
   void ExampleParticleModel<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                         SpatialOps::OperatorDatabase& opr ){
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTptr;
-    typedef SpatialOps::SpatFldPtr<IT> ITptr;
-    typedef typename OperatorTypeBuilder< SpatialOps::Interpolant, IT, DT >::type InterpT;
-    const InterpT* const interp = opr.retrieve_operator<InterpT>();
+    typedef typename ArchesCore::VariableHelper<IT>::ConstType CIT;
 
-    for ( int i = 0; i < _N; i++ ){
+    for ( int ienv = 0; ienv < _N; ienv++ ){
 
-      const std::string name = get_name(i, _base_var_name);
-      DTptr model_value = tsk_info->get_so_field<DT>(name);
+      const std::string name = get_name(ienv, _base_var_name);
+      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
 
-      //temp: remove this after testing:
-      ITptr temperature = tsk_info->get_const_so_field<IT>(_temperature_var_name);
-      ITptr conc = tsk_info->get_const_so_field<IT>(_conc_var_name);
-      //end temp:
+      CIT& temperature = *(tsk_info->get_const_uintah_field<CIT>(_temperature_var_name));
+      CIT& conc = *(tsk_info->get_const_uintah_field<CIT>(_conc_var_name));
 
-      //const std::string temperature_name = get_name( i, _temperature_var_name );
-      //ITptr temperature = tsk_info->get_const_so_field<IT>(temperature_name);
+      Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
 
-      //const std::string conc_name = get_name( i, _conc_var_name );
-      //ITptr conc = tsk_info->get_const_so_field<IT>(conc_name);
+        //compute a rate term
+        model_value(i,j,k) = _A * std::exp( _ER * temperature(i,j,k)) * std::pow( conc(i,j,k), _m );
 
-      //compute a rate term
-      *model_value <<= _A * exp( _ER * (*interp)(*temperature)) * pow( (*interp)(*conc), _m );
+      });
 
     }
   }

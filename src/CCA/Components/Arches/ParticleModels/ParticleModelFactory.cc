@@ -82,7 +82,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           if ( independent_type == "CC"){
 
             TaskInterface::TaskBuilder* tsk = scinew
-              ExampleParticleModel<SVol,SVol>::Builder(task_name, 0, model_name, N);
+              ExampleParticleModel<CCVariable<double> ,CCVariable<double> >::Builder(task_name, 0, model_name, N);
 
             register_task( task_name, tsk );
             _pre_update_particle_tasks.push_back(task_name);
