@@ -1,11 +1,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
-typedef SpatialOps::SVolField SVolF;
-typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
 
-using namespace Uintah;
-using namespace SpatialOps;
-using SpatialOps::operator *;
+namespace Uintah{
 
 CO::CO( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
@@ -154,23 +150,22 @@ void CO::register_timestep_init( VIVec& variable_registry ){
 void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                    SpatialOps::OperatorDatabase& opr ){
 
-  using namespace SpatialOps;
-  using SpatialOps::operator *;
+  CCVariable<double>& CO          = *(tsk_info->get_uintah_field<CCVariable<double>>( _CO_model_name ));
+  constCCVariable<double>& CO_old = *(tsk_info->get_const_uintah_field<constCCVariable<double>>( _CO_model_name ));
+  CCVariable<double>& defect      = *(tsk_info->get_uintah_field<CCVariable<double>>( _defect_name ));
+  constCCVariable<double>& defect_old = *(tsk_info->get_const_uintah_field<constCCVariable<double>>( _defect_name ));
+  CCVariable<double>& CO_diff     = *(tsk_info->get_uintah_field<CCVariable<double>>(_CO_diff_name));
+  CCVariable<double>& CO_conv     = *(tsk_info->get_uintah_field<CCVariable<double>>(_CO_conv_name));
+  CCVariable<double>& rate        = *(tsk_info->get_uintah_field<CCVariable<double>>(_rate_name));
 
-  SVolFP CO = tsk_info->get_so_field<SVolF>( _CO_model_name );
-  SVolFP const CO_old   = tsk_info->get_const_so_field<SVolF>( _CO_model_name );
-  SVolFP d = tsk_info->get_so_field<SVolF>( _defect_name );
-  SVolFP const d_old   = tsk_info->get_const_so_field<SVolF>( _defect_name );
-  SVolFP CO_diff = tsk_info->get_so_field<SVolF>(_CO_diff_name);
-  SVolFP CO_conv = tsk_info->get_so_field<SVolF>(_CO_conv_name);
-  SVolFP rate = tsk_info->get_so_field<SVolF>(_rate_name);
-
-  *CO <<= *CO_old;
-  *d <<= *d_old;
-  *CO_diff <<= 0.0; // this is needed because all conv and diff computations are +=
-  *CO_conv <<= 0.0;
-  *rate <<= 0.0;
-
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+  Uintah::parallel_for( range, [&](int i, int j, int k){
+    CO(i,j,k) = CO_old(i,j,k);
+    defect(i,j,k)  = defect_old(i,j,k);
+    CO_diff(i,j,k) = 0.0; // this is needed because all conv and diff computations are +=
+    CO_conv(i,j,k) = 0.0;
+    rate(i,j,k) = 0.0;
+  });
 }
 
 
@@ -340,3 +335,4 @@ CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   _boundary_condition->setScalarValueBC( 0, patch, *y_new, _CO_model_name );
 
 }
+} //namespace Uintah
