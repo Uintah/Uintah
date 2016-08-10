@@ -81,7 +81,8 @@ void getBounds(int low[3], int high[3],
 	       const LevelInfo &levelInfo,
 	       int patch_id=-1);
 
-void CheckNaNs(int num, double *data, int level, int patch);
+void CheckNaNs(double *data, const int num,
+	       const char* varname, const int level, const int patch);
 }
 
 #endif //UINTAH_UDA2VIS_H

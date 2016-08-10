@@ -343,8 +343,10 @@ static GridDataRaw* readGridData(DataArchive *archive,
 
   // this queries the entire patch, including extra cells and boundary cells
   VAR<T> var;
-  archive->queryRegion(var, variable_name, material,
-                       level.get_rep(), timestep, ilow, ihigh);
+  // archive->queryRegion(var, variable_name, material,
+  //                      level.get_rep(), timestep, ilow, ihigh);
+
+  archive->query(var, variable_name, material, patch, timestep);
 
   //  IntVector low = var.getLowIndex();
   //  IntVector high = var.getHighIndex();
@@ -911,7 +913,8 @@ void getBounds(int low[3], int high[3],
 //  Modifications:
 const double NAN_REPLACE_VAL = 1.0E9;
 
-void CheckNaNs(int num, double *data, int level, int patch)
+void CheckNaNs(double *data, const int num,
+	       const char* varname, const int level, const int patch)
 {
   // replace nan's with a large negative number
   std::vector<int> nanCells;
@@ -928,31 +931,31 @@ void CheckNaNs(int num, double *data, int level, int patch)
   if (!nanCells.empty())
   {
     std::stringstream sstr;
-    sstr << "NaNs exist in this file (patch " << patch
-         << " of level " << level
-         << "). They have been replaced by the value "
+    sstr << "NaNs exist for variable " << varname
+	 << " in patch " << patch << " of level " << level
+         << " and " << nanCells.size() << "/" << num
+	 << " cells have been replaced by the value "
          <<  NAN_REPLACE_VAL << ".";
 
-    if ((int)nanCells.size()>40)
-    {
-      sstr << std::endl << "First 20: ";
+    // if ((int)nanCells.size()>40)
+    // {
+    //   sstr << std::endl << "First 20: ";
 
-      for (int i=0;i<(int)nanCells.size() && i<20;i++)
-        sstr << nanCells[i] << ",";
+    //   for (int i=0;i<(int)nanCells.size() && i<20;i++)
+    //     sstr << nanCells[i] << ",";
 
-      sstr << std::endl << "Last 20: ";
+    //   sstr << std::endl << "Last 20: ";
 
-      for (int i=(int)nanCells.size()-21;i<(int)nanCells.size();i++)
-        sstr << nanCells[i] << ",";
-    }
-    else
-    {
-      for (int i=0;i<(int)nanCells.size();i++)
-        sstr << nanCells[i] << ((int)nanCells.size()!=(i+1)?",":".");
-    }
+    //   for (int i=(int)nanCells.size()-21;i<(int)nanCells.size();i++)
+    //     sstr << nanCells[i] << ",";
+    // }
+    // else
+    // {
+    //   for (int i=0;i<(int)nanCells.size();i++)
+    //     sstr << nanCells[i] << ((int)nanCells.size()!=(i+1)?",":".");
+    // }
 
     std::cerr << "Uintah/VisIt Libsim warning : " << sstr.str() << std::endl;
-    // avtCallback::IssueWarning(sstr.str().c_str());
   }
 }
 
@@ -995,8 +998,10 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
 
   if( dw->exists( varLabel, material, patch ) )
   {
-    dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
-  
+    // dw->getRegion( var, varLabel, material, level.get_rep(), ilow, ihigh );
+
+    dw->get( var, varLabel, material, patch, Ghost::None, 0 );
+
     const T *p=var.getPointer();
 
     for (int i=0; i<gd->num; ++i)
