@@ -252,8 +252,8 @@ visit_handle visit_SimGetMetaData(void *cbdata)
               VisIt_MeshMetaData_addDomainName(mmd, tmpName);
             }
 
-          // ARS - FIXME
-//        VisIt_MeshMetaData_setContainsExteriorBoundaryGhosts(mmd, false);
+            // ARS - FIXME
+	    // VisIt_MeshMetaData_setContainsExteriorBoundaryGhosts(mmd, false);
 
             VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
 
@@ -339,6 +339,26 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // add a proc id enum variable
     if (addProcId)
     {
+      // add a patch id enum variable
+      {
+        visit_handle vmd = VISIT_INVALID_HANDLE;
+          
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          VisIt_VariableMetaData_setName(vmd, "patch/id");
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
+
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+        }
+      }
+
       // Add in the processor runtime stats.
       for( unsigned int i=0; i<simStateP->d_runTimeStats.size(); ++i )
       {
@@ -399,6 +419,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         }
       }
 
+      // add a proc id enum variable
       {
         visit_handle vmd = VISIT_INVALID_HANDLE;
           
@@ -563,15 +584,14 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     //                            "Save", "Checkpoint", "Unused",
     //                            "Finish", "Terminate", "Abort"};
 
-
     const char *cmd_names[] = {"Stop", "Step", "Run",
                                "Save", "Checkpoint", "Unused",
                                "Terminate", "Abort"};
 
 
-    int numNames = sizeof(cmd_names) / sizeof(const char *);
+    unsigned int numNames = sizeof(cmd_names) / sizeof(const char *);
 
-    for (int i=0; i<numNames; ++i)
+    for (unsigned int i=0; i<numNames; ++i)
     {
       bool enabled;
 
@@ -1265,7 +1285,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       getParticleData(schedulerP, gridP, level, local_patch, varName,
                       matlNo, timestate);
 
-    CheckNaNs(pd->num*pd->components,pd->data,level,local_patch);
+    CheckNaNs(pd->data, pd->num*pd->components, varname, level, local_patch);
 
     if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
     {
@@ -1287,7 +1307,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   {
     MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
       (sim->simController->getSchedulerP().get_rep());
-        
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
@@ -1298,7 +1317,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       
     GridDataRaw *gd = nullptr;
 
-    if( varName == "processor" )
+    if( varName == "patch" || varName == "processor" )
     {
       varName = std::string(varname);
       found = varName.find_last_of("/");
@@ -1307,7 +1326,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       double val;
 
       // Processor Id
-      if( strcmp(varname, "processor/id") == 0 )
+      if( strcmp(varname, "patch/id") == 0 )
+      {
+          val = local_patch;
+      }
+      // Processor Id
+      else if( strcmp(varname, "processor/id") == 0 )
       {
           val = patchInfo.getProcId();
       }
@@ -1365,7 +1389,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
       if( gd )
       {
-        CheckNaNs(gd->num*gd->components, gd->data, level, local_patch);
+        CheckNaNs(gd->data, gd->num*gd->components, varname, level, local_patch);
       }
       else
       {
@@ -1415,7 +1439,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     {
       VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
                                   gd->num*gd->components, gd->data);
-      
+
       // vtkDoubleArray *rv = vtkDoubleArray::New();
       // rv->SetNumberOfComponents(gd->components);
       // rv->SetArray(gd->data, ncells*gd->components, 0);
