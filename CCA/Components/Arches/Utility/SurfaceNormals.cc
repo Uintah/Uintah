@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/Utility/SurfaceNormals.h>
 #include <CCA/Components/Arches/GridTools.h>
+#include <math.h>
 
 using namespace Uintah;
 
@@ -59,7 +60,7 @@ SurfaceNormals::register_initialize( VIVec& variable_registry ){
 }
 
 void
-SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){ 
+SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   GET_FX_BUFFERED_PATCH_RANGE(0,1)
   GET_FY_BUFFERED_PATCH_RANGE(0,1)
@@ -102,9 +103,9 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
   });
   //Z
   Uintah::parallel_for(Uintah::BlockRange(low_fz_patch_range, high_fz_patch_range), [&](int i, int j, int k){
-    n_out_x(i,j,k) = ( vol_fraction(i,j,k) - vol_fraction(i,j,k-1) )
+    n_out_z(i,j,k) = ( vol_fraction(i,j,k) - vol_fraction(i,j,k-1) )
                      / std::abs( vol_fraction(i,j,k) - vol_fraction(i,j,k-1) + noise);
-    n_in_x(i,j,k) = ( vol_fraction(i,j,k-1) - vol_fraction(i,j,k) ) /
+    n_in_z(i,j,k) = ( vol_fraction(i,j,k-1) - vol_fraction(i,j,k) ) /
                     std::abs( vol_fraction(i,j,k-1) - vol_fraction(i,j,k) + noise);
   });
 
@@ -160,8 +161,8 @@ SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_in
     n_in_x(i,j,k)  = old_n_in_x(i,j,k);
     n_out_x(i,j,k) = old_n_out_x(i,j,k);
     n_in_y(i,j,k)  = old_n_in_y(i,j,k);
-    n_out_y(i,j,k) = old_n_out_x(i,j,k);
+    n_out_y(i,j,k) = old_n_out_y(i,j,k);
     n_in_z(i,j,k)  = old_n_in_z(i,j,k);
-    n_out_z(i,j,k) = old_n_out_x(i,j,k);
+    n_out_z(i,j,k) = old_n_out_z(i,j,k);
   });
 }
