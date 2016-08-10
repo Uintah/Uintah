@@ -4209,7 +4209,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
         if (req->toTasks.front()->getTask()->getType() == Task::Output
-            && !m_oport->isOutputTimestep() && !m_oport->isCheckpointTimestep()) {
+            && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             gpu_stats << myRankThread()
@@ -4269,7 +4269,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_oport->isOutputTimestep() && !m_oport->isCheckpointTimestep()) {
+        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
