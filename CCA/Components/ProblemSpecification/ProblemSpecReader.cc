@@ -26,7 +26,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Parallel/Parallel.h> // Only used for MPI cerr
 #include <Core/Parallel/ProcessorGroup.h> // process determination
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
@@ -172,8 +171,8 @@ getNeed( const string & needStr )
     return MULTIPLE;
   }
   else {
-    cout << "Error: ProblemSpecReader.cc: need_e (" << needStr << ") did not parse correctly... "
-         << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
+    // cout << "Error: ProblemSpecReader.cc: need_e (" << needStr << ") did not parse correctly... "
+    //      << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
     return INVALID_NEED;
   }
 }
@@ -1161,11 +1160,14 @@ ProblemSpecReader::parseValidationFile()
 
   if ( doc == 0 ) {
 
-    proc0cout << "During .ups validation: Unable to load 'ups_spec.xml' from source directory...\n" <<
-                 "Will now try current directory.  If this fails, an Exception will be raised.\n";
-    // If the UPS_SPEC can't be read from the source directory, try looking for it in the 'inputs/' directory in the current directory.
-    // This happens on some systems where you have to copy the sus executable to a different filesystem for running, and the original
-    // file system is not visible.
+    // proc0cout << "During .ups validation: Unable to load 'ups_spec.xml' from source directory...\n" <<
+    //              "Will now try current directory.  If this fails, an Exception will be raised.\n";
+
+    // If the UPS_SPEC can't be read from the source directory, try
+    // looking for it in the 'inputs/' directory in the current
+    // directory.  This happens on some systems where you have to copy
+    // the sus executable to a different filesystem for running, and
+    // the original file system is not visible.
     valFileName = "./inputs/UPS_SPEC/ups_spec.xml";
 
     doc = xmlReadFile( valFileName.c_str(), 0, XML_PARSE_PEDANTIC );
@@ -1798,15 +1800,7 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
     uintahSpec_g->validate( prob_spec.get_rep() );
   }
   catch( ProblemSetupException & pse ) {
-    if( Parallel::getMPIRank() == 0 ) {
-      cout << "\n";
-      cout << "!! WARNING: Your .ups file did not parse successfully...\n";
-      cout << "!!          Fix your .ups file or update the ups_spec.xml\n";
-      cout << "!!          specification.  Reason for failure is:\n";
-      cout << "\n";
-      cout << pse.message() << "\n";
-    }
-    throw;
+    throw(pse);
   }
 
   namedGeomPieces_g.clear();
@@ -1859,14 +1853,14 @@ validateFilename( const string & filename, const xmlNode * parent )
       char buffer[2000];
       char * str = getcwd( buffer, 2000 );
       if( str == nullptr ) {
-        proc0cout << "WARNING: Directory not returned by getcwd()...\n";
+        errorMsg += "WARNING: Directory not returned by getcwd()...\n";
       }
       else {
         fullFilename = string(buffer) + "/" + filename;
       }
       if( !validFile( fullFilename ) ) {
         filenameIsBad = true;
-        errorMsg = "Couldn't find include file: '" + filename + "' or '" + fullFilename + "'\n";
+        errorMsg += "Couldn't find include file: '" + filename + "' or '" + fullFilename + "'\n";
       }
     }
   }
@@ -1880,16 +1874,18 @@ validateFilename( const string & filename, const xmlNode * parent )
   }
 
   if( filenameIsBad ) {
-    if ( !getInfo( fullFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
-      stringstream error_stream;
+    // if ( !getInfo( fullFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
+    //   stringstream error_stream;
       
-      string directory = fullFilename.substr(0, fullFilename.rfind( "/" ) );
-          
-      if( !testFilesystem( directory, error_stream, Parallel::getMPIRank() ) ) {
-        cout << error_stream.str();
-        cout.flush();
-      }
-    }
+    //   string directory = fullFilename.substr(0, fullFilename.rfind( "/" ) );
+
+    //   if( !testFilesystem( directory, error_stream,
+    //                     (Parallel::usingMPI() ?
+    //                      Parallel::getMPIRank():0) ) ) {
+    //     cout << error_stream.str();
+    //     cout.flush();
+    //   }
+    // }
     string errorInfo;
     if( parent ) {
       errorInfo = getErrorInfo( parent );
@@ -1903,10 +1899,10 @@ validateFilename( const string & filename, const xmlNode * parent )
 } // end validateFilename()
 
 void
-printDoc( xmlNode * node, int depth )
+printDoc( xmlNode * node, int depth, ostream & out = std::cout )
 {
   if( depth == 0 ) {
-    cout << "PRINTING DOC\n";
+    out << "PRINTING DOC\n";
   }
 
   if( node == nullptr ) {
@@ -1916,8 +1912,8 @@ printDoc( xmlNode * node, int depth )
   if( node->type == XML_ELEMENT_NODE ) {
     string name = (char*)node->name;
 
-    indent( cout, depth );
-    cout << name << "\n";
+    indent( out, depth );
+    out << name << "\n";
   }
 
   xmlNode * child = node->children;
@@ -1925,12 +1921,12 @@ printDoc( xmlNode * node, int depth )
   while( child != 0 ) {
 
     if( child->type == XML_ELEMENT_NODE ) {
-      printDoc( child, depth+1 );
+      printDoc( child, depth+1, out );
     }
     child = child->next;
   }
   if( depth == 0 ) {
-    cout << "DONE PRINTING DOC\n";
+    out << "DONE PRINTING DOC\n";
   }
 
 } // end printDoc()
@@ -2063,7 +2059,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 
   resolveIncludes( prob_spec->getNode()->children, prob_spec->getNode() );
 
-  if( Parallel::getMPIRank() == 0 && validate ) { // Only validate the UPS on proc 0...
+  if( validate ) {
     validateProblemSpec( prob_spec );
   }
 
