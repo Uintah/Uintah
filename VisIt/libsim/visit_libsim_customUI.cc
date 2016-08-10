@@ -317,9 +317,9 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 	      }
 	    }
 	  }
+	  
+	  ++row;
         }
-
-	++row;
       }
     }
   }
