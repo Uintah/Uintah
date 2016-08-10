@@ -2406,6 +2406,13 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
     int totalCells = 0;
     for (int i = 0; i < patches.size(); i++) {
       const Patch* patch = patches[i];
+
+      // After regridding selected patches may return stale patches so
+      // make sure the variable exists on the patch.
+      if( !exists( label, matlIndex, patch ) ) {
+	continue;
+      }
+
       IntVector l, h;
 
       // the caller should determine whether or not he wants extra cells.
@@ -2497,7 +2504,6 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
     }
 
     ASSERT(requestedCells <= totalCells );
-
 }
 
 //______________________________________________________________________
