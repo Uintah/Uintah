@@ -151,7 +151,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
     for( int j=0; j<5; ++j )
       sim->stripChartNames[i][j] = std::string("");
   
-#ifdef HAVE_MPICH
   if( Parallel::usingMPI() )
   {
     int par_rank, par_size;
@@ -176,10 +175,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
     sim->rank = 0;
     sim->isProc0 = true;
   }
-#else
-  sim->rank = 0;
-  sim->isProc0 = true;
-#endif
 
   // TODO: look for the VisItSetupEnvironment2 function.
   // Has better scaling, but has not been release for fortran.
@@ -407,7 +402,8 @@ bool visit_CheckState( visit_simulation_data *sim )
         if(sim->isProc0)
         {
           std::stringstream msg;          
-          msg << "Visit libsim - Continuing the simulation - no input";
+          msg << "Visit libsim - No input, continuing the simulation.";
+
           // visitdbg << msg.str().c_str() << std::endl;
           // visitdbg.flush();
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
@@ -461,6 +457,7 @@ bool visit_CheckState( visit_simulation_data *sim )
 
           std::stringstream msg;          
           msg << "Visit libsim - Continuing the simulation for one time step";
+	  
           // visitdbg << msg.str().c_str() << std::endl;
           // visitdbg.flush();
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
@@ -483,6 +480,7 @@ bool visit_CheckState( visit_simulation_data *sim )
 
           std::stringstream msg;          
           msg << "Visit libsim - Finished the simulation ";
+
           // visitdbg << msg.str().c_str() << std::endl;
           // visitdbg.flush();
           VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
