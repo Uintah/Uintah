@@ -100,8 +100,7 @@ populate_reduction_variable( const Uintah::ProcessorGroup* const pg,
     for( int im=0; im<materials->size(); ++im ){
       Uintah::PerPatch<double> val;
       if( newDW->exists(thisVarLabel_,im,patch) ){
-        newDW->get( val, thisVarLabel_, im, patch );
-        std::cout << " this varlabel = " << thisVarLabel_->getName() << std::endl;
+        newDW->get( val, thisVarLabel_, im, patch );        
         dbg_red << this->get_tag().name() << " patch " << patch->getID() << " val = " << val.get() << std::endl;
         Uintah::ReductionVariableBase* redcVar = NULL;
         
