@@ -109,7 +109,7 @@ if [ -d "SpatialOps" ]; then
     run "cd SpatialOps"
     run "git remote update"
 
-    LOCAL=$(git rev-parse @)
+    LOCAL=$(git rev-parse HEAD)
     REMOTE=$(git rev-parse origin/master)
     
     if [ $LOCAL = $REMOTE ]; then
@@ -184,7 +184,7 @@ if [ -d "ExprLib" ]; then
     run "cd ExprLib"
     run "git remote update"
 
-    LOCAL=$(git rev-parse @)
+    LOCAL=$(git rev-parse HEAD)
     REMOTE=$(git rev-parse origin/master)
 
     if [ $LOCAL = $REMOTE ]; then
@@ -242,7 +242,7 @@ if [ -d "TabProps" ]; then
     run "cd TabProps"
     run "git remote update"
 
-    LOCAL=$(git rev-parse @)
+    LOCAL=$(git rev-parse HEAD)
     REMOTE=$(git rev-parse origin/master)
 
     if [ $LOCAL = $REMOTE ]; then
@@ -294,7 +294,7 @@ if [ -d "RadProps" ]; then
     run "cd RadProps"
     run "git remote update"
 
-    LOCAL=$(git rev-parse @)
+    LOCAL=$(git rev-parse HEAD)
     REMOTE=$(git rev-parse origin/master)
 
     if [ $LOCAL = $REMOTE ]; then
