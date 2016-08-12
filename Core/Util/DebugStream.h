@@ -93,8 +93,8 @@ namespace Uintah {
     private:
       // identifies me uniquely
       std::string name;
-      // my default action (used if nothing is specified in SCI_DEBUG)
-      bool defaulton;
+      // the stream filename
+      std::string filename;
       // the buffer that is used for output redirection
       DebugBuf dbgbuf;
       // if false, all input is ignored
@@ -106,6 +106,9 @@ namespace Uintah {
       DebugStream();
       DebugStream(const std::string& name, bool defaulton = true);
       ~DebugStream();
+      std::string getName() {return name;};      
+      std::string getFilename() {return filename;};      
+      void setFilename( std::string name ) {filename = name;};      
       bool active() {return isactive;};
       void setActive(bool active) { isactive = active; };
       // the ostream that output should be redirected to. cout by default.
