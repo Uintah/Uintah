@@ -82,9 +82,9 @@ DebugStream::DebugStream(const string& iname, bool defaulton):
   dbgbuf.owner = this;
   // set default values
   isactive = defaulton;
-  if(isactive){
-    outstream = &cout;
-  }
+  outstream = &cout;
+  filename = "cout";
+  
   // check SCI_DEBUG to see if this instance is mentioned
   checkenv(iname);
 }
@@ -92,7 +92,7 @@ DebugStream::DebugStream(const string& iname, bool defaulton):
 
 DebugStream::~DebugStream()
 {
-  if( outstream && ( outstream != &cerr && outstream != &cout ) ){
+  if( outstream && outstream != &cerr && outstream != &cout ){
     delete(outstream);
   }
 }
@@ -120,21 +120,24 @@ void DebugStream::checkenv(string iname)
 	file.assign(var, colonpos+1, commapos-colonpos-1);
 	if(file[0] == '-'){
 	  isactive = false;
-	  return;
 	}
 	else if(file[0] == '+'){
 	  isactive = true;
-	  // if no output file was specified, set to cout
-	  if(file.length() == 1){ 
-	    outstream = &cout;
-	  }
-	  else{
-	    outstream = new ofstream(file.substr(1, file.size()-1).c_str());
-	  }
 	}
 	else{
 	  // houston, we have a problem: SCI_DEBUG was not correctly
 	  // set.  Ignore and set all to default value	
+	  return;
+	}
+
+	// if no output file was specified, set to cout
+	if(file.length() == 1){
+	  filename = std::string("std::cout");
+	  outstream = &cout;
+	}
+	else if(file.length() > 1){
+	  filename = file.substr(1, file.size()-1).c_str();
+	  outstream = new ofstream(filename);
 	}
 	return;
       }
