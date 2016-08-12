@@ -100,11 +100,59 @@
       <Turbulence model="none"/>
 
       <TransportEqns>
-        <Eqn label="phi" type="CCscalar">
+        <Eqn label="phi-up" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <conv_scheme>upwind</conv_scheme>
+          <!--<conv_scheme>vanleer</conv_scheme>-->
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>1.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="phi-sb" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
           <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>upwind</conv_scheme>-->
+          <!--<conv_scheme>vanleer</conv_scheme>-->
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>1.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="phi-vl" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>upwind</conv_scheme>-->
+          <conv_scheme>vanleer</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>1.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="phi-roe" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <conv_scheme>roe_minmod</conv_scheme>
           <!--<conv_scheme>upwind</conv_scheme>-->
           <!--<conv_scheme>vanleer</conv_scheme>-->
           <determines_properties/>
@@ -124,76 +172,6 @@
           <temperature>298</temperature>
         </ConstantProps>
       </Properties>
-
-      <ScalarTransport>
-        <eqn label="phi-up">
-          <convection scheme="upwind" />
-          <diffusion/>
-        </eqn>
-        <eqn label="phi-sb">
-          <convection scheme="superbee" />
-          <diffusion/>
-        </eqn>
-        <eqn label="phi-vl">
-          <convection scheme="vanleer" />
-          <diffusion/>
-        </eqn>
-        <eqn label="phi-roe">
-          <convection scheme="minmod" />
-          <diffusion/>
-        </eqn>
-      </ScalarTransport>
-
-      <Initialization>
-        <task task_label="phi_initializer-up"
-              variable_label="phi-up"
-              type="wave">
-              <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX"/>
-                <square min="0.0"
-                        max=".50"
-                        f="1.0"
-                        offset="0.0"/>
-              </wave>
-        </task>
-        <task task_label="phi_initializer-sb"
-              variable_label="phi-sb"
-              type="wave">
-              <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX"/>
-                <square min="0.0"
-                        max=".50"
-                        f="1.0"
-                        offset="0.0"/>
-              </wave>
-        </task>
-        <task task_label="phi_initializer-vl"
-              variable_label="phi-vl"
-              type="wave">
-              <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX"/>
-                <square min="0.0"
-                        max=".50"
-                        f="1.0"
-                        offset="0.0"/>
-              </wave>
-        </task>
-        <task task_label="phi_initializer-roe"
-              variable_label="phi-roe"
-              type="wave">
-              <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX"/>
-                <square min="0.0"
-                        max=".50"
-                        f="1.0"
-                        offset="0.0"/>
-              </wave>
-        </task>
-      </Initialization>
 
       <ExplicitSolver>
 
