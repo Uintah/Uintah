@@ -25,62 +25,70 @@
      <checkpoint cycle = "2" interval = ".01"/>            
    </DataArchiver>
 
-    <Grid>
-      <Level>                                          
-        <Box label = "1">                                
-          <lower>      [0,0,0]       </lower>               
-          <upper>      [1.0,1.0,1.0] </upper>               
-          <resolution> [100,100,100]    </resolution>          
-          <patches>    [1,1,1]       </patches>             
-          <!--<extraCells> [1,0,0]       </extraCells>-->
-        </Box>                                           
-      </Level>                                         
-    </Grid>
+   <Grid>
+     <Level>                                          
+       <Box label = "1">                                
+         <lower>      [0,0,0]       </lower>               
+         <upper>      [0.5,1.0,1.0] </upper>               
+         <resolution> [50,100,100]    </resolution>          
+         <patches>    [1,1,1]       </patches>             
+         <!--<extraCells> [1,0,0]       </extraCells>-->
+       </Box>                                           
+     </Level>                                         
+     <BoundaryConditions>
+       <Face side = "x-">
+         <BCType id = "all" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+        </BCType>
+       </Face>
+       <Face side = "x+">
+         <BCType id = "all" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+       </Face>
+       <Face side = "y-">
+         <BCType id = "all" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+       </Face>                  
+       <Face side = "y+">
+         <BCType id = "all" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+       </Face>
+       <Face side = "z-">
+         <BCType id = "all" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+       </Face>                  
+       <Face side = "z+">
+         <BCType id = "all" label = "Voltage" var = "Dirichlet">
+                <value> 1.0 </value>
+         </BCType>
+        </Face>
+     </BoundaryConditions>
+   </Grid>
 
-    <Solver type = "hypre" />
+   <Solver type = "hypre" />
 
-    <FVM>
-      <delt>.1</delt>
-      <Parameters variable="electrostatic_solver">
-         <!-- CGSolver options -->
-         <norm>     LInfinity  </norm>
-         <criteria> Absolute   </criteria>
+   <FVM>
+     <delt>.1</delt>
+     <Parameters variable="electrostatic_solver">
+       <!-- CGSolver options -->
+       <norm>     LInfinity  </norm>
+       <criteria> Absolute   </criteria>
 
-         <!-- Hypre options -->
-         <solver>         cg  </solver>
-         <preconditioner> pfmg    </preconditioner>
-         <tolerance>      1.e-5  </tolerance>
-         <maxiterations>  7500    </maxiterations>
-         <npre>           1       </npre>
-         <npost>          1       </npost>
-         <skip>           0       </skip>
-         <jump>           0       </jump>
-         <setupFrequency> 3       </setupFrequency>
-      </Parameters>
-    </FVM> 
-
-    <!--
-    <BoundaryConditions>
-      <Face side = "x-">
-        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
-      </Face>
-      <Face side = "x+">
-        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
-      </Face>
-      <Face side = "y-">
-        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
-      </Face>                  
-      <Face side = "y+">
-        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
-      </Face>
-      <Face side = "z-">
-        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
-      </Face>                  
-      <Face side = "z+">
-        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
-      </Face>
-    </BoundaryConditions>
-    -->
-
+       <!-- Hypre options -->
+       <solver>         cg  </solver>
+       <preconditioner> pfmg    </preconditioner>
+       <tolerance>      1.e-5  </tolerance>
+       <maxiterations>  7500    </maxiterations>
+       <npre>           1       </npre>
+       <npost>          1       </npost>
+       <skip>           0       </skip>
+       <jump>           0       </jump>
+       <setupFrequency> 3       </setupFrequency>
+     </Parameters>
+   </FVM> 
 </Uintah_specification>
 

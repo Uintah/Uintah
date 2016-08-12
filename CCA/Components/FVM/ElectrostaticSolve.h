@@ -30,13 +30,13 @@
 #include <Core/Util/Handle.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Components/FVM/FVMLabel.h>
 
 namespace Uintah {
-  class SimpleMaterial;
 
 /**************************************
 
@@ -87,7 +87,7 @@ WARNING
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw);
-    void timeAdvance(const ProcessorGroup*,
+    void buildMatrixAndRhs(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw, DataWarehouse* new_dw,

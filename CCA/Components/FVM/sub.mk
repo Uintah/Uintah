@@ -32,6 +32,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/FVM
 
 SRCS   += $(SRCDIR)/ElectrostaticSolve.cc \
+          $(SRCDIR)/FVMBoundCond.cc       \
           $(SRCDIR)/FVMLabel.cc
 
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
