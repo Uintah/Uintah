@@ -37,7 +37,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Util/DebugStream.h>
 
-#include <stdio.h>
+#include <fstream>
 
 namespace Uintah {
 
@@ -687,6 +687,63 @@ void visit_StripChartCallback(char *val, void *cbdata)
   getTableCMD( val, index, chart, name);
 
   sim->stripChartNames[chart][index] = std::string(name);
+}
+
+//---------------------------------------------------------------------
+// DebugStreamTableCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_DebugStreamTableCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  unsigned int row, column;
+  char value[128];
+
+  getTableCMD( val, row, column, value);
+
+  if( column == 1 )
+  {
+    std::string active( value );
+    
+    simStateP->d_debugStreams[row]->setActive( active == "TRUE" ||
+					       active == "True" ||
+					       active == "true" );
+    
+    if( simStateP->d_debugStreams[row]->outstream == nullptr )
+    {
+      simStateP->d_debugStreams[row]->setFilename( "cout" );
+      simStateP->d_debugStreams[row]->outstream = &std::cout;
+    }
+  }
+  else if( column == 2 )
+  {
+    std::string filename( value );
+
+    if( filename.find("cerr") != std::string::npos )
+    {
+      simStateP->d_debugStreams[row]->setFilename( "cerr" );
+      simStateP->d_debugStreams[row]->outstream = &std::cerr;
+    }
+    else if( filename.find("cout") != std::string::npos )
+    {
+      simStateP->d_debugStreams[row]->setFilename( "cout" );
+      simStateP->d_debugStreams[row]->outstream = &std::cout;
+    }
+    else
+    {
+      simStateP->d_debugStreams[row]->setFilename( filename );
+
+      if( simStateP->d_debugStreams[row]->outstream &&
+	  simStateP->d_debugStreams[row]->outstream != &std::cerr &&
+	  simStateP->d_debugStreams[row]->outstream != &std::cout )
+	delete simStateP->d_debugStreams[row]->outstream;
+
+      simStateP->d_debugStreams[row]->outstream = new std::ofstream(filename);
+    }
+  }
 }
 
 //---------------------------------------------------------------------

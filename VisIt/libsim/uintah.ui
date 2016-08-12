@@ -722,56 +722,135 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>100</y>
+        <y>90</y>
         <width>600</width>
-        <height>110</height>
+        <height>351</height>
        </rect>
       </property>
       <property name="title">
        <string>Simulation Intereaction</string>
       </property>
-      <widget class="QCheckBox" name="StopAtLastTimeStep">
+      <widget class="QGroupBox" name="DebugGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>310</x>
+         <y>20</y>
+         <width>281</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Debug options</string>
+       </property>
+       <widget class="QCheckBox" name="ScrubDataWarehouse">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>170</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Scrub Data Warehouse</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="DebugStreamGroupBox">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>80</y>
-         <width>250</width>
-         <height>20</height>
+         <y>130</y>
+         <width>361</width>
+         <height>181</height>
         </rect>
        </property>
-       <property name="text">
-        <string>Stop execution at the last time step</string>
+       <property name="title">
+        <string>Debug Streams</string>
        </property>
+       <widget class="QTableWidget" name="DebugStreamTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>341</width>
+          <height>141</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Debug Stream</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Active</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Stream</string>
+         </property>
+        </column>
+       </widget>
+       <zorder>DebugStreamTable</zorder>
+       <zorder>DebugGroupBox</zorder>
       </widget>
-      <widget class="QLineEdit" name="StopAtTimeStep">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>40</y>
-         <width>60</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="StopATimeStepLabel">
+      <widget class="QGroupBox" name="TimeStepGroupBox">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>40</y>
-         <width>170</width>
-         <height>20</height>
+         <y>20</y>
+         <width>281</width>
+         <height>101</height>
         </rect>
        </property>
-       <property name="text">
-        <string>Stop execution at time step</string>
+       <property name="title">
+        <string>Time step options</string>
        </property>
+       <widget class="QCheckBox" name="StopAtLastTimeStep">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>70</y>
+          <width>250</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Stop execution at the last time step</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="StopATimeStepLabel">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>170</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Stop execution at time step</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="StopAtTimeStep">
+        <property name="geometry">
+         <rect>
+          <x>180</x>
+          <y>30</y>
+          <width>60</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
       </widget>
      </widget>
      <widget class="QGroupBox" name="StripChartGroupBox">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>240</y>
+        <y>450</y>
         <width>600</width>
         <height>230</height>
        </rect>
@@ -840,32 +919,6 @@
        </column>
       </widget>
      </widget>
-     <widget class="QGroupBox" name="DebugGroupBox">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>490</y>
-        <width>270</width>
-        <height>190</height>
-       </rect>
-      </property>
-      <property name="title">
-       <string>Debug options</string>
-      </property>
-      <widget class="QCheckBox" name="ScrubDataWarehouse">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>30</y>
-         <width>170</width>
-         <height>20</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Scrub Data Warehouse</string>
-       </property>
-      </widget>
-     </widget>
     </widget>
    </widget>
   </widget>
@@ -875,7 +928,7 @@
      <x>0</x>
      <y>0</y>
      <width>650</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

@@ -618,6 +618,9 @@ void visit_Initialize( visit_simulation_data *sim )
   VisItUI_valueChanged("ScrubDataWarehouse",
                        visit_ScrubDataWarehouseCallback, (void*) sim);
 
+  VisItUI_cellChanged("DebugStreamTable",
+                      visit_DebugStreamTableCallback,  (void*) sim);
+
   VisItUI_cellChanged("StripChartTable",
                       visit_StripChartCallback, (void*) sim);
 }

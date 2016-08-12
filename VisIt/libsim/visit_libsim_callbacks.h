@@ -85,6 +85,8 @@ namespace Uintah {
 
   void visit_StripChartCallback (char *val, void *cbdata);
 
+  void visit_DebugStreamTableCallback(char *val, void *cbdata);
+
   void visit_VarModifiedMessage( visit_simulation_data *sim,
                                  std::string name,
                                  std::string value );
