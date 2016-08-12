@@ -24,6 +24,7 @@
 
 
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
+#include <CCA/Components/FVM/FVMBoundCond.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -36,7 +37,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Geometry/Vector.h>
@@ -115,8 +115,8 @@ void ElectrostaticSolve::scheduleComputeStableTimestep(const LevelP& level,
 void
 ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("timeAdvance",
-                           this, &ElectrostaticSolve::timeAdvance,
+  Task* task = scinew Task("buildMatrixAndRhs",
+                           this, &ElectrostaticSolve::buildMatrixAndRhs,
                            level, sched.get_rep());
   task->computes(lb->ccESPotentialMatrix);
   task->computes(lb->ccRHS_ESPotential);
@@ -148,12 +148,14 @@ void ElectrostaticSolve::initialize(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
-void ElectrostaticSolve::timeAdvance(const ProcessorGroup* pg,
+void ElectrostaticSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw, DataWarehouse* new_dw,
                            LevelP level, Scheduler* sched)
 {
+  FVMBoundCond bc;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
@@ -188,6 +190,7 @@ void ElectrostaticSolve::timeAdvance(const ProcessorGroup* pg,
     //IntVector high_interior = high_idx - high_offset;
     std::cout << "low_offset: " << low_offset << std::endl;
     std::cout << "high_offset: " << high_offset << std::endl;
+    std::cout << "material size: " << matls->size() << std::endl;
 
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -195,7 +198,7 @@ void ElectrostaticSolve::timeAdvance(const ProcessorGroup* pg,
       CCVariable<Stencil7> A;
       CCVariable<double> rhs;
       new_dw->allocateAndPut(A,   lb->ccESPotentialMatrix, matl, patch);
-      new_dw->allocateAndPut(rhs, lb->ccRHS_ESPotential,    matl, patch);
+      new_dw->allocateAndPut(rhs, lb->ccRHS_ESPotential,   matl, patch);
 
       // iterate over cells;
       for(CellIterator iter(low_idx, high_idx); !iter.done(); iter++){
@@ -208,7 +211,7 @@ void ElectrostaticSolve::timeAdvance(const ProcessorGroup* pg,
         A_tmp.t = t;   A_tmp.b = b;
         rhs[c] = 0;
 
-
+        /**
         // x minus face cells
         if(c.x() == low_idx.x() && low_offset.x() == 1){
           A_tmp.w = 0;
@@ -244,7 +247,9 @@ void ElectrostaticSolve::timeAdvance(const ProcessorGroup* pg,
           A_tmp.t = 0;
           rhs[c] -= 0;
         }
+        **/
       } // End CellIterator
+      bc.setESBoundaryConditions(patch, matl, A, rhs);
     } // End Materials
   } // End patches
 }
