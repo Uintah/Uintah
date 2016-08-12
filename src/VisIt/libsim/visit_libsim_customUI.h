@@ -68,6 +68,8 @@ void visit_SetGridInfo       ( visit_simulation_data *sim );
 void visit_SetRuntimeStats   ( visit_simulation_data *sim );
 void visit_SetMPIStats       ( visit_simulation_data *sim );
 
+void visit_SetDebugStreams   ( visit_simulation_data *sim );
+
 void visit_SetStripChartNames( visit_simulation_data *sim );
 void visit_SetStripChartValue( visit_simulation_data *sim,
                                std::string name,

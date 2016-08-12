@@ -325,7 +325,6 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
   }
   else
     VisItUI_setValueS( "MinMaxVariableGroupBox", "HIDE_WIDGET", 0);
-
 }
 
 
@@ -611,4 +610,41 @@ void visit_SetStripChartValue( visit_simulation_data *sim,
   }
 }
   
+//---------------------------------------------------------------------
+// SetDebugStreams
+//    Set the debug streams so they can be displayed in the Custon UI
+//---------------------------------------------------------------------
+void visit_SetDebugStreams( visit_simulation_data *sim )
+{
+  SimulationStateP simStateP  = sim->simController->getSimulationStateP();
+
+  VisItUI_setTableValueS("DebugStreamTable",
+                         -1, -1, "CLEAR_TABLE", 0);
+
+  if( simStateP->d_debugStreams.size() )
+  {
+    VisItUI_setValueS( "DebugStreamGroupBox", "SHOW_WIDGET", 1);
+
+    unsigned int nStreams = simStateP->d_debugStreams.size();
+    
+    for( unsigned int i=0; i<nStreams; ++i )
+    {
+      // Add in the stream and state.
+      std::string name     = simStateP->d_debugStreams[i]->getName();
+      std::string filename = simStateP->d_debugStreams[i]->getFilename();
+      bool        active   = simStateP->d_debugStreams[i]->active();
+
+      VisItUI_setTableValueS("DebugStreamTable",
+			     i, 0, name.c_str(),  0);
+      VisItUI_setTableValueS("DebugStreamTable",
+			     i, 1, (active ? "true":"false"), 1);
+      VisItUI_setTableValueS("DebugStreamTable",
+			     i, 2, filename.c_str(), 1);
+    }
+  }
+  else
+    VisItUI_setValueS( "DebugStreamGroupBox", "HIDE_WIDGET", 0);
+}
+
+
 } // End namespace Uintah

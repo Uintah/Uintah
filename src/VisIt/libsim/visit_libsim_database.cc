@@ -41,8 +41,6 @@
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 
-#include <Core/Util/DebugStream.h>
-
 #include "StandAlone/tools/uda2vis/udaData.h"
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
@@ -646,6 +644,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
     VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
     VisItUI_setValueI("ScrubDataWarehouse", sim->scrubDataWarehouse, 1);
+
+    // Set the custom UI debug stream table
+    visit_SetDebugStreams( sim );
 
     // if( sim->message.size() )
     // {
