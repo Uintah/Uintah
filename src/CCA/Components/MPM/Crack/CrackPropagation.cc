@@ -339,7 +339,7 @@ void Crack::addComputesAndRequiresConstructNewCrackFrontElems(Task* t,
                                 const MaterialSet* /*matls*/) const
 {
   // delT will be used to calculate crack propagation velocity  
-   t->requires(Task::OldDW, d_sharedState->get_delt_label());
+   t->requires(Task::OldDW, d_sharedState->getDeltLabel());
 }
 
 void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
@@ -425,7 +425,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
           /*      
           double time=d_sharedState->getElapsedTime();
           delt_vartype delT;
-          old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+          old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
           if(sp) { // Record crack incremental and time instant 
             cfSegDis[m][2*i]=(p1p-p1).length();
             cfSegTime[m][2*i]=time-delT;            

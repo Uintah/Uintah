@@ -102,7 +102,7 @@ void UnifiedSchedulerTest::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("UnifiedSchedulerTest::computeStableTimestep", this, &UnifiedSchedulerTest::computeStableTimestep);
 
   task->requires(Task::NewDW, residual_label);
-  task->computes(sharedState_->get_delt_label(), level.get_rep());
+  task->computes(sharedState_->getDeltLabel(), level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
@@ -140,7 +140,7 @@ void UnifiedSchedulerTest::computeStableTimestep(const ProcessorGroup* pg,
     new_dw->get(residual, residual_label);
     cerr << "Residual=" << residual << '\n';
   }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
+  new_dw->put(delt_vartype(delt_), sharedState_->getDeltLabel(), getLevel(patches));
 }
 
 //______________________________________________________________________
