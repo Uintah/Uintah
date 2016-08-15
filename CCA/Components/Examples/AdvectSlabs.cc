@@ -107,7 +107,7 @@ void AdvectSlabs::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimestep",
                            this, &AdvectSlabs::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
+  task->computes(sharedState_->getDeltLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
@@ -129,7 +129,7 @@ void AdvectSlabs::computeStableTimestep(const ProcessorGroup*,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
+  new_dw->put(delt_vartype(delt_), sharedState_->getDeltLabel(),getLevel(patches));
 }
 
 void AdvectSlabs::initialize(const ProcessorGroup*,

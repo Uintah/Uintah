@@ -163,7 +163,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pSizeLabel);
   t->computes(lb->pDispGradsLabel);
   t->computes(lb->pStrainEnergyDensityLabel);
-  t->computes(d_sharedState->get_delt_label(),level.get_rep());
+  t->computes(d_sharedState->getDeltLabel(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
   // Debugging Scalar
@@ -463,7 +463,7 @@ void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
     t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
-  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
+  t->computes(d_sharedState->getDeltLabel(),getLevel(patches));
   t->computes(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);
@@ -639,7 +639,7 @@ void FractureMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &FractureMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
@@ -696,7 +696,7 @@ void FractureMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                     this, &FractureMPM::setGridBoundaryConditions);
                   
   const MaterialSubset* mss = matls->getUnion();
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
   
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
@@ -728,7 +728,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
 
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
   Ghost::GhostType   gac = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
@@ -1847,7 +1847,7 @@ void FractureMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
+      old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches));
 
       // Get required variables for this patch
       constNCVariable<Vector>  velocity;
@@ -1921,7 +1921,7 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
     delt_vartype delT;            
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
                       
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2180,7 +2180,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
     bool combustion_problem=false;
 
     Material* reactant;
