@@ -27,6 +27,7 @@
 
 #include <Core/Util/InfoMapper.h>
 #include <Core/Util/RefCounted.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -410,6 +411,8 @@ public:
 
   void setVisIt( bool val ) { d_doVisIt = val; }
   bool getVisIt() { return d_doVisIt; }
+
+  std::vector< DebugStream * > d_debugStreams;
   
 private:
   bool d_doVisIt;
