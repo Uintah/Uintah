@@ -912,12 +912,12 @@ void FractureMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
     task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
   }
   else {
-    task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(),
+    task->requires(Task::NewDW, d_sharedState->getRefineFlagLabel(),
                    0, Task::FineLevel, d_sharedState->refineFlagMaterials(),
                    Task::NormalDomain, Ghost::None, 0);
   }
-  task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
-  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->getRefineFlagLabel(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 
 }
@@ -936,8 +936,8 @@ void FractureMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   Task* task = scinew Task("errorEstimate", this, &FractureMPM::initialErrorEstimate);
   task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
 
-  task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
-  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->getRefineFlagLabel(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
@@ -2420,9 +2420,9 @@ FractureMPM::initialErrorEstimate(const ProcessorGroup*,
 
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
-    new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+    new_dw->getModifiable(refineFlag, d_sharedState->getRefineFlagLabel(),
                           0, patch);
-    new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+    new_dw->get(refinePatchFlag, d_sharedState->getRefinePatchFlagLabel(),
                 0, patch);
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
@@ -2476,9 +2476,9 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
 
-      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+      new_dw->getModifiable(refineFlag, d_sharedState->getRefineFlagLabel(),
                             0, coarsePatch);
-      new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+      new_dw->get(refinePatchFlag, d_sharedState->getRefinePatchFlagLabel(),
                   0, coarsePatch);
         
       PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
@@ -2491,7 +2491,7 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
 
         // Get the particle data
         constCCVariable<int> fineErrorFlag;
-        new_dw->get(fineErrorFlag, d_sharedState->get_refineFlag_label(), 0,
+        new_dw->get(fineErrorFlag, d_sharedState->getRefineFlagLabel(), 0,
                     finePatch, Ghost::None, 0);
 
         IntVector fl(finePatch->getExtraCellLowIndex());
