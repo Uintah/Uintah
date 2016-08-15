@@ -145,8 +145,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->stopAtTimeStep = 0;
   sim->stopAtLastTimeStep = 0;
 
-  sim->scrubDataWarehouse = 1;
-
   for( int i=0; i<5; ++i )
     for( int j=0; j<5; ++j )
       sim->stripChartNames[i][j] = std::string("");
@@ -615,8 +613,8 @@ void visit_Initialize( visit_simulation_data *sim )
   VisItUI_valueChanged("StopAtLastTimeStep",
                        visit_StopAtLastTimeStepCallback, (void*) sim);
 
-  VisItUI_valueChanged("ScrubDataWarehouse",
-                       visit_ScrubDataWarehouseCallback, (void*) sim);
+  VisItUI_cellChanged("StateVariableTable",
+                      visit_StateVariableTableCallback, (void*) sim);
 
   VisItUI_cellChanged("DebugStreamTable",
                       visit_DebugStreamTableCallback,  (void*) sim);

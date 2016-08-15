@@ -104,13 +104,13 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     // Output interval based on time.
     if( output->getOutputInterval() > 0 )
     {
-      name = simStateP->get_outputInterval_label()->getName();
+      name = simStateP->getOutputIntervalLabel()->getName();
       val = output->getOutputInterval();
     }
     // Output interval based on timestep.
     else
     {
-      name = simStateP->get_outputTimestepInterval_label()->getName();
+      name = simStateP->getOutputTimestepIntervalLabel()->getName();
       val = output->getOutputTimestepInterval();
     }
 
@@ -124,13 +124,13 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
     // Checkpoint interval based on times.
     if( output->getCheckpointInterval() > 0 )
     {
-      name = simStateP->get_checkpointInterval_label()->getName();
+      name = simStateP->getCheckpointIntervalLabel()->getName();
       val = output->getCheckpointInterval();
     }
       // Checkpoint interval based on timestep.
     else
     {
-      name = simStateP->get_checkpointTimestepInterval_label()->getName();
+      name = simStateP->getCheckpointTimestepIntervalLabel()->getName();
       val = output->getCheckpointTimestepInterval();
     }
 
@@ -336,12 +336,11 @@ void visit_SetUPSVars( visit_simulation_data *sim )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
-  if( simStateP->d_interactiveVars.size() )
+  if( simStateP->d_UPSVars.size() )
   {
     VisItUI_setValueS( "UPSVariableGroupBox", "SHOW_WIDGET", 1);
 
-    std::vector< SimulationState::interactiveVar > &vars =
-      simStateP->d_interactiveVars;
+    std::vector< SimulationState::interactiveVar > &vars = simStateP->d_UPSVars;
       
     for( unsigned int i=0; i<vars.size(); ++i )
     {
@@ -353,17 +352,33 @@ void visit_SetUPSVars( visit_simulation_data *sim )
       
       switch( var.type )
       {
-      case Uintah::TypeDescription::int_type:
-        VisItUI_setTableValueI("UPSVariableTable", i, 1, *(var.Ivalue), 1);
+        case Uintah::TypeDescription::bool_type:
+        {
+	  bool *val = (bool*) var.value;
+	  VisItUI_setTableValueI("UPSVariableTable", i, 1, *val, 1);
+	}
         break;
             
-      case Uintah::TypeDescription::double_type:
-        VisItUI_setTableValueD("UPSVariableTable", i, 1, *(var.Dvalue), 1);
+        case Uintah::TypeDescription::int_type:
+	{
+	  int *val = (int*) var.value;
+	  VisItUI_setTableValueI("UPSVariableTable", i, 1, *val, 1);
+	}
         break;
             
-      case Uintah::TypeDescription::Vector:
-        VisItUI_setTableValueV("UPSVariableTable", i, 1,
-                               var.Vvalue->x(), var.Vvalue->y(), var.Vvalue->z(), 1);
+        case Uintah::TypeDescription::double_type:
+	{
+	  double *val = (double*) var.value;
+	  VisItUI_setTableValueD("UPSVariableTable", i, 1, *val, 1);
+	}
+        break;
+            
+        case Uintah::TypeDescription::Vector:
+	{
+	  Vector *val = (Vector*) var.value;
+	  VisItUI_setTableValueV("UPSVariableTable", i, 1,
+				 val->x(), val->y(), val->z(), 1);
+	}
         break;
             
       default:
@@ -610,6 +625,70 @@ void visit_SetStripChartValue( visit_simulation_data *sim,
   }
 }
   
+//---------------------------------------------------------------------
+// SetStateVars
+//    Set the state vars that the user can interact with in the Custon UI
+//---------------------------------------------------------------------
+void visit_SetStateVars( visit_simulation_data *sim )
+{
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  if( simStateP->d_UPSVars.size() )
+  {
+    VisItUI_setValueS( "StateVariableGroupBox", "SHOW_WIDGET", 1);
+
+    std::vector< SimulationState::interactiveVar > &vars =
+      simStateP->d_stateVars;
+      
+    for( unsigned int i=0; i<vars.size(); ++i )
+    {
+      SimulationState::interactiveVar &var = vars[i];
+      
+      var.modified = false;
+      
+      VisItUI_setTableValueS("StateVariableTable", i, 0, var.name.c_str(), 0);
+      
+      switch( var.type )
+      {
+        case Uintah::TypeDescription::bool_type:
+        {
+	  bool *val = (bool*) var.value;
+	  VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
+	}
+        break;
+            
+        case Uintah::TypeDescription::int_type:
+	{
+	  int *val = (int*) var.value;
+	  VisItUI_setTableValueI("StateVariableTable", i, 1, *val, 1);
+	}
+        break;
+            
+        case Uintah::TypeDescription::double_type:
+	{
+	  double *val = (double*) var.value;
+	  VisItUI_setTableValueD("StateVariableTable", i, 1, *val, 1);
+	}
+        break;
+            
+        case Uintah::TypeDescription::Vector:
+	{
+	  Vector *val = (Vector*) var.value;
+	  VisItUI_setTableValueV("StateVariableTable", i, 1,
+				 val->x(), val->y(), val->z(), 1);
+	}
+        break;
+            
+      default:
+        throw InternalError(" invalid data type", __FILE__, __LINE__); 
+      }
+    }
+  }
+  else
+    VisItUI_setValueS( "StateVariableGroupBox", "HIDE_WIDGET", 0);
+}
+
+
 //---------------------------------------------------------------------
 // SetDebugStreams
 //    Set the debug streams so they can be displayed in the Custon UI

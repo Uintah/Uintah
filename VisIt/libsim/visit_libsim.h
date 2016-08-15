@@ -115,8 +115,6 @@ typedef struct
   int  stopAtTimeStep;
   bool stopAtLastTimeStep;
 
-  bool scrubDataWarehouse;
-  
   // The first row is the strip chart name.
   std::string stripChartNames[5][5];
   
