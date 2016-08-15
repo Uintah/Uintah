@@ -682,8 +682,8 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  d_matl_sub, gac,1);
   
   t->computes(d_scalar->mag_grad_scalarLabel, d_matl_sub);
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->getRefineFlagLabel(),      d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials());
  
   // define the material set of 0 and whatever the passive scalar index is 
   // don't add matl 0 twice 
@@ -714,8 +714,8 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
-    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    const VarLabel* refineFlagLabel = d_sharedState->getRefineFlagLabel();
+    const VarLabel* refinePatchLabel= d_sharedState->getRefinePatchFlagLabel();
     
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      

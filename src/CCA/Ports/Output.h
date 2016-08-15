@@ -144,10 +144,10 @@ class SimulationState;
     virtual int getNextCheckpointTimestep() const = 0;
       
     // Returns true if data will be output this timestep
-    virtual bool isOutputTimestep() const = 0;
+    virtual bool getOutputTimestep() const = 0;
 
     // Returns true if data will be checkpointed this timestep
-    virtual bool isCheckpointTimestep() const = 0;
+    virtual bool getCheckpointTimestep() const = 0;
 
     // Returns true if the label is being saved
     virtual bool isLabelSaved( const std::string & label ) const = 0;

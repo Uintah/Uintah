@@ -225,7 +225,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   }
 
-  task->requires( Task::OldDW,_shared_state->get_delt_label(), Ghost::None, 0);
+  task->requires( Task::OldDW,_shared_state->getDeltLabel(), Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
@@ -249,7 +249,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     HTVariables vars;
     vars.time = _shared_state->getElapsedTime();  
     delt_vartype DT;
-    old_dw->get(DT, _shared_state->get_delt_label());
+    old_dw->get(DT, _shared_state->getDeltLabel());
     vars.delta_t = DT;
     vars.t_ave_start = _t_ave_start;  
 

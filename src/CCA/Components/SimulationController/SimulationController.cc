@@ -76,11 +76,11 @@ extern Uintah::DebugStream amrout;
 
 namespace Uintah {
 
-double
-stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
-{
-  return sqrt( (n*sum_of_x_squares - sum_of_x*sum_of_x) / (n*n) );
-}
+// double
+// stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
+// {
+//   return sqrt( (n*sum_of_x_squares - sum_of_x*sum_of_x) / (n*n) );
+// }
 
 SimulationController::SimulationController( const ProcessorGroup * myworld,
                                                   bool             doAMR,
@@ -98,15 +98,12 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_restarting             = false;
   d_reduceUda              = false;
   d_doMultiTaskgraphing    = false;
-  d_usingLocalFileSystems  = false;
   d_archive                = nullptr;
   d_sim                    = 0;
 
   d_grid_ps                = d_ups->findBlock( "Grid" );
 
-#ifdef HAVE_VISIT
-  d_doVisIt                = false;
-#endif
+  d_sharedState            = scinew SimulationState( d_ups );
 
 #ifdef USE_PAPI_COUNTERS
   /*
@@ -264,15 +261,6 @@ SimulationController::setReduceUdaFlags( const string & fromDir )
 //
 
 void
-SimulationController::setUseLocalFileSystems()
-{
-  d_usingLocalFileSystems = true;
-}
-
-//______________________________________________________________________
-//
-
-void
 SimulationController::doRestart( const string & restartFromDir, int timestep,
                                  bool fromScratch, bool removeOldDir )
 {
@@ -289,14 +277,6 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 void
 SimulationController::preGridSetup( void )
 {
-  d_sharedState = scinew SimulationState( d_ups );
-
-#ifdef HAVE_VISIT
-  d_sharedState->setVisIt( d_doVisIt );
-#endif
-
-  d_sharedState->d_usingLocalFileSystems = d_usingLocalFileSystems;
-
   d_output = dynamic_cast<Output*>(getPort("output"));
     
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
@@ -316,7 +296,7 @@ SimulationController::preGridSetup( void )
   
   // Parse time struct
   d_timeinfo = scinew SimulationTime( d_ups );
-  d_sharedState->d_simTime = d_timeinfo;
+  d_sharedState->setSimTime(d_timeinfo);
 }
 
 //______________________________________________________________________
@@ -468,7 +448,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
     // Set prevDelt to what it was in the last simulation.  If in the last 
     // sim we were clamping delt based on the values of prevDelt, then
     // delt will be off if it doesn't match.
-    d_sharedState->d_prev_delt = d_archive->getOldDelt( d_restartIndex );
+    d_sharedState->setPrevDelt( d_archive->getOldDelt( d_restartIndex ) );
 
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
     // Tell the scheduler the generation of the re-started simulation.
@@ -480,15 +460,15 @@ SimulationController::postGridSetup( GridP& grid, double& t )
     if (d_timeinfo->override_restart_delt != 0) {
       double newdelt = d_timeinfo->override_restart_delt;
       proc0cout << "Overriding restart delt with " << newdelt << "\n";
-      d_scheduler->get_dw(1)->override( delt_vartype(newdelt), d_sharedState->get_delt_label() );
+      d_scheduler->get_dw(1)->override( delt_vartype(newdelt), d_sharedState->getDeltLabel() );
 
       double delt_fine = newdelt;
       for( int i = 0; i < grid->numLevels(); i++ ) {
         const Level* level = grid->getLevel(i).get_rep();
-        if( i != 0 && !d_sharedState->isLockstepAMR() ) {
+        if( i != 0 && !d_sharedState->getLockstepAMR() ) {
           delt_fine /= level->getRefinementRatioMaxDim();
         }
-        d_scheduler->get_dw(1)->override( delt_vartype(delt_fine), d_sharedState->get_delt_label(), level );
+        d_scheduler->get_dw(1)->override( delt_vartype(delt_fine), d_sharedState->getDeltLabel(), level );
       }
     }
     // This delete is an enigma... I think if it is called then memory is not leaked, but sometimes if it
@@ -659,30 +639,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
      runTimeStats.getAverage(SimulationState::TaskWaitThreadTime));
   
   // Calculate percentage of time spent in overhead.
-  double percent_overhead = overhead_time / total_time;
-  
-  //set the overhead sample
-  if( d_n > 2 ) { // Ignore the first 3 samples, they are not good samples.
-    d_sharedState->overhead[d_sharedState->overheadIndex] = percent_overhead;
-    // Increment the overhead index
-
-    double overhead = 0;
-    double weight = 0;
-
-    int t = min( d_n - 2, OVERHEAD_WINDOW );
-    //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
-    for( int i = 0; i < t; i++ ) {
-      overhead += d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW] * d_sharedState->overheadWeights[i];
-      weight += d_sharedState->overheadWeights[i];
-    }
-
-    d_sharedState->overheadAvg = overhead/weight; 
-    d_sharedState->overheadIndex =
-      (d_sharedState->overheadIndex+1) % OVERHEAD_WINDOW;
-
-    // Increase overhead size if needed.
-  } 
-
+  d_sharedState->calculateOverhead( d_n, overhead_time / total_time);
+ 
   // calculate mean/std dev
   //double stdDev = 0;
   double mean = 0;
@@ -788,9 +746,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	}
       }
       
-      if( d_n > 2 && !std::isnan(d_sharedState->overheadAvg) ) {
+      if( d_n > 2 && !std::isnan(d_sharedState->getOverheadAvg()) ) {
         stats << "  Percent Time in overhead:"
-              << d_sharedState->overheadAvg*100 <<  "\n";
+              << d_sharedState->getOverheadAvg()*100 <<  "\n";
       }
     }
 

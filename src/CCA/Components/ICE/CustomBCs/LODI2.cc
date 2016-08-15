@@ -340,7 +340,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
 /*`==========TESTING==========*/
   delt_vartype delT;
   const Level* level   = patch->getLevel();
-  old_dw->get(delT, sharedState->get_delt_label(),level);
+  old_dw->get(delT, sharedState->getDeltLabel(),level);
   lv->delT = delT; 
 /*===========TESTING==========`*/
   

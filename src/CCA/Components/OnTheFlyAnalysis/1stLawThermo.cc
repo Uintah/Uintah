@@ -348,7 +348,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   delt_vartype delT;
   
   old_dw->get(analysisTime, FL_lb->lastCompTimeLabel);
-  old_dw->get(delT, d_sharedState->get_delt_label(),level);
+  old_dw->get(delT, d_sharedState->getDeltLabel(),level);
   
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  

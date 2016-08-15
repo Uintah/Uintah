@@ -223,7 +223,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  bulletproofing
-  if(d_doAMR && !d_sharedState->isLockstepAMR()){
+  if(d_doAMR && !d_sharedState->getLockstepAMR()){
     ostringstream msg;
     msg << "\n ERROR: You must add \n"
         << " <useLockStep> true </useLockStep> \n"
@@ -384,7 +384,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 {
   MALLOC_TRACE_TAG_SCOPE("MPMICE::scheduleTimeAdvance()");
   // Only do scheduling on level 0 for lockstep AMR
-  if(inlevel->getIndex() > 0 && d_sharedState->isLockstepAMR())
+  if(inlevel->getIndex() > 0 && d_sharedState->getLockstepAMR())
     return;
 
   // If we have a finer level, then assume that we are doing multilevel MPMICE
@@ -902,7 +902,7 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
 
   Ghost::GhostType  gn = Ghost::None;
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label(),getLevel(patches));
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel(),getLevel(patches));
   t->requires(Task::NewDW, Ilb->mass_L_CCLabel,         gn);
   t->requires(Task::NewDW, Ilb->mom_L_CCLabel,          gn);  
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gn);  
@@ -952,7 +952,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
                                                                                 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label(),getLevel(patches));
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel(),getLevel(patches));
   t->requires(Task::NewDW, Ilb->dVdt_CCLabel,       gan,1);
   t->requires(Task::NewDW, Ilb->dTdt_CCLabel,       gan,1);
   
@@ -987,7 +987,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t = scinew Task("MPMICE::computeEquilibrationPressure",
             this, &MPMICE::computeEquilibrationPressure, press_matl);
   
-  t->requires(Task::OldDW, d_sharedState->get_delt_label(),getLevel(patches));
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel(),getLevel(patches));
 
                               // I C E
   Ghost::GhostType  gn  = Ghost::None;
@@ -1584,7 +1584,7 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->getDeltLabel());
 
     for (int m = 0; m < numMPMMatls; m++) {
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1650,7 +1650,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->getDeltLabel());
 
     for (int m = 0; m < numMPMMatls; m++) {
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2401,7 +2401,7 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
   d_ice->scheduleRefineInterface(fineLevel, scheduler, needOld, needNew);
   d_mpm->scheduleRefineInterface(fineLevel, scheduler, needOld, needNew);
 
-  if(fineLevel->getIndex() > 0 && d_sharedState->isCopyDataTimestep() &&
+  if(fineLevel->getIndex() > 0 && d_sharedState->getCopyDataTimestep() &&
      d_mpm->flags->doMPMOnLevel(fineLevel->getIndex(),
                                 fineLevel->getGrid()->numLevels())) {
     cout_doing << d_myworld->myrank() 

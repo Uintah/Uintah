@@ -237,7 +237,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   }
 
-  tsk->requires( Task::OldDW, _field_labels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires( Task::OldDW, _field_labels->d_sharedState->getDeltLabel(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -328,7 +328,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     } 
 
     delt_vartype DT; 
-    old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
+    old_dw->get(DT, _field_labels->d_sharedState->getDeltLabel()); 
     double dt = DT;
     Box patchInteriorBox = patch->getBox(); 
 

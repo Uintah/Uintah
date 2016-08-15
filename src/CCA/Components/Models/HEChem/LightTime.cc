@@ -376,8 +376,8 @@ void LightTime::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, reactedFractionLabel,   react_matl, gac, 1);
   
   t->computes(mag_grad_Fr_Label, react_matl);
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->getRefineFlagLabel(),      d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials());
   
   sched->addTask(t, coarseLevel->eachPatch(), mymatls);
 }
@@ -395,8 +395,8 @@ void LightTime::errorEstimate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
-    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    const VarLabel* refineFlagLabel = d_sharedState->getRefineFlagLabel();
+    const VarLabel* refinePatchLabel= d_sharedState->getRefinePatchFlagLabel();
     
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      

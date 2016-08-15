@@ -149,7 +149,7 @@ BrownSootFormation_nd::computeSource( const ProcessorGroup* pc,
       
     /// Obtaining time step length
     delt_vartype DT;
-    old_dw->get(DT, _shared_state->get_delt_label());
+    old_dw->get(DT, _shared_state->getDeltLabel());
     
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         

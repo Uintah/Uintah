@@ -184,7 +184,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 
         //__________________________________
         //  bulletproofing
-        if(!d_sharedState->isLockstepAMR()){
+        if(!d_sharedState->getLockstepAMR()){
           ostringstream msg;
           msg << "\n ERROR: You must add \n"
               << " <useLockStep> true </useLockStep> \n"
@@ -339,7 +339,7 @@ void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP
   Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this,
                             &RMCRT_Test::computeStableTimestep );
 
-  task->computes( d_sharedState->get_delt_label(),level.get_rep() );
+  task->computes( d_sharedState->getDeltLabel(),level.get_rep() );
 
   scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
@@ -882,7 +882,7 @@ void RMCRT_Test::computeStableTimestep (const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   double delt = level->dCell().x();
-  new_dw->put(delt_vartype(delt), d_sharedState->get_delt_label(), level);
+  new_dw->put(delt_vartype(delt), d_sharedState->getDeltLabel(), level);
 }
 
 //______________________________________________________________________

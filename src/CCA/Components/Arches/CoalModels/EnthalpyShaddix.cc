@@ -358,7 +358,7 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
     tsk->requires( which_dw, _volq_varlabel, Ghost::None, 0);
     tsk->requires( which_dw, _abskp_varlabel, Ghost::None, 0);
   }
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label());
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->getDeltLabel());
 
   // require particle phase variables
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
@@ -395,7 +395,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_sharedState->getDeltLabel());
     double dt = DT;
 
     CCVariable<double> heat_rate;

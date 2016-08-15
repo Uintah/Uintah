@@ -250,7 +250,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     int getMaxLevelOffset() { return m_max_level_offset; }
 
-    bool isCopyDataTimestep() { return m_shared_state->isCopyDataTimestep() || m_is_init_timestep; }
+    bool getCopyDataTimestep() { return m_shared_state->getCopyDataTimestep() || m_is_init_timestep; }
 
     void setInitTimestep( bool isInitTimestep ) { m_is_init_timestep = isInitTimestep; }
 

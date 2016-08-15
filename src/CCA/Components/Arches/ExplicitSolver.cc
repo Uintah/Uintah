@@ -847,7 +847,7 @@ ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
     tsk->requires(Task::NewDW, d_celltype_label,  gac, 1);
   }
 
-  tsk->computes(d_sharedState->get_delt_label(),level.get_rep());
+  tsk->computes(d_sharedState->getDeltLabel(),level.get_rep());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -1022,12 +1022,12 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 
 
       delta_t = delta_t2;
-      new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label(), level);
+      new_dw->put(delt_vartype(delta_t),  d_sharedState->getDeltLabel(), level);
 
     }
   } else { // if not on the arches level
 
-    new_dw->put(delt_vartype(9e99),  d_sharedState->get_delt_label(),level);
+    new_dw->put(delt_vartype(9e99),  d_sharedState->getDeltLabel(),level);
 
   }
 }
@@ -2209,7 +2209,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,  gn,  0);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
-    tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+    tsk->requires(Task::OldDW, d_lab->d_sharedState->getDeltLabel());
 
     if ( d_solvability ){
       std::stringstream strRKStage;
@@ -2316,7 +2316,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     IntVector idxHi = patch->getFortranCellHighIndex();
 
     delt_vartype delT;
-    old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_lab->d_sharedState->getDeltLabel() );
     double dt = delT;
 
     // Get the PerPatch CellInformation data
@@ -2876,7 +2876,7 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   }else{
     parent_old_dw = Task::OldDW;
   }
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->getDeltLabel());
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -2944,7 +2944,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   }
 
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->getDeltLabel() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 

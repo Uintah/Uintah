@@ -52,12 +52,12 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     VarLabel::create("delT", delt_vartype::getTypeDescription() );
 
   nonconstDelt->allowMultipleComputes();
-  delt_label = nonconstDelt;
+  deltLabel = nonconstDelt;
 
-  refineFlag_label      = VarLabel::create("refineFlag",     CCVariable<int>::getTypeDescription());
-  oldRefineFlag_label   = VarLabel::create("oldRefineFlag",  CCVariable<int>::getTypeDescription());
-  refinePatchFlag_label = VarLabel::create("refinePatchFlag",PerPatch<int>::getTypeDescription());
-  switch_label          = VarLabel::create("switchFlag",     max_vartype::getTypeDescription());
+  refineFlagLabel      = VarLabel::create("refineFlag",     CCVariable<int>::getTypeDescription());
+  oldRefineFlagLabel   = VarLabel::create("oldRefineFlag",  CCVariable<int>::getTypeDescription());
+  refinePatchFlagLabel = VarLabel::create("refinePatchFlag",PerPatch<int>::getTypeDescription());
+  switchLabel          = VarLabel::create("switchFlag",     max_vartype::getTypeDescription());
 
   //__________________________________
   //  These variables can be modified by a component.
@@ -82,14 +82,14 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   nonconstCheckpointInv->allowMultipleComputes();
   nonconstCheckpointTimestepInv->allowMultipleComputes();
 
-  outputInterval_label             = nonconstOutputInv;
-  outputTimestepInterval_label     = nonconstOutputTimestepInv;
+  outputIntervalLabel             = nonconstOutputInv;
+  outputTimestepIntervalLabel     = nonconstOutputTimestepInv;
 
-  checkpointInterval_label         = nonconstCheckpointInv;
-  checkpointTimestepInterval_label = nonconstCheckpointTimestepInv;
+  checkpointIntervalLabel         = nonconstCheckpointInv;
+  checkpointTimestepIntervalLabel = nonconstCheckpointTimestepInv;
 
   //__________________________________
-  d_elapsed_time = 0.0;
+  d_elapsedTime = 0.0;
 
   d_adjustDelT                = true;
   d_lockstepAMR               = false;
@@ -112,11 +112,11 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   
   max_matl_index    = 0;
   refine_flag_matls = 0;
-  d_isRegridTimestep = 0;
+  d_RegridTimestep  = false;
   d_simTime         = 0;
   d_numDims         = 0;
   
-  d_isCopyDataTimestep = 0;
+  d_CopyDataTimestep = false;
   d_recompileTaskGraph = false;
   d_switchState        = false;
   d_activeDims[0]      = d_activeDims[1] = d_activeDims[2] = 0;
@@ -124,12 +124,13 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_usingLocalFileSystems = false;
   
   //initialize the overhead percentage
-  overheadIndex=0;
-  overheadAvg=0;
-  for(int i=0;i<OVERHEAD_WINDOW;i++){
-    double x=i/(OVERHEAD_WINDOW/2);
-    overheadWeights[i]=8-x*x*x;
-    overhead[i]=0;
+  d_overheadIndex = 0;
+  d_overheadAvg = 0;
+
+  for(int i=0; i<OVERHEAD_WINDOW; ++i){
+    double x = i / (OVERHEAD_WINDOW/2);
+    d_overheadWeights[i] = 8 - x*x*x;
+    d_overhead[i] = 0;
   }
 
   std::string timeStr("seconds");
@@ -436,15 +437,15 @@ void SimulationState::clearMaterials()
 //
 SimulationState::~SimulationState()
 {
-  VarLabel::destroy(delt_label);
-  VarLabel::destroy(refineFlag_label);
-  VarLabel::destroy(oldRefineFlag_label);
-  VarLabel::destroy(refinePatchFlag_label);
-  VarLabel::destroy(switch_label);
-  VarLabel::destroy(outputInterval_label);
-  VarLabel::destroy(outputTimestepInterval_label);
-  VarLabel::destroy(checkpointInterval_label);
-  VarLabel::destroy(checkpointTimestepInterval_label);
+  VarLabel::destroy(deltLabel);
+  VarLabel::destroy(refineFlagLabel);
+  VarLabel::destroy(oldRefineFlagLabel);
+  VarLabel::destroy(refinePatchFlagLabel);
+  VarLabel::destroy(switchLabel);
+  VarLabel::destroy(outputIntervalLabel);
+  VarLabel::destroy(outputTimestepIntervalLabel);
+  VarLabel::destroy(checkpointIntervalLabel);
+  VarLabel::destroy(checkpointTimestepIntervalLabel);
   clearMaterials();
 
   for (unsigned i = 0; i < old_matls.size(); i++){
@@ -579,3 +580,35 @@ void SimulationState::setDimensionality(bool x, bool y, bool z)
   }
 }
 
+//__________________________________
+//
+void SimulationState::calculateOverhead(int d_n, double percent_overhead)
+{
+  // Set the overhead sample
+
+  // Ignore the first 3 samples, they are not good samples.
+  if( d_n > 2 )
+  {
+    d_overhead[d_overheadIndex] = percent_overhead;
+
+    double overhead = 0;
+    double weight = 0;
+
+    int t = min( d_n - 2, OVERHEAD_WINDOW );
+
+    // Calcualte total weight by incrementing through the overhead
+    // sample array backwards and multiplying samples by the weights
+    for( int i=0; i<t; ++i ) {
+      overhead +=
+	d_overhead[(d_overheadIndex-i+OVERHEAD_WINDOW) % OVERHEAD_WINDOW] *
+	d_overheadWeights[i];
+
+      weight += d_overheadWeights[i];
+    }
+
+    d_overheadAvg = overhead / weight;
+    d_overheadIndex = (d_overheadIndex+1) % OVERHEAD_WINDOW;
+
+    // Increase overhead size if needed.
+  } 
+}
