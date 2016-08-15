@@ -678,7 +678,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     pass
 #  susSuccess  = subprocess.check_output("sed -n /'timestep'/,//p sus.log.txt | grep -c 'Sus: going down successfully'",shell=True);
 
-  print( "susSuccess %d" %(len(susSuccess)) )
+#  print( "susSuccess %d" %(len(susSuccess)) )
   if exception == 0:
     print( "\t*** An exception was thrown ***" )
     rc = -9
@@ -693,7 +693,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   else:
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
 
-  replace_msg = "%s\n\tTo replace multiple tests that have failed run:\n\t    cd %s \n\t    ./replace_all_GS\n" % (replace_msg,startpath)
+  replace_msg = "%s\n\t\t\tor\n\t    %s/replace_all_GS\n" % (replace_msg,startpath)
 
   return_code = 0
   if rc == 35072 or rc == 36608 :
@@ -773,12 +773,18 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       if compUda_RC != 0:
         if compUda_RC == 10 * 256:
           print( "\t*** Input file(s) differs from the goldstandard" )
-          print( "%s" % replace_msg )
 
-        elif compUda_RC == 1 * 256 or compUda_RC == 5*256:
-          print( "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, compUda_RC) )
+        elif compUda_RC == 1 * 256:
+          print( "\t*** Warning, test (%s) failed uda comparison, tolerances exceeded (%s)" % (testname, compUda_RC) ) 
           print compare_msg
-
+        
+          if startFrom != "restart":
+           print( "%s" % replace_msg )
+           
+        elif compUda_RC == 5*256:
+          print( "\t*** ERROR: test (%s) uda comparison aborted (%s)" % (testname, compUda_RC) ) 
+          print compare_msg
+        
           if startFrom != "restart":
            print( "%s" % replace_msg )
 
