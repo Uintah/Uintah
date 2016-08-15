@@ -272,7 +272,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->getDeltLabel());
   tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,    gac, 1);
   tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,   gac, 1);
   tsk->requires(Task::NewDW,   d_lab->d_uVelRhoHatLabel,  gaf, 1);
@@ -317,7 +317,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     parent_old_dw = old_dw;
   }
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->getDeltLabel() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -467,7 +467,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     parent_old_dw = Task::OldDW;
   }
 
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->getDeltLabel());
 
   // Requires
   // from old_dw for time integration
@@ -601,7 +601,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   }
 
   delt_vartype delT;
-  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->getDeltLabel() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 

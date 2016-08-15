@@ -451,7 +451,7 @@ void DDT1::initialize(const ProcessorGroup*,
                       DataWarehouse* new_dw){
   int m0 = d_matl0->getDWIndex();
   
-  SimulationTime* simTime = d_sharedState->d_simTime;
+  SimulationTime* simTime = d_sharedState->getSimTime();
   double initTimestep = simTime->max_initial_delt;
   
  
@@ -598,10 +598,10 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     t1->requires( Task::OldDW, adjOutIntervalsLabel );
     t1->computes( adjOutIntervalsLabel );
     
-    t1->computes( d_sharedState->get_outputInterval_label() );
-    t1->computes( d_sharedState->get_checkpointInterval_label() );
-    d_sharedState->updateOutputInterval( true );
-    d_sharedState->updateCheckpointInterval( true ); 
+    t1->computes( d_sharedState->getOutputIntervalLabel() );
+    t1->computes( d_sharedState->getCheckpointIntervalLabel() );
+    d_sharedState->setUpdateOutputInterval( true );
+    d_sharedState->setUpdateCheckpointInterval( true ); 
   } 
   
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
@@ -1062,7 +1062,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
               inductionTime_new =  (delta_x*A)/S_f_new ;
               inductionTime[c] = inductionTime_new ;
 
-              SimulationTime* simTime = d_sharedState->d_simTime;
+              SimulationTime* simTime = d_sharedState->getSimTime();
               double initTimestep = simTime->max_initial_delt;
 
               if(inductionTimeOld[c] != ( initTimestep + 1e-20)){ //initializes induction time to the calculated indcutiontime on the first timestep. 
@@ -1118,8 +1118,8 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
       double hasSwitched = me; 
     
       // for readability
-      const VarLabel* outIntervalLabel      = d_sharedState->get_outputInterval_label();
-      const VarLabel* chkpointIntervalLabel = d_sharedState->get_checkpointInterval_label();
+      const VarLabel* outIntervalLabel      = d_sharedState->getOutputIntervalLabel();
+      const VarLabel* chkpointIntervalLabel = d_sharedState->getCheckpointIntervalLabel();
       
       //__________________________________
       // Pressure

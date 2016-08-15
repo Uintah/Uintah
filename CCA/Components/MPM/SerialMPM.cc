@@ -333,7 +333,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pAreaLabel);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pRefinedLabel);
-  t->computes(d_sharedState->get_delt_label(),level.get_rep());
+  t->computes(d_sharedState->getDeltLabel(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
 
@@ -547,7 +547,7 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP& level,
 
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
 
-  t->computes(d_sharedState->get_delt_label(),level.get_rep());
+  t->computes(d_sharedState->getDeltLabel(),level.get_rep());
   sched->addTask(t,level->eachPatch(), mpm_matls);
 }
 
@@ -851,7 +851,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
     t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
-  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
+  t->computes(d_sharedState->getDeltLabel(),getLevel(patches));
 
   if (flags->d_reductionVars->accStrainEnergy ||
       flags->d_reductionVars->strainEnergy) {
@@ -1071,7 +1071,7 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &SerialMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
@@ -1126,7 +1126,7 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                       this, &SerialMPM::setGridBoundaryConditions);
 
   const MaterialSubset* mss = matls->getUnion();
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
@@ -1161,7 +1161,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
                       this, &SerialMPM::interpolateToParticlesAndUpdate);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
@@ -1262,7 +1262,7 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::finalParticleUpdate",
                       this, &SerialMPM::finalParticleUpdate);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
@@ -1290,7 +1290,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP& sched,
                       this, &SerialMPM::interpolateToParticlesAndUpdateMom1);
 
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
 
   Ghost::GhostType gac   = Ghost::AroundCells;
@@ -1338,7 +1338,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdateMom2",
                       this, &SerialMPM::interpolateToParticlesAndUpdateMom2);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
@@ -1414,7 +1414,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   Task* t=scinew Task("MPM::updateCohesiveZones",
                       this, &SerialMPM::updateCohesiveZones);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
@@ -1464,7 +1464,7 @@ void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
     Task* t=scinew Task("MPM::insertParticles",this,
                   &SerialMPM::insertParticles);
 
-    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+    t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
 
     t->modifies(lb->pXLabel_preReloc);
     t->modifies(lb->pVelocityLabel_preReloc);
@@ -1578,7 +1578,7 @@ void SerialMPM::scheduleSetPrescribedMotion(SchedulerP& sched,
     const MaterialSubset* mss = matls->getUnion();
     t->modifies(             lb->gAccelerationLabel,     mss);
     t->modifies(             lb->gVelocityStarLabel,     mss);
-    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+    t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
     if(!flags->d_doGridReset){
       t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
       t->modifies(lb->gDisplacementLabel, mss);
@@ -1612,7 +1612,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pSizeLabel);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->NC_CCweightLabel);
-  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
+  t->computes(d_sharedState->getDeltLabel(),getLevel(patches));
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -1671,12 +1671,12 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
     task->requires(Task::NewDW, lb->pXLabel, Ghost::AroundCells, 0);
   }
   else {
-    task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(),
+    task->requires(Task::NewDW, d_sharedState->getRefineFlagLabel(),
                    0, Task::FineLevel, d_sharedState->refineFlagMaterials(),
                    Task::NormalDomain, Ghost::None, 0);
   }
-  task->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->getRefineFlagLabel(),      d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 
 }
@@ -2875,7 +2875,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       constNCVariable<double> mass;
 
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+      old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 
       new_dw->get(internalforce,lb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce,lb->gExternalForceLabel, dwi, patch, gnone, 0);
@@ -2920,7 +2920,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 
     string interp_type = flags->d_interpolator_type;
     for(int m = 0; m < numMPMMatls; m++){
@@ -2980,7 +2980,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
     // Get the current time
     double time = d_sharedState->getElapsedTime();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
@@ -3059,7 +3059,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
          double t4 = d_prescribedTimes[s+3];
          if (time == 0 && t4 != 0) {
             new_dw->put(delt_vartype(t3 - t2),
-                    d_sharedState->get_delt_label(), getLevel(patches));
+                    d_sharedState->getDeltLabel(), getLevel(patches));
          }
          else {
             F_high = d_prescribedF[s + 2]; //next prescribed deformation gradient
@@ -3070,7 +3070,7 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
             Ft = F_low*(t2-time)/(t2-t1) + F_high*(time-t1)/(t2-t1);
             Fdot = (F_high - F_low)/(t3-t2);
             thetadot = PrescribedTheta*(degtorad)/(t3-t2);
-            new_dw->put(delt_vartype(tst), d_sharedState->get_delt_label(), getLevel(patches));
+            new_dw->put(delt_vartype(tst), d_sharedState->getDeltLabel(), getLevel(patches));
           }
        }
 
@@ -3315,7 +3315,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 
 #if 0
     Material* reactant;
@@ -3690,7 +3690,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
               "Doing finalParticleUpdate");
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -3755,7 +3755,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 
     double move_particles=1.;
     if(!flags->d_doGridReset){
@@ -3891,7 +3891,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     double partvoldef = 0.;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 //    bool combustion_problem=false;
 
     Material* reactant;
@@ -4101,7 +4101,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     vector<double> S(interpolator->size());
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
@@ -4358,7 +4358,7 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
     // Get current time and timestep size
     double time = d_sharedState->getElapsedTime();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
 
     int index = -999;
     for(int i = 0; i<(int) d_IPTimes.size(); i++){
@@ -4629,7 +4629,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
       new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 
-      if(dataArchiver->isOutputTimestep()){
+      if(dataArchiver->getOutputTimestep()){
         Vector dx = patch->dCell();
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
@@ -4795,9 +4795,9 @@ SerialMPM::initialErrorEstimate(const ProcessorGroup*,
 
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
-    new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+    new_dw->getModifiable(refineFlag, d_sharedState->getRefineFlagLabel(),
                           0, patch);
-    new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+    new_dw->get(refinePatchFlag, d_sharedState->getRefinePatchFlagLabel(),
                 0, patch);
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
@@ -4844,9 +4844,9 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
 
-      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+      new_dw->getModifiable(refineFlag, d_sharedState->getRefineFlagLabel(),
                             0, coarsePatch);
-      new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+      new_dw->get(refinePatchFlag, d_sharedState->getRefinePatchFlagLabel(),
                   0, coarsePatch);
 
       PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
@@ -4866,7 +4866,7 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
         }
         constCCVariable<int> fineErrorFlag;
         new_dw->getRegion(fineErrorFlag,
-                          d_sharedState->get_refineFlag_label(), 0,
+                          d_sharedState->getRefineFlagLabel(), 0,
                           fineLevel,fl, fh, false);
 
         //__________________________________

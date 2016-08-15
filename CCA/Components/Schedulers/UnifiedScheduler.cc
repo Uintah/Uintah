@@ -546,7 +546,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
       if (!task->getTask()->getHasSubScheduler()) {
         // add my task time to the total time
         mpi_info_[TotalTask] += total_task_time;
-        if (!m_shared_state->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+        if (!m_shared_state->getCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
           // add contribution of task execution time to load balancer
           getLoadBalancer()->addContribution(task, total_task_time);
         }
@@ -652,7 +652,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
                          )
 {
   // copy data timestep must be single threaded for now
-  if (Uintah::Parallel::usingMPI() && m_shared_state->isCopyDataTimestep()) {
+  if (Uintah::Parallel::usingMPI() && m_shared_state->getCopyDataTimestep()) {
     MPIScheduler::execute( tgnum, iteration );
     return;
   }
@@ -735,7 +735,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
-  if (!m_shared_state->isCopyDataTimestep()) {
+  if (!m_shared_state->getCopyDataTimestep()) {
     Impl::g_run_tasks = 1;
     for (int i = 1; i < Impl::g_num_threads; ++i) {
       Impl::g_thread_states[i] = Impl::ThreadState::Active;
@@ -751,7 +751,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
-  if (!m_shared_state->isCopyDataTimestep()) {
+  if (!m_shared_state->getCopyDataTimestep()) {
     Impl::g_run_tasks = 0;
 
     Impl::thread_fence();

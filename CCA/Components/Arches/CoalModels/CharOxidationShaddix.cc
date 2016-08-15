@@ -338,7 +338,7 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
   tsk->requires( which_dw, _H2O_varlabel, gn, 0 );
   tsk->requires( which_dw, _N2_varlabel, gn, 0 );
   tsk->requires( which_dw, _MW_varlabel, gn, 0 );
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label());
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->getDeltLabel());
   tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 );
   tsk->requires( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 );
 
@@ -376,7 +376,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     double vol = Dx.x()* Dx.y()* Dx.z();
 
     delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    old_dw->get(DT, d_fieldLabels->d_sharedState->getDeltLabel());
     double dt = DT;
 
     CCVariable<double> char_rate;

@@ -116,8 +116,8 @@ void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
 {
   Task* task = scinew Task("errorEstimate", this, &AMRWave::errorEstimate);
   task->requires(Task::NewDW, phi_label, Ghost::AroundCells, 1);
-  task->modifies(sharedState_->get_refineFlag_label(), sharedState_->refineFlagMaterials());
-  task->modifies(sharedState_->get_refinePatchFlag_label(), sharedState_->refineFlagMaterials());
+  task->modifies(sharedState_->getRefineFlagLabel(), sharedState_->refineFlagMaterials());
+  task->modifies(sharedState_->getRefinePatchFlagLabel(), sharedState_->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
@@ -149,9 +149,9 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
     
-    new_dw->getModifiable(refineFlag, sharedState_->get_refineFlag_label(),
+    new_dw->getModifiable(refineFlag, sharedState_->getRefineFlagLabel(),
                           0, patch);
-    new_dw->get(refinePatchFlag, sharedState_->get_refinePatchFlag_label(),
+    new_dw->get(refinePatchFlag, sharedState_->getRefinePatchFlagLabel(),
                 0, patch);
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();

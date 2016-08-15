@@ -92,7 +92,7 @@ momentumAnalysis::momentumAnalysis(ProblemSpecP& module_spec,
   labels->convectMom_fluxes  = VarLabel::create( "convectMom_fluxes", sumvec_vartype::getTypeDescription() );
   labels->viscousMom_fluxes  = VarLabel::create( "viscousMom_fluxes", sumvec_vartype::getTypeDescription() );
   labels->pressForces        = VarLabel::create( "pressForces",       sumvec_vartype::getTypeDescription() );
-  labels->delT               = d_sharedState->get_delt_label();
+  labels->delT               = d_sharedState->getDeltLabel();
 }
 
 //__________________________________

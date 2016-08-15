@@ -77,7 +77,7 @@ void JGConcentrationDiffusion::scheduleComputeFlux(Task* task,
   task->requires(Task::OldDW, d_lb->pConcGradientLabel, matlset, gnone);
 
   task->computes(d_lb->pFluxLabel_preReloc, matlset);
-  task->computes(d_sharedState->get_delt_label(),getLevel(patch));
+  task->computes(d_sharedState->getDeltLabel(),getLevel(patch));
 }
 
 void JGConcentrationDiffusion::computeFlux(const Patch* patch, 

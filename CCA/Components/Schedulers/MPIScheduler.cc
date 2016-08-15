@@ -298,7 +298,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     if (!dtask->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
       mpi_info_[TotalTask] += total_task_time;
-      if (!m_shared_state->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
+      if (!m_shared_state->getCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
         getLoadBalancer()->addContribution(dtask, total_task_time);
       }
@@ -396,7 +396,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
      }
 
      // if we send/recv to an output task, don't send/recv if not an output timestep
-     if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+     if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->getOutputTimestep() && !m_out_port->getCheckpointTimestep()) {
        DOUT(g_dbg, "Rank-" << me << "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
@@ -588,7 +588,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->getOutputTimestep() && !m_out_port->getCheckpointTimestep()) {
           DOUT(g_dbg, "Rank-" << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req);
           continue;
         }

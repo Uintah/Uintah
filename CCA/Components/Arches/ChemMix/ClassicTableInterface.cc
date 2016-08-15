@@ -86,6 +86,8 @@ ClassicTableInterface::~ClassicTableInterface()
   delete ND_interp;
 }
 
+#include <dlfcn.h>
+
 //---------------------------------------------------------------------------
 // Problem Setup
 //---------------------------------------------------------------------------
@@ -104,13 +106,45 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // READ TABLE:
   proc0cout << "----------Mixing Table Information---------------  " << endl;
 
+  int mpi_rank = Parallel::getMPIRank();
+
+    char *pathname = 0;
+
+    Dl_info info;
+    if (dladdr(__builtin_return_address(0), &info)) {
+      const char *lastslash = strrchr(info.dli_fname,'/');
+
+      if( lastslash )
+      {
+        int pathLen = strlen(info.dli_fname) - strlen(lastslash);
+        
+        pathname = (char *) malloc(pathLen+2);
+        strncpy( pathname, info.dli_fname, pathLen );
+        pathname[pathLen] = '\0';
+      }
+    }
+
+    proc0cout << "FILE " << propertiesParameters->getFile() << std::endl;
+    proc0cout << "PATHNAME " << pathname << std::endl;
+    
+#ifdef OLD_TABLE
+  gzFile gzFp = gzopen(tableFileName.c_str(),"r");
+  
+  if( gzFp == nullptr ) {
+    // If errno is 0, then not enough memory to uncompress file.
+    proc0cout << "Error with gz in opening file: " << tableFileName << ". Errno: " << errno << "\n";
+    throw ProblemSetupException("Unable to open the given input file: " + tableFileName, __FILE__, __LINE__);
+  }
+
+  loadMixingTable(gzFp, tableFileName );
+  gzrewind(gzFp);
+  checkForConstants(gzFp, tableFileName );
+  gzclose(gzFp);
+
+#else
   int table_size = 0;
   char* table_contents=nullptr;
   std::string uncomp_table_contents;
-
-  int mpi_rank = Parallel::getMPIRank();
-
-#ifndef OLD_TABLE
 
   if (mpi_rank == 0) {
     try {
@@ -136,21 +170,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   std::stringstream table_contents_stream;
   table_contents_stream << table_contents;
-#endif
 
-#ifdef OLD_TABLE
-  gzFile gzFp = gzopen(tableFileName.c_str(),"r");
-  if( gzFp == nullptr ) {
-    // If errno is 0, then not enough memory to uncompress file.
-    proc0cout << "Error with gz in opening file: " << tableFileName << ". Errno: " << errno << "\n";
-    throw ProblemSetupException("Unable to open the given input file: " + tableFileName, __FILE__, __LINE__);
-  }
-
-  loadMixingTable(gzFp, tableFileName );
-  gzrewind(gzFp);
-  checkForConstants(gzFp, tableFileName );
-  gzclose(gzFp);
-#else
   loadMixingTable(table_contents_stream, tableFileName );
   table_contents_stream.seekg(0);
   checkForConstants(table_contents_stream, tableFileName );

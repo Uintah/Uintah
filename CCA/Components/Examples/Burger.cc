@@ -92,7 +92,7 @@ void Burger::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("Burger::computeStableTimestep",
                      this, &Burger::computeStableTimestep);
                      
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
+  task->computes(sharedState_->getDeltLabel(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
@@ -104,7 +104,7 @@ void  Burger::scheduleTimeAdvance( const LevelP& level,
                      this, &Burger::timeAdvance);
                      
   task->requires(Task::OldDW, u_label, Ghost::AroundNodes, 1);
-  task->requires(Task::OldDW, sharedState_->get_delt_label());
+  task->requires(Task::OldDW, sharedState_->getDeltLabel());
   
   task->computes(u_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -118,7 +118,7 @@ void Burger::computeStableTimestep(const ProcessorGroup*,
                                    DataWarehouse*, 
                                    DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
+  new_dw->put(delt_vartype(delt_), sharedState_->getDeltLabel(),getLevel(patches));
 }
 
 //______________________________________________________________________
@@ -170,7 +170,7 @@ void Burger::timeAdvance(const ProcessorGroup*,
     // dt, dx
     Vector dx = patch->getLevel()->dCell();
     delt_vartype dt;
-    old_dw->get(dt, sharedState_->get_delt_label());
+    old_dw->get(dt, sharedState_->getDeltLabel());
     
     // allocate memory
     NCVariable<double> new_u;

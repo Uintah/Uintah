@@ -148,7 +148,7 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
     which_dw->get( rho            , rho_label            , matlIndex , patch , gn, 0 );
 
     delt_vartype DT;
-    old_dw->get(DT, _shared_state->get_delt_label());
+    old_dw->get(DT, _shared_state->getDeltLabel());
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         

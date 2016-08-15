@@ -159,7 +159,7 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   task->requires(Task::NewDW, d_lb->gConcentrationLabel,      matlset, gac, NGN);
   task->requires(Task::NewDW, d_lb->gHydrostaticStressLabel,  matlset, gac, NGN);
 
-  task->computes(d_sharedState->get_delt_label(),getLevel(patch));
+  task->computes(d_sharedState->getDeltLabel(),getLevel(patch));
 
   task->computes(d_lb->pFluxLabel_preReloc,        matlset);
   task->computes(d_lb->pDiffusivityLabel_preReloc, matlset);

@@ -66,7 +66,7 @@ KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   Task* tsk = scinew Task( "KokkosSolver::computeStableTimeStep",this,
                            &KokkosSolver::computeStableTimeStep);
 
-  tsk->computes( m_sharedState->get_delt_label(), level.get_rep() );
+  tsk->computes( m_sharedState->getDeltLabel(), level.get_rep() );
   sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
 }
 
@@ -83,7 +83,7 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup*,
     // int archIndex = 0; // only one arches material
     // int indx = m_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    new_dw->put(delt_vartype(0.1), m_sharedState->get_delt_label(), level);
+    new_dw->put(delt_vartype(0.1), m_sharedState->getDeltLabel(), level);
 
   }
 
