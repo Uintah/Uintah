@@ -291,6 +291,10 @@ SimulationController::preGridSetup( void )
 {
   d_sharedState = scinew SimulationState( d_ups );
 
+#ifdef HAVE_VISIT
+  d_sharedState->setVisIt( d_doVisIt );
+#endif
+
   d_sharedState->d_usingLocalFileSystems = d_usingLocalFileSystems;
 
   d_output = dynamic_cast<Output*>(getPort("output"));
@@ -313,10 +317,6 @@ SimulationController::preGridSetup( void )
   // Parse time struct
   d_timeinfo = scinew SimulationTime( d_ups );
   d_sharedState->d_simTime = d_timeinfo;
-
-#ifdef HAVE_VISIT
-  d_sharedState->setVisIt( d_doVisIt );
-#endif
 }
 
 //______________________________________________________________________
