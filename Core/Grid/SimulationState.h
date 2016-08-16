@@ -55,6 +55,7 @@ class MPMMaterial;
 class CZMaterial;
 class ArchesMaterial; 
 class WasatchMaterial;
+class FVMMaterial;
 class SimpleMaterial;
 class Level;
 
@@ -132,6 +133,8 @@ public:
   void registerICEMaterial(ICEMaterial*,unsigned int index);
   void registerWasatchMaterial(WasatchMaterial*);
   void registerWasatchMaterial(WasatchMaterial*,unsigned int index);
+  void registerFVMMaterial(FVMMaterial*);
+  void registerFVMMaterial(FVMMaterial*,unsigned int index);
 
   void registerMaterial( Material* );
   void registerMaterial( Material*, unsigned int index );
@@ -342,6 +345,7 @@ private:
   std::vector<ICEMaterial*>     ice_matls;
   std::vector<WasatchMaterial*> wasatch_matls;
   std::vector<SimpleMaterial*>  simple_matls;
+  std::vector<FVMMaterial*>     fvm_matls;
 
   //! in switcher we need to clear the materials, but don't 
   //! delete them yet or we might have VarLabel problems when 
@@ -355,6 +359,7 @@ private:
   MaterialSet    * all_ice_matls;
   MaterialSet    * all_wasatch_matls;  
   MaterialSet    * all_arches_matls;
+  MaterialSet    * all_fvm_matls;
   MaterialSet    * all_matls;
 
   // keep track of the original materials if you switch

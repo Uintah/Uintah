@@ -30,11 +30,11 @@
 #include <Core/Util/Handle.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
-#include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Components/FVM/FVMLabel.h>
+#include <CCA/Components/FVM/FVMMaterial.h>
 
 namespace Uintah {
 
@@ -77,7 +77,7 @@ WARNING
                                       SchedulerP&);
 
   protected:
-    FVMLabel* lb;
+    FVMLabel* d_lb;
 
   private:
     void initialize(const ProcessorGroup*,
@@ -94,11 +94,11 @@ WARNING
                      LevelP, Scheduler*);
 
 
-    SimulationStateP sharedState_;
-    double delt_;
-    SimpleMaterial* mymat_;
-    SolverInterface* solver;
-    SolverParameters* solver_parameters;
+    SimulationStateP d_shared_state;
+    double d_delt;
+    FVMMaterial* d_fvmmat;
+    SolverInterface* d_solver;
+    SolverParameters* d_solver_parameters;
     
     ElectrostaticSolve(const ElectrostaticSolve&);
     ElectrostaticSolve& operator=(const ElectrostaticSolve&);

@@ -64,7 +64,6 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
     int nCells = 0;
 
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
-    std::cout << "FaceType: " << (int)face << ", Children: " << numChildren << std::endl;
 
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
@@ -129,44 +128,4 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
       } // end foundIterator if statment
     } // end child loop
   } // end face loop
-
-  /**
-  // x minus face cells
-  if(c.x() == low_idx.x() && low_offset.x() == 1){
-            A_tmp.w = 0;
-            rhs[c] -= w;
-  }
-
-  // x plus face cells
-  if(c.x() == high_idx.x()-1 && high_offset.x() == 1){
-            A_tmp.e = 0;
-            rhs[c] -= 0;
-  }
-
-  // y minus face cells
-  if(c.y() == low_idx.y() && low_offset.y() == 1){
-            A_tmp.s = 0;
-            rhs[c] -= 0;
-  }
-
-  // y plus face cells
-  if(c.y() == high_idx.y()-1 && high_offset.y() == 1){
-            A_tmp.n = 0;
-            rhs[c] -= 0;
-  }
-
-  // z minus face cells
-  if(c.z() == low_idx.z() && low_offset.z() == 1){
-            A_tmp.b = 0;
-            rhs[c] -= 0;
-  }
-
-  // z plus face cells
-  if(c.z() == high_idx.z()-1 && high_offset.z() == 1){
-            A_tmp.t = 0;
-            rhs[c] -= 0;
-  }
-
-  **/
-
 }

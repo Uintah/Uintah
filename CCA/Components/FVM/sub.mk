@@ -33,6 +33,7 @@ SRCDIR   := CCA/Components/FVM
 
 SRCS   += $(SRCDIR)/ElectrostaticSolve.cc \
           $(SRCDIR)/FVMBoundCond.cc       \
+          $(SRCDIR)/FVMMaterial.cc        \
           $(SRCDIR)/FVMLabel.cc
 
 #include $(SCIRUN_SCRIPTS)/recurse.mk          

@@ -50,49 +50,51 @@ using namespace Uintah;
 ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  lb = scinew FVMLabel();
+  d_lb = scinew FVMLabel();
 
-  solver_parameters = 0;
-  delt_ = 0;
-  solver = 0;
-  mymat_ = 0;
-
+  d_solver_parameters = 0;
+  d_delt = 0;
+  d_solver = 0;
+  d_fvmmat = 0;
+  d_shared_state = 0;
 }
 //__________________________________
 //
 ElectrostaticSolve::~ElectrostaticSolve()
 {
-  delete lb;
-  delete solver_parameters;
+  delete d_lb;
+  delete d_solver_parameters;
 }
 //__________________________________
 //
 void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
-                               const ProblemSpecP& restart_prob_spec, 
-                               GridP&, SimulationStateP& sharedState)
+                                      const ProblemSpecP& restart_prob_spec,
+                                      GridP& grid,
+                                      SimulationStateP& shared_state)
 {
-  solver = dynamic_cast<SolverInterface*>(getPort("solver"));
-  if(!solver) {
+
+  d_shared_state = shared_state;
+  d_solver = dynamic_cast<SolverInterface*>(getPort("solver"));
+  if(!d_solver) {
     throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
   }
   
   ProblemSpecP st_ps = prob_spec->findBlock("FVM");
-  solver_parameters = solver->readParameters(st_ps, "electrostatic_solver",
-                                             sharedState);
-  solver_parameters->setSolveOnExtraCells(false);
+  d_solver_parameters = d_solver->readParameters(st_ps, "electrostatic_solver",
+                                             d_shared_state);
+  d_solver_parameters->setSolveOnExtraCells(false);
     
-  sharedState_ = sharedState;
-  st_ps->require("delt", delt_);
+  st_ps->require("delt", d_delt);
 
-  mymat_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(mymat_);
+  d_fvmmat = scinew FVMMaterial();
+  d_shared_state->registerFVMMaterial(d_fvmmat);
 }
 //__________________________________
 // 
 void ElectrostaticSolve::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  solver->scheduleInitialize(level,sched,sharedState_->allMaterials());
+  d_solver->scheduleInitialize(level,sched, d_shared_state->allMaterials());
 }
 //__________________________________
 //
@@ -107,8 +109,8 @@ void ElectrostaticSolve::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimestep",this, 
                            &ElectrostaticSolve::computeStableTimestep);
-  task->computes(sharedState_->getDeltLabel(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->computes(d_shared_state->getDeltLabel(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), d_shared_state->allMaterials());
 }
 //__________________________________
 //
@@ -118,15 +120,15 @@ ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("buildMatrixAndRhs",
                            this, &ElectrostaticSolve::buildMatrixAndRhs,
                            level, sched.get_rep());
-  task->computes(lb->ccESPotentialMatrix);
-  task->computes(lb->ccRHS_ESPotential);
+  task->computes(d_lb->ccESPotentialMatrix);
+  task->computes(d_lb->ccRHS_ESPotential);
 
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), d_shared_state->allMaterials());
 
-  solver->scheduleSolve(level, sched, sharedState_->allMaterials(), 
-                        lb->ccESPotentialMatrix, Task::NewDW, lb->ccESPotential,
-                        false, lb->ccRHS_ESPotential, Task::NewDW, 0, Task::OldDW,
-                        solver_parameters,false);
+  d_solver->scheduleSolve(level, sched, d_shared_state->allMaterials(),
+                        d_lb->ccESPotentialMatrix, Task::NewDW, d_lb->ccESPotential,
+                        false, d_lb->ccRHS_ESPotential, Task::NewDW, 0, Task::OldDW,
+                        d_solver_parameters,false);
 
 }
 //__________________________________
@@ -136,7 +138,7 @@ void ElectrostaticSolve::computeStableTimestep(const ProcessorGroup*,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->getDeltLabel(),getLevel(pss));
+  new_dw->put(delt_vartype(d_delt), d_shared_state->getDeltLabel(),getLevel(pss));
 }
 //__________________________________
 //
@@ -192,14 +194,13 @@ void ElectrostaticSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
     std::cout << "high_offset: " << high_offset << std::endl;
     std::cout << "material size: " << matls->size() << std::endl;
 
+    CCVariable<Stencil7> A;
+    CCVariable<double> rhs;
+
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-
-      CCVariable<Stencil7> A;
-      CCVariable<double> rhs;
-      new_dw->allocateAndPut(A,   lb->ccESPotentialMatrix, matl, patch);
-      new_dw->allocateAndPut(rhs, lb->ccRHS_ESPotential,   matl, patch);
-
+      new_dw->allocateAndPut(A,   d_lb->ccESPotentialMatrix, matl, patch);
+      new_dw->allocateAndPut(rhs, d_lb->ccRHS_ESPotential,   matl, patch);
       // iterate over cells;
       for(CellIterator iter(low_idx, high_idx); !iter.done(); iter++){
         IntVector c = *iter;
@@ -211,43 +212,6 @@ void ElectrostaticSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
         A_tmp.t = t;   A_tmp.b = b;
         rhs[c] = 0;
 
-        /**
-        // x minus face cells
-        if(c.x() == low_idx.x() && low_offset.x() == 1){
-          A_tmp.w = 0;
-          rhs[c] -= w;
-        }
-
-        // x plus face cells
-        if(c.x() == high_idx.x()-1 && high_offset.x() == 1){
-          A_tmp.e = 0;
-          rhs[c] -= 0;
-        }
-
-        // y minus face cells
-        if(c.y() == low_idx.y() && low_offset.y() == 1){
-          A_tmp.s = 0;
-          rhs[c] -= 0;
-        }
-
-        // y plus face cells
-        if(c.y() == high_idx.y()-1 && high_offset.y() == 1){
-          A_tmp.n = 0;
-          rhs[c] -= 0;
-        }
-
-        // z minus face cells
-        if(c.z() == low_idx.z() && low_offset.z() == 1){
-          A_tmp.b = 0;
-          rhs[c] -= 0;
-        }
-
-        // z plus face cells
-        if(c.z() == high_idx.z()-1 && high_offset.z() == 1){
-          A_tmp.t = 0;
-          rhs[c] -= 0;
-        }
-        **/
       } // End CellIterator
       bc.setESBoundaryConditions(patch, matl, A, rhs);
     } // End Materials
