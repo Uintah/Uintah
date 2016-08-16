@@ -887,7 +887,7 @@ namespace Uintah {
     }
     task->modifies(pIDLabel_ );
     task->modifies(pPosLabel_);
-    task->requires(Task::OldDW, sharedState_->getDeltLabel());
+    task->requires(Task::OldDW, sharedState_->get_delt_label());
     sched->addTask(task, level->eachPatch(), materials_);
   }
   
@@ -902,7 +902,7 @@ namespace Uintah {
     using namespace Uintah;
     
     delt_vartype DT;
-    old_dw->get(DT, sharedState_->getDeltLabel());
+    old_dw->get(DT, sharedState_->get_delt_label());
     const double dt = DT;
 
     for( int m=0; m<matls->size(); ++m ){

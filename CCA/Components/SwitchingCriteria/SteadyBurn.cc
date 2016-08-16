@@ -102,7 +102,7 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
     t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gan,2);
   }
   
-  t->computes(d_sharedState->getSwitchLabel());
+  t->computes(d_sharedState->get_switch_label());
 
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 
@@ -243,5 +243,5 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
   max_vartype switch_condition(timeToSwitch);
 
   const Level* allLevels = 0;
-  new_dw->put(switch_condition,d_sharedState->getSwitchLabel(),allLevels);
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),allLevels);
 }

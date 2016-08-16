@@ -159,7 +159,7 @@ void RigidMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &RigidMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
 
@@ -216,7 +216,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
                       this, &RigidMPM::interpolateToParticlesAndUpdate);
 
-  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
@@ -306,7 +306,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
 //    double move_particles=1.;
 //    if(!flags->d_doGridReset){

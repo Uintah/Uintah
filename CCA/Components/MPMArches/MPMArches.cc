@@ -4564,7 +4564,7 @@ void MPMArches::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPMArches::computeAndIntegrateAcceleration",
       this, &MPMArches::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, Mlb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, Mlb->gInternalForceLabel, Ghost::None);
@@ -4596,7 +4596,7 @@ void MPMArches::computeAndIntegrateAcceleration(const ProcessorGroup* pg,
       constNCVariable<double> mass;
 
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
       new_dw->get(internalforce,Mlb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce,Mlb->gExternalForceLabel, dwi, patch, gnone, 0);

@@ -970,8 +970,8 @@ void AdiabaticTable::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
   
   t->computes(d_scalar->mag_grad_scalarLabel);
-  t->modifies(d_sharedState->getRefineFlagLabel(),      d_sharedState->refineFlagMaterials(), Task::OutOfDomain);
-  t->modifies(d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials(), Task::OutOfDomain);
+  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials(), Task::OutOfDomain);
+  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials(), Task::OutOfDomain);
   
   sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
 }
@@ -990,8 +990,8 @@ void AdiabaticTable::errorEstimate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    const VarLabel* refineFlagLabel = d_sharedState->getRefineFlagLabel();
-    const VarLabel* refinePatchLabel= d_sharedState->getRefinePatchFlagLabel();
+    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
+    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
     
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      

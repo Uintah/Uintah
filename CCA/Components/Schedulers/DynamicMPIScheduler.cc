@@ -164,7 +164,7 @@ void
 DynamicMPIScheduler::execute( int tgnum     /*=0*/,
                               int iteration /*=0*/ )
 {
-  if (m_shared_state->getCopyDataTimestep()) {
+  if (m_shared_state->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -216,7 +216,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
 #if 0
   // hook to post all the messages up front
-  if (!m_shared_state->getCopyDataTimestep()) {
+  if (!m_shared_state->isCopyDataTimestep()) {
     // post the receives in advance
     for (int i = 0; i < ntasks; i++) {
       initiateTask( dts->localTask(i), abort, abort_point, iteration );

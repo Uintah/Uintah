@@ -99,14 +99,14 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //
   d_sharedState = state;
-  d_sharedState->setLockstepAMR(true);
-  d_sharedState->setSwitchState(true);         /// HACK NEED TO CHANGE THIS
+  d_sharedState->setIsLockstepAMR(true);
+  d_sharedState->d_switchState = true;         /// HACK NEED TO CHANGE THIS
    
   // This matl is for delT
   d_oneMatl = scinew SimpleMaterial();
   d_sharedState->registerSimpleMaterial( d_oneMatl );
   
-  delt_label = d_sharedState->getDeltLabel();
+  delt_label = d_sharedState->get_delt_label();
 
   d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(!d_dataArchiver){

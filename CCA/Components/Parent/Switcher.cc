@@ -300,7 +300,7 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
   
   
   // read in <Time> block from ups file
-  d_sharedState->getSimTime()->problemSetup( subCompUps );    
+  d_sharedState->d_simTime->problemSetup( subCompUps );    
     
   //__________________________________
   // init Variables:
@@ -437,7 +437,7 @@ void Switcher::scheduleSwitchTest(const LevelP     & level,
   t->setType(Task::OncePerProc);
   
   // the component is responsible for determining when it is to switch.
-  t->requires(Task::NewDW,d_sharedState->getSwitchLabel());
+  t->requires(Task::NewDW,d_sharedState->get_switch_label());
   sched->addTask(t,sched->getLoadBalancer()->getPerProcessorPatchSet(level),d_sharedState->allMaterials());
 }
 
@@ -494,7 +494,7 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
 
   d_initVars[nextComp_indx]->matls = matlSet;
 
-  t->requires(Task::NewDW,d_sharedState->getSwitchLabel());
+  t->requires(Task::NewDW,d_sharedState->get_switch_label());
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
 }
 
@@ -573,7 +573,7 @@ void Switcher::switchTest(const ProcessorGroup *,
                                 DataWarehouse  * new_dw)
 {
   max_vartype switch_condition;
-  new_dw->get(switch_condition, d_sharedState->getSwitchLabel(), 0);
+  new_dw->get(switch_condition, d_sharedState->get_switch_label(), 0);
 
   if (switch_condition) {
     // actually PERFORM the switch during the next needRecompile; set back to idle then
@@ -593,7 +593,7 @@ void Switcher::initNewVars(const ProcessorGroup *,
                                  DataWarehouse  * new_dw)
 {
   max_vartype switch_condition;
-  new_dw->get(switch_condition, d_sharedState->getSwitchLabel(), 0);
+  new_dw->get(switch_condition, d_sharedState->get_switch_label(), 0);
 
 
   if (!switch_condition)
@@ -815,7 +815,7 @@ Switcher::needRecompile(       double   time,
     d_computedVars.clear();
     d_componentIndex++;
     d_sharedState->clearMaterials();
-    d_sharedState->setSwitchState(true);
+    d_sharedState->d_switchState = true;
     
     // Reseting the GeometryPieceFactory only (I believe) will ever need to be done
     // by the Switcher component...
@@ -845,7 +845,7 @@ Switcher::needRecompile(       double   time,
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
 
     // read in <Time> block from ups file
-    d_sharedState->getSimTime()->problemSetup(subCompUps);
+    d_sharedState->d_simTime->problemSetup(subCompUps);
 
     // execute the subcomponent ProblemSetup
     d_sim->problemSetup(subCompUps, restart_prob_spec, const_cast<GridP&>(grid), d_sharedState);
@@ -868,7 +868,7 @@ Switcher::needRecompile(       double   time,
     proc0cout << "__________________________________\n\n";
   } 
   else {
-    d_sharedState->setSwitchState(false);
+    d_sharedState->d_switchState = false;
   }
   retval |= d_sim->needRecompile(time, delt, grid);
 

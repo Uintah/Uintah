@@ -51,8 +51,6 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/StringUtil.h>
 
-#include <sci_defs/visit_defs.h>
-
 #include <iomanip>
 #include <cerrno>
 #include <fstream>
@@ -356,19 +354,6 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointWalltimeInterval << " wall clock seconds,"
               << " starting time:" << d_checkpointWalltimeStart << " sec.\n";
   }
-  
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( d_sharedState->getVisIt() & !initialized ) {
-    d_sharedState->d_debugStreams.push_back( &dbg  );
-    d_sharedState->d_debugStreams.push_back( &dbgPIDX );
-
-    initialized = true;
-  }
-#endif
 }
 //______________________________________________________________________
 //
@@ -385,7 +370,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
 
   if( Parallel::usingMPI() ) {
 
-    if( d_sharedState->getUsingLocalFileSystems() ) {
+    if( d_sharedState->d_usingLocalFileSystems ) {
       setupLocalFileSystems();
     }
     else {
@@ -904,7 +889,7 @@ DataArchiver::finalizeTimestep(double time,
   // or if there is a component switch or a new level in the grid
   // - BJW
   if (((delt != 0 || d_outputInitTimestep) && !d_wereSavesAndCheckpointsInitialized) || 
-      d_sharedState->getSwitchState() || grid->numLevels() != d_numLevelsInOutput) {
+        d_sharedState->d_switchState || grid->numLevels() != d_numLevelsInOutput) {
       /* skip the initialization timestep (normally, anyway) for this
          because it needs all computes to be set
          to find the save labels */

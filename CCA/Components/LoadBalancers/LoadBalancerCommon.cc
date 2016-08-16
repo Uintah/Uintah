@@ -158,7 +158,7 @@ int
 LoadBalancerCommon::getPatchwiseProcessorAssignment( const Patch * patch )
 {
   // If on a copy-data timestep and we ask about an old patch, that could cause problems.
-  if( m_shared_state->getCopyDataTimestep() && patch->getRealPatch()->getID() < m_assignment_base_patch ) {
+  if( m_shared_state->isCopyDataTimestep() && patch->getRealPatch()->getID() < m_assignment_base_patch ) {
     return -patch->getID();
   }
  
@@ -571,7 +571,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
           }
         }
         
-        if (m_shared_state->getCopyDataTimestep() && proc == me) {
+        if (m_shared_state->isCopyDataTimestep() && proc == me) {
           if (oldGrid->numLevels() > l) {
             // on copy data timestep we need old patches that line up with this proc's patches,
             // get the other way around at the end
@@ -594,7 +594,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
         }
 
         // add AMR stuff - so the patch will know about coarsening and refining
-        if (l > 0 && (proc == me || (oldproc == me && !m_shared_state->getCopyDataTimestep()))) {
+        if (l > 0 && (proc == me || (oldproc == me && !m_shared_state->isCopyDataTimestep()))) {
           LevelP coarseLevel = level;
 
           // get the max level offset and max ghost cells to consider for neighborhood creation
@@ -624,7 +624,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
           }
         }
 
-        if (l < grid->numLevels() - 1 && (proc == me || (oldproc == me && !m_shared_state->getCopyDataTimestep()))) {
+        if (l < grid->numLevels() - 1 && (proc == me || (oldproc == me && !m_shared_state->isCopyDataTimestep()))) {
 
           IntVector ghost(maxGhost, maxGhost, maxGhost);
           const LevelP& fineLevel = level->getFinerLevel();
@@ -647,7 +647,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
     }
   }
 
-  if (m_shared_state->getCopyDataTimestep()) {
+  if (m_shared_state->isCopyDataTimestep()) {
     // Regrid timestep postprocess 
     // 1)- go through the old grid and 
     //     find which patches used to be on this proc 
