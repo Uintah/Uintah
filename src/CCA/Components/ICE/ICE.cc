@@ -99,7 +99,7 @@ using namespace Uintah;
 //  default is OFF
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
-static DebugStream ds_EqPress("DBG_EqPress",    false);
+static DebugStream ds_EqPress("DBG_EqPress",false);
 
 
 ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
@@ -138,16 +138,16 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   
   d_exchCoeff = scinew ExchangeCoefficients();
   
-  d_conservationTest        = scinew conservationTest_flags();
+  d_conservationTest         = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
 
-  d_customInitialize_basket = scinew customInitialize_basket();
+  d_customInitialize_basket  = scinew customInitialize_basket();
   d_BC_globalVars           = scinew customBC_globalVars();            
-  d_BC_globalVars->lodi     = scinew Lodi_globalVars();               
-  d_BC_globalVars->slip     = scinew slip_globalVars();               
-  d_BC_globalVars->mms      = scinew mms_globalVars();                
-  d_BC_globalVars->sine     = scinew sine_globalVars();               
-  d_BC_globalVars->inletVel = scinew inletVel_globalVars();           
+  d_BC_globalVars->lodi     =  scinew Lodi_globalVars();               
+  d_BC_globalVars->slip     =  scinew slip_globalVars();               
+  d_BC_globalVars->mms      =  scinew mms_globalVars();                
+  d_BC_globalVars->sine     =  scinew sine_globalVars();               
+  d_BC_globalVars->inletVel =  scinew inletVel_globalVars();           
   d_press_matl    = 0;
   d_press_matlSet = 0;
 }
@@ -544,7 +544,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
       is_BC_specified(prob_spec, Labelname, tvar->matls);
     }
     
-    d_modelInfo = scinew ModelInfo(d_sharedState->getDeltLabel(),
+    d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),
                                lb->modelMass_srcLabel,
                                lb->modelMom_srcLabel,
                                lb->modelEng_srcLabel,
@@ -583,25 +583,21 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     SimulationState::interactiveVar var;
     var.name     = "ICE-OrderOfAdvection";
     var.type     = Uintah::TypeDescription::int_type;
-    var.value    = (void *) &d_OrderOfAdvection;
+    var.Ivalue   = &d_OrderOfAdvection;
     var.modifiable = true;
     var.recompile  = true;
     var.modified   = false;
-    d_sharedState->d_UPSVars.push_back( var );
+    d_sharedState->d_interactiveVars.push_back( var );
 
     // variable 2 - Must start with the component name and have NO
     // spaces in the var name
     var.name     = "ICE-gravity";
     var.type     = Uintah::TypeDescription::Vector;
-    var.value    = (void *) &d_gravity;
+    var.Vvalue   = &d_gravity;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
-    d_sharedState->d_UPSVars.push_back( var );
-
-    d_sharedState->d_debugStreams.push_back( &cout_norm  );
-    d_sharedState->d_debugStreams.push_back( &cout_doing );
-    d_sharedState->d_debugStreams.push_back( &ds_EqPress );
+    d_sharedState->d_interactiveVars.push_back( var );
 
     initialized = true;
   }
@@ -845,7 +841,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gn,  0, true);   
   t->requires(Task::NewDW, lb->viscosityLabel,     gn,  0, true);        
   
-  t->computes(d_sharedState->getDeltLabel(),level.get_rep());
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
   sched->addTask(t,level->eachPatch(), ice_matls); 
   
   //__________________________________
@@ -3274,7 +3270,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
     
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(),level);   
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);   
      
     // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++) {
@@ -3418,7 +3414,7 @@ void ICE::updateVel_FC(const ProcessorGroup*,
     }
  
     delt_vartype delT;
-    pOldDW->get(delT, d_sharedState->getDeltLabel(),level);   
+    pOldDW->get(delT, d_sharedState->get_delt_label(),level);   
      
     constCCVariable<double> imp_delP; 
     new_dw->get(imp_delP, lb->imp_delPLabel, 0,   patch,gac, 1);
@@ -3631,7 +3627,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMatls();
     delt_vartype delT;
-    pOldDW->get(delT, d_sharedState->getDeltLabel(),level);
+    pOldDW->get(delT, d_sharedState->get_delt_label(),level);
 
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
     StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
@@ -3753,11 +3749,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
     int numMatls  = d_sharedState->getNumMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(),level);
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx     = patch->dCell();
     double inv_vol    = 1.0/(dx.x()*dx.y()*dx.z()); 
     
-    bool newGrid = d_sharedState->getRegridTimestep();
+    bool newGrid = d_sharedState->isRegridTimestep();
     Advector* advector = d_advector->clone(new_dw,patch,newGrid );   
 
     CCVariable<double> q_advected;
@@ -4352,7 +4348,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     IntVector right, left, top, bottom, front, back;
 
     delt_vartype delT; 
-    old_dw->get(delT, d_sharedState->getDeltLabel(),level);
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
  
     Vector dx      = patch->dCell();
     double vol     = dx.x() * dx.y() * dx.z();
@@ -4454,7 +4450,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(),level);
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx = patch->dCell();
     double A, vol=dx.x()*dx.y()*dx.z();
     
@@ -4732,7 +4728,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     printTask(patches, patch, cout_doing, "Doing ICE::computeLagrangianSpecificVolume" );
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(),level);
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
@@ -4996,7 +4992,7 @@ void ICE::addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
     printTask(patches, patch, cout_doing, "Doing ICE::addExchangeToMomentumAndEnergy_1matl" );
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(),level);
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
     CCVariable<double>  Temp_CC;
     constCCVariable<double>  gamma;
@@ -5126,7 +5122,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
     
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(),level);
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
     //Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
@@ -5542,9 +5538,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
     cout_doing << " progressVar " << AMR_subCycleProgressVar << endl;
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(),level);
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
-    bool newGrid = d_sharedState->getRegridTimestep();
+    bool newGrid = d_sharedState->isRegridTimestep();
     Advector* advector = d_advector->clone(new_dw,patch,newGrid );
 
 
@@ -5855,7 +5851,7 @@ void ICE::TestConservation(const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, d_sharedState->getDeltLabel(),level);
+  old_dw->get(delT, d_sharedState->get_delt_label(),level);
      
   double total_mass     = 0.0;      
   double total_KE       = 0.0;      

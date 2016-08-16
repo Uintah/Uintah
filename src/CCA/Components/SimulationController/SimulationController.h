@@ -39,6 +39,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
+#include <sci_defs/visit_defs.h>
+
 namespace Uintah {
 
 class  DataArchive;
@@ -99,6 +101,10 @@ public:
   //  sets simulationController flags
   void setReduceUdaFlags( const std::string& fromDir );
      
+  // Tells sim controller that we are running with each MPI node having a separate file system.
+  // (Simulation defaults to running on a shared file system.)
+  void setUseLocalFileSystems();
+
   ProblemSpecP         getProblemSpecP() { return d_ups; }
   ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
   SimulationStateP     getSimulationStateP() { return d_sharedState; }
@@ -147,6 +153,8 @@ protected:
 
   bool d_doAMR;
   bool d_doMultiTaskgraphing;
+
+  bool d_usingLocalFileSystems; // Whether Uintah is running on a shared or local file systems.
 
   /* For restarting */
   bool        d_restarting;
@@ -207,6 +215,16 @@ private:
   //                     LoadBalancer* lb ) = 0;
   // SimulationController(const SimulationController&) = 0;
   // SimulationController& operator=(const SimulationController&) = 0;
+
+
+#ifdef HAVE_VISIT
+public:
+  void setVisIt( bool val ) { d_doVisIt = val; }
+  bool getVisIt() { return d_doVisIt; }
+  
+private:
+  bool d_doVisIt;
+#endif      
 };
 
 } // End namespace Uintah

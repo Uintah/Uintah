@@ -72,7 +72,7 @@ void preprocess_CustomBCs(const string& where,
 {
   delt_vartype delT;
   const Level* level = patch->getLevel();
-  old_dw->get(delT, gv->sharedState->getDeltLabel(),level);
+  old_dw->get(delT, gv->sharedState->get_delt_label(),level);
    
   //__________________________________
   //   LODI

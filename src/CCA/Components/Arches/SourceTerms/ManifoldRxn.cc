@@ -87,7 +87,7 @@ ManifoldRxn::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1); 
   tsk->requires(Task::NewDW, VarLabel::find("density"), Ghost::None, 0); 
   tsk->requires(Task::NewDW, VarLabel::find("turb_viscosity"), Ghost::AroundCells, 1); 
-  tsk->requires(Task::OldDW, _shared_state->getDeltLabel());
+  tsk->requires(Task::OldDW, _shared_state->get_delt_label());
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -160,7 +160,7 @@ ManifoldRxn::computeSource( const ProcessorGroup* pc,
     double vol = Dx.x()*Dx.y()*Dx.z(); 
 
     delt_vartype DT;
-    old_dw->get(DT, _shared_state->getDeltLabel() );
+    old_dw->get(DT, _shared_state->get_delt_label() );
     double dt = DT; 
     double voldt = vol/dt; 
 

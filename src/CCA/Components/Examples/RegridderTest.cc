@@ -114,7 +114,7 @@ namespace Uintah
   void RegridderTest::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "computeStableTimestep", this, &RegridderTest::computeStableTimestep );
-    task->computes( d_sharedState->getDeltLabel(),level.get_rep() );
+    task->computes( d_sharedState->get_delt_label(),level.get_rep() );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
@@ -133,9 +133,9 @@ namespace Uintah
     task->requires( Task::OldDW, d_currentAngleLabel, (Level*) 0);
     task->requires( Task::NewDW, d_densityLabel, Ghost::AroundCells, 1 );
     task->requires( Task::NewDW, d_oldDensityLabel, Ghost::AroundCells, 1 );
-    task->modifies( d_sharedState->getRefineFlagLabel(), d_sharedState->refineFlagMaterials() );
-    task->modifies( d_sharedState->getOldRefineFlagLabel(), d_sharedState->refineFlagMaterials() );
-    task->modifies( d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials() );
+    task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
+    task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
+    task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     task->computes( d_currentAngleLabel, (Level*) 0);
     scheduler->addTask( task, scheduler->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMaterials() );
   }
@@ -144,9 +144,9 @@ namespace Uintah
   {
     Task* task = scinew Task( "initialErrorEstimate", this, &RegridderTest::errorEstimate, true );
     task->requires( Task::NewDW, d_densityLabel, Ghost::AroundCells, 1 );
-    task->modifies( d_sharedState->getRefineFlagLabel(), d_sharedState->refineFlagMaterials() );
-    task->modifies( d_sharedState->getOldRefineFlagLabel(), d_sharedState->refineFlagMaterials() );
-    task->modifies( d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials() );
+    task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
+    task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
+    task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
@@ -209,7 +209,7 @@ namespace Uintah
   {
     const Level* level = getLevel(patches);
     double delt = level->dCell().x();
-    new_dw->put(delt_vartype(delt), d_sharedState->getDeltLabel(), level);
+    new_dw->put(delt_vartype(delt), d_sharedState->get_delt_label(), level);
   }
 
   void RegridderTest::timeAdvance ( const ProcessorGroup*,
@@ -295,13 +295,13 @@ namespace Uintah
       dbg << d_myworld->myrank() << "  RegridderTest::errorEstimate() on patch " << patch->getID()<< endl;
 
       CCVariable<int> refineFlag;
-      new_dw->getModifiable(refineFlag, d_sharedState->getRefineFlagLabel(), 0, patch);
+      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(), 0, patch);
 
       CCVariable<int> oldRefineFlag;
-      new_dw->getModifiable(oldRefineFlag, d_sharedState->getOldRefineFlagLabel(), 0, patch);
+      new_dw->getModifiable(oldRefineFlag, d_sharedState->get_oldRefineFlag_label(), 0, patch);
 
       PerPatch<PatchFlagP> refinePatchFlag;
-      new_dw->get(refinePatchFlag, d_sharedState->getRefinePatchFlagLabel(), 0, patch);
+      new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(), 0, patch);
       PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
 
       bool foundErrorOnPatch = false;

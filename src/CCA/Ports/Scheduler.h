@@ -227,7 +227,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual int getMaxLevelOffset() = 0;
 
-    virtual bool getCopyDataTimestep() = 0;
+    virtual bool isCopyDataTimestep() = 0;
 
     virtual void setInitTimestep( bool ) = 0;
 

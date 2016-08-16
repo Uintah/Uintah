@@ -181,7 +181,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* /* dt*/, int rank )
     return;
   }
 
-  if (!m_out_port->getOutputTimestep()) {
+  if (!m_out_port->isOutputTimestep()) {
     return;
   }
 
@@ -248,7 +248,7 @@ SchedulerCommon::finalizeNodes( int process /* = 0 */ )
     return;
   }
 
-  if (m_out_port->getOutputTimestep()) {
+  if (m_out_port->isOutputTimestep()) {
     std::string timestep_dir(m_out_port->getLastTimestepOutputLocation());
 
     std::ostringstream fname;
@@ -1644,7 +1644,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                     GridVariableBase* newVariable = v->cloneType();
                     newVariable->rewindow(newLowIndex, newHighIndex);
                     newVariable->copyPatch(v, srclow, srchigh);
-                    newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, getCopyDataTimestep(), false);
+                    newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, isCopyDataTimestep(), false);
 
                   } else {
                     GridVariableBase* newVariable = dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl,

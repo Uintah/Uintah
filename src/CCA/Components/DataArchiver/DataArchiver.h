@@ -181,10 +181,10 @@ class DataWarehouse;
        virtual int getNextCheckpointTimestep() const { return d_nextCheckpointTimestep; }
 
        //! Returns true if data will be output this timestep
-       virtual bool getOutputTimestep() const { return d_isOutputTimestep; }
+       virtual bool isOutputTimestep() const { return d_isOutputTimestep; }
 
        //! Returns true if data will be checkpointed this timestep
-       virtual bool getCheckpointTimestep() const { return d_isCheckpointTimestep; }
+       virtual bool isCheckpointTimestep() const { return d_isCheckpointTimestep; }
 
        //! Get the directory of the current time step for outputting info.
        virtual const std::string& getLastTimestepOutputLocation() const { return d_lastTimestepLocation; }

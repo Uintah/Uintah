@@ -718,7 +718,7 @@ void AMRICE::refluxOperator_computeCorrectionFluxes(
   
   // number of sub cycles
   double nSubCycles = 1;
-  if(!d_sharedState->getLockstepAMR()){
+  if(!d_sharedState->isLockstepAMR()){
     nSubCycles = (double)fineLevel->getRefinementRatioMaxDim();
   }
 

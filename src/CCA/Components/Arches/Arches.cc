@@ -258,7 +258,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   //__________________________________
   // Bulletproofing needed for multi-level RMCRT
-  if(d_doAMR && !sharedState->getLockstepAMR()) {
+  if(d_doAMR && !sharedState->isLockstepAMR()) {
     ostringstream msg;
     msg << "\n ERROR: You must add \n"
         << " <useLockStep> true </useLockStep> \n"
@@ -364,7 +364,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   nofTimeSteps++;
 
-  if( d_sharedState->getRegridTimestep() ) { // needed for single level regridding on restarts
+  if( d_sharedState->isRegridTimestep() ) { // needed for single level regridding on restarts
     d_doingRestart = true;                  // this task is called twice on a regrid.
     d_recompile_taskgraph =true;
     d_sharedState->setRegridTimestep(false);

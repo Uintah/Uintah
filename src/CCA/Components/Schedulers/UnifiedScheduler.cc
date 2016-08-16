@@ -546,7 +546,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
       if (!task->getTask()->getHasSubScheduler()) {
         // add my task time to the total time
         mpi_info_[TotalTask] += total_task_time;
-        if (!m_shared_state->getCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+        if (!m_shared_state->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
           // add contribution of task execution time to load balancer
           getLoadBalancer()->addContribution(task, total_task_time);
         }
@@ -652,7 +652,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
                          )
 {
   // copy data timestep must be single threaded for now
-  if (Uintah::Parallel::usingMPI() && m_shared_state->getCopyDataTimestep()) {
+  if (Uintah::Parallel::usingMPI() && m_shared_state->isCopyDataTimestep()) {
     MPIScheduler::execute( tgnum, iteration );
     return;
   }
@@ -735,7 +735,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
-  if (!m_shared_state->getCopyDataTimestep()) {
+  if (!m_shared_state->isCopyDataTimestep()) {
     Impl::g_run_tasks = 1;
     for (int i = 1; i < Impl::g_num_threads; ++i) {
       Impl::g_thread_states[i] = Impl::ThreadState::Active;
@@ -751,7 +751,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
-  if (!m_shared_state->getCopyDataTimestep()) {
+  if (!m_shared_state->isCopyDataTimestep()) {
     Impl::g_run_tasks = 0;
 
     Impl::thread_fence();
@@ -1251,7 +1251,7 @@ UnifiedScheduler::runTasks( int thread_id )
           // which can be even costlier overall.  So we do the check here.)
           // So check everything, except for ouputVariables tasks when it's not an output timestep.
 
-          if ((m_out_port->getOutputTimestep())
+          if ((m_out_port->isOutputTimestep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             assignDevicesAndStreams(readyTask);
@@ -4209,7 +4209,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
         if (req->toTasks.front()->getTask()->getType() == Task::Output
-            && !m_out_port->getOutputTimestep() && !m_out_port->getCheckpointTimestep()) {
+            && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             gpu_stats << myRankThread()
@@ -4269,7 +4269,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->getOutputTimestep() && !m_out_port->getCheckpointTimestep()) {
+        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             {

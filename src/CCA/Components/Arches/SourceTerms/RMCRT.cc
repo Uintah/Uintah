@@ -133,7 +133,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
       //__________________________________
       //  bulletproofing
-      if(!_sharedState->getLockstepAMR()){
+      if(!_sharedState->isLockstepAMR()){
         ostringstream msg;
         msg << "\n ERROR: You must add \n"
             << " <useLockStep> true </useLockStep> \n"

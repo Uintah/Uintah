@@ -17,9 +17,9 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>11</x>
+      <x>10</x>
       <y>10</y>
-      <width>631</width>
+      <width>630</width>
       <height>730</height>
      </rect>
     </property>
@@ -730,46 +730,39 @@
       <property name="title">
        <string>Simulation Intereaction</string>
       </property>
-      <widget class="QGroupBox" name="StateVariableGroupBox">
+      <widget class="QGroupBox" name="DebugGroupBox">
        <property name="geometry">
         <rect>
-         <x>10</x>
-         <y>130</y>
-         <width>251</width>
-         <height>161</height>
+         <x>310</x>
+         <y>20</y>
+         <width>281</width>
+         <height>71</height>
         </rect>
        </property>
        <property name="title">
-        <string>State Variables</string>
+        <string>Debug options</string>
        </property>
-       <widget class="QTableWidget" name="StateVariableTable">
+       <widget class="QCheckBox" name="ScrubDataWarehouse">
         <property name="geometry">
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>231</width>
-          <height>121</height>
+          <width>170</width>
+          <height>20</height>
          </rect>
         </property>
-        <column>
-         <property name="text">
-          <string>State Variable</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Value</string>
-         </property>
-        </column>
+        <property name="text">
+         <string>Scrub Data Warehouse</string>
+        </property>
        </widget>
       </widget>
       <widget class="QGroupBox" name="DebugStreamGroupBox">
        <property name="geometry">
         <rect>
-         <x>270</x>
-         <y>20</y>
-         <width>321</width>
-         <height>271</height>
+         <x>10</x>
+         <y>130</y>
+         <width>361</width>
+         <height>181</height>
         </rect>
        </property>
        <property name="title">
@@ -780,8 +773,8 @@
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>301</width>
-          <height>231</height>
+          <width>341</width>
+          <height>141</height>
          </rect>
         </property>
         <column>
@@ -801,14 +794,14 @@
         </column>
        </widget>
        <zorder>DebugStreamTable</zorder>
-       <zorder>StateVariableGroupBox</zorder>
+       <zorder>DebugGroupBox</zorder>
       </widget>
       <widget class="QGroupBox" name="TimeStepGroupBox">
        <property name="geometry">
         <rect>
          <x>10</x>
          <y>20</y>
-         <width>251</width>
+         <width>281</width>
          <height>101</height>
         </rect>
        </property>

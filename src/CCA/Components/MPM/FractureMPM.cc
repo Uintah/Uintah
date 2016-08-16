@@ -163,7 +163,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pSizeLabel);
   t->computes(lb->pDispGradsLabel);
   t->computes(lb->pStrainEnergyDensityLabel);
-  t->computes(d_sharedState->getDeltLabel(),level.get_rep());
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
   // Debugging Scalar
@@ -463,7 +463,7 @@ void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
     t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
-  t->computes(d_sharedState->getDeltLabel(),getLevel(patches));
+  t->computes(d_sharedState->get_delt_label(),getLevel(patches));
   t->computes(lb->StrainEnergyLabel);
 
   sched->addTask(t, patches, matls);
@@ -639,7 +639,7 @@ void FractureMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &FractureMPM::computeAndIntegrateAcceleration);
 
-  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
@@ -696,7 +696,7 @@ void FractureMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                     this, &FractureMPM::setGridBoundaryConditions);
                   
   const MaterialSubset* mss = matls->getUnion();
-  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
   
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
@@ -728,7 +728,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
 
 
-  t->requires(Task::OldDW, d_sharedState->getDeltLabel() );
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType   gac = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
@@ -912,12 +912,12 @@ void FractureMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
     task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
   }
   else {
-    task->requires(Task::NewDW, d_sharedState->getRefineFlagLabel(),
+    task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(),
                    0, Task::FineLevel, d_sharedState->refineFlagMaterials(),
                    Task::NormalDomain, Ghost::None, 0);
   }
-  task->modifies(d_sharedState->getRefineFlagLabel(), d_sharedState->refineFlagMaterials());
-  task->modifies(d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 
 }
@@ -936,8 +936,8 @@ void FractureMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   Task* task = scinew Task("errorEstimate", this, &FractureMPM::initialErrorEstimate);
   task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
 
-  task->modifies(d_sharedState->getRefineFlagLabel(), d_sharedState->refineFlagMaterials());
-  task->modifies(d_sharedState->getRefinePatchFlagLabel(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
@@ -1847,7 +1847,7 @@ void FractureMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches));
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
 
       // Get required variables for this patch
       constNCVariable<Vector>  velocity;
@@ -1921,7 +1921,7 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
     delt_vartype delT;            
-    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
                       
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2180,7 +2180,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->getDeltLabel(), getLevel(patches) );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
     bool combustion_problem=false;
 
     Material* reactant;
@@ -2420,9 +2420,9 @@ FractureMPM::initialErrorEstimate(const ProcessorGroup*,
 
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
-    new_dw->getModifiable(refineFlag, d_sharedState->getRefineFlagLabel(),
+    new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
                           0, patch);
-    new_dw->get(refinePatchFlag, d_sharedState->getRefinePatchFlagLabel(),
+    new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
                 0, patch);
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
@@ -2476,9 +2476,9 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
 
-      new_dw->getModifiable(refineFlag, d_sharedState->getRefineFlagLabel(),
+      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
                             0, coarsePatch);
-      new_dw->get(refinePatchFlag, d_sharedState->getRefinePatchFlagLabel(),
+      new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
                   0, coarsePatch);
         
       PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
@@ -2491,7 +2491,7 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
 
         // Get the particle data
         constCCVariable<int> fineErrorFlag;
-        new_dw->get(fineErrorFlag, d_sharedState->getRefineFlagLabel(), 0,
+        new_dw->get(fineErrorFlag, d_sharedState->get_refineFlag_label(), 0,
                     finePatch, Ghost::None, 0);
 
         IntVector fl(finePatch->getExtraCellLowIndex());
