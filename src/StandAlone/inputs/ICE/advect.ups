@@ -137,9 +137,9 @@
               <lower>        [0,0,0]    </lower>
               <upper>        [5,5,5]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [10,10,10]    </patches>
+              <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [.1,.1,.1]    </spacing>
+           <spacing>         [1,1,1]    </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
