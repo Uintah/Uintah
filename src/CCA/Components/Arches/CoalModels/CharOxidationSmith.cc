@@ -320,21 +320,21 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     SimulationState::interactiveVar var;
     var.name     = "Arches-CharOx-PreExp-Factor-O2";
     var.type     = Uintah::TypeDescription::double_type;
-    var.Dvalue   = &(_a_l[0]);
+    var.value    = (void *) &(_a_l[0]);
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
-    d_sharedState->d_interactiveVars.push_back( var );
+    d_sharedState->d_UPSVars.push_back( var );
 
     // variable 2 - Must start with the component name and have NO
     // spaces in the var name.
     var.name     = "Arches-CharOx-Activation-Energy-O2";
     var.type     = Uintah::TypeDescription::double_type;
-    var.Dvalue   = &(_e_l[0]);
+    var.value    = (void *) &(_e_l[0]);
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
-    d_sharedState->d_interactiveVars.push_back( var );
+    d_sharedState->d_UPSVars.push_back( var );
 
     initialized = true;
   }

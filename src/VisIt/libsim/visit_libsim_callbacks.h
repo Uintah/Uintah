@@ -81,7 +81,7 @@ namespace Uintah {
   void visit_StopAtTimeStepCallback(char *val, void *cbdata);
   void visit_StopAtLastTimeStepCallback(int val, void *cbdata);
 
-  void visit_ScrubDataWarehouseCallback(int val, void *cbdata);
+  void visit_StateVariableTableCallback(char *val, void *cbdata);
 
   void visit_StripChartCallback (char *val, void *cbdata);
 

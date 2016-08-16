@@ -583,21 +583,25 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     SimulationState::interactiveVar var;
     var.name     = "ICE-OrderOfAdvection";
     var.type     = Uintah::TypeDescription::int_type;
-    var.Ivalue   = &d_OrderOfAdvection;
+    var.value    = (void *) &d_OrderOfAdvection;
     var.modifiable = true;
     var.recompile  = true;
     var.modified   = false;
-    d_sharedState->d_interactiveVars.push_back( var );
+    d_sharedState->d_UPSVars.push_back( var );
 
     // variable 2 - Must start with the component name and have NO
     // spaces in the var name
     var.name     = "ICE-gravity";
     var.type     = Uintah::TypeDescription::Vector;
-    var.Vvalue   = &d_gravity;
+    var.value    = (void *) &d_gravity;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
-    d_sharedState->d_interactiveVars.push_back( var );
+    d_sharedState->d_UPSVars.push_back( var );
+
+    d_sharedState->d_debugStreams.push_back( &cout_norm  );
+    d_sharedState->d_debugStreams.push_back( &cout_doing );
+    d_sharedState->d_debugStreams.push_back( &ds_EqPress );
 
     initialized = true;
   }

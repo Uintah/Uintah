@@ -206,11 +206,11 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
     SimulationState::interactiveVar var;
     var.name     = "Arches-Devol-Ultimate-Yield";
     var.type     = Uintah::TypeDescription::double_type;
-    var.Dvalue   = &( _v_hiT);
+    var.value    = (void *) &( _v_hiT);
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
-    d_sharedState->d_interactiveVars.push_back( var );
+    d_sharedState->d_UPSVars.push_back( var );
 
     initialized = true;
   }

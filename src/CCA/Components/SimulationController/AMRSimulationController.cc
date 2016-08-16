@@ -196,8 +196,30 @@ AMRSimulationController::run()
 
   if( d_sharedState->getVisIt() )
   {
+    d_sharedState->d_debugStreams.push_back( &amrout );
+    d_sharedState->d_debugStreams.push_back( &dbg );
+    d_sharedState->d_debugStreams.push_back( &dbg_barrier );
+    d_sharedState->d_debugStreams.push_back( &dbg_dwmem );
+    d_sharedState->d_debugStreams.push_back( &gprofile );
+    d_sharedState->d_debugStreams.push_back( &gheapprofile );
+    d_sharedState->d_debugStreams.push_back( &gheapchecker );
+
     visitSimData.simController = this;
 
+    // Running with VisIt so add in the variables that the user can
+    // modify.
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    SimulationState::interactiveVar var;
+    var.name     = "Scrub-Data-Warehouse";
+    var.type     = Uintah::TypeDescription::bool_type;
+    var.value    = (void *) &(scrubDataWarehouse);
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_stateVars.push_back( var );
+
+    
     visit_InitLibSim( &visitSimData );
   }
 #endif
@@ -530,8 +552,6 @@ AMRSimulationController::run()
       if( visit_CheckState( &visitSimData ) )
 	break;
 
-      scrubDataWarehouse = visitSimData.scrubDataWarehouse;
-      
       // Check to see if at the last iteration. If so stop so the
       // user can have once last chance see the data.
       // if( visitSimData.stopAtLastTimeStep && last )
@@ -782,10 +802,9 @@ AMRSimulationController::needRecompile( double        time,
   // graph to be recompiled.
 
   // ARS - Should this check be on the component level?
-  for( unsigned int i=0; i<d_sharedState->d_interactiveVars.size(); ++i )
+  for( unsigned int i=0; i<d_sharedState->d_UPSVars.size(); ++i )
   {
-    SimulationState::interactiveVar &var =
-      d_sharedState->d_interactiveVars[i];
+    SimulationState::interactiveVar &var = d_sharedState->d_UPSVars[i];
 
     if( var.modified && var.recompile )
     {

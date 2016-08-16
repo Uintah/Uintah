@@ -398,30 +398,33 @@ public:
     std::vector< const VarLabel* > labels;
   };
   
-  std::vector< analysisVar >    d_analysisVars;
+  std::vector< analysisVar > d_analysisVars;
 
-  // Interactive variables from the UPS problem spec.
+  // Interactive variables from the UPS problem spec or other state variables.
   struct interactiveVar {
     std::string name;
     TypeDescription::Type type;
-    int*    Ivalue;
-    double* Dvalue;
-    Vector* Vvalue;
+    void *  value;
     bool    modifiable; // If true the variable maybe modified.
     bool    modified;   // If true the variable was modified by the user.
     bool    recompile;  // If true and the variable was modified recompile the task graph.
   };
   
-  std::vector< interactiveVar > d_interactiveVars;
+  // Interactive variables from the UPS problem spec.
+  std::vector< interactiveVar > d_UPSVars;
 
+  // Interactive state variables from components.
+  std::vector< interactiveVar > d_stateVars;
+
+  // Debug streams that can be turned on or off.
+  std::vector< DebugStream * > d_debugStreams;
+  
   void setVisIt( bool val ) { d_doVisIt = val; }
   bool getVisIt() { return d_doVisIt; }
 
-  std::vector< DebugStream * > d_debugStreams;
-  
 private:
   bool d_doVisIt;
-#endif      
+#endif
 }; // end class SimulationState
 
 } // End namespace Uintah

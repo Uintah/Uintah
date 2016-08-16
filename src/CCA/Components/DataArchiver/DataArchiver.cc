@@ -51,6 +51,8 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/StringUtil.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <iomanip>
 #include <cerrno>
 #include <fstream>
@@ -425,7 +427,19 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
   if (Parallel::usingMPI()) { 
     Uintah::MPI::Barrier(d_myworld->getComm());
   }
+  
+#ifdef HAVE_VISIT
+  static bool initialized = false;
 
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( d_sharedState->getVisIt() & !initialized ) {
+    d_sharedState->d_debugStreams.push_back( &dbg  );
+    d_sharedState->d_debugStreams.push_back( &dbgPIDX );
+
+    initialized = true;
+  }
+#endif
 } // end initializeOutput()
 
 //______________________________________________________________________

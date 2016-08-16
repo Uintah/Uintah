@@ -643,7 +643,9 @@ visit_handle visit_SimGetMetaData(void *cbdata)
     // These are one time initializations.
     VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);
     VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);
-    VisItUI_setValueI("ScrubDataWarehouse", sim->scrubDataWarehouse, 1);
+
+    // Set the custom UI optional state variable table
+    visit_SetStateVars( sim );
 
     // Set the custom UI debug stream table
     visit_SetDebugStreams( sim );
