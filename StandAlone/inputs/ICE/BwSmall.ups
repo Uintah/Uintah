@@ -14,11 +14,11 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.5         </maxTime>
+       <maxTime>            0.01        </maxTime>
        <initTime>           0.0         </initTime>
-       <delt_min>           1.0e-5      </delt_min>
+       <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-5      </delt_init>
+       <delt_init>          1.0e-9      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -139,7 +139,7 @@
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>[0.25,0.25,0.25] </spacing>
+           <spacing>[0.5,0.5,0.5] </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
