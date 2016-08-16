@@ -104,9 +104,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
 
   d_grid_ps                = d_ups->findBlock( "Grid" );
 
-#ifdef HAVE_VISIT
-  d_doVisIt                = false;
-#endif
+  d_sharedState = scinew SimulationState( d_ups );
 
 #ifdef USE_PAPI_COUNTERS
   /*
@@ -289,12 +287,6 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 void
 SimulationController::preGridSetup( void )
 {
-  d_sharedState = scinew SimulationState( d_ups );
-
-#ifdef HAVE_VISIT
-  d_sharedState->setVisIt( d_doVisIt );
-#endif
-
   d_sharedState->d_usingLocalFileSystems = d_usingLocalFileSystems;
 
   d_output = dynamic_cast<Output*>(getPort("output"));

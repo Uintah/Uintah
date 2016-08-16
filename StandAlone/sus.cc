@@ -689,8 +689,9 @@ main( int argc, char *argv[], char *env[] )
     SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
 
 #ifdef HAVE_VISIT
-    ctl->setVisIt( do_VisIt );
+    ctl->getSimulationStateP()->setVisIt( do_VisIt );
 #endif
+
     if( local_filesystem ) {
       ctl->setUseLocalFileSystems();
     }

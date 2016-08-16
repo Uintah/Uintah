@@ -488,22 +488,30 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
 
   getTableCMD( val, row, column, str);
 
-  std::vector< SimulationState::interactiveVar > &vars =
-    simStateP->d_interactiveVars;
+  std::vector< SimulationState::interactiveVar > &vars = simStateP->d_UPSVars;
       
   SimulationState::interactiveVar &var = vars[row];
 
   switch( var.type )
   {       
+    case Uintah::TypeDescription::bool_type:
+    {
+      bool *val = (bool*) var.value;
+      *val = atoi( str );
+      break;
+    }
+    
     case Uintah::TypeDescription::int_type:
     {
-      *(var.Ivalue) = atoi( str );
+      int *val = (int*) var.value;
+      *val = atoi( str );
       break;
     }
     
     case Uintah::TypeDescription::double_type:
     {
-      *(var.Dvalue) = atof( str );
+      double *val = (double*) var.value;
+      *val = atof( str );
       break;
     }
     
@@ -511,7 +519,9 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
     {
       double x, y, z;
       sscanf(str, "%lf,%lf,%lf", &x, &y, &z);
-      *(var.Vvalue) = Vector(x, y, z);
+
+      Vector *val = (Vector*) var.value;
+      *val = Vector(x, y, z);
       break;
     }
     default:
@@ -660,14 +670,85 @@ void visit_StopAtLastTimeStepCallback(int val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// ScrubDataWarehouseCallback
+// StateVariableTableCallback
 //     Custom UI callback
 //---------------------------------------------------------------------
-void visit_ScrubDataWarehouseCallback(int val, void *cbdata)
+void visit_StateVariableTableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->scrubDataWarehouse = val;
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  unsigned int row, column;
+  char str[128];
+
+  getTableCMD( val, row, column, str);
+
+  std::vector< SimulationState::interactiveVar > &vars =
+    simStateP->d_stateVars;
+      
+  SimulationState::interactiveVar &var = vars[row];
+
+  switch( var.type )
+  {       
+    case Uintah::TypeDescription::bool_type:
+    {
+      bool *val = (bool*) var.value;
+      *val = atoi( str );
+      break;
+    }
+    
+    case Uintah::TypeDescription::int_type:
+    {
+      int *val = (int*) var.value;
+      *val = atoi( str );
+      break;
+    }
+    
+    case Uintah::TypeDescription::double_type:
+    {
+      double *val = (double*) var.value;
+      *val = atof( str );
+      break;
+    }
+    
+    case Uintah::TypeDescription::Vector:
+    {
+      double x, y, z;
+      sscanf(str, "%lf,%lf,%lf", &x, &y, &z);
+
+      Vector *val = (Vector*) var.value;
+      *val = Vector(x, y, z);
+      break;
+    }
+    default:
+      throw InternalError(" invalid data type", __FILE__, __LINE__); 
+  }
+
+  // Set the modified flag to true so the component knows the variable
+  // was modified.
+  var.modified = true;
+
+  // Changing this variable may require recompiling the task graph.
+  if( var.recompile )
+    simStateP->setRecompileTaskGraph( true );
+
+  if( sim->isProc0 )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - At time step " << sim->cycle << " "
+        << "the user modified the variable " << var.name << " "
+        << "to be " << str << ". ";
+
+    if( var.recompile )
+      msg << "The task graph will be recompiled.";
+      
+    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+    
+    visitdbg << msg.str().c_str() << std::endl;
+    visitdbg.flush();
+  }
 }
 
 //---------------------------------------------------------------------
