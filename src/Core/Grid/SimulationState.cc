@@ -42,6 +42,7 @@
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
+#include <CCA/Components/FVM/FVMMaterial.h>
 
 using namespace Uintah;
 using namespace std;
@@ -106,6 +107,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_ice_matls     = 0;
   all_wasatch_matls = 0;  
   all_arches_matls  = 0;
+  all_fvm_matls     = 0;
   all_matls         = 0;
   orig_all_matls    = 0;
   allInOneMatl      = 0;
@@ -267,6 +269,20 @@ void SimulationState::registerWasatchMaterial(WasatchMaterial* matl)
 void SimulationState::registerWasatchMaterial(WasatchMaterial* matl,unsigned int index)
 {
   wasatch_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+//__________________________________
+//
+void SimulationState::registerFVMMaterial(FVMMaterial* matl)
+{
+  fvm_matls.push_back(matl);
+  registerMaterial(matl);
+}
+//__________________________________
+//
+void SimulationState::registerFVMMaterial(FVMMaterial* matl,unsigned int index)
+{
+  fvm_matls.push_back(matl);
   registerMaterial(matl,index);
 }
 //__________________________________

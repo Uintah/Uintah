@@ -26,6 +26,9 @@
 
   <MaterialProperties>
     <FVM   spec="OPTIONAL NO_DATA">
+      <material  spec="MULTIPLE NO_DATA" attribute1="name OPTIONAL STRING" >
+        <geom_object          spec="MULTIPLE" />
+      </material>
     </FVM>
   </MaterialProperties>
 

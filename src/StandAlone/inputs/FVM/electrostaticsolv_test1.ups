@@ -43,7 +43,7 @@
        </Face>
        <Face side = "x+">
          <BCType id = "all" label = "Voltage" var = "Dirichlet">
-                <value> 0.0 </value>
+                <value> 1.0 </value>
          </BCType>
        </Face>
        <Face side = "y-">
@@ -63,7 +63,7 @@
        </Face>                  
        <Face side = "z+">
          <BCType id = "all" label = "Voltage" var = "Dirichlet">
-                <value> 1.0 </value>
+                <value> 0.0 </value>
          </BCType>
         </Face>
      </BoundaryConditions>
