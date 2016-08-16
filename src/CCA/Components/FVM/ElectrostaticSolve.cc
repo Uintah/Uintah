@@ -109,8 +109,8 @@ void ElectrostaticSolve::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("computeStableTimestep",this, 
                            &ElectrostaticSolve::computeStableTimestep);
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->computes(d_shared_state->get_delt_label(),level.get_rep());
+  sched->addTask(task, level->eachPatch(), d_shared_state->allMaterials());
 }
 //__________________________________
 //
@@ -138,7 +138,7 @@ void ElectrostaticSolve::computeStableTimestep(const ProcessorGroup*,
                                   const MaterialSubset*,
                                   DataWarehouse*, DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(pss));
+  new_dw->put(delt_vartype(d_delt), d_shared_state->get_delt_label(),getLevel(pss));
 }
 //__________________________________
 //
