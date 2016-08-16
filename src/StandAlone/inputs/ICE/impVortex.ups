@@ -208,28 +208,9 @@
     
     <!--____________________________________________________________________-->
     <DataAnalysis>
-      <Module name="flatPlate_heatFlux">
-        <material>atmosphere</material>
-	<plane>
-          <startingPt>[0, 0, 0]</startingPt>
-          <endingPt>[1, 1, 0]</endingPt>
-	</plane>
-      </Module>
-
-      <Module name="vorticity">
+       <Module name="vorticity">
         <material>atmosphere</material>
       </Module>
-
-      <Module name="statistics">
-        <timeStart>0.0</timeStart>
-        <timeStop>1.0</timeStop>
-	<Variables>
-          <analyze label="press_CC"  matl="0"/>
-          <analyze label="temp_CC"   matl="0"/>
-          <analyze label="vel_CC"    matl="0"/>
-	</Variables>
-      </Module>
-      
   </DataAnalysis>
 
 </Uintah_specification>
