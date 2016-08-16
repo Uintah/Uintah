@@ -1251,7 +1251,7 @@ UnifiedScheduler::runTasks( int thread_id )
           // which can be even costlier overall.  So we do the check here.)
           // So check everything, except for ouputVariables tasks when it's not an output timestep.
 
-          if ((m_out_port->isOutputTimestep())
+          if ((m_out_port->getOutputTimestep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             assignDevicesAndStreams(readyTask);
@@ -4209,7 +4209,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
         if (req->toTasks.front()->getTask()->getType() == Task::Output
-            && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+            && !m_out_port->getOutputTimestep() && !m_out_port->getCheckpointTimestep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             gpu_stats << myRankThread()
@@ -4269,7 +4269,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->getOutputTimestep() && !m_out_port->getCheckpointTimestep()) {
           if (gpu_stats.active()) {
             cerrLock.lock();
             {
