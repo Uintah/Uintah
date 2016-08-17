@@ -44,6 +44,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <iostream> // debug only
 #include <stack>
 #include <vector>
@@ -894,5 +896,22 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
   m_sfc.SetMergeMode(1);
   m_sfc.SetCleanup(BATCHERS);
   m_sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_shared_state->getVisIt() & !initialized ) {
+    m_shared_state->d_debugStreams.push_back( &doing  );
+    m_shared_state->d_debugStreams.push_back( &lb );
+    m_shared_state->d_debugStreams.push_back( &dbg );
+    m_shared_state->d_debugStreams.push_back( &stats  );
+    m_shared_state->d_debugStreams.push_back( &times );
+    m_shared_state->d_debugStreams.push_back( &lbout );
+
+    initialized = true;
+  }
+#endif
 }
 

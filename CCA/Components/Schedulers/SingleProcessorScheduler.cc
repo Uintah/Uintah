@@ -35,6 +35,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
+#include <sci_defs/visit_defs.h>
+
 using namespace Uintah;
 
 static DebugStream dbg("SingleProcessorScheduler", false);
@@ -59,6 +61,14 @@ SingleProcessorScheduler::createSubScheduler()
   UintahParallelPort       * lbp      = getPort("load balancer");
   subsched->attachPort( "load balancer", lbp );
   subsched->m_shared_state = m_shared_state;
+
+#ifdef HAVE_VISIT
+  if( m_shared_state->getVisIt() )
+  {
+    m_shared_state->d_debugStreams.push_back( &dbg );
+  }
+#endif
+
   return subsched;
 }
 

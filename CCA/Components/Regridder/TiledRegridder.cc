@@ -34,6 +34,9 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+
+#include <sci_defs/visit_defs.h>
+
 using namespace Uintah;
 
 #include <iomanip>
@@ -430,6 +433,19 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
       problemSetup_BulletProofing(k);
     }
   }
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( d_sharedState->getVisIt() & !initialized ) {
+    d_sharedState->d_debugStreams.push_back( &grid_dbg );
+    d_sharedState->d_debugStreams.push_back( &rgtimes );
+
+    initialized = true;
+  }
+#endif
 }
 
 //_________________________________________________________________

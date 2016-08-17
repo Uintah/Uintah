@@ -40,6 +40,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <cfloat>
 #include <climits>
 #include <mutex>
@@ -767,6 +769,28 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
   if (p != 0) {
     p->getWithDefault("outputNthProc", m_output_Nth_proc, 1);
   }
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_shared_state->getVisIt() & !initialized ) {
+    SimulationState::interactiveVar var;
+    var.name     = "LoadBalancer-DoSpaceCurve";
+    var.type     = Uintah::TypeDescription::bool_type;
+    var.value    = (void *) &m_do_space_curve;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    m_shared_state->d_UPSVars.push_back( var );
+
+//    m_shared_state->d_debugStreams.push_back( &g_lb_dbg  );
+//    m_shared_state->d_debugStreams.push_back( &g_neighborhood_dbg );
+
+    initialized = true;
+  }
+#endif
 }
 
 //______________________________________________________________________
