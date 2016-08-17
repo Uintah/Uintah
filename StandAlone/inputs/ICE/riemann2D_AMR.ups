@@ -27,7 +27,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.5         </maxTime>
+       <maxTime>            0.30      </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -135,17 +135,12 @@
    <DataArchiver>
       <filebase>riemann2D_AMR.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-<!--  <checkpoint timestepInterval="5" cycle="2"/> -->
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="sp_vol_CC"/>
-
-      <save label="pressX_FC"/> 
-      <save label="pressY_FC"/> 
-      <save label="pressZ_FC"/> 
 
       <save label="mag_grad_rho_CC"/>
       <save label="mag_grad_temp_CC"/>
@@ -275,20 +270,4 @@
       </ICE>       
     </MaterialProperties>  
                      
- <!--__________________________________-->
-   <DataAnalysis>
-
-     <Module name = "minMax">
-       <samplingFrequency> 1e10 </samplingFrequency>
-       <timeStart>          0   </timeStart>
-       <timeStop>          100  </timeStop>
-       <Variables>
-         <analyze label="press_CC"  matl="0"/>
-         <analyze label="temp_CC"   matl="0"/>
-         <analyze label="vel_CC"    matl="0"/>
-       </Variables>
-     </Module>
-
-   </DataAnalysis>
-
- </Uintah_specification>
+</Uintah_specification>
