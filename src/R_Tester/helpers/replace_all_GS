@@ -89,24 +89,40 @@ end
 
 #__________________________________
 # Verify the user inputs
-set message = "\n "
+
+# use a file instead of a shell variable for all dialog parameters.
+# When replacing many tests > 50 you can exceed the system word limit for shell variables
+#
+# write the header
+/bin/rm .dialog
+echo "--stdout --yesno " > .dialog
+echo '"Replace the following tests: (PgUp/PgDwn to scroll)\n' >> .dialog
+
 foreach indx ($choices[*]:q) 
 
   #parse the temp file for the component and test
-  set comp = `awk -v n=$indx -- '{if ($1 == n) print $2}' $tmpFile`
-  set test = `awk -v n=$indx -- '{if ($1 == n) print $3}' $tmpFile`
+  set component = `awk -v n=$indx -- '{if ($1 == n) print $2}' $tmpFile`
+  set test      = `awk -v n=$indx -- '{if ($1 == n) print $3}' $tmpFile`
   
   if ( $#opts > 0 )  then
-    echo "Replacing GS for $comp $test"
-    set message = ($message $comp "----" $test "\n")
+    echo "Replacing GS for $component $test"
+    set label = "$component--$test\n"
+    echo $label >> .dialog      # add this component's test to the message
   endif
 end 
 
-dialog --stdout --yesno "Replace the following tests:\n $message \n Log message: $logMessage \n Replacing: $opts\n\n Is this correct?" 15 61
+# write footer
+echo "\nLog message: $logMessage \n" >> .dialog
+echo "Replacing: $opts\n\n"          >> .dialog
+echo 'Is this correct?"'             >> .dialog
+echo "30 61"                         >> .dialog
+
+dialog --file .dialog
 
 if ($status != 0) then
   goto begin
 endif
+
 clear
 
 #__________________________________
@@ -130,5 +146,5 @@ end
 
 
 # cleanup
-#/bin/rm $tmpFile
+/bin/rm $tmpFile .dialog
 
