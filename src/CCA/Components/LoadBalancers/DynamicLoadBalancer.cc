@@ -45,6 +45,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <iostream> // debug only
 #include <stack>
 #include <vector>
@@ -1209,4 +1211,21 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
 
     d_costForecaster->setMinPatchSize(mps);
   }
+
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( m_shared_state->getVisIt() & !initialized ) {
+    m_shared_state->d_debugStreams.push_back( &doing  );
+    m_shared_state->d_debugStreams.push_back( &lb );
+    m_shared_state->d_debugStreams.push_back( &dbg );
+    m_shared_state->d_debugStreams.push_back( &stats  );
+    m_shared_state->d_debugStreams.push_back( &times );
+    m_shared_state->d_debugStreams.push_back( &lbout );
+
+    initialized = true;
+  }
+#endif
 }

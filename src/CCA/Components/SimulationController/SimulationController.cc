@@ -49,6 +49,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
+#include <sci_defs/visit_defs.h>
+
 #include <cstring>
 #include <fstream>
 #include <iomanip>
@@ -305,6 +307,17 @@ SimulationController::preGridSetup( void )
   if( amr_ps ) {
     amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
   }
+
+#ifdef HAVE_VISIT
+  if( d_sharedState->getVisIt() )
+  {
+    d_sharedState->d_debugStreams.push_back( &dbg );
+    d_sharedState->d_debugStreams.push_back( &dbgTime );
+    d_sharedState->d_debugStreams.push_back( &simdbg );
+    d_sharedState->d_debugStreams.push_back( &stats );
+    d_sharedState->d_debugStreams.push_back( &istats );
+  }
+#endif
 }
 
 //______________________________________________________________________
