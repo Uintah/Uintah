@@ -100,7 +100,7 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   //
   d_sharedState = state;
   d_sharedState->setIsLockstepAMR(true);
-  d_sharedState->d_switchState = true;         /// HACK NEED TO CHANGE THIS
+  d_sharedState->setSwitchState(true);         /// HACK NEED TO CHANGE THIS
    
   // This matl is for delT
   d_oneMatl = scinew SimpleMaterial();

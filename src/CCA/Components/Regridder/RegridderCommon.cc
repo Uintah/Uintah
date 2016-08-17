@@ -98,11 +98,11 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
 
   if (d_dynamicDilation) {
     if (d_sharedState->getCurrentTopLevelTimeStep() - d_dilationTimestep > 5)  //make sure a semi-decent sample has been taken
-        {
+    {
       //compute the average overhead
 
       //if above overhead threshold
-      if (d_sharedState->overheadAvg > d_amrOverheadHigh) {
+      if (d_sharedState->getOverheadAvg() > d_amrOverheadHigh) {
         //increase dilation
         int numDims = d_sharedState->getNumDims();
         int *activeDims = d_sharedState->getActiveDims();
@@ -127,7 +127,7 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
         }
       }
       //if below overhead threshold
-      else if (d_sharedState->overheadAvg < d_amrOverheadLow) {
+      else if (d_sharedState->getOverheadAvg() < d_amrOverheadLow) {
         //decrease dilation
         int numDims = d_sharedState->getNumDims();
         int *activeDims = d_sharedState->getActiveDims();
@@ -639,7 +639,7 @@ RegridderCommon::scheduleDilation(const LevelP& level)
   IntVector regrid_depth = d_cellRegridDilation;
   //IntVector delete_depth=d_cellDeletionDilation;
 
-  if (d_sharedState->d_lockstepAMR) {
+  if (d_sharedState->isLockstepAMR()) {
     //scale regrid dilation according to level
     int max_level = std::min(grid->numLevels() - 1, d_maxLevels - 2);   //finest level that is dilated
     int my_level = level->getIndex();

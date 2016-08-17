@@ -90,18 +90,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   checkpointTimestepInterval_label = nonconstCheckpointTimestepInv;
 
   //__________________________________
-  d_elapsed_time = 0.0;
+  max_matl_index    = 0;
 
-  d_adjustDelT                = true;
-  d_lockstepAMR               = false;
-  d_updateOutputInterval      = false;
-  d_updateCheckpointInterval  = false;
-  ProblemSpecP amr = ps->findBlock("AMR");
-  
-  if (amr){
-    amr->get("useLockStep", d_lockstepAMR);
-  }
-  
   all_mpm_matls     = 0;
   all_cz_matls      = 0;
   all_ice_matls     = 0;
@@ -109,31 +99,41 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_arches_matls  = 0;
   all_fvm_matls     = 0;
   all_matls         = 0;
+  
   orig_all_matls    = 0;
-  allInOneMatl      = 0;
-  
-  max_matl_index    = 0;
   refine_flag_matls = 0;
-  d_isRegridTimestep = 0;
+  allInOneMatl      = 0;
+
+  d_topLevelTimeStep = 0;
+  d_elapsed_time     = 0.0;
+
+  d_numDims = 0;
+  d_activeDims[0] = d_activeDims[1] = d_activeDims[2] = 0;
+
+  d_isCopyDataTimestep        = false;
+
+  d_isRegridTimestep          = false;
+   
+  d_timeRefinementRatio       = 0;
+  
+  d_adjustDelT                = true;
+  d_lockstepAMR               = false;
+  d_updateOutputInterval      = false;
+  d_updateCheckpointInterval  = false;
+  d_recompileTaskGraph        = false;
+  d_overheadAvg               = 0; // Average time spent in overhead.
+  d_usingLocalFileSystems     = false;
+
+  d_switchState               = false;
+  
   d_simTime         = 0;
-  d_numDims         = 0;
-  
-  d_isCopyDataTimestep = 0;
-  d_recompileTaskGraph = false;
-  d_switchState        = false;
-  d_activeDims[0]      = d_activeDims[1] = d_activeDims[2] = 0;
 
-  d_usingLocalFileSystems = false;
+  ProblemSpecP amr = ps->findBlock("AMR");
   
-  //initialize the overhead percentage
-  overheadIndex=0;
-  overheadAvg=0;
-  for(int i=0;i<OVERHEAD_WINDOW;i++){
-    double x=i/(OVERHEAD_WINDOW/2);
-    overheadWeights[i]=8-x*x*x;
-    overhead[i]=0;
+  if (amr){
+    amr->get("useLockStep", d_lockstepAMR);
   }
-
+    
   std::string timeStr("seconds");
   std::string bytesStr("MBytes");
     

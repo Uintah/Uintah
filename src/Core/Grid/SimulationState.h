@@ -43,8 +43,6 @@
 #include <vector>
 #include <iostream>
 
-
-#define OVERHEAD_WINDOW 40
 namespace Uintah {
 
 
@@ -214,34 +212,46 @@ public:
   void incrementCurrentTopLevelTimeStep() { d_topLevelTimeStep++; }
 
 
-  bool getRecompileTaskGraph() const { return d_recompileTaskGraph; }   
-  void setRecompileTaskGraph(bool ans) { d_recompileTaskGraph = ans; }    
-
   Material* parseAndLookupMaterial(ProblemSpecP& params,
                                    const std::string& name) const;
   Material* getMaterialByName(const std::string& name) const;
 
-  inline int getMaxMatlIndex() { return max_matl_index; }
+  inline int getMaxMatlIndex() const { return max_matl_index; }
 
-  bool isCopyDataTimestep() { return d_isCopyDataTimestep; }
+  bool isCopyDataTimestep() const { return d_isCopyDataTimestep; }
   void setCopyDataTimestep(bool is_cdt) { d_isCopyDataTimestep = is_cdt; }
   
-  bool isRegridTimestep() { return d_isRegridTimestep; }
+  bool isRegridTimestep() const { return d_isRegridTimestep; }
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
-  bool adjustDelT() { return d_adjustDelT; }
+  bool adjustDelT() const { return d_adjustDelT; }
   void adjustDelT(bool ans) { d_adjustDelT = ans; }
   
-  bool isLockstepAMR() { return d_lockstepAMR; }
+  bool isLockstepAMR() const { return d_lockstepAMR; }
   void setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
   
-  bool updateOutputInterval() { return d_updateOutputInterval; }
+  bool updateOutputInterval() const { return d_updateOutputInterval; }
   void updateOutputInterval(bool ans) { d_updateOutputInterval = ans; }
   
-  bool updateCheckpointInterval() { return d_updateCheckpointInterval; }
+  bool updateCheckpointInterval() const { return d_updateCheckpointInterval; }
   void updateCheckpointInterval(bool ans) { d_updateCheckpointInterval = ans; }
 
-  int getNumDims() { return d_numDims; }
+  bool getRecompileTaskGraph() const { return d_recompileTaskGraph; }   
+  void setRecompileTaskGraph(bool ans) { d_recompileTaskGraph = ans; }    
+
+  double getOverheadAvg() const { return d_overheadAvg; }   
+  void setOverheadAvg(double val) { d_overheadAvg = val; }    
+
+  bool getUseLocalFileSystems() const { return d_usingLocalFileSystems; }   
+  void setUseLocalFileSystems(bool ans) { d_usingLocalFileSystems = ans; }    
+
+  bool getSwitchState() const { return d_switchState; }   
+  void setSwitchState(bool ans) { d_switchState = ans; }    
+    
+  SimulationTime * getSimulationTime() const { return d_simTime; }   
+  void setSimulationTime(SimulationTime * simTime) { d_simTime = simTime; }
+
+  int getNumDims() const { return d_numDims; }
   int* getActiveDims() { return d_activeDims; }
   void setDimensionality(bool x, bool y, bool z);
 
@@ -250,20 +260,6 @@ public:
 
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
-
-  bool   d_switchState;
-  double d_prev_delt;
-  double d_current_delt;
-
-  SimulationTime * d_simTime;
-
-  bool d_adjustDelT;
-  bool d_lockstepAMR;
-  bool d_updateCheckpointInterval;
-  bool d_updateOutputInterval;
-  bool d_recompileTaskGraph;
-
-  bool d_usingLocalFileSystems;  // Denotes whether each MPI node has a separate file system.
 
   void resetStats();
   
@@ -304,13 +300,6 @@ public:
   };
 
   ReductionInfoMapper< RunTimeStat, double > d_runTimeStats;
-
-  // Percent time in overhead samples
-  double overhead[OVERHEAD_WINDOW];
-  double overheadWeights[OVERHEAD_WINDOW];
-  // Next sample to write to
-  int    overheadIndex;
-  double overheadAvg;
 
 private:
 
@@ -387,7 +376,24 @@ private:
 
   // for AMR, how many times to execute a fine level per coarse level execution
   int d_timeRefinementRatio;
-  
+
+  bool d_adjustDelT;
+  bool d_lockstepAMR;
+  bool d_updateCheckpointInterval;
+  bool d_updateOutputInterval;
+  bool d_recompileTaskGraph;
+
+  double d_overheadAvg; // Average time spent in overhead.
+
+  // Tells the data archiver that we are running with each MPI node
+  // having a separate file system.  (Simulation defaults to running
+  // on a shared file system.)
+  bool d_usingLocalFileSystems;
+
+  bool d_switchState;
+
+  SimulationTime* d_simTime;
+
 #ifdef HAVE_VISIT
 public:
   // Reduction analysis variables for on the fly analysis

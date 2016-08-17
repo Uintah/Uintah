@@ -304,7 +304,7 @@ AMRSimulationController::run()
 #endif
     {
       // delt adjusted based on timeinfo parameters
-      adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
+      adjustDelT( delt, d_prev_delt, first, time );
       newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
     }
 
@@ -433,8 +433,6 @@ AMRSimulationController::run()
       }
     }
 
-    d_sharedState->d_current_delt = delt;
-
     // For the first time through the loop print the initial runtime
     // performance stats. Use a time step of -1 to note that these
     // stats are from before the executeTimestep.
@@ -483,7 +481,7 @@ AMRSimulationController::run()
     // Update the time.
     time += delt;
 
-    d_sharedState->d_prev_delt = delt;
+    d_prev_delt = delt;
 
     ++iterations;
     

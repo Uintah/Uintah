@@ -451,8 +451,7 @@ void DDT1::initialize(const ProcessorGroup*,
                       DataWarehouse* new_dw){
   int m0 = d_matl0->getDWIndex();
   
-  SimulationTime* simTime = d_sharedState->d_simTime;
-  double initTimestep = simTime->max_initial_delt;
+  double initTimestep = d_sharedState->getSimulationTime()->max_initial_delt;
   
  
   for(int p=0;p<patches->size();p++) {
@@ -1062,8 +1061,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
               inductionTime_new =  (delta_x*A)/S_f_new ;
               inductionTime[c] = inductionTime_new ;
 
-              SimulationTime* simTime = d_sharedState->d_simTime;
-              double initTimestep = simTime->max_initial_delt;
+              double initTimestep = d_sharedState->getSimulationTime()->max_initial_delt;
 
               if(inductionTimeOld[c] != ( initTimestep + 1e-20)){ //initializes induction time to the calculated indcutiontime on the first timestep. 
                 inductionTime[c] = (0.2*inductionTime_new) + (0.8*inductionTimeOld[c]) ;

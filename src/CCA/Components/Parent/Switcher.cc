@@ -300,7 +300,7 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
   
   
   // read in <Time> block from ups file
-  d_sharedState->d_simTime->problemSetup( subCompUps );    
+  d_sharedState->getSimulationTime()->problemSetup( subCompUps );    
     
   //__________________________________
   // init Variables:
@@ -815,7 +815,7 @@ Switcher::needRecompile(       double   time,
     d_computedVars.clear();
     d_componentIndex++;
     d_sharedState->clearMaterials();
-    d_sharedState->d_switchState = true;
+    d_sharedState->setSwitchState(true);
     
     // Reseting the GeometryPieceFactory only (I believe) will ever need to be done
     // by the Switcher component...
@@ -845,7 +845,7 @@ Switcher::needRecompile(       double   time,
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
 
     // read in <Time> block from ups file
-    d_sharedState->d_simTime->problemSetup(subCompUps);
+    d_sharedState->getSimulationTime()->problemSetup( subCompUps );    
 
     // execute the subcomponent ProblemSetup
     d_sim->problemSetup(subCompUps, restart_prob_spec, const_cast<GridP&>(grid), d_sharedState);
@@ -868,7 +868,7 @@ Switcher::needRecompile(       double   time,
     proc0cout << "__________________________________\n\n";
   } 
   else {
-    d_sharedState->d_switchState = false;
+    d_sharedState->setSwitchState(false);
   }
   retval |= d_sim->needRecompile(time, delt, grid);
 

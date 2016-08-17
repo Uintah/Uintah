@@ -372,7 +372,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
 
   if( Parallel::usingMPI() ) {
 
-    if( d_sharedState->d_usingLocalFileSystems ) {
+    if( d_sharedState->getUseLocalFileSystems() ) {
       setupLocalFileSystems();
     }
     else {
@@ -903,7 +903,7 @@ DataArchiver::finalizeTimestep(double time,
   // or if there is a component switch or a new level in the grid
   // - BJW
   if (((delt != 0 || d_outputInitTimestep) && !d_wereSavesAndCheckpointsInitialized) || 
-        d_sharedState->d_switchState || grid->numLevels() != d_numLevelsInOutput) {
+      d_sharedState->getSwitchState() || grid->numLevels() != d_numLevelsInOutput) {
       /* skip the initialization timestep (normally, anyway) for this
          because it needs all computes to be set
          to find the save labels */

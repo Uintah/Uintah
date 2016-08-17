@@ -87,7 +87,16 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
                                                   ProblemSpecP     pspec ) :
   UintahParallelComponent( myworld ), d_ups( pspec ), d_doAMR( doAMR )
 {
-  d_n                      = 0;
+  //initialize the overhead percentage
+  overheadIndex = 0;
+  
+  for(int i=0; i<OVERHEAD_WINDOW; ++i){
+    double x = (double) i / (double) (OVERHEAD_WINDOW/2);
+    overheadValues[i] = 0;
+    overheadWeights[i]= 8 - x*x*x;
+  }
+
+  d_nSamples               = 0;
   d_wallTime               = 0;
   d_startTime              = 0;
   d_prevWallTime           = 0;
@@ -98,14 +107,16 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_restarting             = false;
   d_reduceUda              = false;
   d_doMultiTaskgraphing    = false;
-  d_usingLocalFileSystems  = false;
   d_archive                = nullptr;
   d_sim                    = 0;
 
   d_grid_ps                = d_ups->findBlock( "Grid" );
 
+  d_timeinfo    = scinew SimulationTime( d_ups );
   d_sharedState = scinew SimulationState( d_ups );
 
+  d_sharedState->setSimulationTime( d_timeinfo );
+  
 #ifdef USE_PAPI_COUNTERS
   /*
    * Setup PAPI events to track.
@@ -262,15 +273,6 @@ SimulationController::setReduceUdaFlags( const string & fromDir )
 //
 
 void
-SimulationController::setUseLocalFileSystems()
-{
-  d_usingLocalFileSystems = true;
-}
-
-//______________________________________________________________________
-//
-
-void
 SimulationController::doRestart( const string & restartFromDir, int timestep,
                                  bool fromScratch, bool removeOldDir )
 {
@@ -287,8 +289,6 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 void
 SimulationController::preGridSetup( void )
 {
-  d_sharedState->d_usingLocalFileSystems = d_usingLocalFileSystems;
-
   d_output = dynamic_cast<Output*>(getPort("output"));
     
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
@@ -305,10 +305,6 @@ SimulationController::preGridSetup( void )
   if( amr_ps ) {
     amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
   }
-  
-  // Parse time struct
-  d_timeinfo = scinew SimulationTime( d_ups );
-  d_sharedState->d_simTime = d_timeinfo;
 }
 
 //______________________________________________________________________
@@ -460,7 +456,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
     // Set prevDelt to what it was in the last simulation.  If in the last 
     // sim we were clamping delt based on the values of prevDelt, then
     // delt will be off if it doesn't match.
-    d_sharedState->d_prev_delt = d_archive->getOldDelt( d_restartIndex );
+    d_prev_delt = d_archive->getOldDelt( d_restartIndex );
 
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
     // Tell the scheduler the generation of the re-started simulation.
@@ -606,7 +602,7 @@ void
 SimulationController::initSimulationStatsVars ( void )
 {
   // vars used to calculate standard deviation
-  d_n = 0;
+  d_nSamples = 0;
   d_wallTime = 0;
   d_prevWallTime = Time::currentSeconds();
   //d_sumOfWallTimes = 0; // sum of all walltimes
@@ -653,26 +649,29 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   // Calculate percentage of time spent in overhead.
   double percent_overhead = overhead_time / total_time;
   
-  //set the overhead sample
-  if( d_n > 2 ) { // Ignore the first 3 samples, they are not good samples.
-    d_sharedState->overhead[d_sharedState->overheadIndex] = percent_overhead;
-    // Increment the overhead index
+  // Set the overhead sample. Ignore the first 3 samples, they are not
+  // good samples.
+  if( d_nSamples > 2 )
+  {
+    overheadValues[overheadIndex] = percent_overhead;
 
     double overhead = 0;
     double weight = 0;
 
-    int t = min( d_n - 2, OVERHEAD_WINDOW );
-    //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
-    for( int i = 0; i < t; i++ ) {
-      overhead += d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW] * d_sharedState->overheadWeights[i];
-      weight += d_sharedState->overheadWeights[i];
+    int t = min( d_nSamples - 2, OVERHEAD_WINDOW );
+    // Calcualte total weight by incrementing through the overhead
+    // sample array backwards and multiplying samples by the weights
+    for( int i=0; i<t; ++i )
+    {
+      unsigned int index = (overheadIndex-i+OVERHEAD_WINDOW) % OVERHEAD_WINDOW;
+      overhead += overheadValues[index] * overheadWeights[i];
+      weight += overheadWeights[i];
     }
 
-    d_sharedState->overheadAvg = overhead/weight; 
-    d_sharedState->overheadIndex =
-      (d_sharedState->overheadIndex+1) % OVERHEAD_WINDOW;
+    // Increment the overhead index
+    overheadIndex = (overheadIndex+1) % OVERHEAD_WINDOW;
 
-    // Increase overhead size if needed.
+    d_sharedState->setOverheadAvg( overhead / weight );
   } 
 
   // calculate mean/std dev
@@ -680,23 +679,23 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   double mean = 0;
   double walltime = d_wallTime-d_prevWallTime;
 
-  if (d_n > 2) { // ignore times 0,1,2
+  if (d_nSamples > 2) { // ignore times 0,1,2
     //walltimes.push_back();
     //d_sumOfWallTimes += (walltime);
     //d_sumOfWallTimeSquares += pow(walltime,2);
 
     //alpha=2/(N+1)
-    float alpha = 2.0 / (min(d_n-2,AVERAGE_WINDOW)+1);  
+    float alpha = 2.0 / (min(d_nSamples-2,AVERAGE_WINDOW)+1);  
     d_movingAverage = alpha*walltime + (1-alpha) * d_movingAverage;
     mean = d_movingAverage;
   }
   
   /*
-    if (d_n > 3) {
+    if (d_nSamples > 3) {
     // divide by n-2 and not n, because we wait till n>2 to keep track
     // of our stats
-    stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
-    //mean = d_sumOfWallTimes / (d_n-2);
+    stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_nSamples-2);
+    //mean = d_sumOfWallTimes / (d_nSamples-2);
     //         ofstream timefile("avg_elapsed_wallTime.txt");
     //         timefile << mean << " +- " << stdDev << "\n";
     }
@@ -723,7 +722,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   {
     char walltime[96];
 
-    if (d_n > 3)
+    if (d_nSamples > 3)
     {
       //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
       sprintf( walltime, ", elap T = %6.2lf (mean: %6.2lf), ", d_wallTime, mean );
@@ -780,13 +779,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	}
       }
       
-      if( d_n > 2 && !std::isnan(d_sharedState->overheadAvg) ) {
+      if( d_nSamples > 2 && !std::isnan(d_sharedState->getOverheadAvg()) ) {
         stats << "  Percent Time in overhead:"
-              << d_sharedState->overheadAvg*100 <<  "\n";
+              << d_sharedState->getOverheadAvg()*100.0 <<  "\n";
       }
     }
 
-    if ( d_n > 0 ) {
+    if ( d_nSamples > 0 ) {
       double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
       double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
 
@@ -840,7 +839,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     d_prevWallTime = d_wallTime;
   }
 
-  d_n++;
+  ++d_nSamples;
 
 } // end printSimulationStats()
 
