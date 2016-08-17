@@ -39,6 +39,9 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
+// Increase overhead size if needed.
+#define OVERHEAD_WINDOW 40
+
 namespace Uintah {
 
 class  DataArchive;
@@ -99,10 +102,6 @@ public:
   //  sets simulationController flags
   void setReduceUdaFlags( const std::string& fromDir );
      
-  // Tells sim controller that we are running with each MPI node having a separate file system.
-  // (Simulation defaults to running on a shared file system.)
-  void setUseLocalFileSystems();
-
   ProblemSpecP         getProblemSpecP() { return d_ups; }
   ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
   SimulationStateP     getSimulationStateP() { return d_sharedState; }
@@ -152,8 +151,8 @@ protected:
   bool d_doAMR;
   bool d_doMultiTaskgraphing;
 
-  bool d_usingLocalFileSystems; // Whether Uintah is running on a shared or local file systems.
-
+  double d_prev_delt;
+  
   /* For restarting */
   bool        d_restarting;
   std::string d_fromDir;
@@ -195,8 +194,12 @@ protected:
 #endif
 
 private:
+// Percent time in overhead samples
+  double overheadValues[OVERHEAD_WINDOW];
+  double overheadWeights[OVERHEAD_WINDOW];
+  int    overheadIndex; // Next sample for writing
 
-  int    d_n;
+  int    d_nSamples;
   double d_wallTime;              // current wall time
   double d_startTime;             // starting wall time
   double d_startSimTime;          // starting sim time

@@ -688,13 +688,12 @@ main( int argc, char *argv[], char *env[] )
 
     SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
 
+    ctl->getSimulationStateP()->setUseLocalFileSystems( local_filesystem );
+
 #ifdef HAVE_VISIT
     ctl->getSimulationStateP()->setVisIt( do_VisIt );
 #endif
 
-    if( local_filesystem ) {
-      ctl->setUseLocalFileSystems();
-    }
 
     RegridderCommon* reg = 0;
     if(do_AMR) {
