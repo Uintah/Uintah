@@ -53,16 +53,12 @@ namespace Uintah{
 
       struct HTVariables {
 
-        bool averaging_update; 
         double time; 
         double delta_t; 
-        double t_ave_start; // time to reach steady thermal profile
         CCVariable<double> T; 
         CCVariable<double> T_copy; 
         CCVariable<double> T_real; 
         CCVariable<double> deposit_thickness; 
-        CCVariable<double> d_hat_rs; 
-        CCVariable<double> d_hat_rs_start; 
         CCVariable<double> deposit_velocity; 
         constCCVariable<double> deposit_velocity_old; 
         constCCVariable<double> ave_deposit_velocity; 
@@ -76,8 +72,6 @@ namespace Uintah{
         constCCVariable<double> incident_hf_t; 
         constCCVariable<double> incident_hf_b; 
         constCCVariable<double> deposit_thickness_old; 
-        constCCVariable<double> d_hat_rs_old; 
-        constCCVariable<double> d_hat_rs_start_old; 
         CCVariable<Stencil7> total_hf; 
         constCCVariable<Vector > cc_vel; 
         WallModelDriver::RAD_MODEL_TYPE model_type; 
@@ -85,7 +79,6 @@ namespace Uintah{
       };
 
     private: 
-      double _t_ave_start; 
       std::string _dep_vel_name;
       bool do_coal_region; 
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
@@ -111,8 +104,6 @@ namespace Uintah{
       const VarLabel* _ave_dep_vel_label; 
       const VarLabel* _deposit_velocity_label; 
       const VarLabel* _deposit_thickness_label; 
-      const VarLabel* _deposit_thickness_rs_label; 
-      const VarLabel* _deposit_thickness_rs_start_label; 
 
       void doWallHT( const ProcessorGroup* my_world,
                      const PatchSubset* patches, 

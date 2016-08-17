@@ -1280,10 +1280,6 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
 
   if ( VarLabel::find("deposit_thickness"))
     tsk->computes(VarLabel::find("deposit_thickness"));
-  if ( VarLabel::find("deposit_thickness_rs"))
-    tsk->computes(VarLabel::find("deposit_thickness_rs"));
-  if ( VarLabel::find("deposit_thickness_rs_start"))
-    tsk->computes(VarLabel::find("deposit_thickness_rs_start"));
 
 sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
 
@@ -1424,10 +1420,6 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 
     if ( VarLabel::find("deposit_thickness"))
       allocateAndInitializeToC( VarLabel::find("deposit_thickness"), new_dw, indx, patch, 0.0 );
-    if ( VarLabel::find("deposit_thickness_rs"))
-      allocateAndInitializeToC( VarLabel::find("deposit_thickness_rs"), new_dw, indx, patch, 0.0 );
-    if ( VarLabel::find("deposit_thickness_rs_start"))
-      allocateAndInitializeToC( VarLabel::find("deposit_thickness_rs_start"), new_dw, indx, patch, 0.0 );
 
     if ( d_MAlab ){
       allocateAndInitializeToC( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch, 0.0 );
