@@ -22,12 +22,6 @@
     <save label="rho_coal_2"/>
     <save label="dep_velocity"/>
     <save label="deposit_thickness"/>
-    <save label="DepositVelRunningSum_0"/>
-    <save label="DepositVelRunningSum_1"/>
-    <save label="DepositVelRunningSum_2"/>
-    <save label="DepositVelRunningSumStart_0"/>
-    <save label="DepositVelRunningSumStart_1"/>
-    <save label="DepositVelRunningSumStart_2"/>
     <save label="ProbParticleX_0"/>
     <save label="ProbParticleX_1"/>
     <save label="ProbParticleX_2"/>
@@ -1390,7 +1384,6 @@
           <SiO>0.38900000000000001</SiO>
         </model>
         <model label="dep_velocity" type="deposition_velocity">
-          <t_ave_start>0.02</t_ave_start>
           <ash_density>1000</ash_density>
           <relaxation_coef>0.05</relaxation_coef>
         </model>

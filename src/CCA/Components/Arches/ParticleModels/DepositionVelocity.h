@@ -64,7 +64,6 @@ public:
     };
 
 private:
-      bool _averaging_update;
       int _Nenv;
       SimulationStateP _shared_state;
       std::vector<IntVector> _d;
@@ -74,11 +73,6 @@ private:
       std::string _ratedepy_name;
       std::string _ratedepz_name;
       std::string _rhoP_name;
-      std::string _dep_vel_rs_name;
-      std::string _dep_vel_rs_start_name;
-      std::string _new_time_name;
-      double _t_ave_start; // sim time to start time averaging.
-      double _new_time;
       double _user_specified_rho;
       double _relaxation_coe;
 
