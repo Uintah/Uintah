@@ -51,30 +51,21 @@ namespace Uintah {
 //---------------------------------------------------------------------
 void visit_SetTimeVars( visit_simulation_data *sim )
 {
-  VisItUI_setValueI("TimeStep",
-                    sim->cycle, 0);
-  VisItUI_setValueI("MaxTimeStep",
-                    sim->simController->getSimulationTime()->maxTimestep, 1);
+  SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  VisItUI_setValueD("Time",
-                    sim->time, 0);
-  VisItUI_setValueD("MaxTime",
-                    sim->simController->getSimulationTime()->maxTime, 1);
+  VisItUI_setValueI("TimeStep",     sim->cycle, 0);
+  VisItUI_setValueI("MaxTimeStep",  simTime->maxTimestep, 1);
 
-  VisItUI_setValueD("DeltaT",
-                    sim->delt, 0);
-  VisItUI_setValueD("DeltaTNext",
-                    sim->delt_next, 1);
-  VisItUI_setValueD("DeltaTFactor",
-                    sim->simController->getSimulationTime()->delt_factor, 1);
-  VisItUI_setValueD("DeltaTMin",
-                    sim->simController->getSimulationTime()->delt_min, 1);
-  VisItUI_setValueD("DeltaTMax",
-                    sim->simController->getSimulationTime()->delt_max, 1);
-  VisItUI_setValueD("ElapsedTime",
-                    sim->elapsedt, 0);
-  VisItUI_setValueD("MaxWallTime",
-                    sim->simController->getSimulationTime()->max_wall_time, 1);
+  VisItUI_setValueD("Time",         sim->time, 0);
+  VisItUI_setValueD("MaxTime",      simTime->maxTime, 1);
+
+  VisItUI_setValueD("DeltaT",       sim->delt, 0);
+  VisItUI_setValueD("DeltaTNext",   sim->delt_next, 1);
+  VisItUI_setValueD("DeltaTFactor", simTime->delt_factor, 1);
+  VisItUI_setValueD("DeltaTMin",    simTime->delt_min, 1);
+  VisItUI_setValueD("DeltaTMax",    simTime->delt_max, 1);
+  VisItUI_setValueD("ElapsedTime",  sim->elapsedt, 0);
+  VisItUI_setValueD("MaxWallTime",  simTime->max_wall_time, 1);
 
   visit_SetStripChartValue( sim, "DeltaT", sim->delt );
   visit_SetStripChartValue( sim, "DeltaTNext", sim->delt_next );
