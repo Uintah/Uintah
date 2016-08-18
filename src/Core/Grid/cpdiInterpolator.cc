@@ -93,7 +93,21 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   Vector lc = relative_node_location[7];
   Vector ld = relative_node_location[4];
 
+// Check to see if particles need to be scaled to stay within a
+// circumscribing sphere of radius d_lcrit.  la, lb, lc, and ld
+// are the distances from the particle center to the particle corners
+// For example, for a 1 PPC case, the lN are sqrt(.5*.5+.5*.5+.5*.5)=.866
+// All measurements are normalized to cell width.
+
+// This scaling was implemented to prevent the need for arbitrary number
+// of ghost nodes in parallel calculations, but its use may also improve
+// accuracy.
+
   int scale_flag = 0;
+//  cout << "la.length = " << la.length() << endl;
+//  cout << "lb.length = " << lb.length() << endl;
+//  cout << "lc.length = " << lc.length() << endl;
+//  cout << "ld.length = " << ld.length() << endl;
   if(la.length2()>lcritsq){
     la = la*(lcrit/la.length());
     scale_flag = 1;
