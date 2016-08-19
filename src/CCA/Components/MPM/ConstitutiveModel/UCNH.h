@@ -131,10 +131,10 @@ namespace Uintah {
 
     // Plasticity Requirements //
     /////////////////////////////
-    const VarLabel* pPlasticStrain_label;
-    const VarLabel* pPlasticStrain_label_preReloc;
-    const VarLabel* pYieldStress_label;
-    const VarLabel* pYieldStress_label_preReloc;
+    const VarLabel* pPlasticStrainLabel;
+    const VarLabel* pPlasticStrainLabel_preReloc;
+    const VarLabel* pYieldStressLabel;
+    const VarLabel* pYieldStressLabel_preReloc;
       
   protected:
     // Flags indicating if damage and/or plasticity should be used
