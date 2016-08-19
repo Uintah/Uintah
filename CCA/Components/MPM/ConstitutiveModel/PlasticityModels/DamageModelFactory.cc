@@ -49,11 +49,12 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
    string mat_type;
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
-   
    if (mat_type == "johnson_cook")
       return(scinew JohnsonCookDamage(child));
    else if (mat_type == "hancock_mackenzie")
       return(scinew HancockMacKenzieDamage(child));
+   else if (mat_type == "none")
+      return(scinew NullDamage(child));
    else {
       proc0cout << "**WARNING** Creating default null damage model" << endl;
       return(scinew NullDamage(child));

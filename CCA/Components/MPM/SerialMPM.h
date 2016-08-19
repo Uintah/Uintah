@@ -540,6 +540,15 @@ protected:
   void readInsertParticlesFile(std::string filename);
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+
+  //__________________________________
+  // refinement criteria threshold knobs
+  struct thresholdVar {
+    std::string name;
+    int matl;
+    double value;
+  };
+  std::vector<thresholdVar> d_thresholdVars;
                    
   inline void computeVelocityGradient(Matrix3& velGrad,
                                     std::vector<IntVector>& ni,
