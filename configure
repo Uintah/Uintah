@@ -5756,6 +5756,8 @@ else
 $as_echo "no" >&6; }
 fi
 
+rm -f conftest-bgq.cc conftest-bgq
+
 
 
 ######### -- End Test for Bluegene Q --
@@ -16968,7 +16970,7 @@ $as_echo "yes" >&6; }
          EXCEPTIONS_CRASH_DEF=""
       fi
 
-      rm -f conftest-exc.cc conftest-exc
+      rm -rf conftest-exc.cc conftest-exc conftest-exc.dSYM
   esac
 
 
@@ -31701,6 +31703,8 @@ fi
 # FIXME: These two defines need to be tested for and set correctly:
 DEF_MPI_MAX_THREADS="#define MPI_MAX_THREADS 64"
 DEF_MPI3_ENABLED="#define UINTAH_ENABLE_MPI3 false"
+
+rm -f mpi_const_test.cc mpi_const_test.o
 
 
 
