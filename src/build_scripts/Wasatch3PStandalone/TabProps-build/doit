@@ -7,7 +7,11 @@ source ../HelperBuildScripts/setupEnv.sh
 rm -f CMakeCache.txt
 rm -rf ${INSTALL_HERE}/*
 
-cmake                                       \
+if test "$BUILD_CUDA" = "yes"; then
+  FLAGS="-DENABLE_CUDA=ON"
+fi
+cmake     
+  $FLAGS                                    \
   -DTabProps_PREPROCESSOR=OFF               \
   -DTabProps_UTILS=OFF                      \
   -DTabProps_ENABLE_TESTING=OFF             \
@@ -25,7 +29,7 @@ if test $? == 0; then
   echo "Running Make..."
   echo ""
   make clean
-  make -j4
+  make 
   make install
 
   echo ""

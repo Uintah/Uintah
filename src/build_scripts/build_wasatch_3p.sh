@@ -272,6 +272,7 @@ if [ "$needsrecompile" = true ]; then
   "cmake \
     $DEBUG \
     $STATIC \
+    $CUDA \
     -DTabProps_PREPROCESSOR=OFF \
     -DTabProps_UTILS=OFF \
     -DTabProps_ENABLE_TESTING=OFF \
@@ -280,7 +281,7 @@ if [ "$needsrecompile" = true ]; then
     -DCMAKE_CXX_FLAGS=-fPIC \
     .."
   
-  run "make -j4 install"
+  run "make install"
 fi
 
 run "cd ../../.."  # back to Wasatch3P
