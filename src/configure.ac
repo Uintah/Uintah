@@ -915,6 +915,8 @@ else
   AC_MSG_RESULT(no)
 fi
 
+rm -f conftest-bgq.cc conftest-bgq
+
 AC_SUBST(IS_BGQ)
 
 ######### -- End Test for Bluegene Q --
@@ -2494,7 +2496,7 @@ EOF
          EXCEPTIONS_CRASH_DEF=""
       fi
 
-      rm -f conftest-exc.cc conftest-exc
+      rm -rf conftest-exc.cc conftest-exc conftest-exc.dSYM
   esac
 AC_SUBST(EXCEPTIONS_CRASH_DEF)
 
@@ -3308,6 +3310,8 @@ fi
 # FIXME: These two defines need to be tested for and set correctly:
 DEF_MPI_MAX_THREADS="#define MPI_MAX_THREADS 64"
 DEF_MPI3_ENABLED="#define UINTAH_ENABLE_MPI3 false"
+
+rm -f mpi_const_test.cc mpi_const_test.o
 
 AC_SUBST(HAVE_MPI)
 AC_SUBST(DEF_MPI_CONST_WORKS)
