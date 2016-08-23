@@ -29,7 +29,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/Schedulers
 
 SRCS += \
+        $(SRCDIR)/DependencyBatch.cc          \
         $(SRCDIR)/DependencyException.cc      \
+        $(SRCDIR)/DetailedDependency.cc       \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
         $(SRCDIR)/MemoryLog.cc                \
@@ -41,8 +43,7 @@ SRCS += \
         $(SRCDIR)/SendState.cc                \
         $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
-        $(SRCDIR)/UnifiedScheduler.cc         \
-        $(SRCDIR)/Util.cc
+        $(SRCDIR)/UnifiedScheduler.cc
         
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPUDataWarehouse.cu         \

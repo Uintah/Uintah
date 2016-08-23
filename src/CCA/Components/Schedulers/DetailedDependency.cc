@@ -22,38 +22,31 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
-#define CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 
-#include <CCA/Components/Schedulers/DependencyBatch.h>
-#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <sstream>
 
 namespace Uintah {
 
-class BatchReceiveHandler {
+std::ostream& operator<<(       std::ostream & arg_out
+                        , const DetailedDep  & dep
+                        )
+{
+  std::ostringstream out;
 
-public:
+  out << dep.m_req->m_var->getName();
 
-  BatchReceiveHandler( DependencyBatch * batch )
-    : m_dep_batch(batch)
-  {}
-
-  BatchReceiveHandler( const BatchReceiveHandler & copy )
-    : m_dep_batch(copy.m_dep_batch)
-  {}
-
-  void finishedCommunication( const ProcessorGroup * pg )
-  {
-    m_dep_batch->received(pg);
+  if (dep.isNonDataDependency()) {
+    out << " non-data dependency";
+  } else {
+    out << " on patch " << dep.m_from_patch->getID();
   }
 
-  
-private:
-  
-  DependencyBatch * m_dep_batch;
+  out << ", matl " << dep.m_matl << ", low=" << dep.m_low << ", high=" << dep.m_high;
 
-};
+  arg_out << out.str();
 
-}  // namespace Uintah
+  return arg_out;
+}
 
-#endif // CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
+} // namespace Uintah
