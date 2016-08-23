@@ -373,7 +373,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
   int volSend = 0;
 
   // Send data to dependents
-  for (DependencyBatch* batch = dtask->getComputes(); batch != 0; batch = batch->comp_next) {
+  for (DependencyBatch* batch = dtask->getComputes(); batch != 0; batch = batch->m_comp_next) {
 
     // Prepare to send a message
 #ifdef USE_PACKING
@@ -383,30 +383,30 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 #endif
 
     // Create the MPI type
-    int to = batch->toTasks.front()->getAssignedResourceIndex();
+    int to = batch->m_to_tasks.front()->getAssignedResourceIndex();
     ASSERTRANGE(to, 0, d_myworld->size());
 
-    for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+    for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
 
-     if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-         && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
+     if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0) || (req->m_comm_condition == DetailedDep::SubsequentIterations
+         && iteration == 0) || (notCopyDataVars_.count(req->m_req->m_var->getName()) > 0)) {
        // See comment in DetailedDep about CommCondition
        DOUT(g_dbg, "Rank-" << me << "   Ignoring conditional send for " << *req);
        continue;
      }
 
      // if we send/recv to an output task, don't send/recv if not an output timestep
-     if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
        DOUT(g_dbg, "Rank-" << me << "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
 
-      OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
+      OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
 
       DOUT(g_dbg, "Rank-" << me << " --> sending " << *req << ", ghost type: " << "\""
-               << Ghost::getGhostTypeName(req->req->m_gtype) << "\", " << "num req ghost "
-               << Ghost::getGhostTypeName(req->req->m_gtype) << ": " << req->req->m_num_ghost_cells
-               << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->m_gtype)
+               << Ghost::getGhostTypeName(req->m_req->m_gtype) << "\", " << "num req ghost "
+               << Ghost::getGhostTypeName(req->m_req->m_gtype) << ": " << req->m_req->m_num_ghost_cells
+               << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype)
                << ", from dw " << dw->getID());
 
       // the load balancer is used to determine where data was in the old dw on the prev timestep -
@@ -416,16 +416,16 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       LoadBalancer* lb = nullptr;
 
       if( !m_reloc_new_pos_label && m_parent_scheduler ) {
-        posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         posLabel = m_parent_scheduler->m_reloc_new_pos_label;
       }
       else {
         // on an output task (and only on one) we require particle variables from the NewDW
-        if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-          posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
+          posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
         }
         else {
-          posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
+          posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
         posLabel = m_reloc_new_pos_label;
@@ -441,7 +441,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 
     // Post the send
     if (mpibuff.count() > 0) {
-      ASSERT(batch->messageTag > 0);
+      ASSERT(batch->m_message_tag > 0);
       double start = Time::currentSeconds();
       void* buf;
       int count;
@@ -454,7 +454,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       mpibuff.get_type(buf, count, datatype);
 #endif
 
-      DOUT(g_mpi_dbg, "Rank-" << me << " Posting send for message number " << batch->messageTag << " to   rank-"
+      DOUT(g_mpi_dbg, "Rank-" << me << " Posting send for message number " << batch->m_message_tag << " to   rank-"
                    << to << ", length: " << count << " (bytes)");;
 
       m_num_messages++;
@@ -470,7 +470,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
       //---------------------------------------------------------------------------
       CommRequestPool::iterator comm_sends_iter = m_sends.emplace(new SendHandle(mpibuff.takeSendlist()));
-      Uintah::MPI::Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), comm_sends_iter->request());
+      Uintah::MPI::Isend(buf, count, datatype, to, batch->m_message_tag, d_myworld->getComm(), comm_sends_iter->request());
       comm_sends_iter.clear();
       //---------------------------------------------------------------------------
 
@@ -499,7 +499,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 struct CompareDep {
     bool operator()( DependencyBatch* a, DependencyBatch* b )
     {
-      return a->messageTag < b->messageTag;
+      return a->m_message_tag < b->m_message_tag;
     }
 };
 
@@ -554,13 +554,13 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
       if (only_old_recvs) {
 
-        DOUT(g_dbg, "abort analysis: " << batch->fromTask->getTask()->getName() << ", so="
-                 << batch->fromTask->getTask()->getSortedOrder() << ", abort_point=" << abort_point);
+        DOUT(g_dbg, "abort analysis: " << batch->m_from_task->getTask()->getName() << ", so="
+                 << batch->m_from_task->getTask()->getSortedOrder() << ", abort_point=" << abort_point);
 
-        if (batch->fromTask->getTask()->getSortedOrder() <= abort_point) {
-          DOUT(g_dbg, "posting MPI recv for pre-abort message " << batch->messageTag);
+        if (batch->m_from_task->getTask()->getSortedOrder() <= abort_point) {
+          DOUT(g_dbg, "posting MPI recv for pre-abort message " << batch->m_message_tag);
         }
-        if (!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
+        if (!(batch->m_from_task->getTask()->getSortedOrder() <= abort_point)) {
           continue;
         }
       }
@@ -577,26 +577,26 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 #endif
 
       // Create the MPI type
-      for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+      for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
 
-        OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
-        if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-            && iteration == 0) || (notCopyDataVars_.count(req->req->m_var->getName()) > 0)) {
+        OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
+        if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0) || (req->m_comm_condition == DetailedDep::SubsequentIterations
+            && iteration == 0) || (notCopyDataVars_.count(req->m_req->m_var->getName()) > 0)) {
 
           // See comment in DetailedDep about CommCondition
           DOUT(g_dbg, "Rank-" << d_myworld->myrank() << "   Ignoring conditional receive for " << *req);
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_out_port->isOutputTimestep() && !m_out_port->isCheckpointTimestep()) {
           DOUT(g_dbg, "Rank-" << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req);
           continue;
         }
 
         DOUT(g_dbg, "Rank-" << d_myworld->myrank() << " <-- receiving " << *req
-                  << ", ghost type: " << "\"" << Ghost::getGhostTypeName(req->req->m_gtype)
-                  << "\", " << "num req ghost " << Ghost::getGhostTypeName(req->req->m_gtype) << ": " << req->req->m_num_ghost_cells
-                  << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->m_gtype)
+                  << ", ghost type: " << "\"" << Ghost::getGhostTypeName(req->m_req->m_gtype)
+                  << "\", " << "num req ghost " << Ghost::getGhostTypeName(req->m_req->m_gtype) << ": " << req->m_req->m_num_ghost_cells
+                  << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype)
                   << ", into dw " << dw->getID());
 
         OnDemandDataWarehouse* posDW;
@@ -605,15 +605,15 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         // pass it in if the particle data is on the old dw
         LoadBalancer* lb = 0;
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
-          posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+          posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         }
         else {
           // on an output task (and only on one) we require particle variables from the NewDW
-          if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-            posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
+          if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
+            posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
           }
           else {
-            posDW = m_dws[req->req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
+            posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
             lb = getLoadBalancer();
           }
         }
@@ -626,14 +626,14 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         dw->recvMPI(batch, mpibuff, posDW, req, lb);
 
         if (!req->isNonDataDependency()) {
-          m_task_graphs[m_current_task_graph]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, m_dws);
+          m_task_graphs[m_current_task_graph]->getDetailedTasks()->setScrubCount(req->m_req, req->m_matl, req->m_from_patch, m_dws);
         }
       }
 
       // Post the receive
       if (mpibuff.count() > 0) {
 
-        ASSERT(batch->messageTag > 0);
+        ASSERT(batch->m_message_tag > 0);
         double start = Time::currentSeconds();
         void* buf;
         int count;
@@ -645,10 +645,10 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         mpibuff.get_type(buf, count, datatype);
 #endif
 
-        int from = batch->fromTask->getAssignedResourceIndex();
+        int from = batch->m_from_task->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
 
-        DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " Posting recv for message number " << batch->messageTag
+        DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " Posting recv for message number " << batch->m_message_tag
                      << " from rank-" << from << ", length: " << count << " (bytes)");
 
 
@@ -656,7 +656,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
         //---------------------------------------------------------------------------
         CommRequestPool::iterator comm_recvs_iter = m_recvs.emplace(new RecvHandle(p_mpibuff, pBatchRecvHandler));
-        Uintah::MPI::Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), comm_recvs_iter->request());
+        Uintah::MPI::Irecv(buf, count, datatype, from, batch->m_message_tag, d_myworld->getComm(), comm_recvs_iter->request());
         comm_recvs_iter.clear();
         //---------------------------------------------------------------------------
 

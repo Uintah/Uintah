@@ -69,10 +69,12 @@ WARNING
 
   class MPIScatterRecords; // defined in .cc
 
-  class Relocate {
+class Relocate {
 
   public:
-    Relocate();
+
+    Relocate(){};
+
     virtual ~Relocate();
     
     //////////
@@ -99,6 +101,7 @@ WARNING
                                     const MaterialSet* matls);
 
     const MaterialSet* getMaterialSet() const { return reloc_matls;}
+
 
   private:
 
@@ -134,19 +137,21 @@ WARNING
                                 Patch::selectType& AllNeighborPatches);
    
     void finalizeCommunication();
-    const VarLabel* reloc_old_posLabel;
+
+    const VarLabel* reloc_old_posLabel{nullptr};
     std::vector<std::vector<const VarLabel*> > reloc_old_labels;
-    const VarLabel* reloc_new_posLabel;
+    const VarLabel* reloc_new_posLabel{nullptr};
     std::vector<std::vector<const VarLabel*> > reloc_new_labels;
-    const VarLabel* particleIDLabel_;
-    const MaterialSet* reloc_matls;
-    LoadBalancer* lb;
+    const VarLabel* particleIDLabel_{nullptr};
+    const MaterialSet* reloc_matls{nullptr};
+    LoadBalancer* lb{nullptr};
     std::vector<char*> recvbuffers;
     std::vector<char*> sendbuffers;
     std::vector<MPI_Request> sendrequests;
 
 
-  };
+};
+
 } // End namespace Uintah
    
 #endif

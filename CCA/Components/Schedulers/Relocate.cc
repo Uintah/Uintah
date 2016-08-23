@@ -38,20 +38,11 @@
 
 using namespace Uintah;
 
-
-// Debug: Used to sync cerr so it is readable when output by multiple threads
-extern std::mutex  cerrLock;
-
-extern DebugStream mixedDebug;
 extern Dout g_mpi_dbg;
 
-static DebugStream coutdbg("RELOCATE_DBG", false);
+Dout g_total_reloc("RELOCATE_SCATTER_DBG", false);
 
-Relocate::Relocate()
-{
-  reloc_old_posLabel = reloc_new_posLabel = 0;
-  reloc_matls = 0;
-}
+static DebugStream coutdbg("RELOCATE_DBG", false);
 
 Relocate::~Relocate()
 {
@@ -671,7 +662,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
           }
           int size=position-start;
           if(size < datasize){
-            // MPI mis-esimated the size of the message.  For some
+            // MPI mis-estimated the size of the message.  For some
             // reason, mpich does this all the time.  We must pad...
             int diff=datasize-size;
             char* junk = scinew char[diff];
@@ -1297,38 +1288,9 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
       }  // matls loop
     }  // patches loop
     
-    if( mixedDebug.active() ) {
-      cerrLock.lock();
-      mixedDebug << "total_reloc: " << total_reloc[0] << ", " << total_reloc[1] << ", " << total_reloc[2] << "\n";
-      cerrLock.unlock();
-    }
+    DOUT(g_total_reloc, "total_reloc: " << total_reloc[0] << ", " << total_reloc[1] << ", " << total_reloc[2]);
+
   }  // patch size !-= 0
-  
-  
-#if SCI_ASSERTION_LEVEL >= 3
-  if(!mixedDebug.active()){
-    // this is bad for the MixedScheduler... I think it is ok to
-    // just remove it... at least for now... as it is only for info
-    // and debug purposes...
-    // Communicate the number of particles to processor zero, and
-    // print them out
-    int alltotal[3] = {total_reloc[0], total_reloc[1], total_reloc[2] };
-    
-    // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
-    //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
-    if (pg->size() > 1) {
-      DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Relocate reduce");
-      Uintah::MPI::Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
-      DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Done Relocate reduce");
-    }
-    if(pg->myrank() == 0){
-      ASSERTEQ(alltotal[1], alltotal[2]);
-      if(alltotal[0] != 0){
-        std::cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << std::endl;
-      }
-    }
-  }
-#endif
   
   if (pg->size() > 1){
     finalizeCommunication();
@@ -1761,38 +1723,10 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       }  // matls loop
     }  // patches loop
 
-    if( mixedDebug.active() ) {
-      cerrLock.lock();
-      mixedDebug << "total_reloc: " << total_reloc[0] << ", " << total_reloc[1] << ", " << total_reloc[2] << "\n";
-      cerrLock.unlock();
-    }
+    DOUT(g_total_reloc, "total_reloc: " << total_reloc[0] << ", " << total_reloc[1] << ", " << total_reloc[2]);
+
   }  // patch size !-= 0
   
-  
-#if SCI_ASSERTION_LEVEL >= 3
-  if(!mixedDebug.active()){
-    // this is bad for the MixedScheduler... I think it is ok to
-    // just remove it... at least for now... as it is only for info
-    // and debug purposes...
-    // Communicate the number of particles to processor zero, and
-    // print them out
-    int alltotal[3] = {total_reloc[0], total_reloc[1], total_reloc[2] };
-
-    // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
-    //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
-    if (pg->size() > 1) {
-      DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Relocate reduce");
-      Uintah::MPI::Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
-      DOUT(g_mpi_dbg, "Rank-" << pg->myrank() << " Done Relocate reduce");
-    }
-    if(pg->myrank() == 0){
-      ASSERTEQ(alltotal[1], alltotal[2]);
-      if(alltotal[0] != 0){
-        std::cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << std::endl;
-      }
-    }
-  }
-#endif
 
   if (pg->size() > 1){
     finalizeCommunication();

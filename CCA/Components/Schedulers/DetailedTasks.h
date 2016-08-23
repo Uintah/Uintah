@@ -25,6 +25,7 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
@@ -53,6 +54,7 @@ namespace Uintah {
 
 
   class ProcessorGroup;
+  class DependencyBatch;
   class DataWarehouse;
   class DetailedTask;
   class DetailedTasks;
@@ -82,119 +84,6 @@ namespace Uintah {
     CritialPath,
     PatchOrder,
     PatchOrderRandom
-  };
-
-  class DetailedDep {
-
-  public:
-    enum CommCondition { Always, FirstIteration, SubsequentIterations };
-
-    DetailedDep(       DetailedDep*      next,
-                       Task::Dependency* comp,
-                       Task::Dependency* req,
-                       DetailedTask*     toTask,
-                 const Patch*            fromPatch,
-                       int               matl,
-                 const IntVector&        low,
-                 const IntVector&        high,
-                       CommCondition     cond )
-      : next(next), comp(comp), req(req),                  
-        fromPatch(fromPatch), low(low), high(high), matl(matl), condition(cond), patchLow(low), patchHigh(high)
-    {
-      ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
-
-      USE_IF_ASSERTS_ON( Patch::VariableBasis basis = Patch::translateTypeToBasis(req->m_var->typeDescription()->getType(), true); )
-
-      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getExtraLowIndex(basis, req->m_var->getBoundaryLayer())) ==
-				fromPatch->getExtraLowIndex(basis, req->m_var->getBoundaryLayer())));
-
-      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getExtraHighIndex(basis, req->m_var->getBoundaryLayer())) ==
-				fromPatch->getExtraHighIndex(basis, req->m_var->getBoundaryLayer())));
-
-      toTasks.push_back(toTask);
-    }
-
-
-    // As an arbitrary convention, non-data dependency have a nullptr fromPatch.
-    // These types of dependency exist between a modifying task and any task
-    // that requires the data (from ghost cells in particular) before it is
-    // modified preventing the possibility of modifying data while it is being
-    // used.
-    bool isNonDataDependency() const { return (fromPatch == nullptr); }
-
-    DetailedDep*             next;
-    Task::Dependency*        comp;
-    Task::Dependency*        req;
-    std::list<DetailedTask*> toTasks;
-    const Patch*             fromPatch;
-    IntVector                low;
-    IntVector                high;
-    int                      matl;
-
-    // this is to satisfy a need created by the DynamicLoadBalancer.  To keep it unrestricted on when it can perform, and 
-    // to avoid a costly second recompile on the next timestep, we add a comm condition which will send/recv data based
-    // on whether some condition is met at run time - in this case whether it is the first execution or not.
-    CommCondition condition;
-
-    // for SmallMessages - if we don't copy the complete patch, we need to know the range so we can store all segments properly
-    IntVector patchLow, patchHigh; 
-  };
-
-  class DependencyBatch {
-
-  public:
-
-    DependencyBatch( int           to,
-                     DetailedTask* fromTask,
-                     DetailedTask* toTask )
-        : comp_next(0), fromTask(fromTask), head(0), messageTag(-1), to(to), received_(false), madeMPIRequest_(false)
-    {
-      toTasks.push_back(toTask);
-    }
-
-    ~DependencyBatch();
-
-    // The first thread calling this will return true, all others
-    // will return false.
-    bool makeMPIRequest();
-
-    // Tells this batch that it has actually been received and
-    // awakens anybody blocked in makeMPIRequest().
-    void received(const ProcessorGroup * pg);
-
-    bool wasReceived() { return received_; }
-
-    // Initialize receiving information for makeMPIRequest() and received()
-    // so that it can receive again.
-    void reset();
-
-    //Add invalid variables to the dependency batch.  These variables will be marked
-    //as valid when MPI completes. 
-    void addVar( Variable* var ) { toVars.push_back(var); }
-
-    void addReceiveListener( int mpiSignal );
-    
-//    DependencyBatch*         req_next;
-    DependencyBatch*         comp_next;
-    DetailedTask*            fromTask;
-    std::list<DetailedTask*> toTasks;
-    DetailedDep*             head;
-    int                      messageTag;
-    int                      to;
-
-    //scratch pad to store wait times for debugging
-    static std::map<std::string,double> waittimes;
-
-  private:
-
-    volatile bool received_;
-    volatile bool madeMPIRequest_;
-    std::set<int> receiveListeners_;
-
-    DependencyBatch( const DependencyBatch& );
-    DependencyBatch& operator=( const DependencyBatch& );
-    
-    std::vector<Variable*> toVars;
   };
 
   struct InternalDependency {
@@ -697,7 +586,6 @@ namespace Uintah {
   }; // end class DetailedTasks
 
   std::ostream& operator<<( std::ostream& out, const Uintah::DetailedTask& task );
-  std::ostream& operator<<( std::ostream& out, const Uintah::DetailedDep& task );
 
 } // End namespace Uintah
 

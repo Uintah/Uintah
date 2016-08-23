@@ -99,8 +99,6 @@ using namespace Uintah;
 extern std::mutex cerrLock;
 extern std::mutex coutLock;
 
-extern DebugStream mixedDebug;
-
 #ifdef HAVE_CUDA
   extern DebugStream use_single_device;
   extern DebugStream simulate_multiple_gpus;
@@ -109,7 +107,7 @@ extern DebugStream mixedDebug;
 
 namespace {
 
-Dout        g_foreign_dbg("ForeignVariables", false);
+Dout        g_foreign_dbg( "ForeignVariables", false);
 
 DebugStream dbg(        "OnDemandDataWarehouse",      false );
 DebugStream warn(       "OnDemandDataWarehouse_warn", true  );
@@ -611,21 +609,21 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
     return;
   }
 
-  const VarLabel* label = dep->req->m_var;
-  const Patch* patch = dep->fromPatch;
-  int matlIndex = dep->matl;
+  const VarLabel* label = dep->m_req->m_var;
+  const Patch* patch = dep->m_from_patch;
+  int matlIndex = dep->m_matl;
 
   switch ( label->typeDescription()->getType() ) {
     case TypeDescription::ParticleVariable : {
-      IntVector low = dep->low;
-      IntVector high = dep->high;
+      IntVector low = dep->m_low;
+      IntVector high = dep->m_high;
 
       if( !d_varDB.exists( label, matlIndex, patch ) ) {
         SCI_THROW( UnknownVariable(label->getName(), getID(), patch, matlIndex, "in sendMPI", __FILE__, __LINE__) );
       }
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
 
-      int dest = batch->toTasks.front()->getAssignedResourceIndex();
+      int dest = batch->m_to_tasks.front()->getAssignedResourceIndex();
       ASSERTRANGE( dest, 0, d_myworld->size() );
 
       ParticleSubset* sendset = 0;
@@ -678,13 +676,13 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
     case TypeDescription::SFCYVariable :
     case TypeDescription::SFCZVariable : {
       if (!d_varDB.exists(label, matlIndex, patch)) {
-        std::cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << std::endl;
+        std::cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front() << std::endl;
         SCI_THROW(
             UnknownVariable(label->getName(), getID(), patch, matlIndex, "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
       }
       GridVariableBase* var;
       var = dynamic_cast<GridVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
-      var->getMPIBuffer( buffer, dep->low, dep->high );
+      var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
       buffer.addSendlist( var->getRefCounted() );
     }
       break;
@@ -850,14 +848,14 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
     return;
   }
 
-  const VarLabel* label = dep->req->m_var;
-  const Patch* patch = dep->fromPatch;
-  int matlIndex = dep->matl;
+  const VarLabel* label = dep->m_req->m_var;
+  const Patch* patch = dep->m_from_patch;
+  int matlIndex = dep->m_matl;
 
   switch ( label->typeDescription()->getType() ) {
     case TypeDescription::ParticleVariable : {
-      IntVector low = dep->low;
-      IntVector high = dep->high;
+      IntVector low = dep->m_low;
+      IntVector high = dep->m_high;
       bool whole_patch_pset = false;
       // First, get the particle set.  We should already have it
       //      if(!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)){
@@ -917,7 +915,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
 
       //allocate the variable
       GridVariableBase* var = dynamic_cast<GridVariableBase*>( label->typeDescription()->createInstance() );
-      var->allocate( dep->low, dep->high );
+      var->allocate( dep->m_low, dep->m_high );
 
       //set the var as foreign
       var->setForeign();
@@ -934,7 +932,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
                                    << "  low: " << low << "  high: " << high << " sizes: " << size);
 
       d_varDB.putForeign( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep() );  //put new var in data warehouse
-      var->getMPIBuffer( buffer, dep->low, dep->high );
+      var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
     }
       break;
     default :
@@ -1032,23 +1030,11 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   std::vector<char> recvbuf( packsize );
 
-  if( mixedDebug.active() ) {
-    coutLock.lock();
-    mixedDebug << "calling Uintah::MPI::Allreduce\n";
-    coutLock.unlock();
-  }
-
   DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " allreduce, name " << label->getName() << " level " << (level ? level->getID() : -1));
 
   int error = Uintah::MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
 
   DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level " << (level ? level->getID() : -1));
-
-  if( mixedDebug.active() ) {
-    coutLock.lock();
-    mixedDebug << "done with Uintah::MPI::Allreduce (" << label->getName() << ")\n";
-    coutLock.unlock();
-  }
 
   if( error ) {
     DOUT(true, "reduceMPI: Uintah::MPI::Allreduce error: " << error);
