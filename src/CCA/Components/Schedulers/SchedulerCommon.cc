@@ -1647,8 +1647,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                     newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, isCopyDataTimestep(), false);
 
                   } else {
-                    GridVariableBase* newVariable = dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl,
-                                                                                                                  newPatch));
+                    GridVariableBase* newVariable = dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch));
                     // make sure it exists in the right region (it might be ghost data)
                     newVariable->rewindow(newLowIndex, newHighIndex);
 

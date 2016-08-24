@@ -106,7 +106,7 @@ DependencyBatch::received( const ProcessorGroup * pg )
   }
 
 
-  //set all the toVars to valid, meaning the mpi has been completed
+  // set all the toVars to valid, meaning the mpi has been completed
   for (std::vector<Variable*>::iterator iter = m_to_vars.begin(); iter != m_to_vars.end(); iter++) {
     (*iter)->setValid();
   }

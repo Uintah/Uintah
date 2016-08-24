@@ -590,7 +590,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
     }
 #endif
     if (Uintah::Parallel::usingMPI()) {
-      postMPISends(task, iteration, thread_id);
+      MPIScheduler::postMPISends(task, iteration, thread_id);
 #ifdef HAVE_CUDA
 
 #endif
@@ -965,7 +965,7 @@ UnifiedScheduler::runTasks( int thread_id )
             cpuRunReady = true;
           }
 #else
-          //if NOT compiled with device support, then this is a CPU task and we can mark the task consumed
+          // if NOT compiled with device support, then this is a CPU task and we can mark the task consumed
           markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
 #endif
           break;
@@ -1150,7 +1150,7 @@ UnifiedScheduler::runTasks( int thread_id )
       DOUT(g_task_dbg, myRankThread() << " Task external ready " << *readyTask)
 
       if (readyTask->getTask()->getType() == Task::Reduction) {
-        initiateReduction(readyTask);
+        MPIScheduler::initiateReduction(readyTask);
       }
 #ifdef HAVE_CUDA
       else if (gpuInitReady) {
@@ -1276,7 +1276,7 @@ UnifiedScheduler::runTasks( int thread_id )
     }
     else {
       if (m_recvs.size() != 0u) {
-        processMPIRecvs(TEST);
+        MPIScheduler::processMPIRecvs(TEST);
       }
     }
   }  //end while (numTasksDone < ntasks)

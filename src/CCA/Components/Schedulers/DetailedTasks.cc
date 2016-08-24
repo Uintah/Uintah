@@ -1496,9 +1496,9 @@ void
 DetailedTask::checkExternalDepCount()
 {
   DOUT(g_mpi_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-               << " external deps: " << externalDependencyCount_ << " internal deps: " << numPendingInternalDependencies);
+               << " external deps: " << externalDependencyCount_.load(std::memory_order_seq_cst) << " internal deps: " << numPendingInternalDependencies);
 
-  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
+  if (externalDependencyCount_.load(std::memory_order_seq_cst) == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
     {
       external_ready_monitor external_ready_lock { Uintah::CrowdMonitor<external_ready_tag>::WRITER };
       DOUT(g_mpi_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
@@ -1517,9 +1517,9 @@ DetailedTask::checkExternalDepCount()
 void
 DetailedTask::resetDependencyCounts()
 {
-  externalDependencyCount_ = 0;
+  externalDependencyCount_.store(0, std::memory_order_seq_cst);
   externallyReady_ = false;
-  initiated_ = false;
+  initiated_       = false;
 }
 
 //_____________________________________________________________________________
