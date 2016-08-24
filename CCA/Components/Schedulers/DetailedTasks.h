@@ -42,6 +42,7 @@
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
+#include <atomic>
 #include <list>
 #include <queue>
 #include <vector>
@@ -186,13 +187,13 @@ namespace Uintah {
 
     void markInitiated() { initiated_ = true; }
 
-    void incrementExternalDepCount() { externalDependencyCount_++; }
+    void incrementExternalDepCount() { externalDependencyCount_.fetch_add(1, std::memory_order_seq_cst); }
 
-    void decrementExternalDepCount() { externalDependencyCount_--; }
+    void decrementExternalDepCount() { externalDependencyCount_.fetch_sub(1, std::memory_order_seq_cst); }
 
     void checkExternalDepCount();
 
-    int getExternalDepCount() { return externalDependencyCount_; }
+    int getExternalDepCount() { return externalDependencyCount_.load(std::memory_order_seq_cst); }
 
     bool areInternalDependenciesSatisfied() { return (numPendingInternalDependencies == 0); }
 
@@ -237,6 +238,7 @@ namespace Uintah {
     void clearPreparationCollections();
 
     void addTempHostMemoryToBeFreedOnCompletion(void *ptr);
+
     void addTempCudaMemoryToBeFreedOnCompletion(unsigned int device_ptr, void *ptr);
 
     void deleteTemporaryTaskVars();
@@ -263,7 +265,7 @@ namespace Uintah {
 
     bool initiated_;
     bool externallyReady_;
-    int  externalDependencyCount_;
+    std::atomic<int> externalDependencyCount_{0};
 
     mutable std::string name_; // doesn't get set until getName() is called the first time.
 

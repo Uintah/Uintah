@@ -586,7 +586,7 @@ DWDatabase<DomainType>::get( const VarLabel* label, int matlIndex, const DomainT
 {
   const DataItem* dataItem = getDataItem(label, matlIndex, dom);
   ASSERT(dataItem != 0);        // should have thrown an exception before
-  ASSERT(dataItem->next == 0);  //should call getlist
+  ASSERT(dataItem->next == 0);  // should call getlist
   return dataItem->var;
 }
 
