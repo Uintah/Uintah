@@ -4048,6 +4048,7 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched,
     _intrusionBC->sched_setIntrusionVelocities( sched, level, matls );
     _intrusionBC->sched_gatherReductionInformation( sched, level, matls );
     _intrusionBC->sched_printIntrusionInformation( sched, level, matls );
+    _intrusionBC->findRelevantIntrusions( sched, level, matls );
   }
 
 }

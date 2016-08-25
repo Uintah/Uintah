@@ -72,6 +72,7 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, 
 //_________________________________________
 IntrusionBC::~IntrusionBC()
 {
+  delete localPatches_;
   if ( _intrusion_on ) { 
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
@@ -1446,5 +1447,55 @@ IntrusionBC::setIntrusionT( const ProcessorGroup*,
         }
       }
     }
+  }
+}
+//----------------------------------
+void
+IntrusionBC::findRelevantIntrusions( SchedulerP& sched, const LevelP& level, const MaterialSet* matls )
+{
+
+  const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+  const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+  localPatches_ = new Uintah::PatchSet;
+  localPatches_->addEach( localPatches->getVector() );
+  auto mypatches = localPatches->getVector();
+  std::vector<string> intrusion_map_idx;
+  for(auto ipatches = (mypatches).begin(); ipatches != mypatches.end(); ipatches++){ 
+    
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    vector<Patch::FaceType> bf;
+    (*ipatches)->getBoundaryFaces(bf);
+    Box patch_box = (*ipatches)->getBox(); 
+    
+    for ( IntrusionMap::iterator the_iter = _intrusion_map.begin(); the_iter != _intrusion_map.end(); ++the_iter ){
+      bool i_live_on_this_patch = false;
+      for ( int i = 0; i < (int)the_iter->second.geometry.size(); i++ ){ 
+        GeometryPieceP piece = the_iter->second.geometry[i]; 
+        Box geometry_box  = piece->getBoundingBox(); 
+        Box intersect_box = geometry_box.intersect( patch_box ); 
+        if ( !(intersect_box.degenerate()) ) { 
+          i_live_on_this_patch = true;
+        }
+      }// end geometry object loop
+      if ( !i_live_on_this_patch ){
+        intrusion_map_idx.push_back(the_iter->first);
+      }
+    }
+  }// patch loop
+
+  // now delete the boundary conditions that aren't relevant to the patch.  
+  for (auto it = intrusion_map_idx.begin(); it != intrusion_map_idx.end(); ++it){
+    VarLabel::destroy(_intrusion_map[*it].bc_area);
+    VarLabel::destroy(_intrusion_map[*it].max_vel);
+    VarLabel::destroy(_intrusion_map[*it].min_vel);
+    VarLabel::destroy(_intrusion_map[*it].total_m_dot);
+    if ( _intrusion_map[*it].has_velocity_model )  {
+      delete(_intrusion_map[*it].velocity_inlet_generator); 
+    }
+    for ( std::map<std::string, scalarInletBase*>::iterator scalar_iter = _intrusion_map[*it].scalar_map.begin(); 
+        scalar_iter != _intrusion_map[*it].scalar_map.end(); scalar_iter++ ){
+      delete(scalar_iter->second);
+    } 
+    _intrusion_map.erase(*it); 
   }
 }

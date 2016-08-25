@@ -93,6 +93,11 @@ namespace Uintah{
                           const MaterialSubset* matls, 
                           DataWarehouse* old_dw, 
                           DataWarehouse* new_dw ); 
+      
+      /** @brief finds relevant intrusions */
+      void findRelevantIntrusions( SchedulerP& sched, 
+                                const LevelP& level, 
+                                const MaterialSet* matls ); 
 
       /** @brief Computes the velocity if a mass flow rate is specified */
       void sched_setIntrusionVelocities( SchedulerP& sched, 
@@ -999,6 +1004,7 @@ namespace Uintah{
 
       std::vector<Boundary> _intrusions; 
       IntrusionMap _intrusion_map; 
+      Uintah::PatchSet* localPatches_; 
       const ArchesLabel* _lab; 
       const MPMArchesLabel* _mpmlab; 
       Properties* _props;
