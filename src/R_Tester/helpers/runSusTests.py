@@ -318,7 +318,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       do_memory = 0
 
     if do_gpu == 1 and has_gpu == 1:
-      environ['SCI_DEBUG'] = "SingleDevice:+"
       environ['CUDA_VISIBLE_DEVICES'] = "0"            # This will have to change for multiple GPU runs.  May need to make it a machine dependent environmenal variable
 
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
