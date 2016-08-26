@@ -72,8 +72,6 @@ Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
 
 GPU Related:
 __________________________________
-SingleDevice      SCI_DEBUG     Restrict GPU usage to a "single" GPU, device 0. The default is to use all
-                                available on-node GPUs, where tasks are assigned to GPUs in a round-robin fashion.
 GPUStats          SCI_DEBUG     Reports detailed GPU statistics from within the UnififedScheudler on "host-->device"
                                 and "device-->host" data movement.
 GPUDataWarehouse  SCI_DEBUG     Reports detailed statistics from within the GPUDW on GPUDataWarehouse activity.

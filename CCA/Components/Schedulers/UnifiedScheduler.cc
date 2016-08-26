@@ -57,8 +57,7 @@
 using namespace Uintah;
 
 #ifdef HAVE_CUDA
-  DebugStream gpu_stats(              "Unified_GPUStats"     , false );
-  DebugStream use_single_device(      "Unified_SingleDevice" , false );
+  DebugStream gpu_stats(              "GPUStats"     , false );
   DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
 #endif
@@ -1572,8 +1571,6 @@ UnifiedScheduler::gpuInitialize( bool reset )
   if (simulate_multiple_gpus.active()) {
     printf("SimulateMultipleGPUs is on, simulating 3 GPUs\n");
     m_num_devices = 3;
-  } else if (use_single_device.active()) {
-    m_num_devices = 1;
   } else {
     int numDevices = 0;
     CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));

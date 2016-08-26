@@ -100,7 +100,6 @@ extern std::mutex cerrLock;
 extern std::mutex coutLock;
 
 #ifdef HAVE_CUDA
-  extern DebugStream use_single_device;
   extern DebugStream simulate_multiple_gpus;
   extern DebugStream gpudbg;
 #endif
@@ -161,8 +160,6 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
     cudaError_t retVal;
     if (simulate_multiple_gpus.active()) {
       numDevices = 3;
-    } else if (use_single_device.active()) {
-      numDevices = 1;
     } else {
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
     }
@@ -462,8 +459,6 @@ OnDemandDataWarehouse::getNumDevices() {
   if (Uintah::Parallel::usingDevice()) {
     if (simulate_multiple_gpus.active()) {
       numDevices = 2;
-    } else if (!use_single_device.active()) {
-      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
     } else {
       numDevices = 1;
     }
