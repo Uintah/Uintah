@@ -300,13 +300,13 @@ void UCNH::setBrittleDamageData(const UCNH* cm)
 
 void UCNH::getBrittleDamageData(ProblemSpecP& ps)
 {
-  d_brittle_damage.r0b   = 57.0; // Initial energy threshold
-  d_brittle_damage.Gf    = 11.2; // Fracture energy
-  d_brittle_damage.constant_D = 0.1; // Shape constant in softening function 
-  d_brittle_damage.maxDamageInc=0.1; // Maximum damage in a time step
+  d_brittle_damage.r0b          = 57.0; // Initial energy threshold
+  d_brittle_damage.Gf           = 11.2; // Fracture energy
+  d_brittle_damage.constant_D   = 0.1; // Shape constant in softening function 
+  d_brittle_damage.maxDamageInc =0.1; // Maximum damage in a time step
   d_brittle_damage.allowRecovery=false; // Allow recovery
   d_brittle_damage.recoveryCoeff=1.0; // Fraction of recovery if allowed
-  d_brittle_damage.printDamage=false;  // Print damage
+  d_brittle_damage.printDamage  =false;  // Print damage
   ps->get("brittle_damage_initial_threshold",   d_brittle_damage.r0b);
   ps->get("brittle_damage_fracture_energy",     d_brittle_damage.Gf);
   ps->get("brittle_damage_constant_D",          d_brittle_damage.constant_D);
