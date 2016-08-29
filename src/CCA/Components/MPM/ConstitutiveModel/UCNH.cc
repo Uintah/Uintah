@@ -33,7 +33,7 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
+//#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -104,16 +104,6 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
     ps->getWithDefault("initial_pressure", d_init_pressure, 0.0);
   } 
 
-  // Equation of state factory for pressure (default is DefaultHyperEOS)
-  d_eos = MPMEquationOfStateFactory::create(ps);
-  d_eos->setBulkModulus(d_initialData.Bulk);
-  if(!d_eos){
-    ostringstream desc;
-    desc << "An error occured in the MPM EquationOfStateFactory that has \n"
-         << " slipped through the existing bullet proofing. Please check and correct." << endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
-
   // Universal Labels
   bElBarLabel                = VarLabel::create("p.bElBar",
                                ParticleVariable<Matrix3>::getTypeDescription());
@@ -178,78 +168,6 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   if (d_useInitialStress) {
     ps->getWithDefault("initial_pressure", d_init_pressure, 0.0);
   } 
-
-  // Equation of state factory for pressure
-  d_eos = MPMEquationOfStateFactory::create(ps);
-  d_eos->setBulkModulus(d_initialData.Bulk);
-  if(!d_eos){
-    ostringstream desc;
-    desc << "An error occured in the MPM EquationOfStateFactory that has \n"
-         << " slipped through the existing bullet proofing. Please check and correct." << endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
-
-  // Universal Labels
-  bElBarLabel                = VarLabel::create("p.bElBar",
-                             ParticleVariable<Matrix3>::getTypeDescription());
-  bElBarLabel_preReloc       = VarLabel::create("p.bElBar+",
-                             ParticleVariable<Matrix3>::getTypeDescription());
-}
-
-UCNH::UCNH(const UCNH* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
-{
-  d_useModifiedEOS     = cm->d_useModifiedEOS ;
-  d_initialData.Bulk   = cm->d_initialData.Bulk;
-  d_initialData.tauDev = cm->d_initialData.tauDev;
-  
-  // Plasticity Setup
-  d_usePlasticity      = cm->d_usePlasticity;
-  if(d_usePlasticity) {
-    d_initialData.FlowStress = cm->d_initialData.FlowStress;
-    d_initialData.K          = cm->d_initialData.K;
-    d_initialData.Alpha      = cm->d_initialData.Alpha;
-    
-    setYieldStressDistribution(cm);
-
-    pPlasticStrainLabel          = VarLabel::create("p.plasticStrain",
-                                ParticleVariable<double>::getTypeDescription());
-    pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
-                                ParticleVariable<double>::getTypeDescription());
-    pYieldStressLabel          = VarLabel::create("p.yieldStress",
-                                ParticleVariable<double>::getTypeDescription());
-    pYieldStressLabel_preReloc = VarLabel::create("p.yieldStress+",
-                                ParticleVariable<double>::getTypeDescription());
-  } // End Plasticity Setup
-  
-  // Damage Setup
-  d_useDamage = cm->d_useDamage;
-  if(d_useDamage) {
-    // Initialize local VarLabels
-    initializeLocalMPMLabels();
-    
-    if (flag->d_erosionAlgorithm == "BrittleDamage") {
-      setBrittleDamageData(cm);
-    } else {
-      // Set the failure strain data
-      setFailureStressOrStrainData(cm);
-      d_failure_criteria = cm->d_failure_criteria;
-      if(d_failure_criteria=="MohrColoumb"){
-        d_tensile_cutoff = cm->d_tensile_cutoff;
-        d_friction_angle = cm->d_friction_angle;
-      }
-    }
-
-    // Set the erosion algorithm
-    setErosionAlgorithm(cm);
-  } // End Damage Setup
-  
-  // Initial stress
-  d_useInitialStress = cm->d_useInitialStress;
-  d_init_pressure = cm->d_init_pressure;
-
-  // EOS from factory
-  d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
-  d_eos->setBulkModulus(d_initialData.Bulk);
 
   // Universal Labels
   bElBarLabel                = VarLabel::create("p.bElBar",
@@ -495,9 +413,6 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   if (d_useInitialStress) {
     cm_ps->appendElement("initial_pressure", d_init_pressure);
   }
-
-  // EOS from factory
-  d_eos->outputProblemSpec(cm_ps);
 }
 
 UCNH* UCNH::clone()
@@ -526,9 +441,6 @@ UCNH::~UCNH()
     VarLabel::destroy(pTimeOfLocLabel_preReloc);
   }
   
-  // Delete EOS from factory
-  delete d_eos;
-
   // Universal Deletes
   VarLabel::destroy(bElBarLabel);
   VarLabel::destroy(bElBarLabel_preReloc);
@@ -651,7 +563,7 @@ void UCNH::initializeCMData(const Patch* patch,
       double p = d_init_pressure;
       Matrix3 sigInit(p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p);
       double rho_orig = matl->getInitialDensity();
-      double rho_cur = d_eos->computeDensity(rho_orig, p);
+      double rho_cur = computeDensity(rho_orig, p);
       double diag = cbrt(rho_cur/rho_orig);
       for(;iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -953,7 +865,7 @@ void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
   } else {                      // STANDARD EOS            
 
     double p = 0.0;
-    d_eos->computePressure(rho_orig, rho_cur, p, dp_drho, cSquared);
+    computePressure(rho_orig, rho_cur, p, dp_drho, cSquared);
     pressure = -p + p_ref;
     dp_drho = -dp_drho;
 
@@ -988,7 +900,7 @@ double UCNH::computeRhoMicroCM(double pressure,
   } else {                      // STANDARD EOS
 
     try {
-      rho_cur = d_eos->computeDensity(rho_orig, -p_gauge);
+      rho_cur = computeDensity(rho_orig, -p_gauge);
     } catch (ConvergenceFailure& e) {
       cout << e.message() << endl;
       error = true;
@@ -1272,10 +1184,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
       
       // Compute the strain energy for non-localized particles
-      U = d_eos->computeStrainEnergy(rho_orig, rho_cur);
-      bulk = d_eos->computeBulkModulus(rho_orig, rho_cur);
-      //  U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-
+      U = .5*bulk*(.5*(J*J - 1.0) - log(J));
       W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
       double e = (U + W)*pVolume_new[idx]/J;
       se += e;
@@ -2926,6 +2835,36 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
     new_dw->put(pPlasticStrainTmp, pPlasticStrainLabel_preReloc,    true);
     new_dw->put(pYieldStressTmp,   pYieldStressLabel_preReloc,      true);
   }
+}
+
+double UCNH::computeDensity(const double& rho_orig,
+                            const double& pressure)
+{
+  double bulk =  d_initialData.Bulk;
+  double numer1 = bulk*bulk + pressure*pressure;
+  double sqrtNumer = sqrt(numer1);
+  double rho = rho_orig/bulk*(-pressure + sqrtNumer);
+  if (rho < 0) {
+    ostringstream desc;
+    desc << "Value of pressure (" << pressure << ") is beyond the range of validity of model" << endl
+         << "  density = " << rho << endl;
+    throw InvalidValue(desc.str(), __FILE__, __LINE__);
+  }
+  return rho;
+}
+
+void UCNH::computePressure(const double& rho_orig,
+                           const double& rho_cur,
+                           double& pressure,
+                           double& dp_drho,
+                           double& csquared)
+{
+  double bulk =  d_initialData.Bulk;
+  double J = rho_orig/rho_cur;
+  pressure = 0.5*bulk*(J - 1.0/J);
+  double dp_dJ = 0.5*bulk*(1.0 + 1.0/J*J);
+  dp_drho = -0.5*bulk*(1.0 + J*J)/rho_orig;
+  csquared = dp_dJ/rho_cur;
 }
 
 namespace Uintah {

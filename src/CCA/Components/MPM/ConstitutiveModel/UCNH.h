@@ -372,6 +372,15 @@ namespace Uintah {
                                 const double& vol_old,
                                 const double& vol_new,
                                 double Kmatrix[24][24]);
+
+    double computeDensity(const double& rho_orig,
+                          const double& pressure);
+
+    void computePressure(const double& rho_orig,
+                         const double& rho_cur,
+                         double& pressure,
+                         double& dp_drho,
+                         double& csquared);
   };
 } // End namespace Uintah
 
