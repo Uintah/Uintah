@@ -178,13 +178,16 @@ Arches::problemSetup(const ProblemSpecP& params,
     i->second->register_all_tasks(db);
 
   }
+
   proc0cout << "\n Building Tasks For: " << std::endl;
+
   for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
     i->second->build_all_tasks(db);
 
   }
+
   proc0cout << endl;
 
   //Checking for lagrangian particles:
