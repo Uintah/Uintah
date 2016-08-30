@@ -73,9 +73,9 @@
 
           <!-- Wall heat flux variable:
                 This model produces a few variables, all stored in the first wall/intrusion cell exposed to the gas
-                  1) The directional heat flux [J/s], named label+"_x", label+"_y", label+"_z"
-                  2) The total heat flux summed over all exposed faces/cell [J/s], named label
-                  3) The total power [W] to the exposed surface, label+"_power"
+                  1) The directional heat flux [W/m^2], named label+"_x", label+"_y", label+"_z"
+                  2) The total heat flux summed over all exposed faces/cell [W/m^2], named label
+                  3) The net flux (power) [W] for the exposed surface, label+"_power"
                   4) Area of the exposed face, stored as label+"_area"
                 Note that currently, the emissivity is assumed constant across all walls. This can be modified with some work -->
           <use_exact_guess              spec="OPTIONAL NO_DATA"
