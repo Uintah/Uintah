@@ -1,0 +1,214 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  validateUda:
+#
+#   usage:  validateUda  <udas>
+#
+#  This scripts performs the following tests on a uda:
+#    0)  does index.xml exist
+#    1)  does each timestep listed in the index.xml file exist
+#    2)  Does timestep/timestep.xml file exist
+#    3)  Does a level directory for each level exist
+#    4)  for each level directory does a pxxxx.xml file exist
+#    5)  for each level directory does a pxxxx.data file exist and is size > 0
+#______________________________________________________________________
+
+# defaults
+
+set STAT = "stat --format %s"
+if ( `uname` == "Darwin" ) then
+  set STAT = "stat -f %z"
+endif
+
+
+# bulletproofing
+if ($#argv == 0) then
+  echo "Usage validateUda  <udas>"
+  exit
+endif
+
+
+set udas = $argv
+
+echo "udas: $udas"
+
+# bulletproofing
+foreach U ($udas[*]:q)
+  if(! -d $U) then
+    echo " ERROR: The uda $U does not exist. Now exiting"
+    exit
+  endif
+end
+
+date
+
+
+#__________________________________
+foreach U ($udas[*]:q)
+  echo " "
+  echo "---------------------------------"
+  echo "$U"
+  cd $U
+
+  echo -n "Test 0:  Does index.xml exist?"
+
+  set passed0 = true
+  if ( ! -e index.xml ) then
+    set passed0 = false
+  endif
+  echo "                                        $passed0"
+
+  if ($passed0 == "false") then
+    goto bottom
+  endif
+
+  #__________________________________
+  # Test 1:  does each timestep directory exist
+  echo -n "Test 1:  Does each timestep in index.xml exist?"
+
+  # find the path to the timestep directory.  Use 'rev', since basename doesn't work with awk.
+  set timesteps = (`grep "timestep href=" index.xml | awk -F '[="]' '{print $3}' | rev | cut -d/ -f2-100 | rev`)
+
+  set passed1 = true
+  set missingTimesteps
+  foreach T ($timesteps[*]:q)
+    if ( ! -d $T ) then
+      set passed1 = false
+      set missingTimesteps = ($missingTimesteps $T)
+    endif
+  end
+
+  echo "                       $passed1"
+  if ( $passed1 == "false" ) then
+    echo""
+    foreach T ($missingTimesteps[*])
+      echo "          Missing directory:  $T"
+    end
+  endif
+  #__________________________________
+  #Test 2:
+  echo -n "Test 2:  Do all timesteps.xml files exist?"
+  set passed2 = true
+  foreach T ($timesteps[*]:q)
+    if ( -d $T ) then
+
+      if ( ! -e $T/timestep.xml ) then
+        set passed2 = false
+        echo "           Missing $T/timestep.xml"
+      endif
+
+    endif
+  end
+  echo "                            $passed2"
+
+  #__________________________________
+  #Test 3:  does a level directory exist for each level
+  echo -n "Test 3:  Do all the level directories exist?"
+  set passed3 = true
+  foreach T ($timesteps[*]:q)
+    if( -d $T && -e $T/timestep.xml ) then
+
+      set nLevels = `grep numLevels $T/timestep.xml | awk -F '[><]' '{print $3}' `
+      @ l = 0
+      while( $l< $nLevels)
+        set level = "l$l"
+
+        if ( ! -d $T/$level ) then
+          echo "        Missing $T/$level"
+          set passed3 = false
+        endif
+
+        @ l ++
+      end
+    endif
+  end
+  echo "                          $passed3"
+
+  echo "Test 4:  Do all of the pxxxx.xml  files exist and have size > 0?      "
+  echo "Test 5:  Do all of the pxxxx.data files exist and have size > 0?      "
+  set passed4 = true
+  set passed5 = true
+
+
+  foreach T ($timesteps[*]:q)
+
+    if ( -e $T/timestep.xml ) then
+
+      #__________________________________
+      #Test 4:  do the pxxxx.xml files for each level
+      #  You need to do this iteration in chunks, especially when there are a large
+      #  number of files to get around system limitations
+      grep Datafile $T/timestep.xml | awk -F '[="]' '{print $3}'>& /tmp/xmlFiles
+
+      @ chunkSize = 100
+      @ nFiles = `wc -l /tmp/xmlFiles | awk '{print $1}'` + $chunkSize
+
+      foreach lo (`seq 1 $chunkSize $nFiles`)
+
+        @ hi = $lo + $chunkSize
+        set pxxx_xml = `sed -n "$lo","$hi"p /tmp/xmlFiles`
+
+        #echo $pxxx_xml
+
+        foreach D ($pxxx_xml[*]:q)
+          set here = "$T/$D"
+
+          if( ! -e $here ) then
+            echo "           Missing $here"
+            set passed4 = false
+          endif
+
+          if ( -e $here ) then
+            set bytes = `$STAT $here`
+            if ( $bytes == "0" ) then
+              echo "            $here has 0 bytes"
+              set passed4 = false
+            endif
+          endif
+        end
+      end
+      #__________________________________
+      # do all pxxxx.data files exist and have size > 0
+      #  You need to do this iteration in chunks, especially when there are a large
+      #  number of files to get around system limitations
+      /bin/rm /tmp/xmlFiles
+      grep Datafile $T/timestep.xml | awk -F '[=."]' '{print $3".data"}'>& /tmp/xmlFiles
+
+      @ chunkSize = 100
+      @ nFiles = `wc -l /tmp/xmlFiles | awk '{print $1}'` + $chunkSize
+
+      foreach lo (`seq 1 $chunkSize $nFiles`)
+
+        @ hi = $lo + $chunkSize
+        set pxxx_data = `sed -n "$lo","$hi"p /tmp/xmlFiles`
+
+        foreach D ($pxxx_data[*]:q)
+          set here = "$T/$D"
+
+          if( ! -e $here ) then
+            echo "           Missing $here"
+            set passed5 = false
+          endif
+
+          if ( -e $here ) then
+            set bytes = `$STAT $here`
+
+            if ( $bytes == "0" ) then
+              echo "            $here has 0 bytes"
+              set passed5 = false
+            endif
+          endif
+
+        end
+      end
+      /bin/rm /tmp/xmlFiles
+
+    endif  # if timestep exists
+
+  end  # timestep loop
+  echo "                                                         Test 4:      $passed4"
+  echo "                                                         Test 5:      $passed5"
+bottom:
+  cd ..
+end
+exit

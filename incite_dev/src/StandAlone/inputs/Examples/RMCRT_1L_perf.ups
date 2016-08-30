@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>RMCRT</title>
+  </Meta>
+
+  <SimulationComponent type="RMCRT_Test" />
+  <!--__________________________________-->
+  <!-- run for 10 timesteps for RT memory -->
+  <!-- and checkpoint testing             -->
+  <Time>
+    <maxTime>       1.0      </maxTime>
+    <initTime>      0.0       </initTime>
+    <delt_min>      0.00001   </delt_min>
+    <delt_max>      1         </delt_max>
+    <max_Timesteps> 10         </max_Timesteps>
+    <timestep_multiplier>  1  </timestep_multiplier>
+  </Time>
+  <!--__________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet"> 
+                            <value> 1000 </value> 
+        </BCType> 
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 1000 </value>                
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 1000 </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType> 
+      </Face>               
+      <Face side = "y+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                            <value> 1000 </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 1000 </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 1000 </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label = "0">                              
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [1,1,1]     </patches> 
+         <extraCells> [1,1,1]     </extraCells>      
+      </Box>                                         
+    </Level>
+  </Grid>
+  <!--__________________________________-->
+  <DataArchiver>
+  <filebase>rmcrt_1L_performance.uda</filebase>
+  <outputTimestepInterval>0</outputTimestepInterval>
+  </DataArchiver>
+  
+  
+  <!--__________________________________ -->
+  <Temperature>       1500       </Temperature>
+  <abskg>             1.0        </abskg>  
+  <benchmark>         2          </benchmark>
+  <calc_frequency>    1          </calc_frequency>
+
+  
+  <RMCRT type = "double">
+    <randomSeed>         false     </randomSeed>
+    <nDivQRays>         20         </nDivQRays>
+    <nFluxRays>         20         </nFluxRays>
+    
+    <Threshold>         0.001      </Threshold>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+
+    <solveBoundaryFlux> true       </solveBoundaryFlux>
+    <solveDivQ>         true       </solveDivQ>
+    <allowReflect>      true       </allowReflect>
+    <CCRays>            false      </CCRays>
+    
+    <Radiometer>
+       <nRadRays>          20         </nRadRays>
+       <VRViewAngle>      180        </VRViewAngle>
+       <VROrientation>    [-1,0,0]   </VROrientation>
+       <VRLocationsMin>   [0,0,0]    </VRLocationsMin>
+       <VRLocationsMax>   [0.5,0.5,0.5] </VRLocationsMax>
+    </Radiometer>
+    
+  </RMCRT>
+</Uintah_specification>

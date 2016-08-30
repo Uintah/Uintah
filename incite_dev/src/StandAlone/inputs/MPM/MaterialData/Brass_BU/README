@@ -1,0 +1,24 @@
+Properties for Cartridge Brass:
+
+$    CARTRIDGE CU.7 ZN.3 1/2 HARD
+$  
+$   213     Simplified Johnson/Cook Model (MAT_098)
+$           SI Units (kg, m, s, N, Pa, Joule)
+$   Material density . . . . . .      8.5254E+03 Kg/m^3
+$   Young's Modulus. . . . . . .      1.1032E+11 Pa
+$   Shear Modulus. . . . . . . .      4.1472E+10 Pa
+$   Bulk Modulus . . . . . . . .      1.0815E+11 Pa
+$   Poisson's ratio. . . . . . .      0.3300    
+$   Yield stress at offset . . .      3.5853E+08 Pa
+$   Engineering ultimate stress.      4.2748E+08 Pa
+$   Elongation at failure. . . .     23.000      %
+$   CTE. . . . . . . . . . . . .      1.9980E-11 1/C
+$   Yield offset . . . . . . . .      0.5000     %
+$  ------------------ Calculated values -----------------------
+$  Johnson/Cook Equation      Stress = A + B * ep ^ N
+$#     MID        RO         E        PR        VP
+$             Kg/m^3        Pa
+        xx, 8.5254E+03, 1.1032E+11, 0.330,
+$#       A         B         N         C    Psfail    Sigmax    Sigsat      Epso
+$       Pa        Pa
+ 2.3636D+08, 3.9727E+08, 0.226393, 0.0, 0.0000
