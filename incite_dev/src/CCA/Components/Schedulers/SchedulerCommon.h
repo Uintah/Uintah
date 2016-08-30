@@ -248,8 +248,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     int getMaxGhost() { return m_max_ghost_cells; }
 
-    int getMaxFineGhost() { return m_max_fine_ghost_cells; }
-
     int getMaxLevelOffset() { return m_max_level_offset; }
 
     bool isCopyDataTimestep() { return m_shared_state->isCopyDataTimestep() || m_is_init_timestep; }
@@ -376,9 +374,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     // max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
     int m_max_ghost_cells{0};
-
-    // max fine level ghost cells of all tasks - will be used for loadbalancer to create neighborhood
-    int m_max_fine_ghost_cells{0};
 
     // max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int m_max_level_offset{0};
