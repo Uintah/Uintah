@@ -77,6 +77,7 @@ endif
 SUBDIRS := \
         $(SRCDIR)/PlasticityModels \
         $(SRCDIR)/PortableTongeRamesh \
+        $(SRCDIR)/ArenaSoilBanerjeeBrannon \
 #        $(SRCDIR)/Biswajit \
 
 ifneq ($(NO_FORTRAN),yes)
