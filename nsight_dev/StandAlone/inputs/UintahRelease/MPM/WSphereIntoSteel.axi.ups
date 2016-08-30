@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+  <Meta>
+    <title>Tungsten sphere penetration </title>
+  </Meta>
+
+  <SimulationComponent type="mpm" />
+
+  <Time>
+    <maxTime>4.0e-6</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-16</delt_min>
+    <delt_max>1.0e-7</delt_max>
+    <delt_init>1.0e-9</delt_init>
+    <timestep_multiplier>0.3</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>TungstenSphereSteelTargetAxi.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+<!--
+    <outputInterval>1.0e-7</outputInterval>
+    <save label = "KineticEnergy"/>
+    <save label = "TotalMass"/>
+    <save label = "StrainEnergy"/>
+    <save label = "CenterOfMassPosition"/>
+    <save label = "TotalMomentum"/>
+    <save label = "p.plasticStrain"/>
+    <save label = "p.strainRate"/>
+    <save label = "p.damage"/>
+    <save label = "p.porosity"/>
+-->
+    <save label = "p.x"/>
+    <save label = "p.velocity"/>
+    <save label = "p.mass"/>
+    <save label = "p.volume"/>
+    <save label = "p.stress"/>
+    <save label = "p.particleID"/>
+    <save label = "p.deformationMeasure"/>
+    <save label = "p.temperature"/>
+    <save label = "p.localized"/>
+    <save label = "g.mass"/>
+    <save label = "g.volume"/>
+    <save label = "g.stressFS"/>
+    <checkpoint cycle = "2" timestepInterval = "20"/>
+  </DataArchiver>
+
+  <MPM>
+    <time_integrator>explicit</time_integrator>
+    <interpolator>                   gimp   </interpolator>
+    <minimum_particle_mass>          1.0e-8 </minimum_particle_mass>
+    <maximum_particle_velocity>      6.0e3  </maximum_particle_velocity>
+    <minimum_mass_for_acc>           1.e-15 </minimum_mass_for_acc>
+    <artificial_damping_coeff>       0.0     </artificial_damping_coeff>
+    <artificial_viscosity>           true    </artificial_viscosity>
+    <use_load_curves>                false   </use_load_curves>
+    <ForceBC_force_increment_factor> 1.0     </ForceBC_force_increment_factor>
+    <do_contact_friction_heating>    false   </do_contact_friction_heating>
+    <DoExplicitHeatConduction>       false   </DoExplicitHeatConduction>
+    <axisymmetric> true </axisymmetric>
+    <erosion algorithm = "none"/>
+<!--
+    <erosion algorithm = "AllowNoTension"/>
+    <erosion algorithm = "RemoveMass"/>
+-->
+  </MPM>
+
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+    <MPM>
+      <material name="Tungsten Sphere">
+        <density>19.3e3</density>
+        <constitutive_model type="comp_neo_hook_plastic">
+          <!-- from wikipedia.com -->
+            <bulk_modulus>310.0e9</bulk_modulus>
+            <shear_modulus>161.0e9</shear_modulus>
+            <yield_stress>550.0e6</yield_stress>
+            <hardening_modulus>161.0e3</hardening_modulus>
+            <alpha> 0.0 </alpha>
+        </constitutive_model>
+        <thermal_conductivity>174.0</thermal_conductivity>
+        <specific_heat>132.0</specific_heat>
+        <geom_object>
+          <sphere label = "W">
+              <origin>[0.0,1.2e-2,0.0]</origin>
+              <radius> 0.001 </radius>
+          </sphere>
+          <res>[2,2,1]</res>
+          <velocity>[0.0,-5000.0,0.0]</velocity>
+          <temperature>294</temperature>
+        </geom_object>
+      </material>
+      <material name="Steel Target">
+        <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
+<!--
+        <constitutive_model type="comp_neo_hook_plastic">
+            <bulk_modulus>165.0e9</bulk_modulus>
+            <shear_modulus>77.0e9</shear_modulus>
+            <yield_stress>345.0e6</yield_stress>
+            <hardening_modulus>77.0e7</hardening_modulus>
+            <alpha> 0.0 </alpha>
+        </constitutive_model>
+-->
+        <constitutive_model type="elastic_plastic">
+          <isothermal>                    false </isothermal>
+          <tolerance>                  1.0e-10  </tolerance>
+          <evolve_porosity>               true  </evolve_porosity>
+          <evolve_damage>                 true  </evolve_damage>
+          <compute_specific_heat>         true  </compute_specific_heat>
+          <do_melting>                    true  </do_melting>
+          <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
+          <initial_material_temperature>  294.0 </initial_material_temperature>
+          <taylor_quinney_coeff>          0.9   </taylor_quinney_coeff>
+          <check_max_stress_failure>      false </check_max_stress_failure>
+          <critical_stress>              12.0e9 </critical_stress>
+<!--
+          <include href="inputs/MPM/MaterialData/DefaultHypoEOS.xml"/>
+          <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
+          <include href="inputs/MPM/MaterialData/SCGShear4340St.xml"/>
+          <include href="inputs/MPM/MaterialData/ConstantTm.xml"/>
+          <include href="inputs/MPM/MaterialData/JCPlastic4340St.xml"/>
+          <include href="inputs/MPM/MaterialData/IsoHardPlastic4340.xml"/>
+-->
+          <include href="inputs/MPM/MaterialData/IsoElastic4340St.xml"/>
+          <include href="inputs/MPM/MaterialData/MieGruneisenEOS4340Steel.xml"/>
+          <include href="inputs/MPM/MaterialData/SCGShear4340St.xml"/>
+          <include href="inputs/MPM/MaterialData/SCGTm4340St.xml"/>
+          <include href="inputs/MPM/MaterialData/JCPlastic4340St.xml"/>
+          <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
+          <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
+          <include href="inputs/MPM/MaterialData/JCDamage4340St.xml"/>
+          <specific_heat_model type="constant_Cp"> </specific_heat_model>
+
+          <initial_mean_porosity>         0.005 </initial_mean_porosity>
+          <initial_std_porosity>          0.001 </initial_std_porosity>
+          <critical_porosity>             0.3   </critical_porosity>
+          <frac_nucleation>               0.1   </frac_nucleation>
+          <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
+          <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
+          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+
+          <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.001 </initial_std_scalar_damage>
+          <critical_scalar_damage>        1.0   </critical_scalar_damage>
+          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+        </constitutive_model>
+<!--
+-->
+        <geom_object>
+          <box label = "Target">
+             <min>[-1.0,-1.0,   -1.0]</min>
+             <max>[ 1.0, 1.0e-2, 1.0]</max>
+          </box>
+          <res>[2,2,1]</res>
+          <velocity>[0.0,0.0,0.0]</velocity>
+          <temperature>294</temperature>
+        </geom_object>
+      </material>
+      <contact>
+        <type>single_velocity</type>
+        <mu>0.25</mu>
+        <materials>[0,1]</materials>
+      </contact>
+    </MPM>
+  </MaterialProperties>
+
+<!--  The following model assumes 1/4 symmetry  -->
+  <Grid>
+    <Level>
+      <Box label = "1">
+        <lower>[ 0.0,    0.0,   0.0]</lower>
+        <upper>[ 1.0e-2, 1.5e-2, 3.333e-4]</upper>
+        <resolution>[30,45,1]</resolution>
+        <patches>[1,1,1]</patches>
+        <extraCells>[1,1,1]</extraCells>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+          <value> [0.0,0.0,0.0] </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+          <value> [0.0,0.0,0.0] </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+          <value> [0.0,0.0,0.0] </value>
+        </BCType>
+      </Face>                 
+      <Face side = "z-">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>                  
+    </BoundaryConditions>
+  </Grid>
+
+</Uintah_specification>
