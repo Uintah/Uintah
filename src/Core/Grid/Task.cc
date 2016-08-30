@@ -113,6 +113,7 @@ Task::initialize()
   m_comm         = -1;
 
   m_max_ghost_cells      = 0;
+  m_max_fine_ghost_cells = 0;
   m_max_level_offset     = 0;
 }
 
@@ -213,11 +214,17 @@ void Task::requires(WhichDW dw,
     return;  // no materials, no dependency
   }
 
-  Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom,
-                                      matls_dom, gtype, numGhostCells, level_offset);
+  Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom, matls_dom, gtype, numGhostCells,
+                                      level_offset);
 
-  if (numGhostCells > m_max_ghost_cells) {
-    m_max_ghost_cells = numGhostCells;
+  if (level_offset == 0) {
+    if (numGhostCells > m_max_fine_ghost_cells) {
+      m_max_fine_ghost_cells = numGhostCells;
+    }
+  } else {
+    if (numGhostCells > m_max_ghost_cells) {
+      m_max_ghost_cells = numGhostCells;
+    }
   }
 
   if (level_offset > m_max_level_offset) {

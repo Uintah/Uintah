@@ -228,7 +228,7 @@ public:
                     , const IntVector  &
                     ,       selectType &
                     ,       bool withExtraCells=false
-                    ,       bool cache=true
+                    ,       bool cache=false
                     ) const;
 
   bool containsPointIncludingExtraCells( const Point & ) const;
