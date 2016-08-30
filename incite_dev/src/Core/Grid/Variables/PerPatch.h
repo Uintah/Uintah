@@ -249,7 +249,7 @@ WARNING
       void
       PerPatch<T>::setData(const T& val)
       {
-        value = std::make_shared<T>(val);
+        *value = val;
       }
 } // End namespace Uintah
 

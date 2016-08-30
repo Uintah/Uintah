@@ -95,15 +95,21 @@ namespace Uintah{
       //__________________________________
       //
       template< class T>
-      void sigmaT4( const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw,
-                    Task::WhichDW which_temp_dw,
-                    const int radCalc_freq,
-                    const bool includeEC );
-      
+      void  sigmaT4( DetailedTask* dtask,
+                            Task::CallBackEvent event,
+                            const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            void* oldTaskGpuDW,
+                            void* newTaskGpuDW,
+                            void* stream,
+                            int deviceID,
+                            Task::WhichDW which_temp_dw,
+                            const int radCalc_freq,
+                            const bool includeEC );
+
       //__________________________________
       //
       void reflect(double& fs,
@@ -151,14 +157,21 @@ namespace Uintah{
 
       bool doCarryForward( const int radCalc_freq );
 
-      void carryForward_Var ( const ProcessorGroup*,
-                              const PatchSubset* ,
-                              const MaterialSubset*,
-                              DataWarehouse*,
-                              DataWarehouse*,
-                              const VarLabel* variable);
+      void carryForward_Var ( DetailedTask* dtask,
+                                     Task::CallBackEvent event,
+                                     const ProcessorGroup* pg,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw,
+                                     void* oldTaskGpuDW,
+                                     void* newTaskGpuDW,
+                                     void* stream,
+                                     int deviceID,
+                                     const VarLabel* variable);
+
       //__________________________________
-      // If neede convert abskg double -> float
+      // If needed convert abskg double -> float
       void sched_DoubleToFloat( const LevelP& level,
                                 SchedulerP& sched,
                                 Task::WhichDW myDW,

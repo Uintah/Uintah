@@ -182,6 +182,7 @@ Level::addPatch( const IntVector & lowIndex
 {
   Patch* r = scinew Patch(this, lowIndex, highIndex, inLowIndex, inHighIndex, getIndex());
   r->setGrid(grid);
+
   m_real_patches.push_back(r);
   m_virtual_and_real_patches.push_back(r);
 
@@ -389,13 +390,19 @@ Level::totalCells() const
 //
 long
 Level::getTotalSimulationCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
-//Not all simulations are cubic.  Some simulations might be L shaped, or T shaped, or + shaped, etc.
-//It is not enough to simply do a high - low to figure out the amount of simulation cells.  We instead
-//need to go all patches and see if they exist in this range.  If so, add up their cells.
-//This process is similar to how d_totalCells is computed in Level::finalizeLevel().
+  // Note: This method was mainly designed to be called by getRegion() only for bulletproofing to ensure
+  // the selectPatches() cell count matches what we hope it is.
 
+  // This method can be slow if it iterates through potentially hundreds of thousands of patches.
 
-  //compute the number of cells in the level
+  // For something faster selectPatches() and count up cells it returns.
+
+  // Not all simulations are cubic.  Some levels might be L shaped, T shaped, donut shaped,
+  // even non-contiguous blotches, etc.  It is not enough to simply do a high - low to figure
+  // out the amount of simulation cells.  We instead need to go all patches and see if they exist
+  // in this range.  If so, add up their cells. This process is similar to how d_totalCells is
+  // computed in Level::finalizeLevel().
+
   long cellsInRegion =0;
   for(int i=0; i<(int)m_real_patches.size(); i++){
     IntVector patchLow =  m_real_patches[i]->getExtraCellLowIndex();
@@ -547,11 +554,11 @@ void Level::selectPatches( const IntVector  & low
                          , const IntVector  & high
                          ,       selectType & neighbors
                          ,       bool         withExtraCells
-                         ,       bool         cache /* =false */
+                         ,       bool         useCache /* =false */
                          ) const
 {
 
-  if (cache) {
+  if (useCache) {
     // look it up in the cache first
     patch_cache_mutex.lock();
     {
@@ -597,19 +604,27 @@ void Level::selectPatches( const IntVector  & low
   }
 #endif
 
-  if (cache) {
+  if (useCache) {
     patch_cache_mutex.lock();
     {
-      // put it in the cache - start at orig_size in case there was something in
-      // neighbors before this query
-      std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
-      cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-      for (int i = 0; i < neighbors.size(); i++) {
-        cache.push_back(neighbors[i]);
+      // Put it in the cache
+
+      // See if another thread already filled up this cache entry
+      select_cache::const_iterator iter = m_select_cache.find(std::make_pair(low, high));
+
+      if (iter == m_select_cache.end()) {
+        //This cache entry doesn't exist yet, so lets add it.
+        std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
+        cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
+        for (int i = 0; i < neighbors.size(); i++) {
+         cache.push_back(neighbors[i]);
+        }
       }
     }
     patch_cache_mutex.unlock();
   }
+
+
 }
 
 //______________________________________________________________________

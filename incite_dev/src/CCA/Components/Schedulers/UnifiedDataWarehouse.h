@@ -27,19 +27,32 @@
 #define CCA_COMPONENTS_SCHEDULERS_DWVARIABLES_H
 
 #include <cstdio> //For printf
+#include <map>
+#include <vector>
+
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/Variable.h>
 #include <Core/Grid/Variables/ReductionVariableBase.h>
+#include <Core/Grid/Variables/SoleVariableBase.h>
+#include <Core/Grid/Variables/ParticleVariableBase.h>
+#include <Core/Grid/Variables/GridVariableBase.h>
+#include <Core/Grid/Variables/PerPatchBase.h>
 #include <Core/Grid/Grid.h>
-
-
+#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/Variables/constGridVariable.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <CCA/Ports/Scheduler.h>
 
 /**************************************
 
 CLASS
- DWVariables
+ UnifiedDataWarehouse
 
  This data warehouse should serve to unify the current host-side data warehouse
  (currently described by DWDatabase.h and OnDemandDataWarehouse.h)
@@ -62,8 +75,8 @@ DESCRIPTION
  * Allow for variables to utilize Kokkos for data layout, avoiding Array3.h.
  * Allow for this data warehouse to track the status of variables in various
          memory locations (host memory, device memory, etc.)
- * To be fully lock free.  This will utilize a lock free map, instead of the old way which was simply
-         a vector sized prior to the timestep executing.  The map will allow us, if ever needed, to
+ * To be fully lock free.  This will utilize a lock free array, instead of the old way which was simply
+         a vector sized prior to the timestep executing.  The array will allow us, if ever needed, to
          be able to add variables to the database as the simulation is progressing, instead of needing
          to know all variables ahead of time.
  * To allow support for full concurrency of variables, so that we can determine if a variable
@@ -81,7 +94,10 @@ DESCRIPTION
          the prior data structure utilizing polymorphism far too often which greatly inhibited code tweaks
          and additional features.
  * d_combinedMemory = false was the standard for the GPU data warehouse.  This needs to support d_combined = true
-         as the standard baseline
+         as the standard baseline.  But it is not wise to create one large super patch for a variable.  This
+         is because some simulations will use more host memory than what exists in GPU memory, and so variables
+         will need to be rolled in and out of the GPU.
+
  * This data warehouse assumes one accelerator device per NUMA region.  It does not support multiple
          accelerator devices per NUMA region, mainly because Kokkos doesn't.
  * Wasatch still needs raw data pointers.  Do they also need d_combinedMemory = false?
@@ -130,26 +146,26 @@ public:
 
   // Reduction Variables
   virtual void get(ReductionVariableBase&, const VarLabel*,
-       const Level* level = 0, int matlIndex = -1) = 0;
+       const Level* level = 0, int matlIndex = -1) { printf("UnifiedDataWarehouse::get() not implemented yet\n"); }
   virtual void put(const ReductionVariableBase&, const VarLabel*,
        const Level* level = 0, int matlIndex = -1)  { printf("UnifiedDataWarehouse::put() will never be implemented for this class.  Use a get() instead \n"); }
 
   virtual void override(const ReductionVariableBase&, const VarLabel*,
-      const Level* level = 0, int matlIndex = -1) = 0;
+      const Level* level = 0, int matlIndex = -1) { printf("UnifiedDataWarehouse::override() not implemented yet\n"); };
   virtual void print(std::ostream& intout, const VarLabel* label,
-         const Level* level, int matlIndex = -1) = 0;
+         const Level* level, int matlIndex = -1) { printf("UnifiedDataWarehouse::print() not implemented yet\n"); }
 
   // Sole Variables
-  virtual bool exists(const VarLabel*) const = 0;
+  virtual bool exists(const VarLabel*) const { printf("UnifiedDataWarehouse::exists() not implemented yet\n"); }
   virtual void get(SoleVariableBase&, const VarLabel*,
-       const Level* level = 0, int matlIndex = -1) = 0;
+       const Level* level = 0, int matlIndex = -1) { printf("UnifiedDataWarehouse::get() not implemented yet\n"); }
   virtual void put(const SoleVariableBase&, const VarLabel*,
        const Level* level = 0, int matlIndex = -1) { printf("UnifiedDataWarehouse::put() will never be implemented for this class.  Use a get() instead\n"); }
 
   virtual void override(const SoleVariableBase&, const VarLabel*,
-      const Level* level = 0, int matlIndex = -1) = 0;
+      const Level* level = 0, int matlIndex = -1) { printf("UnifiedDataWarehouse::override() not implemented yet\n"); }
 
-  virtual void doReserve() = 0;
+  virtual void doReserve() { printf("UnifiedDataWarehouse::doReserve() not implemented yet\n"); };
 
   // Particle Variables
   // changed way PS's were stored from ghost info to low-high range.
@@ -158,133 +174,133 @@ public:
   virtual ParticleSubset* createParticleSubset(  particleIndex numParticles,
                                                  int matlIndex, const Patch*,
                                                  IntVector low = IntVector(0,0,0),
-                                                 IntVector high = IntVector(0,0,0) ) = 0;
+                                                 IntVector high = IntVector(0,0,0) ) { printf("UnifiedDataWarehouse::createParticleSubset() not implemented yet\n"); }
   virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),
-                                  IntVector high = IntVector(0,0,0)) = 0;
+                                  IntVector high = IntVector(0,0,0)) { printf("UnifiedDataWarehouse::saveParticleSubset() not implemented yet\n"); }
   virtual bool haveParticleSubset(int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),
-                                  IntVector high = IntVector(0,0,0), bool exact = false) = 0;
+                                  IntVector high = IntVector(0,0,0), bool exact = false) { printf("UnifiedDataWarehouse::haveParticleSubset() not implemented yet\n"); }
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
-                                            IntVector low, IntVector high) = 0;
-  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
-  virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
-  virtual std::map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
+                                            IntVector low, IntVector high) { printf("UnifiedDataWarehouse::getParticleSubset() not implemented yet\n"); }
+  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) { printf("UnifiedDataWarehouse::getParticleSubset() not implemented yet\n"); }
+  virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) { printf("UnifiedDataWarehouse::getDeleteSubset() not implemented yet\n"); }
+  virtual std::map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) { printf("UnifiedDataWarehouse::getNewParticleState() not implemented yet\n"); }
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
               Ghost::GhostType,
               int numGhostCells,
-              const VarLabel* posvar) = 0;
+              const VarLabel* posvar) { printf("UnifiedDataWarehouse::getParticleSubset() not implemented yet\n"); }
   virtual ParticleSubset* getParticleSubset(int matlIndex, IntVector low, IntVector high,
                                             const Patch* relPatch,
-                                            const VarLabel* posvar, const Level* level=0) = 0;
+                                            const VarLabel* posvar, const Level* level=0) { printf("UnifiedDataWarehouse::getParticleSubset() not implemented yet\n"); }
   virtual void allocateTemporary(ParticleVariableBase&,
-         ParticleSubset*) = 0;
+         ParticleSubset*) { printf("UnifiedDataWarehouse::allocateTemporary() not implemented yet\n"); }
   virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
-            ParticleSubset*) = 0;
+            ParticleSubset*) { printf("UnifiedDataWarehouse::allocateAndPut() not implemented yet\n"); }
   virtual void get(constParticleVariableBase&, const VarLabel*,
-       ParticleSubset*) = 0;
+       ParticleSubset*) { printf("UnifiedDataWarehouse::get() not implemented yet\n"); }
   virtual void get(constParticleVariableBase&, const VarLabel*,
-       int matlIndex, const Patch* patch) = 0;
+       int matlIndex, const Patch* patch) { printf("UnifiedDataWarehouse::get() not implemented yet\n"); }
   virtual void getModifiable(ParticleVariableBase&, const VarLabel*,
-           ParticleSubset*) = 0;
+           ParticleSubset*) { printf("UnifiedDataWarehouse::getModifiable() not implemented yet\n"); }
   virtual void put(ParticleVariableBase&, const VarLabel*,
-       bool replace = false) = 0;
+       bool replace = false) { printf("UnifiedDataWarehouse::put() not implemented yet\n"); }
 
 
-  virtual void getCopy(ParticleVariableBase&, const VarLabel*, ParticleSubset*) = 0;
-  virtual void copyOut(ParticleVariableBase&, const VarLabel*, ParticleSubset*) = 0;
+  virtual void getCopy(ParticleVariableBase&, const VarLabel*, ParticleSubset*) { printf("UnifiedDataWarehouse::getCopy() not implemented yet\n"); }
+  virtual void copyOut(ParticleVariableBase&, const VarLabel*, ParticleSubset*) { printf("UnifiedDataWarehouse::copyOut() not implemented yet\n"); }
 
-  virtual void print() = 0;
-  virtual void clear() = 0;
+  virtual void print() { printf("UnifiedDataWarehouse::print() not implemented yet\n"); }
+  virtual void clear() { printf("UnifiedDataWarehouse::clear() not implemented yet\n"); }
 
 
   virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
-                ParticleSubset*) = 0;
+                ParticleSubset*) { printf("UnifiedDataWarehouse::getParticleVariable() not implemented yet\n"); }
   virtual ParticleVariableBase*
-  getParticleVariable(const VarLabel*, int matlIndex, const Patch*) = 0;
+  getParticleVariable(const VarLabel*, int matlIndex, const Patch*) { printf("UnifiedDataWarehouse::getParticleVariable() not implemented yet\n"); }
 
   // Generic grid based variables
 
   virtual void get( constGridVariableBase& var,
                     const VarLabel* label, int matlIndex, const Patch* patch,
-                    Ghost::GhostType gtype, int numGhostCells ) = 0;
+                    Ghost::GhostType gtype, int numGhostCells ) { printf("UnifiedDataWarehouse::get() not implemented yet\n"); }
 
   virtual void getModifiable( GridVariableBase& var,
-                              const VarLabel* label, int matlIndex, const Patch* patch, Ghost::GhostType gtype=Ghost::None, int numGhostCells=0 ) = 0;
+                              const VarLabel* label, int matlIndex, const Patch* patch, Ghost::GhostType gtype=Ghost::None, int numGhostCells=0 ) { printf("UnifiedDataWarehouse::getModifiable() not implemented yet\n"); }
 
   virtual void allocateTemporary( GridVariableBase& var, const Patch* patch,
-                                  Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0 ) = 0;
+                                  Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0 ) { printf("UnifiedDataWarehouse::allocateTemporary() not implemented yet\n"); }
 //                                  const IntVector& boundaryLayer ) = 0;
 //                                const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
 
   virtual void allocateAndPut( GridVariableBase& var,
                                const VarLabel* label, int matlIndex,
                                const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-                               int numGhostCells = 0 ) = 0;
+                               int numGhostCells = 0 ) { printf("UnifiedDataWarehouse::allocateAndPut() not implemented yet\n"); }
 
   virtual void put(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
-            bool replace = false) = 0;
+            bool replace = false) { printf("UnifiedDataWarehouse::put() not implemented yet\n"); }
 
   // returns the constGridVariable for all patches on the level
   virtual void getLevel( constGridVariableBase&,
                          const VarLabel*,
                          int matlIndex,
-                         const Level* level) = 0;
+                         const Level* level) { printf("UnifiedDataWarehouse::getLevel() not implemented yet\n"); }
 
   virtual void getRegion(constGridVariableBase&, const VarLabel*,
                           int matlIndex, const Level* level,
                           const IntVector& low, const IntVector& high,
-                          bool useBoundaryCells = true) = 0;
+                          bool useBoundaryCells = true) { printf("UnifiedDataWarehouse::getRegion() not implemented yet\n"); }
 
   // Copy out of the warehouse into an allocated variable.
   virtual void copyOut(GridVariableBase& var, const VarLabel* label, int matlIndex,
          const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-         int numGhostCells = 0) = 0;
+         int numGhostCells = 0) { printf("UnifiedDataWarehouse::copyOut() not implemented yet\n"); }
 
   // Makes var a copy of the specified warehouse data, allocating it
   // to the appropriate size first.
   virtual void getCopy(GridVariableBase& var, const VarLabel* label, int matlIndex,
          const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-         int numGhostCells = 0) = 0;
+         int numGhostCells = 0) { printf("UnifiedDataWarehouse::getCopy() not implemented yet\n"); }
 
 
   // PerPatch Variables
   virtual void get(PerPatchBase&, const VarLabel*,
-       int matlIndex, const Patch*) = 0;
+       int matlIndex, const Patch*) { printf("UnifiedDataWarehouse::get() not implemented yet\n"); }
   virtual void put(PerPatchBase&, const VarLabel*,
-       int matlIndex, const Patch*, bool replace = false) = 0;
+       int matlIndex, const Patch*, bool replace = false) { printf("UnifiedDataWarehouse::put() not implemented yet\n"); }
 
   // this is so we can get reduction information for regridding
-  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
+  virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const { printf("UnifiedDataWarehouse::getVarLabelMatlLevelTriples() not implemented yet\n"); }
 
   // Remove particles that are no longer relevant
-  virtual void deleteParticles(ParticleSubset* delset) = 0;
+  virtual void deleteParticles(ParticleSubset* delset) { printf("UnifiedDataWarehouse::deleteParticles() not implemented yet\n"); }
 
   // Add particles
   virtual void addParticles(const Patch* patch, int matlIndex,
-          std::map<const VarLabel*, ParticleVariableBase*>* addedstate) = 0;
+          std::map<const VarLabel*, ParticleVariableBase*>* addedstate) { printf("UnifiedDataWarehouse::addParticles() not implemented yet\n"); }
 
   // Move stuff to a different data Warehouse
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
-          const PatchSubset*, const MaterialSubset*) = 0;
+          const PatchSubset*, const MaterialSubset*) { printf("UnifiedDataWarehouse::transferFrom() not implemented yet\n"); }
 
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
           const PatchSubset*, const MaterialSubset*,
-                            bool replace) = 0;
+                            bool replace) { printf("UnifiedDataWarehouse::transferFrom() not implemented yet\n"); }
 
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
           const PatchSubset*, const MaterialSubset*,
-                            bool replace, const PatchSubset*) = 0;
+                            bool replace, const PatchSubset*) { printf("UnifiedDataWarehouse::transferFrom() not implemented yet\n"); }
 
   //An overloaded version of transferFrom.  GPU transfers need a stream, and a
   //stream is found in a detailedTask object.
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
                             const PatchSubset*, const MaterialSubset*, void * detailedTask,
-                            bool replace, const PatchSubset*) = 0;
+                            bool replace, const PatchSubset*) { printf("UnifiedDataWarehouse::transferFrom() not implemented yet\n"); }
 
   virtual size_t emit(OutputContext&, const VarLabel* label,
-        int matlIndex, const Patch* patch) = 0;
+        int matlIndex, const Patch* patch) { printf("UnifiedDataWarehouse::emit() not implemented yet\n"); }
 
 #if HAVE_PIDX
   virtual void emitPIDX(PIDXOutputContext&,
@@ -292,7 +308,7 @@ public:
                         int matlIndex,
                         const Patch* patch,
                         unsigned char* buffer,
-                        size_t bufferSize) = 0;
+                        size_t bufferSize) { printf("UnifiedDataWarehouse::emitPIDX() not implemented yet\n"); }
 #endif
 
 
@@ -302,16 +318,16 @@ public:
     ScrubComplete,
     ScrubNonPermanent
   };
-  virtual ScrubMode setScrubbing(ScrubMode) = 0;
+  virtual ScrubMode setScrubbing(ScrubMode) { printf("UnifiedDataWarehouse::setScrubbing() not implemented yet\n"); }
 
       // For related datawarehouses
-  virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW) = 0;
+  virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW) { printf("UnifiedDataWarehouse::getOtherDataWarehouse() not implemented yet\n"); }
 
   // For the schedulers
-  virtual bool isFinalized() const = 0;
-  virtual void finalize() = 0;
-  virtual void unfinalize() = 0;
-  virtual void refinalize() = 0;
+  virtual bool isFinalized() const { printf("UnifiedDataWarehouse::isFinalized() not implemented yet\n"); }
+  virtual void finalize() { printf("UnifiedDataWarehouse::finalize() not implemented yet\n"); }
+  virtual void unfinalize() { printf("UnifiedDataWarehouse::unfinalize() not implemented yet\n"); }
+  virtual void refinalize() { printf("UnifiedDataWarehouse::refinalize() not implemented yet\n"); }
 
   // Returns the generation number (id) of this data warehouse.  Id's
   // start at 0. Each subsequent DW's id is one greater.  SetID should
@@ -323,42 +339,19 @@ public:
   void setID( int id ) { d_generation = id; }
 
   // For timestep abort/restart
-  virtual bool timestepAborted() = 0;
-  virtual bool timestepRestarted() = 0;
-  virtual void abortTimestep() = 0;
-  virtual void restartTimestep() = 0;
+  virtual bool timestepAborted() { printf("UnifiedDataWarehouse::timestepAborted() not implemented yet\n"); }
+  virtual bool timestepRestarted() { printf("UnifiedDataWarehouse::timestepRestarted() not implemented yet\n"); }
+  virtual void abortTimestep() { printf("UnifiedDataWarehouse::abortTimestep() not implemented yet\n"); }
+  virtual void restartTimestep() { printf("UnifiedDataWarehouse::restartTimestep() not implemented yet\n"); }
 
   virtual void reduceMPI(const VarLabel* label, const Level* level,
-    const MaterialSubset* matls, int nComm) = 0;
+    const MaterialSubset* matls, int nComm) { printf("UnifiedDataWarehouse::reduceMPI() not implemented yet\n"); }
 
-  #ifdef HAVE_CUDA
-    GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
-    GPUDataWarehouse* getGPUDW() const {
-      int i;
-      CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
-      return d_gpuDWs[i];
-    }
-  #endif
   protected:
-    DataWarehouse( const ProcessorGroup* myworld,
-       Scheduler* scheduler,
-       int generation );
-    // These two things should be removed from here if possible - Steve
-    const ProcessorGroup* d_myworld;
-    Scheduler* d_scheduler;
 
-    // Generation should be const, but is not as during a restart, the
-    // generation number of the first DW is updated from 0 (the default
-    // for the first DW) to the correct generation number based on how
-    // many previous time steps had taken place before the restart.
-    int d_generation;
-
-  #ifdef HAVE_CUDA
-    std::vector<GPUDataWarehouse*> d_gpuDWs;
-  #endif
   private:
-    DataWarehouse(const DataWarehouse&);
-    DataWarehouse& operator=(const DataWarehouse&);
+  UnifiedDataWarehouse(const UnifiedDataWarehouse&) {printf("UnifiedDataWarehouse constructor not yet implemented");}
+  UnifiedDataWarehouse& operator=(const UnifiedDataWarehouse&){printf("UnifiedDataWarehouse operator= not yet implemented");}
   };
 
   enum status { UNALLOCATED               = 0x00000000,

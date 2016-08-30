@@ -66,9 +66,9 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
     if ( doCarryForward( radCalc_freq ) ) {
       printTask(patches,patches->get(0), dbggpu,"Doing Ray::rayTraceGPU (carryForward)");
       bool replaceVar = true;
-      new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
-      new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
-      new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
+      new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, dtask, replaceVar, nullptr );
+      new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, dtask, replaceVar, nullptr );
+      new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, dtask, replaceVar, nullptr );
       return;
     }
     
@@ -145,6 +145,8 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
     RT_flags.nDivQRays = d_nDivQRays;
     RT_flags.nFluxRays = d_nFluxRays;
 
+    RT_flags.whichROI_algo = d_whichROI_algo;
+    RT_flags.rayDirSampleAlgo = d_rayDirSampleAlgo;
     double start = clock();
 
     //__________________________________
@@ -277,8 +279,8 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     if ( doCarryForward( radCalc_freq ) ) {
       printTask( finePatches, dbggpu, "Doing Ray::rayTrace_dataOnionGPU carryForward ( divQ )" );
 
-      new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, true );
-      new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
+      new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, dtask, true, nullptr );
+      new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, dtask, true, nullptr );
       return;
     }
 

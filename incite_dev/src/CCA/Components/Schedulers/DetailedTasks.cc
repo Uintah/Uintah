@@ -935,7 +935,9 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 #endif
 
   //make keys for MPI messages
-  if (fromPatch) varKeyDB.insert(req->m_var,matl,fromPatch);
+  if (fromPatch) {
+    varKeyDB.insert(req->m_var,matl,fromPatch);
+  }
 
   //get dependency batch
   DependencyBatch* batch = from->getComputes();
