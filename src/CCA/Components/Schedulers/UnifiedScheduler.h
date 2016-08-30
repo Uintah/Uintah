@@ -30,6 +30,7 @@
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
 #include <sci_defs/cuda_defs.h>
@@ -200,22 +201,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     bool allGPUVarsProcessingReady( DetailedTask * dtask );
 
-    void reclaimCudaStreamsIntoPool( DetailedTask * dtask );
-
-    void freeCudaStreamsFromPool();
-
-    cudaStream_t* getCudaStreamFromPool( int device );
-
-    void addCudaEvent( cudaEvent_t * event, int device );
-
-    cudaError_t freeDeviceRequiresMem();
-
-    cudaError_t freeComputesMem();
-
-    void freeCudaEvents();
-
-    void clearGpuDBMaps();
-
     void assignDevice( DetailedTask * task );
 
     struct GPUGridVariableInfo {
@@ -252,9 +237,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     int  m_num_devices;
     int  m_current_device;
-
-    // thread shared data, needs lock protection when accessed
-    static std::map <unsigned int, std::queue<cudaStream_t*> > * s_idle_streams;
 
     std::vector< std::string > m_material_names;
 

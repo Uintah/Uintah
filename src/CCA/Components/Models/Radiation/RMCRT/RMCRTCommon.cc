@@ -282,21 +282,28 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 //______________________________________________________________________
 template< class T>
 void
-RMCRTCommon::sigmaT4( const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     Task::WhichDW which_temp_dw,
-                     const int radCalc_freq,
-                     const bool includeEC )
+RMCRTCommon::sigmaT4( DetailedTask* dtask,
+                      Task::CallBackEvent event,
+                      const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
+                      void* stream,
+                      int deviceID,
+                      Task::WhichDW which_temp_dw,
+                      const int radCalc_freq,
+                      const bool includeEC )
 {
+
   //__________________________________
   //  Carry Forward
   if ( doCarryForward( radCalc_freq ) ) {
     printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::sigmaT4 carryForward (sigmaT4)" );
 
-    new_dw->transferFrom( old_dw, d_sigmaT4Label, patches, matls, true );
+    new_dw->transferFrom( old_dw, d_sigmaT4Label, patches, matls, dtask, true, nullptr);
     return;
   }
 
@@ -329,7 +336,6 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
     }
   }
 }
-
 
 //______________________________________________________________________
 //
@@ -722,17 +728,22 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
 
 //______________________________________________________________________
 void
-RMCRTCommon::carryForward_Var ( const ProcessorGroup*,
+RMCRTCommon::carryForward_Var ( DetailedTask* dtask,
+                               Task::CallBackEvent event,
+                               const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
-                               const VarLabel* variable)
-{
-  new_dw->transferFrom(old_dw, variable, patches, matls, true);
+                               void* oldTaskGpuDW,
+                               void* newTaskGpuDW,
+                               void* stream,
+                               int deviceID,
+                               const VarLabel* variable) {
+
+  new_dw->transferFrom(old_dw, variable, patches, matls, dtask, true, nullptr);
+
 }
-
-
 //______________________________________________________________________
 //  Trigger a taskgraph recompilation if the *next* timestep is a
 //  calculation timestep
