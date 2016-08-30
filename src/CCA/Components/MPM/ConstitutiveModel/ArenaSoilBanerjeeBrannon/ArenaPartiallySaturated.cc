@@ -184,13 +184,6 @@ ArenaPartiallySaturated::ArenaPartiallySaturated(Uintah::ProblemSpecP& ps,
 
   checkInputParameters();
 
-  // For stress initialization using body force
-  d_initializeWithBodyForce = false;
-  ps->getWithDefault("initialize_with_body_force", d_initializeWithBodyForce, false);
-  if (d_initializeWithBodyForce) {
-    ps->require("surface_reference_point", d_surfaceRefPoint);
-  }
-
   initializeLocalMPMLabels();
 }
 
@@ -219,15 +212,6 @@ ArenaPartiallySaturated::checkInputParameters()
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-  /*
-    if (d_cm.use_disaggregation_algorithm) {
-    std::ostringstream warn;
-    warn << "Disaggregation algorithm not currently supported with partial saturation model"
-         << std::endl;
-    throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  */
- 
   // *TODO*  Add checks for the other parameters
 }
 
@@ -281,71 +265,71 @@ void
 ArenaPartiallySaturated::initializeLocalMPMLabels()
 {
   pElasticVolStrainLabel = VarLabel::create("p.elasticVolStrain",
-                                            Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pElasticVolStrainLabel_preReloc = VarLabel::create("p.elasticVolStrain+",
-                                                     Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
 
   pStressQSLabel = VarLabel::create("p.stressQS",
-                                    Uintah::ParticleVariable<Matrix3>::getTypeDescription());
+    Uintah::ParticleVariable<Matrix3>::getTypeDescription());
   pStressQSLabel_preReloc = VarLabel::create("p.stressQS+",
-                                             Uintah::ParticleVariable<Matrix3>::getTypeDescription());
+    Uintah::ParticleVariable<Matrix3>::getTypeDescription());
 
   pPlasticStrainLabel = Uintah::VarLabel::create("p.plasticStrain",
-                                                 Uintah::ParticleVariable<Uintah::Matrix3>::getTypeDescription());
+    Uintah::ParticleVariable<Uintah::Matrix3>::getTypeDescription());
   pPlasticStrainLabel_preReloc = Uintah::VarLabel::create("p.plasticStrain+",
-                                                          Uintah::ParticleVariable<Uintah::Matrix3>::getTypeDescription());
+    Uintah::ParticleVariable<Uintah::Matrix3>::getTypeDescription());
 
   pPlasticCumEqStrainLabel = Uintah::VarLabel::create("p.plasticCumEqStrain",
-                                                      Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pPlasticCumEqStrainLabel_preReloc = Uintah::VarLabel::create("p.plasticCumEqStrain+",
-                                                               Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
 
   pPlasticVolStrainLabel = Uintah::VarLabel::create("p.plasticVolStrain",
-                                                    Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pPlasticVolStrainLabel_preReloc = Uintah::VarLabel::create("p.plasticVolStrain+",
-                                                             Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
 
   pBackstressLabel = Uintah::VarLabel::create("p.porePressure",
-                                              Uintah::ParticleVariable<Uintah::Matrix3>::getTypeDescription());
+    Uintah::ParticleVariable<Uintah::Matrix3>::getTypeDescription());
   pBackstressLabel_preReloc = Uintah::VarLabel::create("p.porePressure+",
-                                                       Uintah::ParticleVariable<Uintah::Matrix3>::getTypeDescription());
+    Uintah::ParticleVariable<Uintah::Matrix3>::getTypeDescription());
 
   pPorosityLabel = Uintah::VarLabel::create("p.porosity",
-                                            Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pPorosityLabel_preReloc = Uintah::VarLabel::create("p.porosity+",
-                                                     Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
 
   pSaturationLabel = Uintah::VarLabel::create("p.saturation",
-                                              Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pSaturationLabel_preReloc = Uintah::VarLabel::create("p.saturation+",
-                                                       Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
       
   pCapXLabel = Uintah::VarLabel::create("p.capX",
-                                        Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pCapXLabel_preReloc = Uintah::VarLabel::create("p.capX+",
-                                                 Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
 
   pP3Label = Uintah::VarLabel::create("p.p3",
-                                      Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pP3Label_preReloc = Uintah::VarLabel::create("p.p3+",
-                                               Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
 
 #ifdef USE_LOCAL_LOCALIZED_PVAR
   pLocalizedLabel = Uintah::VarLabel::create("p.localized",
-                                             Uintah::ParticleVariable<int>::getTypeDescription());
+    Uintah::ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc = Uintah::VarLabel::create("p.localized+",
-                                                      Uintah::ParticleVariable<int>::getTypeDescription());
+    Uintah::ParticleVariable<int>::getTypeDescription());
 #endif
 
   pCoherenceLabel = Uintah::VarLabel::create("p.COHER",
-                                             Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pCoherenceLabel_preReloc = Uintah::VarLabel::create("p.COHER+",
-                                                      Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
 
   pTGrowLabel = Uintah::VarLabel::create("p.TGROW",
-                                         Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
   pTGrowLabel_preReloc = Uintah::VarLabel::create("p.TGROW+",
-                                                  Uintah::ParticleVariable<double>::getTypeDescription());
+    Uintah::ParticleVariable<double>::getTypeDescription());
 }
 
 // DESTRUCTOR
@@ -421,10 +405,6 @@ ArenaPartiallySaturated::outputProblemSpec(Uintah::ProblemSpecP& ps, bool output
   cm_ps->appendElement("fspeed",                       d_damageParam.fSpeed);
   cm_ps->appendElement("eq_plastic_strain_at_failure", d_damageParam.ep_f_eq);
 
-  // For initialization with body force
-  cm_ps->appendElement("initialize_with_body_force", d_initializeWithBodyForce);
-  cm_ps->appendElement("surface_reference_point", d_surfaceRefPoint);
-
   // MPMICE Murnaghan EOS
   cm_ps->appendElement("K0_Murnaghan_EOS", d_cm.K0_Murnaghan_EOS);
   cm_ps->appendElement("n_Murnaghan_EOS",  d_cm.n_Murnaghan_EOS);
@@ -441,7 +421,7 @@ void
 ArenaPartiallySaturated::addParticleState(std::vector<const VarLabel*>& from,
                                           std::vector<const VarLabel*>& to)
 {
-  // Push back all the particle variables associated with Arenisca.
+  // Push back all the particle variables associated with ArenaSoil.
   // Important to keep from and to lists in same order!
   from.push_back(pElasticVolStrainLabel);
   to.push_back(pElasticVolStrainLabel_preReloc);
@@ -709,70 +689,6 @@ ArenaPartiallySaturated::initializeInternalVariables(const Uintah::Patch* patch,
   }
 }
 
-// Initialize stress and deformation gradient using body force
-// **TODO** The pore pressure is not modified yet.  Do the correct initialization of
-//          pbar_w0
-/*
-void 
-ArenaPartiallySaturated::initializeStressAndDefGradFromBodyForce(const Uintah::Patch* patch,
-                                                                 const Uintah::MPMMaterial* matl,
-                                                                 Uintah::DataWarehouse* new_dw) const
-{
-  // Check the flag to make sure that we actually want stress initialization
-  // for this particular object
-  if (!d_initializeWithBodyForce) {
-    return;
-  }
-
-  // Get density, bulk modulus, shear modulus
-  double rho = matl->getInitialDensity();
-  ElasticModuli moduli = d_elastic->getInitialElasticModuli();
-  double bulk = moduli.bulkModulus;
-  double shear = moduli.shearModulus;
-
-  // Scale moduli using reference porosity (proxy for reference density)
-  bulk *= d_modulus_scale_fac;
-  shear *= d_modulus_scale_fac;
-
-  // Get material index
-  int matID = matl->getDWIndex();
-
-  // Get the particles in the current patch
-  Uintah::ParticleSubset* pset = new_dw->getParticleSubset(matID, patch);
-
-  // Get fixed particle data
-  Uintah::constParticleVariable<Uintah::Point>  pPosition;
-  Uintah::constParticleVariable<Uintah::Vector> pBodyForceAcc;
-  new_dw->get(pPosition,     lb->pXLabel,            pset);
-  new_dw->get(pBodyForceAcc, lb->pBodyForceAccLabel, pset);
-
-  // Get modifiable particle data
-  Uintah::ParticleVariable<Uintah::Matrix3> pStress, pDefGrad;
-  new_dw->getModifiable(pStress,  lb->pStressLabel,  pset);
-  new_dw->getModifiable(pDefGrad, lb->pDeformationMeasureLabel, pset);
-
-  // loop over the particles in the patch
-  for (auto iter = pset->begin(); iter != pset->end(); iter++) {
-    Uintah::particleIndex idx = *iter;
-
-    // Compute stress
-    double sigma_xx = -rho*pBodyForceAcc[idx].x()*(pPosition[idx].x() - d_surfaceRefPoint.x());
-    double sigma_yy = -rho*pBodyForceAcc[idx].y()*(pPosition[idx].y() - d_surfaceRefPoint.y());
-    double sigma_zz = -rho*pBodyForceAcc[idx].z()*(pPosition[idx].z() - d_surfaceRefPoint.z());
-    Uintah::Matrix3 stress(sigma_xx, 0, 0, 0, sigma_yy, 0, 0, 0, sigma_zz);
-
-    // Update particle stress
-    pStress[idx] += stress;
-
-    // Compute strain
-    Uintah::Matrix3 strain = pStress[idx]*(0.5/shear) + 
-      Identity*((one_ninth/bulk - one_sixth/shear)*pStress[idx].Trace());
-
-    // Update defgrad
-    pDefGrad[idx] = Identity + strain;
-  }
-}
-*/
 
 // Compute stable timestep based on both the particle velocities
 // and wave speed
@@ -1021,7 +937,7 @@ ArenaPartiallySaturated::computeStressTensor(const Uintah::PatchSubset* patches,
       //cout<<"pID="<<pParticleID[idx]<<std::endl;
 
       // A parameter to consider the thermal effects of the plastic work which
-      // is not coded in the current source code. Further development of Arenisca
+      // is not coded in the current source code. Further development of ArenaSoil
       // may activate this feature.
       pdTdt[idx] = 0.0;
 
@@ -2938,7 +2854,7 @@ ArenaPartiallySaturated::allocateCMDataAdd(Uintah::DataWarehouse* new_dw,
                                            Uintah::DataWarehouse* old_dw)
 {
   std::ostringstream out;
-  out << "Material conversion after failure not implemented for Arenisca.";
+  out << "Material conversion after failure not implemented for ArenaSoil.";
   throw Uintah::ProblemSetupException(out.str(), __FILE__, __LINE__);
   //task->requires(Task::NewDW, pPorosityLabel_preReloc,         matlset, Ghost::None);
   //task->requires(Task::NewDW, pSaturationLabel_preReloc,       matlset, Ghost::None);

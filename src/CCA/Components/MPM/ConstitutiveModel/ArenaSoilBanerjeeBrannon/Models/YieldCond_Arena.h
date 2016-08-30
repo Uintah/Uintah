@@ -44,7 +44,7 @@ namespace Vaango {
 
   /*! 
     \class  YieldCond_Arena
-    \brief  The Partally saturated Arenisca3 yield condition
+    \brief  The Partally saturated Arena3 yield condition
   */
 
   class YieldCond_Arena : public YieldCondition {
@@ -430,40 +430,40 @@ namespace Vaango {
      */
     void initializeLocalMPMLabels() 
       {
-        pPEAKI1Label          = Uintah::VarLabel::create("p.AreniscaPEAKI1",
+        pPEAKI1Label          = Uintah::VarLabel::create("p.ArenaPEAKI1",
                                                  Uintah::ParticleVariable<double>::getTypeDescription());
-        pPEAKI1Label_preReloc = Uintah::VarLabel::create("p.AreniscaPEAKI1+",
+        pPEAKI1Label_preReloc = Uintah::VarLabel::create("p.ArenaPEAKI1+",
                                                  Uintah::ParticleVariable<double>::getTypeDescription());
-        pFSLOPELabel          = Uintah::VarLabel::create("p.AreniscaFSLOPE",
+        pFSLOPELabel          = Uintah::VarLabel::create("p.ArenaFSLOPE",
                                                  Uintah::ParticleVariable<double>::getTypeDescription());
-        pFSLOPELabel_preReloc = Uintah::VarLabel::create("p.AreniscaFSLOPE+",
+        pFSLOPELabel_preReloc = Uintah::VarLabel::create("p.ArenaFSLOPE+",
                                                  Uintah::ParticleVariable<double>::getTypeDescription());
-        pSTRENLabel          = Uintah::VarLabel::create("p.AreniscaSTREN",
+        pSTRENLabel          = Uintah::VarLabel::create("p.ArenaSTREN",
                                                 Uintah::ParticleVariable<double>::getTypeDescription());
-        pSTRENLabel_preReloc = Uintah::VarLabel::create("p.AreniscaSTREN+",
+        pSTRENLabel_preReloc = Uintah::VarLabel::create("p.ArenaSTREN+",
                                                 Uintah::ParticleVariable<double>::getTypeDescription());
-        pYSLOPELabel          = Uintah::VarLabel::create("p.AreniscaYSLOPE",
+        pYSLOPELabel          = Uintah::VarLabel::create("p.ArenaYSLOPE",
                                                  Uintah::ParticleVariable<double>::getTypeDescription());
-        pYSLOPELabel_preReloc = Uintah::VarLabel::create("p.AreniscaYSLOPE+",
+        pYSLOPELabel_preReloc = Uintah::VarLabel::create("p.ArenaYSLOPE+",
                                                  Uintah::ParticleVariable<double>::getTypeDescription());
 
-        pBETALabel          = Uintah::VarLabel::create("p.AreniscaBETA",
+        pBETALabel          = Uintah::VarLabel::create("p.ArenaBETA",
                                                Uintah::ParticleVariable<double>::getTypeDescription());
-        pBETALabel_preReloc = Uintah::VarLabel::create("p.AreniscaBETA+",
+        pBETALabel_preReloc = Uintah::VarLabel::create("p.ArenaBETA+",
                                                Uintah::ParticleVariable<double>::getTypeDescription());
 
-        pCRLabel          = Uintah::VarLabel::create("p.AreniscaCR",
+        pCRLabel          = Uintah::VarLabel::create("p.ArenaCR",
                                              Uintah::ParticleVariable<double>::getTypeDescription());
-        pCRLabel_preReloc = Uintah::VarLabel::create("p.AreniscaCR+",
+        pCRLabel_preReloc = Uintah::VarLabel::create("p.ArenaCR+",
                                              Uintah::ParticleVariable<double>::getTypeDescription());
     
-        pT1Label          = Uintah::VarLabel::create("p.AreniscaT1",
+        pT1Label          = Uintah::VarLabel::create("p.ArenaT1",
                                              Uintah::ParticleVariable<double>::getTypeDescription());
-        pT1Label_preReloc = Uintah::VarLabel::create("p.AreniscaT1+",
+        pT1Label_preReloc = Uintah::VarLabel::create("p.ArenaT1+",
                                              Uintah::ParticleVariable<double>::getTypeDescription());
-        pT2Label          = Uintah::VarLabel::create("p.AreniscaT2",
+        pT2Label          = Uintah::VarLabel::create("p.ArenaT2",
                                              Uintah::ParticleVariable<double>::getTypeDescription());
-        pT2Label_preReloc = Uintah::VarLabel::create("p.AreniscaT2+",
+        pT2Label_preReloc = Uintah::VarLabel::create("p.ArenaT2+",
                                              Uintah::ParticleVariable<double>::getTypeDescription());
       }
 
