@@ -1,0 +1,44 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+<!--<test>
+  <name>MEHE</name>
+  <ups>DeterminingBurnRate.ups</ups>
+  <tst>burn_rates.tst</tst>
+   <otherFilesToCopy>ExpData.dat</otherFilesToCopy>
+</test>-->
+<!--<test>
+  <name>Temp</name>
+  <ups>DeterminingBurnRate.ups</ups>
+  <tst>Temp.tst</tst>
+   <otherFilesToCopy>ExpData.dat</otherFilesToCopy>
+</test>-->
+<!--<test>
+  <name>ResolutionAt298</name>
+  <ups>DeterminingBurnRate.ups</ups>
+  <tst>Resolution.tst</tst>
+  <otherFilesToCopy>ExpData.dat</otherFilesToCopy>
+</test>-->
+<test>
+  <name>ResolutionAt423</name>
+  <ups>DeterminingBurnRate.ups</ups>
+  <tst>ResolutionAt423.tst</tst>
+  <otherFilesToCopy>Exp423.dat</otherFilesToCopy>
+</test>
+<!--<test>
+  <name>ResolutionAt373</name>
+  <ups>DeterminingBurnRate.ups</ups>
+  <tst>ResolutionAt373.tst</tst>
+  <otherFilesToCopy>Exp373.dat</otherFilesToCopy>
+</test>
+<test>
+  <name>Particles_per_Cell</name>
+  <ups>DeterminingBurnRate.ups</ups>
+  <tst>Particles_per_Cell.tst</tst>
+</test>
+<test>
+  <name>VolumeFraction</name>
+  <ups>DeterminingBurnRate.ups</ups>
+  <tst>VolumeFraction.tst</tst>
+  <otherFilesToCopy>ExpData.dat</otherFilesToCopy>
+</test>-->
+</config>

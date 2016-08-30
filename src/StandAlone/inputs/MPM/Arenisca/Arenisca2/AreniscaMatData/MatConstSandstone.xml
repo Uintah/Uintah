@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Sandstone -->
+<Uintah_Include>
+  <density>2300.0</density>
+  <melt_temp>3695.0</melt_temp>
+  <room_temp>294.0</room_temp>
+  <thermal_conductivity>1.3</thermal_conductivity>
+  <specific_heat>1366.0</specific_heat>
+</Uintah_Include>
