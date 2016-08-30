@@ -687,6 +687,10 @@ SchedulerCommon::addTask(       Task        * task
     this->m_max_ghost_cells = task->m_max_ghost_cells;
   }
 
+  if (task->m_max_fine_ghost_cells > m_max_fine_ghost_cells) {
+    m_max_fine_ghost_cells = task->m_max_fine_ghost_cells;
+  }
+
   if (task->m_max_level_offset > this->m_max_level_offset) {
     this->m_max_level_offset = task->m_max_level_offset;
   }
@@ -819,8 +823,9 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */
   m_computed_vars.clear();
   m_num_tasks = 0;
 
-  m_max_ghost_cells = 0;
-  m_max_level_offset = 0;
+  m_max_ghost_cells      = 0;
+  m_max_fine_ghost_cells = 0;
+  m_max_level_offset     = 0;
 
   m_reduction_tasks.clear();
   addTaskGraph(NormalTaskGraph);

@@ -36,11 +36,8 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
-
-#include <sci_defs/visit_defs.h>
 
 #include <cfloat>
 #include <climits>
@@ -49,14 +46,11 @@
 
 using namespace Uintah;
 
-namespace {
+// Debug: Used to sync cerr so it is readable when output by multiple threads
+extern std::mutex cerrLock;
 
-Dout g_lb_dbg(           "LoadBalancer", false );
-Dout g_neighborhood_dbg( "Neighborhood", false );
-
-std::mutex g_pidx_mutex{};
-
-}
+DebugStream lbDebug( "LoadBalancer", false );
+DebugStream neiDebug("Neighborhood", false );
 
 // If defined, the space-filling curve will be computed in parallel,
 // this may not be a good idea because the time to compute the
@@ -66,9 +60,8 @@ std::mutex g_pidx_mutex{};
 
 //______________________________________________________________________
 //
-LoadBalancerCommon::LoadBalancerCommon( const ProcessorGroup * myworld )
-  : UintahParallelComponent( myworld )
-  , m_sfc( myworld )
+LoadBalancerCommon::LoadBalancerCommon( const ProcessorGroup * myworld ) :
+  UintahParallelComponent( myworld ), m_sfc( myworld )
 {
 }
 
@@ -85,7 +78,11 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
 {
   int nTasks = graph.numTasks();
 
-  DOUT(g_lb_dbg, d_myworld->myrank() << " Assigning Tasks to Resources! (" << nTasks << " tasks)");
+  if( lbDebug.active() ) {
+    cerrLock.lock();
+    lbDebug << d_myworld->myrank() << " Assigning Tasks to Resources! (" << nTasks << " tasks)\n";
+    cerrLock.unlock();
+  }
 
   for(int i=0;i<nTasks;i++){
     DetailedTask* task = graph.getTask(i);
@@ -104,9 +101,13 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
         task->assignResource(idx);
       }
 
-      DOUT(g_lb_dbg, d_myworld->myrank() << " Task " << *(task->getTask()) << " put on resource " << idx);
-
-#if SCI_ASSERTION_LEVEL > 0
+      if( lbDebug.active() ) {
+        cerrLock.lock();
+        lbDebug << d_myworld->myrank() << " Task " << *(task->getTask()) << " put on resource "
+          << idx << "\n";
+        cerrLock.unlock();
+      }
+#if SCI_ASSERTION_LEVEL>0
       std::ostringstream ostr;
       ostr << patch->getID() << ':' << idx;
 
@@ -117,11 +118,12 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
         ASSERTRANGE(pidx, 0, d_myworld->size());
         
         if (pidx != idx && task->getTask()->getType() != Task::Output) {
-          {
-            std::lock_guard<std::mutex> lock(g_pidx_mutex);
-            std::cerr << d_myworld->myrank() << " WARNING: inconsistent task (" << task->getTask()->getName()
-                      << ") assignment (" << pidx << ", " << idx << ") in LoadBalancerCommon" << std::endl;;
-          }
+          cerrLock.lock();
+          std::cerr << d_myworld->myrank() << " WARNING: inconsistent task (" << task->getTask()->getName()
+            << ") assignment (" << pidx << ", " << idx 
+            << ") in LoadBalancerCommon"
+            << std::endl;;
+          cerrLock.unlock();
         }
       }
 #endif
@@ -129,7 +131,12 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
       if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
         task->assignResource( d_myworld->myrank() );
 
-        DOUT(g_lb_dbg, d_myworld->myrank() << "  Resource (for no patch task) " << *task->getTask() << " is : " << d_myworld->myrank());
+        if( lbDebug.active() ) {
+          cerrLock.lock();
+          lbDebug << d_myworld->myrank() << "  Resource (for no patch task) " << *task->getTask() << " is : " 
+            << d_myworld->myrank() << "\n";
+          cerrLock.unlock();
+        }
 
       } else if( task->getTask()->getType() == Task::InitialSend){
         // Already assigned, do nothing
@@ -143,12 +150,23 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
           int i=(*p);
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
-            DOUT(g_lb_dbg, d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource " << i);
+            
+            if( lbDebug.active() ) {
+              cerrLock.lock();
+              lbDebug << d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource "
+                       << i << "\n";
+              cerrLock.unlock();
+            }
           }
         }
       } else {
+        if( lbDebug.active() ) {
+          cerrLock.lock();
+          lbDebug << d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource "
+                  << 0 << "\n";
+          cerrLock.unlock();
+        }
         task->assignResource(0);
-        DOUT(g_lb_dbg, d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource " << 0);
       }
     }
   }
@@ -164,7 +182,7 @@ LoadBalancerCommon::getPatchwiseProcessorAssignment( const Patch * patch )
     return -patch->getID();
   }
  
-  ASSERTRANGE( patch->getRealPatch()->getID(), m_assignment_base_patch, m_assignment_base_patch + static_cast<int>(m_processor_assignment.size()) );
+  ASSERTRANGE( patch->getRealPatch()->getID(), m_assignment_base_patch, m_assignment_base_patch + (int) m_processor_assignment.size() );
   int proc = m_processor_assignment[ patch->getRealPatch()->getGridIndex() ];
 
   ASSERTRANGE(proc, 0, d_myworld->size());
@@ -176,11 +194,16 @@ LoadBalancerCommon::getPatchwiseProcessorAssignment( const Patch * patch )
 int
 LoadBalancerCommon::getOldProcessorAssignment( const Patch * patch )
 {
+  // At one point, the var label was a parameter to this function, but it was not actually
+  // passed in anywhere, so at least for now, this is commented out:
+  //
+  // if (var && var->typeDescription()->isReductionVariable()) {
+  //    return d_myworld->myrank();
+  // }
 
   // On an initial-regrid-timestep, this will get called from createNeighborhood
   // and can have a patch with a higher index than we have.
-  if ( static_cast<int>(patch->getRealPatch()->getID()) < m_old_assignment_base_patch ||
-      patch->getRealPatch()->getID() >= m_old_assignment_base_patch + static_cast<int>(m_old_assignment.size()) ) {
+  if ((int)patch->getRealPatch()->getID() < m_old_assignment_base_patch || patch->getRealPatch()->getID() >= m_old_assignment_base_patch + (int)m_old_assignment.size()) {
     return -9999;
   }
   
@@ -292,7 +315,7 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
     for (unsigned i = 0; i < recvcounts.size(); i++) {
       displs[i]=originalPatchStart[i]*sizeof(DistributedIndex);
       if( displs[i] < 0 ) {
-        throw InternalError("Displacements < 0",__FILE__,__LINE__);
+        throw InternalError("Displacments < 0",__FILE__,__LINE__);
       }
       recvcounts[i]=originalPatchCount[i]*sizeof(DistributedIndex);
       if( recvcounts[i] < 0 ) {
@@ -398,23 +421,22 @@ LoadBalancerCommon::restartInitialize(       DataArchive  * archive
 
   if (prevNumProcs != d_myworld->size() || m_output_Nth_proc > 1) {
     if (d_myworld->myrank() == 0){
-      DOUT(g_lb_dbg, "  Original run had " << prevNumProcs << ", this has " << d_myworld->size());
+      lbDebug << "  Original run had " << prevNumProcs << ", this has " << d_myworld->size() << std::endl;
     }
     m_check_after_restart = true;
   }
 
   if (d_myworld->myrank() == 0) {
-    DOUT(g_lb_dbg, d_myworld->myrank() << " check after restart: " << m_check_after_restart);
-
+    lbDebug << d_myworld->myrank() << " check after restart: " << m_check_after_restart << "\n";
 #if 0
     int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
-    std::ostringstream message;
+    if (lb.active()) {
       for (unsigned i = 0; i < m_processor_assignment.size(); i++) {
-        message << d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc "
-                << m_processor_assignment[i] << " (old " << m_old_assignment[i] << ") - "
-                << m_processor_assignment.size() << ' ' << m_old_assignment.size() << "\n";
+        lb <<d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc " 
+           << m_processor_assignment[i] << " (old " << m_old_assignment[i] << ") - " 
+           << m_processor_assignment.size() << ' ' << m_old_assignment.size() << "\n";
       }
-      DOUT(true, message.str();)
+    }
 #endif
   }
 } // end restartInitialize()
@@ -533,7 +555,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
     LevelP level = grid->getLevel(l);
 
     // get the max ghost cells to consider for neighborhood creation
-    int maxGhost = m_scheduler->getMaxGhost();
+    int maxGhost = (l == num_levels - 1) ? m_scheduler->getMaxFineGhost() : m_scheduler->getMaxGhost();
 
     for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
@@ -659,8 +681,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
         continue;
       }
 
-      // NOTE: all other components use uniform ghost cells across levels, so RMCRT is a specific case.
-      int maxGhost = m_scheduler->getMaxGhost();
+      int maxGhost = (l == num_levels - 1) ? m_scheduler->getMaxFineGhost() : m_scheduler->getMaxGhost();
       IntVector ghost(maxGhost, maxGhost, maxGhost);
 
       LevelP oldLevel = oldGrid->getLevel(l);
@@ -716,13 +737,11 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
   std::cout << std::endl;
 #endif
 
-  if (g_neighborhood_dbg) {
-    std::ostringstream message;
+  if (neiDebug.active()) {
     for (std::set<const Patch*>::iterator iter = m_neighbors.begin(); iter != m_neighbors.end(); iter++) {
-      message << "Rank-" << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc "
+      std::cout << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc "
                 << getPatchwiseProcessorAssignment(*iter) << std::endl;
     }
-    DOUT(true, message.str());
   }
 
 } // end createNeighborhood()
@@ -769,28 +788,6 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
   if (p != 0) {
     p->getWithDefault("outputNthProc", m_output_Nth_proc, 1);
   }
-
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  // Running with VisIt so add in the variables that the user can
-  // modify.
-  if( m_shared_state->getVisIt() & !initialized ) {
-    SimulationState::interactiveVar var;
-    var.name     = "LoadBalancer-DoSpaceCurve";
-    var.type     = Uintah::TypeDescription::bool_type;
-    var.value    = (void *) &m_do_space_curve;
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    m_shared_state->d_UPSVars.push_back( var );
-
-//    m_shared_state->d_debugStreams.push_back( &g_lb_dbg  );
-//    m_shared_state->d_debugStreams.push_back( &g_neighborhood_dbg );
-
-    initialized = true;
-  }
-#endif
 }
 
 //______________________________________________________________________
