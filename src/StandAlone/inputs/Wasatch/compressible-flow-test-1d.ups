@@ -82,13 +82,10 @@
     <save label="Temperature"/>
     <save label="u"/>
     <save label="pressure"/>
-    <save label="density"/>
     <save label="et"/>
-    <save label="rhoet"/>
     <save label="rhoet_rhs"/>
     <save label="viscous_dissipation"/>
     <save label="x-mom_rhs"/>    
-    <save label="x-mom_rhs_partial"/>        
   </DataArchiver>
   <Grid>
     <BoundaryConditions>
