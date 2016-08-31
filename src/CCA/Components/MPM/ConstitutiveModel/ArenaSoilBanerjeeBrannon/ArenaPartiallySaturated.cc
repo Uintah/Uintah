@@ -62,8 +62,8 @@
 #include <chrono>
 
 // Boost
-#include <boost/range/combine.hpp>
-#include <boost/foreach.hpp>
+//#include <boost/range/combine.hpp>
+//#include <boost/foreach.hpp>
 
 #define USE_LOCAL_LOCALIZED_PVAR
 #define CHECK_FOR_NAN
@@ -103,6 +103,23 @@ const double ArenaPartiallySaturated::pi_fourth = 0.25*pi;
 const double ArenaPartiallySaturated::pi_half = 0.5*pi;
 const Matrix3 ArenaPartiallySaturated::Identity(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 const Matrix3 ArenaPartiallySaturated::Zero(0.0);
+
+// Implementing boost::combine functionality for ArenaPartiallySaturated
+namespace Vaango {
+  template<class Column1, class Column2>
+  std::vector< std::pair<Column1, Column2> > combine(std::vector<Column1> column1,
+                                                     std::vector<Column2> column2)
+  {
+    auto col1 = column1.begin();
+    auto col2 = column2.begin();
+    std::vector< std::pair<Column1, Column2> > zipped;
+    while ( col1 != column1.end() && col2 != column2.end() ) {
+      zipped.push_back( std::pair<Column1, Column2>(*col1, *col2) );
+      col1++; col2++;
+    }
+    return zipped;
+  }
+}
 
 // Requires the necessary input parameters CONSTRUCTORS
 ArenaPartiallySaturated::ArenaPartiallySaturated(Uintah::ProblemSpecP& ps, 
@@ -534,28 +551,6 @@ ArenaPartiallySaturated::initializeCMData(const Uintah::Patch* patch,
   // Initialize variables for yield function parameter variability
   d_yield->initializeLocalVariables(patch, pset, new_dw, pVolume);
 
-  /* **NOTE: May need this if yield parameters are needed for variable initialization
-  // Get the yield parameter variable labels
-  std::vector<std:string> pYieldParamVarLabels = d_yield->getLocalVariableLabels();
-
-  // Get the yield condition parameter variables
-  std::vector<constParticleVariable<double> > pYieldParamVars = 
-  d_yield->getLocalVariables(pset, new_dw);
-
-  // Get yield condition parameters and add to the list of parameters
-  std::vector<ParameterDict> allParamsVec;
-  for(auto iter = pset->begin(); iter != pset->end(); iter++){
-
-  std::string                   yield_param_label;
-  constParticleVariable<double> yield_param_var;
-  ParameterDict particleAllParams;
-  BOOST_FOREACH(boost::tie(yield_param_label, yield_param_var),
-  boost::combine(pYieldParamLabels, pYieldParamVars)) {
-  particleAllParams[yield_param_label] = yield_param_var[idx];
-  }
-  allParamsVec.push_back(particleAllParams);
-  } */
- 
   ParameterDict yieldParams = d_yield->getParameters();
   allParams.insert(yieldParams.begin(), yieldParams.end());
   proc0cout << "ArenaPartSat Model parameters are: " << std::endl;
@@ -568,12 +563,13 @@ ArenaPartiallySaturated::initializeCMData(const Uintah::Patch* patch,
 
   // Now initialize the other variables
   Uintah::ParticleVariable<double>  pdTdt, pCoherence, pTGrow;
-  Uintah::ParticleVariable<Matrix3> pStress;
+  Uintah::ParticleVariable<Matrix3> pStress, pDefGrad;
   Uintah::ParticleVariable<int>     pLocalized;
   Uintah::ParticleVariable<double>  pElasticVolStrain; // Elastic Volumetric Strain
   Uintah::ParticleVariable<Matrix3> pStressQS;
 
   new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
+  new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
 
 #ifdef USE_LOCAL_LOCALIZED_PVAR
@@ -590,6 +586,7 @@ ArenaPartiallySaturated::initializeCMData(const Uintah::Patch* patch,
   // modify the stress tensors to comply with the initial stress state
   for(auto iter = pset->begin(); iter != pset->end(); iter++){
     pdTdt[*iter]             = 0.0;
+    pDefGrad[*iter]          = Identity;
     pStress[*iter]           = allParams["pbar_w0"]*Identity;
     pLocalized[*iter]        = 0;
     pElasticVolStrain[*iter] = 0.0;
@@ -921,7 +918,7 @@ ArenaPartiallySaturated::computeStressTensor(const Uintah::PatchSubset* patches,
     Uintah::ParticleVariable<double>  p_q, pdTdt; 
     Uintah::ParticleVariable<Uintah::Matrix3> pStress_new;
     new_dw->allocateAndPut(p_q,                 lb->p_qLabel_preReloc,         pset);
-    new_dw->allocateAndPut(pdTdt,               lb->pdTdtLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pdTdt,               lb->pdTdtLabel,                pset);
     new_dw->allocateAndPut(pStress_new,         lb->pStressLabel_preReloc,     pset);
 
     Uintah::ParticleVariable<double>  pElasticVolStrain_new;
@@ -1003,12 +1000,17 @@ ArenaPartiallySaturated::computeStressTensor(const Uintah::PatchSubset* patches,
       //std::cout << "state_old.Stress = " << state_old.stressTensor << std::endl;
 
       // Get the parameters of the yield surface (for variability)
-      std::string                    yield_param_label;
-      Uintah::constParticleVariable<double>  yield_param_var;
-      BOOST_FOREACH(boost::tie(yield_param_label, yield_param_var),
-                    boost::combine(pYieldParamVarLabels, pYieldParamVars)) {
+      for (auto & zipped : combine(pYieldParamVarLabels, pYieldParamVars)) {
+        auto yield_param_label = std::get<0>(zipped);
+        auto yield_param_var   = std::get<1>(zipped);
         state_old.yieldParams[yield_param_label] = yield_param_var[idx];
       }
+      //std::string                            yield_param_label;
+      //Uintah::constParticleVariable<double>  yield_param_var;
+      //BOOST_FOREACH(boost::tie(yield_param_label, yield_param_var),
+      //              boost::combine(pYieldParamVarLabels, pYieldParamVars)) {
+      //  state_old.yieldParams[yield_param_label] = yield_param_var[idx];
+      //}
 
       // Compute the elastic moduli at t = t_n
       computeElasticProperties(state_old);
