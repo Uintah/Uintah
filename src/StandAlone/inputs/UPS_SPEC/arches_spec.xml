@@ -94,7 +94,7 @@
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type burns_christon"/> 
 
-          <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi) (all three components) and the sum(squared value) from which
+          <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi*dt) (all three components) and the sum(squared value) from which
                a time average can be computed.
 
                NOTE: only cc-scalars can be averaged. Fluxes at faces are computed using the flux_variable option. If you really
