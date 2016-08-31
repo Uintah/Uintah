@@ -1110,13 +1110,6 @@ ExplicitSolver::initialize( const LevelP& level,
 
   sched_scalarInit(level, sched);
 
-  //property models
-  all_tasks.clear();
-  all_tasks = i_property_models_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-
   // Property model initialization
   PropertyModelFactory& propFactory = PropertyModelFactory::self();
   PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
@@ -1149,6 +1142,13 @@ ExplicitSolver::initialize( const LevelP& level,
     PropertyModelBase* prop_model = iprop->second;
     if ( prop_model->initType()=="physical" )
       prop_model->sched_computeProp( level, sched, 1 );
+  }
+
+  //property models
+  all_tasks.clear();
+  all_tasks = i_property_models_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+    i->second->schedule_init(level, sched, matls, is_restart );
   }
 
   //Setup BC areas

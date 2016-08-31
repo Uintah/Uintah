@@ -58,6 +58,7 @@
                                                                           variable_stats,
                                                                           density_predictor,
                                                                           constant_property,
+                                                                          burns_christon,
                                                                           CO'">
 
           <grid                         spec="REQUIRED NO_DATA"
@@ -89,6 +90,9 @@
                                         need_applies_to="type wall_heatflux_variable"/> <!-- When turning on these models during restart, this variable is required
                                                                                              to allocate the variables in the old_dw. It must be turned OFF for subsequent
                                                                                              restarts -->
+          <abskg                        spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type burns_christon"/> 
 
           <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi) (all three components) and the sum(squared value) from which
                a time average can be computed.

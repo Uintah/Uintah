@@ -17,6 +17,7 @@ CUDA_ENABLED_SRCS =            \
         PropertyModelFactoryV2 \
         VariableStats          \
         FaceVelocities         \
+				BurnsChriston          \
         WallHFVariable
 
 ifeq ($(HAVE_CUDA),yes)

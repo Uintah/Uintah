@@ -137,41 +137,47 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   std::string modelName;
   std::string baseNameTemperature;
   _radiateAtGasTemp=true; // this flag is arbitrary for no particles
+
+  // Does this system have particles??? Check for particle property models
   ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-  for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0;
-      db_model = db_model->findNextBlock("model")){
-    db_model->getAttribute("type", modelName);
-    if (modelName=="radiation_properties"){
-      if  (db_model->findBlock("calculator") == 0){
-        throw ProblemSetupException("Error: <calculator> for DO-radiation node not found.", __FILE__, __LINE__);
-        break;
-      }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
-        _nQn_part = 0;
-        break;
-      }else{
-//        db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part );
-        bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
-        bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
+  if  (db_prop){
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0;
+        db_model = db_model->findNextBlock("model")){
+      db_model->getAttribute("type", modelName);
+      if (modelName=="radiation_properties"){
+        if  (db_model->findBlock("calculator") == 0){
+          throw ProblemSetupException("Error: <calculator> for DO-radiation node not found.", __FILE__, __LINE__);
+          break;
+        }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
+          _nQn_part = 0;
+          break;
+        }else{
+          //        db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part );
+          bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
+          bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
 
-        if ( doing_dqmom ){
-          _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
-        } else if ( doing_cqmom ){
-          _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
-        } else {
-          throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
+          if ( doing_dqmom ){
+            _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+          } else if ( doing_cqmom ){
+            _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
+          } else {
+            throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
+          }
+
+          db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", baseNameTemperature, "heat_pT" );
+          db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true );
+          db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
+          //  db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
+          break;
         }
-
-        db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", baseNameTemperature, "heat_pT" );
-        db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true );
-        db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
-      //  db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
+      }
+      if  (db_model== 0){
+        throw ProblemSetupException("Error: <radiation_properties> for DO-radiation node not found.", __FILE__, __LINE__);
         break;
       }
     }
-    if  (db_model== 0){
-      throw ProblemSetupException("Error: <radiation_properties> for DO-radiation node not found.", __FILE__, __LINE__);
-      break;
-    }
+  } else{
+    _nQn_part =0; // No property model found, so particles do not interact radiatively
   }
 
     for (int qn=0; qn < _nQn_part; qn++){
