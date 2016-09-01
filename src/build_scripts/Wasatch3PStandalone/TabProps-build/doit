@@ -10,7 +10,7 @@ rm -rf ${INSTALL_HERE}/*
 if test "$BUILD_CUDA" = "yes"; then
   FLAGS="-DENABLE_CUDA=ON"
 fi
-cmake     
+cmake                                       \
   $FLAGS                                    \
   -DTabProps_PREPROCESSOR=OFF               \
   -DTabProps_UTILS=OFF                      \
