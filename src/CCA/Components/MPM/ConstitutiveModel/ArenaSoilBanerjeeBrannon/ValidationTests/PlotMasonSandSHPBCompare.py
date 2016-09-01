@@ -302,18 +302,18 @@ def read_extracted_test_data(root_dir, ups_file):
   os.chdir(input_dir)
 
   # Read the time
-  time = readExtractedPartVar(input_dir, test_name, "p.deformationGradient", "time", "none")
+  time = readExtractedPartVar(input_dir, test_name, "p.deformationMeasure", "time", "none")
 
   # Read deformation gradient
-  detF = readExtractedPartVar(input_dir, test_name, "p.deformationGradient", "matrix", "det")
-  F_11 = readExtractedPartVar(input_dir, test_name, "p.deformationGradient", "matrix", "11")
-  F_22 = readExtractedPartVar(input_dir, test_name, "p.deformationGradient", "matrix", "22")
-  lambda_1 = readExtractedPartVar(input_dir, test_name, "p.deformationGradient", "matrix", "lambda1")
+  detF = readExtractedPartVar(input_dir, test_name, "p.deformationMeasure", "matrix", "det")
+  F_11 = readExtractedPartVar(input_dir, test_name, "p.deformationMeasure", "matrix", "11")
+  F_22 = readExtractedPartVar(input_dir, test_name, "p.deformationMeasure", "matrix", "22")
+  lambda_1 = readExtractedPartVar(input_dir, test_name, "p.deformationMeasure", "matrix", "lambda1")
   eps_11 = [1.0 + F for F in F_11]
   eps_22 = [1.0 + F for F in F_22]
 
   # Read logarithmic strain
-  logeps_11 = readExtractedPartVar(input_dir, test_name, "p.deformationGradient", "matrix", "logeps11")
+  logeps_11 = readExtractedPartVar(input_dir, test_name, "p.deformationMeasure", "matrix", "logeps11")
 
   # Read stress
   sig_I1 = readExtractedPartVar(input_dir, test_name, "p.stress", "matrix", "I1")

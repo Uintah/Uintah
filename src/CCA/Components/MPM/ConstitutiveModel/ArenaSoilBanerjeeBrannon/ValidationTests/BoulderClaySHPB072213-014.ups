@@ -29,7 +29,7 @@
       <save label = "p.particleID"/>
       <save label = "p.stress"/>
       <save label = "g.mass"/>
-      <save label = "p.deformationGradient"/>
+      <save label = "p.deformationMeasure"/>
       <save label = "g.acceleration"/>
       <save label = "p.capX"/>
       <save label = "p.plasticStrain"/>

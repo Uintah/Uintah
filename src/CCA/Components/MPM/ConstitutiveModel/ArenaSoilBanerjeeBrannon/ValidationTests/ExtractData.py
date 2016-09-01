@@ -186,7 +186,7 @@ def extract_test_data(root_dir, ups_file):
 
   # Create a deformation gradient output file
   extractPartVar(uda_dir, output_dir, test_name, partList_file_name,
-                 "p.deformationGradient", "matrix")
+                 "p.deformationMeasure", "matrix")
 
   # Create a stress output file
   extractPartVar(uda_dir, output_dir, test_name, partList_file_name,

@@ -28,7 +28,7 @@
       <save label = "p.particleID"/>
       <save label = "p.stress"/>
       <save label = "g.mass"/>
-      <save label = "p.deformationGradient"/>
+      <save label = "p.deformationMeasure"/>
       <save label = "g.acceleration"/>
       <save label = "p.capX"/>
       <save label = "p.plasticStrain"/>
@@ -121,7 +121,7 @@
           </plastic_yield_condition>
       
           <yield_surface_radius_scaling_factor> 10.0 </yield_surface_radius_scaling_factor>
-          <subcycling_characteristic_number>512</subcycling_characteristic_number>
+          <subcycling_characteristic_number>5120</subcycling_characteristic_number>
 
           <use_disaggregation_algorithm> false </use_disaggregation_algorithm>
 
