@@ -88,10 +88,7 @@ ifeq ($(HAVE_CUDA),yes)
   DLINK_FILES := $(DLINK_FILES) $(SRCDIR)/constructLinearSystemKernel.o
 endif
 
-PSELIBS := \
-        CCA/Components/Wasatch          \
-        \
-        CCA/Components/Arches/fortran   \
+PSELIBS := CCA/Components/Arches/fortran   \
         CCA/Components/Models           \
         CCA/Components/OnTheFlyAnalysis \
         CCA/Ports                       \
