@@ -84,6 +84,7 @@
 //#define CHECK_FLOATING_POINT_OVERFLOW
 //#define DEBUG_YIELD_BISECTION_R
 //#define CHECK_CONSISTENCY_BISECTION_CONVERGENCE
+//#define TEST_FRACTURE_STRAIN_CRITERION
 
 using namespace Vaango;
 using Uintah::VarLabel;
@@ -394,7 +395,7 @@ ArenaPartiallySaturated::outputProblemSpec(Uintah::ProblemSpecP& ps, bool output
   Uintah::ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","Arena_part_sat");
+    cm_ps->setAttribute("type","ArenaSoil");
   }
 
   d_elastic->outputProblemSpec(cm_ps);
@@ -420,6 +421,7 @@ ArenaPartiallySaturated::outputProblemSpec(Uintah::ProblemSpecP& ps, bool output
   // Get the damage model parameters
   cm_ps->appendElement("do_damage",                    d_cm.do_damage);
   cm_ps->appendElement("fspeed",                       d_damageParam.fSpeed);
+  cm_ps->appendElement("time_at_failure",              d_damageParam.tFail);
   cm_ps->appendElement("eq_plastic_strain_at_failure", d_damageParam.ep_f_eq);
 
   // MPMICE Murnaghan EOS

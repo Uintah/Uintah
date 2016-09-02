@@ -159,7 +159,7 @@ void
 YieldCond_Arena::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   Uintah::ProblemSpecP yield_ps = ps->appendChild("plastic_yield_condition");
-  yield_ps->setAttribute("type", "mason_sand");
+  yield_ps->setAttribute("type", "arena");
 
   yield_ps->appendElement("FSLOPE", d_yieldParam.FSLOPE);
   yield_ps->appendElement("PEAKI1", d_yieldParam.PEAKI1);
