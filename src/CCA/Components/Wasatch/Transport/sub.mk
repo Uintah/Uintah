@@ -37,6 +37,7 @@ CUDA_ENABLED_SRCS :=                        \
      LowMachMomentumTransportEquation       \
      MomentTransportEquation                \
      MomentumTransportEquationBase          \
+     ParseParticleEquations                 \
      ParticleMomentumEquation               \
      PreconditioningParser					\
      TotalInternalEnergyTransportEquation   
@@ -71,13 +72,19 @@ SRCS +=                                                \
         $(SRCDIR)/ParticleEquationBase.cc              \
         $(SRCDIR)/ParticlePositionEquation.cc          \
         $(SRCDIR)/ParticleMassEquation.cc              \
+        $(SRCDIR)/ParticleTemperatureEquation.cc       \
         $(SRCDIR)/ParticleSizeEquation.cc              \
         $(SRCDIR)/EnthalpyTransportEquation.cc         \
         $(SRCDIR)/ScalabilityTestTransportEquation.cc  \
         $(SRCDIR)/ScalarTransportEquation.cc           \
         $(SRCDIR)/TransportEquation.cc                 \
-        $(SRCDIR)/ParseEquationHelper.cc
+        $(SRCDIR)/ParseEquationHelper.cc               \
+        $(SRCDIR)/PersistentParticleICs.cc             
+#        $(SRCDIR)/SetupCoalModels.cc
 
+ifeq ($(HAVE_POKITT),yes)
+   SRCS += $(SRCDIR)/SetupCoalModels.cc
+endif
 
 ########################################################################
 #

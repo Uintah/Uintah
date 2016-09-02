@@ -116,7 +116,7 @@ ParticleDragForce( const Expr::Tag& gasVelTag,
                    const Expr::TagList& particlePositionTags )
 : Expr::Expression<ParticleField>()
 {
-  this->set_gpu_runnable(true);
+  this->set_gpu_runnable(false);  // waiting for GPU-enabled particle interpolants
 
   px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
   py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);

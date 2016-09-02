@@ -101,7 +101,8 @@ namespace WasatchCore{
     pdragx, pdragy, pdragz,
     pbodyx, pbodyy, pbodyz,
     pmomsrcx, pmomsrcy, pmomsrcz,
-    presponse, preynolds, pdragcoef;
+    presponse, preynolds, pdragcoef,
+    pHeatTransCoef, pHeatCapacity;
 
     // varden
     const std::string

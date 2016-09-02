@@ -950,6 +950,15 @@
                        attribute1="name REQUIRED STRING"
                        attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,STATE_DYNAMIC'"/>
        </ParticleSize>
+       
+       <!-- this solves dT/dt = rhs -->
+       <ParticleTemperature spec="OPTIONAL NO_DATA"
+           attribute1="name REQUIRED STRING"
+           attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,STATE_DYNAMIC'">
+           <SourceTerm spec="OPTIONAL NO_DATA"
+           attribute1="name REQUIRED STRING"
+           attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,STATE_DYNAMIC'"/>
+       </ParticleTemperature>
     
        <!-- this solves dm/dt = rhs -->
        <ParticleMass spec="OPTIONAL NO_DATA"
@@ -1008,8 +1017,26 @@
                              attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,STATE_DYNAMIC'"/>                  
                     </GasVelocity>                                                                                          
             </GasProperties>                                
-       </ParticleMomentum>                                                                                             
+       </ParticleMomentum>
     </ParticleTransportEquations>
+    
+    <!-- This turns on coal models. -->
+    <Coal spec="OPTIONAL NO_DATA">
+      <DevolModel spec="REQUIRED NO_DATA"
+                 attribute1="name REQUIRED STRING 'CPD, KobSarofim, SingleRate, DAE'"/>
+      <CharModel spec="REQUIRED NO_DATA"
+                 attribute1="name REQUIRED STRING 'LH, FRACTAL, FIRST_ORDER, CCK'"/>
+      <CoalType spec="REQUIRED NO_DATA"
+                attribute1="name REQUIRED STRING
+                'NorthDakota_Lignite,       Gillette_Subbituminous,  MontanaRosebud_Subbituminous,
+                 Illinois_Bituminous,       Kentucky_Bituminous,     Pittsburgh_Bituminous, 
+                 Pittsburgh_Shaddix,        Russian_Bituminous,      Black_Thunder,
+                 Shenmu,                    Guizhou,                 Utah_Bituminous,
+                 Utah_Skyline,              Utah_Skyline_Char_10atm, Utah_Skyline_Char_12_5atm,
+                 Utah_Skyline_Char_12_5atm, Utah_Skyline_Char_15atm, Highvale,
+                 Highvale_Char,             Eastern_Bituminous,      Eastern_Bituminous_Char,
+                 Illinois_No_6,             Illinois_No_6_Char'"/>
+    </Coal>
 
     <MomentumEquations        spec="OPTIONAL NO_DATA">
       

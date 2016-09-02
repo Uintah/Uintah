@@ -128,6 +128,9 @@ ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
         $(SRCDIR)/Operators     \
         $(SRCDIR)/Expressions   \
         $(SRCDIR)/Transport
+  ifeq ($(HAVE_POKITT),yes)
+    SUBDIRS += $(SRCDIR)/Coal
+  endif
 else
   # Minimum list of subdirs necessary to build to support ARCHES.
   SUBDIRS :=                    \

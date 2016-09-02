@@ -93,6 +93,13 @@
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
+
+#ifdef HAVE_POKITT
+//-- includes for coal models --//
+#include <CCA/Components/Wasatch/Coal/CoalEquation.h>
+#include <CCA/Components/Wasatch/Transport/SetupCoalModels.h>
+#endif
+
 using std::endl;
 WasatchCore::FlowTreatment WasatchCore::Wasatch::flowTreatment_;
 bool WasatchCore::Wasatch::needPressureSolve_ = false;
@@ -836,6 +843,32 @@ namespace WasatchCore{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
     }
+
+#   ifdef HAVE_POKITT
+    Uintah::ProblemSpecP coalSpec = wasatchSpec_->findBlock("Coal");
+    if( coalSpec ){
+        if( !(particleEqnSpec->findBlock("ParticleTemperature")) ){
+          std::ostringstream msg;
+          msg << endl
+          << "Implementation of coal models requires a 'ParticleTransportEquations' block\n"
+          << "with a ParticleTemperature sub-block."
+          << endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    	}
+
+        // setup coal models (an if-loop is needed here)
+        proc0cout << "Setting up coal models" << std::endl;
+        Expr::ExpressionFactory& ifactory = *(graphCategories_[INITIALIZATION]->exprFactory);
+        SetupCoalModels* scm = scinew SetupCoalModels( particleEqnSpec,
+                                                       wasatchSpec_,
+                                                       coalSpec,
+                                                       graphCategories_ ,
+                                                       persistentFields_ );
+        EquationAdaptors coalEqns = scm->get_adaptors();
+        adaptors_.insert( adaptors_.end(), coalEqns.begin(), coalEqns.end() );
+    }
+#   endif // HAVE_POKITT
+
     //
     // process any reduction variables specified through the input file
     //
