@@ -102,7 +102,23 @@ AMRTESTS = [
                   ("Collide_AMR_3L",                      "Collide_AMR_3L.ups",         1,  "Linux", ["exactComparison"] ),
             ]
 
-
+ARENATESTS = [
+                  ("HydrostaticCompressionSaturated",
+                   "ArenaSoilBanerjeeBrannon/HydrostaticCompressionSaturated.ups",           
+                   1, 
+                   "Linux", 
+                   ["exactComparison"] ),
+                  ("MultiaxialStrainLoadUnload",
+                   "ArenaSoilBanerjeeBrannon/MultiaxialStrainLoadUnload.ups",           
+                   1, 
+                   "Linux", 
+                   ["exactComparison"] ),
+                  ("BoulderClaySHPB072213-014",
+                   "ArenaSoilBanerjeeBrannon/BoulderClaySHPB072213-014.ups",           
+                   1, 
+                   "Linux", 
+                   ["exactComparison"] ),
+            ]
 
 
 # Tests that are run during local regression testing
@@ -114,7 +130,7 @@ DEBUGTESTS =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS
 #__________________________________
 
 # returns the list
@@ -127,6 +143,8 @@ def getTestList(me) :
     TESTS = NIGHTLYTESTS
   elif me == "AMRTESTS":
     TESTS = AMRTESTS
+  elif me == "ARENATESTS":
+    TESTS = ARENATESTS
   else:
     print "\nERROR:MPM.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
