@@ -59,6 +59,7 @@
                                                                           density_predictor,
                                                                           constant_property,
                                                                           burns_christon,
+                                                                          cloudBenchmark,
                                                                           CO'">
 
           <grid                         spec="REQUIRED NO_DATA"
@@ -92,7 +93,7 @@
                                                                                              restarts -->
           <abskg                        spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type burns_christon"/> 
+                                        need_applies_to="type burns_christon, cloudBenchmark"/> 
 
           <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi*dt) (all three components) and the sum(squared value) from which
                a time average can be computed.
@@ -708,7 +709,7 @@
 
         <ConstantProps                  spec="OPTIONAL NO_DATA">
           <density                      spec="REQUIRED DOUBLE 'positive'"/>
-          <temperature                  spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature                  spec="OPTIONAL DOUBLE 'positive'"/>
           <temperature_label_name       spec="OPTIONAL STRING"/> <!-- default = temperature -->
           <!-- no reference density specified here since the entire world is considered constant -->
         </ConstantProps>

@@ -29,6 +29,7 @@ void
 BurnsChriston::create_local_labels(){
 
     register_new_variable<CCVariable<double> >(m_abskg_name);
+    register_new_variable<CCVariable<double> >("temperature");
 
 }
 
@@ -37,8 +38,8 @@ void
 BurnsChriston::register_initialize( VIVec& variable_registry ){
 
     register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( "temperature", ArchesFieldContainer::COMPUTES, variable_registry );
 
-    register_variable( "temperature", ArchesFieldContainer::MODIFIES, variable_registry );
     register_variable( "gridX", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
     register_variable( "gridY", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
     register_variable( "gridZ", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
@@ -95,7 +96,7 @@ BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 void BurnsChriston::register_restart_initialize( VIVec& variable_registry ){
 
   register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( "temperature", ArchesFieldContainer::MODIFIES, variable_registry );
+  register_variable( "temperature", ArchesFieldContainer::COMPUTES, variable_registry );
 
   register_variable( "gridX", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   register_variable( "gridY", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
@@ -155,6 +156,8 @@ void BurnsChriston::register_timestep_init( VIVec& variable_registry ){
 
   register_variable( m_abskg_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_abskg_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "temperature", ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "temperature", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
 }
 
@@ -162,11 +165,14 @@ void BurnsChriston::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskg_name));
   constCCVariable<double>& old_abskg = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_abskg_name));
+  CCVariable<double>& temp = *(tsk_info->get_uintah_field<CCVariable<double> >("temperature"));
+  constCCVariable<double>& old_temp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("temperature"));
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
     abskg(i,j,k) = old_abskg(i,j,k);
+    temp(i,j,k) = old_temp(i,j,k);
 
   });
 }

@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
 #include <CCA/Components/Arches/PropertyModelsV2/BurnsChriston.h>
+#include <CCA/Components/Arches/PropertyModelsV2/cloudBenchmark.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 
 using namespace Uintah;
@@ -76,6 +77,12 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew BurnsChriston::Builder( name, 0 );
         register_task( name, tsk );
+
+      } else if ( type == "cloudBenchmark" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew cloudBenchmark::Builder( name, 0 );
+        register_task( name, tsk );
+
 
       } else if ( type == "constant_property"){
 

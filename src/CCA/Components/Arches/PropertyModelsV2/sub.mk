@@ -18,6 +18,7 @@ CUDA_ENABLED_SRCS =            \
         VariableStats          \
         FaceVelocities         \
 				BurnsChriston          \
+				cloudBenchmark         \
         WallHFVariable
 
 ifeq ($(HAVE_CUDA),yes)
