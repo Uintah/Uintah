@@ -10,19 +10,7 @@ SRCDIR   := CCA/Components/Arches/SourceTerms
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =               \
-         CoalGasDevol             \
-         CoalGasDevolMom          \
-         CoalGasHeat              \
-         CoalGasMomentum          \
-         CoalGasOxi               \
-         CoalGasOxiMom            \
-         DORadiation              \
-         MomentumDragSrc          \
-         RMCRT                    \
-         SourceTermFactory        \
-         UnweightedSrcTerm        
-
+CUDA_ENABLED_SRCS :=               
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -39,6 +27,18 @@ endif
 # Normal source files:
 
 SRCS += \
+         $(SRCDIR)/CoalGasDevol.cc             \
+         $(SRCDIR)/CoalGasDevolMom.cc          \
+         $(SRCDIR)/CoalGasHeat.cc              \
+         $(SRCDIR)/CoalGasMomentum.cc          \
+         $(SRCDIR)/CoalGasOxi.cc               \
+         $(SRCDIR)/CoalGasOxiMom.cc            \
+         $(SRCDIR)/DORadiation.cc              \
+         $(SRCDIR)/MomentumDragSrc.cc          \
+         $(SRCDIR)/RMCRT.cc                    \
+         $(SRCDIR)/SourceTermFactory.cc        \
+         $(SRCDIR)/UnweightedSrcTerm.cc        \
+         \
          $(SRCDIR)/BowmanNOx.cc                \
          $(SRCDIR)/BrownSootFormation_Tar.cc   \
          $(SRCDIR)/BrownSootFormation_nd.cc    \

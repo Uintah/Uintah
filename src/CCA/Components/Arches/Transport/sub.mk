@@ -10,11 +10,7 @@ SRCDIR := CCA/Components/Arches/Transport
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =      \
-        ComputePsi       \
-        KFEUpdate        \
-        KScalarRHS       \
-        TransportFactory 
+CUDA_ENABLED_SRCS :=
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -30,7 +26,11 @@ endif
 ########################################################################
 # Normal source files:
 
-# SRCS += ???
+SRCS += \
+        $(SRCDIR)/ComputePsi.cc       \
+        $(SRCDIR)/KFEUpdate.cc        \
+        $(SRCDIR)/KScalarRHS.cc       \
+        $(SRCDIR)/TransportFactory.cc 
 
 ########################################################################
 #

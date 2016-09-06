@@ -10,14 +10,7 @@ SRCDIR   := CCA/Components/Arches/TransportEqns
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =         \
-         CQMOMEqn           \
-         CQMOMEqnFactory    \
-         DQMOMEqn           \
-         DQMOMEqnFactory    \
-         EqnBase            \
-         EqnFactory         \
-         ScalarEqn                  
+CUDA_ENABLED_SRCS :=
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -34,6 +27,14 @@ endif
 # Add normal source files:
 
 SRCS += \
+         $(SRCDIR)/CQMOMEqn.cc           \
+         $(SRCDIR)/CQMOMEqnFactory.cc    \
+         $(SRCDIR)/DQMOMEqn.cc           \
+         $(SRCDIR)/DQMOMEqnFactory.cc    \
+         $(SRCDIR)/EqnBase.cc            \
+         $(SRCDIR)/EqnFactory.cc         \
+         $(SRCDIR)/ScalarEqn.cc          \
+  \
   $(SRCDIR)/CQMOM_Convection.cc           \
   $(SRCDIR)/CQMOM_Convection_OpSplit.cc   \
   $(SRCDIR)/Discretization_new.cc         

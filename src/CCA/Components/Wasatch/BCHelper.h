@@ -51,7 +51,7 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 
 //-- Wasatch Includes --//
-#include "Operators/OperatorTypes.h"
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 
 /**

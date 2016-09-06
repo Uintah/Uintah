@@ -10,17 +10,7 @@ SRCDIR := CCA/Components/Arches/Utility
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =                      \
-          BoundaryInfo                   \
-          GridInfo                       \
-          InitializeFactory              \
-          InitLagrangianParticleSize     \
-          InitLagrangianParticleVelocity \
-          RandParticleLoc                \
-          SurfaceNormals                 \
-          TaskAlgebra                    \
-          UtilityFactory                 \
-          WaveFormInit                   
+CUDA_ENABLED_SRCS :=
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -36,7 +26,17 @@ endif
 ########################################################################
 # Add normal source files:
 
-# SRCS += ???
+SRCS += \
+          $(SRCDIR)/BoundaryInfo.cc                   \
+          $(SRCDIR)/GridInfo.cc                       \
+          $(SRCDIR)/InitializeFactory.cc              \
+          $(SRCDIR)/InitLagrangianParticleSize.cc     \
+          $(SRCDIR)/InitLagrangianParticleVelocity.cc \
+          $(SRCDIR)/RandParticleLoc.cc                \
+          $(SRCDIR)/SurfaceNormals.cc                 \
+          $(SRCDIR)/TaskAlgebra.cc                    \
+          $(SRCDIR)/UtilityFactory.cc                 \
+          $(SRCDIR)/WaveFormInit.cc                   
 
 ########################################################################
 #
