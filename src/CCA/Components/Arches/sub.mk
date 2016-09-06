@@ -158,12 +158,12 @@ $(SRCDIR)/Source.$(OBJEXT) : \
           $(SRCDIR)/fortran/vvelsrc_fort.h          \
           $(SRCDIR)/fortran/wvelsrc_fort.h          
 
-ifeq ($(HAVE_CUDA),yes)
-   EXTRA_DIR=$(OBJTOP_ABS)/
-   REAL_EXT=cu
-else
+#ifeq ($(HAVE_CUDA),yes)
+#   EXTRA_DIR=$(OBJTOP_ABS)/
+#   REAL_EXT=cu
+#else
    REAL_EXT=$(OBJEXT)
-endif
+#endif
 
 # (Possibly) CUDA versions:
 $(EXTRA_DIR)$(SRCDIR)/BoundaryCondition.$(REAL_EXT) :  $(SRCDIR)/fortran/mmbcvelocity_fort.h         \
