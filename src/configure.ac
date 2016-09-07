@@ -2195,7 +2195,7 @@ AC_SUBST(DEF_RAY_SCATTER)
 
 ##  --  Verify CMake -----------------------------
 
-if test "$with_visit" -o "$build_wasatch_3p" != "no"; then
+if test "$with_visit" != NOT_SET -o "$build_wasatch_3p" != "no"; then
    which cmake > /dev/null 2>&1
    if test $? != 0; then
       AC_MSG_ERROR( Wasatch 3P requires CMake. Please make sure 'cmake' is in your path!)
