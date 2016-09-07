@@ -126,12 +126,12 @@ InterpolateParticleExpression( const Expr::Tag& srctag,
                               const Expr::TagList& particlePositionTags)
 : Expr::Expression<DestT>()
 {
-  this->set_gpu_runnable( false );
-   src_ = this->template create_field_request<ParticleField>(srctag);
-   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
-   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
-   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
-   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+  this->set_gpu_runnable(false);  // waiting for GPU-enabled particle interpolants
+  src_   = this->template create_field_request<ParticleField>(srctag                 );
+  psize_ = this->template create_field_request<ParticleField>(particleSizeTag        );
+  px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+  py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+  pz_    = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 }
 
 //--------------------------------------------------------------------

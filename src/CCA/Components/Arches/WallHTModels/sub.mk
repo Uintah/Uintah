@@ -10,8 +10,7 @@ SRCDIR   := CCA/Components/Arches/WallHTModels
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =  \
-    WallModelDriver
+CUDA_ENABLED_SRCS :=
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -27,7 +26,8 @@ endif
 ########################################################################
 # Add normal source files:
 
-# SRCS += ???
+SRCS += \
+        $(SRCDIR)/WallModelDriver.cc 
 
 ########################################################################
 #

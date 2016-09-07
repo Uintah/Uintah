@@ -36,16 +36,11 @@ SRCDIR := CCA/Components/Wasatch
 # as needed.
 #
 
-# If only building Arches required files, then we don't need these...
-ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
-  # Do not put the extension on files in this list as the .cc or .cu will
-  # be added automatically as needed.
-  CUDA_ENABLED_SRCS := \
-	TimeStepper    \
-	Wasatch
-else
-  CUDA_ENABLED_SRCS :=
-endif
+# Do not put the extension on files in this list as the .cc or .cu will
+# be added automatically as needed.
+CUDA_ENABLED_SRCS := \
+      TimeStepper    \
+      Wasatch
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -58,19 +53,14 @@ else
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).cc)
 endif
 
-# Only list of src files needed for Arches support here!
 SRCS +=                                              \
         $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/ConvectiveInterpolationMethods.cc  \
-        $(SRCDIR)/FieldAdaptor.cc                    \
-        $(SRCDIR)/ParticlesHelper.cc                 
-
-# All other src files for Wastach should be listed here:
-ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
-  SRCS +=                                            \
         $(SRCDIR)/CoordinateHelper.cc                \
+        $(SRCDIR)/FieldAdaptor.cc                    \
         $(SRCDIR)/GraphHelperTools.cc                \
         $(SRCDIR)/OldVariable.cc                     \
+        $(SRCDIR)/ParticlesHelper.cc                 \
         $(SRCDIR)/ParseTools.cc                      \
         $(SRCDIR)/Properties.cc                      \
         $(SRCDIR)/ReductionHelper.cc                 \
@@ -78,7 +68,6 @@ ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
         $(SRCDIR)/TaskInterface.cc                   \
         $(SRCDIR)/WasatchBCHelper.cc                 \
         $(SRCDIR)/WasatchParticlesHelper.cc          
-endif
 
 PSELIBS :=                        \
         CCA/Components/Schedulers \
@@ -98,7 +87,7 @@ PSELIBS :=                        \
 LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
         $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                    \
         $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY)                     \
-        $(POKITT_LIBRARY)											\
+        $(POKITT_LIBRARY)                                           \
         $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
@@ -123,15 +112,13 @@ endif
 #
 # Sub-dir recurse...
 
-ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
-  SUBDIRS :=                    \
-        $(SRCDIR)/Operators     \
-        $(SRCDIR)/Expressions   \
-        $(SRCDIR)/Transport
-else
-  # Minimum list of subdirs necessary to build to support ARCHES.
-  SUBDIRS :=                    \
-        $(SRCDIR)/Operators     
+SUBDIRS :=                         \
+           $(SRCDIR)/Expressions   \
+           $(SRCDIR)/Operators     \
+           $(SRCDIR)/Transport     
+
+ifeq ($(HAVE_POKITT),yes)
+  SUBDIRS += $(SRCDIR)/Coal
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

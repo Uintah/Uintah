@@ -10,11 +10,7 @@ SRCDIR := CCA/Components/Arches/LagrangianParticles
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =                \
-         LagrangianParticleFactory \
-         UpdateParticlePosition    \
-         UpdateParticleSize        \
-         UpdateParticleVelocity
+CUDA_ENABLED_SRCS :=                
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -30,7 +26,11 @@ endif
 ########################################################################
 # Normal source files:
 
-# SRCS += ???
+SRCS += \
+         $(SRCDIR)/LagrangianParticleFactory.cc \
+         $(SRCDIR)/UpdateParticlePosition.cc    \
+         $(SRCDIR)/UpdateParticleSize.cc        \
+         $(SRCDIR)/UpdateParticleVelocity.cc
 
 ########################################################################
 #

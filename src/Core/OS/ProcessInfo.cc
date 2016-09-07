@@ -59,7 +59,7 @@ bool
 ProcessInfo::isSupported ( int info_type )
 {
 
-#if defined( __linux ) || defined( __APPLE__ )
+#if defined( __linux ) || defined( __APPLE__ ) || defined( __bgq__ )
 
   switch ( info_type ) {
     case MEM_SIZE: return true;

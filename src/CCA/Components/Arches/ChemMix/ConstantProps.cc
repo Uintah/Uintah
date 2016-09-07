@@ -71,10 +71,8 @@ ConstantProps::problemSetup( const ProblemSpecP& propertiesParameters )
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   db_coldflow->require( "density", _density ); 
-  db_coldflow->require( "temperature", _temperature ); 
-
   insertIntoMap("density");
-  insertIntoMap("temperature"); 
+ 
 
   //Automatically adding density_old to the table lookup because this 
   //is needed for scalars that aren't solved on stage 1: 
@@ -86,10 +84,18 @@ ConstantProps::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "   ------ Using constant density and temperature -------   " << endl;
 
   //setting varlabels to roles: 
-  d_lab->setVarlabelToRole( "temperature", "temperature" ); 
   d_lab->setVarlabelToRole( "density", "density" ); 
 
   problemSetupCommon( db_coldflow, this ); 
+
+
+  _includeTemp=false;
+  if(db_coldflow->findBlock("temperature")) {
+    db_coldflow->require( "temperature", _temperature ); 
+    insertIntoMap("temperature"); 
+    _includeTemp=true;
+    d_lab->setVarlabelToRole( "temperature", "temperature" ); 
+  }
 
 }
 
@@ -263,7 +269,7 @@ ConstantProps::getState( const ProcessorGroup* pc,
       // easily identified: 
       if ( i->first == "density" )
         iter_to_index.insert( make_pair( i->first, 0 ));
-      else if ( i->first == "temperature" )
+      else if ( i->first == "temperature" && _includeTemp )
         iter_to_index.insert( make_pair( i->first, 1 ));
 
     }
@@ -277,7 +283,7 @@ ConstantProps::getState( const ProcessorGroup* pc,
       if ( i->first == "density" ){ 
         (*i->second.var).initialize(_density); 
         arches_density.copyData( (*i->second.var) ); 
-      } else if ( i->first == "temperature" ){ 
+      } else if ( i->first == "temperature" && _includeTemp){ 
         (*i->second.var).initialize(_temperature); 
       } 
     }
@@ -295,7 +301,7 @@ ConstantProps::getState( const ProcessorGroup* pc,
         if ( i->first == "density" ){ 
           (*i->second.var)[c] *= eps_vol[c]; 
           arches_density[c] = (*i->second.var)[c];
-        } else if ( i->first == "temperature" ){ 
+        } else if ( i->first == "temperature" && _includeTemp){ 
           (*i->second.var)[c] = _temperature * eps_vol[c]; 
         } 
 
@@ -342,7 +348,7 @@ double ConstantProps::getTableValue( std::vector<double> iv, std::string variabl
 
     return _density; 
 
-  } else if ( variable == "temperature" ) { 
+  } else if ( variable == "temperature" && _includeTemp) { 
 
     return _temperature; 
 

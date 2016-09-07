@@ -31,9 +31,9 @@
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Containers/FastHashTable.h>
-#include <Core/Grid/Variables/VarLabelMatl.h>
-#include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Parallel/UintahMPI.h>
 
 #include <iosfwd>
@@ -58,13 +58,13 @@ inline const Level* getRealDomain(const Level* level)
 
 class BufferInfo;
 class DependencyBatch;
-class DetailedTasks;
 class DetailedDep;
-class TypeDescription;
+class DetailedTasks;
+class LoadBalancer;
 class Patch;
 class ProcessorGroup;
 class SendState;
-class LoadBalancer;
+class TypeDescription;
 
 /**************************************
 
@@ -560,8 +560,8 @@ class OnDemandDataWarehouse : public DataWarehouse {
         void encompassOffsets(IntVector low,
                               IntVector high)
         {
-          lowOffset = Uintah::Max(low, lowOffset);
-          highOffset = Uintah::Max(high, highOffset);
+          lowOffset  = Uintah::Max( low,  lowOffset );
+          highOffset = Uintah::Max( high, highOffset );
         }
 
         AccessType accessType;

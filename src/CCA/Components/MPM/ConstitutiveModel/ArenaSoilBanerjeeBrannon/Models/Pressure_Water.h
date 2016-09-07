@@ -47,7 +47,7 @@ namespace Vaango {
     \f$n\f$ = pressure derivative of reference bulk modulus 
     \f$J = \rho_0/\rho\f$ = ratio of mass densities
    
-    \warning For use only with Arenisca3PartiallySaturated
+    \warning For use only with ArenaPartiallySaturated
   */
   ////////////////////////////////////////////////////////////////////////////
 

@@ -114,7 +114,7 @@ void
 ElasticModuli_Arena::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   ProblemSpecP elasticModuli_ps = ps->appendChild("elastic_moduli_model");
-  elasticModuli_ps->setAttribute("type", "mason_sand");
+  elasticModuli_ps->setAttribute("type", "arena");
 
   elasticModuli_ps->appendElement("b0",d_bulk.b0);
   elasticModuli_ps->appendElement("b1",d_bulk.b1);

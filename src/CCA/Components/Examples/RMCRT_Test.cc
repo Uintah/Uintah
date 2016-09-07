@@ -687,7 +687,7 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
         double y = p(1);
         double z = p(2);
         
-        abskg[c] =   (max(sin(x*5*M_PI)*abs((sin(z*3*M_PI+M_PI)) + (sin(y *3*M_PI))),0.0)+max(sin(x*5.0*M_PI+M_PI),0.0)*max(sin(z*3*M_PI+M_PI) + sin(y *3*M_PI+M_PI),0.0))*5.0;
+        abskg[c] =   (max(sin(x*5*M_PI)*std::abs((sin(z*3*M_PI+M_PI)) + (sin(y *3*M_PI))),0.0)+max(sin(x*5.0*M_PI+M_PI),0.0)*max(sin(z*3*M_PI+M_PI) + sin(y *3*M_PI+M_PI),0.0))*5.0;
         double tmp = (max(sin(x*5.0*M_PI)*max(sin((z)*3.0*M_PI)      +  sin((y) *3.0*M_PI),0.0),0.0)+max(sin(x*5.0*M_PI),0.0)*max(sin(z*3.0*M_PI+M_PI) + sin(y *3.0*M_PI+M_PI),0.0))*1000.0 ;
 
         color[c] = tmp; 

@@ -37,13 +37,10 @@ SRCDIR := CCA/Components/Wasatch/Operators
 # as needed.
 #
 CUDA_ENABLED_SRCS :=             \
-        UpwindInterpolant        \
-        FluxLimiterInterpolant
-
-ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
-  CUDA_ENABLED_SRCS += Extrapolant \
-                       Operators
-endif
+        Extrapolant              \
+        FluxLimiterInterpolant   \
+        Operators                \
+        UpwindInterpolant        
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of

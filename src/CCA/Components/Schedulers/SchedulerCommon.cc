@@ -151,10 +151,10 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse
 
   if ( ProcessInfo::isSupported( ProcessInfo::MEM_SIZE ) ) {
     memuse = ProcessInfo::getMemoryResident();
-    // printf("1) memuse is %d (on proc %d)\n", (int)memuse, Uintah::Parallel::getMPIRank() );
+    // printf("1) memuse is %ld (on proc %d)\n", memuse, Uintah::Parallel::getMPIRank() );
   } else {
     memuse = (char*)sbrk(0)-start_addr;
-    // printf("2) memuse is %d (on proc %d)\n", (int)memuse, Uintah::Parallel::getMPIRank() );
+    // printf("2) memuse is %ld (on proc %d)\n", memuse, Uintah::Parallel::getMPIRank() );
   }
 #endif
 

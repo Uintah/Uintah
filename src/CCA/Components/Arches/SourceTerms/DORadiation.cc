@@ -93,15 +93,21 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
   std::string modelName;
   ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-  for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
-      db_model = db_model->findNextBlock("model")){
-    db_model->getAttribute("type", modelName);
-    if (modelName=="radiation_properties"){
-    db_model->getAttribute("label",_abskt_label_name);
-    db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
+  if  (db_prop){
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
+        db_model = db_model->findNextBlock("model")){
+      db_model->getAttribute("type", modelName);
+      if (modelName=="radiation_properties"){
+        db_model->getAttribute("label",_abskt_label_name);
+        db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
+      }
     }
+  }else{
+    proc0cout << " **WARNING**: Couldn't find property model (old interface), using user specified absorption coefficient.    \n";
+      db->findBlock("abskg")->getAttribute("label", _abskg_label_name);
+     _abskt_label_name=_abskg_label_name; 
   }
-  
+
   proc0cout << " --- DO Radiation Model Summary: --- " << endl;
   proc0cout << "   -> calculation frequency:     " << _radiation_calc_freq << endl;
   proc0cout << "   -> temperature label:         " << _T_label_name << endl;
@@ -137,7 +143,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   }
   _abskt_label = VarLabel::find(_abskt_label_name); 
   if ( _abskt_label == 0){
-    throw InvalidValue("Error: For DO Radiation source term -- Could not find the abskt label.", __FILE__, __LINE__);
+    throw InvalidValue("Error: For DO Radiation source term -- Could not find the abskt label=", __FILE__, __LINE__);
   }
   _abskg_label = VarLabel::find(_abskg_label_name); 
   if ( _abskg_label == 0){

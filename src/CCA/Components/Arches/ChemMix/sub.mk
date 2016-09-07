@@ -9,14 +9,11 @@ SRCDIR := CCA/Components/Arches/ChemMix
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =          \
-      ClassicTableInterface  \
-      ColdFlow               \
-      MixingRxnModel
+CUDA_ENABLED_SRCS :=          
 
-ifeq ($(HAVE_TABPROPS),yes)
-   CUDA_ENABLED_SRCS += TabPropsInterface
-endif
+#ifeq ($(HAVE_TABPROPS),yes)
+#   CUDA_ENABLED_SRCS += TabPropsInterface
+#endif
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -30,7 +27,13 @@ else
 endif
 
 SRCS += \
-        $(SRCDIR)/ConstantProps.cc         
+      $(SRCDIR)/TabPropsInterface.cc      \
+      \
+      $(SRCDIR)/ClassicTableInterface.cc  \
+      $(SRCDIR)/ColdFlow.cc               \
+      $(SRCDIR)/MixingRxnModel.cc         \
+      \
+      $(SRCDIR)/ConstantProps.cc         
 
 PSELIBS := $(PSELIBS) Core/IO
 
