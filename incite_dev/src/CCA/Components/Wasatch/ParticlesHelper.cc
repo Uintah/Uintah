@@ -39,7 +39,7 @@
  \ $$      \ $$  \ $$ \$$   \$$   \$$    \$$$$$$  \$$$$$$  \$$$$$$$$ \$$$$$$$$  \$$$$$$
  **************************************************************************************/
 
-#include "ParticlesHelper.h"
+#include <CCA/Components/Wasatch/ParticlesHelper.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Box.h>

@@ -38,7 +38,7 @@
 namespace Vaango {
 
   /*! \class ElasticModuli_Arena
-   *  \brief The updated elasticity for Arenisca3
+   *  \brief The elasticity for ArenaSoil
    *  \author Biswajit Banerjee, 
    *          Caveat below by Michael Homel.
    *

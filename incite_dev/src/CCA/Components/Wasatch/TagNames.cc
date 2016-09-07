@@ -108,6 +108,8 @@ namespace WasatchCore{
   presponse( "p.tau",      Expr::STATE_NONE ),
   preynolds( "p.re",       Expr::STATE_NONE ),
   pdragcoef( "p.cd",       Expr::STATE_NONE ),
+  pHeatTransCoef( "p.heatTransferCoeff", Expr::STATE_NONE ),
+  pHeatCapacity(  "p.heatCapacity", Expr::STATE_NONE ),
   
   // predictor related variables
   star           ( "*"),

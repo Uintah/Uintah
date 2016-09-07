@@ -46,7 +46,7 @@ namespace Vaango {
     \f$\gamma\f$ = parameter
     \f$n\epsilon_v = -\log(\rho/\rho_0)$ = volumetric strain
    
-    \warning For use only with Arenisca3PartiallySaturated
+    \warning For use only with ArenaPartiallySaturated
   */
   ////////////////////////////////////////////////////////////////////////////
 

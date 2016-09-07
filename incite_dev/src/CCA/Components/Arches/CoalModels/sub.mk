@@ -10,25 +10,7 @@ SRCDIR := CCA/Components/Arches/CoalModels
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=             \
-        CharOxidation            \
-        CharOxidationShaddix     \
-        CharOxidationSmith       \
-        ConstantModel            \
-        Deposition               \
-        Devolatilization         \
-        DragModel                \
-        EnthalpyShaddix          \
-        FOWYDevol                \
-        HeatTransfer             \
-        KobayashiSarofimDevol    \
-        MaximumTemperature       \
-        PartVel                  \
-        ParticleConvection       \
-        RichardsFletcherDevol    \
-        SimpleBirth              \
-        Thermophoresis           \
-        YamamotoDevol            
+CUDA_ENABLED_SRCS :=             
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -45,6 +27,24 @@ endif
 # Normal source files:
 
 SRCS += \
+        $(SRCDIR)/CharOxidation.cc            \
+        $(SRCDIR)/CharOxidationShaddix.cc     \
+        $(SRCDIR)/CharOxidationSmith.cc       \
+        $(SRCDIR)/ConstantModel.cc            \
+        $(SRCDIR)/Deposition.cc               \
+        $(SRCDIR)/Devolatilization.cc         \
+        $(SRCDIR)/DragModel.cc                \
+        $(SRCDIR)/EnthalpyShaddix.cc          \
+        $(SRCDIR)/FOWYDevol.cc                \
+        $(SRCDIR)/HeatTransfer.cc             \
+        $(SRCDIR)/KobayashiSarofimDevol.cc    \
+        $(SRCDIR)/MaximumTemperature.cc       \
+        $(SRCDIR)/PartVel.cc                  \
+        $(SRCDIR)/ParticleConvection.cc       \
+        $(SRCDIR)/RichardsFletcherDevol.cc    \
+        $(SRCDIR)/SimpleBirth.cc              \
+        $(SRCDIR)/Thermophoresis.cc           \
+        $(SRCDIR)/YamamotoDevol.cc            \
   $(SRCDIR)/CoalModelFactory.cc      \
   $(SRCDIR)/ModelBase.cc             
 

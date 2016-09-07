@@ -10,10 +10,7 @@ SRCDIR := CCA/Components/Arches/PropertyModels
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =            \
-        HeatLoss               \
-        RadProperties          \
-        ScalarVarianceScaleSim \
+CUDA_ENABLED_SRCS :=
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -30,6 +27,10 @@ endif
 # Normal source files:
 
 SRCS += \
+        $(SRCDIR)/HeatLoss.cc               \
+        $(SRCDIR)/RadProperties.cc          \
+        $(SRCDIR)/ScalarVarianceScaleSim.cc \
+        \
         $(SRCDIR)/AlgebraicScalarDiss.cc    \
         $(SRCDIR)/ConstProperty.cc          \
         $(SRCDIR)/EmpSoot.cc                \

@@ -10,14 +10,7 @@ SRCDIR := CCA/Components/Arches/PropertyModelsV2
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =            \
-        CO                     \
-        ConstantProperty       \
-        DensityPredictor       \
-        PropertyModelFactoryV2 \
-        VariableStats          \
-        FaceVelocities         \
-        WallHFVariable
+CUDA_ENABLED_SRCS :=            
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -33,7 +26,17 @@ endif
 ########################################################################
 # Normal source files:
 
-# SRCS += ???
+SRCS += \
+	$(SRCDIR)/cloudBenchmark.cc         \
+        $(SRCDIR)/CO.cc                     \
+        $(SRCDIR)/ConstantProperty.cc       \
+        $(SRCDIR)/OneDWallHT.cc             \
+        $(SRCDIR)/DensityPredictor.cc       \
+        $(SRCDIR)/PropertyModelFactoryV2.cc \
+        $(SRCDIR)/VariableStats.cc          \
+        $(SRCDIR)/FaceVelocities.cc         \
+	$(SRCDIR)/BurnsChriston.cc          \
+        $(SRCDIR)/WallHFVariable.cc
 
 ########################################################################
 #

@@ -57,7 +57,10 @@
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable,
                                                                           variable_stats,
                                                                           density_predictor,
+                                                                          one_d_wallht,
                                                                           constant_property,
+                                                                          burns_christon,
+                                                                          cloudBenchmark,
                                                                           CO'">
 
           <grid                         spec="REQUIRED NO_DATA"
@@ -89,8 +92,11 @@
                                         need_applies_to="type wall_heatflux_variable"/> <!-- When turning on these models during restart, this variable is required
                                                                                              to allocate the variables in the old_dw. It must be turned OFF for subsequent
                                                                                              restarts -->
+          <abskg                        spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type burns_christon, cloudBenchmark"/> 
 
-          <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi) (all three components) and the sum(squared value) from which
+          <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi*dt) (all three components) and the sum(squared value) from which
                a time average can be computed.
 
                NOTE: only cc-scalars can be averaged. Fluxes at faces are computed using the flux_variable option. If you really
@@ -160,6 +166,14 @@
                                         need_applies_to="type CO"/> <!-- get prandtl number for RHS term -->
           <Tcrit                        spec="OPTIONAL DOUBLE"
                                         need_applies_to="type CO"/> <!-- temperature cutoff for the resolved rate, default=1150 -->
+          <incident_hf_label            spec="REQUIRED STRING"
+                                        need_applies_to="type one_d_wallht"/> <!-- label of variable that gives the incident heat flux to the representative 1d surface -->
+          <emissivity_label             spec="REQUIRED STRING"
+                                        need_applies_to="type one_d_wallht"/> <!-- label providing the emissivity of the surface exposed to the flame -->
+          <Tshell_label                 spec="REQUIRED STRING"
+                                        need_applies_to="type one_d_wallht"/> <!-- outside wall temperature -->
+          <wall_resistance_label        spec="REQUIRED STRING"
+                                        need_applies_to="type one_d_wallht"/> <!-- total wall resistance label -->
 
         </model>
       </PropertyModelsV2>
@@ -704,7 +718,7 @@
 
         <ConstantProps                  spec="OPTIONAL NO_DATA">
           <density                      spec="REQUIRED DOUBLE 'positive'"/>
-          <temperature                  spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature                  spec="OPTIONAL DOUBLE 'positive'"/>
           <temperature_label_name       spec="OPTIONAL STRING"/> <!-- default = temperature -->
           <!-- no reference density specified here since the entire world is considered constant -->
         </ConstantProps>

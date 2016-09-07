@@ -28,25 +28,24 @@ SRCDIR  := StandAlone/tools/puda
 PROGRAM := StandAlone/tools/puda/puda
 
 SRCS := \
-        $(SRCDIR)/asci.cc        \
-        $(SRCDIR)/jacquie.cc     \
-        $(SRCDIR)/pressure.cc    \
-        $(SRCDIR)/monica1.cc     \
-        $(SRCDIR)/monica2.cc     \
-        $(SRCDIR)/jim1.cc        \
-        $(SRCDIR)/jim2.cc        \
-        $(SRCDIR)/jim3.cc        \
-        $(SRCDIR)/PIC.cc         \
-        $(SRCDIR)/POL.cc         \
-        $(SRCDIR)/AA_MMS.cc      \
-        $(SRCDIR)/util.cc        \
-        $(SRCDIR)/varsummary.cc  \
-        $(SRCDIR)/puda.cc        \
-        $(SRCDIR)/GV_MMS.cc      \
-        $(SRCDIR)/ER_MMS.cc      \
-        $(SRCDIR)/todd1.cc       \
-        $(SRCDIR)/ICE_momentum.cc
-        
+        $(SRCDIR)/AA_MMS.cc       \
+        $(SRCDIR)/asci.cc         \
+        $(SRCDIR)/ER_MMS.cc       \
+        $(SRCDIR)/GV_MMS.cc       \
+        $(SRCDIR)/ICE_momentum.cc \
+        $(SRCDIR)/jacquie.cc      \
+        $(SRCDIR)/jim1.cc         \
+        $(SRCDIR)/jim2.cc         \
+        $(SRCDIR)/jim3.cc         \
+        $(SRCDIR)/monica1.cc      \
+        $(SRCDIR)/monica2.cc      \
+        $(SRCDIR)/PIC.cc          \
+        $(SRCDIR)/POL.cc          \
+        $(SRCDIR)/pressure.cc     \
+        $(SRCDIR)/puda.cc         \
+        $(SRCDIR)/todd1.cc        \
+        $(SRCDIR)/util.cc         \
+        $(SRCDIR)/varsummary.cc   
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(ALL_STATIC_PSE_LIBS)
@@ -73,4 +72,19 @@ else
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+###########################################################
+#
+# grid_reader
+#
+# Grid to Human Readable
+#
+LIBS := 
+PSELIBS :=
+
+SRCS    := $(SRCDIR)/grid_reader.cc
+PROGRAM := StandAlone/grid_reader
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
 

@@ -10,21 +10,7 @@ SRCDIR := CCA/Components/Arches/ParticleModels
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS =           \
-         CoalMassClip         \
-         DepositionVelocity   \
-         RateDeposition       \
-         BodyForce            \
-         CQMOMSourceWrapper   \
-         CoalDensity          \
-         CoalTemperature      \
-         Constant             \
-         DragModel            \
-         ExampleParticleModel \
-         FOWYDevol            \
-         ParticleModelFactory \
-         ShaddixOxidation     \
-         TotNumDensity        
+CUDA_ENABLED_SRCS :=           
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -40,7 +26,22 @@ endif
 ########################################################################
 # Normal source files:
 
-# SRCS += ???
+SRCS +=  \
+         $(SRCDIR)/CoalMassClip.cc         \
+         $(SRCDIR)/DepositionVelocity.cc   \
+         $(SRCDIR)/RateDeposition.cc       \
+         $(SRCDIR)/BodyForce.cc            \
+         $(SRCDIR)/CQMOMSourceWrapper.cc   \
+         $(SRCDIR)/CoalDensity.cc          \
+         $(SRCDIR)/CoalTemperature.cc      \
+         $(SRCDIR)/Constant.cc             \
+         $(SRCDIR)/DragModel.cc            \
+         $(SRCDIR)/ExampleParticleModel.cc \
+         $(SRCDIR)/FOWYDevol.cc            \
+         $(SRCDIR)/ParticleModelFactory.cc \
+         $(SRCDIR)/ShaddixOxidation.cc     \
+         $(SRCDIR)/TotNumDensity.cc        
+
 
 ########################################################################
 #

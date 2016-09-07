@@ -61,8 +61,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca4.h>
 #include <CCA/Components/MPM/ConstitutiveModel/JWLppMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ArenaSoilBanerjeeBrannon/ArenaPartiallySaturated.h>
 //#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/CamClay.h>
-//#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Arena.h>
 #include <CCA/Components/MPM/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/MPMFlags.h>
@@ -113,8 +113,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew Arenisca3(child,flags));
   else if (mat_type == "Arenisca4")
     return(scinew Arenisca4(child,flags));
-//  else if (mat_type == "arena")
-//    return(scinew Arena(child,flags));
+  else if (mat_type == "ArenaSoil")
+    return(scinew Vaango::ArenaPartiallySaturated(child,flags));
 
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" ||

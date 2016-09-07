@@ -135,7 +135,7 @@ private:
 
   double _density; 
   double _temperature; 
-
+  bool _includeTemp;
 }; // end class ConstantProps
   
 } // end namespace Uintah

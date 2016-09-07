@@ -36,16 +36,7 @@ SRCDIR := CCA/Components/Arches
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=         \
-       Arches                \
-       BoundaryCond_new      \
-       BoundaryCondition     \
-       CQMOM                 \
-       Discretization        \
-       DQMOM                 \
-       ExplicitSolver        \
-       KokkosSolver          \
-       Properties            
+CUDA_ENABLED_SRCS :=         
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -60,21 +51,41 @@ endif
 
 ########################################################################
 
-SRCS += $(SRCDIR)/ArchesConstVariables.cc      \
+ifeq ($(BUILD_WASATCH),no)
+  # Hack for now... until we decide what to do about this common file.
+  SRCS += $(SRCDIR)/../Wasatch/ParticlesHelper.cc
+
+  $(SRCDIR)/../Wasatch/ParticlesHelper.o : CCA/Components/Wasatch/.created
+
+  CCA/Components/Wasatch/.created :
+	mkdir -p CCA/Components/Wasatch
+	touch CCA/Components/Wasatch/.created
+endif
+
+SRCS += $(SRCDIR)/Arches.cc                    \
+        $(SRCDIR)/ArchesConstVariables.cc      \
         $(SRCDIR)/ArchesLabel.cc               \
         $(SRCDIR)/ArchesMaterial.cc            \
         $(SRCDIR)/ArchesParticlesHelper.cc     \
         $(SRCDIR)/ArchesVariables.cc           \
+        $(SRCDIR)/BoundaryCond_new.cc          \
+        $(SRCDIR)/BoundaryCondition.cc         \
         $(SRCDIR)/CellInformation.cc           \
         $(SRCDIR)/CompDynamicProcedure.cc      \
+        $(SRCDIR)/CQMOM.cc                     \
+        $(SRCDIR)/Discretization.cc            \
+        $(SRCDIR)/DQMOM.cc                     \
+        $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
         $(SRCDIR)/IncDynamicProcedure.cc       \
         $(SRCDIR)/IntrusionBC.cc               \
+        $(SRCDIR)/KokkosSolver.cc              \
         $(SRCDIR)/LU.cc                        \
         $(SRCDIR)/MomentumSolver.cc            \
         $(SRCDIR)/NonlinearSolver.cc           \
         $(SRCDIR)/PhysicalConstants.cc         \
         $(SRCDIR)/PressureSolverV2.cc          \
+        $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \
@@ -106,6 +117,10 @@ PSELIBS := \
         Core/ProblemSpec                \
         Core/Util
 
+ifneq ($(BUILD_WASATCH),no)
+   PSELIBS += $(WASATCH)
+endif
+
 ifeq ($(HAVE_PETSC),yes)
    SRCS += $(SRCDIR)/Filter.cc      \
            $(SRCDIR)/PetscCommon.cc 
@@ -122,10 +137,9 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
         $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \
         $(BOOST_LIBRARY) $(Z_LIBRARY) \
-        $(SPATIALOPS_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) \
-            $(EXPRLIB_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) $(SPATIALOPS_INCLUDE)
+            $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) 
 
 
 ########################################################################
@@ -144,12 +158,12 @@ $(SRCDIR)/Source.$(OBJEXT) : \
           $(SRCDIR)/fortran/vvelsrc_fort.h          \
           $(SRCDIR)/fortran/wvelsrc_fort.h          
 
-ifeq ($(HAVE_CUDA),yes)
-   EXTRA_DIR=$(OBJTOP_ABS)/
-   REAL_EXT=cu
-else
+#ifeq ($(HAVE_CUDA),yes)
+#   EXTRA_DIR=$(OBJTOP_ABS)/
+#   REAL_EXT=cu
+#else
    REAL_EXT=$(OBJEXT)
-endif
+#endif
 
 # (Possibly) CUDA versions:
 $(EXTRA_DIR)$(SRCDIR)/BoundaryCondition.$(REAL_EXT) :  $(SRCDIR)/fortran/mmbcvelocity_fort.h         \

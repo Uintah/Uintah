@@ -132,9 +132,7 @@
     <save label="u"/>
     <save label="v"/>
     <save label="pressure"/>
-    <save label="density"/>
     <save label="et"/>
-    <save label="rhoet"/>
   </DataArchiver>
   <Grid>
     <BoundaryConditions>
