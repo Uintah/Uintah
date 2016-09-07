@@ -74,8 +74,9 @@ namespace WasatchCore{
   thermalConductivity( "thermal_conductivity", Expr::STATE_NONE ),
 
   // momentum related variables
-  pressure  ( "pressure",   Expr::STATE_NONE ),
+  pressure  ( "pressure"  , Expr::STATE_NONE ),
   dilatation( "dilatation", Expr::STATE_NONE ),
+  divrhou   ( "divrhou"   , Expr::STATE_NONE ),
   strainxx  (  "strain_xx", Expr::STATE_NONE ),
   strainxy  (  "strain_xy", Expr::STATE_NONE ),
   strainxz  (  "strain_xz", Expr::STATE_NONE ),
