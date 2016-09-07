@@ -218,7 +218,7 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
       echo ""
       echo ""
       run "mv $INSTALL_HERE/include/spatialops/NeboOperators.h $INSTALL_HERE/include/spatialops/NeboOperators.h.orig"
-      run "sed -r -e 's,(std::pow.*)operand2_,\1(double)operand2_,' $INSTALL_HERE/include/spatialops/NeboOperators.h.orig > NeboOperators h.tmp"
+      run "sed -r -e 's,(std::pow.*)operand2_,\1(double)operand2_,' $INSTALL_HERE/include/spatialops/NeboOperators.h.orig > NeboOperators.h.tmp"
       run "sed -r -e 's,(std::pow.*)exp_,\1(double)exp_,' NeboOperators.h.tmp > $INSTALL_HERE/include/spatialops/NeboOperators.h"
       run "rm NeboOperators.h.tmp"
 
@@ -412,7 +412,6 @@ echo "Done Building Wasatch Thirdparty Libraries ($component_list)."
 echo "------------------------------------------------------------------"
 echo ""
 export GIT_SSL_NO_VERIFY=false
+
 # Return 0 == success
 exit 0
-
-  
