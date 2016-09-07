@@ -57,6 +57,7 @@
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable,
                                                                           variable_stats,
                                                                           density_predictor,
+                                                                          one_d_wallht,
                                                                           constant_property,
                                                                           burns_christon,
                                                                           cloudBenchmark,
@@ -165,6 +166,14 @@
                                         need_applies_to="type CO"/> <!-- get prandtl number for RHS term -->
           <Tcrit                        spec="OPTIONAL DOUBLE"
                                         need_applies_to="type CO"/> <!-- temperature cutoff for the resolved rate, default=1150 -->
+          <incident_hf_label            spec="REQUIRED STRING"
+                                        need_applies_to="type one_d_wallht"/> <!-- label of variable that gives the incident heat flux to the representative 1d surface -->
+          <emissivity_label             spec="REQUIRED STRING"
+                                        need_applies_to="type one_d_wallht"/> <!-- label providing the emissivity of the surface exposed to the flame -->
+          <Tshell_label                 spec="REQUIRED STRING"
+                                        need_applies_to="type one_d_wallht"/> <!-- outside wall temperature -->
+          <wall_resistance_label        spec="REQUIRED STRING"
+                                        need_applies_to="type one_d_wallht"/> <!-- total wall resistance label -->
 
         </model>
       </PropertyModelsV2>

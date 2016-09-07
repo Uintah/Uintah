@@ -30,6 +30,7 @@ SRCS += \
 	$(SRCDIR)/cloudBenchmark.cc         \
         $(SRCDIR)/CO.cc                     \
         $(SRCDIR)/ConstantProperty.cc       \
+        $(SRCDIR)/OneDWallHT.cc             \
         $(SRCDIR)/DensityPredictor.cc       \
         $(SRCDIR)/PropertyModelFactoryV2.cc \
         $(SRCDIR)/VariableStats.cc          \

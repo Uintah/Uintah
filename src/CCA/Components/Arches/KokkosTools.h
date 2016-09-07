@@ -10,5 +10,11 @@ namespace Uintah{ namespace ArchesCore {
     phi(i,j,k) = const; \
   });
 
+#define KOKKOS_INITIALIZE_TO_CONSTANT_INTERIOR_CELL(phi, const) \
+  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() ); \
+  Uintah::parallel_for( range, [&](int i, int j, int k){ \
+    phi(i,j,k) = const; \
+  });
+
 }} //end namespace Uintah::ArchesCore
 #endif

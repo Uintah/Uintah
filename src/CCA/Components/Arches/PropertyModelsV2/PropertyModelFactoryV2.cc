@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
+#include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
 #include <CCA/Components/Arches/PropertyModelsV2/BurnsChriston.h>
@@ -66,6 +67,13 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
+
+      } else if ( type == "one_d_wallht" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew OneDWallHT::Builder( name, 0 );
+        register_task( name, tsk );
+        _pre_update_property_tasks.push_back( name );
+
 
       } else if ( type == "CO" ) {
 
@@ -173,6 +181,12 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
+
+      } else if ( type == "one_d_wallht" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew OneDWallHT::Builder( name, 0 );
+        register_task( name, tsk );
+        _pre_update_property_tasks.push_back( name );
 
       } else if ( type == "CO" ) {
 
