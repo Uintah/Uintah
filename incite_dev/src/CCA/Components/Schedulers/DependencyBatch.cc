@@ -25,7 +25,6 @@
 #include <CCA/Components/Schedulers/DependencyBatch.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <mutex>
 #include <sstream>
 
 
@@ -34,12 +33,9 @@ namespace Uintah {
 
 namespace {
 
-std::mutex dependency_batch_mutex{};
-Dout g_received( "DependencyBatch", false );
+Dout g_received_dbg( "DependencyBatch", false );
 
 }
-
-std::map<std::string, double> DependencyBatch::waittimes;
 
 
 //_____________________________________________________________________________
@@ -59,8 +55,8 @@ DependencyBatch::~DependencyBatch()
 void
 DependencyBatch::reset()
 {
-  m_received         = false;
-  m_made_mpi_request = false;
+  m_received.store(         false, std::memory_order_seq_cst);
+  m_made_mpi_request.store( false, std::memory_order_seq_cst);
 }
 
 //_____________________________________________________________________________
@@ -68,23 +64,17 @@ DependencyBatch::reset()
 bool
 DependencyBatch::makeMPIRequest()
 {
-  {
-    std::lock_guard<std::mutex> lock(dependency_batch_mutex);
+  if (m_to_tasks.size() > 1) {
 
-    if (m_to_tasks.size() > 1) {
-      if (!m_made_mpi_request) {
-        m_made_mpi_request = true;
-        return true;  // first to make the request
-      } else {
-        return false;  // got beat out -- request already made
-      }
-      return false;  // request already made
-    } else {
-      // only 1 requiring task -- don't worry about competing with another thread
-      ASSERT(!m_made_mpi_request);
-      m_made_mpi_request = true;
-      return true;
-    }
+    // returns true if expected compares equal to the contained value, false otherwise.
+    bool expected_val = false;
+    return m_made_mpi_request.compare_exchange_strong(expected_val, true);
+
+  } else {
+    // only 1 requiring task -- don't worry about competing with another thread
+    ASSERT(m_made_mpi_request.load(std::memory_order_seq_cst) == false);
+    m_made_mpi_request.store(true, std::memory_order_seq_cst);
+    return true;
   }
 }
 
@@ -93,9 +83,9 @@ DependencyBatch::makeMPIRequest()
 void
 DependencyBatch::received( const ProcessorGroup * pg )
 {
-  m_received = true;
+  m_received.store(true, std::memory_order_seq_cst);
 
-  if (g_received) {
+  if (g_received_dbg) {
     std::ostringstream message;
     message << "Received batch message " << m_message_tag << " from task " << *m_from_task << "\n";
 
@@ -106,17 +96,19 @@ DependencyBatch::received( const ProcessorGroup * pg )
   }
 
 
-  // set all the toVars to valid, meaning the mpi has been completed
+  // set all the toVars to valid, meaning the MPI has been completed
   for (std::vector<Variable*>::iterator iter = m_to_vars.begin(); iter != m_to_vars.end(); iter++) {
     (*iter)->setValid();
   }
+
+  // prepare for placement into the external ready queue
   for (std::list<DetailedTask*>::iterator iter = m_to_tasks.begin(); iter != m_to_tasks.end(); iter++) {
     // if the count is 0, the task will add itself to the external ready queue
     (*iter)->decrementExternalDepCount();
     (*iter)->checkExternalDepCount();
   }
 
-  //clear the variables that have outstanding MPI as they are completed now.
+  // clear the variables that have outstanding MPI as they are completed now.
   m_to_vars.clear();
 }
 

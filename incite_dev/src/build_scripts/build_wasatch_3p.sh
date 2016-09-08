@@ -72,7 +72,7 @@ if test "$7" = "yes"; then
   if [[ `hostname` = titan* ]]; then
     CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" -DCUDA_HOST_COMPILER=/opt/gcc/4.9.0/bin/g++"
   else
-    CUDA="-DENABLE_CUDA=ON"
+    CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON"
   fi
 else
   # Building without CUDA

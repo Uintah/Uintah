@@ -115,6 +115,8 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription());
 
+  d_temperature_label = VarLabel::find("temperature");
+
 }
 
 
@@ -2702,8 +2704,7 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
 
     proc0cout << "\nDomain boundary condition summary: \n";
 
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-          bc_iter != d_bc_information.end(); bc_iter++) {
+    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); bc_iter != d_bc_information.end(); bc_iter++) {
 
       sum_vartype area_var;
       new_dw->get( area_var, bc_iter->second.total_area_label );
@@ -2779,49 +2780,50 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
 
               IntVector c = *bound_ptr;
 
-              switch ( bc_iter->second.type ) {
+              switch (bc_iter->second.type) {
 
-              case ( VELOCITY_INLET ):
-                bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
-                if ( d_check_inlet_obstructions ) {
-                  if ( volFraction[c-insideCellDir] < small ) {
-                    std::cout << "WARNING: Intrusion blocking a velocity inlet. " << std::endl;
+                case (VELOCITY_INLET) :
+                  bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                  if (d_check_inlet_obstructions) {
+                    if (volFraction[c - insideCellDir] < small) {
+                      std::cout << "WARNING: Intrusion blocking a velocity inlet. " << std::endl;
+                    }
                   }
-                }
-                break;
-              case (TURBULENT_INLET):
-                bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
-                break;
-              case ( MASSFLOW_INLET ): {
-                bc_iter->second.mass_flow_rate = bc_value;
-                double pm = -1.0*insideCellDir[norm];
-                if ( bc_iter->second.density > 0.0 ) {
-                  bc_iter->second.velocity[norm] = pm*bc_iter->second.mass_flow_rate /
-                                                   ( area * bc_iter->second.density );
-                }
+                  break;
 
-                if ( d_check_inlet_obstructions ) {
-                  if ( volFraction[c-insideCellDir] < small ) {
-                    std::stringstream msg;
-                    msg << " Error: Intrusion blocking mass flow inlet on boundary cell: " << c << std::endl;
-                    throw InvalidValue(msg.str(), __FILE__, __LINE__);
+                case (TURBULENT_INLET) :
+                  bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                  break;
+
+                case (MASSFLOW_INLET) : {
+                  bc_iter->second.mass_flow_rate = bc_value;
+                  double pm = -1.0 * insideCellDir[norm];
+                  if (bc_iter->second.density > 0.0) {
+                    bc_iter->second.velocity[norm] = pm * bc_iter->second.mass_flow_rate / (area * bc_iter->second.density);
                   }
+
+                  if (d_check_inlet_obstructions) {
+                    if (volFraction[c - insideCellDir] < small) {
+                      std::stringstream msg;
+                      msg << " Error: Intrusion blocking mass flow inlet on boundary cell: " << c << std::endl;
+                      throw InvalidValue(msg.str(), __FILE__, __LINE__);
+                    }
+                  }
+
+                  break;
                 }
 
-                break;
-              }
-              case ( SWIRL ):
-                bc_iter->second.mass_flow_rate = bc_value;
-                bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate /
-                                                 ( area * bc_iter->second.density );
-                break;
+                case (SWIRL) :
+                  bc_iter->second.mass_flow_rate = bc_value;
+                  bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / (area * bc_iter->second.density);
+                  break;
 
-              case ( STABL ):
-                bc_iter->second.mass_flow_rate = 0.0;
-                break;
+                case (STABL) :
+                  bc_iter->second.mass_flow_rate = 0.0;
+                  break;
 
-              default:
-                break;
+                default :
+                  break;
 
               }
             }
@@ -4427,7 +4429,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                   if ( !file_is_open ) {
                     file_is_open = true;
                     outputfile.open(fname.str().c_str());
-                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << "Patch Dimensions (exclusive): \n";
                     outputfile << " low  = " << patch->getCellLowIndex() << "\n";
                     outputfile << " high = " << patch->getCellHighIndex() << "\n";
                     outputfile << out.str();
@@ -4710,9 +4712,6 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP& sched, const 
   if ( radiation ) {
     string taskname = "BoundaryCondition::create_radiation_temperature";
     Task* tsk = scinew Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw );
-
-    //WARNING! HACK HERE FOR CONSTANT TEMPERATURE NAME
-    d_temperature_label = VarLabel::find("temperature");
 
     tsk->computes(d_radiation_temperature_label);
 

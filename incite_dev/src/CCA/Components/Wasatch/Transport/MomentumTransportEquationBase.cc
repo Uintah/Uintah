@@ -627,6 +627,8 @@ namespace WasatchCore{
       } else { // staggered, const density & low-Mach projection
         typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
         factory.register_expression( new Dilatation(dilTag, this->velTags_) );
+        const Expr::Tag divRhoUTag = tagNames.divrhou;
+        factory.register_expression( new Dilatation(divRhoUTag, this->momTags_) );
       }
     }
     

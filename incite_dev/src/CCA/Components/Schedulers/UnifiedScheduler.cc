@@ -66,7 +66,6 @@ extern std::mutex cerrLock;
 
 extern Dout g_task_dbg;
 extern Dout g_task_order;
-extern Dout g_wait_out;
 extern Dout g_exec_out;
 
 extern std::map<std::string, double> waittimes;
@@ -78,8 +77,6 @@ namespace {
 Dout g_dbg(         "Unified_DBG"        , false);
 Dout g_timeout(     "Unified_TimingsOut" , false);
 Dout g_queuelength( "Unified_QueueLength", false);
-
-double Unified_CurrentWaitTime = 0;
 
 }
 
@@ -99,10 +96,8 @@ double Unified_CurrentWaitTime = 0;
 //
 namespace {
 
-std::mutex g_main_io_mutex{};
-std::mutex g_scheduler_mutex{};
+std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
 std::mutex g_lb_lock{};                // load balancer lock
-std::mutex g_wait_times_lock{};        // MPI wait times lock
 std::mutex g_GridVarSuperPatch_mutex{}; // An ugly hack to get superpatches for host levels to work.
 
 } // namespace
@@ -114,7 +109,7 @@ namespace Uintah { namespace Impl {
 
 namespace {
 
-thread_local     int         t_tid = 0;            // unique ID assigned in thread_driver()
+thread_local  int  t_tid = 0;   // unique ID assigned in thread_driver()
 
 }
 
@@ -493,15 +488,6 @@ UnifiedScheduler::runTask( DetailedTask*         task
                          , Task::CallBackEvent   event
                          )
 {
-  if (g_wait_out) {
-    g_wait_times_lock.lock();
-    {
-      waittimes[task->getTask()->getName()] += Unified_CurrentWaitTime;
-      Unified_CurrentWaitTime = 0;
-    }
-    g_wait_times_lock.unlock();
-  }
-
   // Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
   if ( event == Task::CPU || event == Task::GPU) {
     // -------------------------< begin task execution timing >-------------------------

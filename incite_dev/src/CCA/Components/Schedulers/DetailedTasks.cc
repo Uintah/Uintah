@@ -106,14 +106,12 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
                                     DetailedTasks*   first,
                               const TaskGraph*       taskgraph,
                               const set<int>&        neighborhood_processors,
-                                    bool             mustConsiderInternalDependencies /* = false */ ) :
-  sc_(sc),
-  d_myworld(pg),
-  first(first),
-  taskgraph_(taskgraph),
-  mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
-  currentDependencyGeneration_(1),
-  extraCommunication_(0)
+                                    bool             mustConsiderInternalDependencies /* = false */ )
+  : sc_(sc)
+  , d_myworld(pg)
+  , first(first)
+  , taskgraph_(taskgraph)
+  , mustConsiderInternalDependencies_(mustConsiderInternalDependencies)
 {
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
@@ -268,20 +266,14 @@ DetailedTask::DetailedTask(       Task*           task,
                             const PatchSubset*    patches,
                             const MaterialSubset* matls,
                                   DetailedTasks*  taskGroup )
-  :   task(task),
-      patches(patches),
-      matls(matls),
-      comp_head(0),
-      internal_comp_head(0),
-      taskGroup(taskGroup),
-      numPendingInternalDependencies(0),
-      resourceIndex(-1),
-      staticOrder(-1),
-      d_profileType(Normal)
+  : task(task)
+  , patches(patches)
+  , matls(matls)
+  ,taskGroup(taskGroup)
 {
   if (patches) {
     // patches and matls must be sorted
-    ASSERT(std::is_sorted(patches->getVector().begin(), patches->getVector().end(), Patch::Compare()) );
+    ASSERT( std::is_sorted(patches->getVector().begin(), patches->getVector().end(), Patch::Compare()) );
     patches->addReference();
   }
   if (matls) {
@@ -289,11 +281,13 @@ DetailedTask::DetailedTask(       Task*           task,
     ASSERT( std::is_sorted(matls->getVector().begin(), matls->getVector().end()) );
     matls->addReference();
   }
+
 #ifdef HAVE_CUDA
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
 #endif
+
 }
 
 //_____________________________________________________________________________
@@ -1497,19 +1491,22 @@ bool DetailedTask::addInternalRequires(DependencyBatch* req)
 void
 DetailedTask::checkExternalDepCount()
 {
-  DOUT(g_mpi_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-               << " external deps: " << externalDependencyCount_.load(std::memory_order_seq_cst) << " internal deps: " << numPendingInternalDependencies);
+  DOUT(g_mpi_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
+                          << externalDependencyCount_.load(std::memory_order_seq_cst)
+                          << " internal deps: " << numPendingInternalDependencies);
 
-  if (externalDependencyCount_.load(std::memory_order_seq_cst) == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
-    {
-      external_ready_monitor external_ready_lock { Uintah::CrowdMonitor<external_ready_tag>::WRITER };
-      DOUT(g_mpi_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-                   << " MPI requirements satisfied, placing into external ready queue");
+  if ((externalDependencyCount_.load(std::memory_order_seq_cst) == 0) && taskGroup->sc_->useInternalDeps() &&
+       initiated_.load(std::memory_order_seq_cst) && !task->usesMPI()) {
 
-      if (externallyReady_ == false) {
+    DOUT(g_mpi_dbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
+                            << " MPI requirements satisfied, placing into external ready queue");
+
+    if (externallyReady_.load(std::memory_order_seq_cst) == false) {
+      {
+        external_ready_monitor external_ready_lock { Uintah::CrowdMonitor<external_ready_tag>::WRITER };
         taskGroup->mpiCompletedTasks_.push(this);
-        externallyReady_ = true;
       }
+      externallyReady_.store(true, std::memory_order_seq_cst);
     }
   }
 }
@@ -1519,9 +1516,9 @@ DetailedTask::checkExternalDepCount()
 void
 DetailedTask::resetDependencyCounts()
 {
-  externalDependencyCount_.store(0, std::memory_order_seq_cst);
-  externallyReady_ = false;
-  initiated_       = false;
+  externalDependencyCount_.store(     0, std::memory_order_seq_cst);
+  externallyReady_.store(         false, std::memory_order_seq_cst);
+  initiated_.store(               false, std::memory_order_seq_cst);
 }
 
 //_____________________________________________________________________________

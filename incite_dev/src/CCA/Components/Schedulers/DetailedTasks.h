@@ -185,7 +185,7 @@ namespace Uintah {
     // DetailedTasks::mpiCompletedTasks list.
     void resetDependencyCounts();
 
-    void markInitiated() { initiated_ = true; }
+    void markInitiated() { initiated_.store(true, std::memory_order_seq_cst); }
 
     void incrementExternalDepCount() { externalDependencyCount_.fetch_add(1, std::memory_order_seq_cst); }
 
@@ -251,6 +251,12 @@ namespace Uintah {
 
   private:
 
+    // eliminate copy, assignment and move
+    DetailedTask( const DetailedTask & )            = delete;
+    DetailedTask& operator=( const DetailedTask & ) = delete;
+    DetailedTask( DetailedTask && )                 = delete;
+    DetailedTask& operator=( DetailedTask && )      = delete;
+
     // called by done()
     void scrub( std::vector<OnDemandDataWarehouseP>& );
 
@@ -259,13 +265,13 @@ namespace Uintah {
     const MaterialSubset*                        matls;
     std::map<DependencyBatch*, DependencyBatch*> reqs;
     std::map<DependencyBatch*, DependencyBatch*> internal_reqs;
-    DependencyBatch*                             comp_head;
-    DependencyBatch*                             internal_comp_head;
+    DependencyBatch*                             comp_head{nullptr};
+    DependencyBatch*                             internal_comp_head{nullptr};
     DetailedTasks*                               taskGroup;
 
-    bool initiated_;
-    bool externallyReady_;
-    std::atomic<int> externalDependencyCount_{0};
+    std::atomic<bool> initiated_{false};
+    std::atomic<bool> externallyReady_{false};
+    std::atomic<int>  externalDependencyCount_{0};
 
     mutable std::string name_; // doesn't get set until getName() is called the first time.
 
@@ -279,21 +285,18 @@ namespace Uintah {
     // internalDependencies list of the requiring DetailedTasks.
     std::map<DetailedTask*, InternalDependency*> internalDependents;
     
-    unsigned long numPendingInternalDependencies;
+    unsigned long numPendingInternalDependencies{0};
     
-    int resourceIndex;
-    int staticOrder;
+    int resourceIndex{-1};
+    int staticOrder{-1};
 
-    DetailedTask( const Task& );
-    DetailedTask& operator=( const Task& );
-    
-    // specifies the type of task this is:
-    //   * normal executes on either the patches cells or the patches coarse cells
-    //   * fine executes on the patches fine cells (for example coarsening)
-    
     bool operator<( const DetailedTask& other );
     
-    ProfileType d_profileType;
+    // specifies the type of task this is:
+    //   * Normal executes on either the patches cells or the patches coarse cells
+    //   * Fine   executes on the patches fine cells (for example coarsening)
+    ProfileType d_profileType{Normal};
+
 
 #ifdef HAVE_CUDA
     bool deviceExternallyReady_;
@@ -351,12 +354,16 @@ namespace Uintah {
 
   }; // end class DetailedTask
 
+
+
   class DetailedTaskPriorityComparison
   {
     public:
 
       bool operator()( DetailedTask*& ltask, DetailedTask*& rtask );
   };
+
+
 
   class DetailedTasks {
 
@@ -546,7 +553,7 @@ namespace Uintah {
     Task*                         stask_;
     std::vector<DetailedTask*>    localtasks_;
     std::vector<DependencyBatch*> batches_;
-    DetailedDep*                  initreq_;
+    DetailedDep*                  initreq_{nullptr};
     
     // True for mixed scheduler which needs to keep track of internal dependencies.
     bool mustConsiderInternalDependencies_;
@@ -555,7 +562,7 @@ namespace Uintah {
     // to run.  I implemented this using topological sort order as the priority
     // but that probably isn't a good way to do unless you make it a breadth
     // first topological order.
-    QueueAlg taskPriorityAlg_;
+    QueueAlg taskPriorityAlg_{QueueAlg::MostMessages};
     typedef std::queue<DetailedTask*> TaskQueue;
     typedef std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
     
@@ -566,10 +573,10 @@ namespace Uintah {
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the
     // need to traverse all InternalDependency links to reset values.
-    unsigned long currentDependencyGeneration_;
+    unsigned long currentDependencyGeneration_{1};
 
     // for logging purposes - how much extra comm is going on
-    int extraCommunication_;
+    int extraCommunication_{0};
     
     ScrubCountTable scrubCountTable_;
 
