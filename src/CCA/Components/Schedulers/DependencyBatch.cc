@@ -35,7 +35,7 @@ namespace Uintah {
 namespace {
 
 std::mutex dependency_batch_mutex{};
-Dout g_received_dbg( "DependencyBatch", false );
+Dout g_received( "DependencyBatch", false );
 
 }
 
@@ -59,8 +59,8 @@ DependencyBatch::~DependencyBatch()
 void
 DependencyBatch::reset()
 {
-  m_received.store(         false, std::memory_order_seq_cst);
-  m_made_mpi_request.store( false, std::memory_order_seq_cst);
+  m_received         = false;
+  m_made_mpi_request = false;
 }
 
 //_____________________________________________________________________________
@@ -68,17 +68,23 @@ DependencyBatch::reset()
 bool
 DependencyBatch::makeMPIRequest()
 {
-  if (m_to_tasks.size() > 1) {
+  {
+    std::lock_guard<std::mutex> lock(dependency_batch_mutex);
 
-    // returns true if expected compares equal to the contained value, false otherwise.
-    bool expected_val = false;
-    return m_made_mpi_request.compare_exchange_strong(expected_val, true);
-
-  } else {
-    // only 1 requiring task -- don't worry about competing with another thread
-    ASSERT(!m_made_mpi_request);
-    m_made_mpi_request.store(true, std::memory_order_seq_cst);
-    return true;
+    if (m_to_tasks.size() > 1) {
+      if (!m_made_mpi_request) {
+        m_made_mpi_request = true;
+        return true;  // first to make the request
+      } else {
+        return false;  // got beat out -- request already made
+      }
+      return false;  // request already made
+    } else {
+      // only 1 requiring task -- don't worry about competing with another thread
+      ASSERT(!m_made_mpi_request);
+      m_made_mpi_request = true;
+      return true;
+    }
   }
 }
 
@@ -87,9 +93,9 @@ DependencyBatch::makeMPIRequest()
 void
 DependencyBatch::received( const ProcessorGroup * pg )
 {
-  m_received.store(true, std::memory_order_seq_cst);
+  m_received = true;
 
-  if (g_received_dbg) {
+  if (g_received) {
     std::ostringstream message;
     message << "Received batch message " << m_message_tag << " from task " << *m_from_task << "\n";
 

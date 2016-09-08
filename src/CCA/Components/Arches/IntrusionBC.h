@@ -1004,7 +1004,7 @@ namespace Uintah{
 
       std::vector<Boundary> _intrusions; 
       IntrusionMap _intrusion_map; 
-      Uintah::PatchSet* localPatches_{nullptr};
+      Uintah::PatchSet* localPatches_; 
       const ArchesLabel* _lab; 
       const MPMArchesLabel* _mpmlab; 
       Properties* _props;
@@ -1018,7 +1018,7 @@ namespace Uintah{
       std::mutex _bc_cell_iterator_lock{};
       std::mutex _iterator_initializer_lock{};
 
-      const VarLabel* _T_label{nullptr};
+      const VarLabel* _T_label; 
 
       /** @brief Add a face iterator to the list of total iterators for this patch and face */ 
       void inline add_face_iterator( IntVector c, const Patch* patch, int dir, IntrusionBC::Boundary& intrusion ){ 

@@ -42,7 +42,7 @@
     </BasicExpression>
 
     <!-- Build a scalar transport equation for mixture fraction -->
-    <TransportEquation equation="mixturefraction">
+    <TransportEquation equation="generic">
 
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>

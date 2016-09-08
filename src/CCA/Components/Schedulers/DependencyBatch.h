@@ -68,6 +68,11 @@ public:
   // awakens anybody blocked in makeMPIRequest().
   void received( const ProcessorGroup * pg );
 
+  bool wasReceived()
+  {
+    return m_received;
+  }
+
   //Add invalid variables to the dependency batch.  These variables will be marked
   //as valid when MPI completes.
   void addVar( Variable * var )
@@ -94,8 +99,8 @@ private:
   DependencyBatch( DependencyBatch && )                 = delete;
   DependencyBatch& operator=( DependencyBatch && )      = delete;
 
-  std::atomic<bool> m_received{false};
-  std::atomic<bool> m_made_mpi_request{false};
+  volatile bool m_received{false};
+  volatile bool m_made_mpi_request{false};
 
   std::vector<Variable*> m_to_vars;
 

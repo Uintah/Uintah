@@ -113,10 +113,8 @@ namespace WasatchCore{
       }
       else if( !isStrong_ && existPrimVar ){
         std::ostringstream msg;
-        msg << "ERROR: When solving a transport equation in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
+        msg << "ERROR: For solving the transport equations in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      } else {
-        primVarTag_ = solution_variable_tag();
       }
     }
     assert( primVarTag_ != Expr::Tag() );
@@ -144,15 +142,9 @@ namespace WasatchCore{
            diffFluxParams != 0;
            diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
       {
-        Expr::Tag densityTag, primVarTag;
-        if (is_strong_form()) {
-          densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
-          primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
-        } else {
-          densityTag = densityTag_;
-          primVarTag = primVarTag_;
-        }
-        
+        const Expr::Tag densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
+        const Expr::Tag primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
+
         setup_diffusive_flux_expression<FieldT>( diffFluxParams,
                                                  densityTag,
                                                  primVarTag,
@@ -272,7 +264,7 @@ namespace WasatchCore{
       }
     }
 
-    return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.divrhou ) );
+    return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.drhodt ) );
   }
 
   //------------------------------------------------------------------

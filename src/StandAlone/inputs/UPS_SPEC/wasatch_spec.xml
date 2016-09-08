@@ -772,7 +772,7 @@
     <!-- Spec for a TransportEquation -->
     <!-- ============================ -->
     <TransportEquation spec="MULTIPLE NO_DATA"
-                       attribute1="equation REQUIRED STRING 'generic, mixturefraction, enthalpy'"
+                       attribute1="equation REQUIRED STRING 'generic, enthalpy'"
                        attribute2="form     OPTIONAL STRING 'strong, weak'">
       
       <!-- An Optional Primitive variable tag: -->

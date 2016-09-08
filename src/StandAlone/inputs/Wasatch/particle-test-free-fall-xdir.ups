@@ -3,7 +3,7 @@
     <title>Particles Free Fall</title>
   </Meta>
   <SimulationComponent type="wasatch"/>
-
+  <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>
     <ParticleTransportEquations>

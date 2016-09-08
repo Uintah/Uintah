@@ -3,7 +3,7 @@
     <title>Lid Driven Cavity Problem</title>
   </Meta>
   <SimulationComponent type="wasatch"/>
-
+  <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>
     <ParticleTransportEquations>
