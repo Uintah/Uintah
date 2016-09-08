@@ -360,6 +360,7 @@
       <exponentialInitialize_1D  spec="OPTIONAL BOOLEAN"/>
       <exponentialInitialize_2D  spec="OPTIONAL BOOLEAN"/>
       <concentration             spec="OPTIONAL DOUBLE"/>
+      <conductivity              spec="OPTIONAL DOUBLE"/>
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"

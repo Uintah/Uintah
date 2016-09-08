@@ -28,6 +28,9 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 
 namespace Uintah{
   class FVMBoundCond{
@@ -35,8 +38,16 @@ namespace Uintah{
       FVMBoundCond();
       ~FVMBoundCond();
 
+      void setConductivityBC(const Patch* patch, int dwi, CCVariable<double>& conductivity);
+
       void setESBoundaryConditions(const Patch* patch, int dwi,
-    		                       CCVariable<Stencil7>& A, CCVariable<double>& rhs);
+    		                           CCVariable<Stencil7>& A, CCVariable<double>& rhs,
+    		                           constSFCXVariable<double>& fcx_conductivity,
+    		                           constSFCYVariable<double>& fcy_conductivity,
+    		                           constSFCZVariable<double>& fcz_conductivity);
+
+      void setESPotentialBC(const Patch* patch, int dwi, CCVariable<double>& es_potential);
+
   };
 }
 #endif

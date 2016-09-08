@@ -29,13 +29,18 @@
 
 namespace Uintah{
   class FVMLabel {
-  public:
-	  FVMLabel();
-	  ~FVMLabel();
+    public:
+	    FVMLabel();
+	    ~FVMLabel();
 
       const VarLabel* ccESPotential;
       const VarLabel* ccESPotentialMatrix;
       const VarLabel* ccRHS_ESPotential;
+      const VarLabel* ccConductivity;
+      const VarLabel* ccGridConductivity;
+      const VarLabel* fcxConductivity;
+      const VarLabel* fcyConductivity;
+      const VarLabel* fczConductivity;
   };
 } // End Uintah namespace
 

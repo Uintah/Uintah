@@ -26,13 +26,29 @@
 #define UINTAH_CCA_COMPONENTS_FVM_FVMMATERIAL_H
 
 #include <Core/Grid/Material.h>
+#include <Core/Grid/Patch.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/CCVariable.h>
+
+#include <vector>
+
 namespace Uintah {
   class FVMMaterial : public Material {
     public:
-      FVMMaterial();
+      FVMMaterial(ProblemSpecP& ps, SimulationStateP& shared_state);
       ~FVMMaterial();
 
+      void initializeConductivity(CCVariable<double>& conductivity, const Patch* patch);
+
     private:
+       std::vector<GeometryObject*> d_geom_objs;
+
+       // Prevent copying of this class
+       // copy constructor
+       FVMMaterial(const FVMMaterial &fvmm);
+       FVMMaterial& operator=(const FVMMaterial &fvmm);
   };
 
 } // End namespace Uintah

@@ -829,7 +829,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // this will be removed next, 
       // it should be computed in the flow stress routine
       // the flow stress routines should be passed
-      //  the entire stress (not just deviatoric)
+      // the entire stress (not just deviatoric)
       double equivStress = sqrtThreeTwo*trialS.Norm();
       pEquStress[idx] = equivStress;
 

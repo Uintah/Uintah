@@ -152,7 +152,10 @@ public:
   }
   int getNumWasatchMatls() const {
     return (int)wasatch_matls.size();
-  }  
+  }
+  int getNumFVMMatls() const {
+    return (int)fvm_matls.size();
+  }
   MaterialSubset* getAllInOneMatl() {
     return allInOneMatl;
   }
@@ -174,6 +177,9 @@ public:
   WasatchMaterial* getWasatchMaterial(int idx) const {
     return wasatch_matls[idx];
   }
+  FVMMaterial* getFVMMaterial(int idx) const {
+    return fvm_matls[idx];
+  }
 
   inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
     particle_ghost_type = type;
@@ -190,6 +196,7 @@ public:
   const MaterialSet* allCZMaterials() const;
   const MaterialSet* allArchesMaterials() const;
   const MaterialSet* allICEMaterials() const;
+  const MaterialSet* allFVMMaterials() const;
   const MaterialSet* allWasatchMaterials() const;
   const MaterialSet* allMaterials() const;
   const MaterialSet* originalAllMaterials() const;
