@@ -66,7 +66,6 @@ struct recv_tag{};
 using  recv_monitor = Uintah::CrowdMonitor<recv_tag>;
 
 std::mutex g_lb_mutex;                // load balancer lock
-std::mutex g_wait_times_mutex;        // MPI wait times lock
 
 Dout g_dbg(          "MPIScheduler_DBG",        false );
 Dout g_send_timings( "SendTiming",              false );
@@ -80,10 +79,8 @@ double CurrentWaitTime = 0;
 Dout g_task_order( "TaskOrder", false );
 Dout g_task_dbg(   "TaskDBG",   false );
 Dout g_mpi_dbg(    "MPIDBG",    false );
-Dout g_wait_out(   "WaitTimes", false );
 Dout g_exec_out(   "ExecTimes", false );
 
-std::map<std::string, double> waittimes;
 std::map<std::string, double> exectimes;
 
 //______________________________________________________________________
@@ -263,13 +260,6 @@ MPIScheduler::runTask( DetailedTask * dtask
                      , int            thread_id /* = 0 */
                      )
 {
-  if (g_wait_out) {
-    g_wait_times_mutex.lock();
-    waittimes[dtask->getTask()->getName()] += CurrentWaitTime;
-    CurrentWaitTime = 0;
-    g_wait_times_mutex.unlock();
-  }
-
   double taskstart = Time::currentSeconds();
 
   if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
@@ -672,10 +662,11 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
       }
     }  // end for loop over requires
-  }  // end recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER }
 
-  double drecv = Time::currentSeconds() - recvstart;
-  mpi_info_[TotalRecv] += drecv;
+    double drecv = Time::currentSeconds() - recvstart;
+    mpi_info_[TotalRecv] += drecv;
+
+  }  // end recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER }
 
 }  // end postMPIRecvs()
 
@@ -697,41 +688,46 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   CommRequestPool::iterator comm_iter;
 
-  switch (test_type) {
+  {
+    recv_monitor recv_lock { Uintah::CrowdMonitor<recv_tag>::WRITER };
 
-    case TEST :
-      comm_iter = m_recvs.find_any(test_request);
-      if (comm_iter) {
-        MPI_Status status;
-        comm_iter->finishedCommunication(d_myworld, status);
-        m_recvs.erase(comm_iter);
-      }
-      break;
+    switch (test_type) {
 
-    case WAIT_ONCE :
-      comm_iter = m_recvs.find_any(wait_request);
-      if (comm_iter) {
-        MPI_Status status;
-        comm_iter->finishedCommunication(d_myworld, status);
-        m_recvs.erase(comm_iter);
-      }
-      break;
+      case TEST :
+        comm_iter = m_recvs.find_any(test_request);
+        if (comm_iter) {
+          MPI_Status status;
+          comm_iter->finishedCommunication(d_myworld, status);
+          m_recvs.erase(comm_iter);
+        }
+        break;
 
-    case WAIT_ALL :
-      while (m_recvs.size() != 0u) {
+      case WAIT_ONCE :
         comm_iter = m_recvs.find_any(wait_request);
         if (comm_iter) {
           MPI_Status status;
           comm_iter->finishedCommunication(d_myworld, status);
           m_recvs.erase(comm_iter);
         }
-      }
-      break;
+        break;
 
-  }  // end switch
+      case WAIT_ALL :
+        while (m_recvs.size() != 0u) {
+          comm_iter = m_recvs.find_any(wait_request);
+          if (comm_iter) {
+            MPI_Status status;
+            comm_iter->finishedCommunication(d_myworld, status);
+            m_recvs.erase(comm_iter);
+          }
+        }
+        break;
 
-  mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
-  CurrentWaitTime += Time::currentSeconds() - start;
+    }  // end switch
+
+    mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
+    CurrentWaitTime += Time::currentSeconds() - start;
+
+  }
 
 }  // end processMPIRecvs()
 
@@ -893,7 +889,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   finalizeTimestep();
 
-  if ( !m_parent_scheduler && (g_exec_out || g_time_out || g_wait_out) ) {  // only do on toplevel scheduler
+  if ( !m_parent_scheduler && (g_exec_out || g_time_out) ) {  // only do on toplevel scheduler
     outputTimingStats("MPIScheduler");
   }
 
@@ -1048,35 +1044,6 @@ MPIScheduler::outputTimingStats( const char* label )
       }
       fout.close();
       exectimes.clear();
-    }
-  }
-
-  if (g_wait_out) {
-    static int count = 0;
-
-    // only output the exec times every 10 timesteps
-    if (++count % 10 == 0) {
-
-      if (d_myworld->myrank() == 0 || d_myworld->myrank() == d_myworld->size() / 2 || d_myworld->myrank() == d_myworld->size() - 1) {
-
-        std::ofstream wout;
-        char fname[100];
-        sprintf(fname, "waittimes.%d.%d", d_myworld->size(), d_myworld->myrank());
-        wout.open(fname);
-
-        for (std::map<std::string, double>::iterator iter = waittimes.begin(); iter != waittimes.end(); iter++) {
-          wout << std::fixed << d_myworld->myrank() << ":   TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << std::endl;
-        }
-
-        for (std::map<std::string, double>::iterator iter = DependencyBatch::waittimes.begin(); iter != DependencyBatch::waittimes.end();
-            iter++) {
-          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << std::endl;
-        }
-        wout.close();
-      }
-
-      waittimes.clear();
-      DependencyBatch::waittimes.clear();
     }
   }
 }
