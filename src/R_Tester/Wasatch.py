@@ -150,6 +150,8 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+  ("varden-projection-advection-xdir-weak", "varden-projection-advection-xdir-weak.ups", 3, "All", ["exactComparison","no_restart"] ),
+  ("varden-projection-advection-xdir-analytic-dens-weak","varden-projection-advection-xdir-analytic-dens-weak.ups", 3, "All", ["exactComparison","no_restart"] ),
   ("compressible-bubble-2d",        "compressible-bubble-2d.ups",          4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-bubble-2d-PGS",    "compressible-bubble-2d-AC-PGS.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-bubble-2d-ASR",    "compressible-bubble-2d-AC-ASR.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
@@ -354,6 +356,8 @@ RKTESTS=[
 ]
 
 VARDENTESTS=[
+  ("varden-projection-advection-xdir-weak", "varden-projection-advection-xdir-weak.ups", 3, "All", ["exactComparison","no_restart"] ),
+  ("varden-projection-advection-xdir-analytic-dens-weak","varden-projection-advection-xdir-analytic-dens-weak.ups", 3, "All", ["exactComparison","no_restart"] ),
   ("varden-jet-2d",                    "varden-jet-2d.ups",   4,  "All",  ["exactComparison","no_restart"] ),
   ("varden-2dmms-tabulated", "varden-2dmms-tabulated.ups", 4,  "All",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("varden-projection-mms-analytic",                         "varden-projection-mms-analytic.ups",              3,  "All",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
