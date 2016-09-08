@@ -47,7 +47,7 @@ namespace WasatchCore{
    *  \param [inout] persistentFields the fields that should be persistent (not
    *         scratch/temporary).  These will be managed by Uintah.
    */
-  void setup_property_evaluation( Uintah::ProblemSpecP& params,
+  void setup_property_evaluation( Uintah::ProblemSpecP& wasatchSpec,
                                   GraphCategories& gc,
                                   std::set<std::string>& persistentFields );
 

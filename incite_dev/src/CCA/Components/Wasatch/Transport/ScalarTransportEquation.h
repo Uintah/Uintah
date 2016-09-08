@@ -183,7 +183,8 @@ namespace WasatchCore{
     static std::string get_primvar_name( Uintah::ProblemSpecP params );
 
     bool is_weak_form() const{ return !isStrong_; }
-
+    bool is_strong_form() const{ return isStrong_; }
+    
   protected:
     virtual void setup_diffusive_flux( FieldTagInfo& );
     virtual void setup_convective_flux( FieldTagInfo& );

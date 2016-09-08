@@ -95,7 +95,7 @@ namespace WasatchCore{
     proc0cout << "------------------------------------------------" << std::endl
     << "Creating transport equation for '" << solnVariable << "'" << std::endl;
     
-    if( eqnLabel == "generic" ){
+    if( eqnLabel == "generic" || eqnLabel=="mixturefraction"){
       typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
       transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
                                        params,
