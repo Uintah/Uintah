@@ -46,7 +46,7 @@ template< typename FieldT >
 ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
                               const Expr::TagList srcTags,
                               const Expr::Tag& densityTag,
-                              const Expr::Tag& divrhouTag,
+                              const Expr::Tag& drhodtTag,
                               const bool isConstDensity,
                               const bool isStrongForm )
   : Expr::Expression<FieldT>(),
@@ -88,7 +88,7 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
     isConstDensity_( isConstDensity ),
     strongForm_    ( isStrongForm   ),
     phiTag_        ( resolve_field_tag( PRIMITIVE_VARIABLE, fieldTags ) ),
-    divrhouTag_     ( divrhouTag      ),
+    drhodtTag_     ( drhodtTag      ),
 
     srcTags_( srcTags )
 {
@@ -102,9 +102,9 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
           << "\t" << __FILE__ << " : " << __LINE__ << std::endl;
       throw std::runtime_error(msg.str());
     }
-    if( divrhouTag_ == Expr::Tag() && !isConstDensity ){
+    if( drhodtTag_ == Expr::Tag() && !isConstDensity ){
       std::ostringstream msg;
-      msg << "When using the weak form of an equation in a variable density simulation,\n the density time derivative tag must be provided to the ScalarRHS.\n"
+      msg << "When using the weak form of an equation in a variable density simulation,\nthe density time derivative tag must be provided to the ScalarRHS.\n"
           << "\t" << __FILE__ << " : " << __LINE__ << std::endl;
       throw std::runtime_error(msg.str());
     }
@@ -142,13 +142,11 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 
   this->template create_field_vector_request<FieldT>( srcTags_, srcTerms_ );
   
-  if( isConstDensity_ && (srcTerms_.size()>0 || !strongForm_) )
-    rho_ = this->template create_field_request<SVolField>( densityTag_);
+  if( isConstDensity_ && (srcTerms_.size()>0 || !strongForm_) )  rho_ = this->template create_field_request<SVolField>( densityTag_);
   
   if( !strongForm_ ){
-    rho_ = this->template create_field_request<SVolField>( densityTag_);
     phi_    = this->template create_field_request<SVolField>( phiTag_    );
-    divrhou_ = this->template create_field_request<SVolField>( divrhouTag_ );
+    drhodt_ = this->template create_field_request<SVolField>( drhodtTag_ );
   }
 }
 
@@ -276,9 +274,9 @@ void ScalarRHS<FieldT>::evaluate()
     }
   }
 
-  // for weak form cases, adjust the convective flux calculation
+  // for weak form (variable density) cases, augment with drhodt term and scale by density
   if( !strongForm_ && !isConstDensity_ )
-    rhs <<= ( rhs + phi_->field_ref() * divrhou_->field_ref() ) / rho_->field_ref();
+    rhs <<= ( rhs - phi_->field_ref() * drhodt_->field_ref() ) / rho_->field_ref();
 }
 
 //------------------------------------------------------------------
@@ -290,13 +288,13 @@ ScalarRHS<FieldT>::Builder::Builder( const Expr::Tag& result,
                                      const Expr::Tag& densityTag,
                                      const bool isConstDensity,
                                      const bool isStrongForm,
-                                     const Expr::Tag divrhouTag )
+                                     const Expr::Tag drhodtTag )
 
   : ExpressionBuilder(result),
     info_          ( fieldInfo      ),
     srcT_          ( sources        ),
     densityT_      ( densityTag     ),
-    divrhouTag_     ( divrhouTag      ),
+    drhodtTag_     ( drhodtTag      ),
     isConstDensity_( isConstDensity ),
     isStrongForm_  ( isStrongForm   )
 {}
@@ -309,11 +307,11 @@ ScalarRHS<FieldT>::Builder::Builder( const Expr::Tag& result,
                                      const Expr::Tag& densityTag,
                                      const bool isConstDensity,
                                      const bool isStrongForm,
-                                     const Expr::Tag divrhouTag )
+                                     const Expr::Tag drhodtTag )
   : ExpressionBuilder(result),
     info_          ( fieldInfo      ),
     densityT_      ( densityTag     ),
-    divrhouTag_     ( divrhouTag      ),
+    drhodtTag_     ( drhodtTag      ),
     isConstDensity_( isConstDensity ),
     isStrongForm_  ( isStrongForm   )
 {}
@@ -324,7 +322,7 @@ template< typename FieldT >
 Expr::ExpressionBase*
 ScalarRHS<FieldT>::Builder::build() const
 {
-  return new ScalarRHS<FieldT>( info_, srcT_, densityT_, divrhouTag_, isConstDensity_, isStrongForm_ );
+  return new ScalarRHS<FieldT>( info_, srcT_, densityT_, drhodtTag_, isConstDensity_, isStrongForm_ );
 }
 //------------------------------------------------------------------
 

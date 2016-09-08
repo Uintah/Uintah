@@ -134,14 +134,14 @@ public:
      *  \param densityTag density tag for cases that we have constant density and a source term.
      *  \param isConstDensity a boolean o show if density is constant or not.
      *  \param isStrongForm true (default) for the strong form of the governing equation, false otherwise.
-     *  \param divrhouTag the Tag for divrhou.
+     *  \param drhodtTag the Tag for the expression that computes the density time derivative.
      */
     Builder( const Expr::Tag& result,
              const FieldTagInfo& fieldInfo,
              const Expr::Tag& densityTag,
              const bool isConstDensity,
              const bool isStrongForm=true,
-             const Expr::Tag divrhouTag=Expr::Tag() );
+             const Expr::Tag drhodtTag=Expr::Tag() );
 
     /**
      *  \brief Constructs a builder for a ScalarRHS object. This is being
@@ -153,7 +153,7 @@ public:
      *  \param densityTag density tag for cases that we have constant density and a source term.
      *  \param isConstDensity a boolean to show if density is constant or not.
      *  \param isStrongForm true (default) for the strong form of the governing equation, false otherwise.
-     *  \param divrhouTag the Tag for divrhou.
+     *  \param drhodtTag the Tag for the expression that computes the density time derivative.
      */
     Builder( const Expr::Tag& result,
              const FieldTagInfo& fieldInfo,
@@ -161,13 +161,13 @@ public:
              const Expr::Tag& densityTag,
              const bool isConstDensity,
              const bool isStrongForm=true,
-             const Expr::Tag divrhouTag=Expr::Tag() );
+             const Expr::Tag drhodtTag=Expr::Tag() );
     virtual ~Builder(){}
     virtual Expr::ExpressionBase* build() const;
   protected:
     const FieldTagInfo info_;
     const Expr::TagList srcT_;
-    const Expr::Tag densityT_, divrhouTag_;
+    const Expr::Tag densityT_, drhodtTag_;
     const bool isConstDensity_, isStrongForm_;
   };
 
@@ -189,7 +189,7 @@ protected:
 
   const Expr::Tag densityTag_;
 
-  DECLARE_FIELDS( SVolField, rho_, volfrac_, divrhou_, phi_ )
+  DECLARE_FIELDS( SVolField, rho_, volfrac_, drhodt_, phi_ )
   DECLARE_FIELD( XVolField, xareafrac_ )
   DECLARE_FIELD( YVolField, yareafrac_ )
   DECLARE_FIELD( ZVolField, zareafrac_ )
@@ -204,7 +204,7 @@ protected:
   const DensityInterpT* densityInterpOp_;
 
   // things requried for weak form:
-  const Expr::Tag phiTag_, divrhouTag_;
+  const Expr::Tag phiTag_, drhodtTag_;
 
   Expr::TagList srcTags_;
 
@@ -220,7 +220,7 @@ protected:
   ScalarRHS( const FieldTagInfo& fieldTags,
              const Expr::TagList srcTags,
              const Expr::Tag& densityTag,
-             const Expr::Tag& divrhouTag,
+             const Expr::Tag& drhodtTag,
              const bool isConstDensity,
              const bool isStrongForm = true );
 

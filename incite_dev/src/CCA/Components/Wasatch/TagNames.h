@@ -85,7 +85,7 @@ namespace WasatchCore{
     const Expr::Tag
     xvel, yvel, zvel,
     xmom, ymom, zmom,
-    pressure, dilatation, divrhou,
+    pressure, dilatation,
     strainxx, strainxy, strainxz,
     strainyx, strainyy, strainyz,
     strainzx, strainzy, strainzz;
