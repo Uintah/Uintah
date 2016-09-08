@@ -149,7 +149,8 @@ namespace WasatchCore{
                         const DensityEvaluationLevel densLevel,
                         GraphHelper& gh,
                         const Category& cat,
-                        std::set<std::string>& persistentFields )
+                        std::set<std::string>& persistentFields,
+                        const bool weakForm)
   {
     if (cat == INITIALIZATION) {
       throw Uintah::ProblemSetupException( "You cannot currently use a density calculator for Initialization of the density. Please use ExtractVariable rather than ExtractDensity in your initial condition for TabProps.", __FILE__, __LINE__ );
@@ -188,7 +189,10 @@ namespace WasatchCore{
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
       Expr::Tag fTag = parse_nametag(modelParams->findBlock("MixtureFraction")->findBlock("NameTag"));
-      if( densLevel != NORMAL ) rhofTag.reset_context( Expr::STATE_NP1 );
+      if( densLevel != NORMAL ) {
+        rhofTag.reset_context( Expr::STATE_NP1 );
+        if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
+      }
       rhofTag.reset_name( rhofTag.name() + scalarTagNameAppend );
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
@@ -202,7 +206,7 @@ namespace WasatchCore{
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
       factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
 
-      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, rtol, (size_t) maxIter) );
+      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, fTag, weakForm, rtol, (size_t) maxIter) );
 
     }
     else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
@@ -258,7 +262,8 @@ namespace WasatchCore{
                        GraphHelper& gh,
                        const Category cat,
                        const bool doDenstPlus,
-                       std::set<std::string>& persistentFields )
+                       std::set<std::string>& persistentFields,
+                       const bool weakForm )
   {
     std::string fileName;
     params->get("FileNamePrefix",fileName);
@@ -413,9 +418,9 @@ namespace WasatchCore{
     const Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
     if( densityParams ){
       const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      parse_density_solver( densityParams, table, densityTag, NORMAL, gh, cat, persistentFields );
+      parse_density_solver( densityParams, table, densityTag, NORMAL, gh, cat, persistentFields, weakForm );
       if( doDenstPlus ){
-        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR, gh, cat, persistentFields );
+        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR, gh, cat, persistentFields, weakForm );
         gh.exprFactory->cleave_from_children( id1 );
       }
     }
@@ -427,9 +432,10 @@ namespace WasatchCore{
   parse_twostream_mixing( Uintah::ProblemSpecP params,
                           const bool doDenstPlus,
                           GraphCategories& gc,
-                          std::set<std::string>& persistentFields)
+                          std::set<std::string>& persistentFields,
+                          const bool weakForm)
   {
-    const Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
+    Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
 
@@ -445,29 +451,51 @@ namespace WasatchCore{
     {
       GraphHelper& gh = *gc[INITIALIZATION];
       typedef TwoStreamDensFromMixfr<SVolField>::Builder ICDensExpr;
+      
       const Expr::Tag icRhoTag( rhoTag.name(), Expr::STATE_NONE );
-      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoTag,fTag,rho0,rho1) ) );
+      const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
+      const Expr::TagList theTagList( tag_list( icRhoTag, drhodfTag ) );
+      
+      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagList,fTag,rho0,rho1) ) );
 
       if( doDenstPlus ){
-        const Expr::Tag icRhoStarTag ( rhoTag.name()+TagNames::self().star,       Expr::STATE_NONE );
-        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
+        const Expr::Tag icRhoStarTag ( rhoTag.name() + TagNames::self().star,       Expr::STATE_NONE );
+        const Expr::Tag drhodfStarTag( "drhod" + fTag.name() + TagNames::self().star, Expr::STATE_NONE);
+        const Expr::TagList theTagStarList( tag_list( icRhoStarTag, drhodfStarTag ) );
+
+        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagStarList, fTag,rho0,rho1) ) );
       }
     }
 
     typedef TwoStreamMixingDensity<SVolField>::Builder DensExpr;
+    typedef TwoStreamDensFromMixfr<SVolField>::Builder DensFromFExpr;
+    
     const Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
     const Expr::TagList theTagList( tag_list( rhoTag, drhodfTag ));
-    gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
+    
+    if (weakForm) {
+      fTag.reset_context( Expr::STATE_N );
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensFromFExpr(theTagList,fTag,rho0,rho1) );
+    } else {
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
+    }
+    
 
     if( doDenstPlus ){
       const TagNames& names = TagNames::self();
 
-      Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
-      Expr::Tag rhofStar( rhofTag.name(), Expr::STATE_NP1 );
-
-      const Expr::Tag drhodfStarTag("drhod" + fTag.name() + "*", Expr::STATE_NONE);
+      Expr::Tag rhoStar  ( rhoTag .name() + names.star, rhoTag.context() );
+      Expr::Tag fStarTag ( fTag .name()   , Expr::STATE_NP1 );
+      Expr::Tag rhofStar ( rhofTag.name(), Expr::STATE_NP1 );
+      const Expr::Tag drhodfStarTag("drhod" + fTag.name() + names.star, Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( rhoStar, drhodfStarTag ));
-      const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofStar,rho0,rho1) );
+      Expr::ExpressionID id1;
+      
+      if (weakForm) {
+        id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensFromFExpr(theTagList,fStarTag,rho0,rho1) );
+      } else {
+        id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofStar,rho0,rho1) );
+      }
       gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
     }
   }
@@ -495,14 +523,14 @@ namespace WasatchCore{
   //====================================================================
 
   void
-  setup_property_evaluation( Uintah::ProblemSpecP& params,
+  setup_property_evaluation( Uintah::ProblemSpecP& wasatchSpec,
                              GraphCategories& gc,
                              std::set<std::string>& persistentFields )
   {
     //__________________________________________________________________________
     // extract the density tag in the cases that it is needed
 
-    Uintah::ProblemSpecP densityParams  = params->findBlock("Density");
+    Uintah::ProblemSpecP densityParams  = wasatchSpec->findBlock("Density");
     
     if (!densityParams) {
       std::ostringstream msg;
@@ -510,9 +538,9 @@ namespace WasatchCore{
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
     
-    Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
-    Uintah::ProblemSpecP radPropsParams = params->findBlock("RadProps");
-    Uintah::ProblemSpecP twoStreamParams= params->findBlock("TwoStreamMixing");
+    Uintah::ProblemSpecP tabPropsParams = wasatchSpec->findBlock("TabProps");
+    Uintah::ProblemSpecP radPropsParams = wasatchSpec->findBlock("RadProps");
+    Uintah::ProblemSpecP twoStreamParams= wasatchSpec->findBlock("TwoStreamMixing");
 
     if( radPropsParams ){
       parse_radprops( radPropsParams, *gc[ADVANCE_SOLUTION] );
@@ -520,20 +548,34 @@ namespace WasatchCore{
 
     const bool isConstDensity = densityParams->findBlock("Constant");
     const bool doDenstPlus = !isConstDensity
-                           && params->findBlock("MomentumEquations")
-                           && params->findBlock("TransportEquation");
+                           && wasatchSpec->findBlock("MomentumEquations")
+                           && wasatchSpec->findBlock("TransportEquation");
 
+    // find out if we are using a weak formulation for scalar transport
+    bool weakForm = false;
+    if (wasatchSpec->findBlock("TransportEquation")) {
+      std::string eqnLabel;
+      wasatchSpec->findBlock("TransportEquation")->getAttribute( "equation", eqnLabel );
+      if (eqnLabel=="enthalpy" || eqnLabel=="mixturefraction") {
+        std::string form;
+        wasatchSpec->findBlock("TransportEquation")->getAttribute( "form", form );
+        if (form == "weak") {
+          weakForm = true;
+        }
+      }
+    }
+    
     if( twoStreamParams ){
-      parse_twostream_mixing( twoStreamParams, doDenstPlus, gc, persistentFields );
+      parse_twostream_mixing( twoStreamParams, doDenstPlus, gc, persistentFields, weakForm );
     }
 
     // TabProps
-    for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
+    for( Uintah::ProblemSpecP tabPropsParams = wasatchSpec->findBlock("TabProps");
          tabPropsParams != 0;
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") )
     {
       const Category cat = parse_tasklist( tabPropsParams,false);
-      parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus, persistentFields );
+      parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus, persistentFields, weakForm );
     }
   }
 

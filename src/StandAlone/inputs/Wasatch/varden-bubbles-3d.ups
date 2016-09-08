@@ -67,7 +67,7 @@
     </FieldClipping>
 
     <!-- Build a scalar transport equation for mixture fraction -->
-    <TransportEquation equation="generic">
+    <TransportEquation equation="mixturefraction">
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
       <ConvectiveFlux direction="X" method="SUPERBEE">
