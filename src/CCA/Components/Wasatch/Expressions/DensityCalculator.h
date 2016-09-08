@@ -91,11 +91,14 @@ class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalcul
 {
   const InterpT& rhoEval_;
   const std::pair<double,double> bounds_;
-  DECLARE_FIELDS(FieldT, rhoOld_, rhoF_)
+  const bool weak_;
+  DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, f_)
   
   DensFromMixfrac( const InterpT& rhoEval,
                    const Expr::Tag& rhoOldTag,
                    const Expr::Tag& rhoFTag,
+                   const Expr::Tag& fTag,
+                   const bool weakForm,
                    const double rtol,
                    const unsigned maxIter);
 
@@ -132,17 +135,20 @@ public:
              const Expr::TagList& resultsTag,
              const Expr::Tag& rhoOldTag,
              const Expr::Tag& rhoFTag,
+             const Expr::Tag& fTag,
+             const bool weakForm,
              const double rtol,
              const unsigned maxIter );
     
     ~Builder(){ delete rhoEval_; }
     Expr::ExpressionBase* build() const{
-      return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, rtol_, maxIter_ );
+      return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, fTag_, weakForm_, rtol_, maxIter_ );
     }
 
   private:
     const InterpT* const rhoEval_;
-    const Expr::Tag rhoOldTag_, rhoFTag_;
+    const Expr::Tag rhoOldTag_, rhoFTag_, fTag_;
+    const bool weakForm_;
     const double rtol_;    ///< relative error tolerance
     const unsigned maxIter_; ///< maximum number of iterations    
   };
@@ -337,7 +343,7 @@ public:
      *  @brief Build a TwoStreamDensFromMixfr expression
      *  @param resultTag the tag for the value that this expression computes
      */
-    Builder( const Expr::Tag& resultTag,
+    Builder( const Expr::TagList& resultsTagList,
              const Expr::Tag& mixfrTag,
              const double rho0,
              const double rho1 );

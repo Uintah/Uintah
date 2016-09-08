@@ -238,8 +238,6 @@ HAVE_EXPRLIB=no
 ##  Use the SCI_ARG_WITH and SCI_ARG_ENABLE macros to check for arguments
 ##
 
-#NOT_SET="not set"
-
 SCI_ARG_WITH(atlas,
   AC_HELP_STRING(--with-atlas=DIR,
                  Use the atlas installation (for lapack/blas) in DIR),
@@ -1621,6 +1619,8 @@ case $host in
 
     if test $USING_CLANG = "yes"; then
       SCI_CHECK_VERSION($CC,--version,3.0.0,,echo configure: error: not new enough version of $CC.; exit)
+      # FIXME: Are these the right flags for Clang on the Mac?"
+      CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic $NO_LONG_DOUBLE"
     else
       if test $USING_GCC = "yes"; then
         SCI_CHECK_VERSION($CC,--version,4.0.0,GCC_VERSION=4.0,)
