@@ -4412,7 +4412,7 @@ else
      AC_MSG_WARN(Relying on a built-in version of Hypre)
   else
 
-     if test "$with_hypre" != NOT_SET; then
+     if test "$with_hypre" != NOT_SET -a "$with_hypre" != "yes"; then
         _sci_lib="$with_hypre/lib"
         _sci_inc="$with_hypre/include"
         _sci_optional=specific
