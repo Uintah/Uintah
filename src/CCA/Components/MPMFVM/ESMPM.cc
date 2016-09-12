@@ -28,11 +28,20 @@ using namespace Uintah;
 
 ESMPM::ESMPM(const ProcessorGroup* myworld) : UintahParallelComponent(myworld)
 {
+  d_amrmpm = scinew AMRMPM(myworld);
+  d_esfvm = scinew ElectrostaticSolve(myworld);
+
+  d_mpm_lb = scinew MPMLabel();
+  d_fvm_lb = scinew FVMLabel();
 
 }
 
 ESMPM::~ESMPM()
 {
+  delete d_amrmpm;
+  delete d_esfvm;
+  delete d_mpm_lb;
+  delete d_fvm_lb;
 
 }
 

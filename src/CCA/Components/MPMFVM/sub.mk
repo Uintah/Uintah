@@ -36,6 +36,8 @@ SRCS   += $(SRCDIR)/ESMPM.cc
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
+       CCA/Components/MPM              \
+       CCA/Components/FVM              \
        CCA/Components/OnTheFlyAnalysis \
        CCA/Ports                       \
        Core/Disclosure                 \
