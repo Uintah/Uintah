@@ -83,6 +83,9 @@ endif
 
 ifeq ($(BUILD_FVM),yes)
   FVM_LIB            = CCA/Components/FVM
+  ifeq ($(BUILD_MPM),yes)
+    MPMFVM_LIB       = CCA/Components/MPMFVM
+  endif
 endif
 
 ifeq ($(BUILD_MPM),yes)
@@ -138,6 +141,7 @@ ALL_PSE_LIBS =                              \
         $(MPM_LIB)                          \
         $(ICE_LIB)                          \
         $(MPMICE_LIB)                       \
+        $(MPMFVM_LIB)                       \
         $(WASATCH_LIB)                      
 
   # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
@@ -159,6 +163,7 @@ ALL_STATIC_PSE_LIBS =                   \
     $(MPM_LIB)                          \
     $(ICE_LIB)                          \
     $(MPMICE_LIB)                       \
+    $(MPMFVM_LIB)                       \
     $(WASATCH_LIB)                      \
                                         \
     CCA/Components/Schedulers           \

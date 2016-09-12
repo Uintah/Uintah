@@ -371,6 +371,7 @@
                                                 mpmarches, 
                                                 mpmf, mpmice, amrmpm, wasatch, reduce_uda,
                                                 electrostatic_solver,
+                                                esmpm,
                                                 advectslabs,
                                                 unifiedschedulertest,poissongpu1,poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,

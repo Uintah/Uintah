@@ -57,6 +57,9 @@ endif
 
 ifeq ($(BUILD_FVM),yes)
   FVM :=$(SRCDIR)/FVM
+  ifeq ($(BUILD_MPM),yes)
+    MPMFVM := $(SRCDIR)/MPMFVM
+  endif
 endif
 
 SUBDIRS := \
@@ -67,6 +70,7 @@ SUBDIRS := \
         $(MPMARCHES)                   \
         $(WASATCH)                     \
         $(FVM)                         \
+        $(MPMFVM)                      \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \
