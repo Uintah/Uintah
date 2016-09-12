@@ -1028,36 +1028,33 @@ IntrusionBC::gatherReductionInformation( const ProcessorGroup*,
     
       for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
-        if ( !iIntrusion->second.bc_face_iterator.empty() ) {
+        BCIterator::iterator iBC_iter = (iIntrusion->second.bc_face_iterator).begin(); 
+        
+        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
-          BCIterator::iterator iBC_iter = (iIntrusion->second.bc_face_iterator).begin(); 
-          
-          for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+          IntVector c = *i; 
 
-            IntVector c = *i; 
+          for ( int idir = 0; idir < 6; idir++ ){ 
 
-            for ( int idir = 0; idir < 6; idir++ ){ 
+            if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-              if ( iIntrusion->second.directions[idir] != 0 ){ 
+              const Vector V = iIntrusion->second.velocity_inlet_generator->get_velocity(c); 
 
-                const Vector V = iIntrusion->second.velocity_inlet_generator->get_velocity(c); 
+              double face_vel = V[_iHelp[idir]];
 
-                double face_vel = V[_iHelp[idir]];
+              mass_flow += iIntrusion->second.density * face_vel * area[_iHelp[idir]];
 
-                mass_flow += iIntrusion->second.density * face_vel * area[_iHelp[idir]];
+              if ( max_vel < face_vel ) max_vel = face_vel; 
+              if ( min_vel > face_vel ) min_vel = face_vel; 
 
-                if ( max_vel < face_vel ) max_vel = face_vel; 
-                if ( min_vel > face_vel ) min_vel = face_vel; 
-
-              }
             }
           }
-
-          new_dw->put( min_vartype( min_vel ), iIntrusion->second.min_vel );
-          new_dw->put( max_vartype( max_vel ), iIntrusion->second.max_vel ); 
-          new_dw->put( sum_vartype( mass_flow ), iIntrusion->second.total_m_dot ); 
-
         }
+
+        new_dw->put( min_vartype( min_vel ), iIntrusion->second.min_vel );
+        new_dw->put( max_vartype( max_vel ), iIntrusion->second.max_vel ); 
+        new_dw->put( sum_vartype( mass_flow ), iIntrusion->second.total_m_dot ); 
+
       }
     }
   }
@@ -1182,23 +1179,20 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
   
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
-      if ( !iIntrusion->second.bc_face_iterator.empty() ) {
+      BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+      
+      for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
-        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
-        
-        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+        IntVector c = *i; 
 
-          IntVector c = *i; 
+        for ( int idir = 0; idir < 6; idir++ ){ 
 
-          for ( int idir = 0; idir < 6; idir++ ){ 
+          if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-            if ( iIntrusion->second.directions[idir] != 0 ){ 
+            iIntrusion->second.velocity_inlet_generator->set_velocity( idir, c, u, v, w, density, 
+                iIntrusion->second.density );  
 
-              iIntrusion->second.velocity_inlet_generator->set_velocity( idir, c, u, v, w, density, 
-                  iIntrusion->second.density );  
-
-            } 
-          }
+          } 
         }
       }
     }
