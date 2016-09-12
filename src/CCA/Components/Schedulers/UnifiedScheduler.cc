@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/CommunicationList.hpp>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Time.h>
 
@@ -42,6 +41,7 @@
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #include <Core/Grid/Variables/GPUGridVariable.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
+  #include <Core/Util/DebugStream.h>
 #endif
 
 #include <sci_defs/cuda_defs.h>
@@ -52,36 +52,38 @@
 #include <mutex>
 #include <thread>
 
+
 #define USE_PACKING
+
 
 using namespace Uintah;
 
-#ifdef HAVE_CUDA
-  DebugStream gpu_stats(              "GPUStats"     , false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
-  DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
-#endif
-
-extern std::mutex cerrLock;
 
 extern Dout g_task_dbg;
 extern Dout g_task_order;
 extern Dout g_exec_out;
 
-extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
-
+//______________________________________________________________________
+//
 namespace {
 
 Dout g_dbg(         "Unified_DBG"        , false);
 Dout g_timeout(     "Unified_TimingsOut" , false);
 Dout g_queuelength( "Unified_QueueLength", false);
 
+std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
+std::mutex g_lb_lock{};                // load balancer lock
+
 }
 
 
 #ifdef HAVE_CUDA
+
+  DebugStream gpu_stats(              "GPUStats"     , false );
+  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
+  DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
 
   //TODO, should be deallocated
   std::map <unsigned int, std::queue<cudaStream_t*> > * UnifiedScheduler::s_idle_streams = new std::map <unsigned int, std::queue<cudaStream_t*> >;
@@ -92,17 +94,10 @@ Dout g_queuelength( "Unified_QueueLength", false);
 
   }
 
+  extern std::mutex cerrLock;
+
 #endif
 
-
-//______________________________________________________________________
-//
-namespace {
-
-std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
-std::mutex g_lb_lock{};                // load balancer lock
-
-} // namespace
 
 
 //______________________________________________________________________
@@ -310,9 +305,6 @@ UnifiedScheduler::~UnifiedScheduler()
       m_avg_stats.close();
     }
   }
-#ifdef HAVE_CUDA
-  //freeCudaStreams();
-#endif
 }
 
 
@@ -329,6 +321,7 @@ UnifiedScheduler::verifyAnyGpuActive()
     return 1;  // let 1 be a good error code
   }
 #endif
+
   return 2;
 }
 

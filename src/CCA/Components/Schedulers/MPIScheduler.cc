@@ -37,7 +37,6 @@
 #include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Time.h>
@@ -76,6 +75,7 @@ double CurrentWaitTime = 0;
 
 }
 
+// these are used externally, keep them visible outside this unit
 Dout g_task_order( "TaskOrder", false );
 Dout g_task_dbg(   "TaskDBG",   false );
 Dout g_mpi_dbg(    "MPIDBG",    false );
@@ -830,7 +830,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   if (g_time_out) {
     emitTime("MPI send time", mpi_info_[TotalSendMPI]);
-    emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
+    emitTime("MPI Test time", mpi_info_[TotalTestMPI]);
     emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
     emitTime("MPI recv time", mpi_info_[TotalRecvMPI]);
     emitTime("MPI wait time", mpi_info_[TotalWaitMPI]);
