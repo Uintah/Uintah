@@ -21,6 +21,7 @@ else :
 #       no_restart:             - skip the restart tests
 #       no_dbg:                 - skip all debug compilation tests
 #       no_opt:                 - skip all optimized compilation tests
+#       no_cuda:                - skip test if this is a cuda enable build
 #       do_performance_test:    - Run the performance test, log and plot simulation runtime.
 #                                 (You cannot perform uda comparsions with this flag set)
 #       doesTestRun:            - Checks if a test successfully runs
@@ -79,7 +80,7 @@ NIGHTLYTESTS = [
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "Linux" , ["exactComparison"]) , 
+   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "Linux" , ["exactComparison"     , "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "Linux" , ["exactComparison"]) , 
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"])   , 
@@ -161,7 +162,7 @@ LOCALTESTS = [
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"]) , 
+   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All" , ["exactComparison"]) , 
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"]), 
