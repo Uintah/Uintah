@@ -283,6 +283,11 @@ QMOMTESTS=[
   ("qmom-surface-energy-test",      "qmom-surface-energy-test.ups",      1,  "All",  ["exactComparison","no_restart"] )
 ]
 
+POKITTTESTS=[
+  ("species-transport-test",       "species-transport.ups",  1, "All", ["exactComparison","no_restart"] ),
+  ("coal-cpd-cck-1D",              "coal-cpd-cck-1D.ups",    1, "All", ["exactComparison","no_restart"] )
+]
+
 SCALARTRANSPORTTESTS=[
   ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("BasicScalarTransportEq_2L",     "BasicScalarTransportEq_2L.ups",     1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -328,29 +333,28 @@ PARTICLETESTS=[
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
 
 
-# print( " --------------------" )
-# wasatchDefs = path.normpath(path.join(build_root(), "include/sci_defs/wasatch_defs.h"))
-# print( "WasatchDefs: %s " % wasatchDefs )
-# 
-# pattern = "HAVE_POKITT"
-# cmd = "grep -c %s %s" % (pattern, wasatchDefs)
+print( " --------------------" )
+wasatchDefs = path.normpath(path.join(build_root(), "include/sci_defs/wasatch_defs.h"))
+print( "WasatchDefs: %s " % wasatchDefs )
 
-# HAVE_POKITT = getoutput(cmd)
-# print( "Cmd: %s"      % cmd )
-# print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
-# print( " --------------------" )
+pattern = "HAVE_POKITT"
+cmd = "grep -c %s %s" % (pattern, wasatchDefs)
 
-# if HAVE_POKITT > 0:
-#   NIGHTLYTESTS = NIGHTLYTESTS 
-
+HAVE_POKITT = getoutput(cmd)
+print( "Cmd: %s"      % cmd )
+print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
+print( " --------------------" )
 
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS DUALTIMETESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS POKITTTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
 #__________________________________
 NIGHTLYTESTS = DUALTIMETESTS + RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS + COMPRESSIBLETESTS
+
+if HAVE_POKITT > 0:
+  NIGHTLYTESTS = NIGHTLYTESTS + POKITTTESTS
 
 # returns the list
 def getTestList(me) :
@@ -390,6 +394,8 @@ def getTestList(me) :
     TESTS = COMPRESSIBLETESTS       
   elif me == "DUALTIMETESTS":
     TESTS = DUALTIMETESTS           
+  elif me == "POKITTTESTS":
+    TESTS = POKITTTESTS           
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
