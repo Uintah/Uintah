@@ -15,10 +15,10 @@ echo
 if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
    echo ""
-   echo "  At Utah: Ember, Ash, Baja, Aurora, or Anasazi"
+   echo "  At Utah: Ember, Ash, Baja, Albion, Aurora, or Anasazi"
    echo "  At LLNL: Vulcan, Cab, Surface, or Syrah"
    echo "  At LANL: Mustang, Mapache, or Wolf"
-   echo "  At ORNL: titan"
+   echo "  At ORNL: Titan"
    echo ""
    exit
 fi
@@ -45,10 +45,12 @@ fi
 
 if test "$BUILD_CUDA" = "yes"; then
   echo "Building SpatialOps with CUDA."
+  CUDA_DIR_EXT="cuda"
 else
   echo "NOT Building SpatialOps with CUDA.  To turn CUDA on, set environment var BUILD_CUDA to 'yes'"
+  CUDA_DIR_EXT="no_cuda"
 fi
-sleep 2
+sleep 1
 
 echo
 echo "  Building for $MACHINE"
@@ -233,7 +235,7 @@ if test "$MACHINE" = "Syrah"; then
   INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/syrah/Wasatch3P
   BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/syrah/Boost/v1_60_0/intel16
 else
-if test "$MACHINE" = "titan"; then
+if test "$MACHINE" = "Titan"; then
   
   if [[ $host != titan* ]]; then
      echo "Error: hostname did not return titan*... Goodbye."
@@ -246,10 +248,24 @@ if test "$MACHINE" = "titan"; then
   INSTALL_BASE=/ccs/proj/csc188/utah/thirdparty-install/titan/Wasatch3P
   BOOST_LOC=$BOOST_ROOT
 else
+if test "$MACHINE" = "Albion"; then
+  
+  if [[ $host != albion* ]]; then
+     echo "Error: hostname did not return albion*... Goodbye."
+     exit
+  fi
+  CC=/usr/bin/gcc
+  CXX=/usr/bin/g++
+  COMP=gcc-4.9.2
+  NAME2="albion"
+  INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr/local/boost
+else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 fi
@@ -296,7 +312,7 @@ echo "  CXX:   $CXX"
 echo "  COMP:  $COMP"
 echo "  BOOST: $BOOST_LOC"
 
-export INSTALL_BASE=$INSTALL_BASE/build-$DATE
+export INSTALL_BASE=$INSTALL_BASE/build-$DATE-$CUDA_DIR_EXT
 
 echo 
 
