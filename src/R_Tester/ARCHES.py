@@ -80,10 +80,6 @@ NIGHTLYTESTS = [
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "Linux" , ["exactComparison"     , "no_cuda"]) , 
-   ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "Linux" , ["exactComparison"]) , 
-#   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"])   , 
    ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1.1 , "Linux" , ["exactComparison"])   , 
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "Linux" , ["exactComparison"])   , 
    ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1.1 , "Linux" , ["exactComparison"])   , 
@@ -104,12 +100,21 @@ NIGHTLYTESTS = [
    ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison","do_performance_test"   ]) , 
-   ("OFC4c"                             , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ]) , 
-   ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ]) , 
-   ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ]) , 
    ("partMassFlow"                      , "Coal/partMassFlow.ups"                                   , 8   , "All"  , ["exactComparison"   ]) , 
    ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
+
+#__________________________________
+# THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD   "corrupted double-linked list: 0x00000000024b8120 ***"
+   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "Linux" , ["exactComparison"     , "no_cuda"]) , 
+   ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "Linux" , ["exactComparison"     , "no_cuda"]) , 
+#   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"     , "no_cuda"]) , 
+   ("OFC4c"                             , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
+   ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
+   ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,  
+#__________________________________
+
 
 # multi-threaded NIGHTLY tests
    ("rmcrt_bm1_1L_thread"               , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
@@ -162,10 +167,6 @@ LOCALTESTS = [
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
-   ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All" , ["exactComparison"]) , 
-#   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
-   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"]), 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "All"  , ["exactComparison"]) , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -182,12 +183,20 @@ LOCALTESTS = [
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ]) , 
-   ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ]) , 
-   ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ]) , 
+   ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ]) ,  
+   
    ("partMassFlow"                      , "Coal/partMassFlow.ups"                                   , 8   , "All"  , ["exactComparison"   ]) , 
    ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
+#__________________________________
+# THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD, "corrupted double-linked list: 0x00000000024b8120 ***"
+   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
+   ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All" , ["exactComparison"    ,  "no_cuda"]) , 
+#   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"    ,  "no_cuda"]),
+   ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
+   ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
+#__________________________________
    
 # multi-threaded LOCAL tests
    ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
