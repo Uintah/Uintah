@@ -9,6 +9,8 @@ echo "Building Wasatch 3P libraries."
 
 source HelperBuildScripts/checkEnv.sh
 
+export GIT_SSL_NO_VERIFY=true 
+
 for dir in SpatialOps ExprLib TabProps RadProps
 do
 
@@ -16,8 +18,12 @@ do
   echo
 
   if ! test -d "$dir"; then
-    echo "Error, there is no $dir directory!"
-    exit
+    echo "WARNING: W3P source directories do not appear to be 'git'ed yet. Downloading them now:"
+    echo
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git
   fi
 
   echo "----- Updating GIT files ---"

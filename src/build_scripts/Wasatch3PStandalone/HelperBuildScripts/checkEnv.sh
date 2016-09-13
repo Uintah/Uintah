@@ -15,7 +15,7 @@ echo
 if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
    echo ""
-   echo "  At Utah: Ember, Ash, Baja, Albion, Aurora, or Anasazi"
+   echo "  At Utah: Albion, Anasazi, Ash, Aurora, Baja, Cyrus, or Ember"
    echo "  At LLNL: Vulcan, Cab, Surface, or Syrah"
    echo "  At LANL: Mustang, Mapache, or Wolf"
    echo "  At ORNL: Titan"
@@ -44,10 +44,10 @@ if test "$BUILD_CUDA" = ""; then
 fi
 
 if test "$BUILD_CUDA" = "yes"; then
-  echo "Building SpatialOps with CUDA."
+  echo "Building with CUDA."
   CUDA_DIR_EXT="cuda"
 else
-  echo "NOT Building SpatialOps with CUDA.  To turn CUDA on, set environment var BUILD_CUDA to 'yes'"
+  echo "NOT building with CUDA.  To turn CUDA on, set environment var BUILD_CUDA to 'yes'"
   CUDA_DIR_EXT="no_cuda"
 fi
 sleep 1
@@ -261,10 +261,23 @@ if test "$MACHINE" = "Albion"; then
   INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
   BOOST_LOC=/usr/local/boost
 else
+if test "$MACHINE" = "Cyrus"; then
+  if [[ $host != cyrus* ]]; then
+     echo "Error: hostname did not return cyrus*... Goodbye."
+     exit
+  fi
+  CC=/usr/bin/gcc
+  CXX=/usr/bin/g++
+  COMP=gcc-4.8.4
+  NAME2="cyrus"
+  INSTALL_BASE=/raid/home/harman/thirdparty-install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr
+else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 fi
