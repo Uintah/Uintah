@@ -241,9 +241,9 @@ if test "$MACHINE" = "Titan"; then
      echo "Error: hostname did not return titan*... Goodbye."
      exit
   fi
-  CC=/opt/cray/craype/2.4.0/bin/cc
-  CXX=/opt/cray/craype/2.4.0/bin/CC
-  COMP=cc-4.8.2
+  CC=`which cc`
+  CXX=`which CC`
+  COMP=cc-4.9.3
   NAME2="titan"
   INSTALL_BASE=/ccs/proj/csc188/utah/thirdparty-install/titan/Wasatch3P
   BOOST_LOC=$BOOST_ROOT
