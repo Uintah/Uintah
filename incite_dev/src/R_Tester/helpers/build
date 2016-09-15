@@ -52,6 +52,10 @@ if [ "$OS" = "Linux" ]; then
       --enable-ice \\
       --enable-mpm \\
       --enable-wasatch_3p \\"
+    
+    DBG_CONFIGURE="    --enable-debug \\
+      --enable-64bit \\
+      --enable-scinew-line-numbers \\"
 
     ENV="       CC=gcc-4.8 \\
        CXX=g++-4.8 \\

@@ -835,7 +835,7 @@ TaskGraph::createDetailedDependencies()
   // Assign task phase number based on the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
   int currphase = 0;
-  int currcomm = 0;
+  int curr_num_comms = 0;
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
     task->task->m_phase = currphase;
@@ -843,15 +843,15 @@ TaskGraph::createDetailedDependencies()
       tgphasedbg << "Rank-" << m_proc_group->myrank() << " Task: " << *task << " phase: " << currphase << "\n";
     }
     if (task->task->getType() == Task::Reduction) {
-      task->task->m_comm = currcomm;
-      currcomm++;
+      task->task->m_comm = curr_num_comms;
+      curr_num_comms++;
       currphase++;
     }
     else if (task->task->usesMPI()) {
       currphase++;
     }
   }
-  m_proc_group->setgComm(currcomm);
+  m_proc_group->setGlobalComm(curr_num_comms);
   m_num_task_phases = currphase + 1;
 
   // Go through the modifies/requires and create data dependencies as appropriate

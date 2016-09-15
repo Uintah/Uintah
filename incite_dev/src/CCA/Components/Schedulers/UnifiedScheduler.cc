@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/CommunicationList.hpp>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Time.h>
 
@@ -42,6 +41,7 @@
   #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
   #include <Core/Grid/Variables/GPUGridVariable.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
+  #include <Core/Util/DebugStream.h>
 #endif
 
 #include <sci_defs/cuda_defs.h>
@@ -52,36 +52,39 @@
 #include <mutex>
 #include <thread>
 
+
 #define USE_PACKING
+
 
 using namespace Uintah;
 
-#ifdef HAVE_CUDA
-  DebugStream gpu_stats(              "GPUStats"     , false );
-  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
-  DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
-#endif
-
-extern std::mutex cerrLock;
 
 extern Dout g_task_dbg;
 extern Dout g_task_order;
 extern Dout g_exec_out;
 
-extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
-
+//______________________________________________________________________
+//
 namespace {
 
 Dout g_dbg(         "Unified_DBG"        , false);
 Dout g_timeout(     "Unified_TimingsOut" , false);
 Dout g_queuelength( "Unified_QueueLength", false);
 
-}
+std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
+std::mutex g_lb_lock{};                // load balancer lock
+std::mutex g_GridVarSuperPatch_mutex{}; // An ugly hack to get superpatches for host levels to work.
+
+} // namespace
 
 
 #ifdef HAVE_CUDA
+
+  DebugStream gpu_stats(              "GPUStats"     , false );
+  DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
+  DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
 
   namespace {
 
@@ -89,18 +92,10 @@ Dout g_queuelength( "Unified_QueueLength", false);
 
   }
 
+  extern std::mutex cerrLock;
+
 #endif
 
-
-//______________________________________________________________________
-//
-namespace {
-
-std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
-std::mutex g_lb_lock{};                // load balancer lock
-std::mutex g_GridVarSuperPatch_mutex{}; // An ugly hack to get superpatches for host levels to work.
-
-} // namespace
 
 
 //______________________________________________________________________
@@ -243,8 +238,11 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
                                   )
   : MPIScheduler(myworld, oport, parentScheduler)
 {
+
 #ifdef HAVE_CUDA
-  if (Uintah::Parallel::usingDevice()) {
+  //__________________________________
+  //    
+  if ( Uintah::Parallel::usingDevice() ) {
     gpuInitialize();
 
     // we need one of these for each GPU, as each device will have it's own CUDA context
@@ -257,31 +255,26 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld
     // precluding memory blocks being defined across multiple patches.
     Uintah::OnDemandDataWarehouse::d_combineMemory = false;
 
-  }
-
-  int numThreads = Uintah::Parallel::getNumThreads();
-  if (numThreads == -1) {
-    numThreads = 1;
-  }
-  //get the true numDevices (in case we have the simulation turned on)
-  int numDevices;
-  CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
-  int can_access = 0;
-  for (int i = 0; i < numDevices; i++) {
-    CUDA_RT_SAFE_CALL( cudaSetDevice(i) );
-    for (int j = 0; j < numDevices; j++) {
-      if (i != j) {
-        cudaDeviceCanAccessPeer(&can_access, i, j);
-        if (can_access) {
-          printf("GOOD\n GPU device #%d can access GPU device #%d\n", i, j);
-          cudaDeviceEnablePeerAccess(j, 0);
-        } else {
-          printf("ERROR\n GPU device #%d cannot access GPU device #%d\n.  Uintah is not yet configured to work with multiple GPUs in different NUMA regions.  For now, use the environment variable CUDA_VISIBLE_DEVICES and don't list GPU device #%d\n." , i, j, j);
-          SCI_THROW( InternalError("** GPUs in multiple NUMA regions are currently unsupported.", __FILE__, __LINE__));
+    //get the true numDevices (in case we have the simulation turned on)
+    int numDevices;
+    CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
+    int can_access = 0;
+    for (int i = 0; i < numDevices; i++) {
+      CUDA_RT_SAFE_CALL( cudaSetDevice(i) );
+      for (int j = 0; j < numDevices; j++) {
+        if (i != j) {
+          cudaDeviceCanAccessPeer(&can_access, i, j);
+          if (can_access) {
+            printf("GOOD\n GPU device #%d can access GPU device #%d\n", i, j);
+            cudaDeviceEnablePeerAccess(j, 0);
+          } else {
+            printf("ERROR\n GPU device #%d cannot access GPU device #%d\n.  Uintah is not yet configured to work with multiple GPUs in different NUMA regions.  For now, use the environment variable CUDA_VISIBLE_DEVICES and don't list GPU device #%d\n." , i, j, j);
+            SCI_THROW( InternalError("** GPUs in multiple NUMA regions are currently unsupported.", __FILE__, __LINE__));
+          }
         }
       }
     }
-  }
+  }  // using Device
 
 #endif
 
@@ -310,9 +303,6 @@ UnifiedScheduler::~UnifiedScheduler()
       m_avg_stats.close();
     }
   }
-#ifdef HAVE_CUDA
-  //freeCudaStreams();
-#endif
 }
 
 
@@ -329,6 +319,7 @@ UnifiedScheduler::verifyAnyGpuActive()
     return 1;  // let 1 be a good error code
   }
 #endif
+
   return 2;
 }
 
@@ -1272,18 +1263,6 @@ UnifiedScheduler::runTasks( int thread_id )
   }  //end while (numTasksDone < ntasks)
   ASSERT(m_num_tasks_done == m_num_tasks);
 }
-
-
-//______________________________________________________________________
-//
-struct CompareDep {
-
-  bool operator()( DependencyBatch* a,
-                   DependencyBatch* b )
-  {
-    return a->m_message_tag < b->m_message_tag;
-  }
-};
 
 
 #ifdef HAVE_CUDA

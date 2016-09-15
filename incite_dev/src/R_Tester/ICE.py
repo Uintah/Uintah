@@ -37,6 +37,7 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #       no_restart:             - skip the restart tests
 #       no_dbg:                 - skip all debug compilation tests
 #       no_opt:                 - skip all optimized compilation tests
+#       no_cuda:                - skip test if this is a cuda enable build
 #       do_performance_test:    - Run the performance test, log and plot simulation runtime.
 #                                 (You cannot perform uda comparsions with this flag set)
 #       doesTestRun:            - Checks if a test successfully runs

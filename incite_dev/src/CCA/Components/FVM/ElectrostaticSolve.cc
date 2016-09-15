@@ -31,12 +31,16 @@
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Geometry/Vector.h>
@@ -55,7 +59,6 @@ ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld)
   d_solver_parameters = 0;
   d_delt = 0;
   d_solver = 0;
-  d_fvmmat = 0;
   d_shared_state = 0;
 }
 //__________________________________
@@ -64,6 +67,14 @@ ElectrostaticSolve::~ElectrostaticSolve()
 {
   delete d_lb;
   delete d_solver_parameters;
+
+  if (d_es_matl && d_es_matl->removeReference()){
+    delete d_es_matl;
+  }
+
+  if (d_es_matlset && d_es_matlset->removeReference()){
+      delete d_es_matlset;
+    }
 }
 //__________________________________
 //
@@ -72,8 +83,15 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
                                       GridP& grid,
                                       SimulationStateP& shared_state)
 {
-
   d_shared_state = shared_state;
+  d_es_matl  = scinew MaterialSubset();
+  d_es_matl->add(0);
+  d_es_matl->addReference();
+
+  d_es_matlset  = scinew MaterialSet();
+  d_es_matlset->add(0);
+  d_es_matlset->addReference();
+
   d_solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!d_solver) {
     throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
@@ -86,15 +104,31 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
     
   st_ps->require("delt", d_delt);
 
-  d_fvmmat = scinew FVMMaterial();
-  d_shared_state->registerFVMMaterial(d_fvmmat);
+  ProblemSpecP mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
+  ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
+
+  for (ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != 0;
+      ps = ps->findNextBlock("material") ) {
+
+    FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state);
+    d_shared_state->registerFVMMaterial(mat);
+
+  }
 }
 //__________________________________
 // 
 void ElectrostaticSolve::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  d_solver->scheduleInitialize(level,sched, d_shared_state->allMaterials());
+  const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
+
+  Task* t = scinew Task("ElectrostaticSolve::initialize", this,
+                        &ElectrostaticSolve::initialize);
+
+  t->computes(d_lb->ccConductivity);
+  sched->addTask(t, level->eachPatch(), fvm_matls);
+
+  d_solver->scheduleInitialize(level,sched, fvm_matls);
 }
 //__________________________________
 //
@@ -110,25 +144,28 @@ void ElectrostaticSolve::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("computeStableTimestep",this, 
                            &ElectrostaticSolve::computeStableTimestep);
   task->computes(d_shared_state->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), d_shared_state->allMaterials());
+  sched->addTask(task, level->eachPatch(), d_shared_state->allFVMMaterials());
 }
 //__________________________________
 //
 void
 ElectrostaticSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("buildMatrixAndRhs",
-                           this, &ElectrostaticSolve::buildMatrixAndRhs,
-                           level, sched.get_rep());
-  task->computes(d_lb->ccESPotentialMatrix);
-  task->computes(d_lb->ccRHS_ESPotential);
+  const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
+  const MaterialSet* all_matls = d_shared_state->allMaterials();
 
-  sched->addTask(task, level->eachPatch(), d_shared_state->allMaterials());
+  scheduleComputeConductivity(   sched, level, fvm_matls);
+  scheduleComputeFCConductivity( sched, level, d_es_matlset);
+  scheduleBuildMatrixAndRhs(     sched, level, d_es_matlset);
 
-  d_solver->scheduleSolve(level, sched, d_shared_state->allMaterials(),
-                        d_lb->ccESPotentialMatrix, Task::NewDW, d_lb->ccESPotential,
-                        false, d_lb->ccRHS_ESPotential, Task::NewDW, 0, Task::OldDW,
-                        d_solver_parameters,false);
+  d_solver->scheduleSolve(level, sched, d_es_matlset,
+                          d_lb->ccESPotentialMatrix, Task::NewDW,
+                          d_lb->ccESPotential, false,
+                          d_lb->ccRHS_ESPotential, Task::NewDW,
+                          0, Task::OldDW,
+                          d_solver_parameters,false);
+
+  scheduleUpdateESPotential(     sched, level, d_es_matlset);
 
 }
 //__________________________________
@@ -147,16 +184,169 @@ void ElectrostaticSolve::initialize(const ProcessorGroup*,
                        const MaterialSubset* matls,
                        DataWarehouse*, DataWarehouse* new_dw)
 {
+  FVMBoundCond bc;
+  int num_matls = d_shared_state->getNumFVMMatls();
+
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    for(int m = 0; m < num_matls; m++){
+      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      int idx = fvm_matl->getDWIndex();
+
+      CCVariable<double> conductivity;
+      new_dw->allocateAndPut(conductivity, d_lb->ccConductivity, idx, patch);
+
+      fvm_matl->initializeConductivity(conductivity, patch);
+
+      bc.setConductivityBC(patch, idx, conductivity);
+
+    }
+  }
+
+
+}
+
+//______________________________________________________________________
+//
+void ElectrostaticSolve::scheduleComputeConductivity(SchedulerP& sched,
+                                                     const LevelP& level,
+                                                     const MaterialSet* fvm_matls)
+{
+  Task* t = scinew Task("ElectrostaticSolve::computeConductivity", this,
+                           &ElectrostaticSolve::computeConductivity);
+
+  t->requires(Task::OldDW, d_lb->ccConductivity, Ghost::AroundCells, 1);
+  t->computes(d_lb->ccConductivity);
+  t->computes(d_lb->ccGridConductivity, d_es_matl, Task::OutOfDomain);
+
+  sched->addTask(t, level->eachPatch(), fvm_matls);
+}
+
+//______________________________________________________________________
+//
+void ElectrostaticSolve::computeConductivity(const ProcessorGroup* pg,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* fvm_matls,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
+{
+  int num_matls = d_shared_state->getNumFVMMatls();
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    CCVariable<double>   grid_conductivity;
+
+    new_dw->allocateAndPut(grid_conductivity, d_lb->ccGridConductivity, 0, patch);
+
+    grid_conductivity.initialize(0.0);
+
+    for(int m = 0; m < num_matls; m++){
+      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      int idx = fvm_matl->getDWIndex();
+
+      constCCVariable<double> old_conductivty;
+      CCVariable<double> conductivity;
+
+      old_dw->get(old_conductivty, d_lb->ccConductivity, idx, patch, Ghost::AroundCells, 1);
+      new_dw->allocateAndPut(conductivity, d_lb->ccConductivity,  idx, patch);
+
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        conductivity[c] = old_conductivty[c];
+        if(conductivity[c] > 0.0){
+          grid_conductivity[c] = conductivity[c];
+        }
+      }
+    } // material loop
+  } // patch loop
+}
+
+void ElectrostaticSolve::scheduleComputeFCConductivity(SchedulerP& sched, const LevelP& level,
+                                                       const MaterialSet* es_matls)
+{
+  Task* t = scinew Task("ElectrostaticSolve::computeFCConductivity", this,
+                        &ElectrostaticSolve::computeFCConductivity);
+
+    t->requires(Task::NewDW, d_lb->ccGridConductivity, Ghost::AroundCells, 1);
+    t->computes(d_lb->fcxConductivity,    d_es_matl, Task::OutOfDomain);
+    t->computes(d_lb->fcyConductivity,    d_es_matl, Task::OutOfDomain);
+    t->computes(d_lb->fczConductivity,    d_es_matl, Task::OutOfDomain);
+    sched->addTask(t, level->eachPatch(), es_matls);
+}
+
+void ElectrostaticSolve::computeFCConductivity(const ProcessorGroup* pg,const PatchSubset* patches,
+                                               const MaterialSubset* es_matls,DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    constCCVariable<double>  grid_conductivity;
+
+    SFCXVariable<double> fcx_conductivity;
+    SFCYVariable<double> fcy_conductivity;
+    SFCZVariable<double> fcz_conductivity;
+
+
+    new_dw->get(grid_conductivity, d_lb->ccGridConductivity, 0, patch, Ghost::AroundCells, 1);
+    new_dw->allocateAndPut(fcx_conductivity,  d_lb->fcxConductivity,    0, patch);
+    new_dw->allocateAndPut(fcy_conductivity,  d_lb->fcyConductivity,    0, patch);
+    new_dw->allocateAndPut(fcz_conductivity,  d_lb->fczConductivity,    0, patch);
+
+    fcx_conductivity.initialize(0.0);
+    fcy_conductivity.initialize(0.0);
+    fcz_conductivity.initialize(0.0);
+
+    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector offset(-1,0,0);
+      fcx_conductivity[c] = .5*(grid_conductivity[c] + grid_conductivity[c + offset]);
+    }
+
+    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector offset(0,-1,0);
+      fcy_conductivity[c] = .5*(grid_conductivity[c] + grid_conductivity[c + offset]);
+    }
+
+    for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector offset(0,0,-1);
+      fcz_conductivity[c] = .5*(grid_conductivity[c] + grid_conductivity[c + offset]);
+    }
+  } // patch loop
+}
+//______________________________________________________________________
+//
+void ElectrostaticSolve::scheduleBuildMatrixAndRhs(SchedulerP& sched,
+                                                   const LevelP& level,
+                                                   const MaterialSet* es_matl)
+{
+  Task* task = scinew Task("ElectrostaticSolve::buildMatrixAndRhs", this,
+                           &ElectrostaticSolve::buildMatrixAndRhs,
+                           level, sched.get_rep());
+
+  task->requires(Task::NewDW, d_lb->fcxConductivity , Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, d_lb->fcyConductivity , Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, d_lb->fczConductivity , Ghost::AroundCells, 1);
+
+  task->computes(d_lb->ccESPotentialMatrix, d_es_matl, Task::OutOfDomain);
+  task->computes(d_lb->ccRHS_ESPotential,   d_es_matl, Task::OutOfDomain);
+
+  sched->addTask(task, level->eachPatch(), es_matl);
 }
 //______________________________________________________________________
 //
 void ElectrostaticSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
                            const PatchSubset* patches,
-                           const MaterialSubset* matls,
+                           const MaterialSubset* ,
                            DataWarehouse* old_dw, DataWarehouse* new_dw,
                            LevelP level, Scheduler* sched)
 {
   FVMBoundCond bc;
+  IntVector xoffset(1,0,0);
+  IntVector yoffset(0,1,0);
+  IntVector zoffset(0,0,1);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -170,50 +360,81 @@ void ElectrostaticSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
     double n = a_n / dx.y(); double s = a_s / dx.y();
     double e = a_e / dx.x(); double w = a_w / dx.x();
     double t = a_t / dx.z(); double b = a_b / dx.z();
-    double center = n + s + e + w + t + b;
 
-    IntVector low_idx  = patch->getCellLowIndex();
-    IntVector high_idx = patch->getCellHighIndex();
+    constSFCXVariable<double> fcx_conductivity;
+    constSFCYVariable<double> fcy_conductivity;
+    constSFCZVariable<double> fcz_conductivity;
 
-    std::cout << "low_idx: " << low_idx << std::endl;
-    std::cout << "high_idx: " << high_idx << std::endl;
-
-
-    IntVector low_offset = IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
-                                     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
-                                     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
-
-
-    IntVector high_offset = IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor?0:1,
-                                      patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
-                                      patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
-
-    //IntVector low_interior  = low_idx + low_offset;
-    //IntVector high_interior = high_idx - high_offset;
-    std::cout << "low_offset: " << low_offset << std::endl;
-    std::cout << "high_offset: " << high_offset << std::endl;
-    std::cout << "material size: " << matls->size() << std::endl;
+    new_dw->get(fcx_conductivity, d_lb->fcxConductivity, 0, patch, Ghost::AroundCells, 1);
+    new_dw->get(fcy_conductivity, d_lb->fcyConductivity, 0, patch, Ghost::AroundCells, 1);
+    new_dw->get(fcz_conductivity, d_lb->fczConductivity, 0, patch, Ghost::AroundCells, 1);
 
     CCVariable<Stencil7> A;
     CCVariable<double> rhs;
+    new_dw->allocateAndPut(A,   d_lb->ccESPotentialMatrix, 0, patch);
+    new_dw->allocateAndPut(rhs, d_lb->ccRHS_ESPotential,   0, patch);
 
-    for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
-      new_dw->allocateAndPut(A,   d_lb->ccESPotentialMatrix, matl, patch);
-      new_dw->allocateAndPut(rhs, d_lb->ccRHS_ESPotential,   matl, patch);
-      // iterate over cells;
-      for(CellIterator iter(low_idx, high_idx); !iter.done(); iter++){
-        IntVector c = *iter;
-        Stencil7&  A_tmp=A[c];
+    //__________________________________
+    //  Initialize A
+    for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
+      IntVector c = *iter;
+      Stencil7&  A_tmp=A[c];
+      A_tmp.p = 0.0;
+      A_tmp.n = 0.0;   A_tmp.s = 0.0;
+      A_tmp.e = 0.0;   A_tmp.w = 0.0;
+      A_tmp.t = 0.0;   A_tmp.b = 0.0;
+      rhs[c] = 0;
+    }
 
-        A_tmp.p = -center;
-        A_tmp.n = n;   A_tmp.s = s;
-        A_tmp.e = e;   A_tmp.w = w;
-        A_tmp.t = t;   A_tmp.b = b;
-        rhs[c] = 0;
+    // iterate over cells;
+    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      Stencil7&  A_tmp=A[c];
+      double efc = e*fcx_conductivity[c + xoffset];
+      double wfc = w*fcx_conductivity[c];
+      double nfc = n*fcy_conductivity[c + yoffset];
+      double sfc = s*fcy_conductivity[c];
+      double tfc = t*fcz_conductivity[c + zoffset];
+      double bfc = b*fcz_conductivity[c];
+      double center = efc + wfc + nfc + sfc + tfc + bfc;
 
-      } // End CellIterator
-      bc.setESBoundaryConditions(patch, matl, A, rhs);
-    } // End Materials
+      A_tmp.p = -center;
+      A_tmp.n = nfc;   A_tmp.s = sfc;
+      A_tmp.e = efc;   A_tmp.w = wfc;
+      A_tmp.t = tfc;   A_tmp.b = bfc;
+    } // End CellIterator
+
+    bc.setESBoundaryConditions(patch, 0, A, rhs, fcx_conductivity, fcy_conductivity, fcz_conductivity);
+
   } // End patches
+}
+
+void ElectrostaticSolve::scheduleUpdateESPotential(SchedulerP& sched, const LevelP& level,
+                                                  const MaterialSet* es_matl)
+{
+  Task* task = scinew Task("ElectrostaticSolve::updateESPotential", this,
+                           &ElectrostaticSolve::updateESPotential,
+                           level, sched.get_rep());
+
+  task->modifies(d_lb->ccESPotential , d_es_matl, Task::OutOfDomain);
+  sched->addTask(task, level->eachPatch(), es_matl);
+}
+
+void ElectrostaticSolve::updateESPotential(const ProcessorGroup*, const PatchSubset* patches,
+                                           const MaterialSubset* es_matls,
+                                           DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                           LevelP, Scheduler*)
+{
+  FVMBoundCond bc;
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    CCVariable<double> es_potential;
+    new_dw->getModifiable(es_potential, d_lb->ccESPotential, 0, patch);
+
+    bc.setESPotentialBC(patch, 0, es_potential);
+
+  } // end patch loop
+
 }

@@ -16,12 +16,5 @@
 #______________________________________________________________________
 
 #type  :  location
-race:Uintah::DWDatabase<Uintah::Level>::putReduce
-race:Uintah::UnifiedScheduler::markTaskConsumed
-race:Uintah::UnifiedScheduler::runTask
-race:Uintah::UnifiedScheduler::execute(int, int)
-race:Uintah::UnifiedSchedulerWorker::run
 
-race:Uintah::MPIScheduler::postMPISends
-race:Uintah::MPIScheduler::postMPIRecvs
-race:Uintah::MPIScheduler::processMPIRecvs
+race:thread_fence

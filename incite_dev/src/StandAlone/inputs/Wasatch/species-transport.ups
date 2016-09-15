@@ -17,7 +17,7 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="H2"/>
-      <Constant>0.2</Constant>
+      <Constant>0.4</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
@@ -29,7 +29,7 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="Temperature"/>
-      <GaussianFunction amplitude="700.0" deviation="2e-3" mean="0.0" baseline="500.0">
+      <GaussianFunction amplitude="1000.0" deviation="2e-3" mean="0.0" baseline="1000.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>
@@ -75,7 +75,7 @@
     </EnergyEquation>
     
     <SpeciesTransportEquations>
-      <CanteraInputFile>h2.cti</CanteraInputFile>
+      <CanteraInputFile>inputs/Wasatch/h2.xml</CanteraInputFile>
       <CanteraGroup>gas</CanteraGroup>
       <DiffusiveFlux direction="X">
         <MixtureAveraged/>
@@ -90,18 +90,18 @@
   </Wasatch>
 
   <Time>
-    <maxTime>5e-6</maxTime>
+    <maxTime>2e-7</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-7</delt_min>
-    <delt_max>1e-7</delt_max>
+    <delt_min>1e-8</delt_min>
+    <delt_max>1e-8</delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
   <DataArchiver>
     <filebase>species-transport.uda</filebase>
-    <outputTimestepInterval>20</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="2.0e-6"/>
+    <checkpoint cycle="2" interval="1.0e-7"/>
     <compression>gzip</compression>
     <save label="H2"/>
     <save label="HO2"/>

@@ -310,9 +310,6 @@ main( int argc, char *argv[], char *env[] )
       }
       Uintah::Parallel::setNumThreads( numThreads );
     }
-    else if (arg == "-threadmpi") {
-      //used threaded mpi (this option is handled in Uintah::MPI::Communicator.cc  Uintah::MPI::Init_thread
-    }
     else if (arg == "-solver") {
       if (++i == argc) {
         usage("You must provide a solver name for -solver", arg, argv[0]);

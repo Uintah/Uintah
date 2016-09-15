@@ -47,7 +47,7 @@
 
 #include <Core/Malloc/Allocator.h>
 
-// USE_LENNY_HACK: See Allocator.h for mor information:
+// USE_LENNY_HACK: See Allocator.h for more information:
 
 #if !defined( DISABLE_SCI_MALLOC )
 

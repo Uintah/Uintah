@@ -4,14 +4,14 @@ THELIB=SpatialOps
 
 source ../HelperBuildScripts/setupEnv.sh
 
-rm -f CMakeCache.txt
+rm -rf CMakeCache.txt CMakeFiles *.cmake
 rm -rf ${INSTALL_HERE}/*
 
 echo "Start time: `date`"
 echo ""
 
 if test "$BUILD_CUDA" = "yes"; then
-  FLAGS="-DENABLE_THREADS=OFF -DENABLE_CUDA=ON"
+  FLAGS="-DENABLE_THREADS=OFF -DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON"
 else
   FLAGS="-DENABLE_THREADS=ON"
 fi
