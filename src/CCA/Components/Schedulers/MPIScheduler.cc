@@ -61,10 +61,8 @@ using namespace Uintah;
 
 namespace {
 
-struct recv_tag{};
-using  recv_monitor = Uintah::CrowdMonitor<recv_tag>;
-
-std::mutex g_lb_mutex;                // load balancer lock
+std::mutex g_lb_mutex{};                // load balancer lock
+std::mutex g_recv_mutex{};
 
 Dout g_dbg(          "MPIScheduler_DBG",        false );
 Dout g_send_timings( "SendTiming",              false );
@@ -523,9 +521,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
   std::vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
 
   // Receive any of the foreign requires
+  g_recv_mutex.lock();
   {
-    recv_monitor recv_lock { Uintah::CrowdMonitor<recv_tag>::WRITER };
-
     for (; sorted_iter != sorted_reqs.end(); sorted_iter++) {
       DependencyBatch* batch = *sorted_iter;
 
@@ -666,7 +663,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
     double drecv = Time::currentSeconds() - recvstart;
     mpi_info_[TotalRecv] += drecv;
 
-  }  // end recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER }
+  }
+  g_recv_mutex.unlock();
 
 }  // end postMPIRecvs()
 
@@ -688,9 +686,8 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   CommRequestPool::iterator comm_iter;
 
+  g_recv_mutex.lock();
   {
-    recv_monitor recv_lock { Uintah::CrowdMonitor<recv_tag>::WRITER };
-
     switch (test_type) {
 
       case TEST :
@@ -728,6 +725,7 @@ void MPIScheduler::processMPIRecvs( int test_type )
     CurrentWaitTime += Time::currentSeconds() - start;
 
   }
+  g_recv_mutex.unlock();
 
 }  // end processMPIRecvs()
 

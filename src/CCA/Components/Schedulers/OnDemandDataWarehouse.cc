@@ -969,6 +969,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
       var = dynamic_cast<ReductionVariableBase*>( d_levelDB.get( label, matlIndex, level ) );
     }
     else {
+      //TODO: clean this up - APH 09/15/16
       // create a new var with a harmless value.  This will make
       // "inactive" processors work with reduction vars
       //cout << "NEWRV1\n";
@@ -1005,7 +1006,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   }
   int packsize;
-  Uintah::MPI::Pack_size( count, datatype, d_myworld->getgComm( nComm ), &packsize );
+  Uintah::MPI::Pack_size( count, datatype, d_myworld->getGlobalComm( nComm ), &packsize );
   std::vector<char> sendbuf( packsize );
 
   int packindex = 0;
@@ -1016,7 +1017,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
     try {
       var = dynamic_cast<ReductionVariableBase*>( d_levelDB.get( label, matlIndex, level ) );
     }
-    catch( UnknownVariable ) {
+    catch( UnknownVariable& ) {
       SCI_THROW(
           UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduceMPI(pass 2)", __FILE__, __LINE__) );
     }
@@ -1027,7 +1028,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " allreduce, name " << label->getName() << " level " << (level ? level->getID() : -1));
 
-  int error = Uintah::MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
+  int error = Uintah::MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getGlobalComm( nComm ) );
 
   DOUT(g_mpi_dbg, "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level " << (level ? level->getID() : -1));
 
@@ -1044,7 +1045,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
     try {
       var = dynamic_cast<ReductionVariableBase*>( d_levelDB.get( label, matlIndex, level ) );
     }
-    catch( UnknownVariable ) {
+    catch( UnknownVariable& ) {
       SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduceMPI(pass 2)", __FILE__, __LINE__) );
     }
     var->putMPIData( recvbuf, unpackindex );
@@ -2636,7 +2637,7 @@ OnDemandDataWarehouse::print(       std::ostream&  intout,
     ReductionVariableBase* var = dynamic_cast<ReductionVariableBase*>( d_levelDB.get( label, matlIndex, level ) );
     var->print( intout );
   }
-  catch( UnknownVariable ) {
+  catch( UnknownVariable& ) {
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on emit reduction", __FILE__, __LINE__) );
   }
 }

@@ -31,12 +31,12 @@
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+  #include <Core/Parallel/CrowdMonitor.hpp>
 #endif
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
-#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/FancyAssert.h>
@@ -57,15 +57,10 @@ using namespace Uintah;
 
 namespace {
 
-// These are for uniquely identifying the Uintah::CrowdMonitors<Tag>
-// used to synchronize multi-threaded access to global data structures
-struct external_ready_tag{};
-struct internal_ready_tag{};
-
-using  external_ready_monitor = Uintah::CrowdMonitor<external_ready_tag>;
-using  internal_ready_monitor = Uintah::CrowdMonitor<internal_ready_tag>;
-
 std::mutex g_internal_dependency_mutex{};
+std::mutex g_internal_ready_mutex{};
+std::mutex g_external_ready_mutex{};
+std::mutex g_dtask_output_mutex{};
 
 Dout dbg(         "DetailedTasks", false);
 Dout scrubout(    "Scrubbing",     false);
@@ -73,8 +68,6 @@ Dout messagedbg(  "MessageTags",   false);
 Dout internaldbg( "InternalDeps",  false);
 Dout externaldbg( "ExternalDeps",  false);
 Dout dwdbg(       "DetailedDWDBG", false);
-
-std::mutex g_dtask_output_mutex{};
 
 // for debugging - set the var name to watch one in the scrubout
 std::string dbgScrubVar   = "";
@@ -1188,6 +1181,8 @@ bool DetailedTask::addInternalRequires( DependencyBatch * req )
 void
 DetailedTask::checkExternalDepCount()
 {
+  std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
+
   DOUT(externaldbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
                           << externalDependencyCount_.load(std::memory_order_seq_cst)
                           << " internal deps: " << numPendingInternalDependencies);
@@ -1199,10 +1194,7 @@ DetailedTask::checkExternalDepCount()
                             << " MPI requirements satisfied, placing into external ready queue");
 
     if (externallyReady_.load(std::memory_order_seq_cst) == false) {
-      {
-        external_ready_monitor external_ready_lock { Uintah::CrowdMonitor<external_ready_tag>::WRITER };
-        taskGroup->mpiCompletedTasks_.push(this);
-      }
+      taskGroup->mpiCompletedTasks_.push(this);
       externallyReady_.store(true, std::memory_order_seq_cst);
     }
   }
@@ -1579,13 +1571,10 @@ void DetailedTask::deleteTemporaryTaskVars() {
 void
 DetailedTasks::internalDependenciesSatisfied( DetailedTask * dtask )
 {
+  std::lock_guard<std::mutex> internal_ready_guard(g_internal_ready_mutex);
+
   DOUT(internaldbg, "Begin internalDependenciesSatisfied");
-
-  {
-    internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
-    readyTasks_.push(dtask);
-  }
-
+  readyTasks_.push(dtask);
   DOUT(internaldbg, *dtask << " satisfied.  Now " << readyTasks_.size() << " ready.");
 }
 
@@ -1594,14 +1583,15 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * dtask )
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
+  std::lock_guard<std::mutex> internal_ready_guard(g_internal_ready_mutex);
+
   DetailedTask* nextTask = nullptr;
-  {
-    internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
-    if (!readyTasks_.empty()) {
-      nextTask = readyTasks_.front();
-      readyTasks_.pop();
-    }
+
+  if (!readyTasks_.empty()) {
+    nextTask = readyTasks_.front();
+    readyTasks_.pop();
   }
+
   return nextTask;
 }
 
@@ -1610,10 +1600,9 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  {
-    internal_ready_monitor internal_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::READER };
-    return readyTasks_.size();
-  }
+  std::lock_guard<std::mutex> internal_ready_guard(g_internal_ready_mutex);
+
+  return readyTasks_.size();
 }
 
 //_____________________________________________________________________________
@@ -1621,14 +1610,15 @@ DetailedTasks::numInternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
+  std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
+
   DetailedTask* nextTask = nullptr;
-  {
-    external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::WRITER };
-    if (!mpiCompletedTasks_.empty()) {
-      nextTask = mpiCompletedTasks_.top();
-      mpiCompletedTasks_.pop();
-    }
+
+  if (!mpiCompletedTasks_.empty()) {
+    nextTask = mpiCompletedTasks_.top();
+    mpiCompletedTasks_.pop();
   }
+
   return nextTask;
 }
 
@@ -1637,10 +1627,9 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  {
-    external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::READER };
-    return mpiCompletedTasks_.size();
-  }
+  std::lock_guard<std::mutex> external_ready_guard(g_external_ready_mutex);
+
+  return mpiCompletedTasks_.size();
 }
 
 //_____________________________________________________________________________
@@ -1669,7 +1658,7 @@ DetailedTasks::incrementDependencyGeneration()
 void
 DetailedTasks::initializeBatches()
 {
-  for (int i = 0; i < (int)batches_.size(); i++) {
+  for (int i = 0; i < static_cast<int>(batches_.size()); i++) {
     batches_[i]->reset();
   }
 }

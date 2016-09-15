@@ -1260,18 +1260,6 @@ UnifiedScheduler::runTasks( int thread_id )
 }
 
 
-//______________________________________________________________________
-//
-struct CompareDep {
-
-  bool operator()( DependencyBatch* a,
-                   DependencyBatch* b )
-  {
-    return a->m_message_tag < b->m_message_tag;
-  }
-};
-
-
 #ifdef HAVE_CUDA
 
 

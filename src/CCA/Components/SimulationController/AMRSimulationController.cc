@@ -144,6 +144,7 @@ AMRSimulationController::run()
   GridP currentGrid = gridSetup();
 
   d_scheduler->initialize( 1, 1 );
+
 #ifdef HAVE_CUDA
    GpuUtilities::assignPatchesToGpus(currentGrid);
 #endif

@@ -206,15 +206,9 @@ class UnifiedScheduler : public MPIScheduler  {
 
     cudaStream_t* getCudaStreamFromPool( int device );
 
-    void addCudaEvent( cudaEvent_t * event, int device );
-
     cudaError_t freeDeviceRequiresMem();
 
     cudaError_t freeComputesMem();
-
-    void freeCudaEvents();
-
-    void clearGpuDBMaps();
 
     void assignDevice( DetailedTask * task );
 

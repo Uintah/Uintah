@@ -22,45 +22,43 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
+#include <Core/Parallel/Parallel.h>
 
 #include <iostream>
 
-
 using namespace Uintah;
 
-ProcessorGroup::ProcessorGroup( const ProcessorGroup* parent,
-			                                MPI_Comm comm,
-			                                bool allmpi,
-			                                int rank,
-			                                int size,
-			                                int threads )
-  : d_parent(parent), d_rank(rank), d_size(size),  d_threads(threads),
-    d_comm(comm),  d_allmpi(allmpi)
-{
-}
+ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
+                              ,       MPI_Comm         comm
+                              ,       bool             allmpi
+                              ,       int              rank
+                              ,       int              size
+                              ,       int              threads
+                              )
+  : m_all_mpi(allmpi)
+  , m_rank(rank)
+  , m_size(size)
+  , m_threads(threads)
+  , m_comm(comm)
+  , m_parent_group(parent)
+{}
 
-ProcessorGroup::~ProcessorGroup()
+void ProcessorGroup::setGlobalComm(int num_comms) const
 {
-}
-
-void ProcessorGroup::setgComm( int nComm ) const
-{
-  if (d_threads <= 1 || !d_allmpi) {
+  if (m_threads <= 1 || !m_all_mpi) {
     return;
   }
 
-  int curr_size = d_gComms.size();
-  if (nComm <= curr_size) {
+  int curr_size = m_global_comms.size();
+  if (num_comms <= curr_size) {
     return;
   }
 
-  d_gComms.resize(nComm);
-  for (int i = curr_size; i < nComm; i++) {
-    if (Uintah::MPI::Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS) {
-      std::cerr << "Rank: " << d_rank << " - MPI Error in Uintah::MPI::Comm_dup\n";
+  m_global_comms.resize(num_comms);
+  for (int i = curr_size; i < num_comms; i++) {
+    if (Uintah::MPI::Comm_dup(m_comm, &m_global_comms[i]) != MPI_SUCCESS) {
+      std::cerr << "Rank: " << m_rank << " - MPI Error in Uintah::MPI::Comm_dup\n";
       Parallel::exitAll(1);
     }
   }
