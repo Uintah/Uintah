@@ -37,7 +37,6 @@
 #include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Time.h>
@@ -62,10 +61,8 @@ using namespace Uintah;
 
 namespace {
 
-struct recv_tag{};
-using  recv_monitor = Uintah::CrowdMonitor<recv_tag>;
-
-std::mutex g_lb_mutex;                // load balancer lock
+std::mutex g_lb_mutex{};                // load balancer lock
+std::mutex g_recv_mutex{};
 
 Dout g_dbg(          "MPIScheduler_DBG",        false );
 Dout g_send_timings( "SendTiming",              false );
@@ -76,6 +73,7 @@ double CurrentWaitTime = 0;
 
 }
 
+// these are used externally, keep them visible outside this unit
 Dout g_task_order( "TaskOrder", false );
 Dout g_task_dbg(   "TaskDBG",   false );
 Dout g_mpi_dbg(    "MPIDBG",    false );
@@ -523,9 +521,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
   std::vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
 
   // Receive any of the foreign requires
+  g_recv_mutex.lock();
   {
-    recv_monitor recv_lock { Uintah::CrowdMonitor<recv_tag>::WRITER };
-
     for (; sorted_iter != sorted_reqs.end(); sorted_iter++) {
       DependencyBatch* batch = *sorted_iter;
 
@@ -666,7 +663,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
     double drecv = Time::currentSeconds() - recvstart;
     mpi_info_[TotalRecv] += drecv;
 
-  }  // end recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER }
+  }
+  g_recv_mutex.unlock();
 
 }  // end postMPIRecvs()
 
@@ -688,9 +686,8 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   CommRequestPool::iterator comm_iter;
 
+  g_recv_mutex.lock();
   {
-    recv_monitor recv_lock { Uintah::CrowdMonitor<recv_tag>::WRITER };
-
     switch (test_type) {
 
       case TEST :
@@ -728,6 +725,7 @@ void MPIScheduler::processMPIRecvs( int test_type )
     CurrentWaitTime += Time::currentSeconds() - start;
 
   }
+  g_recv_mutex.unlock();
 
 }  // end processMPIRecvs()
 
@@ -830,7 +828,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   if (g_time_out) {
     emitTime("MPI send time", mpi_info_[TotalSendMPI]);
-    emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
+    emitTime("MPI Test time", mpi_info_[TotalTestMPI]);
     emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
     emitTime("MPI recv time", mpi_info_[TotalRecvMPI]);
     emitTime("MPI wait time", mpi_info_[TotalWaitMPI]);

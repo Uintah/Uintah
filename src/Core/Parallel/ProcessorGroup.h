@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
-#define CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
+#ifndef CORE_PARALLEL_PROCESSORGROUP_H
+#define CORE_PARALLEL_PROCESSORGROUP_H
 
 #include <Core/Parallel/UintahMPI.h>
 
@@ -33,87 +33,97 @@ namespace Uintah {
 
 /**************************************
 
-CLASS
-   ProcessorGroup
-   
-
-GENERAL INFORMATION
-
-   ProcessorGroup.h
-
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-
-KEYWORDS
-   Processor_Group
+ CLASS
+ ProcessorGroup
 
 
-DESCRIPTION
-  
+ GENERAL INFORMATION
 
-WARNING
-  
-****************************************/
+ ProcessorGroup.h
+
+ Steven G. Parker
+ Department of Computer Science
+ University of Utah
+
+ Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+
+
+ KEYWORDS
+ Processor_Group
+
+
+ DESCRIPTION
+
+
+ WARNING
+
+ ****************************************/
 
 class Parallel;
 
 class ProcessorGroup {
 
-  public:
+public:
 
-    ~ProcessorGroup();
+  ~ProcessorGroup(){};
 
-    int size() const { return d_size; }
+  int size() const
+  {
+    return m_size;
+  }
 
-    int myrank() const { return d_rank; }
+  int myrank() const
+  {
+    return m_rank;
+  }
 
-    MPI_Comm getComm() const
-    {
-      return d_comm;
+  MPI_Comm getComm() const
+  {
+    return m_comm;
+  }
+
+  MPI_Comm getGlobalComm( int comm_idx ) const
+  {
+    if (comm_idx == -1 || m_threads < 1) {
+      return m_comm;
+    } else {
+      return m_global_comms[comm_idx];
     }
+  }
 
-    MPI_Comm getgComm( int i ) const
-    {
-      if (d_threads < 1 || i == -1) {
-        return d_comm;
-      }
-      else {
-        return d_gComms[i];
-      }
-    }
+  void setGlobalComm( int num_comms ) const;
 
-    void setgComm( int i ) const;
 
-  private:
+private:
 
-    const ProcessorGroup* d_parent;
+  // can only be called from Parallel
+  ProcessorGroup( const ProcessorGroup * parent
+                ,       MPI_Comm         comm
+                ,       bool             allmpi
+                ,       int              rank
+                ,       int              size
+                ,       int              threads
+                );
 
-    friend class Parallel;
+  // eliminate copy, assignment and move
+  ProcessorGroup( const ProcessorGroup & )            = delete;
+  ProcessorGroup& operator=( const ProcessorGroup & ) = delete;
+  ProcessorGroup( ProcessorGroup && )                 = delete;
+  ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
-    ProcessorGroup( const ProcessorGroup* parent,
-                          MPI_Comm        comm,
-                          bool            allmpi,
-                          int             rank,
-                          int             size,
-                          int             threads );
+  bool m_all_mpi; // TODO: this should go away once the SIngleProc Scheduler/LB are removed - APH 09/15/16
+  int  m_rank;
+  int  m_size;
+  int  m_threads;
 
-    int                           d_rank;
-    int                           d_size;
-    int                           d_threads;
-    MPI_Comm                      d_comm;
-    mutable std::vector<MPI_Comm> d_gComms;
-    bool                          d_allmpi;
+  MPI_Comm                        m_comm;
+  mutable std::vector<MPI_Comm>   m_global_comms;
+  const ProcessorGroup          * m_parent_group;
 
-    // disable copy and assignment
-    ProcessorGroup(const ProcessorGroup&);
-    ProcessorGroup& operator=(const ProcessorGroup&);
+  friend class Parallel;
+
 };
 
-} // End namespace Uintah
+}  // namespace Uintah
 
-
-#endif // end CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
+#endif // end CORE_PARALLEL_PROCESSORGROUP_H

@@ -201,6 +201,17 @@ class UnifiedScheduler : public MPIScheduler  {
 
     bool allGPUVarsProcessingReady( DetailedTask * dtask );
 
+
+    void reclaimCudaStreamsIntoPool( DetailedTask * dtask );
+
+    void freeCudaStreamsFromPool();
+
+    cudaStream_t* getCudaStreamFromPool( int device );
+
+    cudaError_t freeDeviceRequiresMem();
+
+    cudaError_t freeComputesMem();
+
     void assignDevice( DetailedTask * task );
 
     struct GPUGridVariableInfo {

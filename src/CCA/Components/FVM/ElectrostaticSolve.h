@@ -23,8 +23,8 @@
  */
 
 
-#ifndef Uintah_CCA_Components_FVM_ElectorstaticSolve_h
-#define Uintah_CCA_Components_FVM_ElectorstaticSolve_h
+#ifndef UINTAH_CCA_COMPONENTS_FVM_ELECTROSTATICSOLVE_H
+#define UINTAH_CCA_COMPONENTS_FVM_ELECTROSTATICSOLVE_H
 
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Handle.h>
@@ -87,18 +87,46 @@ WARNING
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw);
-    void buildMatrixAndRhs(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw, DataWarehouse* new_dw,
-                     LevelP, Scheduler*);
 
+    void scheduleComputeConductivity(SchedulerP& sched, const LevelP& level,
+                                     const MaterialSet* fvm_matls);
+
+    void computeConductivity(const ProcessorGroup* pg,const PatchSubset* patches,
+                             const MaterialSubset* fvm_matls,DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
+
+    void scheduleComputeFCConductivity(SchedulerP& sched, const LevelP& level,
+                                       const MaterialSet* es_matl);
+
+    void computeFCConductivity(const ProcessorGroup* pg,const PatchSubset* patches,
+                               const MaterialSubset* es_matls,DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
+    void scheduleBuildMatrixAndRhs(SchedulerP& sched, const LevelP& level,
+                                   const MaterialSet* es_matls);
+
+    void buildMatrixAndRhs(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* es_matl,
+                           DataWarehouse* old_dw, DataWarehouse* new_dw,
+                           LevelP, Scheduler*);
+
+
+    void scheduleUpdateESPotential(SchedulerP& sched, const LevelP& level,
+                                   const MaterialSet* es_matl);
+
+    void updateESPotential(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw, DataWarehouse* new_dw,
+                           LevelP, Scheduler*);
 
     SimulationStateP d_shared_state;
     double d_delt;
-    FVMMaterial* d_fvmmat;
     SolverInterface* d_solver;
     SolverParameters* d_solver_parameters;
+    MaterialSet* d_es_matlset;
+    MaterialSubset* d_es_matl;
     
     ElectrostaticSolve(const ElectrostaticSolve&);
     ElectrostaticSolve& operator=(const ElectrostaticSolve&);

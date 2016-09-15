@@ -360,6 +360,7 @@
       <exponentialInitialize_1D  spec="OPTIONAL BOOLEAN"/>
       <exponentialInitialize_2D  spec="OPTIONAL BOOLEAN"/>
       <concentration             spec="OPTIONAL DOUBLE"/>
+      <conductivity              spec="OPTIONAL DOUBLE"/>
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
@@ -370,6 +371,7 @@
                                                 mpmarches, 
                                                 mpmf, mpmice, amrmpm, wasatch, reduce_uda,
                                                 electrostatic_solver,
+                                                esmpm,
                                                 advectslabs,
                                                 unifiedschedulertest,poissongpu1,poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,

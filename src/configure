@@ -40269,7 +40269,7 @@ if test "$BUILD_ARCHES" = "yes"; then
 fi
 
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
-  if test "$with_hypre" = ""; then
+  if test "$with_hypre" = NOT_SET; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&5
 $as_echo "$as_me: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&2;}
     with_hypre=yes
@@ -40294,7 +40294,7 @@ else
 $as_echo "$as_me: WARNING: Relying on a built-in version of Hypre" >&2;}
   else
 
-     if test "$with_hypre" != NOT_SET; then
+     if test "$with_hypre" != NOT_SET -a "$with_hypre" != "yes"; then
         _sci_lib="$with_hypre/lib"
         _sci_inc="$with_hypre/include"
         _sci_optional=specific
@@ -41218,7 +41218,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
         DEF_HYPRE="#define HAVE_HYPRE 1"
      fi
 
-     if test "$with_hypre" && test ! "$DEF_HYPRE"; then
+     if test "$with_hypre" != NOT_SET && test ! "$DEF_HYPRE"; then
         echo
         as_fn_error $? "One or more of the HYPRE components is missing." "$LINENO" 5
      fi

@@ -45,12 +45,13 @@ my $data = $simple->XMLin("$tstFile");
 #__________________________________
 # copy gnuplot script
 my $gpFile = $data->{gnuplot}[0]->{script}[0];
-chomp($gpFile);
 
-if($gpFile ne ""){                
+if( length $gpFile ){  
+  chomp($gpFile);              
   $gpFile    = $config_files_path."/".$gpFile;
   system("cp -f $gpFile .");
 }
+
 
 #__________________________________
 # determing the ups basename
@@ -70,8 +71,12 @@ for($i = 0; $i<=$#tests; $i++){
   my $test            =$tests[$i];
   $test_title[$i]     =$test->{Title}[0];          # test title
   $sus_cmd[$i]        =$test->{sus_cmd}[0];        # sus command
-  $postProc_cmd[$i]   =$test->{postProcess_cmd}[0];    # comparison utility command
   
+  if( length $test->{postProcess_cmd}[0] ){
+    $postProc_cmd[$i] =$test->{postProcess_cmd}[0];    # comparison utility command
+  }else{
+    $postProc_cmd[$i] = "";
+  }
   #print Dumper($test);         #debugging
 }
 $num_of_tests=$#tests;
@@ -79,7 +84,7 @@ $num_of_tests=$#tests;
 # make a symbolic link to the post processing command
 # Note Debian doesn't have the --skip-dot option
 for ($i=0;$i<=$num_of_tests;$i++){
-   if( $postProc_cmd[$i] ne ''){
+   if( length $postProc_cmd[$i] ){
     my @stripped_cmd = split(/ /,$postProc_cmd[$i]);  # remove command options
     my $cmd = `which --skip-dot $stripped_cmd[0] > /dev/null 2>&1`;
     system("ln -fs $cmd > /dev/null 2>&1");
@@ -227,6 +232,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
   $udaFilename  = $ups_basename."_$test_title[$i]".".uda";
   $test_output  = "out.".$test_title[$i];
 
+
   # change the uda filename in each ups file
   print "\n--------------------------------------------------\n";
   print "Now modifying $test_ups\n";
@@ -261,6 +267,10 @@ for ($i=0;$i<=$num_of_tests;$i++){
     }
   }
   
+  
+  #bulletproofing
+  system("xmlstarlet val --err $test_ups") == 0 ||  die("\nERROR: $upsFile, contains errors.\n");
+  
   #__________________________________
   print statsFile "Test Name :       "."$test_title[$i]"."\n";
   print statsFile "(ups) :         "."$test_ups"."\n";
@@ -281,7 +291,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
   
   #__________________________________
   # execute comparison
-  if($postProc_cmd[$i] ne ''){
+  if( length $postProc_cmd[$i] ){
     print "\nLaunching: analyze_results.pl $tstFile test $i\n";
     @args = ("analyze_results.pl","$tstFile", "$i");
     system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");

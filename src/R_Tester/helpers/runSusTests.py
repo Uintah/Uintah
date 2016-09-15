@@ -232,6 +232,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     do_debug        = 1
     do_opt          = 1
     do_gpu          = 0    # run test if gpu is supported
+    do_cuda         = 1    # test will run if this is a cuda build
     abs_tolerance = 1e-9   # defaults used in compare_uda
     rel_tolerance = 1e-6
     sus_options     = ""
@@ -261,6 +262,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
           do_debug = 0
         if flags[i] == "no_opt":
           do_opt = 0
+        if flags[i] == "no_cuda":
+          do_cuda = 0
         if flags[i] == "do_performance_test":
           do_restart         = 0
           do_debug           = 0
@@ -305,6 +308,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     if do_gpu == 1 and has_gpu == 0:
       print( "\nWARNING: skipping this test.  This machine is not configured to run GPU tests\n" )
+      continue
+
+    if has_gpu == 1 and do_cuda == 0:
+      print( "\nWARNING: skipping this test.\n" )
       continue
 
     if dbg_opt == "opt" :

@@ -20,7 +20,7 @@
      <CoalType   name="Eastern_Bituminous" />
     </Coal>
     
-      <ParticleTransportEquations>
+    <ParticleTransportEquations>
       <ParticlesPerCell>1</ParticlesPerCell>
       <ParticleDensity name="p.rho"/>
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
@@ -53,16 +53,16 @@
       </ParticleMomentum>      
     </ParticleTransportEquations>
     
-<!-- Set the initial condition expressions for particles -->
-   <BasicExpression type="PARTICLE">
-      <TaskList>initialization</TaskList>
-      <NameTag name="p.size"/>
-      <Constant>1e-4</Constant>
-    </BasicExpression>
-   <BasicExpression type="PARTICLE">
-      <TaskList>initialization</TaskList>
-      <NameTag name="p.T"/>
-      <Constant>300</Constant>
+    <!-- Set the initial condition expressions for particles -->
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.size"/>
+       <Constant>1e-4</Constant>
+     </BasicExpression>
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.T"/>
+       <Constant>500</Constant>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
@@ -128,7 +128,7 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="Temperature"/>
-      <GaussianFunction amplitude="700.0" deviation="2e-3" mean="0.0" baseline="500.0">
+      <GaussianFunction amplitude="700.0" deviation="2e-3" mean="0.0" baseline="800.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>
@@ -187,7 +187,7 @@
     </EnergyEquation>
     
     <SpeciesTransportEquations>
-      <CanteraInputFile>griReduced.cti</CanteraInputFile>
+      <CanteraInputFile>inputs/Wasatch/griReduced.xml</CanteraInputFile>
       <CanteraGroup>gri30</CanteraGroup>
       <DiffusiveFlux direction="X">
         <MixtureAveraged/>
@@ -202,7 +202,7 @@
   </Wasatch>
 
   <Time>
-    <maxTime>5e-2</maxTime>
+    <maxTime>5e-8</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1e-8</delt_min>
     <delt_max>1e-8</delt_max>
@@ -211,9 +211,9 @@
 
   <DataArchiver>
     <filebase>coal-cpd-cck-1D.uda</filebase>
-    <outputTimestepInterval>2000</outputTimestepInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="2.0e-4"/>
+    <checkpoint cycle="2" interval="2.5e-8"/>
     <compression>gzip</compression>
     <save label="H2"/>
     <save label="HO2"/>
@@ -251,10 +251,6 @@
     <save label="char_mass"/>
     <save label="Volatile_Mass"/>
     
-    <!-- ===================================================== -->
-<!-- Variables that must be saved or an exception is thown -->
-<!-- ===================================================== -->
-
 <!--     <save label="dev_char_production"/> -->
     
 <!--     KS vars -->

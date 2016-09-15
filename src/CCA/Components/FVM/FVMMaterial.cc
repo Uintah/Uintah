@@ -24,13 +24,63 @@
 
 
 #include <CCA/Components/FVM/FVMMaterial.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/GeometryPiece/FileGeometryPiece.h>
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+
+#include <list>
+#include <vector>
 
 using namespace Uintah;
 
-FVMMaterial::FVMMaterial()
+FVMMaterial::FVMMaterial(ProblemSpecP& ps, SimulationStateP& shared_state)
 {
+  std::list<GeometryObject::DataItem> geom_obj_data;
+  geom_obj_data.push_back(GeometryObject::DataItem("conductivity",GeometryObject::Double));
+
+  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");geom_obj_ps != 0;
+         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+
+    std::vector<GeometryPieceP> pieces;
+    GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+    GeometryPieceP mainpiece;
+    if(pieces.size() == 0){
+      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+    } else if(pieces.size() > 1){
+      mainpiece = scinew UnionGeometryPiece(pieces);
+    } else {
+      mainpiece = pieces[0];
+    }
+
+    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
+  }
 }
 
 FVMMaterial::~FVMMaterial()
 {
+  for (int i = 0; i< (int)d_geom_objs.size(); i++) {
+    delete d_geom_objs[i];
+  }
+}
+
+void FVMMaterial::initializeConductivity(CCVariable<double>& conductivity, const Patch* patch)
+{
+  conductivity.initialize(0.0);
+
+  for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
+      GeometryPieceP piece = d_geom_objs[obj]->getPiece();
+
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      Point center = patch->cellPosition(c);
+
+      if(piece->inside(center)){
+        conductivity[c] = d_geom_objs[obj]->getInitialData_double("conductivity");
+      }
+    }
+  }
 }

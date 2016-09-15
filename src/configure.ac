@@ -4390,7 +4390,7 @@ if test "$BUILD_ARCHES" = "yes"; then
 fi
 
 if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
-  if test "$with_hypre" = ""; then
+  if test "$with_hypre" = NOT_SET; then
     AC_MSG_WARN( [ Requiring Hypre due to Arches or Wasatch...] )
     with_hypre=yes
   fi
@@ -4412,7 +4412,7 @@ else
      AC_MSG_WARN(Relying on a built-in version of Hypre)
   else
 
-     if test "$with_hypre" != NOT_SET; then
+     if test "$with_hypre" != NOT_SET -a "$with_hypre" != "yes"; then
         _sci_lib="$with_hypre/lib"
         _sci_inc="$with_hypre/include"
         _sci_optional=specific
@@ -4450,7 +4450,7 @@ else
         DEF_HYPRE="#define HAVE_HYPRE 1"
      fi
 
-     if test "$with_hypre" && test ! "$DEF_HYPRE"; then
+     if test "$with_hypre" != NOT_SET && test ! "$DEF_HYPRE"; then
         echo
         AC_MSG_ERROR(One or more of the HYPRE components is missing.)
      fi

@@ -28,10 +28,10 @@
 #include <thread>
 
 
-// Macros used to eliminate excess spew on large parallel runs...
+// Macros used to eliminate excess output on large parallel runs
 //
-//   Note, make sure that Uintah::MPI::Init (or Uintah::MPI::Init_thread) is called
-//   before using isProc0_macro.
+//   Note, make sure that Uintah::MPI::Init (or Uintah::MPI::Init_thread)
+//   is called before using isProc0_macro.
 //
 #define isProc0_macro ( Uintah::Parallel::getMPIRank() == 0 &&           \
 			( ( Uintah::Parallel::getNumThreads() > 1 &&	\
@@ -52,7 +52,6 @@ class ProcessorGroup;
 CLASS
    Parallel
    
-   Short description...
 
 GENERAL INFORMATION
 
@@ -69,17 +68,16 @@ KEYWORDS
    Parallel
 
 DESCRIPTION
-   Long description...
-  
-WARNING
   
 ****************************************/
 
 class Parallel {
+
    public:
+
       enum Circumstances {
-          NormalShutdown,
-          Abort
+            NormalShutdown
+          , Abort
       };
 
       //////////
@@ -95,21 +93,20 @@ class Parallel {
       static void initializeManager( int& argc, char**& arg );
 
       //////////
-      // check to see whether initializeManager has been called
+      // Check to see whether initializeManager has been called
       static bool isInitialized();
       
       //////////
-      // Insert Documentation Here:
+      // Shuts down and finalizes the MPI runtime in a safe manner
       static void finalizeManager( Circumstances cirumstances = NormalShutdown );
 
       //////////
-      // Insert Documentation here:
+      // Returns the root context ProcessorGroup
       static ProcessorGroup* getRootProcessorGroup();
 
       //////////
-      // Returns the MPI Rank of this process.  If this is not running
-      // under MPI, than 0 is returned.  Rank value is set after call to
-      // initializeManager();
+      // Returns the MPI Rank of this process.  If this is not running under MPI,
+      // than 0 is returned.  Rank value is set after call to initializeManager();
       static int getMPIRank();
 
       //////////
@@ -121,16 +118,12 @@ class Parallel {
       static bool usingMPI();
       
       //////////
-      // Ignore mpi probe, and force this to use MPI
+      // Ignore MPI probe, and force this to use MPI
       static void forceMPI();
 
       //////////
-      // Ignore mpi probe, and force this to not use MPI
+      // Ignore MPI probe, and force this to not use MPI
       static void forceNoMPI();
-
-      //////////
-      // Tells Parallel that Threads are not to be used
-      static void noThreading();
 
       //////////
       // Returns true if this process is to use an accelerator or co-processor (e.g. GPU, MIC, etc), false otherwise
@@ -145,27 +138,40 @@ class Parallel {
       // allowed to use to compute its tasks.  
       static int getNumThreads();
 
+      //////////
+      // Returns the ID of the main thread, via std::this_thread::get_id()
       static std::thread::id getMainThreadID();
 
+      //////////
+      // Sets the number of task runner threads to the value specified
       static void setNumThreads( int num );
       
-      static void exitAll(int code);
+      //////////
+      // Passes the specified exit code to std::exit()
+      static void exitAll( int code );
+
 
    private:
-      Parallel();
-      Parallel( const Parallel& );
-      ~Parallel();
-      Parallel& operator=( const Parallel& );
 
-      static int               numThreads_;
-      static std::thread::id   m_main_thread_id;
-      static bool              determinedIfUsingMPI_;
-      static bool              initialized_;
-      static bool              usingMPI_;
-      static bool              usingDevice_;
-      static int               worldRank_;
-      static int               worldSize_;
-      static ProcessorGroup*   rootContext_;
+
+      // eliminate public construction/destruction, copy, assignment and move
+      Parallel();
+     ~Parallel();
+
+      Parallel( const Parallel & )            = delete;
+      Parallel& operator=( const Parallel & ) = delete;
+      Parallel( Parallel && )                 = delete;
+      Parallel& operator=( Parallel && )      = delete;
+
+      static int               s_num_threads;
+      static std::thread::id   s_main_thread_id;
+      static bool              s_determined_if_using_mpi;
+      static bool              s_initialized;
+      static bool              s_using_mpi;
+      static bool              s_using_device;
+      static int               s_world_rank;
+      static int               s_world_size;
+      static ProcessorGroup*   s_root_context;
 
 };
 

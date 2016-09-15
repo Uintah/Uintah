@@ -2,7 +2,7 @@
 September 07, 2016
 -------------------------
 
--r55711
+commit #: 55711
 
 * Merge of trunk with /branches/incite_dev
     (svn merge -r55676:55710)
@@ -16,10 +16,24 @@ September 07, 2016
 September 08, 2016
 -------------------------
 
--r55723
+commit #: 55723
 
 * Merge of trunk with /branches/incite_dev
     (svn merge -r55710:55722)
+    
+* Generate new configure script
+
+
+
+
+-------------------------------------------------------------------------------
+September 15, 2016
+-------------------------
+
+commit #: 55750
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55722:55749)
     
 * Generate new configure script
 

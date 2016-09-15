@@ -115,3 +115,18 @@ WASATCH_TASKS       SCI_DEBUG   Outputs Wasatch task diagnostics. See TaskInterf
 WASATCH_FIELDS      SCI_DEBUG   Outputs information on Wasatch registered fields. See TaskInterface.cc
 WASATCH_REDUCTIONS  SCI_DEBUG   Information about Wasatch's reduction tasks and related expressions. See ReductionBase.cc
 WASATCH_QMOM_DBG    SCI_DEBUG   Outputs full matrices that are constructed during the product difference algorithm, and warning for moment reduction
+
+
+
+
+Regression testing:
+__________________________________
+GOLD_STANDARDS        N/A       Path to the gold standards, this overrides the default path.
+RT_CHECKPOINTS        N/A       Path to the checkpoints directory that are needed for tests that restart from checkpoints.
+MALLOC_STATS          N/A       file that is used for sci malloc output
+MALLOC_STRICT         N/A       "set" will enable the sci malloc tests on all.
+ 
+
+
+
+

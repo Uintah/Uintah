@@ -22,8 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#include<CCA/Components/FVM/FVMLabel.h>
-#include<Core/Grid/Variables/CCVariable.h>
+#include <CCA/Components/FVM/FVMLabel.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 
 using namespace Uintah;
 
@@ -31,11 +34,21 @@ FVMLabel::FVMLabel()
 {
 
   ccESPotential       = VarLabel::create("cc.esPotential",
-	                    CCVariable<double>::getTypeDescription());
+	                      CCVariable<double>::getTypeDescription());
   ccESPotentialMatrix = VarLabel::create("cc.esPotentialMatrix",
-	                    CCVariable<Stencil7>::getTypeDescription());
+	                      CCVariable<Stencil7>::getTypeDescription());
   ccRHS_ESPotential   = VarLabel::create("cc.rhsEsPotential",
-	                    CCVariable<double>::getTypeDescription());
+	                      CCVariable<double>::getTypeDescription());
+  ccConductivity      = VarLabel::create("cc.Conductivity",
+                        CCVariable<double>::getTypeDescription());
+  ccGridConductivity  = VarLabel::create("cc.GridConductivity",
+                          CCVariable<double>::getTypeDescription());
+  fcxConductivity     = VarLabel::create("fcx.Conductivity",
+                        SFCXVariable<double>::getTypeDescription());
+  fcyConductivity     = VarLabel::create("fcy.Conductivity",
+                        SFCYVariable<double>::getTypeDescription());
+  fczConductivity     = VarLabel::create("fcz.Conductivity",
+                        SFCZVariable<double>::getTypeDescription());
 }
 
 FVMLabel::~FVMLabel()
@@ -43,5 +56,10 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(ccESPotential);
   VarLabel::destroy(ccESPotentialMatrix);
   VarLabel::destroy(ccRHS_ESPotential);
+  VarLabel::destroy(ccConductivity);
+  VarLabel::destroy(ccGridConductivity);
+  VarLabel::destroy(fcxConductivity);
+  VarLabel::destroy(fcyConductivity);
+  VarLabel::destroy(fczConductivity);
 }
 

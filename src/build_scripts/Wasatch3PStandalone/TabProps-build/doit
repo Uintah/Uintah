@@ -4,7 +4,7 @@ THELIB=TabProps
 
 source ../HelperBuildScripts/setupEnv.sh
 
-rm -f CMakeCache.txt
+rm -rf CMakeCache.txt CMakeFiles *.cmake
 rm -rf ${INSTALL_HERE}/*
 
 if test "$BUILD_CUDA" = "yes"; then

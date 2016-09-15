@@ -41,9 +41,45 @@ FVMBoundCond::~FVMBoundCond()
 
 }
 
-void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
-                                           CCVariable<Stencil7>& A, CCVariable<double>& rhs)
+void FVMBoundCond::setConductivityBC(const Patch* patch, int dwi, CCVariable<double>& conductivity)
 {
+  std::vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  for(std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    Patch::FaceType face = *itr;
+    IntVector oneCell = patch->faceDirection(face);
+    std::string bc_kind  = "NotSet";
+    int nCells = 0;
+
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
+
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      Iterator bound_ptr;
+      bool foundIterator =  getIteratorBCValueBCKind<double>( patch, face, child,
+                                "Conductivity", dwi, bc_value, bound_ptr,bc_kind);
+
+      if(foundIterator){
+        if(bc_kind == "Dirichlet"){
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            conductivity[*bound_ptr] = bc_value;
+          }
+          nCells += bound_ptr.size();
+        }
+      } // end foundIterator if statment
+    } // end child loop
+  } // end face loop
+}
+
+void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
+                                           CCVariable<Stencil7>& A, CCVariable<double>& rhs,
+                                           constSFCXVariable<double>& fcx_conductivity,
+                                           constSFCYVariable<double>& fcy_conductivity,
+                                           constSFCZVariable<double>& fcz_conductivity)
+{
+  IntVector xoffset(1,0,0);
+  IntVector yoffset(0,1,0);
+  IntVector zoffset(0,0,1);
   Vector dx = patch->dCell();
 
   double a_n = dx.x() * dx.z(); double a_s = dx.x() * dx.z();
@@ -54,7 +90,6 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
   double n = a_n / dx.y(); double s = a_s / dx.y();
   double e = a_e / dx.x(); double w = a_w / dx.x();
   double t = a_t / dx.z(); double b = a_b / dx.z();
-  double center = n + s + e + w + t + b;
 
   std::vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
@@ -74,58 +109,85 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
         switch (face) {
           case Patch::xplus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector c(*bound_ptr);
+              IntVector c(*bound_ptr - xoffset);
               A[c].e = 0;
-              rhs[c] -= bc_value*e;
+              rhs[c] -= bc_value * fcx_conductivity[c + xoffset] * e;
             }
             nCells += bound_ptr.size();
             break;
           case Patch::xminus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector c(*bound_ptr);
+              IntVector c(*bound_ptr + xoffset);
               A[c].w = 0;
-              rhs[c] -= bc_value*w;
-             }
-             nCells += bound_ptr.size();
-             break;
+              rhs[c] -= bc_value * fcx_conductivity[c] * w;
+            }
+            nCells += bound_ptr.size();
+            break;
           case Patch::yplus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector c(*bound_ptr);
+              IntVector c(*bound_ptr - yoffset);
               A[c].n = 0;
-              rhs[c] -= bc_value*n;
+              rhs[c] -= bc_value * fcy_conductivity[c + yoffset] * n;
             }
             nCells += bound_ptr.size();
             break;
           case Patch::yminus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector c(*bound_ptr);
+              IntVector c(*bound_ptr + yoffset);
               A[c].s = 0;
-              rhs[c] -= bc_value*s;
-             }
-             nCells += bound_ptr.size();
-             break;
+              rhs[c] -= bc_value * fcx_conductivity[c] * s;
+            }
+            nCells += bound_ptr.size();
+            break;
           case Patch::zplus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector c(*bound_ptr);
+              IntVector c(*bound_ptr - zoffset);
               A[c].t = 0;
-              rhs[c] -= bc_value*t;
+              rhs[c] -= bc_value * fcz_conductivity[c + zoffset] * t;
             }
             nCells += bound_ptr.size();
             break;
           case Patch::zminus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector c(*bound_ptr);
+              IntVector c(*bound_ptr + zoffset);
               A[c].b = 0;
-              rhs[c] -= bc_value*b;
+              rhs[c] -= bc_value * fcz_conductivity[c] * b;
             }
             nCells += bound_ptr.size();
-            break;
-          case Patch::numFaces:
-            break;
-          case Patch::invalidFace:
             break;
         } // end switch statment
       } // end foundIterator if statment
     } // end child loop
   } // end face loop
 }
+
+
+void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi, CCVariable<double>& es_potential)
+{
+  std::vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  for(std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    Patch::FaceType face = *itr;
+    IntVector oneCell = patch->faceDirection(face);
+    std::string bc_kind  = "NotSet";
+    int nCells = 0;
+
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
+
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      Iterator bound_ptr;
+      bool foundIterator = getIteratorBCValueBCKind<double>( patch, face, child,
+                                  "Voltage", dwi, bc_value, bound_ptr,bc_kind);
+      if(foundIterator){
+        if(bc_kind == "Dirichlet"){
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            es_potential[*bound_ptr] = bc_value;
+          }
+          nCells += bound_ptr.size();
+        } // end bc_kind if statement
+      } // end foundIterator if statement
+    } // end child loop
+  } // end face loop
+}
+

@@ -110,6 +110,8 @@ public:
   //SimulationStateP d_sharedState;
 
 protected:
+  friend class ESMPM;
+
   enum coarsenFlag{
     coarsenData,
     zeroData,
