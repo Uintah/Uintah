@@ -28,8 +28,11 @@
 #include <CCA/Components/FVM/FVMLabel.h>
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
 #include <CCA/Components/MPM/AMRMPM.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationState.h>
@@ -44,23 +47,34 @@ namespace Uintah {
       ESMPM(const ProcessorGroup* myworld);
       ~ESMPM();
 
-      virtual void problemSetup(const ProblemSpecP& params,
+      virtual void problemSetup(const ProblemSpecP& prob_spec,
                                 const ProblemSpecP& restart_prob_spec,
                                 GridP& grid, SimulationStateP& state);
 
-      virtual void scheduleInitialize(const LevelP& level, SchedulerP&);
+      virtual void outputProblemSpec(ProblemSpecP& prob_spec);
 
-      virtual void scheduleRestartInitialize(const LevelP& level, SchedulerP&);
+      virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched);
 
-      virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
+      virtual void scheduleRestartInitialize(const LevelP& level, SchedulerP& sched);
 
-      virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&);
+      virtual void restartInitialize();
+
+      virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched);
+
+      virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP& sched);
+
+      virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched);
 
     private:
+      SimulationStateP d_shared_state;
+      Output* d_data_archiver;
       AMRMPM* d_amrmpm;
       ElectrostaticSolve* d_esfvm;
       MPMLabel* d_mpm_lb;
       FVMLabel* d_fvm_lb;
+      MPMFlags* d_mpm_flags;
+
+      SwitchingCriteria* d_switch_criteria;
   };
 }
 #endif
