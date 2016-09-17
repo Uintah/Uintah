@@ -447,7 +447,7 @@ public:
   __host__ std::string getDisplayableStatusCodes(atomicDataStatus& status);
   __host__ void getStatusFlagsForVariableOnGPU(bool& correctSize, bool& allocating, bool& allocated, bool& copyingIn,
                                                bool& validOnGPU, bool& gatheringGhostCells, bool& validWithGhostCellsOnGPU,
-                                               bool& deallocating, bool formingSuperPatch, bool& superPatch,
+                                               bool& deallocating, bool& formingSuperPatch, bool& superPatch,
                                                char const* label, const int patchID, const int matlIndx, const int levelIndx,
                                                const int3& offset, const int3& size);
 

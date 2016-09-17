@@ -2438,8 +2438,8 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           const TypeDescription::Type type = type_description->getType();
           const TypeDescription::Type subtype = type_description->getSubType()->getType();
           const VarLabel* label = it->second.m_dep->m_var;
-          char label_ctsr[80];
-          strcpy (label_ctsr, it->second.m_dep->m_var->getName().c_str());
+          char label_cstr[80];
+          strcpy (label_cstr, it->second.m_dep->m_var->getName().c_str());
           const Patch* patch = it->second.m_patchPointer;
           const Level* level = patch->getLevel();
           const int patchID = it->first.m_patchID;
@@ -2456,7 +2456,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           switch (type) {
             case TypeDescription::PerPatch : {
               GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(subtype);
-              gpudw->allocateAndPut(*patchVar, label_ctsr, patchID, matlIndx, levelID, elementDataSize);
+              gpudw->allocateAndPut(*patchVar, label_cstr, patchID, matlIndx, levelID, elementDataSize);
               device_ptr = patchVar->getVoidPointer();
               delete patchVar;
               break;
@@ -2464,7 +2464,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
             case TypeDescription::ReductionVariable : {
 
               GPUReductionVariableBase* reductionVar = OnDemandDataWarehouse::createGPUReductionVariable(subtype);
-              gpudw->allocateAndPut(*reductionVar, label_ctsr, patchID, matlIndx, levelID, elementDataSize);
+              gpudw->allocateAndPut(*reductionVar, label_cstr, patchID, matlIndx, levelID, elementDataSize);
               device_ptr = reductionVar->getVoidPointer();
               delete reductionVar;
               break;
@@ -2477,19 +2477,73 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
               GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(subtype);
 
               if (!uses_SHRT_MAX) {
-                gpudw->allocateAndPut(*device_var, label_ctsr, patchID, matlIndx, levelID, staging,
+                gpudw->allocateAndPut(*device_var, label_cstr, patchID, matlIndx, levelID, staging,
                                       make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()),
                                       elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
                                       it->second.m_numGhostCells);
               } else {
                 //Get the level extents
 
+                //Since the ghost cells are the entire domain, treat it as one giant superpatch.
+
+                //it's not listed as a super patch yet, but because of the global domain, we need to treat it as one.
+                Patch::selectType neighbors;
+
+                level->selectPatches(low, high, neighbors);
+                //mark the lowest patch as being the superpatch
+                const Patch* firstPatchInSuperPatch = nullptr;
+                if (neighbors.size() == 0) {
+                  //this must be a one patch simulation, there are no neighbors.
+                  firstPatchInSuperPatch = patch;
+                } else {
+                  firstPatchInSuperPatch = neighbors[0]->getRealPatch();
+                }
+                thisThreadHandlesSuperPatchWork = gpudw->compareAndSwapFormASuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
+
                 //TODO, give it an offset so it could be requested as a patch or as a level.  Right now they all get the same low/high.
-                //TODO, verify high and low
-                gpudw->allocateAndPut(*device_var, label_ctsr, firstPatchInSuperPatch->getID(), matlIndx, levelID, staging,
+                gpudw->allocateAndPut(*device_var, label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID, staging,
                                         make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()),
                                         elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
                                         it->second.m_numGhostCells);
+
+                //At this point the patch has been marked as a superpatch and space has been allocated for the superpatch.
+
+                device_ptr = device_var->getVoidPointer();
+
+                if (thisThreadHandlesSuperPatchWork) {
+
+
+                  //This thread turned the lowest ID'd patch in the region into a superpatch.  Go through *neighbor* patches
+                  //in the superpatch region and flag them as being a superpatch as well (the copySuperPatchInfo call below
+                  //can also flag it as a superpatch.
+                  for( int i = 0; i < neighbors.size(); i++) {
+                    if (neighbors[i]->getRealPatch() != firstPatchInSuperPatch) {  //This if statement is because there is no need to merge itself
+
+
+                      //These neighbor patches may not have yet been handled by a prior task.  So go ahead and make sure they show up in the database
+                      gpudw->putUnallocatedIfNotExists(label_cstr, neighbors[i]->getRealPatch()->getID(), matlIndx, levelID,
+                                                       false, make_int3(0,0,0), make_int3(0,0,0));
+
+                      //TODO: Ensure these variables weren't yet allocated, in use, being copied in, etc. At the time of
+                      //writing, this scenario didn't exist.  I think it's best solved through an "I'm using this" reference counter
+                      //TODO: Give offsets as well?
+                      //Shallow copy this neighbor patch into the superaptch
+                      gpudw->copySuperPatchInfo(label_cstr, firstPatchInSuperPatch->getID(), neighbors[i]->getRealPatch()->getID(), matlIndx, levelID);
+
+                    }
+                  }
+                  //All patches have been shared into the superpatch.  Update the atomic status. 
+                  gpudw->compareAndSwapSetSuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
+                }
+
+
+                //Shallow copy this patch into the superpatch, doing it here so we can check on race conditions.  
+                if (firstPatchInSuperPatch->getID() != patchID) { //This if statement is to ensure it doesn't copy itself
+                  gpudw->copySuperPatchInfo(label_cstr, firstPatchInSuperPatch->getID(), patchID, matlIndx, levelID);
+                }
+                
+                //spin and wait until it's done.
+                while (!gpudw->isSuperPatchGPU(label_cstr, patchID, matlIndx, levelID));
 
               }
               device_ptr = device_var->getVoidPointer();
@@ -2520,7 +2574,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                 {
                   gpu_stats << myRankThread()
                             << " prepareDeviceVars() - Checking if we should copy"
-                            << " data for variable " << label_ctsr
+                            << " data for variable " << label_cstr
                             << " patch " << patchID
                             << " material " << matlIndx
                             << " level " << levelID
@@ -2539,10 +2593,10 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
               //the patch vars were shallow copied so they all patches in the superpatch refer to the same atomic status.
               bool performCopy = false;
               if (!staging) {
-                performCopy = gpudw->compareAndSwapCopyingIntoGPU(label_ctsr, patchID, matlIndx, levelID);
+                performCopy = gpudw->compareAndSwapCopyingIntoGPU(label_cstr, patchID, matlIndx, levelID);
               }
               else {
-                performCopy = gpudw->compareAndSwapCopyingIntoGPUStaging(label_ctsr, patchID, matlIndx, levelID,
+                performCopy = gpudw->compareAndSwapCopyingIntoGPUStaging(label_cstr, patchID, matlIndx, levelID,
                                                                      make_int3(low.x(), low.y(), low.z()),
                                                                      make_int3(size.x(), size.y(), size.z()));
               }
@@ -2631,7 +2685,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   default : {
                     cerrLock.lock();
                     {
-                      std::cerr << "Variable " << label_ctsr
+                      std::cerr << "Variable " << label_cstr
                                 << " is of a type that is not supported on GPUs yet."
                                 << std::endl;
                     }
@@ -2669,7 +2723,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
                   if (it->second.m_varMemSize == 0) {
                     printf("ERROR: For variable %s patch %d material %d level %d staging %s attempting to copy zero bytes to the GPU.\n",
-                        label_ctsr, patchID, matlIndx, levelID, staging ? "true" : "false" );
+                        label_cstr, patchID, matlIndx, levelID, staging ? "true" : "false" );
                     SCI_THROW(InternalError("Attempting to copy zero bytes to the GPU.  That shouldn't happen.", __FILE__, __LINE__));
                   }
 

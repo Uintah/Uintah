@@ -3208,7 +3208,7 @@ GPUDataWarehouse::setValidWithGhostsOnGPU(char const* label, int patchID, int ma
 // returns true if successful if marking a variable as a superpatch.  False otherwise.
 // Can only turn an unallocated variable into a superpatch.
 __host__ bool
-GPUDataWarehouse::compareAndSwapFormASuperPatch(char const* label, int patchID, int matlIndx, int levelIndx)
+GPUDataWarehouse::compareAndSwapFormASuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx)
 {
 
   bool compareAndSwapSucceeded = false;
@@ -3221,7 +3221,7 @@ GPUDataWarehouse::compareAndSwapFormASuperPatch(char const* label, int patchID, 
     status = &(varPointers->at(lpml).var->atomicStatusInGpuMemory);
   } else {
     varLock->unlock();
-    printf("ERROR:\nGPUDataWarehouse::compareAndSwapFormASuperPatch( )  Variable %s patch %d material %d levelIndx %d not found.\n", label, patchID, matlIndx, levelIndx);
+    printf("ERROR:\nGPUDataWarehouse::compareAndSwapFormASuperPatchGPU( )  Variable %s patch %d material %d levelIndx %d not found.\n", label, patchID, matlIndx, levelIndx);
     exit(-1);
     return false;
   }
@@ -3234,7 +3234,7 @@ GPUDataWarehouse::compareAndSwapFormASuperPatch(char const* label, int patchID, 
        cerrLock.lock();
        {
          gpu_stats << UnifiedScheduler::myRankThread()
-           << " GPUDataWarehouse::compareAndSwapFormASuperPatch() - "
+           << " GPUDataWarehouse::compareAndSwapFormASuperPatchGPU() - "
            << " Attempting to set a superpatch flag for label " << label
            << " patch " << patchID
            << " matl " << matlIndx
@@ -3261,7 +3261,7 @@ GPUDataWarehouse::compareAndSwapFormASuperPatch(char const* label, int patchID, 
       //At the time of implementation this scenario shouldn't ever happen.  If so it means
       //Someone is requesting to take a variable already in memory that's not a superpatch
       //and turn it into a superpatch.  It would require some kind of special deep copy mechanism
-      printf("ERROR:\nGPUDataWarehouse::compareAndSwapFormASuperPatch( )  Variable %s cannot be turned into a superpatch, it's in use already with status %s.\n", label, getDisplayableStatusCodes(oldVarStatus).c_str());
+      printf("ERROR:\nGPUDataWarehouse::compareAndSwapFormASuperPatchGPU( )  Variable %s cannot be turned into a superpatch, it's in use already with status %s.\n", label, getDisplayableStatusCodes(oldVarStatus).c_str());
       exit(-1);
       return false;
     } else {
@@ -3275,7 +3275,7 @@ GPUDataWarehouse::compareAndSwapFormASuperPatch(char const* label, int patchID, 
      cerrLock.lock();
      {
        gpu_stats << UnifiedScheduler::myRankThread()
-         << " GPUDataWarehouse::compareAndSwapFormASuperPatch() - "
+         << " GPUDataWarehouse::compareAndSwapFormASuperPatchGPU() - "
          << " Success for label " << label
          << " patch " << patchID
          << " matl " << matlIndx
@@ -3293,7 +3293,7 @@ GPUDataWarehouse::compareAndSwapFormASuperPatch(char const* label, int patchID, 
 // Sets the allocated flag on a variables atomicDataStatus
 // This is called after a forming a superpatch process completes.  *Only* the thread that got to set FORMING_SUPERPATCH can
 // set SUPERPATCH.  Further, no other thread should modify the atomic status 
-//compareAndSwapFormASuperPatch() should immediately call this.
+//compareAndSwapFormASuperPatchGPU() should immediately call this.
 __host__ bool
 GPUDataWarehouse::compareAndSwapSetSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx)
 {
@@ -3314,14 +3314,15 @@ GPUDataWarehouse::compareAndSwapSetSuperPatchGPU(char const* label, int patchID,
   }
   varLock->unlock();
 
-
+  const atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
   if ((oldVarStatus & FORMING_SUPERPATCH) == 0) {
     //A sanity check
     printf("ERROR:\nGPUDataWarehouse::compareAndSwapSetSuperPatchGPU( )  Can't set a superpatch status if it wasn't previously marked as forming a superpatch.\n");
     exit(-1);
   } else {
     //Attempt to claim forming it into a superpatch.  
-    atomicDataStatus newVarStatus & ~FORMING_SUPERPATCH;
+    atomicDataStatus newVarStatus = oldVarStatus;
+    newVarStatus & ~FORMING_SUPERPATCH;
     newVarStatus = newVarStatus | SUPERPATCH;
 
     //If we succeeded in our attempt to claim to deallocate, this returns true.
@@ -3341,10 +3342,11 @@ GPUDataWarehouse::compareAndSwapSetSuperPatchGPU(char const* label, int patchID,
 __host__ bool
 GPUDataWarehouse::isSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx)
 {
+  bool retVal = false;
   varLock->lock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
   if (varPointers->find(lpml) != varPointers->end()) {
-    bool retVal = ((__sync_fetch_and_or(&(varPointers->at(lpml).var->atomicStatusInGpuMemory), 0) & SUPERPATCH) == SUPERPATCH);
+    retVal = ((__sync_fetch_and_or(&(varPointers->at(lpml).var->atomicStatusInGpuMemory), 0) & SUPERPATCH) == SUPERPATCH);
   }
   varLock->unlock();
   return retVal;
