@@ -177,6 +177,13 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void initiateH2DCopies( DetailedTask * dtask );
 
+    void turnIntoASuperPatch(GPUDataWarehouse* const       gpudw, 
+                             const Level* const            level, 
+                             const VarLabel* const         label, 
+                             const Patch * const           patch, 
+                             const int                     matlIndx, 
+                             const int                     levelID ); 
+
     void prepareDeviceVars( DetailedTask * dtask );
 
     void prepareTaskVarsIntoTaskDW( DetailedTask * dtask );

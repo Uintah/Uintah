@@ -3322,7 +3322,7 @@ GPUDataWarehouse::compareAndSwapSetSuperPatchGPU(char const* label, int patchID,
   } else {
     //Attempt to claim forming it into a superpatch.  
     atomicDataStatus newVarStatus = oldVarStatus;
-    newVarStatus & ~FORMING_SUPERPATCH;
+    newVarStatus = newVarStatus & ~FORMING_SUPERPATCH;
     newVarStatus = newVarStatus | SUPERPATCH;
 
     //If we succeeded in our attempt to claim to deallocate, this returns true.

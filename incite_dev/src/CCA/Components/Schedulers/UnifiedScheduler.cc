@@ -1571,7 +1571,12 @@ UnifiedScheduler::gpuInitialize( bool reset )
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::turnIntoASuperPatch(const Patch * patch, const VarLabel* const label, const int matlIndx, const int levelID ) {
+void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw, 
+                                           const Level* const level, 
+                                           const VarLabel* const label, 
+                                           const Patch * const patch, 
+                                           const int matlIndx, 
+                                           const int levelID ) {
   //Handle superpatch stuff
   //This was originally designed for the use case of turning an entire level into a variable.  
   //We need to set up the equivalent of a super patch.
@@ -1604,8 +1609,8 @@ void UnifiedScheduler::turnIntoASuperPatch(const Patch * patch, const VarLabel* 
   //shouldn't be automatically deleted, but only available for removal if the memory space hits capacity.
 
   bool thisThreadHandlesSuperPatchWork = false;
-  const string label_ctsr[80];
-  strcpy (label_ctsr, it->second.m_dep->m_var->getName().c_str());
+  char label_cstr[80];
+  strcpy (label_cstr, label->getName().c_str());
 
   Patch::selectType neighbors;
   IntVector low, high;
@@ -1622,9 +1627,9 @@ void UnifiedScheduler::turnIntoASuperPatch(const Patch * patch, const VarLabel* 
   }
   //The firstPatchInSuperPatch may not have yet been handled by a prior task  (such as it being a patch
   //assigned to a different node).  So make an entry if needed.
-  gpudw->putUnallocatedIfNotExists(label_ctsr, firstPatchInSuperPatch->getID(), matlIndx, levelID,
+  gpudw->putUnallocatedIfNotExists(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID,
                                                          false, make_int3(0,0,0), make_int3(0,0,0));
-  thisThreadHandlesSuperPatchWork = gpudw->compareAndSwapFormASuperPatchGPU(label_ctsr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
+  thisThreadHandlesSuperPatchWork = gpudw->compareAndSwapFormASuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
 
   //At this point the patch has been marked as a superpatch.
 
@@ -1637,7 +1642,7 @@ void UnifiedScheduler::turnIntoASuperPatch(const Patch * patch, const VarLabel* 
       if (neighbors[i]->getRealPatch() != firstPatchInSuperPatch) {  //This if statement is because there is no need to merge itself
 
         //These neighbor patches may not have yet been handled by a prior task.  So go ahead and make sure they show up in the database
-        gpudw->putUnallocatedIfNotExists(label_ctsr, neighbors[i]->getRealPatch()->getID(), matlIndx, levelID,
+        gpudw->putUnallocatedIfNotExists(label_cstr, neighbors[i]->getRealPatch()->getID(), matlIndx, levelID,
                                          false, make_int3(0,0,0), make_int3(0,0,0));
 
         //TODO: Ensure these variables weren't yet allocated, in use, being copied in, etc. At the time of
@@ -1647,15 +1652,15 @@ void UnifiedScheduler::turnIntoASuperPatch(const Patch * patch, const VarLabel* 
         //them together here
 
         //Shallow copy this neighbor patch into the superaptch
-        gpudw->copySuperPatchInfo(label_ctsr, firstPatchInSuperPatch->getID(), neighbors[i]->getRealPatch()->getID(), matlIndx, levelID);
+        gpudw->copySuperPatchInfo(label_cstr, firstPatchInSuperPatch->getID(), neighbors[i]->getRealPatch()->getID(), matlIndx, levelID);
 
       }
     }
-    gpudw->testAndSetSetSuperPatchGPU(label_ctsr, firstPatchInSuperPatch->getID(), neighbors[i]->getRealPatch()->getID(), matlIndx, levelID);
+    gpudw->compareAndSwapSetSuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
 
   } else {
      //spin and wait until it's done.
-     while (!isSuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID));
+     while (!gpudw->isSuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID));
   }
 
 }
@@ -1833,7 +1838,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
       if (curDependency->m_dep_type == Task::Requires) {
 
         //Turn this into a superpatch if not already done so:
-
+        turnIntoASuperPatch(gpudw, level, curDependency->m_var, patch, matlID, levelID);
 
         // For any variable, only ONE task should manage all ghost cells for it.
         // It is a giant mess to try and have two tasks simultaneously managing ghost cells for a single var.
@@ -2482,68 +2487,12 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                                       elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
                                       it->second.m_numGhostCells);
               } else {
-                //Get the level extents
-
-                //Since the ghost cells are the entire domain, treat it as one giant superpatch.
-
-                //it's not listed as a super patch yet, but because of the global domain, we need to treat it as one.
-                Patch::selectType neighbors;
-
-                level->selectPatches(low, high, neighbors);
-                //mark the lowest patch as being the superpatch
-                const Patch* firstPatchInSuperPatch = nullptr;
-                if (neighbors.size() == 0) {
-                  //this must be a one patch simulation, there are no neighbors.
-                  firstPatchInSuperPatch = patch;
-                } else {
-                  firstPatchInSuperPatch = neighbors[0]->getRealPatch();
-                }
-                thisThreadHandlesSuperPatchWork = gpudw->compareAndSwapFormASuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
 
                 //TODO, give it an offset so it could be requested as a patch or as a level.  Right now they all get the same low/high.
-                gpudw->allocateAndPut(*device_var, label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID, staging,
+                gpudw->allocateAndPut(*device_var, label_cstr, patchID, matlIndx, levelID, staging,
                                         make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()),
                                         elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
                                         it->second.m_numGhostCells);
-
-                //At this point the patch has been marked as a superpatch and space has been allocated for the superpatch.
-
-                device_ptr = device_var->getVoidPointer();
-
-                if (thisThreadHandlesSuperPatchWork) {
-
-
-                  //This thread turned the lowest ID'd patch in the region into a superpatch.  Go through *neighbor* patches
-                  //in the superpatch region and flag them as being a superpatch as well (the copySuperPatchInfo call below
-                  //can also flag it as a superpatch.
-                  for( int i = 0; i < neighbors.size(); i++) {
-                    if (neighbors[i]->getRealPatch() != firstPatchInSuperPatch) {  //This if statement is because there is no need to merge itself
-
-
-                      //These neighbor patches may not have yet been handled by a prior task.  So go ahead and make sure they show up in the database
-                      gpudw->putUnallocatedIfNotExists(label_cstr, neighbors[i]->getRealPatch()->getID(), matlIndx, levelID,
-                                                       false, make_int3(0,0,0), make_int3(0,0,0));
-
-                      //TODO: Ensure these variables weren't yet allocated, in use, being copied in, etc. At the time of
-                      //writing, this scenario didn't exist.  I think it's best solved through an "I'm using this" reference counter
-                      //TODO: Give offsets as well?
-                      //Shallow copy this neighbor patch into the superaptch
-                      gpudw->copySuperPatchInfo(label_cstr, firstPatchInSuperPatch->getID(), neighbors[i]->getRealPatch()->getID(), matlIndx, levelID);
-
-                    }
-                  }
-                  //All patches have been shared into the superpatch.  Update the atomic status. 
-                  gpudw->compareAndSwapSetSuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
-                }
-
-
-                //Shallow copy this patch into the superpatch, doing it here so we can check on race conditions.  
-                if (firstPatchInSuperPatch->getID() != patchID) { //This if statement is to ensure it doesn't copy itself
-                  gpudw->copySuperPatchInfo(label_cstr, firstPatchInSuperPatch->getID(), patchID, matlIndx, levelID);
-                }
-                
-                //spin and wait until it's done.
-                while (!gpudw->isSuperPatchGPU(label_cstr, patchID, matlIndx, levelID));
 
               }
               device_ptr = device_var->getVoidPointer();
