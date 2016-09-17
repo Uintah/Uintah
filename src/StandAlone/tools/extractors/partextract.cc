@@ -93,7 +93,6 @@ void printCauchyStress(const Matrix3& stress);
 int
 main( int argc, char** argv )
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   /*

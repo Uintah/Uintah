@@ -64,10 +64,11 @@ namespace {
 std::mutex g_lb_mutex{};                // load balancer lock
 std::mutex g_recv_mutex{};
 
-Dout g_dbg(          "MPIScheduler_DBG",        false );
-Dout g_send_timings( "SendTiming",              false );
-Dout g_reductions(   "ReductionTasks",          false );
-Dout g_time_out(     "MPIScheduler_TimingsOut", false );
+Dout g_dbg(            "MPIScheduler_DBG"       , false );
+Dout g_send_timings(   "SendTiming"             , false );
+Dout g_reductions(     "ReductionTasks"         , false );
+Dout g_time_out(       "MPIScheduler_TimingsOut", false );
+Dout g_task_begin_end( "TaskBeginEnd"           , false );
 
 double CurrentWaitTime = 0;
 
@@ -75,8 +76,8 @@ double CurrentWaitTime = 0;
 
 // these are used externally, keep them visible outside this unit
 Dout g_task_order( "TaskOrder", false );
-Dout g_task_dbg(   "TaskDBG",   false );
-Dout g_mpi_dbg(    "MPIDBG",    false );
+Dout g_task_dbg(   "TaskDBG"  , false );
+Dout g_mpi_dbg(    "MPIDBG"   , false );
 Dout g_exec_out(   "ExecTimes", false );
 
 std::map<std::string, double> exectimes;
@@ -798,9 +799,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     DOUT(g_task_order,
          "Rank-" << d_myworld->myrank() << " Running task static order: " << dtask->getStaticOrder() << " , scheduled order: " << numTasksDone);
 
-    if (g_task_dbg) {
-      DOUT(true, "Rank-" << me << " Initiating task: " << dtask->getTask()->getName() << "\t" << *dtask);
-    }
+    DOUT(g_task_begin_end, "Rank-" << me << " Initiating task: " << dtask->getTask()->getName() << "\t" << *dtask);
 
     if (dtask->getTask()->getType() == Task::Reduction) {
       if (!abort) {
@@ -813,9 +812,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       ASSERT(m_recvs.size() == 0);
       runTask(dtask, iteration);
 
-      if (g_task_dbg) {
-        DOUT(true, "Rank-" << d_myworld->myrank() << " Completed task: " << dtask->getTask()->getName() << "\t" << *dtask);
-      }
+      DOUT(g_task_begin_end, "Rank-" << d_myworld->myrank() << " Completed task: " << dtask->getTask()->getName() << "\t" << *dtask);
     }
 
     if(!abort && m_dws[m_dws.size()-1] && m_dws[m_dws.size()-1]->timestepAborted()){

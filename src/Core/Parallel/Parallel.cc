@@ -42,16 +42,13 @@ using namespace Uintah;
 #  undef THREADED_MPI_AVAILABLE
 #endif
 
-
-int              Parallel::s_num_threads           = -1;
-std::thread::id  Parallel::s_main_thread_id      = std::this_thread::get_id();
-bool             Parallel::s_determined_if_using_mpi = false;
-bool             Parallel::s_initialized          = false;
-bool             Parallel::s_using_mpi             = false;
-bool             Parallel::s_using_device          = false;
-int              Parallel::s_world_rank            = -1;
-int              Parallel::s_world_size            = -1;
-ProcessorGroup*  Parallel::s_root_context          = nullptr;
+bool             Parallel::s_initialized             = false;
+bool             Parallel::s_using_device            = false;
+int              Parallel::s_num_threads             = -1;
+int              Parallel::s_world_rank              = -1;
+int              Parallel::s_world_size              = -1;
+std::thread::id  Parallel::s_main_thread_id          = std::this_thread::get_id();
+ProcessorGroup*  Parallel::s_root_context            = nullptr;
 
 
 namespace Uintah {
@@ -61,7 +58,8 @@ namespace Uintah {
   // depend on mpi.h, so I'm just going to create it here.
 
   static MPI_Comm   worldComm_ = MPI_Comm(-1);
-}
+
+}  // namespace Uintah
 
 
 //_____________________________________________________________________________
@@ -85,12 +83,9 @@ MpiError( char * what, int errorcode )
 bool
 Parallel::usingMPI()
 {
-   if( !s_determined_if_using_mpi ) {
-     std::cerr << "Must call determineIfRunningUnderMPI() before usingMPI().\n";
-      throw InternalError( "Bad coding... call determineIfRunningUnderMPI()"
-                           " before usingMPI()", __FILE__, __LINE__ );
-   }
-   return s_using_mpi;
+  // TODO: Remove this method once all prior usage of Parallel::usingMPI() is gone - APH 09/17/16
+  //         We now assume this to be an invariant for Uintah, and hence this is always true.
+  return true;
 }
 
 //_____________________________________________________________________________
@@ -128,27 +123,9 @@ Parallel::getMainThreadID()
 //_____________________________________________________________________________
 //
 void
-Parallel::setNumThreads( int num)
+Parallel::setNumThreads( int num )
 {
   s_num_threads = num;
-}
-
-//_____________________________________________________________________________
-//
-void
-Parallel::forceMPI()
-{
-  s_determined_if_using_mpi = true;
-  s_using_mpi             = true;
-}
-
-//_____________________________________________________________________________
-//
-void
-Parallel::forceNoMPI()
-{
-  s_determined_if_using_mpi = true;
-  s_using_mpi             = false;
 }
 
 //_____________________________________________________________________________
@@ -162,135 +139,77 @@ Parallel::isInitialized()
 //_____________________________________________________________________________
 //
 void
-Parallel::determineIfRunningUnderMPI( int argc, char** argv )
+Parallel::initializeManager( int& argc , char**& argv )
 {
-  if( s_determined_if_using_mpi ) {
-    return;
-  }
-
-  // Try to automatically determine if we are running under MPI (many MPIs set environment variables
-  // that can be used for this.)
-  if(getenv("MPI_ENVIRONMENT")){                                  // Look for SGI MPI
-    s_using_mpi =true;
-  }
-  else if(getenv("RMS_PROCS") || getenv("RMS_STOPONELANINIT")) {  // CompaqMPI (ASCI Q)
-    // Above check isn't conclusive, but we will go with it.
-    s_using_mpi = true;
-  }
-  else if(getenv("LAMWORLD") || getenv("LAMRANK")) {              // LAM-MPI
-    s_using_mpi = true;
-  }
-  else if(getenv("SLURM_PROCID") || getenv("SLURM_NPROCS")) {     // ALC's MPI (LLNL)
-    s_using_mpi = true;
-  }
-  else if(getenv("MPIRUN_RANK")) {                                // Hera's MPI (LLNL)
-    s_using_mpi = true;
-  }
-  else if(getenv("OMPI_MCA_ns_nds_num_procs") || getenv("OMPI_MCA_pls") || getenv("OMPI_COMM_WORLD_RANK")) { // Open MPI
-    s_using_mpi = true;
-  }
-  else if( getenv("MPI_LOCALNRANKS") ) {                          // Updraft.chpc.utah.edu
-    s_using_mpi = true;
-  }
-  else {
-    // Look for MPICH
-    for (int i = 0; i < argc; i++) {
-      std::string s = argv[i];
-
-      // on the turing machine, using mpich, we can't find the mpich var, so
-      // search for our own -mpi, as (according to sus.cc),
-      // we haven't parsed the args yet
-      if (s.substr(0, 3) == "-p4" || s == "-mpi") {
-        s_using_mpi = true;
-      }
-    }
-  }
-  s_determined_if_using_mpi = true;
-}
-
-//_____________________________________________________________________________
-//
-void
-Parallel::initializeManager(int& argc, char**& argv)
-{
-  if( !s_determined_if_using_mpi ) {
-    std::cerr << "Must call determineIfRunningUnderMPI() " << "before initializeManager().\n";
-    throw InternalError( "Bad coding... call determineIfRunningUnderMPI()"
-                         " before initializeManager()", __FILE__, __LINE__ );
-  }
   s_initialized = true;
 
-  if( s_world_rank != -1 ) { // IF ALREADY INITIALIZED, JUST RETURN...
+  if (s_world_rank != -1) {  // IF ALREADY INITIALIZED, JUST RETURN...
     return;
     // If s_world_rank is not -1, then we have already been initialized..
     // This only happens (I think) if usage() is called (due to bad
-    // input parameters (to sus)) and usage() needs to init mpi so that
+    // input parameters (to sus)) and usage() needs to init MPI so that
     // it only displays the usage to the root process.
   }
+
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;
   int required = MPI_THREAD_SINGLE;
-#endif
-  if( s_using_mpi ){
-#ifdef THREADED_MPI_AVAILABLE
-    if( s_num_threads > 0 ) {
-      required = MPI_THREAD_MULTIPLE;
-    } else {
-      required = MPI_THREAD_SINGLE;
-    }
+  if (s_num_threads > 0) {
+    required = MPI_THREAD_MULTIPLE;
+  }
+  else {
+    required = MPI_THREAD_SINGLE;
+  }
 #endif
 
-    int status;
-#if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
-    const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
+  int status;
+
+#if ( !defined( DISABLE_SCI_MALLOC ) )
+  const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
 #endif
 #ifdef THREADED_MPI_AVAILABLE
-    if( ( status = Uintah::MPI::Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
+  if ((status = Uintah::MPI::Init_thread(&argc, &argv, required, &provided)) != MPI_SUCCESS) {
 #else
     if( ( status = Uintah::MPI::Init( &argc, &argv ) ) != MPI_SUCCESS) {
 #endif
-      MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
-    }
+    MpiError(const_cast<char*>("Uinath::MPI::Init"), status);
+  }
 
 #ifdef THREADED_MPI_AVAILABLE
-    if( provided < required ) {
-      std::cerr << "Provided MPI parallel support of " << provided << " is not enough for the required level of " << required << "\n"
-           << "To use multi-threaded schedulers, your MPI implementation needs to support MPI_THREAD_MULTIPLE (level-3)" << std::endl;
-      throw InternalError( "Bad MPI level", __FILE__, __LINE__ );
-    }
+  if (provided < required) {
+    std::cerr << "Provided MPI parallel support of " << provided << " is not enough for the required level of " << required << "\n"
+              << "To use multi-threaded scheduler, your MPI implementation needs to support MPI_THREAD_MULTIPLE (level-3)"
+              << std::endl;
+    throw InternalError("Bad MPI level", __FILE__, __LINE__);
+  }
 #endif
 
-    Uintah::worldComm_ = MPI_COMM_WORLD;
-    if( ( status=Uintah::MPI::Comm_size( Uintah::worldComm_, &s_world_size ) ) != MPI_SUCCESS ) {
-      MpiError(const_cast<char*>("Uintah::MPI::Comm_size"), status);
-    }
+  Uintah::worldComm_ = MPI_COMM_WORLD;
+  if ((status = Uintah::MPI::Comm_size(Uintah::worldComm_, &s_world_size)) != MPI_SUCCESS) {
+    MpiError(const_cast<char*>("Uintah::MPI::Comm_size"), status);
+  }
 
-    if((status=Uintah::MPI::Comm_rank( Uintah::worldComm_, &s_world_rank )) != MPI_SUCCESS) {
-      MpiError(const_cast<char*>("Uintah::MPI::Comm_rank"), status);
-    }
+  if ((status = Uintah::MPI::Comm_rank(Uintah::worldComm_, &s_world_rank)) != MPI_SUCCESS) {
+    MpiError(const_cast<char*>("Uintah::MPI::Comm_rank"), status);
+  }
 
-#if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
-    Uintah::AllocatorSetDefaultTagMalloc(oldtag);
-    Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
+#if ( !defined( DISABLE_SCI_MALLOC ) )
+  Uintah::AllocatorSetDefaultTagMalloc(oldtag);
+  Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
-    s_root_context = scinew ProcessorGroup( nullptr, Uintah::worldComm_, true, s_world_rank, s_world_size, s_num_threads );
+  s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
 
-    if(s_root_context->myrank() == 0) {
-      std::string plural = (s_root_context->size() > 1) ? "processes" : "process" ;
-      std::cout << "Parallel: " << s_root_context->size() << " MPI " << plural << " (using MPI)\n";
+  if (s_root_context->myrank() == 0) {
+    std::string plural = (s_root_context->size() > 1) ? "processes" : "process";
+    std::cout << "Parallel: " << s_root_context->size() << " MPI " << plural << " (using MPI)\n";
 #ifdef THREADED_MPI_AVAILABLE
-      if (s_num_threads > 0) {
-        std::cout << "Parallel: " << s_num_threads << " threads per MPI process\n";
-      }
-      std::cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
-#endif
+    if (s_num_threads > 0) {
+      std::cout << "Parallel: " << s_num_threads << " threads per MPI process\n";
     }
-     //MPI::Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    std::cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
+#endif
   }
-  else {
-    s_world_rank   = 0;
-    s_root_context = scinew ProcessorGroup(nullptr, 0, false, 0, 1, 0);
-  }
+//    Uintah::MPI::Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 }
 
   //_____________________________________________________________________________
@@ -325,12 +244,12 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
 {
   static bool finalized = false;
 
-  if( finalized ) {
+  if (finalized) {
     // Due to convoluted logic, signal, and exception handling,
     // finalizeManager() can be easily/mistakenly called multiple
     // times.  This catches that case and returns harmlessly.
     //
-    // (One example of this occurs when Uintah::MPI::Abort causes an SIG_TERM
+    // (One example of this occurs when Uintah::MPI::Abort causes a SIG_TERM
     // to be thrown, which is caught by Uintah's exit handler, which
     // in turn calls finalizeManager.)
     return;
@@ -341,38 +260,32 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
   // s_world_rank is not reset here as even after finalizeManager,
   // some things need to know their rank...
 
-  if( s_determined_if_using_mpi == false ) {
-  // Only finalize if MPI is initialized.
-    return;
+  // Only finalize if MPI was initialized.
+  if (s_initialized == false) {
+    throw InternalError("Trying to finalize without having MPI initialized", __FILE__, __LINE__);
   }
 
-  if( s_using_mpi ) {
-    if(circumstances == Abort) {
-      int errorcode = 1;
-      if(getenv("LAMWORLD") || getenv("LAMRANK")) {
-        errorcode = (errorcode << 16) + 1; // see LAM man Uintah::MPI::Abort
-      }
-      if( s_world_rank == 0 ) {
-        std::cout << "FinalizeManager() called... Calling Uintah::MPI::Abort on rank " << s_world_rank << ".\n";
-      }
-      std::cerr.flush();
-      std::cout.flush();
-      Time::waitFor(1.0);
-      Uintah::MPI::Abort( Uintah::worldComm_, errorcode );
-    } else {
-      int status;
-      if ((status = Uintah::MPI::Finalize()) != MPI_SUCCESS) {
-        MpiError(const_cast<char*>("Uintah::MPI::Finalize"), status);
-      }
+  if (circumstances == Abort) {
+    int errorcode = 1;
+    if (s_world_rank == 0) {
+      std::cout << "FinalizeManager() called... Calling Uintah::MPI::Abort on rank " << s_world_rank << ".\n";
+    }
+    std::cerr.flush();
+    std::cout.flush();
+    Time::waitFor(1.0);
+    Uintah::MPI::Abort(Uintah::worldComm_, errorcode);
+  }
+  else {
+    int status;
+    if ((status = Uintah::MPI::Finalize()) != MPI_SUCCESS) {
+      MpiError(const_cast<char*>("Uintah::MPI::Finalize"), status);
     }
   }
-  if( s_root_context != nullptr ) {
+
+  if (s_root_context != nullptr) {
     delete s_root_context;
     s_root_context = nullptr;
   }
-
-  // MPI can no longer be used.
-  s_determined_if_using_mpi = false;
 }
 
 //_____________________________________________________________________________

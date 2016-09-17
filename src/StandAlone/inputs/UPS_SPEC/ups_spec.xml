@@ -816,7 +816,7 @@
   <!-- Scheduler Options -->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
-                            attribute1="type OPTIONAL STRING 'SingleProcessor MPI DynamicMPI ThreadedMPI Unified'">
+                            attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
@@ -862,7 +862,7 @@
   
   <!--__________________________________-->
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
-                             attribute1="type REQUIRED STRING 'DLB PLB SimpleLoadBalancer'" >
+                             attribute1="type REQUIRED STRING 'Simple SimpleLoadBalancer RoundRobin DLB PLB'" >
                              
     <costAlgorithm         spec="OPTIONAL STRING 'Model,ModelLS,Kalman,Memory'" />
     <dynamicAlgorithm      spec="OPTIONAL STRING 'particle3, patchFactor, patchFactorParticles, random, Zoltan'" />

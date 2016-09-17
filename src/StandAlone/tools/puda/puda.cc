@@ -219,7 +219,6 @@ gridstats( DataArchive* da,
 int
 main(int argc, char** argv)
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   if (argc <= 1) {

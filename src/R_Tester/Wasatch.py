@@ -337,15 +337,16 @@ PARTICLETESTS=[
 print( " --------------------" )
 wasatchDefs = path.normpath(path.join(build_root(), "include/sci_defs/wasatch_defs.h"))
 print( "WasatchDefs: %s " % wasatchDefs )
-
+wasatchDefsExists=path.isfile(wasatchDefs)
 pattern = "HAVE_POKITT"
-cmd = "grep -c %s %s" % (pattern, wasatchDefs)
-
-HAVE_POKITT = getoutput(cmd)
-print( "Cmd: %s"      % cmd )
+if (wasatchDefsExists):
+  cmd = "grep -c %s %s" % (pattern, wasatchDefs)
+  HAVE_POKITT = getoutput(cmd)
+  print( "Cmd: %s"      % cmd )  
+  print( " --------------------" )
+else:
+  HAVE_POKITT="0"
 print( "HAVE_POKITT: %s" % (HAVE_POKITT) )
-print( " --------------------" )
-
 
 #__________________________________
 # The following list is parsed by the local RT script
