@@ -3411,7 +3411,7 @@ DataArchiver::saveSVNinfo()
 
 //______________________________________________________________________
 //
-// Verifyies that all processes can see the same file system (as rank 0).
+// Verifies that all processes can see the same file system (as rank 0).
 //
 void
 DataArchiver::setupSharedFileSystem()

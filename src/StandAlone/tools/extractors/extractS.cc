@@ -77,7 +77,6 @@ void printStress(DataArchive* da,
 
 int main(int argc, char** argv)
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   string partVar;

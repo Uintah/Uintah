@@ -31,13 +31,11 @@ using namespace Uintah;
 
 ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
                               ,       MPI_Comm         comm
-                              ,       bool             allmpi
                               ,       int              rank
                               ,       int              size
                               ,       int              threads
                               )
-  : m_all_mpi(allmpi)
-  , m_rank(rank)
+  : m_rank(rank)
   , m_size(size)
   , m_threads(threads)
   , m_comm(comm)
@@ -46,7 +44,7 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
 
 void ProcessorGroup::setGlobalComm(int num_comms) const
 {
-  if (m_threads <= 1 || !m_all_mpi) {
+  if (m_threads <= 1) {
     return;
   }
 

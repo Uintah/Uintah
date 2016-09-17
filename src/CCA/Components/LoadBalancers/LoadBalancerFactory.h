@@ -22,27 +22,26 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_LoadBalancer_LoadBalancerFactory_h
-#define Packages_Uintah_CCA_Components_LoadBalancer_LoadBalancerFactory_h
+#ifndef CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERFACTORY_H
+#define CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERFACTORY_H
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
-  class ProcessorGroup;
+class ProcessorGroup;
 
-  class LoadBalancerFactory
-  {
-  public:
-    // this function has a switch for all known load balancers
-    
-    static LoadBalancerCommon* create(ProblemSpecP& ps,
-                                      const ProcessorGroup* world);
+class LoadBalancerFactory {
 
+public:
 
-  };
-} // End namespace Uintah
+  // This function has a switch for all known load balancers
+  static LoadBalancerCommon* create( const ProblemSpecP   & ps
+                                   , const ProcessorGroup * world
+                                   );
+};
 
+}  // End namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERFACTORY_H

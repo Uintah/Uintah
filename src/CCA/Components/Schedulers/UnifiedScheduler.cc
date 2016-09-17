@@ -621,7 +621,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
                          )
 {
   // copy data timestep must be single threaded for now
-  if (Uintah::Parallel::usingMPI() && m_shared_state->isCopyDataTimestep()) {
+  if (m_shared_state->isCopyDataTimestep()) {
     MPIScheduler::execute( tgnum, iteration );
     return;
   }

@@ -505,7 +505,6 @@ void printData(DataArchive* archive, string& variable_name,
 int
 main( int argc, char** argv )
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   //__________________________________

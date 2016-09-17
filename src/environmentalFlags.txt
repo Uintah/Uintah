@@ -40,12 +40,6 @@ ComponentTimings  SCI_DEBUG     output overall mpi and cpu times
 BCR_dbg           SCI_DEBUG     print out some information regarding the BC setup
 
 
-Schedulers:                              NOTE: The default is "MPI" without threads and "UnifiedScheduler" with threads.
-                                               These flags invoke specific schedulers and are semantically equivalent to
-                                               adding a <Scheduler> section to an input file.
-__________________________________
-SingleProcessorScheduler   SCI_DEBUG     Use SingleProcessorScheduler (Static task ordering and deterministic execution without MPI.)
-DynamicMPIScheduler        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution (1 MPI process per CPU core)
 
 Scheduler Debugging Information:
 __________________________________

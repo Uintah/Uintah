@@ -32,32 +32,31 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/LoadBalancers
 
 SRCS += \
-	$(SRCDIR)/LoadBalancerCommon.cc \
-	$(SRCDIR)/LoadBalancerFactory.cc \
-	$(SRCDIR)/RoundRobinLoadBalancer.cc \
-	$(SRCDIR)/DynamicLoadBalancer.cc \
-	$(SRCDIR)/SimpleLoadBalancer.cc \
-	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
-	$(SRCDIR)/CostProfiler.cc \
-	$(SRCDIR)/ProfileDriver.cc \
-	$(SRCDIR)/CostModelForecaster.cc \
+	$(SRCDIR)/LoadBalancerCommon.cc       \
+	$(SRCDIR)/LoadBalancerFactory.cc      \
+	$(SRCDIR)/RoundRobinLoadBalancer.cc   \
+	$(SRCDIR)/DynamicLoadBalancer.cc      \
+	$(SRCDIR)/SimpleLoadBalancer.cc       \
+	$(SRCDIR)/CostProfiler.cc             \
+	$(SRCDIR)/ProfileDriver.cc            \
+	$(SRCDIR)/CostModelForecaster.cc      \
 	$(SRCDIR)/ParticleLoadBalancer.cc
 
 
 PSELIBS := \
-	CCA/Components/ProblemSpecification \
-	CCA/Ports        \
-	Core/DataArchive \
-	Core/Disclosure  \
-	Core/Exceptions  \
-	Core/Grid        \
-	Core/Parallel    \
-	Core/ProblemSpec \
-	Core/Util        \
-	Core/Containers                  \
-	Core/Exceptions                  \
-	Core/Geometry                    \
-	Core/Util  \
+	CCA/Components/ProblemSpecification  \
+	CCA/Ports                            \
+	Core/DataArchive                     \
+	Core/Disclosure                      \
+	Core/Exceptions                      \
+	Core/Grid                            \
+	Core/Parallel                        \
+	Core/ProblemSpec                     \
+	Core/Util                            \
+	Core/Containers                      \
+	Core/Exceptions                      \
+	Core/Geometry                        \
+	Core/Util                            \
 	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)

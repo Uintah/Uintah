@@ -685,7 +685,6 @@ bgq_hack()
 int
 main( int argc, char** argv )
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   //__________________________________

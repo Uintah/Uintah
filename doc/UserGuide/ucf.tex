@@ -737,18 +737,13 @@ followed by more in-depth discussion of each, its usage and input (XML)
 specification.
 
 \begin{itemize}
-  \item \textbf{Single Processor Scheduler:} Static task ordering and
-      deterministic execution without MPI. Primarily used for small runs on
-      a
-      single desktop or laptop.
   \item \textbf{MPI Scheduler:} Static task ordering and deterministic
       execution with MPI. One MPI rank per CPU core.
   \item \textbf{Dynamic MPI Scheduler:} Dynamic scheduling with
       non-deterministic, out-of-order execution of tasks at runtime. One MPI
       rank per CPU core.
   \item \textbf{Threaded MPI Scheduler:} A multi-threaded scheduler that
-      uses
-      a combination of MPI + Pthreads, with dynamic scheduling with
+      uses a combination of MPI + Pthreads, with dynamic scheduling with
       non-deterministic, out-of-order execution of tasks at runtime. One MPI
       rank per multi-core node. Pthreads are pinned to individual CPU cores
       where these tasks are executed. Uses a centralized model using 1
@@ -790,8 +785,7 @@ explanation.
 \begin{itemize}
   \item \emph{Scheduler} - specifies the specific Uintah task scheduler to
       use.
-      Valid options are: \TT{SingleProcessor \; MPI \; DynamicMPI \;
-      ThreadedMPI \; Unified}
+      Valid options are: \TT{MPI \; DynamicMPI \; Unified}
   \item \emph{small\_messages} - whether or not to turn on MPI message
       combination, e.g. send small, individual messages (takes more work to
       organize) or large, combined messages (more communication time). There
@@ -865,16 +859,6 @@ invoke the MPI Scheduler automatically; and by launching \TT{sus} via
 ThreadedMPI Scheduler automatically. The input file options simply give 
 explicit control over what scheduler is used and also makes the Variable 
 Tracking capabilities available to a Uintah simulation.
-
-
-\subsection{Single Processor Scheduler} \label{Sec:SingleProcessorScheduler}
-This is the simplest scheduler available within Uintah, and offers static task
-ordering and deterministic execution of ALL tasks, without MPI. With this
-scheduler, the MPI runtime is not initialized. It is primarily used for small
-runs on a single desktop or laptop. The \TT{SingleProcessorScheduler} is not
-the default scheduler in any case, and to invoke you must specify
-\TT{SingleProcessor} in the \TT{<Scheduler>} section of your input file.
-
 
 \subsection{MPI Scheduler} \label{Sec:MPIScheduler}
 Uintah's MPI Scheduler, shown in Figure \ref{fig:MPIScheduler} is the basic
