@@ -452,7 +452,6 @@ void createFile(string& filename, const int timestep)
 int
 main(int argc, char** argv)
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   string ignoreVar = "none";

@@ -41,7 +41,6 @@ SRCS += \
         $(SRCDIR)/SchedulerCommon.cc          \
         $(SRCDIR)/SchedulerFactory.cc         \
         $(SRCDIR)/SendState.cc                \
-        $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/UnifiedScheduler.cc
         

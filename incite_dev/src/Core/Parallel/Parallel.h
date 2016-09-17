@@ -81,14 +81,6 @@ class Parallel {
       };
 
       //////////
-      // Determines if MPI is being used.  MUST BE CALLED BEFORE
-      // initializeManager()!  Also must be called before any one
-      // calls "Uintah::Parallel::usingMPI()".  argc/argv are only
-      // passed in so that they can be parsed to see if we are using
-      // mpich. (mpich mpirun adds some flags to the args.)
-      static void determineIfRunningUnderMPI( int argc, char** argv );
-
-      //////////
       // Initializes MPI if necessary. 
       static void initializeManager( int& argc, char**& arg );
 
@@ -116,14 +108,6 @@ class Parallel {
       //////////
       // Returns true if this process is using MPI
       static bool usingMPI();
-      
-      //////////
-      // Ignore MPI probe, and force this to use MPI
-      static void forceMPI();
-
-      //////////
-      // Ignore MPI probe, and force this to not use MPI
-      static void forceNoMPI();
 
       //////////
       // Returns true if this process is to use an accelerator or co-processor (e.g. GPU, MIC, etc), false otherwise
@@ -153,7 +137,6 @@ class Parallel {
 
    private:
 
-
       // eliminate public construction/destruction, copy, assignment and move
       Parallel();
      ~Parallel();
@@ -163,14 +146,12 @@ class Parallel {
       Parallel( Parallel && )                 = delete;
       Parallel& operator=( Parallel && )      = delete;
 
-      static int               s_num_threads;
-      static std::thread::id   s_main_thread_id;
-      static bool              s_determined_if_using_mpi;
       static bool              s_initialized;
-      static bool              s_using_mpi;
       static bool              s_using_device;
+      static int               s_num_threads;
       static int               s_world_rank;
       static int               s_world_size;
+      static std::thread::id   s_main_thread_id;
       static ProcessorGroup*   s_root_context;
 
 };

@@ -1266,7 +1266,6 @@ buildPatchMap( LevelP                 level,
 int
 main(int argc, char** argv)
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   double rel_tolerance  = 1e-6; // Default

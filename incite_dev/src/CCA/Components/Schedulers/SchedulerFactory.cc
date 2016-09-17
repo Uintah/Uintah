@@ -24,7 +24,6 @@
 
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
@@ -33,7 +32,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/DebugStream.h>
 
 #include <sci_defs/cuda_defs.h>
 
@@ -42,16 +40,14 @@
 
 using namespace Uintah;
 
-// Enable specific schedulers via environment variable
-static DebugStream singleProcessor("SingleProcessorScheduler", false);
-static DebugStream dynamicMPI(     "DynamicMPIScheduler"     , false);
 
 SchedulerCommon*
-SchedulerFactory::create( const ProblemSpecP   & ps,
-                          const ProcessorGroup * world,
-                          const Output         * output )
+SchedulerFactory::create( const ProblemSpecP   & ps
+                        , const ProcessorGroup * world
+                        , const Output         * output
+                        )
 {
-  SchedulerCommon* sch = nullptr;
+  SchedulerCommon* sch  = nullptr;
   std::string scheduler = "";
 
   ProblemSpecP sc_ps = ps->findBlock("Scheduler");
@@ -59,58 +55,33 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
     sc_ps->getAttribute("type", scheduler);
   }
 
+  /////////////////////////////////////////////////////////////////////
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
-
-    // Using MPI
-    if (Uintah::Parallel::usingMPI()) {
-
-      // Using MPI without threads
-      if (!(Uintah::Parallel::getNumThreads() > 0)) {
-        if (singleProcessor.active()) {
-          throw ProblemSetupException("Cannot use Single Processor Scheduler with MPI.", __FILE__, __LINE__);
-        }
-        else if (dynamicMPI.active()) {
-          scheduler = "DynamicMPI";
-        }
-        else {
-          scheduler = "MPI";
-        }
-      }
-      else {
-        scheduler = "Unified";
-      }
-    }
-
-    // No MPI
-    else if (Uintah::Parallel::getNumThreads() > 0) {
-      if (dynamicMPI.active()) {
-        std::string message =
-            "Cannot use Dynamic MPI scheduler without -mpi option. SCI_DEBUG flags: DynamicMPI may also be active.";
-        throw ProblemSetupException(message, __FILE__, __LINE__);
-      }
+    if (Uintah::Parallel::getNumThreads() > 0) {
       scheduler = "Unified";
     }
     else {
-      scheduler = "SingleProcessor";
+      scheduler = "MPI";
     }
   }
 
+  /////////////////////////////////////////////////////////////////////
   // Check for specific scheduler request from the input file
-  if (scheduler == "SingleProcessor") {
-    sch = scinew SingleProcessorScheduler(world, output, nullptr);
-  }
-  else if (scheduler == "MPI") {
+  if (scheduler == "MPI") {
     sch = scinew MPIScheduler(world, output, nullptr);
   }
+
   else if (scheduler == "DynamicMPI") {
     sch = scinew DynamicMPIScheduler(world, output, nullptr);
   }
+
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, nullptr);
   }
+
   else {
-    sch = 0;
+    sch = nullptr;
     std::string error = "Unknown scheduler: '" + scheduler
                         + "' Please check UPS Spec for valid scheduler options (.../src/StandAlone/inputs/UPS_SPEC/ups_spec.xml)'";
     throw ProblemSetupException(error, __FILE__, __LINE__);
@@ -118,14 +89,20 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
 
   //__________________________________
   //  bulletproofing
-  // "-nthreads" at command line, something other than "ThreadedMPI" specified in UPS file (w/ -do_not_validate)
+  // "-nthreads" at command line, something other than "Unified" specified in UPS file (w/ -do_not_validate)
   if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified")) {
     throw ProblemSetupException("Unified Scheduler needed for '-nthreads <n>' option", __FILE__, __LINE__);
   }
 
+  // "-gpu" provided at command line, but not using "Unified"
   if ((scheduler != "Unified") && Uintah::Parallel::usingDevice()) {
-    std::string error =
-        "\n \tTo use '-gpu' option you must invoke the Unified Scheduler.  Add '-nthreads <n>' to the sus command line.";
+    std::string error = "\n \tTo use '-gpu' option you must invoke the Unified Scheduler.  Add '-nthreads <n>' to the sus command line.";
+    throw ProblemSetupException(error, __FILE__, __LINE__);
+  }
+
+  // "Unified" specified in UPS file, but "-nthreads" not given at command line
+  if ((scheduler == "Unified") && !(Uintah::Parallel::getNumThreads() > 0)) {
+    std::string error = "\n \tAdd '-nthreads <n>' to the sus command line if you are specifying Unified in your input file.";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 

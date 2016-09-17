@@ -99,7 +99,6 @@ private:
   // can only be called from Parallel
   ProcessorGroup( const ProcessorGroup * parent
                 ,       MPI_Comm         comm
-                ,       bool             allmpi
                 ,       int              rank
                 ,       int              size
                 ,       int              threads
@@ -111,7 +110,6 @@ private:
   ProcessorGroup( ProcessorGroup && )                 = delete;
   ProcessorGroup& operator=( ProcessorGroup && )      = delete;
 
-  bool m_all_mpi; // TODO: this should go away once the SIngleProc Scheduler/LB are removed - APH 09/15/16
   int  m_rank;
   int  m_size;
   int  m_threads;
