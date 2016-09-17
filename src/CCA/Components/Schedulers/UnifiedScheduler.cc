@@ -1571,6 +1571,97 @@ UnifiedScheduler::gpuInitialize( bool reset )
 
 //______________________________________________________________________
 //
+void UnifiedScheduler::turnIntoASuperPatch(const Patch * patch, const VarLabel* const label, const int matlIndx, const int levelID ) {
+  //Handle superpatch stuff
+  //This was originally designed for the use case of turning an entire level into a variable.  
+  //We need to set up the equivalent of a super patch.
+  //For example, suppose a simulation has 8 patches and 2 ranks and 1 level, and this rank owns
+  //patches 0, 1, 2, and 3.  Further suppose this scheduler thread is checking
+  //to see the status of a patch 1 variable which has a ton of ghost cells associated
+  //with it, enough to envelop all seven other patches.  Also suppose patch 1 is
+  //found on the CPU, ghost cells for patches 4, 5, 6, and 7 have previously been sent to us,
+  //patch 1 is needed on the GPU, and this is the first thread to process this situation.
+  //This thread's job should be to claim it is responsible for processing the variable for
+  //patches 0, 1, 2, and 3.  Four GPU data warehouse entries should be created, one for each
+  //patch.  
+
+  //Patches 0, 1, 2, and 3 should be given the same pointer, same low, same high, (TODO: but different offsets).
+  //In order to avoid concurrency problems when marking all patches in the superpatch region as 
+  //belonging to the superpatch, we need to avoid Dining Philosophers problem.  That is accomplished 
+  //by claiming patches in *sorted* order, and no scheduler thread can attempt to claim any later patch
+  //if it hasn't yet claimed a former patch.  The first thread to claim all will have claimed the
+  //"superpatch" region.
+  
+  //Superpatches essentially are just windows into a shared variable, it uses shared_ptrs behind the scenes
+  //With this later only one alloaction or H2D transfer can be done.  This method's job is just 
+  //to concurrently set up all the underlying shared_ptr work.  
+ 
+  //Note: Superpatch approaches won't work if for some reason a prior task copied a patch in a non-superpatch
+  //manner, at the current moment no known simulation will ever do this.  It is also why we try to prepare
+  //the superpatch a bit upstream before concurrency checks start, and not down in prepareDeviceVars(). Brad P - 8/6/2016
+  //Future note:   A lock free reference counter should also be created and set to 4 for the above example.
+  // If a patch is "vacated" from the GPU, the reference counter should be reduced.  If it hits 0, it
+  //shouldn't be automatically deleted, but only available for removal if the memory space hits capacity.
+
+  bool thisThreadHandlesSuperPatchWork = false;
+  const string label_ctsr[80];
+  strcpy (label_ctsr, it->second.m_dep->m_var->getName().c_str());
+
+  Patch::selectType neighbors;
+  IntVector low, high;
+  level->selectPatches(low, high, neighbors); //Assuming our superpatch is the entire level
+                                              //This also sorts the patches by ID for us
+
+  //mark the lowest patch as being the superpatch
+  const Patch* firstPatchInSuperPatch = nullptr;
+  if (neighbors.size() == 0) {
+    //this must be a one patch simulation, there are no neighbors.
+    firstPatchInSuperPatch = patch;
+  } else {
+    firstPatchInSuperPatch = neighbors[0]->getRealPatch();
+  }
+  //The firstPatchInSuperPatch may not have yet been handled by a prior task  (such as it being a patch
+  //assigned to a different node).  So make an entry if needed.
+  gpudw->putUnallocatedIfNotExists(label_ctsr, firstPatchInSuperPatch->getID(), matlIndx, levelID,
+                                                         false, make_int3(0,0,0), make_int3(0,0,0));
+  thisThreadHandlesSuperPatchWork = gpudw->compareAndSwapFormASuperPatchGPU(label_ctsr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
+
+  //At this point the patch has been marked as a superpatch.
+
+  if (thisThreadHandlesSuperPatchWork) {
+
+    //This thread turned the lowest ID'd patch in the region into a superpatch.  Go through *neighbor* patches
+    //in the superpatch region and flag them as being a superpatch as well (the copySuperPatchInfo call below
+    //can also flag it as a superpatch.
+    for( int i = 0; i < neighbors.size(); i++) {
+      if (neighbors[i]->getRealPatch() != firstPatchInSuperPatch) {  //This if statement is because there is no need to merge itself
+
+        //These neighbor patches may not have yet been handled by a prior task.  So go ahead and make sure they show up in the database
+        gpudw->putUnallocatedIfNotExists(label_ctsr, neighbors[i]->getRealPatch()->getID(), matlIndx, levelID,
+                                         false, make_int3(0,0,0), make_int3(0,0,0));
+
+        //TODO: Ensure these variables weren't yet allocated, in use, being copied in, etc. At the time of
+        //writing, this scenario didn't exist.  Some ways to solve this include 1) An "I'm using this" reference counter.
+        //2) Moving superpatch creation to the start of a timestep, and not at the start of initiateH2D, or 
+        //3) predetermining at the start of a timestep what superpatch regions will be, and then we can just form 
+        //them together here
+
+        //Shallow copy this neighbor patch into the superaptch
+        gpudw->copySuperPatchInfo(label_ctsr, firstPatchInSuperPatch->getID(), neighbors[i]->getRealPatch()->getID(), matlIndx, levelID);
+
+      }
+    }
+    gpudw->testAndSetSetSuperPatchGPU(label_ctsr, firstPatchInSuperPatch->getID(), neighbors[i]->getRealPatch()->getID(), matlIndx, levelID);
+
+  } else {
+     //spin and wait until it's done.
+     while (!isSuperPatchGPU(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID));
+  }
+
+}
+
+//______________________________________________________________________
+//
 //initiateH2DCopies is a key method for the GPU Data Warehouse and the Unified Scheduler
 //It helps manage which data needs to go H2D, what allocations and ghost cells need to be copied, etc.
 //It also manages concurrency so that no two threads could process the same task.
@@ -1708,12 +1799,13 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
       bool gatheringGhostCells = false;
       bool validWithGhostCellsOnGPU = false;
       bool deallocating = false;
+      bool formingSuperPatch = false;
       bool superPatch = false;
 
 
       gpudw->getStatusFlagsForVariableOnGPU(correctSize, allocating, allocated, copyingIn,
                                       validOnGPU, gatheringGhostCells, validWithGhostCellsOnGPU,
-                                      deallocating, superPatch,
+                                      deallocating, formingSuperPatch, superPatch,
                                       curDependency->m_var->getName().c_str(), patchID, matlID, levelID,
                                       make_int3(low.x(), low.y(), low.z()),
                                       make_int3(host_size.x(), host_size.y(), host_size.z()));
@@ -1724,8 +1816,8 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
         {
           gpu_stats << myRankThread()
               << " InitiateH2D - Handling this task's dependency for "
-              << curDependency->m_var->getName() << " for patch: " << patchID
-              << " material: " << matlID << " level: " << levelID;
+              << curDependency->m_var->getName() << " patch " << patchID
+              << " material " << matlID << " level " << levelID;
           if (curDependency->m_dep_type == Task::Requires) {
             gpu_stats << " - A REQUIRES dependency";
           } else if (curDependency->m_dep_type == Task::Computes) {
@@ -1739,6 +1831,9 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
       }
 
       if (curDependency->m_dep_type == Task::Requires) {
+
+        //Turn this into a superpatch if not already done so:
+
 
         // For any variable, only ONE task should manage all ghost cells for it.
         // It is a giant mess to try and have two tasks simultaneously managing ghost cells for a single var.
@@ -1759,23 +1854,23 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           //This variable exists or soon will exist on the destination.  So the non-ghost cell part of this
           //variable doesn't need any more work.
 
-          //Queue it to be added to this tasks's TaskDW.
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats << myRankThread()
+                  << " InitiateH2D() - The variable "
+                  << curDependency->m_var->getName().c_str()
+                  << " patch " << patchID << " material " << matlID
+                  << " has been copied in or is copying into the GPU.  But ghost cells are not copied in, so starting that process now." << std::endl;
+            }
+            cerrLock.unlock();
+          }
 
+          //Queue it to be added to this tasks's TaskDW.
           //It's possible this variable data already was queued to be sent in due to this patch being a ghost cell region of another patch
-          //So lets just confirm
+          //So just double check to prevent duplicates.
           if (!dtask->getTaskVars().varAlreadyExists(curDependency->m_var, patch, matlID, levelID, curDependency->mapDataWarehouse())) {
             dtask->getTaskVars().addTaskGpuDWVar(patch, matlID, levelID, elementDataSize, curDependency, deviceIndex);
-            if (gpu_stats.active()) {
-              cerrLock.lock();
-              {
-                gpu_stats << myRankThread()
-                    << " InitiateH2D() - GridVariable: "
-                    << curDependency->m_var->getName().c_str()
-                    << " patch " << patchID << " material " << matlID
-                    << " exists or will exist in GPU, don't need to copy into GPU" << std::endl;
-              }
-              cerrLock.unlock();
-            }
           }
 
           if (gatherGhostCells) {
@@ -2021,7 +2116,8 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                                            elementDataSize, ghost_host_low, curDependency, Ghost::None, 0,
                                            destDeviceNum, iter->validNeighbor, GpuUtilities::sameDeviceSameMpiRank);
 
-                // let this Task GPU DW know about this staging array
+                // Let this Task GPU DW know about this staging array.  We may end up not needed it if another thread processes it or it became
+                // part of a superpatch.  We'll figure that out later when we go actually add it.
                 dtask->getTaskVars().addTaskGpuDWStagingVar(sourcePatch, matlID, levelID, ghost_host_low, ghost_host_size,
                                                             elementDataSize, curDependency, sourceDeviceNum);
 
@@ -2032,22 +2128,13 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                                           destDeviceNum, destDeviceNum, -1, -1, /* we're copying within a device, so destDeviceNum -> destDeviceNum */
                                           (Task::WhichDW)curDependency->mapDataWarehouse(),
                                           GpuUtilities::sameDeviceSameMpiRank);
+
               } else if (useCpuGhostCells) {
                 //This handles the scenario where the variable is in the GPU, but the ghost cell data is only found in the
                 //neighboring normal patch (non-foreign) in host memory.  Ghost cells haven't been gathered in or started
                 //to be gathered in.
 
-                // Check if we should copy this patch into the GPU. (If it came from another node via MPI, then we won't have the entire neighbor patch
-                // just the contiguous array(s) containing ghost cells data. If there are periodic boundary conditions, the source
-                // region of a patch could show up multiple times.)
-
-                // First see if the ghost cells from the source patch fully encompass this neighbor patch.  If so, then when the
-                // source patch is gathen this neighbor patch
-                // doesn't need to be listed as copied into the GPU as a source of ghost cells.
-
-                //Here if the variable is already queued to go, we can assume it encompasses enough of it for us to use.  Specifically,
-                //the logic for this if statement assumes exactly 0 ghost cells and using the entire variable.  So we can ask that if the
-                //var exists or is going to exist, then it must have at least 0 or more ghost cells already in that memory space.
+                // Check if we should copy this patch into the GPU.
 
                 // TODO: Instead of copying the entire patch for a ghost cell, we should just create a foreign var, copy
                 // a contiguous array of ghost cell data into that foreign var, then copy in that foreign var.  If it's a foreign var,
@@ -2055,31 +2142,32 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                 if (!dtask->getDeviceVars().varAlreadyExists(curDependency->m_var, sourcePatch, matlID, levelID, curDependency->mapDataWarehouse())) {
 
                   if (gpu_stats.active()) {
-                     cerrLock.lock();
-                     {
-                       gpu_stats << myRankThread()
-                           << " InitiateH2D() -  The CPU variable has ghost cells needed, use it.  Patch "
-                           << sourcePatch->getID() << " to "
-                           << patchID
-                           << " with size (" << host_size.x()
-                           << ", " << host_size.y()
-                           << ", " << host_size.z()
-                           << ") with low (" << ghost_host_low.x()
-                           << ", " << ghost_host_low.y()
-                           << ", " << ghost_host_low.z() << ")"
-                           << ".  The iter low is (" << iter->low.x()
-                           << ", " << iter->low.y()
-                           << ", " << iter->low.z()
-                           << ") and iter high is (" << iter->high.x()
-                           << ", " << iter->high.y()
-                           << ", " << iter->high.z()
-                           << ") and the neighbor variable has a virtual offset (" << virtualOffset.x()
-                           << ", " << virtualOffset.y()
-                           << ", " << virtualOffset.z() << ")"
-                           << std::endl;
-                     }
-                     cerrLock.unlock();
-                   }
+                    cerrLock.lock();
+                    {
+                      gpu_stats << myRankThread()
+                          << " InitiateH2D() -  The CPU variable has ghost cells needed, use it.  For "
+                          << curDependency->m_var->getName().c_str() << " from patch "
+                          << sourcePatch->getID() << " to "
+                          << patchID
+                          << " with size (" << host_size.x()
+                          << ", " << host_size.y()
+                          << ", " << host_size.z()
+                          << ") with low (" << ghost_host_low.x()
+                          << ", " << ghost_host_low.y()
+                          << ", " << ghost_host_low.z() << ")"
+                          << ".  The iter low is (" << iter->low.x()
+                          << ", " << iter->low.y()
+                          << ", " << iter->low.z()
+                          << ") and iter high is (" << iter->high.x()
+                          << ", " << iter->high.y()
+                          << ", " << iter->high.z()
+                          << ") and the neighbor variable has a virtual offset (" << virtualOffset.x()
+                          << ", " << virtualOffset.y()
+                          << ", " << virtualOffset.z() << ")"
+                          << std::endl;
+                    }
+                    cerrLock.unlock();
+                  }
                   // Prepare to tell the host-side GPU DW to possibly allocate and/or copy this variable.
                   dtask->getDeviceVars().add(sourcePatch, matlID, levelID, false,
                       ghost_host_size, ghost_mem_size,
@@ -2125,7 +2213,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                   }
                 }
 
-                // Add in info to potentially perofmr a GPU ghost cell copy.
+                // Add in info to perform a GPU ghost cell copy.  (It will ensure duplicates can't be entered.)
                 dtask->getGhostVars().add(curDependency->m_var,
                                           sourcePatch, patch, matlID, levelID,
                                           false, false,
@@ -2237,7 +2325,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           cerrLock.lock();
           {
             gpu_stats << myRankThread()
-                << " InitiateH2D() - Preparing to allocating computes space on device"
+                << " InitiateH2D() - Preparing to allocate computes space on device"
                 << " for " << curDependency->m_var->getName()
                 << " patch " << patchID
                 << " material " << matlID
@@ -2362,7 +2450,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           const int numGhostCells = it->second.m_numGhostCells;
           Ghost::GhostType ghosttype = it->second.m_gtype;
           bool uses_SHRT_MAX = (numGhostCells == SHRT_MAX);
-          bool thisThreadHandlesSuperPatchWork = false;
+
           //Allocate the vars if needed.  If they've already been allocated, then
           //this simply sets the var to reuse the existing pointer.
           switch (type) {
@@ -2394,89 +2482,14 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                                       elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
                                       it->second.m_numGhostCells);
               } else {
-                //Handle superpatch stuff
-                //This assumes the amount of ghost cells fully envelop or encompass all patches
-                //in this level in this this MPI rank.  If so, we need to set up the equivalent of a super patch.
-                //For example, suppose a simulation has 8 patches and 2 ranks and 1 level, and this rank owns
-                //patches 0, 1, 2, and 3.  Further suppose this scheduler thread is checking
-                //to see the status of a patch 1 variable which has a ton of ghost cells associated
-                //with it, enough to envelop all seven other patches.  Also suppose patch 1 is
-                //found on the CPU, ghost cells for patches 4, 5, 6, and 7 have previously been sent to us
-                //patch 1 is needed on the GPU, and this is the first thread to process this situation.
-                //This thread's job should be to claim it is responsible for processing the variable for
-                //patches 0, 1, 2, and 3.  Four GPU data warehouse entries should be created, one for each
-                //patch.  But only one allocation and H2D transfer completed.  The variable for
-                //patches 0, 1, 2, and 3 should be given the same pointer, same low, same high, but different offsets.
-                //Because all patches on this level should have the same SHRT_MAX ghost cells, they all
-                //need the same list of patches copied in.  Therefore we can avoid the Dining Philosophers problem
-                //by claiming patches in sorted order, and no scheduler thread can attempt to claim any later patch
-                //if it hasn't yet claimed a former patch.  The first thread to claim all will have claimed the
-                //"superpatch" region.
-                //"Superpatch" approaches won't work if for some reason a prior task copied a patch in a non-superpatch
-                //manner, at the current moment no known simulation will ever do this.   Brad P - 8/6/2016
-                //Future note:   A lock free reference counter should also be created and set to 4 for the above example.
-                // If a patch is "vacated" from the GPU, the reference counter should be reduced.  If it hits 0, it
-                //shouldn't be automatically deleted, but only available for removal if the memory space hits capacity.
-
-                //Since the ghost cells are the entire domain, treat it as one giant superpatch.
-
-                //it's not listed as a super patch yet, but because of the global domain, we need to treat it as one.
-                Patch::selectType neighbors;
-
-                level->selectPatches(low, high, neighbors);
-                //mark the lowest patch as being the superpatch
-                const Patch* firstPatchInSuperPatch = nullptr;
-                if (neighbors.size() == 0) {
-                  //this must be a one patch simulation, there are no neighbors.
-                  firstPatchInSuperPatch = patch;
-                } else {
-                  firstPatchInSuperPatch = neighbors[0]->getRealPatch();
-                }
-                thisThreadHandlesSuperPatchWork = gpudw->compareAndSwapTurnIntoASuperPatch(label_ctsr, firstPatchInSuperPatch->getID(), matlIndx, levelID);
+                //Get the level extents
 
                 //TODO, give it an offset so it could be requested as a patch or as a level.  Right now they all get the same low/high.
+                //TODO, verify high and low
                 gpudw->allocateAndPut(*device_var, label_ctsr, firstPatchInSuperPatch->getID(), matlIndx, levelID, staging,
-                                      make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()),
-                                      elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
-                                      it->second.m_numGhostCells);
-
-                //At this point the patch has been marked as a superpatch and space has been allocated for the superpatch.
-
-                device_ptr = device_var->getVoidPointer();
-
-                if (thisThreadHandlesSuperPatchWork) {
-
-
-                  //This thread turned the lowest ID'd patch in the region into a superpatch.  Go through *neighbor* patches
-                  //in the superpatch region and flag them as being a superpatch as well (the copySuperPatchInfo call below
-                  //can also flag it as a superpatch.
-                  for( int i = 0; i < neighbors.size(); i++) {
-                    if (neighbors[i]->getRealPatch() != firstPatchInSuperPatch) {  //This if statement is because there is no need to merge itself
-
-
-                      //These neighbor patches may not have yet been handled by a prior task.  So go ahead and make sure they show up in the database
-                      gpudw->putUnallocatedIfNotExists(label_ctsr, neighbors[i]->getRealPatch()->getID(), matlIndx, levelID,
-                                                       false, make_int3(0,0,0), make_int3(0,0,0));
-
-                      //TODO: Ensure these variables weren't yet allocated, in use, being copied in, etc. At the time of
-                      //writing, this scenario didn't exist.  I think it's best solved through an "I'm using this" reference counter
-
-                      //Shallow copy this neighbor patch into the superaptch
-                      gpudw->copySuperPatchInfo(label_ctsr, firstPatchInSuperPatch->getID(), neighbors[i]->getRealPatch()->getID(), matlIndx, levelID);
-
-                      //TODO: Unlikely but still possible race condition here, this thread may not be done setting patches into superpatches but
-                      //another thread may need a superpatch neighbor.
-
-                    }
-                  }
-                }
-
-                //TODO, give it an offset so it could be requested as a patch or as a level.  Right now they all get the same low/high.
-
-                //Shallow copy this patch into the superpatch
-                if (firstPatchInSuperPatch->getID() != patchID) { //This if statement is to ensure it doesn't copy itself
-                  gpudw->copySuperPatchInfo(label_ctsr, firstPatchInSuperPatch->getID(), patchID, matlIndx, levelID);
-                }
+                                        make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()),
+                                        elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
+                                        it->second.m_numGhostCells);
 
               }
               device_ptr = device_var->getVoidPointer();
@@ -2508,10 +2521,10 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   gpu_stats << myRankThread()
                             << " prepareDeviceVars() - Checking if we should copy"
                             << " data for variable " << label_ctsr
-                            << " patch: " << patchID
-                            << " material: " << matlIndx
-                            << " level: " << levelID
-                            << " staging: " << staging;
+                            << " patch " << patchID
+                            << " material " << matlIndx
+                            << " level " << levelID
+                            << " staging " << staging;
                   if (staging) {
                     gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
                               << ") and size (" << size.x() << ", " << size.y() << ", " << size.z() << ")";
@@ -2633,10 +2646,10 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                       gpu_stats << myRankThread()
                                 << " prepareDeviceVars() - Copying into GPU #" << whichGPU
                                 << " data for variable " << it->first.m_label
-                                << " patch: " << it->first.m_patchID
-                                << " material: " << it->first.m_matlIndx
-                                << " level: " << it->first.m_levelIndx
-                                << " staging: " << it->second.m_staging;
+                                << " patch " << it->first.m_patchID
+                                << " material " << it->first.m_matlIndx
+                                << " level " << it->first.m_levelIndx
+                                << " staging " << it->second.m_staging;
 
                       if (it->second.m_staging) {
                         gpu_stats << " offset (" << low.x() << ", " << low.y() << ", " << low.z()
@@ -2735,6 +2748,22 @@ UnifiedScheduler::prepareTaskVarsIntoTaskDW( DetailedTask * dtask )
             if (it->second.m_staging) {
               offset = make_int3(it->second.m_offset.x(), it->second.m_offset.y(), it->second.m_offset.z());
               size = make_int3(it->second.m_sizeVector.x(), it->second.m_sizeVector.y(), it->second.m_sizeVector.z());
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << myRankThread()
+                            << " prepareTaskVarsIntoTaskDW() - data for staging variable "
+                            << it->second.m_dep->m_var->getName()
+                            << " patch " << patchID
+                            << " material " << matlIndx
+                            << " level " << levelIndx
+                            << " offset (" << offset.x << ", " << offset.y << ", " << offset.z << ") "
+                            << " size (" << size.x << ", " << size.y << ", " << size.z << ") "
+                            << std::endl;
+                }
+                cerrLock.unlock();
+              }
+
             }
             else {
               offset = make_int3(0, 0, 0);
@@ -2745,9 +2774,9 @@ UnifiedScheduler::prepareTaskVarsIntoTaskDW( DetailedTask * dtask )
                   gpu_stats << myRankThread()
                             << " prepareTaskVarsIntoTaskDW() - data for variable "
                             << it->second.m_dep->m_var->getName()
-                            << " patch: " << patchID
-                            << " material: " << matlIndx
-                            << " level: " << levelIndx
+                            << " patch " << patchID
+                            << " material " << matlIndx
+                            << " level " << levelIndx
                             << std::endl;
                 }
                 cerrLock.unlock();
@@ -3370,7 +3399,7 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
                     if (gpu_stats.active()) {
                       cerrLock.lock();
                       {
-                        gpu_stats << myRankThread() << " InitiateD2H() -"
+                        gpu_stats << myRankThread() << " initiateD2HForHugeGhostCells() -"
                             // Task: " << dtask->getName()
                             << " allocateAndPut for "
                             << compVarName << " patch" << patchID
