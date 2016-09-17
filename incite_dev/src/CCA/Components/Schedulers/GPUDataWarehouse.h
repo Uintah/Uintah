@@ -174,6 +174,10 @@ public:
   };
 
 
+  //This status is for concurrency.  This enum largely follows a model of "action -> state".  
+  //For example, allocating -> allocated.  The idea is that only one thread should be able 
+  //to claim moving into an action, and that winner should be responsible for setting it into the state.  
+  //When it hits the state, other threads can utilize the variable.  
   enum status { UNALLOCATED               = 0x00000000,
                 ALLOCATING                = 0x00000001,
                 ALLOCATED                 = 0x00000002,
@@ -187,14 +191,17 @@ public:
                                                             //Note: Change to just GHOST_VALID?  Meaning ghost cells could be valid but the
                                                             //non ghost part is unknown?
                 DEALLOCATING              = 0x00000040,     //TODO: REMOVE THIS WHEN YOU CAN, IT'S NOT OPTIMAL DESIGN.
-                SUPERPATCH                = 0x00000080,     //Indicates this patch is allocated as part of a superpatch.
+                FORMING_SUPERPATCH        = 0x00000080,     //As the name suggests, when a number of individual patches are being formed 
+                                                            //into a superpatch, there is a period of time which other threads
+                                                            //should wait until all patches have been processed.  
+                SUPERPATCH                = 0x00000100,     //Indicates this patch is allocated as part of a superpatch.
                                                             //At the moment superpatches is only implemented for entire domain
                                                             //levels.  But it seems to make the most sense to have another set of
                                                             //logic in level.cc which subdivides a level into superpatches.
                                                             //If this bit is set, you should find the lowest numbered patch ID
                                                             //first and start with concurrency reads/writes there.  (Doing this
                                                             //avoids the Dining Philosopher's problem.
-                UNKNOWN                   = 0x00000100};    //Remove this when you can, unknown can be dangerous.
+                UNKNOWN                   = 0x00000200};    //Remove this when you can, unknown can be dangerous.
                                                             //It's only here to help track some host variables
 
 
@@ -209,7 +216,7 @@ public:
   //    0                   1                   2                   3
   //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
   //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-  //   |    16-bit reference counter   |             | | | | | | | | | |
+  //   |    16-bit reference counter   |  unsued   | | | | | | | | | | |
   //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
   //left sixteen bits is a 16-bit integer reference counter.
@@ -440,7 +447,7 @@ public:
   __host__ std::string getDisplayableStatusCodes(atomicDataStatus& status);
   __host__ void getStatusFlagsForVariableOnGPU(bool& correctSize, bool& allocating, bool& allocated, bool& copyingIn,
                                                bool& validOnGPU, bool& gatheringGhostCells, bool& validWithGhostCellsOnGPU,
-                                               bool& deallocating, bool& superPatch,
+                                               bool& deallocating, bool formingSuperPatch, bool& superPatch,
                                                char const* label, const int patchID, const int matlIndx, const int levelIndx,
                                                const int3& offset, const int3& size);
 
@@ -465,7 +472,9 @@ public:
   __host__ bool isValidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ void setValidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
 
-  __host__ bool compareAndSwapTurnIntoASuperPatch(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool compareAndSwapFormASuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool compareAndSwapSetSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool isSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool compareAndSwapDeallocating(atomicDataStatus& status);
   __host__ bool compareAndSwapDeallocate(atomicDataStatus& status);
 

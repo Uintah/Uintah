@@ -348,7 +348,7 @@ GPUDataWarehouse::copySuperPatchInfo(char const* label, int superPatchBaseID, in
          cerrLock.unlock();
        }
 
-       //They now share the variable.  The magic of this happens because varData is a C++ shared_ptr
+       //They now share the variable.  The magic of this happens because the var is a C++ shared_ptr
        //TODO: They don't share the same offset.  When offsets are added in, this should be updated
        //to manage offsets.
        dest_iter->second.var = source_iter->second.var;
@@ -731,6 +731,34 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
 
          // Have this var use the existing memory address.
          var.setArray3(it->second.var->device_offset, it->second.var->device_size, it->second.var->device_ptr);
+      } else if (it->second.var->device_offset.x <= low.x
+          && it->second.var->device_offset.y <= low.y
+          && it->second.var->device_offset.z <= low.z
+          && it->second.var->device_size.x >= size.x
+          && it->second.var->device_size.y >= size.y
+          && it->second.var->device_size.z >= size.z) {
+        //It fits inside.  Just use it.
+        if (gpu_stats.active()) {
+          cerrLock.lock();
+          {
+            gpu_stats << UnifiedScheduler::myRankThread()
+               << " GPUDataWarehouse::allocateAndPut( " << label << " ) - "
+               << " This non-staging/regular variable fits inside another variable that already exists.  No need to allocate another.  GPUDW has a variable for label " << label
+               << " patch " << patchID
+               << " matl " << matlIndx
+               << " level " << levelIndx
+               << " with offset (" << offset.x << ", " << offset.y << ", " << offset.z << ")"
+               << " and size (" << size.x << ", " << size.y << ", " << size.z << ")"
+               << " on device " << d_device_id
+               << " with data pointer " << it->second.var->device_ptr
+               << " with status codes " << getDisplayableStatusCodes(it->second.var->atomicStatusInGpuMemory)
+               << " into GPUDW at " << std::hex << this << std::dec
+               << std::endl;
+          }
+          cerrLock.unlock();
+        }
+
+        var.setArray3(it->second.var->device_offset, it->second.var->device_size, it->second.var->device_ptr);
       } else {
         printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  Variable in database but of the wrong size.  This shouldn't ever happen. This needs low (%d, %d, %d) and size (%d, %d, %d), but in the database it is low (%d, %d, %d) and size (%d, %d, %d)\n",
             label, low.x, low.y, low.z, size.x, size.y, size.z,
@@ -866,6 +894,11 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
   std::map<stagingVar, stagingVarInfo>::iterator hostSideGPUDW_staging_iter;
   if (staging) {
     hostSideGPUDW_staging_iter = hostSideGPUDW_iter->second.var->stagingVars.find(sv);
+    if (hostSideGPUDW_staging_iter == hostSideGPUDW_iter->second.var->stagingVars.end()) {
+      printf("ERROR:\nGPUDataWarehouse::copyItemIntoTaskDW() - No staging var was found for for %s patch %d material %d level %d offset (%d, %d, %d) size (%d, %d, %d)\n", label, patchID, matlIndx, levelIndx, offset.x, offset.y, offset.z, size.x, size.y, size.z);
+      varLock->unlock();
+      exit(-1);
+    }
   }
 
   hostSideGPUDW->varLock->unlock();
@@ -887,6 +920,7 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
   // then any staging variables can come in later.  This won't handle any scenario where a staging variable is requested
   // into the task DW without a non-staging variable already existing here.
 
+  //TODO: Replace with an atomic counter.
   int d_varDB_index=d_numVarDBItems;
   d_numVarDBItems++;
 
@@ -1268,7 +1302,7 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* l
 
   //sanity check
   if (iter == varPointers->end()) {
-    printf("ERROR:\nGPUDataWarehouse::put( )  Can't use put() for a host-side GPU DW without it first existing in the internal database.\n");
+    printf("ERROR:\nGPUDataWarehouse::put( )  Can't use put() for a host-side GPU DW without it first existing in the internal database for %s patch %d matl %d.\n", label, patchID, matlIndx);
     exit(-1);
   }
 
@@ -2196,8 +2230,8 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   } else {
     //Find the variable that contains the region in which our ghost cells exist.
     //Usually the sharedLowCoordinates and sharedHighCoordinates correspond
-    //exactly to the size of the staging variable.  But sometimes the ghost data is found within
-    //a larger staging variable.
+    //exactly to the size of the staging variable.
+    //(TODO ? But sometimes the ghost data is found within larger staging variable. Not sure if there is a use case for this yet)
     stagingVar sv;
     sv.device_offset = varOffset;
     sv.device_size = varSize;
@@ -2209,7 +2243,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
 
     } else {
       int nStageVars = varPointers->at(lpml_source).var->stagingVars.size();
-      printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Number of staging vars for this var: %d, No staging variable found label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d) on DW at %p.\n",
+      printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Number of staging vars for this var: %d, No staging variable found exactly matching all of the following: label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d) on DW at %p.\n",
                     label, nStageVars, label, sourcePatchID, matlIndx, levelIndx,
                     sv.device_offset.x, sv.device_offset.y, sv.device_offset.z,
                     sv.device_size.x, sv.device_size.y, sv.device_size.z,
@@ -2513,6 +2547,9 @@ GPUDataWarehouse::getDisplayableStatusCodes(atomicDataStatus& status) {
     if ((varStatus & DEALLOCATING) == DEALLOCATING) {
       retval += "Deallocating ";
     }
+    if ((varStatus & FORMING_SUPERPATCH) == FORMING_SUPERPATCH) {
+      retval += "Forming-superpatch ";
+    }
     if ((varStatus & SUPERPATCH) == SUPERPATCH) {
       retval += "Superpatch ";
     }
@@ -2520,6 +2557,8 @@ GPUDataWarehouse::getDisplayableStatusCodes(atomicDataStatus& status) {
       retval += "Unknown ";
     }
   }
+  //trim whitespace
+  retval.erase(std::find_if(retval.rbegin(), retval.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), retval.end());
   return retval;
 }
 
@@ -2529,7 +2568,7 @@ GPUDataWarehouse::getDisplayableStatusCodes(atomicDataStatus& status) {
 __host__ void
 GPUDataWarehouse::getStatusFlagsForVariableOnGPU(bool& correctSize, bool& allocating, bool& allocated, bool& copyingIn,
                                bool& validOnGPU, bool& gatheringGhostCells, bool& validWithGhostCellsOnGPU,
-                               bool& deallocating, bool& superPatch,
+                               bool& deallocating, bool& formingSuperPatch, bool& superPatch,
                                char const* label, const int patchID, const int matlIndx, const int levelIndx,
                                const int3& offset, const int3& size) {
   varLock->lock();
@@ -2553,6 +2592,7 @@ GPUDataWarehouse::getStatusFlagsForVariableOnGPU(bool& correctSize, bool& alloca
     gatheringGhostCells      = ((varStatus & AWAITING_GHOST_COPY) == AWAITING_GHOST_COPY);
     validWithGhostCellsOnGPU = ((varStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS);
     deallocating             = ((varStatus & DEALLOCATING) == DEALLOCATING);
+    formingSuperPatch        = ((varStatus & FORMING_SUPERPATCH) == FORMING_SUPERPATCH);
     superPatch               = ((varStatus & SUPERPATCH) == SUPERPATCH);
 
   } else {
@@ -2563,6 +2603,7 @@ GPUDataWarehouse::getStatusFlagsForVariableOnGPU(bool& correctSize, bool& alloca
     validOnGPU               = false;
     gatheringGhostCells      = false;
     validWithGhostCellsOnGPU = false;
+    formingSuperPatch        = false;
     superPatch               = false;
   }
 
@@ -3167,7 +3208,7 @@ GPUDataWarehouse::setValidWithGhostsOnGPU(char const* label, int patchID, int ma
 // returns true if successful if marking a variable as a superpatch.  False otherwise.
 // Can only turn an unallocated variable into a superpatch.
 __host__ bool
-GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch(char const* label, int patchID, int matlIndx, int levelIndx)
+GPUDataWarehouse::compareAndSwapFormASuperPatch(char const* label, int patchID, int matlIndx, int levelIndx)
 {
 
   bool compareAndSwapSucceeded = false;
@@ -3180,7 +3221,7 @@ GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch(char const* label, int patch
     status = &(varPointers->at(lpml).var->atomicStatusInGpuMemory);
   } else {
     varLock->unlock();
-    printf("ERROR:\nGPUDataWarehouse::compareAndSwapTurnIntoASuperPatch( )  Variable %s patch %d material %d levelIndx %d not found.\n", label, patchID, matlIndx, levelIndx);
+    printf("ERROR:\nGPUDataWarehouse::compareAndSwapFormASuperPatch( )  Variable %s patch %d material %d levelIndx %d not found.\n", label, patchID, matlIndx, levelIndx);
     exit(-1);
     return false;
   }
@@ -3193,7 +3234,7 @@ GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch(char const* label, int patch
        cerrLock.lock();
        {
          gpu_stats << UnifiedScheduler::myRankThread()
-           << " GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch() - "
+           << " GPUDataWarehouse::compareAndSwapFormASuperPatch() - "
            << " Attempting to set a superpatch flag for label " << label
            << " patch " << patchID
            << " matl " << matlIndx
@@ -3204,7 +3245,8 @@ GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch(char const* label, int patch
        cerrLock.unlock();
      }
 
-    if ((oldVarStatus & SUPERPATCH) == SUPERPATCH) {
+    if ( (oldVarStatus & FORMING_SUPERPATCH) == FORMING_SUPERPATCH 
+       || (oldVarStatus & SUPERPATCH == SUPERPATCH)) {
       //Something else already took care of it.  So this task won't manage it.
       return false;
     } else if (((oldVarStatus & ALLOCATING) == ALLOCATING)
@@ -3219,11 +3261,11 @@ GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch(char const* label, int patch
       //At the time of implementation this scenario shouldn't ever happen.  If so it means
       //Someone is requesting to take a variable already in memory that's not a superpatch
       //and turn it into a superpatch.  It would require some kind of special deep copy mechanism
-      printf("ERROR:\nGPUDataWarehouse::compareAndSwapTurnIntoASuperPatch( )  Variable %s cannot be turned into a superpatch, it's in use already with status %s.\n", label, getDisplayableStatusCodes(oldVarStatus).c_str());
+      printf("ERROR:\nGPUDataWarehouse::compareAndSwapFormASuperPatch( )  Variable %s cannot be turned into a superpatch, it's in use already with status %s.\n", label, getDisplayableStatusCodes(oldVarStatus).c_str());
       exit(-1);
       return false;
     } else {
-      atomicDataStatus newVarStatus = oldVarStatus | SUPERPATCH;
+      atomicDataStatus newVarStatus = oldVarStatus | FORMING_SUPERPATCH;
       compareAndSwapSucceeded = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
     }
   }
@@ -3233,7 +3275,7 @@ GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch(char const* label, int patch
      cerrLock.lock();
      {
        gpu_stats << UnifiedScheduler::myRankThread()
-         << " GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch() - "
+         << " GPUDataWarehouse::compareAndSwapFormASuperPatch() - "
          << " Success for label " << label
          << " patch " << patchID
          << " matl " << matlIndx
@@ -3245,6 +3287,67 @@ GPUDataWarehouse::compareAndSwapTurnIntoASuperPatch(char const* label, int patch
    }
 
   return true;
+}
+
+//______________________________________________________________________
+// Sets the allocated flag on a variables atomicDataStatus
+// This is called after a forming a superpatch process completes.  *Only* the thread that got to set FORMING_SUPERPATCH can
+// set SUPERPATCH.  Further, no other thread should modify the atomic status 
+//compareAndSwapFormASuperPatch() should immediately call this.
+__host__ bool
+GPUDataWarehouse::compareAndSwapSetSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+
+  bool superpatched = false;
+
+  //get the status
+  atomicDataStatus* status = nullptr;
+  varLock->lock();
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  if (varPointers->find(lpml) != varPointers->end()) {
+    status = &(varPointers->at(lpml).var->atomicStatusInGpuMemory);
+  } else {
+    varLock->unlock();
+    printf("ERROR:\nGPUDataWarehouse::compareAndSwapSetSuperPatchGPU( )  Variable %s patch %d material %d levelIndx %d not found.\n", label, patchID, matlIndx, levelIndx);
+    exit(-1);
+    return false;
+  }
+  varLock->unlock();
+
+
+  if ((oldVarStatus & FORMING_SUPERPATCH) == 0) {
+    //A sanity check
+    printf("ERROR:\nGPUDataWarehouse::compareAndSwapSetSuperPatchGPU( )  Can't set a superpatch status if it wasn't previously marked as forming a superpatch.\n");
+    exit(-1);
+  } else {
+    //Attempt to claim forming it into a superpatch.  
+    atomicDataStatus newVarStatus & ~FORMING_SUPERPATCH;
+    newVarStatus = newVarStatus | SUPERPATCH;
+
+    //If we succeeded in our attempt to claim to deallocate, this returns true.
+    //If we failed, thats a real problem, and we crash below.
+    superpatched = __sync_bool_compare_and_swap(&status, oldVarStatus, newVarStatus);
+  }
+  if (!superpatched) {
+    //Another sanity check
+    printf("ERROR:\nGPUDataWarehouse::compareAndSwapSetSuperPatchGPU( )  Something modified the atomic status between the phases of forming a superpatch and setting a superpatch.  This shouldn't happen\n");
+    exit(-1);
+  }
+  return superpatched;
+}
+
+//______________________________________________________________________
+//
+__host__ bool
+GPUDataWarehouse::isSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+  varLock->lock();
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  if (varPointers->find(lpml) != varPointers->end()) {
+    bool retVal = ((__sync_fetch_and_or(&(varPointers->at(lpml).var->atomicStatusInGpuMemory), 0) & SUPERPATCH) == SUPERPATCH);
+  }
+  varLock->unlock();
+  return retVal;
 }
 
 //______________________________________________________________________
