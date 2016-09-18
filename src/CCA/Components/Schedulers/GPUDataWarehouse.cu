@@ -3327,7 +3327,8 @@ GPUDataWarehouse::compareAndSwapSetSuperPatchGPU(char const* label, int patchID,
 
     //If we succeeded in our attempt to claim to deallocate, this returns true.
     //If we failed, thats a real problem, and we crash below.
-    superpatched = __sync_bool_compare_and_swap(&status, oldVarStatus, newVarStatus);
+    //printf("current status is %s oldVarStatus is %s newVarStatus is %s\n", getDisplayableStatusCodes(status)
+    superpatched = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
   }
   if (!superpatched) {
     //Another sanity check
