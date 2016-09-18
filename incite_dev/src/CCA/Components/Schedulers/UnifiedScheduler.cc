@@ -1837,9 +1837,6 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
 
       if (curDependency->m_dep_type == Task::Requires) {
 
-        //Turn this into a superpatch if not already done so:
-        turnIntoASuperPatch(gpudw, level, curDependency->m_var, patch, matlID, levelID);
-
         // For any variable, only ONE task should manage all ghost cells for it.
         // It is a giant mess to try and have two tasks simultaneously managing ghost cells for a single var.
         // So if ghost cells are required, attempt to claim that we're the ones going to manage ghost cells
@@ -1847,6 +1844,12 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
         // Otherwise the var's status is left alone (perhaps the ghost cells were already processed by another task a while ago)
         bool gatherGhostCells = false;
         if (curDependency->m_gtype != Ghost::None && curDependency->m_num_ghost_cells > 0) {
+          
+          if(uses_SHRT_MAX) { 
+            //Turn this into a superpatch if not already done so:
+            turnIntoASuperPatch(gpudw, level, curDependency->m_var, patch, matlID, levelID);
+          }
+
 
           // We will also mark it as awaiting ghost cells.
           // (If it was a uses_SHRT_MAX amount of ghost cells, we'll handle that later.  For these gathering will happen on the *CPU*
@@ -2593,8 +2596,23 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                         }
                         //get the host pointer as well
                         host_ptr = gridVar->getBasePointer();
+                        if (gpu_stats.active()) {
+                          cerrLock.lock();
+                          {
+                            gpu_stats << myRankThread()
+                                      << " prepareDeviceVars() - Placed a level variable into the host-side levelDB for"
+                                      << " patch " << it->first.m_patchID
+                                      << " material " << it->first.m_matlIndx
+                                      << " level " << it->first.m_levelIndx
+                                      << " total variable size " << it->second.m_varMemSize
+                                      << " in host address " << host_ptr
+                                      << std::endl;
+                          }
+                          cerrLock.unlock();
+                        }
+
                         //let go of our reference, allowing a single reference to remain and keep the variable alive in leveDB.
-                        delete gridVar;
+                        //delete gridVar;
 
                       }
                       g_GridVarSuperPatch_mutex.unlock();
