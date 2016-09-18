@@ -1577,8 +1577,8 @@ __device__ GPUDataWarehouse::dataItem*
 GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int levelIndx)
 {
 
-  //This upcoming __syncthreads is needed.  I believe with CUDA function calls are inlined.
-  // If you don't have it this upcoming __syncthreads here's what can happen:
+  //This upcoming __syncthreads is needed.  With CUDA function calls are inlined.
+  // If you don't have it this upcoming __syncthreads here's what I think can happen:
 
   // * The correct index was found by one of the threads.
   // * The last __syncthreads is called, all threads met up there.
@@ -1586,7 +1586,7 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   // * Meanwhile, those other threads were still in the first "function" call and hadn't
   //   yet processed if (index == -1).  They now run that line.  And see index is now -1.  That's bad.
 
-  // So to prevent this scenario, we have one more __syncthreads.
+  // So to prevent this scenario, we have one more __syncthreads listed immediately below.
   __syncthreads();  //sync before get
 
 
@@ -1596,7 +1596,6 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;  //threadID in the block
 
   int i = threadID;
-  __syncthreads();  //sync before get
 
 
   //if (d_debug && threadID == 0 && blockID == 0) {
@@ -1605,11 +1604,15 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   //}
 
   //Have every thread try to find the label/patchId/matlIndx is a match in
-  //array.  This is a clever approach so that instead of doing a simple
+  //array.  This is a parallel approach so that instead of doing a simple
   //sequential search with one thread, we can let every thread search for it.  Only the
   //winning thread gets to write to shared data.
+
   __shared__ int index;
   index = -1;
+
+  __syncthreads();  //sync before get, making sure everyone set index to -1
+
   while(i<d_numVarDBItems){
     int strmatch=0;
     char const *s1 = label; //reset s1 and s2 back to the start
