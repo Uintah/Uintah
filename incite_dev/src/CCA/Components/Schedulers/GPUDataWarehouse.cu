@@ -504,6 +504,10 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
       }
       cerrLock.unlock();
     }
+    std::cout << "put() - The size of the map is: " << iter->second.var->stagingVars.size() << " for the var at " << iter->second.var << std::endl;
+    for (auto& kv : iter->second.var->stagingVars) {
+      std::cout << "put() - size (" << kv.first.device_size.x << ") offset(" << kv.first.device_offset.x << ")" << std::endl;
+    }
 
   }
 
@@ -846,15 +850,16 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
     // Also update the var object itself
     var.setArray3(offset, size, addr);
 
-    // Put all remaining information about the variable into the the database.
-    put(var, sizeOfDataType, label, patchID, matlIndx, levelIndx, staging, gtype, numGhostCells);
-
-    // Now that the database knows of this and other threads can see the device pointer, update the status from allocating to allocated
+    // Update the status from allocating to allocated
     if (!staging) {
       compareAndSwapAllocate(it->second.var->atomicStatusInGpuMemory);
     } else {
       compareAndSwapAllocate(staging_it->second.atomicStatusInGpuMemory);
     }
+    
+    // Put all remaining information about the variable into the the database.
+    put(var, sizeOfDataType, label, patchID, matlIndx, levelIndx, staging, gtype, numGhostCells);
+
   }
 }
 
@@ -894,8 +899,12 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
   std::map<stagingVar, stagingVarInfo>::iterator hostSideGPUDW_staging_iter;
   if (staging) {
     hostSideGPUDW_staging_iter = hostSideGPUDW_iter->second.var->stagingVars.find(sv);
+    std::cout << "copyItemIntoTaskDW() - The size of the map is: " << hostSideGPUDW_iter->second.var->stagingVars.size() << " for the var at " << hostSideGPUDW_iter->second.var << std::endl;
+    for (auto& kv : hostSideGPUDW_iter->second.var->stagingVars) {
+      std::cout << "copyItemIntoTaskDW() - size (" << kv.first.device_size.x << ") offset(" << kv.first.device_offset.x << ")" << std::endl;
+    }
     if (hostSideGPUDW_staging_iter == hostSideGPUDW_iter->second.var->stagingVars.end()) {
-      printf("ERROR:\nGPUDataWarehouse::copyItemIntoTaskDW() - No staging var was found for for %s patch %d material %d level %d offset (%d, %d, %d) size (%d, %d, %d)\n", label, patchID, matlIndx, levelIndx, offset.x, offset.y, offset.z, size.x, size.y, size.z);
+      printf("ERROR:\nGPUDataWarehouse::copyItemIntoTaskDW() - No staging var was found for for %s patch %d material %d level %d offset (%d, %d, %d) size (%d, %d, %d) in the DW located at %p\n", label, patchID, matlIndx, levelIndx, offset.x, offset.y, offset.z, size.x, size.y, size.z, hostSideGPUDW);
       varLock->unlock();
       exit(-1);
     }
@@ -928,17 +937,17 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
 
   if (!staging) {
 
-    // copy the item
-    allVarPointersInfo vp = hostSideGPUDW_iter->second;
-    // Clear out any staging vars it may have had
-    vp.var->stagingVars.clear();
+    // Create a new allVarPointersInfo object, copying over the offset.  
+    allVarPointersInfo vp;
+    vp.device_offset = hostSideGPUDW_iter->second.device_offset;
+    
+    std::cout << "The size of the map is: " << hostSideGPUDW_iter->second.var->stagingVars.size() << std::endl;
 
     // Give it a d_varDB index
     vp.varDB_index = d_varDB_index;
 
     // insert it in
     varPointers->insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
-
 
     strncpy(d_varDB[i].label, label, MAX_NAME_LENGTH);
 
@@ -959,12 +968,12 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
     if (iter == varPointers->end()) {
       // A staging item was requested but there's no regular variable for it to piggy back in.
       // So create an empty placeholder regular variable.
+      
+      // Create a new allVarPointersInfo object, copying over the offset.  
+      allVarPointersInfo vp;
+      vp.device_offset = hostSideGPUDW_iter->second.device_offset;
 
-      // Start by getting a copy of what the GPU DW already had for this non-staging var
-      allVarPointersInfo vp = hostSideGPUDW_iter->second;
-
-      // Clear out any staging vars it may have had
-      vp.var->stagingVars.clear();
+      std::cout << "The size of the map is: " << hostSideGPUDW_iter->second.var->stagingVars.size() << std::endl;
 
       // Empty placeholders won't be placed in the d_varDB array.
       vp.varDB_index = -1;
@@ -1848,6 +1857,7 @@ GPUDataWarehouse::clear()
         }
       }
     }
+    std::cout << "Clear() - Clearing out staging vars for" << varIter->second.var << std::endl;
     varIter->second.var->stagingVars.clear();
 
     // clear out the regular vars
