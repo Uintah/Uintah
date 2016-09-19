@@ -179,6 +179,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void turnIntoASuperPatch(GPUDataWarehouse* const       gpudw, 
                              const Level* const            level, 
+                             const IntVector&              low,
+                             const IntVector&              high,
                              const VarLabel* const         label, 
                              const Patch * const           patch, 
                              const int                     matlIndx, 
