@@ -1,0 +1,14 @@
+(Per Tony's earlier readme.txt)
+This directory contains a widely used test case for verifying your turbulence model. 
+The case consists of a isotropic-turbulence initial conditions that decay over time. 
+The initial conditions correspond to periodic grids of sizes 32x32x32 and 64x64x64, respectively. These are provided by the files:
+
+cbc32_uvw_arches.gz
+
+cbc64_uvw_arches.gz
+
+The cbc terminology is in honor of the original experiment by Comte-Bellot and Corrsin in which they generated grid turbulence and extracted plenty of statistics including energy spectra.
+
+Use the getTKE.py script to run the test, extract the data, and generate the comparison plots.  Type "python getTKE.py --help" for more information. 
+
+Note that the getTKE.py script assumes you will step at dt=1e-2 or dt=1e-3 depending on the CFL conditions for your case so that the CBC data can be plotted against the correct timestep of the simulation. 

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Uintah_specification> 
+  <Meta>
+    <title> Test of the Thomsen and Hartka EOS for water </title>
+  </Meta>
+
+  <SimulationComponent type="ice" />
+
+  <!--____________________________________________________________________-->
+  <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Time>
+    <maxTime>            1    </maxTime>
+    <initTime>           0.0    </initTime>
+    <delt_min>           1.0e-9 </delt_min>
+    <delt_max>           1.0    </delt_max>
+    <max_Timesteps>   10      </max_Timesteps>
+    <timestep_multiplier> 1.0    </timestep_multiplier>
+  </Time>
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side="x-">
+        <BCType id="0" label="Pressure"    var="Neumann"> 
+                         <value> 0.0 </value> 
+        </BCType> 
+        <BCType id="0" label="Velocity"    var="Neumann">
+                         <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id="0" label="Temperature" var="Neumann"> 
+                         <value> 0.0 </value>
+        </BCType>
+        <BCType id="0" label="Density"     var="Neumann">
+                         <value> 0.0 </value>
+        </BCType>
+        <BCType id="0" label="SpecificVol" var="computeFromDensity">
+                         <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType id="0" label="Pressure"    var="Neumann"> 
+                         <value> 0.0 </value> 
+        </BCType> 
+        <BCType id="0" label="Velocity"    var="Neumann">
+                         <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id="0" label="Temperature" var="Neumann"> 
+                         <value> 0.0 </value>
+        </BCType>
+        <BCType id="0" label="Density"     var="Neumann">
+                         <value> 0.0 </value>
+        </BCType>
+        <BCType id="0" label="SpecificVol" var="computeFromDensity">
+                         <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType id="0" label="Pressure"    var="Neumann"> 
+                         <value> 0.0 </value> 
+        </BCType> 
+        <BCType id="0" label="Velocity"    var="Neumann">
+                         <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id="0" label="Temperature" var="Neumann"> 
+                         <value> 0.0 </value>
+        </BCType>
+        <BCType id="0" label="Density"     var="Neumann">
+                         <value> 0.0 </value>
+        </BCType>
+        <BCType id="0" label="SpecificVol" var="computeFromDensity">
+                         <value> 0.0 </value>
+        </BCType>
+      </Face>                  
+      <Face side="y+">
+        <BCType id="0" label="Pressure"    var="Neumann"> 
+                         <value> 0.0 </value> 
+        </BCType> 
+        <BCType id="0" label="Velocity"    var="Neumann">
+                         <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id="0" label="Temperature" var="Neumann"> 
+                         <value> 0.0 </value>
+        </BCType>
+        <BCType id="0" label="Density"     var="Neumann">
+                         <value> 0.0 </value>
+        </BCType>
+        <BCType id="0" label="SpecificVol" var="computeFromDensity">
+                         <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType id="0" label="Symmetric" var="symmetry">
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType id="0" label="Symmetric" var="symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>      [ 0, 0, 0]     </lower>
+        <upper>      [ 1, 1, 0.1]  </upper>
+        <extraCells> [ 1, 1, 1]     </extraCells>
+        <patches>    [ 1, 1, 1]     </patches>
+        <resolution> [100,100,1]    </resolution>
+      </Box>
+    </Level>
+  </Grid>    
+  <!--____________________________________________________________________-->
+  <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+  <!--____________________________________________________________________-->
+  <DataArchiver>
+    <filebase> thomsen_hartka_water.uda </filebase>
+    <outputInterval> 0.01 </outputInterval>
+    <save label="vel_CC"/>
+    <save label="press_CC"/>
+    <save label="delP_Dilatate"/>
+    <save label="rho_CC"/>
+    <save label="temp_CC"/>
+    <save label="sp_vol_CC"/>
+    <save label="speedSound_CC"/>
+  </DataArchiver>
+  <!--____________________________________________________________________-->
+  <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+  <!--____________________________________________________________________-->
+  <CFD>
+    <cfl> 0.25 </cfl>
+    <ICE>
+        <advection type="SecondOrder"/>
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+    </ICE>        
+  </CFD>
+  <!--____________________________________________________________________-->
+  <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+  <!--____________________________________________________________________-->   
+  <PhysicalConstants>
+    <gravity>            [0,0,0]  </gravity>
+    <reference_pressure> 101325.0 </reference_pressure>
+  </PhysicalConstants>
+  <!--____________________________________________________________________-->
+  <!--      MATERIAL PROPERTIES AND INTIAL CONDITIONS                     -->
+  <!--___________________________________________________________________-->                      
+  <MaterialProperties>
+    <ICE>
+      <material>
+        <EOS type="Thomsen_Hartka_water">
+          <a>  2.0e-7     </a>    <!-- (K/Pa)     -->    
+          <b>  2.6        </b>    <!-- (J/kg K^2) -->
+          <co> 4205.7     </co>   <!-- (J/Kg K)   -->
+          <ko> 5.0e-10    </ko>   <!-- (1/Pa)     -->
+          <To> 277.0      </To>   <!-- (K)        -->
+          <L>  8.0e-6     </L>    <!-- (1/K^2)    -->
+          <vo> 1.00008e-3 </vo>   <!-- (m^3/kg)   -->
+        </EOS>
+        <dynamic_viscosity>    855           </dynamic_viscosity>
+        <thermal_conductivity> 613000        </thermal_conductivity>
+        <specific_heat>        4145.37627765 </specific_heat>
+        <gamma>                1.000009      </gamma>
+        <geom_object>
+          <box label="wholeDomain">
+            <min> [-1,-1,-1] </min>
+            <max> [ 1, 1, 1] </max>
+          </box>
+          <res>         [2,2,2]       </res>
+          <velocity>    [10, 0.0,0.0] </velocity>
+          <density>     995.749014615 </density>
+          <pressure>    101325.0      </pressure>     
+          <temperature> 300.0         </temperature>
+        </geom_object>
+      </material>
+    </ICE>       
+  </MaterialProperties>       
+</Uintah_specification>

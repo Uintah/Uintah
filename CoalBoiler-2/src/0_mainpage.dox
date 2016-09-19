@@ -1,0 +1,10 @@
+/**
+\mainpage Welcome to Uintah
+
+Uintah is a set of software components and libraries that facilitate the solution of 
+partial differential equations on structured adaptive mesh refinement grids using hundreds 
+to thousands of processors. Uintah is the product of a ten year partnership with the 
+Department of Energy's ASC program through the University of Utah's Center for Simulation 
+of Accidental Fires and Explosions (C-SAFE). Uintah is licensed under the MIT license. 
+Please see our license page for more information.	
+*/

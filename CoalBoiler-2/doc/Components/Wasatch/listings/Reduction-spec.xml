@@ -1,0 +1,17 @@
+<Reduction spec="MULTIPLE NO_DATA" 
+  <!-- tasklist: task that computes this expression. currently support advance_solution only -->
+	attribute1="tasklist REQUIRED STRING 'advance_solution'"
+  <!-- op: reduction operation: min, max, or sum -->	
+	attribute2="op REQUIRED STRING 'min,max,sum'"
+  <!-- output: specify if you wish to output the reduced value to the terminal -->		
+	attribute3="output OPTIONAL BOOLEAN">
+  <!-- NameTag: nametag of the reduced variable -->			
+	<NameTag          spec="REQUIRED" />
+  <!-- Source: information about the sourcefield -->				
+	<Source spec="REQUIRED NO_DATA" 
+	  <!-- type: fieldtype of the source field -->				
+		attribute1="type REQUIRED STRING 'PERPATCH,SVOL,XVOL,YVOL,ZVOL'" >\
+		<!-- NameTag: nametag of the source field -->					
+		<NameTag spec="REQUIRED"/>
+	</Source>       
+</Reduction>

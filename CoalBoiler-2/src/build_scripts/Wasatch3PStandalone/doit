@@ -1,0 +1,48 @@
+#! /bin/bash
+
+#
+# This script updates, builds, and installs the 3P Wasatch libraries... 
+#
+
+echo
+echo "Building Wasatch 3P libraries."
+
+source HelperBuildScripts/checkEnv.sh
+
+export GIT_SSL_NO_VERIFY=true 
+
+for dir in SpatialOps ExprLib TabProps RadProps
+do
+
+  echo "--- Building $dir ---"
+  echo
+
+  if ! test -d "$dir"; then
+    echo "WARNING: W3P source directories do not appear to be 'git'ed yet. Downloading them now:"
+    echo
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git
+  fi
+
+  echo "----- Updating GIT files ---"
+  echo
+
+  cd $dir
+  git pull
+
+  if test "$?" != "0"; then
+    echo "Error, 'git pull' failed for $dir!"
+    exit
+  fi
+
+  echo
+  echo "----- Installing ---"
+  echo
+  cd ../$dir-build
+  ./doit
+
+  cd ..
+
+done

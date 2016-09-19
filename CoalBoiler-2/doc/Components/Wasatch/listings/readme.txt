@@ -1,0 +1,1 @@
+This directory contains a collection of input specs that are used in the Wasatch documentation. See "Summary of Supported Expressions" for an example. It is highly recommended that you put your listings here instead of direct copy-paste into the LYX documentation file.

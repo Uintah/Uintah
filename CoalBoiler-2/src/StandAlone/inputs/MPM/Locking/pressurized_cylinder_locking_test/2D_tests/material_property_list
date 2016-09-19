@@ -1,0 +1,92 @@
+             <!-- Original Material Properties nu = 0.3756 -->
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus>
+
+
+MODIFIED BULK MODULUS
+
+	     <!-- Modified Bulk Modulus nu = 0.499 >
+             <bulk_modulus>  1.3106e+13 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus -->
+
+	     <!-- Modified Bulk Modulus nu = 0.495 >
+             <bulk_modulus>  2.6143e12 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus -->
+
+	     <!-- Modified Bulk Modulus nu = 0.450 >
+             <bulk_modulus>  2.5356e+11 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus -->
+
+	     <!-- Modified Bulk Modulus nu = 0.400 >
+             <bulk_modulus>  1.2241e+11 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus -->
+
+	     <!-- Modified Bulk Modulus nu = 0.350 >
+             <bulk_modulus>  7.8690e+10 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus-->
+
+	     <!-- Modified Bulk Modulus nu = 0.300 >
+             <bulk_modulus>  5.6832e+10 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus-->
+
+	     <!-- Modified Bulk Modulus nu = 0.250 >
+             <bulk_modulus>  4.3717e+10 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus -->
+
+	     <!-- Modified Bulk Modulus nu = 0.200 >
+             <bulk_modulus>  3.4973e+10 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus -->
+
+	     <!-- Modified Bulk Modulus nu = 0.150 >
+             <bulk_modulus>  2.8728e+10 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus -->
+
+	     <!-- Modified Bulk Modulus nu = 0.100 >
+             <bulk_modulus>  2.4044e+10 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus -->
+
+MODIFIED SHEAR MODULUS
+
+             <!-- Modified Shear Modulus nu = 0.499 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 1.4065e+08 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.495 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 7.0515e+08 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.450 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 7.2703e+09 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.400 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 1.5060e+10 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.350 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 2.3427e+10 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.300 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 3.2437e+10 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.250 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 4.2168e+10 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.200 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 5.2710e+10 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.150 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 6.4169e+10 </shear_modulus-->
+
+             <!-- Modified Shear Modulus nu = 0.100 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 7.6669e+10 </shear_modulus-->
+
+
+
+

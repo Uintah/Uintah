@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <Uintah_specification> 
+    <FVM                   spec="OPTIONAL NO_DATA">
+      <delt                     spec="REQUIRED DOUBLE 'positive'" />
+      <Parameters               spec="OPTIONAL NO_DATA"                                           
+                                attribute1="variable OPTIONAL STRING 'electrostatic_solver'" >      
+        <criteria               spec="OPTIONAL STRING 'Absolute relative'" />                     
+        <jump                   spec="OPTIONAL INTEGER" />                                        
+        <logging                spec="OPTIONAL INTEGER 'positive'" />                             
+        <maxiterations          spec="OPTIONAL INTEGER 'positive'" />                             
+        <norm                   spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+        <npost                  spec="REQUIRED INTEGER" />                                        
+        <npre                   spec="REQUIRED INTEGER" />                                        
+        <preconditioner         spec="REQUIRED STRING 'none, pfmg, smg'" />                            
+        <outputEquations        spec="OPTIONAL BOOLEAN" />                                        
+        <skip                   spec="REQUIRED INTEGER" />                                        
+        <setupFrequency         spec="OPTIONAL INTEGER" />                                        
+        <solver                 spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                               
+        <tolerance              spec="REQUIRED DOUBLE" />                                         
+        <relax_type             spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
+      </Parameters>
+    </FVM>
+  </Uintah_specification>
+
+  <MaterialProperties>
+    <FVM   spec="OPTIONAL NO_DATA">
+      <material  spec="MULTIPLE NO_DATA" attribute1="name OPTIONAL STRING" >
+        <geom_object   spec="MULTIPLE" />
+      </material>
+    </FVM>
+  </MaterialProperties>
+
+  <AMR>
+    <FVM   spec="OPTIONAL NO_DATA" >
+    </FVM>
+  </AMR>
+
+</Uintah_Include>
