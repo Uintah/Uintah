@@ -475,6 +475,8 @@ public:
   __host__ bool compareAndSwapFormASuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool compareAndSwapSetSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool isSuperPatchGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ void setSuperPatchLowAndSize(char const* const label, const int patchID, const int matlIndx, const int levelIndx,
+                                                        const int3& low, const int3& size);
   __host__ bool compareAndSwapDeallocating(atomicDataStatus& status);
   __host__ bool compareAndSwapDeallocate(atomicDataStatus& status);
 

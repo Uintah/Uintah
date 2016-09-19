@@ -1223,13 +1223,18 @@ UnifiedScheduler::runTasks( int thread_id )
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
           // So check everything, except for ouputVariables tasks when it's not an output timestep.
+          
+          //std::cout << "Output timestep is " << std::boolalpha << m_out_port->isOutputTimestep() << std::noboolalpha << std::endl;
 
           if ((m_out_port->isOutputTimestep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
-
             initiateD2H(readyTask);
 
+          } else if ((readyTask->getTask()->getName() == "DataArchiver::outputVariables")
+                  || (readyTask->getTask()->getName() == "DataArchiver::outputVariables(checkpoint)")){
+             
+            //printf("NOT running initiateD2H\n");
           }
           m_detailed_tasks->addFinalizeHostPreparation(readyTask);
         } else if (cpuFinalizeHostPreparation) {
@@ -1572,7 +1577,9 @@ UnifiedScheduler::gpuInitialize( bool reset )
 //______________________________________________________________________
 //
 void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw, 
-                                           const Level* const level, 
+                                           const Level* const level,
+                                           const IntVector& low,
+                                           const IntVector& high, 
                                            const VarLabel* const label, 
                                            const Patch * const patch, 
                                            const int matlIndx, 
@@ -1612,10 +1619,15 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
   char label_cstr[80];
   strcpy (label_cstr, label->getName().c_str());
 
+
+  //Get all patches in the superpatch. Assuming our superpatch is the entire level.
+  //This also sorts the neighbor patches by ID for us.  Note that if the current patch is 
+  //smaller than all the neighbors, we have to work that in too.
+  
   Patch::selectType neighbors;
-  IntVector low, high;
-  level->selectPatches(low, high, neighbors); //Assuming our superpatch is the entire level
-                                              //This also sorts the patches by ID for us
+  //IntVector low, high;
+  //level->computeVariableExtents(type, low, high);  //Get the low and high for the level
+  level->selectPatches(low, high, neighbors);
 
   //mark the lowest patch as being the superpatch
   const Patch* firstPatchInSuperPatch = nullptr;
@@ -1624,7 +1636,12 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
     firstPatchInSuperPatch = patch;
   } else {
     firstPatchInSuperPatch = neighbors[0]->getRealPatch();
+    //seeing if this patch is lower in ID number than the neighbor patches.
+    if (patch->getID() < firstPatchInSuperPatch->getID()) {
+      firstPatchInSuperPatch = patch;
+    }
   }
+
   //The firstPatchInSuperPatch may not have yet been handled by a prior task  (such as it being a patch
   //assigned to a different node).  So make an entry if needed.
   gpudw->putUnallocatedIfNotExists(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID,
@@ -1634,7 +1651,11 @@ void UnifiedScheduler::turnIntoASuperPatch(GPUDataWarehouse* const gpudw,
   //At this point the patch has been marked as a superpatch.
 
   if (thisThreadHandlesSuperPatchWork) {
-
+    
+    gpudw->setSuperPatchLowAndSize(label_cstr, firstPatchInSuperPatch->getID(), matlIndx, levelID, 
+                                   make_int3(low.x(), low.y(), low.z()), 
+                                   make_int3(high.x() - low.x(), high.y() - low.y(), high.z() - low.z())); 
+    
     //This thread turned the lowest ID'd patch in the region into a superpatch.  Go through *neighbor* patches
     //in the superpatch region and flag them as being a superpatch as well (the copySuperPatchInfo call below
     //can also flag it as a superpatch.
@@ -1847,14 +1868,18 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           
           if(uses_SHRT_MAX) { 
             //Turn this into a superpatch if not already done so:
-            turnIntoASuperPatch(gpudw, level, curDependency->m_var, patch, matlID, levelID);
+            turnIntoASuperPatch(gpudw, level, low, high, curDependency->m_var, patch, matlID, levelID);
+  
+            //At the moment superpatches are gathered together through an upcoming getRegionModifiable() call. 
+            //So don't treat them as having ghost cells
+          } else {
+
+
+            // We will also mark it as awaiting ghost cells.
+            // (If it was a uses_SHRT_MAX amount of ghost cells, we'll handle that later.  For these gathering will happen on the *CPU*
+            // as it's currently much more efficient to do it there.)
+            gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
           }
-
-
-          // We will also mark it as awaiting ghost cells.
-          // (If it was a uses_SHRT_MAX amount of ghost cells, we'll handle that later.  For these gathering will happen on the *CPU*
-          // as it's currently much more efficient to do it there.)
-          gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
 
         }
 
@@ -2449,7 +2474,6 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           char label_cstr[80];
           strcpy (label_cstr, it->second.m_dep->m_var->getName().c_str());
           const Patch* patch = it->second.m_patchPointer;
-          const Level* level = patch->getLevel();
           const int patchID = it->first.m_patchID;
           const int matlIndx = it->first.m_matlIndx;
           const int levelID = it->first.m_levelIndx;
