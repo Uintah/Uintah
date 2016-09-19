@@ -23,23 +23,23 @@
  */
 
 //-- Uintah component includes --//
-#include <CCA/Components/Regridder/RegridderCommon.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Components/Regridder/RegridderCommon.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Scheduler.h>
 
 //-- Uintah framework includes --//
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Time.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Box.h>
 
 //-- system includes --//
 #include <iostream>
@@ -48,9 +48,9 @@
 
 using namespace Uintah;
 
-DebugStream rdbg("Regridder", false);
-DebugStream dilate_dbg("Regridder_dilate", false);
-DebugStream rreason("RegridReason", false);
+DebugStream rdbg(       "Regridder", false );
+DebugStream dilate_dbg( "Regridder_dilate", false );
+DebugStream rreason(    "RegridReason", false );
 
 //______________________________________________________________________
 //
@@ -330,8 +330,8 @@ RegridderCommon::problemSetup(const ProblemSpecP& params, const GridP& oldGrid, 
 
   grid_ps_ = params->findBlock("Grid");
 
-  sched_ = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  lb_ = dynamic_cast<LoadBalancer*>(getPort("load balancer"));
+  sched_ = dynamic_cast< Scheduler * >(        getPort( "scheduler" ) );
+  lb_    = dynamic_cast< LoadBalancerPort * >( getPort( "load balancer" ) );
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");

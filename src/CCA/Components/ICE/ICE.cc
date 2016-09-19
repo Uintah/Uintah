@@ -246,10 +246,10 @@ double ICE::recomputeTimestep(double current_dt)
 /* _____________________________________________________________________
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
-void ICE::problemSetup(const ProblemSpecP& prob_spec, 
-                       const ProblemSpecP& restart_prob_spec,
-                       GridP& grid, 
-                       SimulationStateP&   sharedState)
+void ICE::problemSetup( const ProblemSpecP     & prob_spec, 
+                        const ProblemSpecP     & restart_prob_spec,
+                              GridP            & grid, 
+                              SimulationStateP & sharedState )
 {
   cout_doing << d_myworld->myrank() << " Doing ICE::problemSetup " << "\t\t\t ICE" << endl;
   d_sharedState = sharedState;
@@ -394,11 +394,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   // Pull out Initial Conditions
   ProblemSpecP mat_ps = 0;
 
-  if (prob_spec->findBlockWithOutAttribute("MaterialProperties")){
+  if( prob_spec->findBlockWithOutAttribute("MaterialProperties") ) {
     mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  }else if (restart_prob_spec){
-    mat_ps = 
-      restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
+  }
+  else if ( restart_prob_spec ){
+    mat_ps = restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }
   
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
@@ -515,9 +515,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //  Load Model info.
   // If we are doing a restart, then use the "timestep.xml" 
   ProblemSpecP orig_or_restart_ps = 0;
-  if (prob_spec->findBlockWithOutAttribute("MaterialProperties")){
+  if ( prob_spec->findBlockWithOutAttribute("MaterialProperties") ) {
     orig_or_restart_ps = prob_spec;
-  }else if (restart_prob_spec){
+  }
+  else if ( restart_prob_spec ) {
     orig_or_restart_ps = restart_prob_spec;
   }  
     
@@ -4537,10 +4538,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
         }
       }
     
-    
       //__________________________________
       //  User specified source/sink 
-      double Time= dataArchiver->getCurrentTime();  
+      double Time = d_sharedState->getElapsedTime();  
       if (  d_add_heat &&
             Time >= d_add_heat_t_start && 
             Time <= d_add_heat_t_final ) { 

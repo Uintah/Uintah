@@ -27,9 +27,9 @@
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 
+#include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/PapiInitializationError.h>
-#include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationTime.h>
@@ -39,10 +39,10 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Time.h>
 
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
 #include <CCA/Ports/Regridder.h>
@@ -612,7 +612,7 @@ SimulationController::setStartSimTime ( double t )
 }
 
 void
-SimulationController::initSimulationStatsVars ( void )
+SimulationController::initSimulationStatsVars( void )
 {
   // vars used to calculate standard deviation
   d_nSamples = 0;
@@ -625,20 +625,18 @@ SimulationController::initSimulationStatsVars ( void )
 //______________________________________________________________________
 //
 void
-SimulationController::printSimulationStats ( int timestep, double delt, double time )
+SimulationController::printSimulationStats( int timestep, double delt, double time )
 {
-  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
-    d_sharedState->d_runTimeStats;
+  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats = d_sharedState->d_runTimeStats;
 
   // With the sum reduces, use double, since with memory it is possible that
   // it will overflow
-  double avg_memuse = runTimeStats.getAverage(SimulationState::SCIMemoryUsed);
-  unsigned long max_memuse = static_cast<unsigned long>(runTimeStats.getMaximum(SimulationState::SCIMemoryUsed));
-  int max_memuse_rank = runTimeStats.getRank(SimulationState::SCIMemoryUsed);
+  double        avg_memuse = runTimeStats.getAverage( SimulationState::SCIMemoryUsed );
+  unsigned long max_memuse = static_cast<unsigned long>( runTimeStats.getMaximum( SimulationState::SCIMemoryUsed ) );
+  int           max_memuse_rank = runTimeStats.getRank( SimulationState::SCIMemoryUsed );
 
-  double avg_highwater = runTimeStats.getAverage(SimulationState::SCIMemoryHighwater);
-  unsigned long max_highwater =
-      static_cast<unsigned long>(runTimeStats.getMaximum(SimulationState::SCIMemoryHighwater));
+  double        avg_highwater = runTimeStats.getAverage( SimulationState::SCIMemoryHighwater );
+  unsigned long max_highwater = static_cast<unsigned long>( runTimeStats.getMaximum( SimulationState::SCIMemoryHighwater ) );
     
   // Sum up the average time for overhead related components. These
   // same values are used in SimulationState::getOverheadTime.
@@ -860,7 +858,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 //______________________________________________________________________
 //
 void
-SimulationController::getMemoryStats ( int timestep, bool create )
+SimulationController::getMemoryStats ( int timestep, bool create /* = false */ )
 {
   unsigned long memUse, highwater, maxMemUse;
   d_scheduler->checkMemoryUse(memUse, highwater, maxMemUse);
@@ -889,14 +887,14 @@ SimulationController::getMemoryStats ( int timestep, bool create )
       char filename[256];
       sprintf(filename, "%s.%d", filenamePrefix, d_myworld->myrank());
 
-      if (create) {
+      if ( create ) {
         mallocPerProcStream = scinew ofstream(filename, ios::out | ios::trunc);
       }
       else {
         mallocPerProcStream = scinew ofstream(filename, ios::out | ios::app);
       }
 
-      if (!mallocPerProcStream) {
+      if( !mallocPerProcStream ) {
         delete mallocPerProcStream;
         mallocPerProcStream = &dbg;
       }
@@ -905,10 +903,13 @@ SimulationController::getMemoryStats ( int timestep, bool create )
     *mallocPerProcStream << "Proc " << d_myworld->myrank() << "   ";
     *mallocPerProcStream << "Timestep " << timestep << "   ";
 
-    if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE))
+    if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) {
       *mallocPerProcStream << "Size " << ProcessInfo::getMemoryUsed() << "   ";
-    if (ProcessInfo::isSupported(ProcessInfo::MEM_RSS))
+    }
+
+    if (ProcessInfo::isSupported(ProcessInfo::MEM_RSS)) {
       *mallocPerProcStream << "RSS " << ProcessInfo::getMemoryResident() << "   ";
+    }
 
     *mallocPerProcStream << "Sbrk " << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
 #ifndef DISABLE_SCI_MALLOC
@@ -918,7 +919,7 @@ SimulationController::getMemoryStats ( int timestep, bool create )
 #endif
     *mallocPerProcStream << "\n";
 
-    if (mallocPerProcStream != &dbg) {
+    if( mallocPerProcStream != &dbg ) {
       delete mallocPerProcStream;
     }
   }

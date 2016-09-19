@@ -98,12 +98,14 @@ SimpleRxn::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 }
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
-                        ModelSetup* setup)
+void
+SimpleRxn::problemSetup( GridP &,
+                         SimulationStateP & shared_state,
+                         ModelSetup       * setup )
 {
   cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
-  sharedState = in_state;
-  d_matl = sharedState->parseAndLookupMaterial(params, "material");
+  d_sharedState = shared_state;
+  d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -305,7 +307,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
                               f, FakeDiffusivity, fakedelT);
     }
         
-    setBC(f,"scalar-f", patch, sharedState,indx, new_dw); 
+    setBC( f, "scalar-f", patch, d_sharedState, indx, new_dw );
     
     //__________________________________
     // compute thermo-transport-physical quantities
@@ -566,7 +568,7 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
       old_dw->get(lastDumpTime, Slb->lastProbeDumpTimeLabel);
       double oldProbeDumpTime = lastDumpTime;
       
-      double time = d_dataArchiver->getCurrentTime();
+      double time = d_sharedState->getElapsedTime();
       double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
       
       if (time >= nextDumpTime){        // is it time to dump the points

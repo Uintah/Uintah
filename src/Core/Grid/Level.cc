@@ -1020,7 +1020,7 @@ Level::setBCTypes()
 //______________________________________________________________________
 //
 void
-Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
+Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancerPort * lb )
 {
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if (bc_ps == 0) {

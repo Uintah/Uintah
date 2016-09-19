@@ -1153,8 +1153,8 @@ namespace WasatchCore{
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
 
-    Uintah::LoadBalancer* lb = sched->getLoadBalancer();
-    const Uintah::PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
+    Uintah::LoadBalancerPort * lb              = sched->getLoadBalancer();
+    const Uintah::PatchSet   * perproc_patches = lb->getPerProcessorPatchSet( level );
 
     if ( timeIntegrator_.has_dual_time() ) {
       subsched_ = sched->createSubScheduler();
@@ -1521,7 +1521,7 @@ namespace WasatchCore{
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
-    Uintah::LoadBalancer* lb = sched->getLoadBalancer();
+    //    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
     //    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     {
@@ -1597,7 +1597,7 @@ namespace WasatchCore{
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
-    Uintah::LoadBalancer* lb = sched->getLoadBalancer();
+//    Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
 //    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     {

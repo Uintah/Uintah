@@ -45,7 +45,7 @@
 namespace Uintah {
 
 class  DataArchive;
-class  LoadBalancer;
+class  LoadBalancerPort;
 class  Output;
 class  Regridder;
 class  SimulationInterface;
@@ -106,7 +106,7 @@ public:
   ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
   SimulationStateP     getSimulationStateP() { return d_sharedState; }
   SchedulerP           getSchedulerP() { return d_scheduler; }
-  LoadBalancer*        getLoadBalancer() { return d_lb; }
+  LoadBalancerPort*    getLoadBalancer() { return d_lb; }
   Output*              getOutput() { return d_output; }
   SimulationTime*      getSimulationTime() { return d_timeinfo; }
   SimulationInterface* getSimulationInterface() { return d_sim; }
@@ -141,7 +141,7 @@ protected:
   ProblemSpecP         d_grid_ps;         // Problem Spec for the Grid
   SimulationStateP     d_sharedState;
   SchedulerP           d_scheduler;
-  LoadBalancer*        d_lb;
+  LoadBalancerPort*    d_lb;
   Output*              d_output;
   SimulationTime*      d_timeinfo;
   SimulationInterface* d_sim;
@@ -213,7 +213,7 @@ private:
   // void problemSetup( const ProblemSpecP&, GridP& ) = 0;
   // bool needRecompile( double t, double delt, const LevelP& level,
   //                     SimulationInterface* cfd, Output* output,
-  //                     LoadBalancer* lb ) = 0;
+  //                     LoadBalancerPort* lb ) = 0;
   // SimulationController(const SimulationController&) = 0;
   // SimulationController& operator=(const SimulationController&) = 0;
 };

@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_OUTPUT_H
+#define UINTAH_HOMEBREW_OUTPUT_H
+
 /*
  * The MIT License
  *
@@ -21,9 +24,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
-#ifndef UINTAH_HOMEBREW_OUTPUT_H
-#define UINTAH_HOMEBREW_OUTPUT_H
 
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
@@ -123,19 +123,12 @@ class SimulationState;
       // Insert Documentation Here:
     virtual const std::string getOutputLocation() const = 0;
 
-    //////////
-    // Get the current time step
-    virtual int getCurrentTimestep() const = 0;
-
-    //////////
-    // Get the current time step
-    virtual double getCurrentTime() const = 0;
-
     // Get the time the next output will occur
     virtual double getNextOutputTime() const = 0;
 
     // Get the timestep the next output will occur
-    virtual int getNextOutputTimestep() const = 0;
+    virtual int  getNextOutputTimestep() const = 0;
+    virtual void postponeNextOutputTimestep() = 0; // Pushes output back by one timestep.
 
     // Get the time the next checkpoint will occur
     virtual double getNextCheckpointTime() const = 0;
@@ -164,9 +157,12 @@ class SimulationState;
     virtual void updateCheckpointInterval( double inv ) = 0;
     virtual void updateCheckpointTimestepInterval( int inv ) = 0;
 
-    //get checkpoint interval
+    // get checkpoint interval
     virtual double getCheckpointInterval() const = 0;
     virtual int    getCheckpointTimestepInterval() const = 0;
+
+    // Returns true if the UPS file has specified to save the UDA using PIDX format.
+    virtual bool   savingAsPIDX() const = 0;
 
     //////////
     // Get the directory of the current time step for outputting info.

@@ -39,7 +39,6 @@
 #include <CCA/Components/MPM/SerialMPM.h>                // for SerialMPM
 #include <CCA/Components/Regridder/PerPatchVars.h>       // for PatchFlagP, etc
 #include <CCA/Ports/DataWarehouse.h>                     // for DataWarehouse
-#include <CCA/Ports/LoadBalancer.h>                      // for LoadBalancer
 #include <CCA/Ports/Output.h>                            // for Output
 #include <CCA/Ports/Scheduler.h>                         // for Scheduler
 #include <Core/Disclosure/TypeUtils.h>                   // for long64

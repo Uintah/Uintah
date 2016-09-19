@@ -714,7 +714,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
 
   // main thread also executes tasks
-  runTasks(Impl::t_tid);
+  runTasks( Impl::t_tid );
 
 
   //------------------------------------------------------------------------------------------------
@@ -795,16 +795,16 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     }
   }
 
-  if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {
+  if( m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1 ) {
     // Copy the restart flag to all processors
     int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    Uintah::MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    Uintah::MPI::Allreduce( &myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm() );
 
-    if (netrestart) {
+    if( netrestart ) {
       m_dws[m_dws.size() - 1]->restartTimestep();
-      if (m_dws[0]) {
+      if( m_dws[0] ) {
         m_dws[0]->setRestarted();
       }
     }

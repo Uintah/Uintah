@@ -22,16 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 
 using namespace Uintah;
 
-LoadBalancer::LoadBalancer()
+LoadBalancerPort::LoadBalancerPort()
 {
 }
 
-LoadBalancer::~LoadBalancer()
+LoadBalancerPort::~LoadBalancerPort()
 {
 }
 

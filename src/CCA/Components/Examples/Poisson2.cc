@@ -25,7 +25,7 @@
 
 #include <CCA/Components/Examples/Poisson2.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -103,7 +103,7 @@ Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   task->hasSubScheduler();
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
-  LoadBalancer* lb = sched->getLoadBalancer();
+  LoadBalancerPort* lb = sched->getLoadBalancer();
   const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
   sched->addTask(task, perproc_patches, sharedState_->allMaterials());
 }

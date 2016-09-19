@@ -40,7 +40,7 @@
 #include <Core/Exceptions/ConvergenceFailure.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -1065,12 +1065,15 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 
   task->requires(which_b_dw, b, Ghost::None, 0);
   task->hasSubScheduler();
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
+
+  LoadBalancerPort * lb              = sched->getLoadBalancer();
+  const PatchSet   * perproc_patches = lb->getPerProcessorPatchSet( level );
+
   sched->addTask(task, perproc_patches, matls);
 }
 
-string CGSolver::getName(){
+string
+CGSolver::getName() {
   return "CGSolver";
 }
 

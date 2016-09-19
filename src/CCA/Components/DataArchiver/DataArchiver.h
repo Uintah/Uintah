@@ -162,17 +162,12 @@ class DataWarehouse;
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-       //! Recommended to use sharedState directly if you can.
-       virtual int getCurrentTimestep() const { return d_sharedState->getCurrentTopLevelTimeStep(); }
-
-       //! Recommended to use sharedState directly if you can.
-       virtual double getCurrentTime() const { return  d_sharedState->getElapsedTime(); }
-
        //! Get the time the next output will occur
        virtual double getNextOutputTime() const { return d_nextOutputTime; }
 
        //! Get the timestep the next output will occur
-       virtual int getNextOutputTimestep() const { return d_nextOutputTimestep; }
+       virtual int  getNextOutputTimestep() const { return d_nextOutputTimestep; }
+       virtual void postponeNextOutputTimestep() { d_nextOutputTimestep++; } // Pushes output back by one timestep.
 
        //! Get the time the next checkpoint will occur
        virtual double getNextCheckpointTime() const { return d_nextCheckpointTime; }
@@ -202,8 +197,12 @@ class DataWarehouse;
        double getCheckpointInterval() const { return d_checkpointInterval; }
        int    getCheckpointTimestepInterval() const { return d_checkpointTimestepInterval; }
 
+       bool   savingAsPIDX() const { return ( d_outputFileFormat == PIDX ); } 
+
+       //! Called by In-situ VisIt to force the dump of a time step's data.
        void outputTimestep( double time, double delt,
 			    const GridP& grid, SchedulerP& sched );
+
        void checkpointTimestep( double time, double delt,
 				const GridP& grid, SchedulerP& sched );
 
@@ -238,36 +237,39 @@ class DataWarehouse;
 
      private:
      
-      enum outputFileFormat {UDA, PIDX};
-      outputFileFormat d_outputFileFormat;
+       enum outputFileFormat { UDA, PIDX };
+       outputFileFormat d_outputFileFormat;
       
-      //__________________________________
-      //         PIDX related
-      //! output the all of the saveLabels in PIDX format
-      size_t
-          saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
-                           const ProcessorGroup * pg,
-                           const PatchSubset    * patches,      
-                           DataWarehouse        * new_dw,          
-                           int                    type,
+       //__________________________________
+       //         PIDX related
+       //! output the all of the saveLabels in PIDX format
+       size_t
+          saveLabels_PIDX( std::vector< SaveItem >   & saveLabels,
+                           const ProcessorGroup      * pg,
+                           const PatchSubset         * patches,      
+                           DataWarehouse             * new_dw,          
+                           int                         type,
                            const TypeDescription::Type TD,
-                           Dir                    ldir,        // uda/timestep/levelIndex
-                           const std::string      dirName,     // CCVars, SFC*Vars
-                           ProblemSpecP&          doc);
+                           Dir                         ldir,        // uda/timestep/levelIndex
+                           const std::string         & dirName,     // CCVars, SFC*Vars
+                           ProblemSpecP              & doc );
                            
-      //! returns a vector of SaveItems with a common type description
-      std::vector<DataArchiver::SaveItem> 
+       //! returns a vector of SaveItems with a common type description
+       std::vector<DataArchiver::SaveItem> 
           findAllVariableTypes( std::vector< SaveItem >& saveLabels,
                                  const TypeDescription::Type TD );
       
-      //! bulletproofing so user can't save unsupported var type
-      void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
-                               std::vector<TypeDescription::Type> pidxVarTypes );
+       //! bulletproofing so user can't save unsupported var type
+       void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
+                                std::vector<TypeDescription::Type> pidxVarTypes );
            
-      void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
-                            Dir& levelDir );
-                            
-      
+       void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
+                             Dir& levelDir );
+
+       void writeGridBinary(     const bool hasGlobals, const std::string & grid_name, const GridP & grid );
+       void writeGridOriginal(   const bool hasGlobals, const std::string & grid_name, const GridP & grid );
+       void writeGridTextWriter( const bool hasGlobals, const std::string & grid_name, const GridP & grid );
+
        PIDXOutputContext::PIDX_flags d_PIDX_flags;    // contains the knobs & switches                      
        
        //__________________________________
@@ -357,24 +359,24 @@ class DataWarehouse;
 
        // Only one of these should be non-zero.  The value is read from the .ups file.
        double d_outputInterval;         // In seconds.
-       int d_outputTimestepInterval;    // Number of time steps.
+       int    d_outputTimestepInterval; // Number of time steps.
 
        double d_nextOutputTime;         // used when d_outputInterval != 0
-       int d_nextOutputTimestep;        // used when d_outputTimestepInterval != 0
+       int    d_nextOutputTimestep;     // used when d_outputTimestepInterval != 0
        //int d_currentTimestep;
-       Dir d_dir;                       //!< top of uda dir
+       Dir    d_dir;                    //!< top of uda dir
 
        //! Represents whether this proc will output non-processor-specific
        //! files
-       bool d_writeMeta;
+       bool   d_writeMeta;
 
        //! Whether or not to save the initialization timestep
-       bool d_outputInitTimestep;
+       bool   d_outputInitTimestep;
 
        //! last timestep dir (filebase.000/t#)
        std::string d_lastTimestepLocation;
-       bool d_isOutputTimestep;         //!< set if this is an output timestep
-       bool d_isCheckpointTimestep;     //!< set if a checkpoint timestep
+       bool        d_isOutputTimestep;         //!< set if this is an output timestep
+       bool        d_isCheckpointTimestep;     //!< set if a checkpoint timestep
 
        //! Whether or not particle vars are saved
        //! Requires p.x to be set

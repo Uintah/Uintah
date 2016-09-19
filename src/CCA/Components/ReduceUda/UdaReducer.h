@@ -39,7 +39,7 @@
 #include <vector>
 
 namespace Uintah {
-  class LoadBalancer;
+  class LoadBalancerPort;
 
 /**************************************
 
@@ -162,7 +162,7 @@ WARNING
     
     int                    d_timeIndex;
 
-    LoadBalancer         * d_lb;
+    LoadBalancerPort     * d_lb;
     const VarLabel       * delt_label;
     SimulationStateP       d_sharedState;
     SimpleMaterial       * d_oneMatl;
