@@ -956,8 +956,6 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
     allVarPointersInfo vp;
     vp.device_offset = hostSideGPUDW_iter->second.device_offset;
     
-    std::cout << "The size of the map is: " << hostSideGPUDW_iter->second.var->stagingVars.size() << std::endl;
-
     // Give it a d_varDB index
     vp.varDB_index = d_varDB_index;
 
@@ -1872,7 +1870,7 @@ GPUDataWarehouse::clear()
         }
       }
     }
-    std::cout << "Clear() - Clearing out staging vars for" << varIter->second.var << std::endl;
+
     varIter->second.var->stagingVars.clear();
 
     // clear out the regular vars

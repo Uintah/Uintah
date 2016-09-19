@@ -1094,9 +1094,11 @@ UnifiedScheduler::runTasks( int thread_id )
           break;
         }
       }
+      
       if (m_num_tasks_done == m_num_tasks) {
         break;
       }
+
     } // end while (!havework)
     g_scheduler_mutex.unlock();
 
@@ -1870,34 +1872,19 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
             //Turn this into a superpatch if not already done so:
             turnIntoASuperPatch(gpudw, level, low, high, curDependency->m_var, patch, matlID, levelID);
   
-            //At the moment superpatches are gathered together through an upcoming getRegionModifiable() call. 
-            //So don't treat them as having ghost cells
-          } else {
-
-
-            // We will also mark it as awaiting ghost cells.
-            // (If it was a uses_SHRT_MAX amount of ghost cells, we'll handle that later.  For these gathering will happen on the *CPU*
-            // as it's currently much more efficient to do it there.)
-            gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
+            //At the moment superpatches are gathered together through an upcoming getRegionModifiable() call.  So we 
+            //still need to mark it as AWAITING_GHOST_CELLS. It should trigger as one of the simpler scenarios
+            //below where it knows it can gather the ghost cells host-side before sending it into GPU memory.
           }
+          
+          //See if we get to be the lucky thread that processes all ghost cells for this simulation variable
+          gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
 
         }
 
         if ((allocating || allocated) && correctSize && (copyingIn || validOnGPU)) {
           //This variable exists or soon will exist on the destination.  So the non-ghost cell part of this
           //variable doesn't need any more work.
-
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            {
-              gpu_stats << myRankThread()
-                  << " InitiateH2D() - The variable "
-                  << curDependency->m_var->getName().c_str()
-                  << " patch " << patchID << " material " << matlID
-                  << " has been copied in or is copying into the GPU.  But ghost cells are not copied in, so starting that process now." << std::endl;
-            }
-            cerrLock.unlock();
-          }
 
           //Queue it to be added to this tasks's TaskDW.
           //It's possible this variable data already was queued to be sent in due to this patch being a ghost cell region of another patch
@@ -1909,6 +1896,18 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           if (gatherGhostCells) {
             // The variable's space exists or will soon exist on the GPU.  Now copy in any ghost cells
             // into the GPU and let the GPU handle the ghost cell copying logic.
+
+            if (gpu_stats.active()) {
+              cerrLock.lock();
+              {
+                gpu_stats << myRankThread()
+                    << " InitiateH2D() - The variable "
+                    << curDependency->m_var->getName().c_str()
+                    << " patch " << patchID << " material " << matlID
+                    << " has been copied in or is copying into the GPU.  But ghost cells are not copied in, so starting that process now." << std::endl;
+              }
+              cerrLock.unlock();
+            }
 
             // Indicate to the scheduler later on that this variable can be marked as valid with ghost cells.
             dtask->getVarsToBeGhostReady().addVarToBeGhostReady(dtask->getName(), patch, matlID, levelID, curDependency, deviceIndex);
@@ -2054,7 +2053,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                   cerrLock.lock();
                   {
                     gpu_stats << myRankThread()
-                        << " InitiateH2D() - The CPU does not need to supply ghost cells from patch "
+                        << " InitiateH2D() - Host memory does not need to supply ghost cells to GPU memory from patch "
                         << sourcePatch->getID() << " to "
                         << patchID
                         << std::endl;
@@ -2092,7 +2091,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                   cerrLock.lock();
                   {
                     gpu_stats << myRankThread()
-                        << " InitaiteH2D() - Internal GPU ghost cell copy queued for "
+                        << " InitaiteH2D() - Internal GPU memory ghost cell copy queued for "
                         << curDependency->m_var->getName().c_str() << " from patch "
                         << sourcePatch->getID() << " to patch " << patchID
                         << " using a variable starting at ("
@@ -2117,7 +2116,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                    cerrLock.lock();
                    {
                      gpu_stats << myRankThread()
-                         << " InitiateH2D() -  The CPU has foreign ghost cells that we will use for "
+                         << " InitiateH2D() -  The host memory has foreign ghost cells that we will use for "
                          << curDependency->m_var->getName().c_str() << " for patch "
                          << sourcePatch->getID() << " to "
                          << patchID
@@ -3233,7 +3232,18 @@ UnifiedScheduler::markDeviceGhostsAsValid( DetailedTask * dtask )
     int dwIndex = it->second.m_dep->mapDataWarehouse();
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
 
-    // A regular/non staging variable.... if it has a ghost cell
+
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << myRankThread() << " markDeviceGhostsAsValid() -"
+            << " Marking GPU memory as valid with ghosts for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID
+            << " offset(" << it->second.m_offset.x() << ", " << it->second.m_offset.y() << ", " << it->second.m_offset.z()
+            << ") size (" << it->second.m_sizeVector.x() << ", " << it->second.m_sizeVector.y() << ", " << it->second.m_sizeVector.z() << ")" << std::endl;
+      }
+      cerrLock.unlock();
+    }
+
     gpudw->setValidWithGhostsOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
   }
 }
