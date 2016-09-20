@@ -267,11 +267,17 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
 //______________________________________________________________________
 template< class T >
 void
-Radiometer::initializeRadVars( const ProcessorGroup*,
+Radiometer::initializeRadVars( DetailedTask* dtask,
+                               Task::CallBackEvent event,
+                               const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
+                               void* oldTaskGpuDW,
+                               void* newTaskGpuDW,
+                               void* stream,
+                               int deviceID,
                                const int radCalc_freq )
 {
   // Recompile taskgraph on calc timesteps
@@ -281,7 +287,7 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
   if ( doCarryForward( radCalc_freq) ) {
     printTask(patches,patches->get(0), dbg,"Doing Radiometer::initializeVars (carryForward)");
     bool replaceVar = true;
-    new_dw->transferFrom( old_dw, d_VRFluxLabel,    patches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_VRFluxLabel, patches, matls, dtask, replaceVar, nullptr );
 
     return;
   }

@@ -3280,7 +3280,13 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
             const int patchID = patch->getID();
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(var->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(var->typeDescription()->getSubType()->getType());
-
+            if(!dTask) {
+              std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."  
+                        << " You need to update the task's callback function to include more parameters which supplies this information."
+                        << " Then you need to pass that detailed task pointer into the transferFrom method." 
+                        << " As an example, please see the parameters for UnifiedSchedulerTest::timeAdvanceUnified."   << std::endl;
+              throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__); 
+            }
             //The GPU assigns streams per task.  For transferFrom to work, it *must* know which correct stream to use
             bool foundGPU = getGPUDW(0)->transferFrom(((DetailedTask*)dTask)->getCudaStreamForThisTask(0),
                                                       *device_var_source, *device_var_dest,
