@@ -56,7 +56,9 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
                             GridP& grid )
 {
   ProblemSpecP db = input_db;
-  db->getWithDefault("temporal_order", _rk_order,1);
+  ProblemSpecP db_root = db->getRootNode();
+  db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _rk_order);
+  proc0cout << " Time integrator: RK of order " << _rk_order << std::endl;
 }
 
 void
