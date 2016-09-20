@@ -166,13 +166,13 @@ namespace Uintah {
 // All variables that will be relocated must exist on the same levels.
 // You cannot have one variable that exists on a different number of levels
 void
-Relocate::scheduleParticleRelocation(Scheduler* sched,
-                                     const ProcessorGroup* pg,
-                                     LoadBalancerPort * lb,
-                                     const LevelP& coarsestLevelwithParticles,
-                                     const VarLabel* posLabel,
-                                     const std::vector<std::vector<const VarLabel*> >& otherLabels,
-                                     const MaterialSet* matls)
+Relocate::scheduleParticleRelocation(       Scheduler                                  * sched,
+                                      const ProcessorGroup                             * pg,
+                                            LoadBalancerPort                           * lb,
+                                      const LevelP                                     & coarsestLevelwithParticles,
+                                      const VarLabel                                   * posLabel,
+                                      const std::vector<std::vector<const VarLabel*> > & otherLabels,
+                                      const MaterialSet                                * matls )
 {
   //In this version of the relocation algorithm, the user provides a list of varlabels that require
   // relocation. Uintah will create a mirror list of temporary, post-reloc variables. Uintah will
@@ -751,12 +751,12 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
       Uintah::MPI::Unpack(buf, size, &position, &datasize,    1, MPI_INT, pg->getComm());
       
       char* databuf=buf+position;
-      ASSERTEQ( lb->getPatchwiseProcessorAssignment(toPatch), me );
+      ASSERTEQ( m_lb->getPatchwiseProcessorAssignment(toPatch), me );
       
       scatter_records->saveRecv(toPatch, matl, databuf, datasize, numParticles);
       
-      position      +=datasize;
-      total_reloc[2]+=numParticles;
+      position       += datasize;
+      total_reloc[2] += numParticles;
     }
   }
 }
@@ -867,7 +867,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
     Patch::selectType coarsePatches;
     coarseLevel->selectPatches(cl, ch, coarsePatches);
 
-    ASSERT(coarsePatches.size() != 0);
+    ASSERT( coarsePatches.size() != 0 );
 
     for(int i=0; i<coarsePatches.size(); i++){
       const Patch* neighbor=coarsePatches[i];
@@ -972,9 +972,9 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
         
         ParticleSubset::iterator delete_iter = delete_pset->begin();
         
-        ASSERT(std::is_sorted(pset->begin(), pset->end()));
-        ASSERT(std::is_sorted(delete_pset->begin(), delete_pset->end()));
-        ASSERT(pset->begin() == pset->end() || *pset->begin() == 0);
+        ASSERT( std::is_sorted(pset->begin(), pset->end()) );
+        ASSERT( std::is_sorted(delete_pset->begin(), delete_pset->end()) );
+        ASSERT( pset->begin() == pset->end() || *pset->begin() == 0 );
         
         // The previous Particle's relocation patch
         const Patch* PP_ToPatch_FL = 0;   // on fine level
@@ -1096,7 +1096,7 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
         std::vector<ParticleSubset*> subsets;
         
         ParticleSubset* keep_pset = keep_psets(p, m);
-        ASSERT(keep_pset != 0);
+        ASSERT( keep_pset != 0 );
         
         fromPatches.push_back(toPatch);
         subsets.push_back(keep_pset);
@@ -1107,7 +1107,7 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
           const Patch* fromPatch=neighborPatches[i];
           
           int fromProc = m_lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch());
-          ASSERTRANGE(fromProc, 0, pg->size());
+          ASSERTRANGE( fromProc, 0, pg->size() );
           
           if(fromProc == me){
             ScatterRecord* record = scatter_records.findRecord(fromPatch, toPatch, matl, curLevelIndex);
@@ -1256,11 +1256,11 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
               vars[v]->unpackMPI(buf->databuf, buf->bufsize, &position,pg, unpackset);
             }
             
-            ASSERT(position <= buf->bufsize);
+            ASSERT( position <= buf->bufsize );
             delete unpackset;
           }  // MPI portion
           
-          ASSERTEQ(idx, totalParticles);
+          ASSERTEQ( idx, totalParticles );
           
 #if 0
           for(int v=0;v<numVars;v++){
@@ -1270,7 +1270,7 @@ Relocate::relocateParticlesModifies( const ProcessorGroup* pg,
           }
           
           // must have a p.particleID variable in reloc labels
-          ASSERT(v < numVars);
+          ASSERT( v < numVars );
           newsubset->sort(vars[v] /* particleID variable */);
 #endif
           
