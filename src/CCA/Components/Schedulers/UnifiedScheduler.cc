@@ -1272,7 +1272,7 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
                                         , OnDemandDataWarehouse * dw
                                         , OnDemandDataWarehouse * old_dw
                                         , const DetailedDep     * dep
-                                        , LoadBalancer          * lb
+                                        , LoadBalancerPort      * lb
                                         , DeviceVarDest           dest
                                         )
 {
@@ -4180,16 +4180,18 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
 
         // the load balancer is used to determine where data was in the old dw on the prev timestep -
         // pass it in if the particle data is on the old dw
-        LoadBalancer* lb = 0;
+        LoadBalancerPort * lb = nullptr;
 
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
           posLabel = m_parent_scheduler->m_reloc_new_pos_label;
-        } else {
+        }
+        else {
           // on an output task (and only on one) we require particle variables from the NewDW
           if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
-          } else {
+          }
+          else {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
             lb = getLoadBalancer();
           }
@@ -4255,16 +4257,18 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
 
         // the load balancer is used to determine where data was in the old dw on the prev timestep -
         // pass it in if the particle data is on the old dw
-        LoadBalancer* lb = 0;
+        LoadBalancerPort * lb = 0;
 
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW    = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
           posLabel = m_parent_scheduler->m_reloc_new_pos_label;
-        } else {
+        }
+        else {
           // on an output task (and only on one) we require particle variables from the NewDW
           if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
-          } else {
+          }
+          else {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
             lb    = getLoadBalancer();
           }
