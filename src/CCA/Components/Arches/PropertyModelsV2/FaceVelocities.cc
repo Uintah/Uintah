@@ -6,9 +6,9 @@ FaceVelocities::FaceVelocities( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ){
 
   //hard coded velocity names:
-  m_u_vel_name = "uVel";
-  m_v_vel_name = "vVel";
-  m_w_vel_name = "wVel";
+  m_u_vel_name = "uVelocitySPBC";
+  m_v_vel_name = "vVelocitySPBC";
+  m_w_vel_name = "wVelocitySPBC";
 
   m_vel_names.resize(9);
   m_vel_names[0] = "ucell_xvel";
