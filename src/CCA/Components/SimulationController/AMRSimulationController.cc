@@ -261,7 +261,7 @@ AMRSimulationController::run()
       if( requested_nth_output_proc > 1 ) {
         proc0cout << "Input file requests output to be saved by every " << requested_nth_output_proc << "th processor.\n";
         proc0cout << "  - However, setting output to every process until we hit a checkpoint\n";
-        d_lb->setNthProc( 1 );
+        d_lb->setNthRank( 1 );
         d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
       }
     }
@@ -305,7 +305,7 @@ AMRSimulationController::run()
         if( requested_nth_output_proc > 1 ) {
           proc0cout << "this is a checkpoint timestep (" << ( currentTimeStep + 1 )
                     << ") - need to recompile with nth proc set to: " << requested_nth_output_proc << "\n";
-          d_lb->setNthProc( requested_nth_output_proc );
+          d_lb->setNthRank( requested_nth_output_proc );
           d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
           need_to_recompile = true;
         }
@@ -430,7 +430,7 @@ AMRSimulationController::run()
 
       if( put_back ) {
         proc0cout << "this is the timestep following a checkpoint - need to put the task graph back with a recompile - seting nth output to 1\n";
-        d_lb->setNthProc( 1 );
+        d_lb->setNthRank( 1 );
         d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
         put_back = false;
       }
