@@ -177,14 +177,19 @@ namespace Uintah{
                                 Task::WhichDW myDW,
                                 const int radCalc_freq );
 
-      void DoubleToFloat( const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          Task::WhichDW which_dw,
-                          const int radCalc_freq );
-
+      void DoubleToFloat( DetailedTask* dtask,
+                            Task::CallBackEvent event,
+                            const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            void* oldTaskGpuDW,
+                            void* newTaskGpuDW,
+                            void* stream,
+                            int deviceID,
+                            Task::WhichDW which_dw,
+                            const int radCalc_freq);
 
       void doRecompileTaskgraph( const int radCalc_freq );
       

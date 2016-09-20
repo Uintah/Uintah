@@ -200,11 +200,17 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
 //
 //______________________________________________________________________
 void
-RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
+RMCRTCommon::DoubleToFloat( DetailedTask* dtask,
+                            Task::CallBackEvent event,
+                            const ProcessorGroup* pg,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
+                            void* oldTaskGpuDW,
+                            void* newTaskGpuDW,
+                            void* stream,
+                            int deviceID,
                             Task::WhichDW which_dw,
                             const int radCalc_freq )
 {
@@ -212,7 +218,7 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
   //  Carry Forward
   if ( doCarryForward( radCalc_freq ) ) {
     printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::DoubleToFloat carryForward (abskgRMCRT)" );
-    new_dw->transferFrom( old_dw, d_abskgLabel, patches, matls, true );
+    new_dw->transferFrom( old_dw, d_abskgLabel, patches, matls, dtask, true, nullptr );
     return;
   }
 

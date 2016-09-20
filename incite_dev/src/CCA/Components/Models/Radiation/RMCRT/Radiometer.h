@@ -67,11 +67,17 @@ namespace Uintah{
                                     SchedulerP& sched,
                                     const int radCalc_freq );
       template < class T >
-      void initializeRadVars( const ProcessorGroup*,
+      void initializeRadVars( DetailedTask* dtask,
+                              Task::CallBackEvent event,
+                              const ProcessorGroup* pg,
                               const PatchSubset* patches,
-                              const MaterialSubset* ,
+                              const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
+                              void* oldTaskGpuDW,
+                              void* newTaskGpuDW,
+                              void* stream,
+                              int deviceID,
                               const int radCalc_freq );
 
       //__________________________________
