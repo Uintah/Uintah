@@ -312,6 +312,7 @@ private:
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       T& phi = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn] ));
+      T& rhs = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn]+"_rhs" ));
       typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
       CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( _eqn_names[ieqn] ));
 
@@ -409,8 +410,8 @@ private:
         CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(_eqn_names[ieqn]+"_y_psi"));
         CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(_eqn_names[ieqn]+"_z_psi"));
 
-        Uintah::ComputeConvectiveFlux<T> get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
-                                                   x_flux, y_flux, z_flux, af_x, af_y, af_z );
+        Uintah::ComputeConvectiveFlux get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
+                                                x_flux, y_flux, z_flux, af_x, af_y, af_z );
         Uintah::parallel_for( range_cl_to_ech, get_flux );
       }
 
