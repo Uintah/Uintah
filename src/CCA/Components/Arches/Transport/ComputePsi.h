@@ -199,9 +199,9 @@ private:
     register_variable( "areaFractionX", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( "areaFractionY", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     register_variable( "areaFractionZ", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( "uVel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( "vVel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-    register_variable( "wVel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( "uVelocitySPBC", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( "vVelocitySPBC", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( "wVelocitySPBC", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
   }
 
   template <typename T>
@@ -211,9 +211,9 @@ private:
     ConstYFaceT& af_y = *(tsk_info->get_const_uintah_field<ConstYFaceT>("areaFractionY"));
     ConstZFaceT& af_z = *(tsk_info->get_const_uintah_field<ConstZFaceT>("areaFractionZ"));
 
-    ConstXFaceT& u = *(tsk_info->get_const_uintah_field<ConstXFaceT>("uVel"));
-    ConstYFaceT& v = *(tsk_info->get_const_uintah_field<ConstYFaceT>("vVel"));
-    ConstZFaceT& w = *(tsk_info->get_const_uintah_field<ConstZFaceT>("wVel"));
+    ConstXFaceT& u = *(tsk_info->get_const_uintah_field<ConstXFaceT>("uVelocitySPBC"));
+    ConstYFaceT& v = *(tsk_info->get_const_uintah_field<ConstYFaceT>("vVelocitySPBC"));
+    ConstZFaceT& w = *(tsk_info->get_const_uintah_field<ConstZFaceT>("wVelocitySPBC"));
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 

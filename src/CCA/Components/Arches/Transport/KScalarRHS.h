@@ -300,6 +300,7 @@ private:
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
+      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
     }
   }
@@ -315,6 +316,7 @@ private:
       CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( _eqn_names[ieqn] ));
 
       phi.copyData(old_phi);
+      rhs.initialize(0.0);
 
     } //equation loop
   }
@@ -382,6 +384,7 @@ private:
     const int istart = 0;
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+
       CT& phi     = *(tsk_info->get_const_uintah_field<CT>(_eqn_names[ieqn]));
       T& rhs      = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
 

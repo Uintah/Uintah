@@ -181,7 +181,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
-    //now update them
+    // now update them:
     SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
     for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
@@ -196,8 +196,16 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
+    // now construct RHS:
     SVec mom_rhs_builders = i_transport->second->retrieve_task_subset("mom_rhs_builders");
     for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+    }
+
+    // now update them:
+    SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update");
+    for ( SVec::iterator i = mom_fe_up.begin(); i != mom_fe_up.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
