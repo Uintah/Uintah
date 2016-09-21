@@ -30,8 +30,9 @@
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/BoundaryFunctors.h>
+
 #ifdef DO_TIMINGS
-#include <spatialops/util/TimeLogger.h>
+#  include <spatialops/util/TimeLogger.h>
 #endif
 
 namespace Uintah{
