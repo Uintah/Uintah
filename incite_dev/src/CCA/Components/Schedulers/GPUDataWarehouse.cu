@@ -986,8 +986,6 @@ GPUDataWarehouse::copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const
       allVarPointersInfo vp;
       vp.device_offset = hostSideGPUDW_iter->second.device_offset;
 
-      std::cout << "The size of the map is: " << hostSideGPUDW_iter->second.var->stagingVars.size() << std::endl;
-
       // Empty placeholders won't be placed in the d_varDB array.
       vp.varDB_index = -1;
 

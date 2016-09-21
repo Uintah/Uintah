@@ -1214,31 +1214,25 @@ UnifiedScheduler::runTasks( int thread_id )
           //Some CPU tasks still interact with the GPU.  For example, DataArchiver,::ouputVariables, or
           //RMCRT task which copies over old data warehouse variables to the new data warehouse, or even
           //CPU tasks which locally invoke their own quick self contained kernels for quick and dirty local code
-          //which use the GPU in a way that the data warehouse or the scheduler never needs to know about it.
+          //which use the GPU in a way that the data warehouse or the scheduler never needs to know about it (e.g. transferFrom()).
           //So because we aren't sure which CPU tasks could use the GPU, just go ahead and assign each task
           //a GPU stream.
           assignDevicesAndStreams(readyTask);
 
-          // If the task graph has scheduled to output variables, make sure that we are
-          // going to actually output variables before pulling data out of the GPU.
+          // Run initiateD2H on all tasks in case the data we need is in GPU memory but not in host memory.
+          // The exception being we don't run an output task in a non-output timestep.  
           // (It would be nice if the task graph didn't have this OutputVariables task if
           // it wasn't going to output data, but that would require more task graph recompilations,
           // which can be even costlier overall.  So we do the check here.)
-          // So check everything, except for ouputVariables tasks when it's not an output timestep.
-          
-          //std::cout << "Output timestep is " << std::boolalpha << m_out_port->isOutputTimestep() << std::noboolalpha << std::endl;
 
-          if ((m_out_port->isOutputTimestep())
+          if ((m_out_port->isOutputTimestep() || m_out_port->isCheckpointTimestep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             initiateD2H(readyTask);
-
-          } else if ((readyTask->getTask()->getName() == "DataArchiver::outputVariables")
-                  || (readyTask->getTask()->getName() == "DataArchiver::outputVariables(checkpoint)")){
-             
-            //printf("NOT running initiateD2H\n");
           }
+          
           m_detailed_tasks->addFinalizeHostPreparation(readyTask);
+
         } else if (cpuFinalizeHostPreparation) {
           markHostRequiresDataAsValid(readyTask);
           if (!allHostVarsProcessingReady(readyTask)) {
