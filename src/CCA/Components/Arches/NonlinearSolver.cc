@@ -34,7 +34,7 @@ NonlinearSolver::NonlinearSolver(const ProcessorGroup* myworld)
 NonlinearSolver::~NonlinearSolver()
 {}
 
-void 
+void
 NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
 
   //The underflow uses a different method to compute the CFL
@@ -46,5 +46,7 @@ NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
   }
 
   db->getWithDefault("initial_dt",d_initial_dt,1.0);
+
+  _arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
 
 }

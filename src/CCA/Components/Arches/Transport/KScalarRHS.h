@@ -29,10 +29,8 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
-
-#ifdef DO_TIMINGS
-#  include <spatialops/util/TimeLogger.h>
-#endif
+#include <CCA/Components/Arches/BoundaryFunctors.h>
+#include <spatialops/util/TimeLogger.h>
 
 namespace Uintah{
 
@@ -137,7 +135,7 @@ private:
 
     _total_eqns = 0;
 
-    ConvectionHelper* conv_helper;
+    ConvectionHelper* conv_helper = scinew ConvectionHelper();
     for (ProblemSpecP db = input_db->findBlock("eqn"); db != 0;
          db = db->findNextBlock("eqn")){
 
@@ -209,6 +207,8 @@ private:
       _source_info.push_back(eqn_srcs);
 
     }
+
+    delete conv_helper;
 
     // Default velocity names:
     _x_velocity_name = "uVelocitySPBC";
@@ -311,6 +311,7 @@ private:
     const int istart = 0;
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+
       T& phi = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn] ));
       T& rhs = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn]+"_rhs" ));
       typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
@@ -460,7 +461,6 @@ private:
 
   template <typename T> void
   KScalarRHS<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
-    //register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
   }
 
   template <typename T> void

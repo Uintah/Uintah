@@ -38,6 +38,7 @@ public:
     enum TASK_TYPE { STANDARD_TASK, BC_TASK };
 
     typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> ParticleTuple;
+    
     typedef std::tuple<constParticleVariable<double>*, ParticleSubset*> ConstParticleTuple;
 
     /** @brief Default constructor **/
@@ -154,55 +155,12 @@ public:
 
     };
 
-protected:
-
-    /** @brief Inteface to register_variable_work -- this function is overloaded. **/
-    void register_variable( std::string name,
-                            ArchesFieldContainer::VAR_DEPEND dep,
-                            int nGhost,
-                            ArchesFieldContainer::WHICH_DW dw,
-                            std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
-                            const int time_substep );
-
-    /** @brief Inteface to register_variable_work -- this function is overloaded. **/
-    void register_variable( std::string name,
-                            ArchesFieldContainer::VAR_DEPEND dep,
-                            int nGhost,
-                            ArchesFieldContainer::WHICH_DW dw,
-                            std::vector<ArchesFieldContainer::VariableInformation>& var_reg );
-
-    /** @brief Inteface to register_variable_work -- this function is overloaded.
-     *         This version assumes NewDW and zero ghosts. **/
-    void register_variable( std::string name,
-                            ArchesFieldContainer::VAR_DEPEND dep,
-                            std::vector<ArchesFieldContainer::VariableInformation>& var_reg );
-
-    /** @brief Inteface to register_variable_work -- this function is overloaded.
-     *         This version assumes NewDW and zero ghosts. **/
-    void register_variable( std::string name,
-                            ArchesFieldContainer::VAR_DEPEND dep,
-                            std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
-                            const int timesubstep );
-
-    /** @brief Builds a struct for each variable containing all pertinent uintah
-     * DW information **/
-     void register_variable_work( std::string name,
-                                       ArchesFieldContainer::VAR_DEPEND dep,
-                                       int nGhost,
-                                       ArchesFieldContainer::WHICH_DW dw,
-                                       ArchesFieldContainer::VariableRegistry& variable_registry,
-                                       const int time_substep );
-
-
     /** @brief A container to hold a small amount of other information to
      *         pass into the task exe. **/
     struct SchedToTaskInfo{
       int time_substep;
       double dt;
     };
-
-    typedef std::map<std::string, GridVariableBase* > UintahVarMap;
-    typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap;
 
     /** @brief A class for managing the retrieval of uintah/so fields during task exe **/
     class ArchesTaskInfoManager{
@@ -284,6 +242,49 @@ protected:
         SchedToTaskInfo& _tsk_info;
 
     }; //End ArchesTaskInfoManager
+
+protected:
+
+    /** @brief Inteface to register_variable_work -- this function is overloaded. **/
+    void register_variable( std::string name,
+                            ArchesFieldContainer::VAR_DEPEND dep,
+                            int nGhost,
+                            ArchesFieldContainer::WHICH_DW dw,
+                            std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
+                            const int time_substep );
+
+    /** @brief Inteface to register_variable_work -- this function is overloaded. **/
+    void register_variable( std::string name,
+                            ArchesFieldContainer::VAR_DEPEND dep,
+                            int nGhost,
+                            ArchesFieldContainer::WHICH_DW dw,
+                            std::vector<ArchesFieldContainer::VariableInformation>& var_reg );
+
+    /** @brief Inteface to register_variable_work -- this function is overloaded.
+     *         This version assumes NewDW and zero ghosts. **/
+    void register_variable( std::string name,
+                            ArchesFieldContainer::VAR_DEPEND dep,
+                            std::vector<ArchesFieldContainer::VariableInformation>& var_reg );
+
+    /** @brief Inteface to register_variable_work -- this function is overloaded.
+     *         This version assumes NewDW and zero ghosts. **/
+    void register_variable( std::string name,
+                            ArchesFieldContainer::VAR_DEPEND dep,
+                            std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
+                            const int timesubstep );
+
+    /** @brief Builds a struct for each variable containing all pertinent uintah
+     * DW information **/
+     void register_variable_work( std::string name,
+                                       ArchesFieldContainer::VAR_DEPEND dep,
+                                       int nGhost,
+                                       ArchesFieldContainer::WHICH_DW dw,
+                                       ArchesFieldContainer::VariableRegistry& variable_registry,
+                                       const int time_substep );
+
+
+    typedef std::map<std::string, GridVariableBase* > UintahVarMap;
+    typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap;
 
     /** @brief The actual work done within the derived class **/
     virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;

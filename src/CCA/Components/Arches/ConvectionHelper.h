@@ -397,10 +397,10 @@ namespace Uintah {
   **/
   class ConvectionHelper{
 
+  public:
     ConvectionHelper(){}
     ~ConvectionHelper(){}
 
-  public:
     /**
       @brief Get the limiter enum from a string representation
     **/

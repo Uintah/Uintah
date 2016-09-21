@@ -119,7 +119,8 @@ Arches::~Arches()
 void
 Arches::problemSetup(const ProblemSpecP& params,
                      const ProblemSpecP& materials_ps,
-                     GridP& grid, SimulationStateP& sharedState)
+                     GridP& grid, 
+                     SimulationStateP& sharedState)
 {
 
   d_sharedState= sharedState;
@@ -276,10 +277,6 @@ void
 Arches::scheduleInitialize(const LevelP& level,
                            SchedulerP& sched)
 {
-  if( level->getIndex() != d_archesLevelIndex )
-    return;
-
-  const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
   //=========== NEW TASK INTERFACE ==============================
   if ( _doLagrangianParticles ) {
@@ -289,6 +286,9 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //=========== END NEW TASK INTERFACE ==============================
   d_nlSolver->initialize( level, sched, d_doingRestart );
+
+  if( level->getIndex() != d_archesLevelIndex )
+    return;
 
   //______________________
   //Data Analysis
@@ -308,8 +308,8 @@ Arches::scheduleInitialize(const LevelP& level,
 
 //--------------------------------------------------------------------------------------------------
 void
-Arches::scheduleRestartInitialize(const LevelP& level,
-                                  SchedulerP& sched)
+Arches::scheduleRestartInitialize( const LevelP& level,
+                                   SchedulerP& sched )
 {
 
   bool is_restart = true;
@@ -363,8 +363,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
-  //const MaterialSet* matls = d_sharedState->allArchesMaterials(); // not used - commented to remove warnings
-
   nofTimeSteps++;
 
   if( d_sharedState->isRegridTimestep() ) { // needed for single level regridding on restarts
@@ -374,8 +372,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   }
 
   if (d_doingRestart  ) {
-
-    const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
     if(d_recompile_taskgraph)
     d_nlSolver->sched_restartInitializeTimeAdvance(level,sched);

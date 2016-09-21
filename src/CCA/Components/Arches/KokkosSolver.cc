@@ -56,6 +56,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
                             GridP& grid )
 {
   ProblemSpecP db = input_db;
+  m_arches_spec = db;
   ProblemSpecP db_root = db->getRootNode();
   db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _rk_order);
   proc0cout << " Time integrator: RK of order " << _rk_order << std::endl;
@@ -104,8 +105,7 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   bool is_restart = false;
 
   //boundary condition
-  m_bcHelper = scinew WBCHelper( level, sched, matls );
-  m_bcHelper->parse_boundary_conditions();
+  m_bcHelper = scinew WBCHelper( level, sched, matls, m_arches_spec );
   sched_checkBCs( sched, level );
 
   //utility factory

@@ -148,15 +148,19 @@ private:
       eqn_db->getAttribute("label", scalar_name);
 
       if ( eqn_db->findBlock("convection" )){
+
         eqn_db->findBlock("convection")->getAttribute("scheme",limiter);
 
-        ConvectionHelper* conv_helper;
+        ConvectionHelper* conv_helper = scinew ConvectionHelper();
 
         LIMITER enum_limiter = conv_helper->get_limiter_from_string(limiter);
 
         _name_to_limiter_map.insert(std::make_pair(scalar_name, enum_limiter));
 
         _eqn_names.push_back(scalar_name);
+
+        delete conv_helper; 
+
       }
 
     }
