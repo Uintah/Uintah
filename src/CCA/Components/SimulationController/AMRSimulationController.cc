@@ -187,7 +187,7 @@ AMRSimulationController::run()
   //////////////////////////////////////////////////////////
   // Display stats for 0th time step:
   getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep() );
-  getPAPIStats( );
+  getPAPIStats();
   d_sharedState->d_runTimeStats.reduce( d_regridder &&
                                         d_regridder->useDynamicDilation(),
                                         d_myworld );
@@ -294,13 +294,39 @@ AMRSimulationController::run()
       }
     }
      
+    // Retrieve delta T and adjust it:
+    DataWarehouse* newDW = d_scheduler->getLastDW();
+    newDW->get( delt_var, d_sharedState->get_delt_label() );
+    delt = delt_var;
+    
+#ifdef HAVE_VISIT
+    // If the user modified delt during the previous time step skip
+    // calling adjustDelT for this next time step.
+
+    // Note: this code is not explicit to VisIt but it is currently
+    // the only component that is making use of the ability to
+    // overirde adjusting delta T.
+    if( d_sharedState->getVisIt() && d_sharedState->adjustDelT() == false ) {
+      d_sharedState->adjustDelT( true );
+    }
+    else
+#endif
+    {
+      // delt adjusted based on timeinfo parameters
+      adjustDelT( delt, d_prev_delt, first, time );
+      newDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
+    }
+
     if( d_output && d_output->savingAsPIDX() ) {
       int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep();
 
       // Because "incrementCurrentTopLevelTimeStep()" has not yet been called
       // at this point in the loop, we need to add 1 to the currentTimeStep to know if we
       // really are on a checkpoint or output time step.
-      if( ( currentTimeStep + 1 ) == d_output->getNextCheckpointTimestep() ) {
+
+      if( ( d_output->getCheckpointTimestepInterval() > 0 && ( currentTimeStep + 1 ) == d_output->getNextCheckpointTimestep() ) ||
+          ( d_output->getCheckpointInterval() > 0         && ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
+          ( d_output->getCheckpointWalltimeInterval() > 0 && ( Time::currentSeconds() >= d_output->getNextCheckpointWalltime() ) ) ) {
 
         if( requested_nth_output_proc > 1 ) {
           proc0cout << "this is a checkpoint timestep (" << ( currentTimeStep + 1 )
@@ -310,7 +336,8 @@ AMRSimulationController::run()
           need_to_recompile = true;
         }
       }
-      if( ( currentTimeStep + 1 ) == d_output->getNextOutputTimestep() ) {
+      if( ( d_output->getOutputTimestepInterval() > 0 && ( currentTimeStep + 1 ) == d_output->getNextOutputTimestep() ) ||
+          ( d_output->getOutputInterval() > 0         && ( time + delt ) >= d_output->getNextOutputTime() ) ) {
         proc0cout << "this is an output timestep: " << (currentTimeStep + 1) << "\n";
         if( need_to_recompile ) { // If this is also a checkpoint time step
           proc0cout << "   Postposing as this is also a checkpoint time step...\n";
@@ -347,29 +374,6 @@ AMRSimulationController::run()
       }
     }
      
-    // get delt and adjust it
-    DataWarehouse* newDW = d_scheduler->getLastDW();
-    newDW->get(delt_var, d_sharedState->get_delt_label());
-    delt = delt_var;
-    
-#ifdef HAVE_VISIT
-    // If the user modified delt during the previous time step skip
-    // calling adjustDelT for this next time step.
-
-    // Note: this code is not explicit to VisIt but it is currently
-    // the only component that is making use of the ability to
-    // overirde adjusting delta T.
-    if( d_sharedState->getVisIt() && d_sharedState->adjustDelT() == false ) {
-      d_sharedState->adjustDelT( true );
-    }
-    else
-#endif
-    {
-      // delt adjusted based on timeinfo parameters
-      adjustDelT( delt, d_prev_delt, first, time );
-      newDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
-    }
-
     if( log_dw_mem ) {
       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
       // (So usually in optimized mode this will not be run.)
@@ -398,7 +402,7 @@ AMRSimulationController::run()
     // After one step (either timestep or initialization) and correction
     // the delta we can finally, finalize our old timestep, eg. 
     // finalize and advance the Datawarehouse
-    d_scheduler->advanceDataWarehouse(currentGrid);
+    d_scheduler->advanceDataWarehouse( currentGrid );
 
     // Put the current time into the shared state so other components
     // can access it.  Also increment (by one) the current time step
@@ -877,10 +881,12 @@ AMRSimulationController::needRecompile( double        time,
 }
 //______________________________________________________________________
 void
-AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
+AMRSimulationController::doInitialTimestep( GridP & grid, double & time )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doInitialTimestep()");
+  MALLOC_TRACE_TAG_SCOPE( "AMRSimulationController::doInitialTimestep()" );
+
   double start = Time::currentSeconds();
+
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, 1);
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
@@ -923,7 +929,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     d_lb->possiblyDynamicallyReallocate( grid, LoadBalancerPort::init );
     grid->assignBCS( d_grid_ps, d_lb );
     grid->performConsistencyCheck();
-    t = d_timeinfo->initTime;
+    time = d_timeinfo->initTime;
 
     bool needNewLevel = false;
     do {
@@ -953,8 +959,8 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       if( d_output ) {
         double delT      = 0;
         bool   recompile = true;
-        d_output->finalizeTimestep( t, delT, grid, d_scheduler, recompile );
-        d_output->sched_allOutputTasks( delT,grid, d_scheduler, recompile );
+        d_output->finalizeTimestep( time, delT, grid, d_scheduler, recompile );
+        d_output->sched_allOutputTasks(   delT,grid, d_scheduler, recompile );
       }
       
       d_scheduler->compile();
@@ -1166,7 +1172,7 @@ AMRSimulationController::recompile( double time, double delt, GridP & currentGri
 //______________________________________________________________________
 
 void
-AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
+AMRSimulationController::executeTimestep( double time, double& delt, GridP& currentGrid, int totalFine )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimestep()");
 
@@ -1216,7 +1222,7 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
       // Figure out new delt
       double new_delt = d_sim->recomputeTimestep(delt);
 
-      proc0cout << "Restarting timestep at " << t << ", changing delt from "
+      proc0cout << "Restarting timestep at " << time << ", changing delt from "
                 << delt << " to " << new_delt << '\n';
      
       // bulletproofing
