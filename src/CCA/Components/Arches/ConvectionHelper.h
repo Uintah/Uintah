@@ -152,12 +152,12 @@ namespace Uintah {
     const Array3<double>& psi_x;
     const Array3<double>& psi_y;
     const Array3<double>& psi_z;
-    const Array3<double>& af_x;
-    const Array3<double>& af_y;
-    const Array3<double>& af_z;
     Array3<double>& flux_x;
     Array3<double>& flux_y;
     Array3<double>& flux_z;
+    const Array3<double>& af_x;
+    const Array3<double>& af_y;
+    const Array3<double>& af_z;
 
   };
 

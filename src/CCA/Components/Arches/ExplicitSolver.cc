@@ -194,6 +194,7 @@ ExplicitSolver(SimulationStateP& sharedState,
 // ****************************************************************************
 ExplicitSolver::~ExplicitSolver()
 {
+
   delete d_lab;
   delete d_props;
   delete d_turbModel;
@@ -223,7 +224,6 @@ ExplicitSolver::~ExplicitSolver()
   }
 
   for (auto i = m_bcHelper.begin(); i != m_bcHelper.end(); i++){
-    i->second->delete_area_labels();
     delete i->second;
   }
   m_bcHelper.clear();

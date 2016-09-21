@@ -35,28 +35,28 @@ namespace Uintah { namespace BoundaryFunctor{
   struct StableType{};
   struct TableLookupType{};
 
-  static const Uintah::ProblemSpecP get_uintah_bc_problem_spec( const Uintah::ProblemSpecP& db, std::string name, std::string face, std::string type ){
-    if ( db->findBlock("BoundaryConditions") ){
-      Uintah::ProblemSpecP db_bc = db->findBlock("BoundaryConditions");
-      for ( Uintah::ProblemSpecP db_var_bc = db_bc->findBlock("bc"); db_var_bc != 0;
-            db_var_bc = db_var_bc->findNextBlock("bc") ){
+  //static const Uintah::ProblemSpecP get_uintah_bc_problem_spec( const Uintah::ProblemSpecP& db, std::string name, std::string face, std::string type ){
+    //if ( db->findBlock("BoundaryConditions") ){
+      //Uintah::ProblemSpecP db_bc = db->findBlock("BoundaryConditions");
+      //for ( Uintah::ProblemSpecP db_var_bc = db_bc->findBlock("bc"); db_var_bc != 0;
+            //db_var_bc = db_var_bc->findNextBlock("bc") ){
 
-        std::string att_name, att_face, att_type;
-        db_var_bc->getAttribute("varname", att_name);
-        db_var_bc->getAttribute("face", att_face);
-        db_var_bc->getAttribute("type", att_type);
+        //std::string att_name, att_face, att_type;
+        //db_var_bc->getAttribute("varname", att_name);
+        //db_var_bc->getAttribute("face", att_face);
+        //db_var_bc->getAttribute("type", att_type);
 
-        if ( att_name == name && att_face == face && att_type == type ){
-          return db_var_bc;
-        }
-      }
-      std::stringstream msg;
-      msg << "Error: Cannot find a matching bc in <ARCHES><BoundaryConditions> for [varname, face, type]: [" << name << ", " << face << ", " << type << "]" << std::endl;
-      throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__);
-    } else {
-      throw Uintah::ProblemSetupException("Error: Cannot find <ARCHES><BoundaryConditions input block.", __FILE__, __LINE__ );
-    }
-  }
+        //if ( att_name == name && att_face == face && att_type == type ){
+          //return db_var_bc;
+        //}
+      //}
+      //std::stringstream msg;
+      //msg << "Error: Cannot find a matching bc in <ARCHES><BoundaryConditions> for [varname, face, type]: [" << name << ", " << face << ", " << type << "]" << std::endl;
+      //throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    //} else {
+      //throw Uintah::ProblemSetupException("Error: Cannot find <ARCHES><BoundaryConditions input block.", __FILE__, __LINE__ );
+    //}
+  //}
 
   // static const Uintah::ProblemSpecP get_face_spec( const Uintah::ProblemSpecP& db, std::string face_name ){
   //

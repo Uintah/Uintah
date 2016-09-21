@@ -335,6 +335,7 @@ WBCHelper::WBCHelper( const Uintah::LevelP& level,
 
 WBCHelper::~WBCHelper()
 {
+
   delete localPatches_;
 }
 
@@ -858,7 +859,7 @@ void WBCHelper::computeBCAreaHelper( const ProcessorGroup*,
         if ( *i_valid_pid == pid ){
 
           double darea = 0;
-          int i; int j;
+          int i=-1; int j=-1;
           if ( bc_spec.face == Patch::xminus || bc_spec.face == Patch::xplus ){
             darea = DX.y() * DX.z();
             i = 1; j = 2;
