@@ -28,12 +28,12 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/Contact/Contact.h>                     // for Contact
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
-#include <CCA/Components/MPM/FluxBC/FluxBCModel.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>                        // for MPMBoundCond
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>

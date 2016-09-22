@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/FluxBC/FluxBCModel.h>
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <Core/Grid/DbgOutput.h>
