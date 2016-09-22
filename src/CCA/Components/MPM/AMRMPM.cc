@@ -397,11 +397,9 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   materialProblemSetup(mat_ps, d_sharedState,flags);
 
   if(flags->d_doScalarDiffusion){
-    sdInterfaceModel=SDInterfaceModelFactory::create(mat_ps, sharedState,flags);
-    if(flags->d_useLoadCurves){
-      d_fluxbc = scinew FluxBCModel(sharedState, flags);
-    }
+    sdInterfaceModel=SDInterfaceModelFactory::create(mat_ps, d_sharedState,flags);
   }
+  d_fluxbc = scinew FluxBCModel(d_sharedState, flags);
 }
 
 //______________________________________________________________________
