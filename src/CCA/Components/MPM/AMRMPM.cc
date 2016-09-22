@@ -28,6 +28,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/Contact/Contact.h>                     // for Contact
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
+#include <CCA/Components/MPM/FluxBC/FluxBCModel.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>                        // for MPMBoundCond
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
@@ -156,6 +157,8 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   RefineFlagZMinLabel = VarLabel::create("RefFlagZMin",
                                          min_vartype::getTypeDescription() );
   
+  d_fluxbc = 0;
+
   d_one_matl = scinew MaterialSubset();
   d_one_matl->add(0);
   d_one_matl->addReference();
@@ -168,6 +171,8 @@ AMRMPM::~AMRMPM()
 //  delete flags;
   if(flags->d_doScalarDiffusion){
     delete sdInterfaceModel;
+    if(flags->d_useLoadCurves)
+      delete d_fluxbc;
   }
   
   VarLabel::destroy(pDbgLabel);
@@ -393,6 +398,9 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   if(flags->d_doScalarDiffusion){
     sdInterfaceModel=SDInterfaceModelFactory::create(mat_ps, sharedState,flags);
+    if(flags->d_useLoadCurves){
+      d_fluxbc = scinew FluxBCModel(sharedState, flags);
+    }
   }
 }
 
@@ -526,7 +534,8 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   if (flags->d_useLoadCurves && flags->d_doScalarDiffusion) {
     // Schedule the initialization of scalar fluxBCs per particle
     cout << "Scalar load curves are untested for multiple levels" << endl;
-    scheduleInitializeScalarFluxBCs(level, sched);
+    d_fluxbc->scheduleInitializeScalarFluxBCs(level, sched);
+    //scheduleInitializeScalarFluxBCs(level, sched);
   }
 
 }
@@ -570,7 +579,8 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     schedulePartitionOfUnity(               sched, patches, matls);
     scheduleComputeZoneOfInfluence(         sched, patches, matls);
     scheduleApplyExternalLoads(             sched, patches, matls);
-    scheduleApplyExternalScalarFlux(        sched, patches, matls);
+    d_fluxbc->scheduleApplyExternalScalarFlux( sched, patches, matls);
+    //scheduleApplyExternalScalarFlux( sched, patches, matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -5335,6 +5345,11 @@ void AMRMPM::computeDivergence_CFI(const ProcessorGroup*,
     sdm->computeDivergence_CFI(patches, mpm_matl, old_dw, new_dw);
   }
 }
+
+/*
+ * This set of functions used for the scalar flux boundary conditions have been moved
+ * into the FluxBCModel
+ *
 //______________________________________________________________________
 //
 void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
@@ -5629,3 +5644,4 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
     } // matl loop
   }  // patch loop
 }
+*/

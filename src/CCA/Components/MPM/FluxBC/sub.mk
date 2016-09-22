@@ -28,16 +28,7 @@
 # Makefile fragment for this subdirectory 
 
 
-SRCDIR   := CCA/Components/MPM/ReactionDiffusion
+SRCDIR   := CCA/Components/MPM/FluxBC
 
 SRCS     += \
-	$(SRCDIR)/ScalarDiffusionModel.cc        \
-	$(SRCDIR)/JGConcentrationDiffusion.cc    \
-	$(SRCDIR)/SDInterfaceModel.cc            \
-	$(SRCDIR)/CommonIFConcDiff.cc            \
-	$(SRCDIR)/ScalarDiffusionModelFactory.cc \
-	$(SRCDIR)/SDInterfaceModelFactory.cc     \
-	$(SRCDIR)/RFConcDiffusion1MPM.cc         \
-	$(SRCDIR)/NonLinearDiff1.cc              \
-	$(SRCDIR)/NonLinearDiff2.cc              \
-	$(SRCDIR)/ConstantRate.cc
+	$(SRCDIR)/FluxBCModel.cc
