@@ -171,10 +171,10 @@ AMRMPM::~AMRMPM()
 //  delete flags;
   if(flags->d_doScalarDiffusion){
     delete sdInterfaceModel;
-    if(flags->d_useLoadCurves)
-      delete d_fluxbc;
   }
   
+  delete d_fluxbc;
+
   VarLabel::destroy(pDbgLabel);
   VarLabel::destroy(gSumSLabel);
   VarLabel::destroy(RefineFlagXMaxLabel);
