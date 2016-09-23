@@ -437,9 +437,6 @@ namespace Uintah{
       T& qConv       = *(tsk_info->get_uintah_field<T>(qconv_name));
       T& qRad        = *(tsk_info->get_uintah_field<T>(qrad_name));
 
-      //temporary variables used for intermediate calculations
-      double cpAsh    = 0.0;
-      double cpCoal   = 0.0;
       //paritcle variables rqd
       const std::string raw_coal_name = get_name( ienv, _base_raw_coal_name );
       const std::string char_mass_name = get_name( ienv, _base_char_mass_name);

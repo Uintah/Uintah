@@ -188,7 +188,7 @@ WARNING
     double d_viscosity_air;
     double d_viscosity_fuel;
     
-    SimulationStateP sharedState;
+    SimulationStateP d_sharedState;
     Output* dataArchiver;
     std::vector<Vector> d_probePts;
     std::vector<std::string> d_probePtsNames;

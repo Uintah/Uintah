@@ -27,7 +27,7 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Disclosure/TypeDescription.h>
@@ -75,7 +75,7 @@ TaskGraph::TaskGraph(       SchedulerCommon   * sched
   , m_proc_group{pg}
   , m_type{type}
 {
-  m_load_balancer = dynamic_cast<LoadBalancer*>(m_scheduler->getPort("load balancer"));
+  m_load_balancer = dynamic_cast<LoadBalancerPort*>( m_scheduler->getPort("load balancer") );
 }
 
 //______________________________________________________________________
@@ -741,18 +741,18 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
           }
         }
       }
-      else if (task->getType() == Task::Output) {
-        //compute subset that involves this rank
-        int subset = (m_proc_group->myrank() / m_load_balancer->getNthProc()) * m_load_balancer->getNthProc();
+      else if ( task->getType() == Task::Output ) {
+        // Compute rank that handles output for this process.
+        int handling_rank = (m_proc_group->myrank() / m_load_balancer->getNthRank()) * m_load_balancer->getNthRank();
 
-        //only schedule output task for the subset involving our rank
-        const PatchSubset* pss = ps->getSubset(subset);
+        // Only schedule output task for the subset involving our rank.
+        const PatchSubset* pss = ps->getSubset( handling_rank );
 
-        //don't schedule if there are no patches
-        if (pss->size() > 0) {
-          for (int m = 0; m < ms->size(); m++) {
-            const MaterialSubset* mss = ms->getSubset(m);
-            createDetailedTask(task, pss, mss);
+        // Don't schedule if there are no patches.
+        if ( pss->size() > 0 ) {
+          for ( int m = 0; m < ms->size(); m++ ) {
+            const MaterialSubset* mss = ms->getSubset( m );
+            createDetailedTask( task, pss, mss );
           }
         }
 

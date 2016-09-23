@@ -42,7 +42,7 @@
 
 namespace Uintah {
 
-  class LoadBalancer;
+  class LoadBalancerPort;
   class Task;
   class SimulationInterface;
 
@@ -133,7 +133,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
-    virtual LoadBalancer* getLoadBalancer() = 0;
+    virtual LoadBalancerPort * getLoadBalancer() = 0;
 
     virtual void releaseLoadBalancer() = 0;
 

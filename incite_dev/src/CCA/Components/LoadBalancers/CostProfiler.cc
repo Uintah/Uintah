@@ -24,9 +24,12 @@
 
 #include <CCA/Components/LoadBalancers/CostProfiler.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+
 #include <Core/Util/DebugStream.h>
+
 using namespace Uintah;
 using namespace std;
+
 //______________________________________________________________________
 //
 void

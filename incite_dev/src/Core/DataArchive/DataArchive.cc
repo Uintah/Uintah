@@ -1008,11 +1008,11 @@ DataArchive::findPatchAndIndex( const GridP            grid,
 //______________________________________________________________________
 //
 void
-DataArchive::restartInitialize( const int             index,
-                                const GridP         & grid,
-                                      DataWarehouse * dw,
-                                      LoadBalancer  * lb,
-                                      double        * pTime )
+DataArchive::restartInitialize( const int                index,
+                                const GridP            & grid,
+                                      DataWarehouse    * dw,
+                                      LoadBalancerPort * lb,
+                                      double           * pTime )
 {
   vector<int>    ts_indices;
   vector<double> times;
@@ -1112,12 +1112,12 @@ DataArchive::restartInitialize( const int             index,
 //  This method is a specialization of restartInitialize().
 //  It's only used by the reduceUda component
 void
-DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
-                                const int              timeIndex,
-                                const GridP          & grid,
-                                const PatchSubset    * patches,
-                                      DataWarehouse  * dw,
-                                      LoadBalancer   * lb )
+DataArchive::reduceUda_ReadUda( const ProcessorGroup   * pg,
+                                const int                timeIndex,
+                                const GridP            & grid,
+                                const PatchSubset      * patches,
+                                      DataWarehouse    * dw,
+                                      LoadBalancerPort * lb )
 {
   vector<int>    timesteps;
   vector<double> times;

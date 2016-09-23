@@ -98,7 +98,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
       ASSERTRANGE(idx, 0, d_myworld->size());
 
       if (task->getTask()->getType() == Task::Output) {
-        task->assignResource(getOutputProc(patch));
+        task->assignResource( getOutputRank( patch ) );
       }
       else {
         task->assignResource(idx);
@@ -165,10 +165,10 @@ LoadBalancerCommon::getPatchwiseProcessorAssignment( const Patch * patch )
   }
  
   ASSERTRANGE( patch->getRealPatch()->getID(), m_assignment_base_patch, m_assignment_base_patch + static_cast<int>(m_processor_assignment.size()) );
-  int proc = m_processor_assignment[ patch->getRealPatch()->getGridIndex() ];
+  int rank = m_processor_assignment[ patch->getRealPatch()->getGridIndex() ];
 
-  ASSERTRANGE(proc, 0, d_myworld->size());
-  return proc;
+  ASSERTRANGE( rank, 0, d_myworld->size() );
+  return rank;
 }
 
 //______________________________________________________________________

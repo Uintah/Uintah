@@ -402,7 +402,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;
-  double now = d_dataArchiver->getCurrentTime();
+  double now = d_sharedState->getElapsedTime();
 
   bool tsr = new_dw->timestepRestarted();  // ignore if a timestep restart has been requested.
 
@@ -569,8 +569,8 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
   max_vartype lastTime;
   old_dw->get( lastTime, labels->lastCompTime );
 
-  double now = d_dataArchiver->getCurrentTime();
-  double nextTime = lastTime + 1.0/d_analysisFreq;
+  double now      = d_sharedState->getElapsedTime();
+  double nextTime = lastTime + ( 1.0 / d_analysisFreq );
 
   double time_dw  = lastTime;
   if( now >= nextTime ){

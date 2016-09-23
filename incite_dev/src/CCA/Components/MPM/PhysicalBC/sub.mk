@@ -35,7 +35,8 @@ SRCS     += \
 	$(SRCDIR)/ForceBC.cc              	\
 	$(SRCDIR)/PressureBC.cc          	\
 	$(SRCDIR)/ScalarFluxBC.cc          	\
-	$(SRCDIR)/HeatFluxBC.cc			\
+	$(SRCDIR)/HeatFluxBC.cc             \
+	$(SRCDIR)/FluxBCModel.cc            \
 	$(SRCDIR)/ArchesHeatFluxBC.cc		\
 	$(SRCDIR)/PolynomialData.cc		
 

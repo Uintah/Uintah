@@ -26,7 +26,7 @@
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>

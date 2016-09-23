@@ -25,7 +25,7 @@
 #ifndef CORE_GRID_LEVEL_H
 #define CORE_GRID_LEVEL_H
 
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/GridP.h>
@@ -152,7 +152,7 @@ public:
 
   void finalizeLevel();
   void finalizeLevel( bool periodicX, bool periodicY, bool periodicZ );
-  void assignBCS( const ProblemSpecP & ps, LoadBalancer * lb );
+  void assignBCS( const ProblemSpecP & ps, LoadBalancerPort * lb );
       
   int numPatches() const;
   long totalCells() const;

@@ -134,7 +134,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const { return m_init_required_vars; }
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars()        const { return m_computed_vars; }
 
-    virtual LoadBalancer* getLoadBalancer();
+    virtual LoadBalancerPort * getLoadBalancer();
 
     virtual void releaseLoadBalancer();
 

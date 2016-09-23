@@ -111,6 +111,11 @@ protected:
    double                 d_initial_dt;
    bool                   d_underflow;
 
+   typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
+   BCHelperMapT _bcHelperMap;
+
+   ProblemSpecP _arches_spec;
+
 private:
 
 }; // End class NonlinearSolver

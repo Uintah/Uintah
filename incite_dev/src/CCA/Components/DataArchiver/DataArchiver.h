@@ -74,7 +74,7 @@ class DataWarehouse;
    //! Handles outputting the data.
    class DataArchiver : public Output, public UintahParallelComponent {
      public:
-       DataArchiver(const ProcessorGroup* myworld, int udaSuffix = -1);
+       DataArchiver( const ProcessorGroup * myworld, int udaSuffix = -1 );
        virtual ~DataArchiver();
 
        static bool d_wereSavesAndCheckpointsInitialized;
@@ -83,13 +83,13 @@ class DataWarehouse;
        //! to params.  Also stores state to keep track of time and timesteps
        //! in the simulation.  (If you only need to use DataArchiver to copy 
        //! data, then you can pass a nullptr SimulationState
-       virtual void problemSetup(const ProblemSpecP& params,
-           SimulationState* state);
+       virtual void problemSetup( const ProblemSpecP    & params,
+                                        SimulationState * state );
 
        //! This function will set up the output for the simulation.  As part
        //! of this it will output the input.xml and index.xml in the uda
        //! directory.  Call after calling all problemSetups.
-       virtual void initializeOutput(const ProblemSpecP& params);
+       virtual void initializeOutput( const ProblemSpecP & params );
 
        //! Call this when restarting from a checkpoint after calling
        //! problemSetup.  This will copy timestep directories and dat
@@ -107,78 +107,75 @@ class DataWarehouse;
 
        //! Call this after problemSetup it will copy the data and checkpoint files ignore
        //! dumping reduction variables.
-       virtual void reduceUdaSetup(Dir& fromDir);
+       virtual void reduceUdaSetup( Dir& fromDir );
 
        //! Copy a section between udas .
-       void copySection(Dir& fromDir, Dir& toDir, std::string file, std::string section);
+       void copySection( Dir & fromDir, Dir & toDir, const std::string & file, const std::string & section );
 
        //! Copy a section from another uda's to our index.xml.
-       void copySection(Dir& fromDir, std::string section)
-       { copySection(fromDir, d_dir, "index.xml", section); }
+       void copySection( Dir & fromDir, const std::string & section ) { copySection(fromDir, d_dir, "index.xml", section); }
 
        //! Checks to see if this is an output timestep. 
        //! If it is, setup directories and xml files that we need to output.
        //! Call once per timestep, and if recompiling,
        //! after all the other tasks are scheduled.
-       virtual void finalizeTimestep(double t, double delt, const GridP&,
-                                     SchedulerP&, bool recompile=false );
+       virtual void finalizeTimestep(       double       time,
+                                            double       delt,
+                                      const GridP      &,
+                                            SchedulerP &,
+                                            bool         recompile = false );
            
        //! schedule the output tasks if we are recompiling the taskgraph.  
-       virtual void sched_allOutputTasks(double delt, const GridP&,
-				            SchedulerP&, bool recompile = false );
+       virtual void sched_allOutputTasks(       double       delt,
+                                          const GridP      & /* grid */,
+                                                SchedulerP & /* scheduler */,
+                                                bool         recompile = false );
                                       
-
        //! Find the next times to output 
        //! Call after timestep has completed.
-       virtual void findNext_OutputCheckPoint_Timestep(double delt, const GridP&);
+       virtual void findNext_OutputCheckPoint_Timestep( double delt, const GridP & );
        
        
        //! write meta data to xml files 
        //! Call after timestep has completed.
-       virtual void writeto_xml_files(double delt, const GridP& grid);
+       virtual void writeto_xml_files( double delt, const GridP & grid );
 
        //! Returns as a string the name of the top of the output directory.
        virtual const std::string getOutputLocation() const;
 
        //! Asks if we need to recompile the task graph.
-       virtual bool needRecompile(double time, double dt, const GridP& grid);
+       virtual bool needRecompile( double time, double dt, const GridP & grid );
 
        //! The task that handles the outputting.  Scheduled in
        //! finalizeTimestep.  Handles outputs and checkpoints and
        //! differentiates between them in the last argument.  Outputs
        //! as binary the data acquired from VarLabel in p_dir.
-       void outputVariables(const ProcessorGroup*, 
-                            const PatchSubset* patch,
-                            const MaterialSubset* matls, 
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw, 
-                            int type);
+       void outputVariables( const ProcessorGroup *,
+                             const PatchSubset    * patch,
+                             const MaterialSubset * matls, 
+                                   DataWarehouse  * old_dw,
+                                   DataWarehouse  * new_dw, 
+                                   int              type );
 
        //! Task that handles outputting non-checkpoint reduction variables.
        //! Scheduled in finalizeTimestep.
-       void outputReductionVars(const ProcessorGroup*,
-                                const PatchSubset* patch,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw);
-
-       //! Recommended to use sharedState directly if you can.
-       virtual int getCurrentTimestep() const { return d_sharedState->getCurrentTopLevelTimeStep(); }
-
-       //! Recommended to use sharedState directly if you can.
-       virtual double getCurrentTime() const { return  d_sharedState->getElapsedTime(); }
+       void outputReductionVars( const ProcessorGroup *,
+                                 const PatchSubset    * patch,
+                                 const MaterialSubset * matls,
+                                       DataWarehouse  * old_dw,
+                                       DataWarehouse  * new_dw );
 
        //! Get the time the next output will occur
        virtual double getNextOutputTime() const { return d_nextOutputTime; }
 
        //! Get the timestep the next output will occur
-       virtual int getNextOutputTimestep() const { return d_nextOutputTimestep; }
+       virtual int  getNextOutputTimestep() const { return d_nextOutputTimestep; }
+       virtual void postponeNextOutputTimestep() { d_nextOutputTimestep++; } // Pushes output back by one timestep.
 
-       //! Get the time the next checkpoint will occur
-       virtual double getNextCheckpointTime() const { return d_nextCheckpointTime; }
-
-       //! Get the timestep the next checkpoint will occur
-       virtual int getNextCheckpointTimestep() const { return d_nextCheckpointTimestep; }
+       //! Get the time/timestep/walltime of the next checkpoint will occur
+       virtual double getNextCheckpointTime()     const { return d_nextCheckpointTime; }
+       virtual int    getNextCheckpointTimestep() const { return d_nextCheckpointTimestep; }
+       virtual int    getNextCheckpointWalltime() const { return d_nextCheckpointWalltime; }
 
        //! Returns true if data will be output this timestep
        virtual bool isOutputTimestep() const { return d_isOutputTimestep; }
@@ -197,23 +194,29 @@ class DataWarehouse;
        void updateCheckpointInterval( double inv );
        void updateCheckpointTimestepInterval( int inv );
 
-       double getOutputInterval() const { return d_outputInterval; }
+       double getOutputInterval()         const { return d_outputInterval; }
        int    getOutputTimestepInterval() const { return d_outputTimestepInterval; }
-       double getCheckpointInterval() const { return d_checkpointInterval; }
-       int    getCheckpointTimestepInterval() const { return d_checkpointTimestepInterval; }
 
+       double getCheckpointInterval()         const { return d_checkpointInterval; }
+       int    getCheckpointTimestepInterval() const { return d_checkpointTimestepInterval; }
+       int    getCheckpointWalltimeInterval() const { return d_checkpointWalltimeInterval; }
+
+       bool   savingAsPIDX() const { return ( d_outputFileFormat == PIDX ); } 
+
+       //! Called by In-situ VisIt to force the dump of a time step's data.
        void outputTimestep( double time, double delt,
-			    const GridP& grid, SchedulerP& sched );
+                            const GridP& grid, SchedulerP& sched );
+
        void checkpointTimestep( double time, double delt,
-				const GridP& grid, SchedulerP& sched );
+                                const GridP& grid, SchedulerP& sched );
 
      public:
 
        //! problemSetup parses the ups file into a list of these
        //! (d_saveLabelNames)
        struct SaveNameItem {
-         std::string labelName;
-         std::string compressionMode;
+         std::string         labelName;
+         std::string         compressionMode;
          ConsecutiveRangeSet matls;
          ConsecutiveRangeSet levels;
        };
@@ -221,16 +224,14 @@ class DataWarehouse;
        class SaveItem {
          public:
          
-           void setMaterials(int level, 
-                             const ConsecutiveRangeSet& matls,
-                             ConsecutiveRangeSet& prevMatls,
-                             MaterialSetP& prevMatlSet);
+           void setMaterials(      int                   level, 
+                             const ConsecutiveRangeSet & matls,
+                                   ConsecutiveRangeSet & prevMatls,
+                                   MaterialSetP        & prevMatlSet );
 
-           MaterialSet* getMaterialSet(int level){ 
-             return matlSet[level].get_rep(); 
-           }
+           MaterialSet* getMaterialSet( int level ) { return matlSet[level].get_rep(); }
            
-           const MaterialSubset* getMaterialSubset(const Level* level);
+           const MaterialSubset* getMaterialSubset( const Level * level );
            
            const VarLabel* label;
            std::map<int, MaterialSetP> matlSet;
@@ -238,36 +239,39 @@ class DataWarehouse;
 
      private:
      
-      enum outputFileFormat {UDA, PIDX};
-      outputFileFormat d_outputFileFormat;
+       enum outputFileFormat { UDA, PIDX };
+       outputFileFormat d_outputFileFormat;
       
-      //__________________________________
-      //         PIDX related
-      //! output the all of the saveLabels in PIDX format
-      size_t
-          saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
-                           const ProcessorGroup * pg,
-                           const PatchSubset    * patches,      
-                           DataWarehouse        * new_dw,          
-                           int                    type,
+       //__________________________________
+       //         PIDX related
+       //! output the all of the saveLabels in PIDX format
+       size_t
+          saveLabels_PIDX( std::vector< SaveItem >   & saveLabels,
+                           const ProcessorGroup      * pg,
+                           const PatchSubset         * patches,      
+                           DataWarehouse             * new_dw,          
+                           int                         type,
                            const TypeDescription::Type TD,
-                           Dir                    ldir,        // uda/timestep/levelIndex
-                           const std::string      dirName,     // CCVars, SFC*Vars
-                           ProblemSpecP&          doc);
+                           Dir                         ldir,        // uda/timestep/levelIndex
+                           const std::string         & dirName,     // CCVars, SFC*Vars
+                           ProblemSpecP              & doc );
                            
-      //! returns a vector of SaveItems with a common type description
-      std::vector<DataArchiver::SaveItem> 
+       //! returns a vector of SaveItems with a common type description
+       std::vector<DataArchiver::SaveItem> 
           findAllVariableTypes( std::vector< SaveItem >& saveLabels,
                                  const TypeDescription::Type TD );
       
-      //! bulletproofing so user can't save unsupported var type
-      void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
-                               std::vector<TypeDescription::Type> pidxVarTypes );
+       //! bulletproofing so user can't save unsupported var type
+       void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
+                                std::vector<TypeDescription::Type> pidxVarTypes );
            
-      void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
-                            Dir& levelDir );
-                            
-      
+       void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
+                             Dir& levelDir );
+
+       void writeGridBinary(     const bool hasGlobals, const std::string & grid_name, const GridP & grid );
+       void writeGridOriginal(   const bool hasGlobals, const std::string & grid_name, const GridP & grid, ProblemSpecP rootElem );
+       void writeGridTextWriter( const bool hasGlobals, const std::string & grid_name, const GridP & grid );
+
        PIDXOutputContext::PIDX_flags d_PIDX_flags;    // contains the knobs & switches                      
        
        //__________________________________
@@ -278,16 +282,16 @@ class DataWarehouse;
        //! creates the uda directory with a trailing version suffix
        void makeVersionedDir();
 
-       void initSaveLabels(SchedulerP& sched, bool initTimestep);
-       void initCheckpoints(SchedulerP& sched);
+       void initSaveLabels(  SchedulerP& sched, bool initTimestep );
+       void initCheckpoints( SchedulerP& sched );
 
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 
        //! output timestep.
-       void makeTimestepDirs(Dir& dir, 
-                            std::vector<SaveItem>& saveLabels,
-                            const GridP& grid,
-                            std::string* pTimestepDir );
+       void makeTimestepDirs( Dir& dir,
+                              std::vector<SaveItem>& saveLabels,
+                              const GridP& grid,
+                              std::string* pTimestepDir );
 
        //! helper for finalizeTimestep - schedules a task for each var's output
        void scheduleOutputTimestep(std::vector<SaveItem>& saveLabels,
@@ -357,24 +361,24 @@ class DataWarehouse;
 
        // Only one of these should be non-zero.  The value is read from the .ups file.
        double d_outputInterval;         // In seconds.
-       int d_outputTimestepInterval;    // Number of time steps.
+       int    d_outputTimestepInterval; // Number of time steps.
 
        double d_nextOutputTime;         // used when d_outputInterval != 0
-       int d_nextOutputTimestep;        // used when d_outputTimestepInterval != 0
+       int    d_nextOutputTimestep;     // used when d_outputTimestepInterval != 0
        //int d_currentTimestep;
-       Dir d_dir;                       //!< top of uda dir
+       Dir    d_dir;                    //!< top of uda dir
 
        //! Represents whether this proc will output non-processor-specific
        //! files
-       bool d_writeMeta;
+       bool   d_writeMeta;
 
        //! Whether or not to save the initialization timestep
-       bool d_outputInitTimestep;
+       bool   d_outputInitTimestep;
 
        //! last timestep dir (filebase.000/t#)
        std::string d_lastTimestepLocation;
-       bool d_isOutputTimestep;         //!< set if this is an output timestep
-       bool d_isCheckpointTimestep;     //!< set if a checkpoint timestep
+       bool        d_isOutputTimestep;         //!< set if this is an output timestep
+       bool        d_isCheckpointTimestep;     //!< set if a checkpoint timestep
 
        //! Whether or not particle vars are saved
        //! Requires p.x to be set
@@ -412,8 +416,8 @@ class DataWarehouse;
        // How much real time (in seconds) to wait for checkpoint can be
        // used with or without one of the above two.  WalltimeStart
        // cannot be used without walltimeInterval.
-       int d_checkpointWalltimeStart;     // Amount of (real) time to wait before first checkpoint.
-       int d_checkpointWalltimeInterval;  // Amount of (real) time to between checkpoints.
+       int d_checkpointWalltimeStart;     // Amount of (real) time (in seconds) to wait before first checkpoint.
+       int d_checkpointWalltimeInterval;  // Amount of (real) time (in seconds) to between checkpoints.
 
        //! How many checkpoint dirs to keep around
        int d_checkpointCycle;
@@ -423,9 +427,9 @@ class DataWarehouse;
 
        //! List of current checkpoint dirs
        std::list<std::string> d_checkpointTimestepDirs;
-       double d_nextCheckpointTime;      //!< used when d_checkpointInterval != 0
-       int d_nextCheckpointTimestep;     //!< used when d_checkpointTimestepInterval != 0
-       int d_nextCheckpointWalltime;     //!< used when d_checkpointWalltimeInterval != 0
+       double d_nextCheckpointTime;      //!< used when d_checkpointInterval != 0.          Simulation time (seconds (and fractions there of))
+       int    d_nextCheckpointTimestep;  //!< used when d_checkpointTimestepInterval != 0.  Integer - time step
+       int    d_nextCheckpointWalltime;  //!< used when d_checkpointWalltimeInterval != 0.  Integer Seconds.
 
        //-----------------------------------------------------------
        // RNJ - 

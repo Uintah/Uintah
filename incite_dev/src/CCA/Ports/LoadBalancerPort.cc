@@ -22,31 +22,16 @@
  * IN THE SOFTWARE.
  */
 
-//----- NonlinearSolver.cc ----------------------------------------------
+#include <CCA/Ports/LoadBalancerPort.h>
 
-#include <CCA/Components/Arches/NonlinearSolver.h>
 using namespace Uintah;
 
-NonlinearSolver::NonlinearSolver(const ProcessorGroup* myworld)
-   : d_myworld(myworld)
-{}
-
-NonlinearSolver::~NonlinearSolver()
-{}
-
-void
-NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
-
-  //The underflow uses a different method to compute the CFL
-  // dt = dx * rho / (div(rhou)) about the CC.
-  // otherwise, it is the standard conv/diff CFL.
-  d_underflow = false;
-  if ( db->findBlock("scalarUnderflowCheck") ){
-    d_underflow = true;
-  }
-
-  db->getWithDefault("initial_dt",d_initial_dt,1.0);
-
-  _arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
-
+LoadBalancerPort::LoadBalancerPort()
+{
 }
+
+LoadBalancerPort::~LoadBalancerPort()
+{
+}
+
+

@@ -23,25 +23,28 @@
  */
 
 #include <sci_defs/hypre_defs.h>
+
 #include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <CCA/Components/Solvers/AMR/HypreDriver.h>
 #include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
+#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Time.h>
+
 #include <iomanip>
 
 using std::string;
@@ -193,8 +196,8 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     interface = HypreSStruct;   /* A uniform grid */
   }
 
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = lb->getPerProcessorPatchSet(level->getGrid());
+  LoadBalancerPort * lb             = sched->getLoadBalancer();
+  const PatchSet   * perProcPatches = lb->getPerProcessorPatchSet(level->getGrid());
   
   HypreDriver* that = newHypreDriver(interface,level.get_rep(), matls, A, which_A_dw,x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams, perProcPatches);
   Handle<HypreDriver > handle = that;
