@@ -41,7 +41,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -1298,7 +1298,7 @@ namespace Uintah {
     }
 
     task->requires(which_b_dw, b, Ghost::None, 0);
-    LoadBalancer* lb = sched->getLoadBalancer();
+    LoadBalancerPort * lb = sched->getLoadBalancer();
 
     if (modifies_hypre) {
       task->requires(Task::NewDW,hypre_solver_label);

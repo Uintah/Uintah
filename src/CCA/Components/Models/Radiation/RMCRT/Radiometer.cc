@@ -637,8 +637,8 @@ Radiometer::getPatchSet( SchedulerP& sched,
   //
   //  that contain radiometers and that this processor owns
   vector< const Patch* > myPatches;
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* procPatches = lb->getPerProcessorPatchSet(level);
+  LoadBalancerPort * lb          = sched->getLoadBalancer();
+  const PatchSet   * procPatches = lb->getPerProcessorPatchSet( level );
 
   for(int m=0; m<procPatches->size(); m++) {
    const PatchSubset* patches = procPatches->getSubset(m);

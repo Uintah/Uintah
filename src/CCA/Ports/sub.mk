@@ -33,7 +33,7 @@ SRCDIR   := CCA/Ports
 
 SRCS += \
         $(SRCDIR)/DataWarehouse.cc        \
-        $(SRCDIR)/LoadBalancer.cc         \
+        $(SRCDIR)/LoadBalancerPort.cc     \
         $(SRCDIR)/ModelInterface.cc       \
         $(SRCDIR)/ModelMaker.cc           \
         $(SRCDIR)/Output.cc               \

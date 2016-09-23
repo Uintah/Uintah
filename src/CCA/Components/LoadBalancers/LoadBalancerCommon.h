@@ -25,7 +25,7 @@
 #ifndef CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 #define CCA_COMPONENTS_LOADBALANCERS_LOADBALANCERCOMMON_H
 
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/SFC.h>
 
 #include <Core/Grid/Level.h>
@@ -99,7 +99,7 @@ public:
 /// the load balancer subclasses.  The main function that sets load balancers
 /// apart is getPatchwiseProcessorAssignment - how it determines which patch
 /// to assign on which procesor.
-class LoadBalancerCommon : public LoadBalancer, public UintahParallelComponent {
+class LoadBalancerCommon : public LoadBalancerPort, public UintahParallelComponent {
 
 public:
 
@@ -107,6 +107,7 @@ public:
 
   virtual ~LoadBalancerCommon();
 
+  //! Returns the MPI rank of the process on which the patch is to be executed.
   virtual int getPatchwiseProcessorAssignment( const Patch * patch );
 
   //! The implementation in LoadBalancerCommon.cc is for dynamice load balancers.
@@ -151,12 +152,13 @@ public:
   virtual void resetCostForecaster();
 
   //! Returns n - data gets output every n procs.
-  virtual int getNthProc() { return m_output_Nth_proc; }
+  virtual int  getNthRank() { return m_output_Nth_proc; }
+  virtual void setNthRank( int nth ) { m_output_Nth_proc = nth; }
 
-  //! Returns the processor the patch will be output on (not patchwiseProcessor
-  //! if outputNthProc is set)
-  virtual int getOutputProc( const Patch * patch ) {
-    return (getPatchwiseProcessorAssignment(patch)/m_output_Nth_proc)*m_output_Nth_proc;
+  //! Returns the MPI rank of the process that the patch will be output on (it will different from
+  //! the patchwise processor assignment if outputNthProc is greater than 1).
+  virtual int getOutputRank( const Patch * patch ) {
+    return ( getPatchwiseProcessorAssignment( patch ) / m_output_Nth_proc ) * m_output_Nth_proc;
   }
 
   //! Returns the patchset of all patches that have work done on this processor.

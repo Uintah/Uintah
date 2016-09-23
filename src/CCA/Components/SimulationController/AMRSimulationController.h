@@ -84,27 +84,27 @@ class Regridder;
       bool doRegridding(GridP& grid, bool initialTimestep);
    private:
 
-      void recompile(double t, double delt, GridP& currentGrid, int totalFine);
+      void recompile( double time, double delt, GridP& currentGrid, int totalFine );
 
-      void executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine);
+      void executeTimestep( double time, double & delt, GridP & currentGrid, int totalFine );
 
       //! Asks a variety of components if one of them needs the taskgraph
       //! to recompile.
-      bool needRecompile(double t, double delt, const GridP& level);
-      AMRSimulationController(const AMRSimulationController&);
-      AMRSimulationController& operator=(const AMRSimulationController&);
+      bool needRecompile( double time, double delt, const GridP & level );
+      AMRSimulationController( const AMRSimulationController& );
+      AMRSimulationController& operator=( const AMRSimulationController& );
 
       //! recursively schedule refinement, coarsening, and time advances for
       //! finer levels - compensating for time refinement.  Builds one taskgraph
-      void subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel);
+      void subCycleCompile( GridP & grid, int startDW, int dwStride, int step, int numLevel );
 
       //! recursively executes taskgraphs, as several were executed.  Similar to subCycleCompile,
       //! except that this executes the recursive taskgraphs, and compile builds one taskgraph
       //! (to exsecute once) recursively.
-      void subCycleExecute(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle);
+      void subCycleExecute( GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle );
 
-      void scheduleComputeStableTimestep(const GridP& grid,
-                                         SchedulerP&);
+      void scheduleComputeStableTimestep( const GridP      & grid,
+                                                SchedulerP & );
       void reduceSysVar( const ProcessorGroup *,
                          const PatchSubset    * patches,
                          const MaterialSubset * /*matls*/,

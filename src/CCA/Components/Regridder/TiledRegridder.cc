@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/Regridder/TiledRegridder.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/InternalError.h>
@@ -32,21 +32,22 @@
 #include <Core/Grid/PatchBVH/PatchBVH.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Time.h>
 
 #include <sci_defs/visit_defs.h>
 
-using namespace Uintah;
-
 #include <iomanip>
 #include <cstdio>
+
+using namespace Uintah;
 using namespace std;
 
 static DebugStream grid_dbg("GridDBG",false);
 static DebugStream rgtimes("RGTimes",false);
 
-int Product(const IntVector &i)
+int
+Product( const IntVector &i )
 {
     return i[0]*i[1]*i[2];
 }

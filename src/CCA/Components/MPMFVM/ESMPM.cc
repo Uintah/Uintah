@@ -132,7 +132,7 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     d_amrmpm->schedulePartitionOfUnity(        sched, patches, mpm_matls);
     d_amrmpm->scheduleComputeZoneOfInfluence(  sched, patches, mpm_matls);
     d_amrmpm->scheduleApplyExternalLoads(      sched, patches, mpm_matls);
-    d_amrmpm->scheduleApplyExternalScalarFlux( sched, patches, mpm_matls);
+    //d_amrmpm->scheduleApplyExternalScalarFlux( sched, patches, mpm_matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {

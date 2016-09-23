@@ -119,6 +119,8 @@ namespace Uintah{
 
     int _rk_order;
 
+    ProblemSpecP m_arches_spec; 
+
 };
 }
 #endif

@@ -48,6 +48,7 @@ namespace Uintah {
 
 class GeometryObject;
 class SDInterfaceModel;
+class FluxBCModel;
 
 class AMRMPM : public SerialMPM {
 
@@ -112,6 +113,8 @@ public:
 protected:
   friend class ESMPM;
 
+  FluxBCModel* d_fluxbc;
+
   enum coarsenFlag{
     coarsenData,
     zeroData,
@@ -134,21 +137,6 @@ protected:
                            DataWarehouse* dw,
                            int dwi, 
                            const Patch* patch);
-
-  void scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP&);
-
-  void countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw);
-
-  void initializeScalarFluxBC(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
-
 
   void actuallyComputeStableTimestep(const ProcessorGroup*,
                                      const PatchSubset* patches,
@@ -245,11 +233,7 @@ protected:
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-  void applyExternalScalarFlux(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* ,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
+
 
   // Compute Vel. Grad and Def Grad
   void computeLAndF(const ProcessorGroup*,
@@ -381,8 +365,7 @@ protected:
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
 
-  void scheduleApplyExternalScalarFlux(SchedulerP&, const PatchSet*,
-                                       const MaterialSet*);
+
 
   void scheduleComputeLAndF(SchedulerP&, const PatchSet*, const MaterialSet*);
 
@@ -589,6 +572,35 @@ private:
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
+
+  /*
+   * Scalar Flux Boundary Conditions have been moved to the FluxBCModel
+   *
+   *
+   *
+  void scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP&);
+
+  void initializeScalarFluxBC(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+  void scheduleApplyExternalScalarFlux(SchedulerP&, const PatchSet*,
+                                         const MaterialSet*);
+
+  void applyExternalScalarFlux(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* ,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+  void countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* matls,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw);
+  */
 };
 
 } // end namespace Uintah

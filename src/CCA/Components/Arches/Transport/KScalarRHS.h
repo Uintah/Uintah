@@ -29,6 +29,7 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
+#include <CCA/Components/Arches/BoundaryFunctors.h>
 
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
@@ -137,7 +138,7 @@ private:
 
     _total_eqns = 0;
 
-    ConvectionHelper* conv_helper;
+    ConvectionHelper* conv_helper = scinew ConvectionHelper();
     for (ProblemSpecP db = input_db->findBlock("eqn"); db != 0;
          db = db->findNextBlock("eqn")){
 
@@ -209,6 +210,8 @@ private:
       _source_info.push_back(eqn_srcs);
 
     }
+
+    delete conv_helper;
 
     // Default velocity names:
     _x_velocity_name = "uVelocitySPBC";
@@ -300,6 +303,7 @@ private:
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
+      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
     }
   }
@@ -310,11 +314,14 @@ private:
     const int istart = 0;
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+
       T& phi = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn] ));
+      T& rhs = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn]+"_rhs" ));
       typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
       CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( _eqn_names[ieqn] ));
 
       phi.copyData(old_phi);
+      rhs.initialize(0.0);
 
     } //equation loop
   }
@@ -382,6 +389,7 @@ private:
     const int istart = 0;
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+
       CT& phi     = *(tsk_info->get_const_uintah_field<CT>(_eqn_names[ieqn]));
       T& rhs      = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
 
@@ -406,8 +414,8 @@ private:
         CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(_eqn_names[ieqn]+"_y_psi"));
         CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(_eqn_names[ieqn]+"_z_psi"));
 
-        Uintah::ComputeConvectiveFlux<T> get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
-                                                   x_flux, y_flux, z_flux, af_x, af_y, af_z );
+        Uintah::ComputeConvectiveFlux get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
+                                                x_flux, y_flux, z_flux, af_x, af_y, af_z );
         Uintah::parallel_for( range_cl_to_ech, get_flux );
       }
 
@@ -456,7 +464,6 @@ private:
 
   template <typename T> void
   KScalarRHS<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
-    //register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
   }
 
   template <typename T> void

@@ -56,7 +56,10 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
                             GridP& grid )
 {
   ProblemSpecP db = input_db;
-  db->getWithDefault("temporal_order", _rk_order,1);
+  m_arches_spec = db;
+  ProblemSpecP db_root = db->getRootNode();
+  db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _rk_order);
+  proc0cout << " Time integrator: RK of order " << _rk_order << std::endl;
 }
 
 void
@@ -102,8 +105,7 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   bool is_restart = false;
 
   //boundary condition
-  m_bcHelper = scinew WBCHelper( level, sched, matls );
-  m_bcHelper->parse_boundary_conditions();
+  m_bcHelper = scinew WBCHelper( level, sched, matls, m_arches_spec );
   sched_checkBCs( sched, level );
 
   //utility factory
@@ -181,7 +183,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
-    //now update them
+    // now update them:
     SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
     for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
@@ -196,8 +198,16 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
+    // now construct RHS:
     SVec mom_rhs_builders = i_transport->second->retrieve_task_subset("mom_rhs_builders");
     for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+    }
+
+    // now update them:
+    SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update");
+    for ( SVec::iterator i = mom_fe_up.begin(); i != mom_fe_up.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }

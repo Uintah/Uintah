@@ -83,6 +83,7 @@ class EfficiencyCalculator;
 class WallModelDriver;
 class RadPropertyCalculator;
 class ExplicitTimeInt;
+class WBCHelper;
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -405,6 +406,9 @@ public:
   // const VarLabel*
   ArchesLabel* d_lab;
 
+  // problemspec for Arches
+  Uintah::ProblemSpecP _arches_spec;
+
   // Total number of nonlinear iterates
   int d_nonlinear_its;
   // for probing data for debuging or plotting
@@ -492,6 +496,7 @@ public:
   const VarLabel* d_celltype_label;
   int d_archesLevelIndex;
 
+  std::map<int,WBCHelper*> m_bcHelper; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

@@ -8,10 +8,6 @@
 
   <SimulationComponent type="arches"/>
 
-  <Scheduler type="DynamicMPI">
-    <small_messages>true</small_messages>
-  </Scheduler>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>10.0</maxTime>
