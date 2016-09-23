@@ -417,7 +417,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                                                  d_props );
 
   // send params, boundary type defined at the level of Grid
-  d_boundaryCondition->problemSetup(db);
+  d_boundaryCondition->problemSetup(db,  grid);
 
   std::string whichTurbModel = "none";
 
@@ -636,7 +636,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   // Add new intrusion stuff:
   // get a reference to the intrusions
-  IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref();
+  const std::map<const int, IntrusionBC*> intrusion_ref = d_boundaryCondition->get_intrusion_ref();
   bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion();
 
   if(d_doDQMOM)

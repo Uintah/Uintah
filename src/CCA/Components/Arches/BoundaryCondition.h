@@ -165,7 +165,7 @@ inline const FaceOffSets getFaceOffsets( const IntVector& face_normal, const Pat
 
 };
 
-inline IntrusionBC* get_intrusion_ref(){
+inline const std::map<const int, IntrusionBC*> get_intrusion_ref(){
   return _intrusionBC;
 };
 
@@ -365,7 +365,7 @@ BoundaryCondition(const ArchesLabel* label,
 
 ~BoundaryCondition();
 
-void problemSetup( const ProblemSpecP& params );
+void problemSetup( const ProblemSpecP& params, GridP& grid );
 
 void set_bc_information( const LevelP& level );
 
@@ -841,7 +841,7 @@ bool d_check_inlet_obstructions;
 
 bool d_ignore_invalid_celltype;
 
-IntrusionBC* _intrusionBC;
+std::map<const int, IntrusionBC*> _intrusionBC;
 bool _using_new_intrusion;
 
 // used for calculating wall boundary conditions
