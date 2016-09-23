@@ -181,7 +181,6 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
 
     if ( db->findBlock("intrusions") ) {
 
-      int N_levels = grid->numLevels();
       for ( int i = 0; i < grid->numLevels(); i++ ){
         _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION )));
         ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
