@@ -1242,7 +1242,7 @@ UnifiedScheduler::runTasks( int thread_id )
           }  else {
             m_detailed_tasks->addInitiallyReadyHostTask(readyTask);
           }
-
+          
 
         } else if (cpuRunReady) {
 #endif
@@ -3191,7 +3191,7 @@ UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
           }
           cerrLock.unlock();
         }
-        gpudw->setValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        gpudw->compareAndSwapSetValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       } else {
         if (gpu_stats.active()) {
           cerrLock.lock();
@@ -3271,7 +3271,7 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
           const Level* level = getLevel(patches.get_rep());
           int levelID = level->getID();
           if (gpudw->isAllocatedOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID)) {
-            gpudw->setValidOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+            gpudw->compareAndSwapSetValidOnGPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
           }
         }
       }

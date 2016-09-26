@@ -459,7 +459,7 @@ public:
   __host__ bool isAllocatedOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool isAllocatedOnGPU(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
   __host__ bool isValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
-  __host__ void setValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool compareAndSwapSetValidOnGPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx);
   __host__ void setValidOnGPUStaging(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
   __host__ bool dwEntryExistsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool isValidOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx);
