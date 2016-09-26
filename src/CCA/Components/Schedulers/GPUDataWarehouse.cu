@@ -2887,23 +2887,35 @@ GPUDataWarehouse::isValidOnGPU(char const* label, int patchID, int matlIndx, int
 
 //______________________________________________________________________
 //TODO: This needs to be turned into a compare and swap operation
-__host__ void
-GPUDataWarehouse::setValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx)
+__host__ bool
+GPUDataWarehouse::compareAndSwapSetValidOnGPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx)
 {
   varLock->lock();
-  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
-
-  if (it != varPointers->end()) {
-    __sync_and_and_fetch(&(it->second.var->atomicStatusInGpuMemory), ~COPYING_IN);
-    __sync_or_and_fetch(&(it->second.var->atomicStatusInGpuMemory), VALID);
-
-    varLock->unlock();
-  } else {
-    varLock->unlock();
-    printf("host setValidOnGPU unknown variable %s on GPUDataWarehouse\n", label);
-    exit(-1);
+  bool settingValid = false;
+  while (!settingValid) {
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+    if (it != varPointers->end()) {
+      atomicDataStatus *status = &(it->second.var->atomicStatusInGpuMemory);
+      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+      if ((oldVarStatus & VALID) == VALID) {
+        //Something else already took care of it.  So this task won't manage it.
+        varLock->unlock();
+        return false;
+      } else {
+        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        atomicDataStatus newVarStatus = oldVarStatus & ~COPYING_IN;
+        newVarStatus = newVarStatus | VALID;
+        settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      }
+    } else {
+      varLock->unlock();
+      printf("ERROR\nGPUDataWarehouse::compareAndSwapSetValidOnGPU() - Unknown variable %s on GPUDataWarehouse\n", label);
+      exit(-1);
+    }
   }
+  varLock->unlock();
+  return true;
 }
 
 //______________________________________________________________________
@@ -2991,6 +3003,7 @@ GPUDataWarehouse::setValidOnCPU(char const* label, int patchID, int matlIndx, in
   varLock->lock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
   if (varPointers->find(lpml) != varPointers->end()) {
+    //UNKNOWN
     __sync_and_and_fetch(&(varPointers->at(lpml).var->atomicStatusInHostMemory), ~COPYING_IN);
     __sync_or_and_fetch(&(varPointers->at(lpml).var->atomicStatusInHostMemory), VALID);
     varLock->unlock();
@@ -3116,6 +3129,7 @@ GPUDataWarehouse::compareAndSwapCopyingIntoCPU(char const* label, int patchID, i
       } else {
       //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
       atomicDataStatus newVarStatus = oldVarStatus | COPYING_IN;
+      newVarStatus = oldVarStatus & ~UNKNOWN;
       copyingin = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
     }
   }
@@ -3210,7 +3224,7 @@ GPUDataWarehouse::setValidWithGhostsOnGPU(char const* label, int patchID, int ma
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
   if (it != varPointers->end()) {
-
+    //UNKNOWN
     //make sure the valid is still turned on
     __sync_or_and_fetch(&(it->second.var->atomicStatusInGpuMemory), VALID);
 
