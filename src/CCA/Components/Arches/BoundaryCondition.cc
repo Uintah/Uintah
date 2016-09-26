@@ -2308,13 +2308,10 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
   }
 }
 
-//-------------------------------------------------------------
-// Set the boundary information object
-//
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryCondition::prune_per_patch_bcinfo( SchedulerP& sched,
                                            const LevelP& level,
-                                           const MaterialSet* matls,
                                            WBCHelper* bcHelper )
 {
   BndMapT& bc_map = bcHelper->get_for_edit_boundary_information();
@@ -2356,8 +2353,7 @@ BoundaryCondition::prune_per_patch_bcinfo( SchedulerP& sched,
   }
 }
 
-// Set the cell Type
-//
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
                                       const LevelP& level,

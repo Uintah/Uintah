@@ -482,23 +482,31 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
   // create area labels for all areas
   ProblemSpecP db_root = m_arches_spec->getRootNode();
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions");
+  ProblemSpecP db_bc_arches = m_arches_spec->findBlock("BoundaryConditions");
+  bool force_area_calc = false;
+  if ( db_bc_arches->findBlock("force_area_calc") ){
+    force_area_calc = true;
+  }
   if ( db_bc ) {
     for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
           db_face = db_face->findNextBlock("Face") ) {
-      bool found_mass_flux = false; 
+      bool found_mass_flux = false;
       for ( ProblemSpecP db_bc = db_face->findBlock("BCType"); db_bc != 0;
             db_bc = db_bc->findNextBlock("BCType") ) {
-        std::string var; 
+        std::string var;
         db_bc->getAttribute("var", var );
-        if ( var == "MassFlowInlet" || var == "Swirl" ){ 
-          found_mass_flux = true; 
+        if ( var == "MassFlowInlet" || var == "Swirl" ){
+          found_mass_flux = true;
+        }
+        if ( force_area_calc ){
+          found_mass_flux = true;
         }
       }
       std::string faceName;
       db_face->getAttribute("name",faceName);
       std::string level_index = std::to_string(ilvl);
       const std::string faceAreaName = faceName+"_"+level_index+"_area";
-      if ( found_mass_flux ){ 
+      if ( found_mass_flux ){
         create_new_area_label( faceAreaName );
       }
     }
@@ -887,7 +895,7 @@ void WBCHelper::computeBCAreaHelper( const ProcessorGroup*,
 
           std::string level_index = std::to_string(ilvl);
           auto bc_area_iter = m_area_labels.find(bc_name+"_"+level_index+"_area");
-          if ( bc_area_iter != m_area_labels.end() ){ 
+          if ( bc_area_iter != m_area_labels.end() ){
             new_dw->put(sum_vartype( area ), bc_area_iter->second );
           }
 
@@ -933,13 +941,13 @@ void WBCHelper::bindBCAreaHelper( const ProcessorGroup*,
       std::string level_index = std::to_string(ilvl);
       auto bc_area_iter = m_area_labels.find(bc_name+"_"+level_index+"_area");
 
-      if ( bc_area_iter != m_area_labels.end() ){ 
+      if ( bc_area_iter != m_area_labels.end() ){
         sum_vartype area_temp;
         new_dw->get(area_temp, bc_area_iter->second );
         double area = area_temp;
-        bndmap_iter->second.area = area; 
-      } else { 
-        bndmap_iter->second.area = 0.0; 
+        bndmap_iter->second.area = area;
+      } else {
+        bndmap_iter->second.area = 0.0;
       }
 
     }

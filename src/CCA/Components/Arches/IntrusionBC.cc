@@ -1415,7 +1415,6 @@ IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched, const LevelP& level,
   localPatches_->addEach( localPatches->getVector() );
   auto mypatches = localPatches->getVector();
   std::vector<std::string> intrusion_map_idx;
-  const int ilvl = level->getID();
 
   for( auto ipatches = (mypatches).begin(); ipatches != mypatches.end(); ipatches++ ){
 

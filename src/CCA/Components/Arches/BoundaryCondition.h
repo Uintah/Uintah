@@ -189,7 +189,6 @@ inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){
 
 void prune_per_patch_bcinfo( SchedulerP& sched,
                              const LevelP& level,
-                             const MaterialSet* matls,
                              WBCHelper* bcHelper );
 
 void sched_cellTypeInit( SchedulerP& sched,
@@ -601,9 +600,9 @@ struct BCInfo {
 
   DigitalFilterInlet * TurbIn;
 
- std::vector<double> vWeights;
- std::vector<std::vector<double> > vVelScalingConst;
- std::vector<std::vector<std::string> > vVelLabels;
+  std::vector<double> vWeights;
+  std::vector<std::vector<double> > vVelScalingConst;
+  std::vector<std::vector<std::string> > vVelLabels;
 
 };
 
