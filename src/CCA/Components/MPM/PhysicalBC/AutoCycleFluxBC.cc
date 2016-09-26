@@ -56,8 +56,6 @@ void AutoCycleFluxBC::scheduleInitializeScalarFluxBCs(const LevelP& level, Sched
 {
   const PatchSet* patches = level->eachPatch();
 
-  std::cout << "*********Using AutoCycle**********" << std::endl;
-
   d_load_curve_index = scinew MaterialSubset();
   d_load_curve_index->add(0);
   d_load_curve_index->addReference();

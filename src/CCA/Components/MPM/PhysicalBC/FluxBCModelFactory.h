@@ -38,8 +38,7 @@ namespace Uintah {
   public:
     // this function has a switch for all known types
     
-    static FluxBCModel* create(ProblemSpecP& ps, SimulationStateP& ss,
-                               MPMFlags* flags);
+    static FluxBCModel* create(SimulationStateP& ss, MPMFlags* flags);
 
   };
 } // End namespace Uintah

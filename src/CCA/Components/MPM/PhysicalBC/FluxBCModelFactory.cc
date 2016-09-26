@@ -32,13 +32,9 @@
 using namespace std;
 using namespace Uintah;
 
-FluxBCModel* FluxBCModelFactory::create(ProblemSpecP& ps, SimulationStateP& ss,
-                                        MPMFlags* flags)
+FluxBCModel* FluxBCModelFactory::create(SimulationStateP& ss, MPMFlags* flags)
 {
-  bool use_auto_cycle = false;
-  ps->get("do_auto_cycle_bc", use_auto_cycle);
-
-  if (use_auto_cycle)
+  if (flags->d_doAutoCycleBC)
     return(scinew AutoCycleFluxBC(ss, flags));
 
   else

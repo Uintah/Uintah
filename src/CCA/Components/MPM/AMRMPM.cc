@@ -400,7 +400,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(flags->d_doScalarDiffusion){
     sdInterfaceModel=SDInterfaceModelFactory::create(mat_ps, d_sharedState,flags);
   }
-  d_fluxbc = FluxBCModelFactory::create(mpm_soln_ps, d_sharedState, flags);
+  d_fluxbc = FluxBCModelFactory::create(d_sharedState, flags);
 }
 
 //______________________________________________________________________

@@ -58,8 +58,6 @@ void FluxBCModel::scheduleInitializeScalarFluxBCs(const LevelP& level, Scheduler
 {
   const PatchSet* patches = level->eachPatch();
 
-  std::cout << "*********Using Standard**********" << std::endl;
-
   d_load_curve_index = scinew MaterialSubset();
   d_load_curve_index->add(0);
   d_load_curve_index->addReference();
