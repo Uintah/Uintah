@@ -163,7 +163,7 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   ASSERT(patches->size() != 0);
   ASSERT(patches->get(0) != 0);
     
-  const Patch* patch = patches->get(0);
+  //const Patch* patch = patches->get(0);
   const Level* level = patches->get(0)->getLevel();
 
   //__________________________________
@@ -441,27 +441,27 @@ PIDXOutputContext::printBuffer( const string        & desc,
 }
 
 // explicit instantiations
-template void PIDXOutputContext::printBuffer<int>( const string& desc,
-                                                   const string& format,
-                                                   int samples_per_value,
-                                                   IntVector& lo_EC,
-                                                   IntVector& hi_EC,
-                                                   unsigned char* dataPIDX,
-                                                   size_t arraySize );
+template void PIDXOutputContext::printBuffer<int>( const string        & desc,
+                                                   const string        & format,
+                                                   const int             samples_per_value,
+                                                   const IntVector     & lo_EC,
+                                                   const IntVector     & hi_EC,
+                                                   const unsigned char * dataPIDX,
+                                                   const size_t          arraySize ) const;
 
-template void PIDXOutputContext::printBuffer<float>( const string & desc,
-                                                     const string& format,
-                                                     int samples_per_value,
-                                                     IntVector& lo_EC,
-                                                     IntVector& hi_EC,
-                                                     unsigned char* dataPIDX,
-                                                     size_t arraySize );
+template void PIDXOutputContext::printBuffer<float>( const string        & desc,
+                                                     const string        & format,
+                                                     const int             samples_per_value,
+                                                     const IntVector     & lo_EC,
+                                                     const IntVector     & hi_EC,
+                                                     const unsigned char * dataPIDX,
+                                                     const size_t          arraySize ) const;
 
-template void PIDXOutputContext::printBuffer<double>( const string & desc,
-                                                      const string& format,
-                                                      int samples_per_value,
-                                                      IntVector& lo_EC,
-                                                      IntVector& hi_EC,
-                                                      unsigned char* dataPIDX,
-                                                      size_t arraySize );
+template void PIDXOutputContext::printBuffer<double>( const string        & desc,
+                                                      const string        & format,
+                                                      const int             samples_per_value,
+                                                      const IntVector     & lo_EC,
+                                                      const IntVector     & hi_EC,
+                                                      const unsigned char * dataPIDX,
+                                                      const size_t          arraySize ) const;
 #endif
