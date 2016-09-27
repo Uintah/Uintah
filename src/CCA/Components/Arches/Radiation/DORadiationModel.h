@@ -122,7 +122,7 @@ private:
       const PatchSet* d_perproc_patches;
       
       int d_sn, d_totalOrds; // totalOrdinates = sn*(sn+2)
-      std::string d_quadratureMethod;                // Name of Method used to determine intensity directions
+      std::string d_quadratureSet;                // Name of Method used to determine intensity directions
 
       void computeOrdinatesOPL();
       int d_lambda;

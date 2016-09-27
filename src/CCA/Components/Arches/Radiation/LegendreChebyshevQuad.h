@@ -1,4 +1,5 @@
-
+#ifndef Gauss_Legendre_Chebyshev_quadrature_h
+#define Gauss_Legendre_Chebyshev_quadrature_h
 extern "C"{
 # define DGEEV FIX_NAME(dgeev)
 void DGEEV( char* jobvl, char* jobvr, int* n, double* a,
@@ -148,3 +149,4 @@ void computeLegendreChebyshevQuadratureSet(int N, std::vector<double> &xComp, st
   }
 }
 
+#endif  

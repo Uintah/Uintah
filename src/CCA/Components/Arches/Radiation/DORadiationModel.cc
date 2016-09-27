@@ -134,7 +134,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   }
 
   db->getWithDefault("ScatteringOn",_scatteringOn,false);
-  db->getWithDefault("QuadratureMethod",d_quadratureMethod,"LevelSymmetric");
+  db->getWithDefault("QuadratureSet",d_quadratureSet,"LevelSymmetric");
 
   std::string baseNameAbskp;
   std::string modelName;
@@ -277,7 +277,7 @@ DORadiationModel::computeOrdinatesOPL() {
   oeta.initialize(0.0);
   oxi.initialize(0.0);
   wt.initialize(0.0);
-  if (d_quadratureMethod=="LegendreChebyshev"){
+  if (d_quadratureSet=="LegendreChebyshev"){
     std::vector<double> xx(d_totalOrds,0.0);
     std::vector<double> yy(d_totalOrds,0.0);
     std::vector<double> zz(d_totalOrds,0.0);
@@ -290,13 +290,6 @@ DORadiationModel::computeOrdinatesOPL() {
       oxi[i+1]=zz[i];
       wt[i+1]=ww[i];
     }
-    for (int i=0; i< d_totalOrds; i++){
-      proc0cout << omu[i+1] << "  "
-        << oeta[i+1] << "  "
-        << oxi[i+1] << "  "
-        << wt[i+1] << "  \n";
-    }
-
   } else{  // Level-Symmetric
     fort_rordr(d_sn, oxi, omu, oeta, wt);
   }
