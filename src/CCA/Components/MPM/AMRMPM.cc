@@ -32,6 +32,7 @@
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModelFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
@@ -399,7 +400,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(flags->d_doScalarDiffusion){
     sdInterfaceModel=SDInterfaceModelFactory::create(mat_ps, d_sharedState,flags);
   }
-  d_fluxbc = scinew FluxBCModel(d_sharedState, flags);
+  d_fluxbc = FluxBCModelFactory::create(d_sharedState, flags);
 }
 
 //______________________________________________________________________

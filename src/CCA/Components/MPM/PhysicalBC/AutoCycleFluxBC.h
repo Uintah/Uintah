@@ -22,10 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_FLUXBCMODEL_H
-#define UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_FLUXBCMODEL_H
+#ifndef UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_AUTOCYCLEFLUXBC_H
+#define UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_AUTOCYCLEFLUXBC_H
 
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Labels/MPMLabel.h>
@@ -36,19 +37,21 @@
 
 namespace Uintah {
 
-  class FluxBCModel {
+  class AutoCycleFluxBC : public FluxBCModel {
     public:
-      FluxBCModel(SimulationStateP& shared_state, MPMFlags* mpm_flags);
+      AutoCycleFluxBC(SimulationStateP& shared_state, MPMFlags* mpm_flags);
 
-      virtual ~FluxBCModel();
+      virtual ~AutoCycleFluxBC();
 
-      virtual void scheduleInitializeScalarFluxBCs(const LevelP& level,
-                                                   SchedulerP& sched);
+      virtual void scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP& sched);
 
       virtual void scheduleApplyExternalScalarFlux(SchedulerP& sched, const PatchSet* patches,
                                                    const MaterialSet* matls);
 
     protected:
+
+      double d_flux_sign;
+
       virtual void initializeScalarFluxBC(const ProcessorGroup*, const PatchSubset* patches,
                                                 const MaterialSubset*, DataWarehouse* old_dw,
                                                 DataWarehouse* new_dw);
@@ -63,15 +66,7 @@ namespace Uintah {
                                                        DataWarehouse* old_dw,
                                                        DataWarehouse* new_dw);
 
-      FluxBCModel(const FluxBCModel&);
-      FluxBCModel& operator=(const FluxBCModel&);
-
-      MaterialSubset*  d_load_curve_index;
-      SimulationStateP d_shared_state;
-      MPMLabel* d_mpm_lb;
-      MPMFlags* d_mpm_flags;
-
   };
 } // end Uintah namespace
 
-#endif // UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_FLUXBCMODEL_H
+#endif // UINTAH_CCA_COMPONENTS_MPM_PHYSICALBC_AUTOCYCLEFLUXBC_H

@@ -417,7 +417,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                                                  d_props );
 
   // send params, boundary type defined at the level of Grid
-  d_boundaryCondition->problemSetup(db);
+  d_boundaryCondition->problemSetup(db,  grid);
 
   std::string whichTurbModel = "none";
 
@@ -636,7 +636,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   // Add new intrusion stuff:
   // get a reference to the intrusions
-  IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref();
+  const std::map<const int, IntrusionBC*> intrusion_ref = d_boundaryCondition->get_intrusion_ref();
   bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion();
 
   if(d_doDQMOM)
@@ -1052,6 +1052,9 @@ ExplicitSolver::initialize( const LevelP& level,
   //delete the reduction variable so that they don't live beyond this point
   m_bcHelper[level->getID()]->sched_deleteBCAreaHelper( sched, level, matls );
 
+  //delete non-patch-local information on the old BC object
+  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+
   if ( level->getIndex() == d_archesLevelIndex ){
 
     //formerly known as paramInit
@@ -1328,7 +1331,10 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   //delete the reduction variable so that they don't live beyond this point
   m_bcHelper[level->getID()]->sched_deleteBCAreaHelper( sched, level, matls );
 
-  // This is necessary because restartInitialize is called from all levels (I think), and arches operates only on the finest level
+  //delete non-patch-local information on the old BC object
+  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+
+  //Arches only currently solves on the finest level
   if ( !level->hasFinerLevel() ){
 
     d_boundaryCondition->sched_computeBCArea( sched, level, matls );
@@ -1385,7 +1391,10 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
   bool doingRegrid  = true;
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
+  d_boundaryCondition->set_bc_information(level);
+
   d_boundaryCondition->sched_computeBCArea( sched, level, matls );
+
   d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, false, doingRegrid);
 
   EqnFactory& eqnFactory = EqnFactory::self();

@@ -141,7 +141,9 @@ BoundaryCondition::~BoundaryCondition()
   }
 
   if (_using_new_intrusion) {
-    delete _intrusionBC;
+    for ( auto i = _intrusionBC.begin(); i != _intrusionBC.end(); i++ ){
+      delete i->second;
+    }
   }
 
   VarLabel::destroy(d_radiation_temperature_label);
@@ -152,7 +154,8 @@ BoundaryCondition::~BoundaryCondition()
 // Problem Setup
 //****************************************************************************
 void
-BoundaryCondition::problemSetup( const ProblemSpecP& params )
+BoundaryCondition::problemSetup( const ProblemSpecP& params,
+                                 GridP& grid )
 {
 
   ProblemSpecP db_params = params;
@@ -178,11 +181,13 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params )
 
     if ( db->findBlock("intrusions") ) {
 
-      _intrusionBC = scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION );
-      ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
-      _using_new_intrusion = true;
+      for ( int i = 0; i < grid->numLevels(); i++ ){
+        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION )));
+        ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
+        _intrusionBC[i]->problemSetup( db_new_intrusion, i );
 
-      _intrusionBC->problemSetup( db_new_intrusion );
+      }
+      _using_new_intrusion = true;
 
     }
 
@@ -444,8 +449,8 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
                                                   const MaterialSet* matls)
 {
   if ( _using_new_intrusion ) {
-    // Interface to new intrusions
-    _intrusionBC->sched_setIntrusionT( sched, level, matls );
+    const int ilvl = level->getID();
+    _intrusionBC[ilvl]->sched_setIntrusionT( sched, level, matls );
   }
 }
 
@@ -2303,13 +2308,10 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
   }
 }
 
-//-------------------------------------------------------------
-// Set the boundary information object
-//
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryCondition::prune_per_patch_bcinfo( SchedulerP& sched,
                                            const LevelP& level,
-                                           const MaterialSet* matls,
                                            WBCHelper* bcHelper )
 {
   BndMapT& bc_map = bcHelper->get_for_edit_boundary_information();
@@ -2351,8 +2353,7 @@ BoundaryCondition::prune_per_patch_bcinfo( SchedulerP& sched,
   }
 }
 
-// Set the cell Type
-//
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
                                       const LevelP& level,
@@ -4028,7 +4029,9 @@ BoundaryCondition::setHattedIntrusionVelocity( const Patch* p,
                                                constCCVariable<double>& density )
 {
   if ( _using_new_intrusion ) {
-    _intrusionBC->setHattedVelocity( p, u, v, w, density );
+    const Level* level = p->getLevel();
+    const int i = level->getID();
+    _intrusionBC[i]->setHattedVelocity( p, u, v, w, density );
   }
 }
 void
@@ -4038,7 +4041,8 @@ BoundaryCondition::sched_setupNewIntrusionCellType( SchedulerP& sched,
                                                     const bool doing_restart )
 {
   if ( _using_new_intrusion ) {
-    _intrusionBC->sched_setCellType( sched, level, matls, doing_restart );
+    const int i = level->getID();
+    _intrusionBC[i]->sched_setCellType( sched, level, matls, doing_restart );
   }
 }
 
@@ -4050,12 +4054,12 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched,
 {
 
   if ( _using_new_intrusion ) {
-    _intrusionBC->sched_computeBCArea( sched, level, matls );
-    _intrusionBC->sched_computeProperties( sched, level, matls );
-    _intrusionBC->sched_setIntrusionVelocities( sched, level, matls );
-    _intrusionBC->sched_gatherReductionInformation( sched, level, matls );
-    _intrusionBC->sched_printIntrusionInformation( sched, level, matls );
-    _intrusionBC->findRelevantIntrusions( sched, level, matls );
+    const int i = level->getID();
+    _intrusionBC[i]->sched_computeBCArea( sched, level, matls );
+    _intrusionBC[i]->sched_computeProperties( sched, level, matls );
+    _intrusionBC[i]->sched_setIntrusionVelocities( sched, level, matls );
+    _intrusionBC[i]->sched_printIntrusionInformation( sched, level, matls );
+    _intrusionBC[i]->prune_per_patch_intrusions( sched, level, matls );
   }
 
 }
@@ -4083,13 +4087,15 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
 
     if ( _using_new_intrusion ) {
       const Patch* patch = patches->get(p);
+      const Level* level = patch->getLevel();
+      const int ilvl = level->getID();
       int archIndex = 0; // only one arches material
       int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
       CCVariable<double> density;
       new_dw->getModifiable( density, d_lab->d_densityCPLabel, indx, patch );
 
-      _intrusionBC->setDensity( patch, density );
+      _intrusionBC[ilvl]->setDensity( patch, density );
     }
   }
 }

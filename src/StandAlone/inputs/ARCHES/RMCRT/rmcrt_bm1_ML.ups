@@ -26,8 +26,17 @@
   <DataArchiver>
     <filebase>rmcrt_bm1_ML.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="divQ"  levels="-1"/>
-    <save label="radiation_temperature"  levels = "-1"/>
+    <save label="divQ"/>
+    
+    <save label="RMCRTboundFlux"/>
+    <save label="radiationFluxE"    levels="-1"/>
+    <save label="radiationFluxW"    levels="-1"/>
+    <save label="radiationFluxN"    levels="-1"/>
+    <save label="radiationFluxS"    levels="-1"/>
+    <save label="radiationFluxT"    levels="-1"/>
+    <save label="radiationFluxB"    levels="-1"/>
+    
+    <save label="radiation_temperature"/>
     <save label="abskg" />
     <save label="sigmaT4" />
     <save label="cellType" />
@@ -169,7 +178,7 @@
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
          <resolution> [40,40,40]  </resolution>    
-         <patches>    [1,1,1]     </patches> 
+         <patches>    [2,2,2]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
@@ -233,13 +242,14 @@
 
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
-            <calc_frequency>1</calc_frequency>
+            <calc_frequency>2</calc_frequency>
             <abskg label="abskg"/>
             <RMCRT>
                 <randomSeed>        false     </randomSeed>
                 <nDivQRays>          5         </nDivQRays>
+                <nFluxRays>          5         </nFluxRays>
                 <Threshold>         0.05       </Threshold>
-                <solveBoundaryFlux> false       </solveBoundaryFlux>
+                <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 
                 <!-- compute rmcrt on coarse level -->

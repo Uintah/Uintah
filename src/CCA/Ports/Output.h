@@ -164,6 +164,10 @@ class SimulationState;
     // Returns true if the UPS file has specified to save the UDA using PIDX format.
     virtual bool   savingAsPIDX() const = 0;
 
+    // Instructs the output source (DataArchivers) on which format to use when saving data.
+    virtual void   setSaveAsUDA() = 0;
+    virtual void   setSaveAsPIDX() = 0;
+
     //////////
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimestepOutputLocation() const = 0;

@@ -119,7 +119,7 @@ Arches::~Arches()
 void
 Arches::problemSetup(const ProblemSpecP& params,
                      const ProblemSpecP& materials_ps,
-                     GridP& grid, 
+                     GridP& grid,
                      SimulationStateP& sharedState)
 {
 
@@ -372,11 +372,9 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   }
 
   if (d_doingRestart  ) {
-
-    if(d_recompile_taskgraph)
-    d_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
-
-  }
+    if(d_recompile_taskgraph) {
+      d_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
+  }}
 
   d_nlSolver->nonlinearSolve(level, sched);
 

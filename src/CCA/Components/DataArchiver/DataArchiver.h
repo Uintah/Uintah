@@ -203,6 +203,10 @@ class DataWarehouse;
 
        bool   savingAsPIDX() const { return ( d_outputFileFormat == PIDX ); } 
 
+       // Instructs the DataArchive to save data using the original UDA format or using PIDX.
+       void   setSaveAsUDA()  { d_outputFileFormat = UDA; }
+       void   setSaveAsPIDX() { d_outputFileFormat = PIDX; }
+
        //! Called by In-situ VisIt to force the dump of a time step's data.
        void outputTimestep( double time, double delt,
                             const GridP& grid, SchedulerP& sched );
