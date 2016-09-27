@@ -43,14 +43,14 @@ else :
 #  methane_RCCE: 3m fire using the westbrook dryer/RCCE model
 
 NIGHTLYTESTS = [
-   ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"   , ["exactComparison"])   , 
-   ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"   , ["exactComparison"])   , 
+   ("constantMMS"                       , "mms/constantMMS.ups"                                     , 1.1 , "All"   , ["exactComparison"])   , 
+   ("almgrenMMS"                        , "mms/almgrenMMS.ups"                                      , 1.1 , "All"   , ["exactComparison"])   , 
    ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1.1 , "All"   , ["exactComparison"])   , 
-   ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"   , ["exactComparison"     , "no_restart"]) , 
-   ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"   , ["exactComparison"])   , 
-   ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"   , ["exactComparison"])   , 
-   ("methane_fire_8patch__NEW"          , "methane_fire_8patch__NEW.ups"                            , 8   , "All"   , ["exactComparison"])   , 
-   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups"                   , 8   , "All"   , ["exactComparison"])   , 
+   ("isotropic-turbulence-decay"        , "periodicTurb/isotropic-turbulence-decay.ups"             , 1.1 , "All"   , ["exactComparison"     , "no_restart"]) , 
+   ("helium_1m"                         , "helium_1m.ups"                                           , 1.1 , "All"   , ["exactComparison"])   , 
+   ("methane_fire"                      , "methane_fire.ups"                                        , 1.1 , "All"   , ["exactComparison"])   , 
+   ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"   , ["exactComparison"])   , 
+   ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"])   , 
    ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "Linux" , ["exactComparison"])   , 
    ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
@@ -128,14 +128,14 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-   ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"  , ["exactComparison"]) , 
-   ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"  , ["exactComparison"]) , 
+   ("constantMMS"                       , "mms/constantMMS.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
+   ("almgrenMMS"                        , "mms/almgrenMMS.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
    ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1.1 , "All"  , ["exactComparison"])   , 
-   ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
-   ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"  , ["exactComparison"]) , 
-   ("methane_fire_8patch__NEW"          , "methane_fire_8patch__NEW.ups"                            , 8   , "All"  , ["exactComparison"]) , 
-   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups"                   , 8   , "All"  , ["exactComparison"]) , 
+   ("isotropic-turbulence-decay"        , "periodicTurb/isotropic-turbulence-decay.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("helium_1m"                         , "helium_1m.ups"                                           , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_fire"                      , "methane_fire.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"  , ["exactComparison"]) , 
+   ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"  , ["exactComparison"]) , 
    ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "All"  , ["exactComparison"]) , 
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "ALL"  , ["exactComparison"]) , 
    ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "ALL"  , ["exactComparison"]) , 
