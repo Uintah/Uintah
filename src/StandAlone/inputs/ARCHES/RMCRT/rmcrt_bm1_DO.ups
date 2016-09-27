@@ -26,7 +26,8 @@
   <DataArchiver>
     <filebase>rmcrt_bm1_DO.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="divQ"      levels="-1"/>
+    <save label="divQ"              levels="-1"/>
+    <save label="RMCRTboundFlux"    levels="-1"/>
     <save label="radiation_temperature"  levels = "-1"/>
     <save label="abskg" />
     <save label="sigmaT4" />
@@ -227,8 +228,9 @@
             <RMCRT>
                 <randomSeed>        false      </randomSeed>
                 <nDivQRays>          5          </nDivQRays>
+                <nFluxRays>          5         </nFluxRays>
                 <Threshold>         0.05       </Threshold>
-                <solveBoundaryFlux> false       </solveBoundaryFlux>
+                <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 
                 <algorithm type='dataOnion'>

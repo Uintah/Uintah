@@ -1085,8 +1085,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
       radiationVolq.initialize( 0.0 );
 
       for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-        IntVector origin = *iter;
-        boundFlux[origin].initialize(0.0);
+        IntVector c = *iter;
+        boundFlux[c].initialize(0.0);
       }
    }
     unsigned long int size = 0;                   // current size of PathIndex
@@ -1363,6 +1363,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   if (!(Uintah::Parallel::usingDevice())) {
     // needed for carry Forward
     tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
+    tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0);
     tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
   }
 
@@ -1375,9 +1376,9 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // declare requires for all coarser levels
   for (int l = 0; l < maxLevels; ++l) {
     int offset = maxLevels - l;
-    tsk->requires(abskg_dw,    d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX);
-    tsk->requires(sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX);
-    tsk->requires(celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX);
+    tsk->requires( abskg_dw,    d_abskgLabel,    nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+    tsk->requires( sigma_dw,    d_sigmaT4Label,  nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
+    tsk->requires( celltype_dw, d_cellTypeLabel, nullptr, Task::CoarseLevel, offset, nullptr, ND, gac, SHRT_MAX );
 
     proc0cout << "WARNING: RMCRT High communication costs on level: " << l
               << ".  Variables from every patch on this level are communicated to every patch on the finest level."
@@ -1421,9 +1422,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   //  Carry Forward (old_dw -> new_dw)
   if ( doCarryForward( radCalc_freq ) ) {
     printTask( finePatches, dbg, "Doing Ray::rayTrace_dataOnion carryForward ( divQ )" );
-
-    new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, true );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
+    bool replaceVar = true;
+    new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     finePatches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, replaceVar );
     return;
   }
 
@@ -1463,10 +1465,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     Dx[L] = dx;
   }
 
-  IntVector fineLevel_ROI_Lo = IntVector(-9,-9,-9);
-  IntVector fineLevel_ROI_Hi = IntVector(-9,-9,-9);
-  vector<IntVector> regionLo(maxLevels);
-  vector<IntVector> regionHi(maxLevels);
+  IntVector fineLevel_ROI_Lo = IntVector( -9,-9,-9 );
+  IntVector fineLevel_ROI_Hi = IntVector( -9,-9,-9 );
+  vector<IntVector> regionLo( maxLevels );
+  vector<IntVector> regionHi( maxLevels );
 
   //__________________________________
   //  retrieve fine level data & compute the extents (dynamic and fixed )
@@ -1479,9 +1481,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                    regionLo,  regionHi);
 
     dbg << " getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi << endl;
-    abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-    sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-    celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+    sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+    celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
   }
 
   abskg_fine         = abskg[maxLevels-1];
@@ -1510,24 +1512,32 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       int L = maxLevels - 1;
       dbg << " getting fine level data across L-" << L << endl;
 
-      abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-      sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-      celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl ,fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl ,fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       abskg_fine         = abskg[L];
       sigmaT4OverPi_fine = sigmaT4OverPi[L];
     }
 
     CCVariable<double> divQ_fine;
+    CCVariable<Stencil7> boundFlux_fine;
     CCVariable<double> radiationVolq_fine;
 
     if( modifies_divQ ){
       old_dw->getModifiable( divQ_fine,         d_divQLabel,          d_matl, finePatch );
+      new_dw->getModifiable( boundFlux_fine,    d_boundFluxLabel,     d_matl, finePatch );
       old_dw->getModifiable( radiationVolq_fine,d_radiationVolqLabel, d_matl, finePatch );
     }else{
-      new_dw->allocateAndPut( divQ_fine,          d_divQLabel,         d_matl, finePatch );
-      new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl,finePatch );
+      new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
+      new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
+      new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
       divQ_fine.initialize( 0.0 );
       radiationVolq_fine.initialize( 0.0 );
+      
+      for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        boundFlux_fine[c].initialize(0.0);
+      }
     }
 
     unsigned long int nRaySteps = 0;
@@ -1567,9 +1577,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
         Vector direction_vector;
         if (d_rayDirSampleAlgo== LATIN_HYPER_CUBE){       // Latin-Hyper-Cube sampling
-          direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay,rand_i[iRay],iRay );
+          direction_vector =findRayDirectionHyperCube( mTwister, origin, iRay,rand_i[iRay],iRay );
         }else{                                            // Naive Monte-Carlo sampling
-          direction_vector =findRayDirection(mTwister, origin, iRay );
+          direction_vector =findRayDirection( mTwister, origin, iRay );
         }
 
         Vector rayOrigin;
@@ -1578,7 +1588,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
         updateSumI_ML< T >( direction_vector, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType,
-                       nRaySteps, sumI, mTwister);
+                       nRaySteps, sumI, mTwister );
 
 
       }  // Ray loop
@@ -2173,13 +2183,16 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1);
+    task->requires( Task::NewDW, d_divQLabel,      allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requires( Task::NewDW, d_boundFluxLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
 
     // when carryforward is needed
-    task->requires( Task::OldDW, d_divQLabel, d_gn, 0 );
+    task->requires( Task::OldDW, d_divQLabel,      d_gn, 0 );
+    task->requires( Task::OldDW, d_boundFluxLabel, d_gn, 0 );
 
-    task->computes(d_divQLabel);
-    sched->addTask(task, patches, matls);
+    task->computes( d_divQLabel );
+    task->computes( d_boundFluxLabel );
+    sched->addTask( task, patches, matls );
   }
 }
 
@@ -2201,7 +2214,8 @@ void Ray::refine_Q(const ProcessorGroup*,
   if ( doCarryForward( radCalc_freq ) ) {
     printTask( fineLevel->getPatch(0), dbg, "Doing Ray::refine_Q carryForward ( divQ )" );
 
-    new_dw->transferFrom( old_dw, d_divQLabel, patches, matls, true );
+    new_dw->transferFrom( old_dw, d_divQLabel,      patches, matls, true );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel, patches, matls, true );
     return;
   }
 
@@ -2215,8 +2229,16 @@ void Ray::refine_Q(const ProcessorGroup*,
     finePatch->getCoarseLevelPatches(coarsePatches);
 
     CCVariable<double> divQ_fine;
-    new_dw->allocateAndPut(divQ_fine, d_divQLabel, d_matl, finePatch);
-    divQ_fine.initialize(0);
+    CCVariable<Stencil7> boundFlux_fine;
+    
+    new_dw->allocateAndPut(divQ_fine,      d_divQLabel,      d_matl, finePatch);
+    new_dw->allocateAndPut(boundFlux_fine, d_boundFluxLabel, d_matl, finePatch);
+    
+    divQ_fine.initialize( 0.0 );
+    for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      boundFlux_fine[c].initialize( 0.0 );
+    }
 
     IntVector refineRatio = fineLevel->getRefinementRatio();
 
@@ -2233,11 +2255,20 @@ void Ray::refine_Q(const ProcessorGroup*,
         <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
         <<" coarseRegion " << cl << " " << ch <<endl;
 
+    // DivQ
     constCCVariable<double> divQ_coarse;
     new_dw->getRegion( divQ_coarse, d_divQLabel, d_matl, coarseLevel, cl, ch );
 
     selectInterpolator(divQ_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
                        refineRatio, fl, fh, divQ_fine);
+
+    // boundary Flux
+    constCCVariable<Stencil7> boundFlux_coarse;
+    new_dw->getRegion( boundFlux_coarse, d_boundFluxLabel, d_matl, coarseLevel, cl, ch );
+#if 0               // ----------------------------------------------------------------TO BE FILLED IN   Todd
+    selectInterpolator(boundFlux_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
+                       refineRatio, fl, fh, boundFlux_fine);
+#endif
 
   }  // fine patch loop
 }
@@ -2638,7 +2669,6 @@ void Ray::computeCellType( const ProcessorGroup*,
 
       prevCell = cur;
       prevLev  = L;
-      Point prevCC_pos = CC_pos;
 
       //__________________________________
       //  Determine the princple direction the ray is traveling
