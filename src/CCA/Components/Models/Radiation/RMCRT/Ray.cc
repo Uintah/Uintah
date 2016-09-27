@@ -2278,15 +2278,18 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    task->requires( Task::NewDW, d_divQLabel,      allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
-    task->requires( Task::NewDW, d_boundFluxLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requires( Task::NewDW, d_divQLabel,          allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requires( Task::NewDW, d_boundFluxLabel,     allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requires( Task::NewDW, d_radiationVolqLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
 
     // when carryforward is needed
-    task->requires( Task::OldDW, d_divQLabel,      d_gn, 0 );
-    task->requires( Task::OldDW, d_boundFluxLabel, d_gn, 0 );
+    task->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
+    task->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
+    task->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
 
     task->computes( d_divQLabel );
     task->computes( d_boundFluxLabel );
+    task->computes( d_radiationVolqLabel );
     sched->addTask( task, patches, matls );
   }
 }
@@ -2309,8 +2312,9 @@ void Ray::refine_Q(const ProcessorGroup*,
   if ( doCarryForward( radCalc_freq ) ) {
     printTask( fineLevel->getPatch(0), dbg, "Doing Ray::refine_Q carryForward ( divQ )" );
 
-    new_dw->transferFrom( old_dw, d_divQLabel,      patches, matls, true );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel, patches, matls, true );
+    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, true );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, true );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, true );
     return;
   }
 
@@ -2324,12 +2328,16 @@ void Ray::refine_Q(const ProcessorGroup*,
     finePatch->getCoarseLevelPatches(coarsePatches);
 
     CCVariable<double> divQ_fine;
+    CCVariable<double> radVolQ_fine;
     CCVariable<Stencil7> boundFlux_fine;
 
-    new_dw->allocateAndPut(divQ_fine,      d_divQLabel,      d_matl, finePatch);
-    new_dw->allocateAndPut(boundFlux_fine, d_boundFluxLabel, d_matl, finePatch);
+    new_dw->allocateAndPut(divQ_fine,      d_divQLabel,        d_matl, finePatch);
+    new_dw->allocateAndPut(radVolQ_fine, d_radiationVolqLabel, d_matl, finePatch);
+    new_dw->allocateAndPut(boundFlux_fine, d_boundFluxLabel,   d_matl, finePatch);
 
     divQ_fine.initialize( 0.0 );
+    radVolQ_fine.initialize( 0.0 );
+    
     for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       boundFlux_fine[c].initialize( 0.0 );
@@ -2350,14 +2358,21 @@ void Ray::refine_Q(const ProcessorGroup*,
         <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
         <<" coarseRegion " << cl << " " << ch <<endl;
 
-    // DivQ
+    //__________________________________DivQ
     constCCVariable<double> divQ_coarse;
     new_dw->getRegion( divQ_coarse, d_divQLabel, d_matl, coarseLevel, cl, ch );
 
     selectInterpolator(divQ_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
                        refineRatio, fl, fh, divQ_fine);
+    
+    //__________________________________raditionVolQ                   
+    constCCVariable<double> radVolQ_coarse;
+    new_dw->getRegion( radVolQ_coarse, d_radiationVolqLabel, d_matl, coarseLevel, cl, ch );
 
-    // boundary Flux
+    selectInterpolator(radVolQ_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
+                       refineRatio, fl, fh, radVolQ_fine);
+
+    //__________________________________boundary Flux
     constCCVariable<Stencil7> boundFlux_coarse;
     new_dw->getRegion( boundFlux_coarse, d_boundFluxLabel, d_matl, coarseLevel, cl, ch );
 #if 0               // ----------------------------------------------------------------TO BE FILLED IN   Todd
