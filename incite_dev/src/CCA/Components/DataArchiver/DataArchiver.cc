@@ -85,7 +85,7 @@
 #define CHECKPOINT_REDUCTION 2
 
 #define XML_TEXTWRITER 1
-//#undef XML_TEXTWRITER
+#undef XML_TEXTWRITER
 
 using namespace Uintah;
 using namespace std;
@@ -140,10 +140,10 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   // PIDX related
   string type;
   p->getAttribute("type", type);
-  if(type == "pidx" || type == "PIDX"){
-    d_outputFileFormat= PIDX;
-    d_PIDX_flags.problemSetup(p);
-    d_PIDX_flags.print();
+  if( type == "pidx" || type == "PIDX" ) {
+    d_outputFileFormat = PIDX;
+    d_PIDX_flags.problemSetup( p );
+    //d_PIDX_flags.print();
   }
 
   d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
@@ -1017,7 +1017,9 @@ DataArchiver::beginOutputTimestep( double time,
     if( time + delt >= d_nextOutputTime ) {
       // This is an output timestep based on simulation time.
       d_isOutputTimestep = true;
-      makeTimestepDirs( d_dir, d_saveLabels, grid, &d_lastTimestepLocation );
+      if ( d_outputFileFormat != PIDX ) {
+        makeTimestepDirs( d_dir, d_saveLabels, grid, &d_lastTimestepLocation );
+      }
     }
     else {
       d_isOutputTimestep = false;
@@ -1027,7 +1029,9 @@ DataArchiver::beginOutputTimestep( double time,
     if(timestep >= d_nextOutputTimestep) {
       // This is an output timestep based on timestep interval.
       d_isOutputTimestep = true;
-      makeTimestepDirs( d_dir, d_saveLabels, grid, &d_lastTimestepLocation );
+      if ( d_outputFileFormat != PIDX ) {
+        makeTimestepDirs( d_dir, d_saveLabels, grid, &d_lastTimestepLocation );
+      }
     }
     else {
       d_isOutputTimestep = false;
@@ -2352,7 +2356,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   //      Is Variable::emitPIDX() and Variable::readPIDX() efficient? 
   //      Should we be using calloc() instead of malloc+memset
   //
-  if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION){
+  if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION ) {
   
     //__________________________________
     // bulletproofing
@@ -2365,7 +2369,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     ProblemSpecP doc = ProblemSpec::createDocument("Uintah_Output-PIDX");
     ASSERT(doc != 0);
     ProblemSpecP n = doc->findBlock("Variable");
-    while(n != 0) {
+    while( n != 0 ) {
       n = n->findNextBlock("Variable");
     }  
       
@@ -2400,17 +2404,14 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] += (double)totalBytes/(byteToMB * myTime);
     
     // write the xml 
-    doc->output(xmlFilename.c_str());
+    //doc->output(xmlFilename.c_str());
   }
-  
 #endif
-} // end output()
-
-
-
+} // end outputVariables()
 
 //______________________________________________________________________
-//  outut only the savedLabels of a specified type description in PIDX format.
+//  output only the savedLabels of a specified type description in PIDX format.
+
 size_t
 DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
                                const ProcessorGroup        * pg,

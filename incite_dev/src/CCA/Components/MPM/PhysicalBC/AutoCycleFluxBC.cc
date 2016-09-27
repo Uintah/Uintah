@@ -24,6 +24,7 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
+#include <CCA/Components/MPM/PhysicalBC/AutoCycleFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <Core/Grid/DbgOutput.h>
@@ -35,26 +36,23 @@
 
 using namespace Uintah;
 
-static DebugStream cout_doing("FluxBCModel", false);
+static DebugStream cout_doing("AutoCycleFluxBC", false);
 
 #define USE_FLUX_RESTRICTION
 
-FluxBCModel::FluxBCModel(SimulationStateP& shared_state, MPMFlags* mpm_flags)
+AutoCycleFluxBC::AutoCycleFluxBC(SimulationStateP& shared_state, MPMFlags* mpm_flags) :
+    FluxBCModel(shared_state, mpm_flags)
 {
-  d_load_curve_index = 0;
-  d_shared_state = shared_state;
-  d_mpm_lb = scinew MPMLabel();
-  d_mpm_flags = mpm_flags;
+  d_flux_sign = 1.0;
 
 }
 
-FluxBCModel::~FluxBCModel()
+AutoCycleFluxBC::~AutoCycleFluxBC()
 {
-  delete d_mpm_lb;
 
 }
 
-void FluxBCModel::scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP& sched)
+void AutoCycleFluxBC::scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
 
@@ -70,12 +68,12 @@ void FluxBCModel::scheduleInitializeScalarFluxBCs(const LevelP& level, Scheduler
     }
   }
   if (nofSFBCs > 0) {
-    printSchedule(patches,cout_doing,"FluxBCModel::countMaterialPointsPerFluxLoadCurve");
-    printSchedule(patches,cout_doing,"FluxBCModel::scheduleInitializeScalarFluxBCs");
+    printSchedule(patches,cout_doing,"AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve");
+    printSchedule(patches,cout_doing,"AutoCycleFluxBC::scheduleInitializeScalarFluxBCs");
     // Create a task that calculates the total number of particles
     // associated with each load curve.
-    Task* t = scinew Task("FluxBCModel::countMaterialPointsPerFluxLoadCurve", this,
-                          &FluxBCModel::countMaterialPointsPerFluxLoadCurve);
+    Task* t = scinew Task("AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve", this,
+                          &AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve);
     t->requires(Task::NewDW, d_mpm_lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(d_mpm_lb->materialPointsPerLoadCurveLabel, d_load_curve_index, Task::OutOfDomain);
     sched->addTask(t, patches, d_shared_state->allMPMMaterials());
@@ -83,8 +81,8 @@ void FluxBCModel::scheduleInitializeScalarFluxBCs(const LevelP& level, Scheduler
 #if 1
     // Create a task that calculates the force to be associated with
     // each particle based on the pressure BCs
-    t = scinew Task("FluxBCModel::initializeScalarFluxBC", this,
-                    &FluxBCModel::initializeScalarFluxBC);
+    t = scinew Task("AutoCycleFluxBC::initializeScalarFluxBC", this,
+                    &AutoCycleFluxBC::initializeScalarFluxBC);
     t->requires(Task::NewDW, d_mpm_lb->materialPointsPerLoadCurveLabel,
                 d_load_curve_index, Task::OutOfDomain, Ghost::None);
     sched->addTask(t, patches, d_shared_state->allMPMMaterials());
@@ -95,7 +93,7 @@ void FluxBCModel::scheduleInitializeScalarFluxBCs(const LevelP& level, Scheduler
       delete d_load_curve_index;
 }
 
-void FluxBCModel::initializeScalarFluxBC(const ProcessorGroup*, const PatchSubset* patches,
+void AutoCycleFluxBC::initializeScalarFluxBC(const ProcessorGroup*, const PatchSubset* patches,
                                          const MaterialSubset*, DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
@@ -132,17 +130,17 @@ void FluxBCModel::initializeScalarFluxBC(const ProcessorGroup*, const PatchSubse
   }      // patch loop
 }
 
-void FluxBCModel::scheduleApplyExternalScalarFlux(SchedulerP& sched, const PatchSet* patches,
+void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
   if (!d_mpm_flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"FluxBCModel::scheduleApplyExternalScalarFlux");
+  printSchedule(patches,cout_doing,"AutoCycleFluxBC::scheduleApplyExternalScalarFlux");
 
-  Task* t=scinew Task("FluxBCModel::applyExternalScalarFlux", this,
-                      &FluxBCModel::applyExternalScalarFlux);
+  Task* t=scinew Task("AutoCycleFluxBC::applyExternalScalarFlux", this,
+                      &AutoCycleFluxBC::applyExternalScalarFlux);
 
   t->requires(Task::OldDW, d_mpm_lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pSizeLabel,              Ghost::None);
@@ -164,7 +162,7 @@ void FluxBCModel::scheduleApplyExternalScalarFlux(SchedulerP& sched, const Patch
   sched->addTask(t, patches, matls);
 }
 
-void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSubset* patches,
+void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const PatchSubset* patches,
                                           const MaterialSubset*, DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 {
@@ -284,7 +282,7 @@ void FluxBCModel::applyExternalScalarFlux(const ProcessorGroup* , const PatchSub
   }  // patch loop
 }
 
-void FluxBCModel::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
+void AutoCycleFluxBC::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
                                                       const PatchSubset* patches,
                                                       const MaterialSubset*,
                                                       DataWarehouse* old_dw,

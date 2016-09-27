@@ -111,6 +111,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   //******* Reactive Flow Component
   d_doScalarDiffusion = false; //for diffusion component found in ReactiveFlow
 
+  d_doAutoCycleBC = false; //for scalar flux boundary conditions
+
 // MMS
 if(d_mms_type=="AxisAligned"){
     d_mms_type = "AxisAligned";
@@ -254,6 +256,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   // Setting Scalar Diffusion
   mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
+
+  mpm_flag_ps->get("do_auto_cycle_bc", d_doAutoCycleBC);
 
   // d_doComputeHeatFlux:
   // set to true if the label g.HeatFlux is saved or 

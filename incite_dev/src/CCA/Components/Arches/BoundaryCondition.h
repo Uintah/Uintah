@@ -165,7 +165,7 @@ inline const FaceOffSets getFaceOffsets( const IntVector& face_normal, const Pat
 
 };
 
-inline IntrusionBC* get_intrusion_ref(){
+inline const std::map<const int, IntrusionBC*> get_intrusion_ref(){
   return _intrusionBC;
 };
 
@@ -189,7 +189,6 @@ inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){
 
 void prune_per_patch_bcinfo( SchedulerP& sched,
                              const LevelP& level,
-                             const MaterialSet* matls,
                              WBCHelper* bcHelper );
 
 void sched_cellTypeInit( SchedulerP& sched,
@@ -365,7 +364,7 @@ BoundaryCondition(const ArchesLabel* label,
 
 ~BoundaryCondition();
 
-void problemSetup( const ProblemSpecP& params );
+void problemSetup( const ProblemSpecP& params, GridP& grid );
 
 void set_bc_information( const LevelP& level );
 
@@ -601,9 +600,9 @@ struct BCInfo {
 
   DigitalFilterInlet * TurbIn;
 
- std::vector<double> vWeights;
- std::vector<std::vector<double> > vVelScalingConst;
- std::vector<std::vector<std::string> > vVelLabels;
+  std::vector<double> vWeights;
+  std::vector<std::vector<double> > vVelScalingConst;
+  std::vector<std::vector<std::string> > vVelLabels;
 
 };
 
@@ -841,7 +840,7 @@ bool d_check_inlet_obstructions;
 
 bool d_ignore_invalid_celltype;
 
-IntrusionBC* _intrusionBC;
+std::map<const int, IntrusionBC*> _intrusionBC;
 bool _using_new_intrusion;
 
 // used for calculating wall boundary conditions

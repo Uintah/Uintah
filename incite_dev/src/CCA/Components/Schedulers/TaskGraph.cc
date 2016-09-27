@@ -1011,6 +1011,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
     }
     constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(task->matls);
 
+    bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
+
     // this section is just to find the low and the high of the patch that will use the other
     // level's data.  Otherwise, we have to use the entire set of patches (and ghost patches if 
     // applicable) that lay above/beneath this patch.
@@ -1046,9 +1048,13 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         otherLevelHigh = origLevel->mapCellToCoarser(otherLevelHigh, req->m_level_offset) + ratio - IntVector(1, 1, 1);
       }
       else {
-        origPatch->computeVariableExtents(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
+        if (uses_SHRT_MAX) {  
+          //Finer patches probably shouldn't be using SHRT_MAX ghost cells, but just in case they do, at least compute the low and high correctly...
+          origPatch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
+        } else {
+          origPatch->computeVariableExtents(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
                                           req->m_num_ghost_cells, otherLevelLow, otherLevelHigh);
-
+        }
         otherLevelLow = origLevel->mapCellToFiner(otherLevelLow);
         otherLevelHigh = origLevel->mapCellToFiner(otherLevelHigh);
       }
@@ -1066,11 +1072,15 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         neighbors.resize(0);
 
         IntVector low, high;
-
+        
         Patch::VariableBasis basis = Patch::translateTypeToBasis(req->m_var->typeDescription()->getType(), false);
 
-        patch->computeVariableExtents(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
-                                      req->m_num_ghost_cells, low, high);
+        if (uses_SHRT_MAX) {
+          patch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), low, high);
+        } else {
+          patch->computeVariableExtents(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
+                                        req->m_num_ghost_cells, low, high);
+        }
 
         if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
           // make sure the bounds of the dep are limited to the original patch's (see above)

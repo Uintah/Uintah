@@ -52,6 +52,7 @@ commit #: 55756
 * Generate new configure script
 
 
+
 -------------------------------------------------------------------------------
 September 23, 2016
 -------------------------
@@ -60,6 +61,19 @@ commit #: 55788
 
 * Merge of trunk with /branches/incite_dev
     (svn merge -r55755:55786)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+September 27, 2016
+-------------------------
+
+commit #: 557806
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55786:55803)
     
 * Generate new configure script
 

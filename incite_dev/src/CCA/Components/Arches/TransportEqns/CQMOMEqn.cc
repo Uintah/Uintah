@@ -166,7 +166,7 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
       std::string source_label;
       //int nIC = 0;
       std::string ic_name;
-      
+
       if ( m_db->findBlock("IC") ) {
         m_db->get("IC",ic_name);
         m = 0;
@@ -509,6 +509,8 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
@@ -582,7 +584,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, areaFraction, d_convScheme );
 
         if ( _using_new_intrusion ) {
-          _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
+          _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
         }
       }
 
@@ -608,7 +610,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         new_dw->get( Fconv, d_FconvLabel, matlIndex, patch, gn, 0 );
 
         if ( _using_new_intrusion ) {
-          _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
+          _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
         }
       }
 
@@ -1066,6 +1068,8 @@ CQMOMEqn::buildSplitRHS( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
@@ -1120,7 +1124,7 @@ CQMOMEqn::buildSplitRHS( const ProcessorGroup* pc,
 
     // look for and add contribution from intrusions.
     if ( _using_new_intrusion ) {
-      _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
+      _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
     }
 
     //----DIFFUSION

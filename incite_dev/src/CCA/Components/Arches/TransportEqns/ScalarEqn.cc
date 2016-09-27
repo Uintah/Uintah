@@ -429,6 +429,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -519,7 +521,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       d_disc->computeConv( patch, Fconv, phi, uVel, vVel, wVel, den, areaFraction, d_convScheme );
       // look for and add contribution from intrusions.
       if ( _using_new_intrusion ) {
-        _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS, den );
+        _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS, den );
       }
     }
 

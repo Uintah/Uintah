@@ -254,6 +254,7 @@ AMRSimulationController::run()
   static bool need_to_recompile = false;
   static bool put_back          = false;
 
+#ifdef HAVE_PIDX
   if( d_output && d_output->savingAsPIDX() ) {
     if( requested_nth_output_proc == -1 ) {
       requested_nth_output_proc = d_lb->getNthRank();
@@ -263,9 +264,11 @@ AMRSimulationController::run()
         proc0cout << "  - However, setting output to every process until we hit a checkpoint\n";
         d_lb->setNthRank( 1 );
         d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
+        d_output->setSaveAsPIDX();
       }
     }
   }
+#endif
 
   //
   // Note, the 'current timestep' (d_sharedState->getCurrentTopLevelTimeStep()) changes in the middle
@@ -316,36 +319,37 @@ AMRSimulationController::run()
       adjustDelT( delt, d_prev_delt, first, time );
       newDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
     }
-
+#ifdef HAVE_PIDX
     if( d_output && d_output->savingAsPIDX() ) {
-      int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep();
-
       // Because "incrementCurrentTopLevelTimeStep()" has not yet been called
       // at this point in the loop, we need to add 1 to the currentTimeStep to know if we
       // really are on a checkpoint or output time step.
 
-      if( ( d_output->getCheckpointTimestepInterval() > 0 && ( currentTimeStep + 1 ) == d_output->getNextCheckpointTimestep() ) ||
+      int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep() + 1;
+
+      if( ( d_output->getCheckpointTimestepInterval() > 0 && currentTimeStep == d_output->getNextCheckpointTimestep() ) ||
           ( d_output->getCheckpointInterval() > 0         && ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
           ( d_output->getCheckpointWalltimeInterval() > 0 && ( Time::currentSeconds() >= d_output->getNextCheckpointWalltime() ) ) ) {
 
         if( requested_nth_output_proc > 1 ) {
-          proc0cout << "this is a checkpoint timestep (" << ( currentTimeStep + 1 )
+          proc0cout << "this is a checkpoint timestep (" << currentTimeStep
                     << ") - need to recompile with nth proc set to: " << requested_nth_output_proc << "\n";
           d_lb->setNthRank( requested_nth_output_proc );
           d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
+          d_output->setSaveAsUDA();
           need_to_recompile = true;
         }
       }
-      if( ( d_output->getOutputTimestepInterval() > 0 && ( currentTimeStep + 1 ) == d_output->getNextOutputTimestep() ) ||
+      if( ( d_output->getOutputTimestepInterval() > 0 && currentTimeStep == d_output->getNextOutputTimestep() ) ||
           ( d_output->getOutputInterval() > 0         && ( time + delt ) >= d_output->getNextOutputTime() ) ) {
-        proc0cout << "this is an output timestep: " << (currentTimeStep + 1) << "\n";
+        proc0cout << "this is an output timestep: " << currentTimeStep << "\n";
         if( need_to_recompile ) { // If this is also a checkpoint time step
           proc0cout << "   Postposing as this is also a checkpoint time step...\n";
           d_output->postponeNextOutputTimestep();
         }
       }
     }
-
+#endif
     //__________________________________
     //    Regridding
     if ( d_regridder ) {
@@ -433,9 +437,10 @@ AMRSimulationController::run()
       }
 
       if( put_back ) {
-        proc0cout << "this is the timestep following a checkpoint - need to put the task graph back with a recompile - seting nth output to 1\n";
+        proc0cout << "this is the timestep following a checkpoint - need to put the task graph back with a recompile - setting nth output to 1\n";
         d_lb->setNthRank( 1 );
         d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
+        d_output->setSaveAsPIDX();
         put_back = false;
       }
       if( need_to_recompile ) {
@@ -540,7 +545,24 @@ AMRSimulationController::run()
     }
 
     if( d_output ) {
+#ifdef HAVE_PIDX
+      if ( d_output->savingAsPIDX()) {
+        int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep();
+        if( ( d_output->getCheckpointTimestepInterval() > 0 && ( currentTimeStep + 1 ) == d_output->getNextCheckpointTimestep() ) ||
+            ( d_output->getCheckpointInterval() > 0         && ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
+            ( d_output->getCheckpointWalltimeInterval() > 0 && ( Time::currentSeconds() >= d_output->getNextCheckpointWalltime() ) ) ) {
+          // Only save timestep.xml if we are checkpointing.  Normal time step dumps (using PIDX) do not need to write the xml information.
+          d_output->writeto_xml_files( delt, currentGrid );
+        }
+      }
+      else {
+        // PIDX is not being used at time time so write timestep.xml for both checkpoints and time step dumps.
+        d_output->writeto_xml_files( delt, currentGrid );
+      }
+#else
+      // Not using PIDX, write timestep.xml for both checkpoints and time step dumps.
       d_output->writeto_xml_files( delt, currentGrid );
+#endif    
     }
 
     // Update the time.
