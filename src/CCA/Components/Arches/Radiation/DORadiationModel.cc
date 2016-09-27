@@ -65,6 +65,8 @@
 #include <CCA/Components/Arches/Radiation/fortran/rdomsrcscattering_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
+#include <CCA/Components/Arches/Radiation/LegendreChebyshevQuad.h>
+
 
 
 using namespace std;
@@ -132,6 +134,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   }
 
   db->getWithDefault("ScatteringOn",_scatteringOn,false);
+  db->getWithDefault("QuadratureMethod",d_quadratureMethod,"LevelSymmetric");
 
   std::string baseNameAbskp;
   std::string modelName;
@@ -261,19 +264,42 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 void
 DORadiationModel::computeOrdinatesOPL() {
 
-  d_totalOrds = d_sn*(d_sn+2);
 
+
+  d_totalOrds = d_sn*(d_sn+2);
   omu.resize( 1,d_totalOrds + 1);
   oeta.resize(1,d_totalOrds + 1);
   oxi.resize( 1,d_totalOrds + 1);
   wt.resize(  1,d_totalOrds + 1);
 
+
   omu.initialize(0.0);
   oeta.initialize(0.0);
   oxi.initialize(0.0);
   wt.initialize(0.0);
+  if (d_quadratureMethod=="LegendreChebyshev"){
+    std::vector<double> xx(d_totalOrds,0.0);
+    std::vector<double> yy(d_totalOrds,0.0);
+    std::vector<double> zz(d_totalOrds,0.0);
+    std::vector<double> ww(d_totalOrds,0.0);
+    computeLegendreChebyshevQuadratureSet(d_sn, xx,yy,zz,ww);
 
-  fort_rordr(d_sn, oxi, omu, oeta, wt);
+    for (int i=0; i< d_totalOrds; i++){
+      omu[i+1]= xx[i];
+      oeta[i+1]=yy[i];
+      oxi[i+1]=zz[i];
+      wt[i+1]=ww[i];
+    }
+    for (int i=0; i< d_totalOrds; i++){
+      proc0cout << omu[i+1] << "  "
+        << oeta[i+1] << "  "
+        << oxi[i+1] << "  "
+        << wt[i+1] << "  \n";
+    }
+
+  } else{  // Level-Symmetric
+    fort_rordr(d_sn, oxi, omu, oeta, wt);
+  }
 
   _sigma=5.67e-8;  //  w / m^2 k^4
 
@@ -988,4 +1014,5 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
 
   return;
 }
+
 
