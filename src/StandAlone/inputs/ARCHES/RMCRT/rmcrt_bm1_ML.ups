@@ -27,7 +27,15 @@
     <filebase>rmcrt_bm1_ML.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ"/>
+    
     <save label="RMCRTboundFlux"/>
+    <save label="radiationFluxE"    levels="-1"/>
+    <save label="radiationFluxW"    levels="-1"/>
+    <save label="radiationFluxN"    levels="-1"/>
+    <save label="radiationFluxS"    levels="-1"/>
+    <save label="radiationFluxT"    levels="-1"/>
+    <save label="radiationFluxB"    levels="-1"/>
+    
     <save label="radiation_temperature"/>
     <save label="abskg" />
     <save label="sigmaT4" />

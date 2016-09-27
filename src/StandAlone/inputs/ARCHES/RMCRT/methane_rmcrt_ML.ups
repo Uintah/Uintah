@@ -26,23 +26,30 @@
     <filebase>methane_1m.uda</filebase>
     <outputInterval>0.0</outputInterval>
     <save label="totalKineticEnergy"/>
-    <save label="pressurePS" levels="-1"/>
-    <save label="CCVelocity" levels="-1"/>
-    <save label="uVelocitySPBC" levels="-1"/>
-    <save label="vVelocitySPBC" levels="-1"/>
-    <save label="wVelocitySPBC" levels="-1"/>       
-    <save label="viscosityCTS" levels="-1"/>
-    <save label="cellType" levels="-1"/>
+    <save label="pressurePS"        levels="-1"/>
+    <save label="CCVelocity"        levels="-1"/>
+    <save label="uVelocitySPBC"     levels="-1"/>
+    <save label="vVelocitySPBC"     levels="-1"/>
+    <save label="wVelocitySPBC"     levels="-1"/>       
+    <save label="viscosityCTS"      levels="-1"/>
+    <save label="cellType"          levels="-1"/>
 
-    <save label="mixture_fraction" levels="-1"/>
-    <save label="enthalpy_rmcrt" levels="-1"/>
-    <!-- <save label="enthalpy_do" levels="-1"/>       -->
-    <save label="heat_loss" levels="-1"/>
-    <save label="areaFraction" levels="-1"/>
+    <save label="mixture_fraction"  levels="-1"/>
+    <save label="enthalpy_rmcrt"    levels="-1"/>
+    <!-- <save label="enthalpy_do"  levels="-1"/>       -->
+    <save label="heat_loss"         levels="-1"/>
+    <save label="areaFraction"      levels="-1"/>
 
     <!-- radiation properties --> 
-    <save label="abskg" levels="-1"/>
+    <save label="abskg"                 levels="-1"/>
     <save label="radiation_temperature" levels="-1"/>
+    <save label="RMCRTboundFlux"        levels="-1"/>
+    <save label="radiationFluxE"        levels="-1"/>
+    <save label="radiationFluxW"        levels="-1"/>
+    <save label="radiationFluxN"        levels="-1"/>
+    <save label="radiationFluxS"        levels="-1"/>
+    <save label="radiationFluxT"        levels="-1"/>
+    <save label="radiationFluxB"        levels="-1"/>
 
     <!-- table look ups --> 
     <save label="density"     table_lookup="true" levels="-1"/>
@@ -418,7 +425,7 @@
             
             <RMCRT>
                 <randomSeed>        false      </randomSeed>
-                <nDivQRays>          5         </nDivQRays>
+                <nDivQRays>         5         </nDivQRays>
                 <nFluxRays>         5          </nFluxRays>
                 <Threshold>         0.05       </Threshold>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
