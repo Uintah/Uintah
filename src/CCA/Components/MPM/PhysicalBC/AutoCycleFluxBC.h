@@ -51,6 +51,8 @@ namespace Uintah {
     protected:
 
       double d_flux_sign;
+      double d_auto_cycle_max;
+      double d_auto_cycle_min;
 
       virtual void initializeScalarFluxBC(const ProcessorGroup*, const PatchSubset* patches,
                                                 const MaterialSubset*, DataWarehouse* old_dw,

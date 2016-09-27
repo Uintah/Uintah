@@ -204,6 +204,12 @@ MPMLabel::MPMLabel()
   pConcPreviousLabel_preReloc  = VarLabel::create( "p.concPrevious+",
 			ParticleVariable<double>::getTypeDescription() );
 
+  TotalConcLabel = VarLabel::create( "TotalConc",
+      sum_vartype::getTypeDescription() );
+
+  pAvgConcLabel = VarLabel::create( "p.avgConc",
+      sum_vartype::getTypeDescription() );
+
   pFiberDirLabel  = VarLabel::create( "p.fiberdir",
                         ParticleVariable<Vector>::getTypeDescription() );
 
@@ -832,6 +838,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTemperatureGradientLabel_preReloc);
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
+  VarLabel::destroy(TotalConcLabel);
+  VarLabel::destroy(pAvgConcLabel);
   VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pDiffusivityLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);

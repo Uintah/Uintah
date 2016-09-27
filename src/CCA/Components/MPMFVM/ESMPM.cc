@@ -24,10 +24,13 @@
 
 #include <CCA/Components/MPMFVM/ESMPM.h>
 #include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
+#include <string>
 
 using namespace Uintah;
 
@@ -121,7 +124,7 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     return;
 
   const MaterialSet* mpm_matls = d_shared_state->allMPMMaterials();
-  const MaterialSet* all_matls = d_shared_state->allMaterials();
+  //const MaterialSet* all_matls = d_shared_state->allMaterials();
 
   int maxLevels = level->getGrid()->numLevels();
   GridP grid = level->getGrid();
@@ -139,7 +142,7 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     d_amrmpm->scheduleInterpolateParticlesToGrid(     sched, patches, mpm_matls);
-    // Need to add a task to do the reductions on the max hydro stress - JG ???
+    scheduleInterpolateParticlesToCellFC(sched, patches, mpm_matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -252,4 +255,31 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 void ESMPM::scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched)
 {
   d_amrmpm->scheduleFinalizeTimestep(level, sched);
+}
+
+void ESMPM::scheduleInterpolateParticlesToCellFC(SchedulerP& sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls)
+{
+  const Level* level = getLevel(patches);
+  if(!d_mpm_flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
+    return;
+  }
+
+  printSchedule(patches, cout_doing, "ESMPM::scheduleInterpolateConcToGrid");
+
+  Task* t = scinew Task("ESMPM::interpolateParticlesToCellFC",
+                        this, &ESMPM::interpolateParticlesToCellFC);
+
+  t->requires(Task::OldDW, d_mpm_lb->pXLabel,             Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_mpm_lb->pConcentrationLabel, Ghost::AroundCells, 1);
+}
+
+void ESMPM::interpolateParticlesToCellFC(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* ,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
+{
+
 }
