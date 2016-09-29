@@ -1049,9 +1049,6 @@ ExplicitSolver::initialize( const LevelP& level,
   //copies the reduction area variable information on area to a double in the BndCond spec
   m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
 
-  //delete the reduction variable so that they don't live beyond this point
-  m_bcHelper[level->getID()]->sched_deleteBCAreaHelper( sched, level, matls );
-
   //delete non-patch-local information on the old BC object
   d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
 
@@ -1327,9 +1324,6 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
 
   //copies the reduction area variable information on area to a double in the BndCond spec
   m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
-
-  //delete the reduction variable so that they don't live beyond this point
-  m_bcHelper[level->getID()]->sched_deleteBCAreaHelper( sched, level, matls );
 
   //delete non-patch-local information on the old BC object
   d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
