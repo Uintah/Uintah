@@ -184,7 +184,12 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
       for ( int i = 0; i < grid->numLevels(); i++ ){
         _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION )));
         ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
-        _intrusionBC[i]->problemSetup( db_new_intrusion, i );
+        if (i == (grid->numLevels() - 1)){  //  Only create intrusions on the finest level.  
+                                            //  In the future, we may want to create intrusions on all levels,
+                                            //  if so, we will need to resolve problems with redundant intrusion  
+                                            //  names in the infrastructure.
+          _intrusionBC[i]->problemSetup( db_new_intrusion, i );
+        }
 
       }
       _using_new_intrusion = true;
