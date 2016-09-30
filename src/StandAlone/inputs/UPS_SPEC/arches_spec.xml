@@ -1475,22 +1475,23 @@
               <cellTypeCoarsenLogic      spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
 
-              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel'">
+              <algorithm                 spec="OPTIONAL NO_DATA"
+                                             attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
 
-                <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
-                <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
+                <orderOfInterpolation    spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
+                <halo                    spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
 
-                <ROI_extents            spec="OPTIONAL NO_DATA"
-                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+                <ROI_extents             spec="OPTIONAL NO_DATA"
+                                           attribute1="type REQUIRED STRING 'fixed dynamic patch_based max_rayLength'">
 
-                  <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
-                  <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+                  <abskg_threshold       spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+                  <sigmaT4_threshold     spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
 
-                  <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
-                  <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <min                   spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <max                   spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <length                spec="REQUIRED DOUBLE  'positive'" need_applies_to="type max_rayLength"/>
                 </ROI_extents>
               </algorithm>
-
             </RMCRT>
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->

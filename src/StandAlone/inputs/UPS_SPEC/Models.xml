@@ -35,13 +35,14 @@
         <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
 
         <ROI_extents            spec="OPTIONAL NO_DATA"
-                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based max_rayLength'">
 
           <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
           <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
 
           <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
           <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+          <length               spec="REQUIRED DOUBLE" need_applies_to="type max_rayLength"/>
         </ROI_extents>
 
       </algorithm>
