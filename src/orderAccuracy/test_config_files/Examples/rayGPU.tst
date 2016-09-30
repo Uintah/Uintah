@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <start>
-<upsFile>RMCRT_test_1L.ups</upsFile>
+<upsFile>RMCRT_bm1_1L.ups</upsFile>
 <gnuplot>
   <script>plotScript.gp</script>
   <title>GPU::RMCRT \\n Burns and Christon Benchmark \\n41^3, Ray Dir Sampling: Latin Hype Cube</title>

@@ -15,13 +15,13 @@ else :
   the_dir = the_dir + "/Examples"
 
 # convert RMCRT:double -> RMCRT:float
-system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_test_1L.ups RMCRT_FLT_test_1L.ups" % the_dir )
+system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_1L.ups  RMCRT_FLT_bm_1L.ups"   % the_dir )
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_ML.ups      RMCRT_FLT_ML.ups"      % the_dir )
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_DO.ups  RMCRT_FLT_bm1_DO.ups"  % the_dir )
 
 
 # convert CPU -> GPU tests
-system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_test_1L.ups      RMCRT_GPU_1L.ups"         % the_dir )
+system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_bm1_1L.ups       RMCRT_GPU_1L.ups"         % the_dir )
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_ML.ups           RMCRT_GPU_ML.ups"         % the_dir )
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_1L_reflect.ups   RMCRT_GPU_1L_reflect.ups" % the_dir )
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_bm1_DO.ups       RMCRT_GPU_bm1_DO.ups"     % the_dir )
@@ -73,7 +73,7 @@ RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
-                   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exactComparison"]),
+                   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",     1, "ALL", ["exactComparison"]),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1, "ALL", ["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",         8, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["abs_tolerance=1e-14","rel_tolerance=1e-11"]),
@@ -86,7 +86,7 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
                    ("RMCRT_DO_perf",    "RMCRT_DO_perf.ups",    1, "ALL", ["do_performance_test"]),
 
 # multi-threaded tests
-                   ("RMCRT_test_1L_thread",       "RMCRT_test_1L.ups", 1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_test_1L_thread",       "RMCRT_bm1_1L.ups",  1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_bm1_DO_thread",        "RMCRT_bm1_DO.ups",  1.1, "ALL", ["exactComparison", "sus_options=-nthreads 8"]),
                    ("RMCRT_bm1_DO_thread_2proc",  "RMCRT_bm1_DO.ups",  2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_ML_thread",            "RMCRT_ML.ups",      1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
@@ -94,7 +94,7 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
                ]
 
 # Tests that are run during local regression testing
-LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exactComparison"]),
+LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",    1, "ALL", ["exactComparison"]),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1 , "ALL",["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",         8, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["exactComparison"]),
@@ -104,7 +104,7 @@ LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exac
                    ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"])
                ]
 
-FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_test_1L.ups",    1.1, "ALL", ["exactComparison"]),
+FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_bm1_1L.ups",     1.1, "ALL", ["exactComparison"]),
                    ("RMCRT_FLT_ML",      "RMCRT_FLT_ML.ups",         8,   "ALL", ["exactComparison"]),
                    ("RMCRT_FLT_bm1_DO",  "RMCRT_FLT_bm1_DO.ups",     1.1, "ALL", ["exactComparison"])
                  ]

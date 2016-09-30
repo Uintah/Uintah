@@ -8,13 +8,13 @@
 
 <test>
   <name>DoubleRMCRT_OA_Ray_1L_LHC</name>
-  <ups>RMCRT_test_1L.ups</ups>
+  <ups>RMCRT_bm1_1L.ups</ups>
   <tst>ray.tst</tst>
 </test>
 <!--
 <test>
   <name>GPU_RMCRT_OA_Ray_1L_LHC</name>
-  <ups>RMCRT_test_1L.ups</ups>
+  <ups>RMCRT_bm1_1L.ups</ups>
   <tst>rayGPU.tst</tst>
 </test>
 -->
@@ -44,7 +44,7 @@
 <!-- Grid convergence test using Burns & Christon benchmark
 <test>
   <name>DoubleRMCRT_OA_dx_cpu</name>
-  <ups>RMCRT_test_1L.ups</ups>
+  <ups>RMCRT_bm1_1L.ups</ups>
   <tst>dx.tst</tst>
 </test>
 -->
@@ -60,7 +60,7 @@
 <!-- Error versus patch configuration using Burns & Christon benchmark
 <test>
   <name>RMCRT_patchConfig</name>
-  <ups>RMCRT_test_1L.ups</ups>
+  <ups>RMCRT_bm1_1L.ups</ups>
   <tst>multiPatches.tst</tst>
 </test>
 -->
