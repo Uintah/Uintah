@@ -15,7 +15,7 @@ else :
   the_dir = the_dir + "/Examples"
 
 # convert RMCRT:double -> RMCRT:float
-system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_1L.ups  RMCRT_FLT_bm_1L.ups"   % the_dir )
+system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_1L.ups  RMCRT_FLT_bm1_1L.ups"   % the_dir )
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_ML.ups      RMCRT_FLT_ML.ups"      % the_dir )
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_DO.ups  RMCRT_FLT_bm1_DO.ups"  % the_dir )
 
@@ -72,41 +72,44 @@ RMCRT_DO_perf_GPU_ups = modUPS2( the_dir, \
 #  2) If the processors is > 1.0 then an mpirun command will be used
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
-NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
-                   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",     1, "ALL", ["exactComparison"]),
-                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1, "ALL", ["exactComparison"]),
-                   ("RMCRT_ML",         "RMCRT_ML.ups",         8, "ALL", ["exactComparison"]),
-                   ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["abs_tolerance=1e-14","rel_tolerance=1e-11"]),
-                   ("RMCRT_radiometer", "RMCRT_radiometer.ups", 8, "ALL", ["exactComparison"]),
-                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",    1, "ALL", ["exactComparison"]),
-                   ("RMCRT_isoScat_LHC", RMCRT_isoScat_LHC_ups, 1, "ALL", ["exactComparison"]),
-                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]),
-                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"]),
-                   ("RMCRT_1L_perf",    "RMCRT_1L_perf.ups",    1, "ALL", ["do_performance_test"]),
-                   ("RMCRT_DO_perf",    "RMCRT_DO_perf.ups",    1, "ALL", ["do_performance_test"]),
-
-# multi-threaded tests
-                   ("RMCRT_test_1L_thread",       "RMCRT_bm1_1L.ups",  1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_bm1_DO_thread",        "RMCRT_bm1_DO.ups",  1.1, "ALL", ["exactComparison", "sus_options=-nthreads 8"]),
-                   ("RMCRT_bm1_DO_thread_2proc",  "RMCRT_bm1_DO.ups",  2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_ML_thread",            "RMCRT_ML.ups",      1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_ML_thread_2proc",      "RMCRT_ML.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
+NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL"),                      
+                   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]), 
+                   ("RMCRT_1L_maxlen",  "RMCRT_bm1_1L_maxLen.ups",     8, "ALL", ["exactComparison"]),
+                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
+                   ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
+                   ("RMCRT_VR",         "RMCRT_VR.ups",                1, "ALL", ["abs_tolerance=1e-14","rel_tolerance=1e-11"]),
+                   ("RMCRT_radiometer", "RMCRT_radiometer.ups",        8, "ALL", ["exactComparison"]),
+                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
+                   ("RMCRT_isoScat_LHC", RMCRT_isoScat_LHC_ups,        1, "ALL", ["exactComparison"]),
+                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups",        1, "ALL", ["exactComparison"]),
+                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",           1, "ALL", ["exactComparison","no_restart"]),
+                   ("RMCRT_1L_perf",    "RMCRT_1L_perf.ups",           1, "ALL", ["do_performance_test"]),
+                   ("RMCRT_DO_perf",    "RMCRT_DO_perf.ups",           1, "ALL", ["do_performance_test"]),
                ]
 
 # Tests that are run during local regression testing
-LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",    1, "ALL", ["exactComparison"]),
-                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1 , "ALL",["exactComparison"]),
-                   ("RMCRT_ML",         "RMCRT_ML.ups",         8, "ALL", ["exactComparison"]),
-                   ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["exactComparison"]),
-                   ("RMCRT_radiometer", "RMCRT_radiometer.ups", 8, "ALL", ["exactComparison"]),
-                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]),
-                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",    1, "ALL", ["exactComparison"]),
-                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"])
+LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL", ["exactComparison"]),
+                   ("RMCRT_1L_maxlen",  "RMCRT_bm1_1L_maxLen.ups",     8, "ALL", ["exactComparison"]),
+                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1 , "ALL",["exactComparison"]),
+                   ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
+                   ("RMCRT_VR",         "RMCRT_VR.ups",                1, "ALL", ["exactComparison"]),
+                   ("RMCRT_radiometer", "RMCRT_radiometer.ups",        8, "ALL", ["exactComparison"]),
+                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups",        1, "ALL", ["exactComparison"]),
+                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
+                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",           1, "ALL", ["exactComparison","no_restart"])
                ]
 
 FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_bm1_1L.ups",     1.1, "ALL", ["exactComparison"]),
                    ("RMCRT_FLT_ML",      "RMCRT_FLT_ML.ups",         8,   "ALL", ["exactComparison"]),
                    ("RMCRT_FLT_bm1_DO",  "RMCRT_FLT_bm1_DO.ups",     1.1, "ALL", ["exactComparison"])
+                 ]
+
+THREADEDTESTS = [  ("RMCRT_test_1L_thread",           "RMCRT_bm1_1L.ups",         1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_1L_maxLen_threaded_2proc", "RMCRT_bm1_1L_maxLen.ups",  2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_bm1_DO_thread",            "RMCRT_bm1_DO.ups",         1.1, "ALL", ["exactComparison", "sus_options=-nthreads 8"]),
+                   ("RMCRT_bm1_DO_thread_2proc",      "RMCRT_bm1_DO.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_ML_thread",                "RMCRT_ML.ups",             1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_ML_thread_2proc",          "RMCRT_ML.ups",             2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
                  ]
 
 GPUTESTS      = [
@@ -123,13 +126,13 @@ DEBUGTESTS   =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS
 #__________________________________
 
 # returns the list
 def getTestList(me) :
   if me == "LOCALTESTS":
-    TESTS = LOCALTESTS + FLOATTESTS
+    TESTS = LOCALTESTS + THREADEDTESTS + FLOATTESTS
   elif me == "FLOATTESTS":
     TESTS = FLOATTESTS
   elif me == "GPUTESTS":
@@ -137,7 +140,7 @@ def getTestList(me) :
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS + FLOATTESTS + GPUTESTS
+    TESTS = NIGHTLYTESTS + THREADEDTESTS + FLOATTESTS + GPUTESTS
   else:
     print "\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
