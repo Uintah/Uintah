@@ -310,6 +310,7 @@ SimulationController::preGridSetup( void )
     d_sharedState->d_debugStreams.push_back( &simdbg );
     d_sharedState->d_debugStreams.push_back( &stats );
     d_sharedState->d_debugStreams.push_back( &istats );
+    d_sharedState->d_debugStreams.push_back( &amrout );
   }
 #endif
 }

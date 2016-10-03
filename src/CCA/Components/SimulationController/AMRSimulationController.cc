@@ -212,14 +212,6 @@ AMRSimulationController::run()
 
   if( d_sharedState->getVisIt() )
   {
-    d_sharedState->d_debugStreams.push_back( &amrout );
-    d_sharedState->d_debugStreams.push_back( &dbg );
-    d_sharedState->d_debugStreams.push_back( &dbg_barrier );
-    d_sharedState->d_debugStreams.push_back( &dbg_dwmem );
-    d_sharedState->d_debugStreams.push_back( &gprofile );
-    d_sharedState->d_debugStreams.push_back( &gheapprofile );
-    d_sharedState->d_debugStreams.push_back( &gheapchecker );
-
     visitSimData.simController = this;
 
     // Running with VisIt so add in the variables that the user can
@@ -235,6 +227,13 @@ AMRSimulationController::run()
     var.modified   = false;
     d_sharedState->d_stateVars.push_back( var );
 
+    d_sharedState->d_debugStreams.push_back( &amrout );
+    d_sharedState->d_debugStreams.push_back( &dbg );
+    d_sharedState->d_debugStreams.push_back( &dbg_barrier );
+    d_sharedState->d_debugStreams.push_back( &dbg_dwmem );
+    d_sharedState->d_debugStreams.push_back( &gprofile );
+    d_sharedState->d_debugStreams.push_back( &gheapprofile );
+    d_sharedState->d_debugStreams.push_back( &gheapchecker );
     
     visit_InitLibSim( &visitSimData );
   }
