@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <start>
-<upsFile>RMCRT_test_1L.ups</upsFile>
+<upsFile>RMCRT_bm1_1L.ups</upsFile>
 <gnuplot>
   <script>plotScript.gp</script>s
   <title>Double:CPU:RMCRT \\n Burns and Christon Benchmark \\n41^3, Ray Dir Sampling: Latin Hyper Cube </title>

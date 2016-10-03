@@ -44,7 +44,8 @@ AutoCycleFluxBC::AutoCycleFluxBC(SimulationStateP& shared_state, MPMFlags* mpm_f
     FluxBCModel(shared_state, mpm_flags)
 {
   d_flux_sign = 1.0;
-
+  d_auto_cycle_min = mpm_flags->d_autoCycleMin;
+  d_auto_cycle_max = mpm_flags->d_autoCycleMax;
 }
 
 AutoCycleFluxBC::~AutoCycleFluxBC()
@@ -149,12 +150,17 @@ void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const P
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);
+  t->requires(Task::OldDW, d_mpm_lb->TotalConcLabel,          Ghost::None);
+  t->requires(Task::OldDW, d_mpm_lb->partCountLabel,          Ghost::None);
+
 #if defined USE_FLUX_RESTRICTION
   if(d_mpm_flags->d_doScalarDiffusion){
     t->requires(Task::OldDW, d_mpm_lb->pConcentrationLabel,     Ghost::None);
   }
 #endif
-  t->computes(             d_mpm_lb->pExternalScalarFluxLabel_preReloc);
+
+  t->computes(d_mpm_lb->pExternalScalarFluxLabel_preReloc);
+
   if (d_mpm_flags->d_useLoadCurves) {
     t->requires(Task::OldDW, d_mpm_lb->pLoadCurveIDLabel,     Ghost::None);
   }
@@ -189,6 +195,22 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
     }
   }
 
+  sumlong_vartype totalparts;
+  sum_vartype totalconc;
+  double avgconc;
+
+  old_dw->get(totalparts, d_mpm_lb->partCountLabel);
+  old_dw->get(totalconc,  d_mpm_lb->TotalConcLabel);
+
+  avgconc = totalconc/(double)totalparts;
+
+  if(d_flux_sign > 0){
+    if(avgconc > .94)
+      d_flux_sign = -1.0;
+  }else{
+    if(avgconc < .1)
+      d_flux_sign = 1.0;
+  }
   // Loop thru patches to update scalar flux
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -212,6 +234,9 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<double> pExternalScalarFlux;
       ParticleVariable<double> pExternalScalarFlux_pR;
+      ParticleVariable<double> pAvgConc;
+
+
 
       old_dw->get(px,    d_mpm_lb->pXLabel,    pset);
       if(d_mpm_flags->d_doScalarDiffusion){
@@ -222,7 +247,6 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
       old_dw->get(pDeformationMeasure, d_mpm_lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pExternalScalarFlux,
                                        d_mpm_lb->pExternalScalarFluxLabel_preReloc,  pset);
-
 #if defined USE_FLUX_RESTRICTION
       constParticleVariable<double> pConcentration;
       if(d_mpm_flags->d_doScalarDiffusion){
@@ -251,11 +275,11 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
               pExternalScalarFlux[idx] = 0.0;
             } else {
 #if 0
-              pExternalScalarFlux[idx] = fluxPerPart[loadCurveID];
+              pExternalScalarFlux[idx] = d_flux_sign * fluxPerPart[loadCurveID];
 #else
               ScalarFluxBC* pbc = pbcP[loadCurveID];
               double area = parea[idx].length();
-              pExternalScalarFlux[idx] = pbc->fluxPerParticle(time, area) / pvol[idx];
+              pExternalScalarFlux[idx] = d_flux_sign * pbc->fluxPerParticle(time, area) / pvol[idx];
 #endif
 #if defined USE_FLUX_RESTRICTION
               if(d_mpm_flags->d_doScalarDiffusion){

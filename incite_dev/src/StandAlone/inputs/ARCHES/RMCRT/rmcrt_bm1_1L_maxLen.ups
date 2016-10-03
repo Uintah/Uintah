@@ -20,10 +20,10 @@
   </Time>
 
   <DataArchiver>
-    <filebase>rmcrt_bm1_1L.uda</filebase>
+    <filebase>rmcrt_bm1_1L_maxLen.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ"              levels="-1"/>
-    
+   
     <save label="RMCRTboundFlux"    levels="-1"/>
     <save label="radiationFluxE"    levels="-1"/>
     <save label="radiationFluxW"    levels="-1"/>
@@ -31,7 +31,7 @@
     <save label="radiationFluxS"    levels="-1"/>
     <save label="radiationFluxT"    levels="-1"/>
     <save label="radiationFluxB"    levels="-1"/>
-    
+
     <save label="radiation_temperature"  levels="-1"/>
     <save label="radiationVolq"          levels="-1"/>
     <save label="abskg" />
@@ -165,7 +165,7 @@
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
          <resolution> [40,40,40]  </resolution>    
-         <patches>    [1,1,1]     </patches> 
+         <patches>    [2,2,2]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
@@ -222,12 +222,20 @@
             <calc_frequency>2</calc_frequency>
             <abskg label = "abskg" /> 
             <RMCRT>
-                <randomSeed>         false     </randomSeed>
-                <nDivQRays>          5         </nDivQRays>
-                <nFluxRays>          5         </nFluxRays>
+                <randomSeed>         false      </randomSeed>
+                <CCRays>             false      </CCRays>
+                <nDivQRays>          5        </nDivQRays>
+                <nFluxRays>          5        </nFluxRays>
                 <Threshold>         0.05       </Threshold>
-                <solveBoundaryFlux> true       </solveBoundaryFlux>
+                <solveBoundaryFlux> true      </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+                
+                <algorithm type='singleLevel'>
+                  <ROI_extents type='max_rayLength'>
+                    <length>    0.1     </length>
+                  </ROI_extents>
+                </algorithm>
+                
             </RMCRT>
           </src>
        </Sources> 

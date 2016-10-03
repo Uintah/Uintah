@@ -167,7 +167,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   if (doLatinHyperCube){
     randVectorDevice(rand_i, nFluxRays, randNumStates);
   }
-  
+ 
   //______________________________________________________________________
   //           R A D I O M E T E R
   //______________________________________________________________________

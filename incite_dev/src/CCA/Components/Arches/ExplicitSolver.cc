@@ -636,7 +636,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   // Add new intrusion stuff:
   // get a reference to the intrusions
-  const std::map<const int, IntrusionBC*> intrusion_ref = d_boundaryCondition->get_intrusion_ref();
+  const std::map<int, IntrusionBC*> intrusion_ref = d_boundaryCondition->get_intrusion_ref();
   bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion();
 
   if(d_doDQMOM)
@@ -1049,9 +1049,6 @@ ExplicitSolver::initialize( const LevelP& level,
   //copies the reduction area variable information on area to a double in the BndCond spec
   m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
 
-  //delete the reduction variable so that they don't live beyond this point
-  m_bcHelper[level->getID()]->sched_deleteBCAreaHelper( sched, level, matls );
-
   //delete non-patch-local information on the old BC object
   d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
 
@@ -1328,9 +1325,6 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   //copies the reduction area variable information on area to a double in the BndCond spec
   m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
 
-  //delete the reduction variable so that they don't live beyond this point
-  m_bcHelper[level->getID()]->sched_deleteBCAreaHelper( sched, level, matls );
-
   //delete non-patch-local information on the old BC object
   d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
 
@@ -1392,6 +1386,18 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   d_boundaryCondition->set_bc_information(level);
+
+  //boundary condition helper
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, _arches_spec )));
+
+  //computes the area for each inlet through the use of a reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+
+  //delete non-patch-local information on the old BC object
+  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
 
   d_boundaryCondition->sched_computeBCArea( sched, level, matls );
 

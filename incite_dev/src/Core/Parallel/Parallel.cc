@@ -23,9 +23,11 @@
  */
 
 #include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/ProcessorGroup.h>
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/UintahMPI.h>
 #include <Core/Util/Time.h>
 
 #include <cstdlib>

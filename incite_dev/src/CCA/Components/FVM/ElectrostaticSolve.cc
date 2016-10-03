@@ -60,6 +60,15 @@ ElectrostaticSolve::ElectrostaticSolve(const ProcessorGroup* myworld)
   d_delt = 0;
   d_solver = 0;
   d_shared_state = 0;
+  d_with_mpm = false;
+
+  d_es_matl  = scinew MaterialSubset();
+  d_es_matl->add(0);
+  d_es_matl->addReference();
+
+  d_es_matlset  = scinew MaterialSet();
+  d_es_matlset->add(0);
+  d_es_matlset->addReference();
 }
 //__________________________________
 //
@@ -73,8 +82,8 @@ ElectrostaticSolve::~ElectrostaticSolve()
   }
 
   if (d_es_matlset && d_es_matlset->removeReference()){
-      delete d_es_matlset;
-    }
+    delete d_es_matlset;
+  }
 }
 //__________________________________
 //
@@ -84,35 +93,37 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
                                       SimulationStateP& shared_state)
 {
   d_shared_state = shared_state;
-  d_es_matl  = scinew MaterialSubset();
-  d_es_matl->add(0);
-  d_es_matl->addReference();
-
-  d_es_matlset  = scinew MaterialSet();
-  d_es_matlset->add(0);
-  d_es_matlset->addReference();
 
   d_solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!d_solver) {
     throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
   }
   
-  ProblemSpecP st_ps = prob_spec->findBlock("FVM");
-  d_solver_parameters = d_solver->readParameters(st_ps, "electrostatic_solver",
+  ProblemSpecP root_ps = 0;
+  if (restart_prob_spec){
+    root_ps = restart_prob_spec;
+  } else{
+    root_ps = prob_spec;
+  }
+
+  ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
+
+  d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver",
                                              d_shared_state);
   d_solver_parameters->setSolveOnExtraCells(false);
     
-  st_ps->require("delt", d_delt);
+  fvm_ps->require("delt", d_delt);
 
   ProblemSpecP mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
 
-  for (ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != 0;
-      ps = ps->findNextBlock("material") ) {
+  if(!d_with_mpm){
+    for (ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != 0;
+        ps = ps->findNextBlock("material") ) {
 
-    FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state);
-    d_shared_state->registerFVMMaterial(mat);
-
+      FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state);
+      d_shared_state->registerFVMMaterial(mat);
+    }
   }
 }
 //__________________________________
@@ -407,6 +418,18 @@ void ElectrostaticSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
     bc.setESBoundaryConditions(patch, 0, A, rhs, fcx_conductivity, fcy_conductivity, fcz_conductivity);
 
   } // End patches
+}
+
+void ElectrostaticSolve::scheduleSolve(SchedulerP& sched,
+                                       const LevelP& level,
+                                       const MaterialSet* es_matlset)
+{
+  d_solver->scheduleSolve(level, sched, d_es_matlset,
+                          d_lb->ccESPotentialMatrix, Task::NewDW,
+                          d_lb->ccESPotential, false,
+                          d_lb->ccRHS_ESPotential, Task::NewDW,
+                          0, Task::OldDW,
+                          d_solver_parameters,false);
 }
 
 void ElectrostaticSolve::scheduleUpdateESPotential(SchedulerP& sched, const LevelP& level,

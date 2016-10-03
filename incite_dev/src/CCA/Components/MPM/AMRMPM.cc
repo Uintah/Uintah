@@ -1329,6 +1329,9 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
     t->computes(lb->pConcentrationLabel_preReloc);
     t->computes(lb->pConcPreviousLabel_preReloc);
+    if(flags->d_doAutoCycleBC){
+      t->computes(lb->TotalConcLabel);
+    }
   }
 
   t->computes(lb->TotalMassLabel);
@@ -1811,6 +1814,10 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
   }
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+
+  if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
+    new_dw->put(sum_vartype(0.0), lb->TotalConcLabel);
+  }
 }
 //______________________________________________________________________
 //
@@ -3668,6 +3675,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector totalMom(0.0,0.0,0.0);
     double ke=0;
 
+    double totalconc = 0;
+
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
@@ -3741,6 +3750,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                         lb->pConcentrationLabel_preReloc, pset);
         new_dw->allocateAndPut(pConcPreviousNew,
                                         lb->pConcPreviousLabel_preReloc,  pset);
+
       }
 
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
@@ -3819,6 +3829,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             pConcentrationNew[idx] = 0.0;
           }
           pConcPreviousNew[idx] = pConcentration[idx];
+          totalconc += pConcentration[idx];
         }
 /*`==========TESTING==========*/
 #ifdef DEBUG_VEL
@@ -3846,6 +3857,11 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(sum_vartype(thermal_energy),  lb->ThermalEnergyLabel);
       new_dw->put(sumvec_vartype(CMX),          lb->CenterOfMassPositionLabel);
       new_dw->put(sumvec_vartype(totalMom),     lb->TotalMomentumLabel);
+
+      if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
+        new_dw->put(sum_vartype(totalconc),     lb->TotalConcLabel);
+      }
+
 #ifndef USE_DEBUG_TASK
       //__________________________________
       //  particle debugging label-- carry forward
