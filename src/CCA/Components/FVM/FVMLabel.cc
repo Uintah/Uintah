@@ -57,6 +57,13 @@ FVMLabel::FVMLabel()
                         SFCYVariable<double>::getTypeDescription());
   fczConcentration    = VarLabel::create("fcz.Concentration",
                         SFCZVariable<double>::getTypeDescription());
+
+  fcxMass             = VarLabel::create("fcx.Mass",
+                        SFCXVariable<double>::getTypeDescription());
+  fcyMass             = VarLabel::create("fcy.Mass",
+                        SFCYVariable<double>::getTypeDescription());
+  fczMass             = VarLabel::create("fcz.Mass",
+                        SFCZVariable<double>::getTypeDescription());
 }
 
 FVMLabel::~FVMLabel()
@@ -72,5 +79,8 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(fcxConcentration);
   VarLabel::destroy(fcyConcentration);
   VarLabel::destroy(fczConcentration);
+  VarLabel::destroy(fcxMass);
+  VarLabel::destroy(fcyMass);
+  VarLabel::destroy(fczMass);
 }
 

@@ -44,6 +44,9 @@ namespace Uintah{
       const VarLabel* fcxConcentration;
       const VarLabel* fcyConcentration;
       const VarLabel* fczConcentration;
+      const VarLabel* fcxMass;
+      const VarLabel* fcyMass;
+      const VarLabel* fczMass;
   };
 } // End Uintah namespace
 

@@ -901,6 +901,7 @@
   </Multimaterial>
 
   <include href="mpm_spec.xml" section="Uintah_specification/MPM" />
+  <include href="fvm_spec.xml" section="Uintah_specification/FVM" />
 
   <MaterialProperties                    spec="MULTIPLE NO_DATA"
                                            attribute1="add OPTIONAL BOOLEAN" >
@@ -923,8 +924,7 @@
                                 attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
 
 
-  <!--  FVM           -->
-  <include href="fvm_spec.xml" section="Uintah_specification/FVM" />
+  
          
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->
