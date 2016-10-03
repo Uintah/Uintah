@@ -120,6 +120,7 @@ enum class ThreadState : int
 };
 
 UnifiedSchedulerWorker * g_runners[MAX_THREADS]        = {};
+std::thread              g_threads[MAX_THREADS]        = {};
 volatile ThreadState     g_thread_states[MAX_THREADS]  = {};
 int                      g_cpu_affinities[MAX_THREADS] = {};
 int                      g_num_threads                 = 0;
@@ -210,7 +211,7 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
     g_cpu_affinities[i] = i;
   }
 
-  // set main thread's affinity - core 0
+  // set main thread's affinity (core-0) and tid
   set_affinity(g_cpu_affinities[0]);
   t_tid = 0;
 
@@ -222,7 +223,7 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
   // spawn worker threads
   // TaskRunner threads start at [1]
   for (int i = 1; i < g_num_threads; ++i) {
-    std::thread(thread_driver, i).detach();
+    g_threads[i] = (std::thread(thread_driver, i));
   }
 
   thread_fence();
@@ -303,6 +304,12 @@ UnifiedScheduler::~UnifiedScheduler()
     if (d_myworld->myrank() == 0) {
       m_max_stats.close();
       m_avg_stats.close();
+    }
+  }
+
+  for (int i = 1; i < Impl::g_num_threads; ++i) {
+    if (Impl::g_threads[i].joinable()) {
+      Impl::g_threads[i].detach();
     }
   }
 }
@@ -4654,9 +4661,9 @@ UnifiedScheduler::myRankThread()
 //______________________________________________________________________
 //
 void
-UnifiedScheduler::init_threads( UnifiedScheduler * sched, int numThreads_ )
+UnifiedScheduler::init_threads( UnifiedScheduler * sched, int num_threads )
 {
-  Impl::init_threads(sched, numThreads_);
+  Impl::init_threads(sched, num_threads);
 }
 
 
