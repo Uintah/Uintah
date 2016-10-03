@@ -152,13 +152,13 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void findIntAndExtGpuDependencies( DetailedTask* dtask, int iteration, int t_id );
 
-    void prepareGpuDependencies( DetailedTask                * dtask
-                               , DependencyBatch             * batch
+    void prepareGpuDependencies(       DetailedTask          * dtask
+                               ,       DependencyBatch       * batch
                                , const VarLabel              * pos_var
                                ,       OnDemandDataWarehouse * dw
                                ,       OnDemandDataWarehouse * old_dw
                                , const DetailedDep           * dep
-                               ,       LoadBalancer          * lb
+                               ,       LoadBalancerPort      * lb
                                ,       DeviceVarDest           des
                                );
 

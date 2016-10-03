@@ -25,7 +25,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/DbgOutput.h>
@@ -369,14 +369,15 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-void particleExtract::doAnalysis(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset*,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw)
+void
+particleExtract::doAnalysis( const ProcessorGroup * pg,
+                             const PatchSubset    * patches,
+                             const MaterialSubset *,
+                             DataWarehouse        * old_dw,
+                             DataWarehouse        * new_dw )
 {   
-  UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
+  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
+  LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
     
   const Level* level = getLevel(patches);
   
@@ -389,7 +390,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_dataArchiver->getCurrentTime();
+  double now = d_sharedState->getElapsedTime();
   if(now < d_startTime || now > d_stopTime){
     return;
   }  
@@ -537,7 +538,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           }
 
           // write particle position and time
-          double time = d_dataArchiver->getCurrentTime();
+          double time = d_sharedState->getElapsedTime();
           fprintf(fp,    "%E\t %E\t %E\t %E",time, px[idx].x(),px[idx].y(),px[idx].z());
 
 

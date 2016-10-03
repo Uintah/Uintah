@@ -39,4 +39,5 @@ SRCS     += \
 	$(SRCDIR)/SDInterfaceModelFactory.cc     \
 	$(SRCDIR)/RFConcDiffusion1MPM.cc         \
 	$(SRCDIR)/NonLinearDiff1.cc              \
+	$(SRCDIR)/NonLinearDiff2.cc              \
 	$(SRCDIR)/ConstantRate.cc

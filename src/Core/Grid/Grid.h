@@ -25,7 +25,7 @@
 #ifndef UINTAH_HOMEBREW_GRID_H
 #define UINTAH_HOMEBREW_GRID_H
 
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/IntVector.h>
@@ -100,19 +100,19 @@ WARNING
 
     //////////
     // Computes the physical boundaries for the grid (including extra cells)
-    void getSpatialRange(Uintah::BBox& b) const;
+    void getSpatialRange( Uintah::BBox & b ) const;
 
-    const Patch* getPatchByID(int id, int startLevel) const;
+    const Patch* getPatchByID( int id, int startLevel ) const;
 
     ////////// 
     // Returns the boundary of the grid exactly (without
     // extra cells).  The value returned is the same value
     // as found in the .ups file.
-    void getInteriorSpatialRange(Uintah::BBox& b) const;
+    void getInteriorSpatialRange( Uintah::BBox & b ) const;
     
     //////////
     // Computes the length of the grid
-    void getLength( Uintah::Vector & length,
+    void getLength(       Uintah::Vector & length,
                     const std::string    & flag = "plusExtraCells" ) const;
     
     //////////
@@ -120,17 +120,17 @@ WARNING
     void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr); 
 
     // For comparing grids - level and patch structure must be equal
-    bool operator==(const Grid& othergrid) const;
+    bool operator==( const Grid & othergrid ) const;
 
     // Returns true if the two grids cover the exact same region.  Patch structure can be different.
-    bool isSimilar(const Grid& othergrid) const;
+    bool isSimilar( const Grid & othergrid ) const;
 
     //Assigns the boundary conditions to the grid
-    void assignBCS( const ProblemSpecP &grid_ps, Uintah::LoadBalancer *lb );
+    void assignBCS( const ProblemSpecP & grid_ps, Uintah::LoadBalancerPort * lb );
 
     void setExtraCells( const IntVector & ex );
            
-    friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
+    friend std::ostream& operator<<( std::ostream & out, const Uintah::Grid & grid );
 
     // Used in Level and Patch for stretched grids
     enum Axis {

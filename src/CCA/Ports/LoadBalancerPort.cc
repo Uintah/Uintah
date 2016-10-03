@@ -22,21 +22,16 @@
  * IN THE SOFTWARE.
  */
 
-/*
- * Manual template instantiations for g++
- */
-
-/*
- * These aren't used by Datatypes directly, but since they are used in
- * a lot of different modules, we instantiate them here to avoid bloat
- */
-
-
-#include <Containers/LockingHandle.h>
-
-#include <Datatypes/Particles/ParticleGridReader.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 
 using namespace Uintah;
 
+LoadBalancerPort::LoadBalancerPort()
+{
+}
+
+LoadBalancerPort::~LoadBalancerPort()
+{
+}
 
 

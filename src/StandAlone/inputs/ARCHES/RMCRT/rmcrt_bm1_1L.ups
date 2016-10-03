@@ -11,32 +11,37 @@
   <Solver type="hypre"/>
 
   <Time>
-    <maxTime>5.0</maxTime>
-    <initTime>0.0</initTime>
-    <delt_min>1.0e-6</delt_min>
-    <delt_max>0.1</delt_max>
+    <maxTime>       5.0     </maxTime>
+    <initTime>      0.0     </initTime>
+    <delt_min>      1.0e-6  </delt_min>
+    <delt_max>      0.1     </delt_max>
+    <max_Timesteps> 4       </max_Timesteps>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>4</max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>rmcrt_bm1_1L.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="uVelocitySPBC"/>
-    <save label="vVelocitySPBC"/>
-    <save label="wVelocitySPBC"/>
-    <save label="mixture_f"/>
-    <save label="divQ"/>
-    <save label="abskg"/>
-    <save label="temperature"/>
-    <save label="radiation_temperature"/>
-    <save label="sigmaT4"/>
-    <save label="cellType"/>
-    <save label="RMCRTboundFlux" />
-
+    <save label="divQ"              levels="-1"/>
+    
+    <save label="RMCRTboundFlux"    levels="-1"/>
+    <save label="radiationFluxE"    levels="-1"/>
+    <save label="radiationFluxW"    levels="-1"/>
+    <save label="radiationFluxN"    levels="-1"/>
+    <save label="radiationFluxS"    levels="-1"/>
+    <save label="radiationFluxT"    levels="-1"/>
+    <save label="radiationFluxB"    levels="-1"/>
+    
+    <save label="radiation_temperature"  levels="-1"/>
+    <save label="radiationVolq"          levels="-1"/>
+    <save label="abskg" />
+    <save label="sigmaT4" />
+    <save label="cellType" />
+    
     <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
-
+  
+  <!--__________________________________-->
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
@@ -159,22 +164,24 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [21,21,21]  </resolution>    
+         <resolution> [40,40,40]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
 
   </Grid>
-
+  
+  <!--__________________________________-->
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.</viscosity>
   </PhysicalConstants>
 
-  <CFD>
 
+  <!--__________________________________-->
+  <CFD>
     <!-- ARCHES specification -->
     <ARCHES>
 
@@ -212,12 +219,12 @@
 
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
-            <calc_frequency>1</calc_frequency>
+            <calc_frequency>2</calc_frequency>
             <abskg label = "abskg" /> 
             <RMCRT>
                 <randomSeed>         false     </randomSeed>
-                <nDivQRays>          2         </nDivQRays>
-                <nFluxRays>          2         </nFluxRays>
+                <nDivQRays>          5         </nDivQRays>
+                <nFluxRays>          5         </nFluxRays>
                 <Threshold>         0.05       </Threshold>
                 <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>

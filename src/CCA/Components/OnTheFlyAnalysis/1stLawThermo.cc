@@ -352,7 +352,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
   
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  double now = d_dataArchiver->getCurrentTime();
+  double now = d_sharedState->getElapsedTime();
 
   if( now < nextCompTime  ){
     return;
@@ -588,7 +588,7 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
 
   double lastCompTime = analysisTime;
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
-  double now = d_dataArchiver->getCurrentTime();
+  double now = d_sharedState->getElapsedTime();
 
   if( now < nextCompTime  ){
     return;
@@ -600,7 +600,7 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
 
     //__________________________________
     //  compute the thermal energy of the solids
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int    numMPMMatls     = d_sharedState->getNumMPMMatls();
     double MPM_totalIntEng = 0.0;
     
     for(int m = 0; m < numMPMMatls; m++){
@@ -641,7 +641,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
   max_vartype lastTime;
   old_dw->get( lastTime, FL_lb->lastCompTimeLabel );
 
-  double now = d_dataArchiver->getCurrentTime();
+  double now = d_sharedState->getElapsedTime();
   double nextTime = lastTime + 1.0/d_analysisFreq;
   
   double time_dw  = lastTime;  

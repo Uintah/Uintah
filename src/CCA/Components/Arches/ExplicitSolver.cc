@@ -26,7 +26,6 @@
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
-#include <CCA/Components/Arches/EfficiencyCalculator.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -49,6 +48,7 @@
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
+#include <CCA/Components/Arches/WBCHelper.h>
 
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/ConstantModel.h>
@@ -194,6 +194,7 @@ ExplicitSolver(SimulationStateP& sharedState,
 // ****************************************************************************
 ExplicitSolver::~ExplicitSolver()
 {
+
   delete d_lab;
   delete d_props;
   delete d_turbModel;
@@ -201,7 +202,6 @@ ExplicitSolver::~ExplicitSolver()
   delete d_boundaryCondition;
   delete d_pressSolver;
   delete d_momSolver;
-  delete d_eff_calculator;
   delete d_timeIntegrator;
   delete d_rad_prop_calc;
   if (d_doDQMOM) {
@@ -222,6 +222,11 @@ ExplicitSolver::~ExplicitSolver()
   if ( d_wall_ht_models != 0 ){
     delete d_wall_ht_models;
   }
+
+  for (auto i = m_bcHelper.begin(); i != m_bcHelper.end(); i++){
+    delete i->second;
+  }
+  m_bcHelper.clear();
 }
 
 // ****************************************************************************
@@ -235,6 +240,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
   ProblemSpecP db = params;
+  _arches_spec = db;
 
   commonProblemSetup( db_es );
 
@@ -411,7 +417,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                                                  d_props );
 
   // send params, boundary type defined at the level of Grid
-  d_boundaryCondition->problemSetup(db);
+  d_boundaryCondition->problemSetup(db,  grid);
 
   std::string whichTurbModel = "none";
 
@@ -450,8 +456,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_props->setBC(d_boundaryCondition);
 
   // ----- DQMOM STUFF:
-
-
   ProblemSpecP dqmom_db = db->findBlock("DQMOM");
   if (dqmom_db) {
 
@@ -632,7 +636,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   // Add new intrusion stuff:
   // get a reference to the intrusions
-  IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref();
+  const std::map<int, IntrusionBC*> intrusion_ref = d_boundaryCondition->get_intrusion_ref();
   bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion();
 
   if(d_doDQMOM)
@@ -789,14 +793,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
 
   d_mixedModel=d_turbModel->getMixedModel();
-
-  bool check_calculator;
-  d_eff_calculator = scinew EfficiencyCalculator( d_boundaryCondition, d_lab );
-  check_calculator = d_eff_calculator->problemSetup( db );
-
-  if ( !check_calculator ){
-    proc0cout << "Notice: No efficiency calculators found." << endl;
-  }
 
   //__________________________________
   // allow for addition of mass source terms
@@ -1038,204 +1034,226 @@ ExplicitSolver::initialize( const LevelP& level,
                             const bool doing_restart )
 {
 
+  d_boundaryCondition->set_bc_information(level);
+
+  d_boundaryCondition->setBCHelper( &m_bcHelper );
+
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  //formerly known as paramInit
-  sched_initializeVariables( level, sched );
+  //boundary condition helper
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, _arches_spec )));
 
-  //check the sanity of the momentum BCs
-  d_boundaryCondition->sched_checkMomBCs( sched, level, matls );
+  //computes the area for each inlet through the use of a reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
 
-  //initialize cell type
-  d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
 
-  // compute the cell area fraction
-  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
+  //delete non-patch-local information on the old BC object
+  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
 
-  // setup intrusion cell type
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
+  if ( level->getIndex() == d_archesLevelIndex ){
 
-  //AF must be called again to account for intrusions (can this be the ONLY call?)
-  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
+    //formerly known as paramInit
+    sched_initializeVariables( level, sched );
 
-  d_turbModel->sched_computeFilterVol( sched, level, matls );
+    //check the sanity of the momentum BCs
+    d_boundaryCondition->sched_checkMomBCs( sched, level, matls );
 
-  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
-  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
-  BFM::iterator i_trans_fac = _task_factory_map.find("transport_factory");
-  BFM::iterator i_init_fac = _task_factory_map.find("initialize_factory");
-  BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
-  BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
-  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+    //initialize cell type
+    d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
 
-  bool is_restart = false;
-  //utility factory
-  TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart);
-  }
+    // compute the cell area fraction
+    d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
 
-  //transport factory
-  all_tasks.clear();
-  all_tasks = i_trans_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart);
-    i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
-  }
+    // setup intrusion cell type
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
 
-  //initialize factory
-  all_tasks.clear();
-  all_tasks = i_init_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld") {
-      std::cout << "Delaying particle calc..." << std::endl;
-    } else {
+    //AF must be called again to account for intrusions (can this be the ONLY call?)
+    d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
+
+    d_turbModel->sched_computeFilterVol( sched, level, matls );
+
+    typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+    BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+    BFM::iterator i_trans_fac = _task_factory_map.find("transport_factory");
+    BFM::iterator i_init_fac = _task_factory_map.find("initialize_factory");
+    BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
+    BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
+    BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+
+    bool is_restart = false;
+    //utility factory
+    TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
       i->second->schedule_init(level, sched, matls, is_restart);
     }
-  }
-  //have to delay and order these specific tasks...clean this up later...
-  TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart);
-  TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld");
-  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart);
-  TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart);
 
-  //lagrangian particles
-  all_tasks.clear();
-  all_tasks = i_lag_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-
-  sched_scalarInit(level, sched);
-
-  //property models
-  all_tasks.clear();
-  all_tasks = i_property_models_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-
-  // Property model initialization
-  PropertyModelFactory& propFactory = PropertyModelFactory::self();
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-        iprop != all_prop_models.end(); iprop++) {
-
-    PropertyModelBase* prop_model = iprop->second;
-    prop_model->sched_initialize( level, sched );
-  }
-
-  IntVector periodic_vector = level->getPeriodicBoundaries();
-  bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
-  d_turbModel->set3dPeriodic(d_3d_periodic);
-  d_props->set3dPeriodic(d_3d_periodic);
-
-  // Table Lookup
-  bool initialize_it = true;
-  bool modify_ref_den = true;
-  int time_substep = 0; //no meaning here, but is required to be zero for
-                        //variables to be properly allocated.
-                        //
-  d_props->doTableMatching();
-  d_props->sched_checkTableBCs( level, sched );
-  d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
-
-  d_init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
-
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-        iprop != all_prop_models.end(); iprop++) {
-    PropertyModelBase* prop_model = iprop->second;
-    if ( prop_model->initType()=="physical" )
-      prop_model->sched_computeProp( level, sched, 1 );
-  }
-
-  //Setup BC areas
-  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
-
-  //For debugging
-  //d_boundaryCondition->printBCInfo();
-
-  //Setup initial inlet velocities
-  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doing_restart,false );
-
-  //Set the initial profiles
-  d_boundaryCondition->sched_setInitProfile( sched, level, matls );
-
-  //Setup the intrusions.
-  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
-
-  sched_setInitVelCond( level, sched, matls );
-
-  sched_getCCVelocities(level, sched);
-
-  d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
-
-  //----------------------
-  //DQMOM initialization
-  if(d_doDQMOM)
-  {
-    sched_weightInit(level, sched);
-    sched_weightedAbsInit(level, sched);
-
-    // check to make sure that all dqmom equations have BCs set.
-    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
-      EqnBase* eqn = ieqn->second;
-      eqn->sched_checkBCs( level, sched, false );
-      //as needed for the coal propery models
-      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
-      dqmom_eqn->sched_getUnscaledValues( level, sched );
+    //transport factory
+    all_tasks.clear();
+    all_tasks = i_trans_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+      i->second->schedule_init(level, sched, matls, is_restart);
+      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
     }
-    d_partVel->schedInitPartVel(level, sched);
-  }
 
-  //----------------------
-  //CQMOM initialization
-  if(d_doCQMOM)
-  {
-    sched_momentInit( level, sched );
+    //initialize factory
+    all_tasks.clear();
+    all_tasks = i_init_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+      if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld") {
+        std::cout << "Delaying particle calc..." << std::endl;
+      } else {
+        i->second->schedule_init(level, sched, matls, is_restart);
+      }
+    }
+    //have to delay and order these specific tasks...clean this up later...
+    TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
+    if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart);
+    TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld");
+    if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart);
+    TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
+    if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart);
 
-    // check to make sure that all cqmom equations have BCs set.
-    CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
-    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
-    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
+    //lagrangian particles
+    all_tasks.clear();
+    all_tasks = i_lag_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+      i->second->schedule_init(level, sched, matls, is_restart );
+    }
+
+    sched_scalarInit(level, sched);
+
+    //property models
+    all_tasks.clear();
+    all_tasks = i_property_models_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+      i->second->schedule_init(level, sched, matls, is_restart );
+    }
+
+    // Property model initialization
+    PropertyModelFactory& propFactory = PropertyModelFactory::self();
+    PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+          iprop != all_prop_models.end(); iprop++) {
+
+      PropertyModelBase* prop_model = iprop->second;
+      prop_model->sched_initialize( level, sched );
+    }
+
+    IntVector periodic_vector = level->getPeriodicBoundaries();
+    bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+    d_turbModel->set3dPeriodic(d_3d_periodic);
+    d_props->set3dPeriodic(d_3d_periodic);
+
+    // Table Lookup
+    bool initialize_it = true;
+    bool modify_ref_den = true;
+    int time_substep = 0; //no meaning here, but is required to be zero for
+                          //variables to be properly allocated.
+                          //
+    d_props->doTableMatching();
+    d_props->sched_checkTableBCs( level, sched );
+    d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
+
+    d_init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
+
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+          iprop != all_prop_models.end(); iprop++) {
+      PropertyModelBase* prop_model = iprop->second;
+      if ( prop_model->initType()=="physical" )
+        prop_model->sched_computeProp( level, sched, 1 );
+    }
+
+    //Setup BC areas
+    d_boundaryCondition->sched_computeBCArea( sched, level, matls );
+
+    //For debugging
+    //d_boundaryCondition->printBCInfo();
+
+    //Setup initial inlet velocities
+    d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doing_restart,false );
+
+    //Set the initial profiles
+    d_boundaryCondition->sched_setInitProfile( sched, level, matls );
+
+    //Setup the intrusions.
+    d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
+
+    sched_setInitVelCond( level, sched, matls );
+
+    sched_getCCVelocities(level, sched);
+
+    d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
+
+    //----------------------
+    //DQMOM initialization
+    if(d_doDQMOM)
+    {
+      sched_weightInit(level, sched);
+      sched_weightedAbsInit(level, sched);
+
+      // check to make sure that all dqmom equations have BCs set.
+      DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+      for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+        EqnBase* eqn = ieqn->second;
+        eqn->sched_checkBCs( level, sched, false );
+        //as needed for the coal propery models
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+        dqmom_eqn->sched_getUnscaledValues( level, sched );
+      }
+      d_partVel->schedInitPartVel(level, sched);
+    }
+
+    //----------------------
+    //CQMOM initialization
+    if(d_doCQMOM)
+    {
+      sched_momentInit( level, sched );
+
+      // check to make sure that all cqmom equations have BCs set.
+      CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
+      CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
+      for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
+        EqnBase* eqn = ieqn->second;
+        eqn->sched_checkBCs( level, sched,false );
+      }
+      //call the cqmom inversion so weights and abscissas are calculated at the start
+      d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
+    }
+
+    //=================================================================================
+    //NEW TASK INTERFACE
+    //
+    //particle models
+    all_tasks.clear();
+    all_tasks = i_partmod_fac->second->retrieve_all_tasks();
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+      i->second->schedule_init(level, sched, matls, is_restart );
+    }
+    //=================================================================================
+
+    // check to make sure that all the scalar variables have BCs set and set intrusions:
+    EqnFactory& eqnFactory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
       EqnBase* eqn = ieqn->second;
       eqn->sched_checkBCs( level, sched,false );
+
+      // also, do table initialization here since all scalars should be initialized by now
+      if (eqn->does_table_initialization()) {
+        eqn->sched_tableInitialization( level, sched );
+      }
     }
-    //call the cqmom inversion so weights and abscissas are calculated at the start
-    d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
+
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+
+    d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
+
   }
 
-  //=================================================================================
-  //NEW TASK INTERFACE
-  //
-  //particle models
-  all_tasks.clear();
-  all_tasks = i_partmod_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-  //=================================================================================
-
-  // check to make sure that all the scalar variables have BCs set and set intrusions:
-  EqnFactory& eqnFactory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
-    EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched,false );
-
-    // also, do table initialization here since all scalars should be initialized by now
-    if (eqn->does_table_initialization()) {
-      eqn->sched_tableInitialization( level, sched );
-    }
-  }
-
-  d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
-
-  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
+  //d_boundaryCondition->sched_setBCInfo( sched, level, matls, m_bcHelper[level->getID()] );
 
 }
 
@@ -1288,54 +1306,76 @@ sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials
 void
 ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 {
-  // This is necessary because restartInitialize is called from all levels (I think), and arches operates only on the finest level
-  if( level->hasFinerLevel() ){
-    return;
-  }
 
-  //__________________________________
-  //  initialize src terms
-  SourceTermFactory& srcFactory = SourceTermFactory::self();
-  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
-    SourceTermBase* src = isrc->second;
-    src->sched_restartInitialize(level, sched);
-  }
 
-  //__________________________________
-  //  initialize property models
-  PropertyModelFactory& propFactory = PropertyModelFactory::self();
-  PropertyModelFactory::PropMap& properties = propFactory.retrieve_all_property_models();
-  for (PropertyModelFactory::PropMap::iterator iprop=properties.begin(); iprop !=properties.end(); iprop++){
-    PropertyModelBase* prop = iprop->second;
-    prop->sched_restartInitialize(level, sched);
-  }
+  d_boundaryCondition->set_bc_information(level);
+
+  d_boundaryCondition->setBCHelper( &m_bcHelper );
 
   bool doingRestart = true;
+
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
-  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart ,false);
+  //boundary condition helper
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, _arches_spec )));
 
-  EqnFactory& eqnFactory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
-    EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched,false );
+  //computes the area for each inlet through the use of a reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+
+  //delete non-patch-local information on the old BC object
+  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+
+  //Arches only currently solves on the finest level
+  if ( !level->hasFinerLevel() ){
+
+    d_boundaryCondition->sched_computeBCArea( sched, level, matls );
+
+    d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart ,false);
+
+    //__________________________________
+    //  initialize src terms
+    SourceTermFactory& srcFactory = SourceTermFactory::self();
+    SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+    for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+      SourceTermBase* src = isrc->second;
+      src->sched_restartInitialize(level, sched);
+    }
+
+    //__________________________________
+    //  initialize property models
+    PropertyModelFactory& propFactory = PropertyModelFactory::self();
+    PropertyModelFactory::PropMap& properties = propFactory.retrieve_all_property_models();
+    for (PropertyModelFactory::PropMap::iterator iprop=properties.begin(); iprop !=properties.end(); iprop++){
+      PropertyModelBase* prop = iprop->second;
+      prop->sched_restartInitialize(level, sched);
+    }
+
+    EqnFactory& eqnFactory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched,false );
+    }
+
+    // check to make sure that all dqmom equations have BCs set.
+    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched,false );
+    }
+
+    checkMomBCs( sched, level, matls );
+
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
+
+    d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
   }
 
-  // check to make sure that all dqmom equations have BCs set.
-  DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
-  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
-  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
-    EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched,false );
-  }
-
-  checkMomBCs( sched, level, matls );
-
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
-  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
+  //d_boundaryCondition->sched_setBCInfo( sched, level, matls, m_bcHelper[level->getID()] );
 
 }
 
@@ -1345,7 +1385,22 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
   bool doingRegrid  = true;
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
+  d_boundaryCondition->set_bc_information(level);
+
+  //boundary condition helper
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, _arches_spec )));
+
+  //computes the area for each inlet through the use of a reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+
+  //delete non-patch-local information on the old BC object
+  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+
   d_boundaryCondition->sched_computeBCArea( sched, level, matls );
+
   d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, false, doingRegrid);
 
   EqnFactory& eqnFactory = EqnFactory::self();
@@ -1391,6 +1446,20 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 
     //total KE:
     new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel );
+
+    //---------------------------------------------------------------------------------------------
+    //test the bc stuff:
+    //const BndMapT& my_map = m_bcHelper->get_boundary_information();
+    //auto iter = my_map.begin();
+    //BndSpec a_spec = iter->second;
+    //Uintah::Iterator my_iter = m_bcHelper->get_uintah_extra_bnd_mask(a_spec, patch->getID());
+    ////this is how you would retrieve a specific variable
+    //const BndCondSpec* test_var_find = a_spec.find("mixture_fraction");
+    //this is how you would loop over the iterator
+    // for (my_iter.reset(); !my_iter.done(); my_iter++ ){
+    //   std::cout << " iter = " << *my_iter << std::endl;
+    // }
+    //---------------------------------------------------------------------------------------------
 
     allocateAndInitializeToC( d_lab->d_densityGuessLabel  , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_uVelRhoHatLabel    , new_dw, indx, patch, 0.0 );
@@ -2035,13 +2104,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // project velocities using the projection step
     d_momSolver->solve(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level], false);
-
-
-
-    if ( d_timeIntegratorLabels[curr_level]->integrator_last_step) {
-      // this is the new efficiency calculator
-      d_eff_calculator->sched_computeAllScalarEfficiencies( level, sched );
-    }
 
 
     // Schedule an interpolation of the face centered velocity data

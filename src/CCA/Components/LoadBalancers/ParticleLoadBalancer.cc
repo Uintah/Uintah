@@ -696,7 +696,7 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
 //    dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
 
   // if it determines we need to re-load-balance, recompile
-  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancer::check)) {
+  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancerPort::check)) {
     doing << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
     return true;
   }
@@ -783,8 +783,8 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != LoadBalancer::restart) {
-    if (state != LoadBalancer::check) {
+  if (state != LoadBalancerPort::restart) {
+    if (state != LoadBalancerPort::check) {
       force = true;
       if (d_lbTimestepInterval != 0) {
         d_lastLbTimestep = m_shared_state->getCurrentTopLevelTimeStep();
@@ -814,7 +814,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
       dynamicAllocate=true;
     }
 
-    if (dynamicAllocate || state != LoadBalancer::check) {
+    if (dynamicAllocate || state != LoadBalancerPort::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
@@ -849,9 +849,9 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   m_temp_assignment.resize(0);
   
   // logic to setting flag
-  int flag = LoadBalancer::check;
-  if ( changed || state == LoadBalancer::restart){
-    flag = LoadBalancer::regrid;
+  int flag = LoadBalancerPort::check;
+  if ( changed || state == LoadBalancerPort::restart){
+    flag = LoadBalancerPort::regrid;
   }
   
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.

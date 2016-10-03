@@ -101,32 +101,20 @@ namespace Uintah {
       @struct ComputeConvectiveFlux
       @brief Compute a convective flux given psi (flux limiter) with this functor.
   **/
-  template <typename T>
   struct ComputeConvectiveFlux{
 
-    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-    typedef typename ArchesCore::VariableHelper<T>::XFaceType FXT;
-    typedef typename ArchesCore::VariableHelper<T>::YFaceType FYT;
-    typedef typename ArchesCore::VariableHelper<T>::ZFaceType FZT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstXFaceType CFXT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
-    typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
-
-    ComputeConvectiveFlux( CT& phi,
-                           CFXT& u, CFYT& v, CFZT& w,
-                           CFXT& psi_x, CFYT& psi_y, CFZT& psi_z,
-                           FXT& flux_x, FYT& flux_y, FZT& flux_z,
-                           CFXT& af_x, CFYT& af_y, CFZT& af_z ) :
-#ifdef UINTAH_ENABLE_KOKKOS
-      phi(phi.getKokkosView()), u(u.getKokkosView()), v(v.getKokkosView()), w(w.getKokkosView()),
-      psi_x(psi_x.getKokkosView()), psi_y(psi_y.getKokkosView()), psi_z(psi_z.getKokkosView()),
-      flux_x(flux_x.getKokkosView()), flux_y(flux_y.getKokkosView()), flux_z(flux_z.getKokkosView()),
-      af_x(af_x.getKokkosView()), af_y(af_y.getKokkosView()), af_z(af_z.getKokkosView())
-#else
-      phi(phi), u(u), v(v), w(w), psi_x(psi_x), psi_y(psi_y), psi_z(psi_z),
-      flux_x(flux_x), flux_y(flux_y), flux_z(flux_z),
-      af_x(af_x), af_y(af_y), af_z(af_z)
-#endif
+    ComputeConvectiveFlux( const Array3<double>& i_phi,
+                           const Array3<double>& i_u, const Array3<double>& i_v,
+                           const Array3<double>& i_w,
+                           const Array3<double>& i_psi_x, const Array3<double>& i_psi_y,
+                           const Array3<double>& i_psi_z,
+                           Array3<double>& i_flux_x, Array3<double>& i_flux_y,
+                           Array3<double>& i_flux_z,
+                           const Array3<double>& i_af_x, const Array3<double>& i_af_y,
+                           const Array3<double>& i_af_z ) :
+      phi(i_phi), u(i_u), v(i_v), w(i_w), psi_x(i_psi_x), psi_y(i_psi_y), psi_z(i_psi_z),
+      flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z),
+      af_x(i_af_x), af_y(i_af_y), af_z(i_af_z)
       {}
 
     void
@@ -157,35 +145,19 @@ namespace Uintah {
 
   private:
 
-#ifdef UINTAH_ENABLE_KOKKOS
-    KokkosView3<const double> phi;
-    KokkosView3<const double> u;
-    KokkosView3<const double> v;
-    KokkosView3<const double> w;
-    KokkosView3<const double> psi_x;
-    KokkosView3<const double> psi_y;
-    KokkosView3<const double> psi_z;
-    KokkosView3<double> flux_x;
-    KokkosView3<double> flux_y;
-    KokkosView3<double> flux_z;
-    KokkosView3<const double> af_x;
-    KokkosView3<const double> af_y;
-    KokkosView3<const double> af_z;
-#else
-    CT& phi;
-    CFXT& u;
-    CFYT& v;
-    CFZT& w;
-    CFXT& psi_x;
-    CFYT& psi_y;
-    CFZT& psi_z;
-    FXT& flux_x;
-    FYT& flux_y;
-    FZT& flux_z;
-    CFXT& af_x;
-    CFYT& af_y;
-    CFZT& af_z;
-#endif
+    const Array3<double>& phi;
+    const Array3<double>& u;
+    const Array3<double>& v;
+    const Array3<double>& w;
+    const Array3<double>& psi_x;
+    const Array3<double>& psi_y;
+    const Array3<double>& psi_z;
+    Array3<double>& flux_x;
+    Array3<double>& flux_y;
+    Array3<double>& flux_z;
+    const Array3<double>& af_x;
+    const Array3<double>& af_y;
+    const Array3<double>& af_z;
 
   };
 
@@ -425,10 +397,10 @@ namespace Uintah {
   **/
   class ConvectionHelper{
 
+  public:
     ConvectionHelper(){}
     ~ConvectionHelper(){}
 
-  public:
     /**
       @brief Get the limiter enum from a string representation
     **/

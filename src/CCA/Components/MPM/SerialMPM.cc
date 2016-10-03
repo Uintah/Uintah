@@ -38,8 +38,9 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Grid.h>

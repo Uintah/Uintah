@@ -727,6 +727,10 @@
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" >
 
+        <force_area_calc                spec="OPTIONAL NO_DATA"/> <!-- Force the code to compute areas on ALL boundaries. By default, areas are not computed
+                                                                       (except in the case of MassFlowInlet and Swirl) to reduce the amount of reduction 
+                                                                       information needed during setup. --> 
+
         <check_for_inlet_obstructions   spec="OPTIONAL NO_DATA"/> <!-- If present, then the code will 1) throw an error when massflow inlets
                                                                        are obstructed by intrusions 2) provide a warning when velocity inlets
                                                                        are obstructed by intrusions. -->
@@ -1417,6 +1421,7 @@
               <!--ReflectOn                  spec="OPTIONAL BOOLEAN" /--> <!-- reflections are off by default.-->
               <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/> <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->
               <ScatteringOn               spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
+              <QuadratureSet               spec="OPTIONAL STRING 'LevelSymmetric, LegendreChebyshev" /> <!-- turn on scattering -->
               <LinearSolver               spec="OPTIONAL NO_DATA"
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />
@@ -1470,22 +1475,23 @@
               <cellTypeCoarsenLogic      spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
 
-              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel'">
+              <algorithm                 spec="OPTIONAL NO_DATA"
+                                             attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
 
-                <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
-                <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
+                <orderOfInterpolation    spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
+                <halo                    spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
 
-                <ROI_extents            spec="OPTIONAL NO_DATA"
-                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+                <ROI_extents             spec="OPTIONAL NO_DATA"
+                                           attribute1="type REQUIRED STRING 'fixed dynamic patch_based max_rayLength'">
 
-                  <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
-                  <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+                  <abskg_threshold       spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+                  <sigmaT4_threshold     spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
 
-                  <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
-                  <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <min                   spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <max                   spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <length                spec="REQUIRED DOUBLE  'positive'" need_applies_to="type max_rayLength"/>
                 </ROI_extents>
               </algorithm>
-
             </RMCRT>
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->

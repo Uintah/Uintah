@@ -29,17 +29,24 @@
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
 #include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/SwitchingCriteria.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <vector>
 
 namespace Uintah {
   class ESMPM : public UintahParallelComponent, public SimulationInterface {
@@ -65,7 +72,29 @@ namespace Uintah {
 
       virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched);
 
+
+    protected:
+
+      virtual void scheduleInterpolateParticlesToCellFC(SchedulerP& sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* mpm_matls,
+                                                 const MaterialSet* all_matls);
+
+      virtual void interpolateParticlesToCellFC(const ProcessorGroup* pg,
+                                                const PatchSubset* patches,
+                                                const MaterialSubset* matls,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw);
+
+    protected:
+      virtual void fcLinearInterpolator(const Patch* patch, const Point& pos,
+                                        std::vector<IntVector>& ni,
+                                        std::vector<double>& S);
+
+
     private:
+      double d_TINY_RHO;
+
       SimulationStateP d_shared_state;
       Output* d_data_archiver;
       AMRMPM* d_amrmpm;
@@ -74,7 +103,10 @@ namespace Uintah {
       FVMLabel* d_fvm_lb;
       MPMFlags* d_mpm_flags;
 
+      MaterialSet* d_one_matlset;
+      MaterialSubset* d_one_matl;
       SwitchingCriteria* d_switch_criteria;
+
   };
 }
 #endif

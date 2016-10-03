@@ -21,18 +21,24 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModelFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
+#include <CCA/Components/MPM/PhysicalBC/AutoCycleFluxBC.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
+#include <string>
 
-
-#include <CCA/Ports/LoadBalancer.h>
-
+using namespace std;
 using namespace Uintah;
 
-LoadBalancer::LoadBalancer()
+FluxBCModel* FluxBCModelFactory::create(SimulationStateP& ss, MPMFlags* flags)
 {
+  if (flags->d_doAutoCycleBC)
+    return(scinew AutoCycleFluxBC(ss, flags));
+
+  else
+    return(scinew FluxBCModel(ss, flags));
+
+  return 0;
 }
-
-LoadBalancer::~LoadBalancer()
-{
-}
-
-

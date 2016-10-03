@@ -27,7 +27,7 @@
 #include <CCA/Components/Schedulers/SendState.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Grid/Variables/ParticleSubset.h>
@@ -269,7 +269,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     plain_old_dws[i] = m_dws[i].get_rep();
   }
 
-    dtask->doit(d_myworld, m_dws, plain_old_dws);
+  dtask->doit( d_myworld, m_dws, plain_old_dws );
 
   if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
     printTrackedVars(dtask, SchedulerCommon::PRINT_AFTER_EXEC);
@@ -400,9 +400,9 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 
       // the load balancer is used to determine where data was in the old dw on the prev timestep -
       // pass it in if the particle data is on the old dw
-      const VarLabel* posLabel;
-      OnDemandDataWarehouse* posDW;
-      LoadBalancer* lb = nullptr;
+      const VarLabel        * posLabel;
+      OnDemandDataWarehouse * posDW;
+      LoadBalancerPort      * lb = nullptr;
 
       if( !m_reloc_new_pos_label && m_parent_scheduler ) {
         posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
@@ -425,7 +425,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
         top = top->m_parent_scheduler;
       }
 
-      dw->sendMPI(batch, posLabel, mpibuff, posDW, req, lb);
+      dw->sendMPI( batch, posLabel, mpibuff, posDW, req, lb );
     }
 
     // Post the send
@@ -591,7 +591,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
         // the load balancer is used to determine where data was in the old dw on the prev timestep
         // pass it in if the particle data is on the old dw
-        LoadBalancer* lb = nullptr;
+        LoadBalancerPort * lb = nullptr;
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         } else {
@@ -738,7 +738,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                      , int iteration /* = 0 */
                      )
 {
-  ASSERTRANGE(tgnum, 0, static_cast<int>(m_task_graphs.size()));
+  ASSERTRANGE( tgnum, 0, static_cast<int>(m_task_graphs.size()) );
+
   TaskGraph* tg = m_task_graphs[tgnum];
   tg->setIteration(iteration);
   m_current_task_graph = tgnum;
@@ -774,10 +775,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   int me = d_myworld->myrank();
 
   // This only happens if "-emit_taskgraphs" is passed to sus
-  makeTaskGraphDoc(dts, me);
+  makeTaskGraphDoc( dts, me );
 
   mpi_info_.reset( 0 );
-
 
   DOUT(g_dbg, me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
@@ -789,7 +789,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   int abort_point  = 987654;
   int numTasksDone = 0;
   int i            = 0;
-  while (numTasksDone < ntasks) {
+  while ( numTasksDone < ntasks ) {
     i++;
 
     DetailedTask * dtask = dts->getNextInternalReadyTask();
@@ -823,7 +823,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     }
   } // end while( numTasksDone < ntasks )
 
-  if (g_time_out) {
+  if( g_time_out ) {
     emitTime("MPI send time", mpi_info_[TotalSendMPI]);
     emitTime("MPI Test time", mpi_info_[TotalTestMPI]);
     emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
@@ -885,7 +885,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   finalizeTimestep();
 
   if ( !m_parent_scheduler && (g_exec_out || g_time_out) ) {  // only do on toplevel scheduler
-    outputTimingStats("MPIScheduler");
+    outputTimingStats( "MPIScheduler" );
   }
 
   DOUT(g_dbg, me << " MPIScheduler finished");

@@ -160,6 +160,7 @@
 <!--__________________________________-->
       <BoundaryConditions>
         <suppress_corner_recirculation/>
+        <force_area_calc/>
       </BoundaryConditions>
 
 <!--__________________________________-->

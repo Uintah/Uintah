@@ -43,7 +43,7 @@
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -81,9 +81,9 @@ static DebugStream cout_dbg("CONTAINEREXTRACT_DBG_COUT", false);
 
 
 //______________________________________________________________________              
-containerExtract::containerExtract(ProblemSpecP& module_spec,
-                         SimulationStateP& sharedState,
-                         Output* dataArchiver)
+containerExtract::containerExtract( ProblemSpecP     & module_spec,
+                                    SimulationStateP & sharedState,
+                                    Output           * dataArchiver )
   : AnalysisModule(module_spec, sharedState, dataArchiver)
 {
   d_sharedState = sharedState;
@@ -625,7 +625,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
                              DataWarehouse* new_dw)
 {   
   UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
+  LoadBalancerPort * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer"));
 
   const Level* level = getLevel(patches);
   // the user may want to restart from an uda that wasn't using the DA module
@@ -637,7 +637,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_dataArchiver->getCurrentTime();
+  double now = d_sharedState->getElapsedTime();
   if(now < d_startTime || now > d_stopTime){
     return;
   }
@@ -793,7 +793,7 @@ void containerExtract::doAnalysis(const ProcessorGroup* pg,
           }
 
           Point here = patch->cellPosition(c);
-          double time = d_dataArchiver->getCurrentTime();
+          double time = d_sharedState->getElapsedTime();
           fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), time);
 
 

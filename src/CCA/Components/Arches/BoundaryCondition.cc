@@ -36,6 +36,8 @@
 #include <CCA/Components/Arches/Filter.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/WBCHelper.h>
+#include <CCA/Components/Arches/BoundaryFunctors.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -125,33 +127,41 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 //****************************************************************************
 BoundaryCondition::~BoundaryCondition()
 {
+
   delete d_newBC;
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
 
-    VarLabel::destroy( bc_iter->second.total_area_label );
+  for ( auto i = d_bc_information.begin(); i != d_bc_information.end(); i++ ){
+    for ( auto j = (i->second).begin(); j != (i->second).end(); j++ ){
 
-    if (bc_iter->second.type ==  TURBULENT_INLET ) {
-      delete bc_iter->second.TurbIn;
+      if ( j->second.type == TURBULENT_INLET ){
+        delete j->second.TurbIn;
+      }
+
     }
   }
 
   if (_using_new_intrusion) {
-    delete _intrusionBC;
+    for ( auto i = _intrusionBC.begin(); i != _intrusionBC.end(); i++ ){
+      delete i->second;
+    }
   }
 
   VarLabel::destroy(d_radiation_temperature_label);
+
 }
 
 //****************************************************************************
 // Problem Setup
 //****************************************************************************
 void
-BoundaryCondition::problemSetup(const ProblemSpecP& params)
+BoundaryCondition::problemSetup( const ProblemSpecP& params,
+                                 GridP& grid )
 {
 
   ProblemSpecP db_params = params;
   ProblemSpecP db = params->findBlock("BoundaryConditions");
+
+  m_arches_spec = db_params;
 
   d_newBC = scinew BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() );
 
@@ -161,7 +171,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
   if ( db.get_rep() != 0 ) {
 
-    setupBCs( db_params );
+    //setupBCs( db_params );
 
     db->getWithDefault("wall_csmag",d_csmag_wall,0.0);
     if ( db->findBlock( "wall_slip" )) {
@@ -171,11 +181,18 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if ( db->findBlock("intrusions") ) {
 
-      _intrusionBC = scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION );
-      ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
-      _using_new_intrusion = true;
+      for ( int i = 0; i < grid->numLevels(); i++ ){
+        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION )));
+        ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
+        if (i == (grid->numLevels() - 1)){  //  Only create intrusions on the finest level.  
+                                            //  In the future, we may want to create intrusions on all levels,
+                                            //  if so, we will need to resolve problems with redundant intrusion  
+                                            //  names in the infrastructure.
+          _intrusionBC[i]->problemSetup( db_new_intrusion, i );
+        }
 
-      _intrusionBC->problemSetup( db_new_intrusion );
+      }
+      _using_new_intrusion = true;
 
     }
 
@@ -300,6 +317,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     //band-aid
     throw ProblemSetupException("Error: Please insert a <BoundaryConditions/> in your <ARCHES> node of the UPS.", __FILE__, __LINE__);
   }
+}
+
+void
+BoundaryCondition::set_bc_information(const LevelP& level){
+  setupBCs(m_arches_spec, level);
 }
 
 //****************************************************************************
@@ -432,8 +454,8 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
                                                   const MaterialSet* matls)
 {
   if ( _using_new_intrusion ) {
-    // Interface to new intrusions
-    _intrusionBC->sched_setIntrusionT( sched, level, matls );
+    const int ilvl = level->getID();
+    _intrusionBC[ilvl]->sched_setIntrusionT( sched, level, matls );
   }
 }
 
@@ -882,8 +904,11 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+        bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
     for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
 
@@ -1924,8 +1949,10 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 // New Domain BCs
 //
 void
-BoundaryCondition::setupBCs( ProblemSpecP& db )
+BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 {
+
+  const int ilvl = level->getID();
 
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions");
@@ -1942,19 +1969,6 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
     }
   }
   int bc_type_index = 0;
-
-  //Map types to strings:
-  d_bc_type_to_string.insert( std::make_pair( TURBULENT_INLET, "TurbulentInlet" ) );
-  d_bc_type_to_string.insert( std::make_pair( VELOCITY_INLET, "VelocityInlet" ) );
-  d_bc_type_to_string.insert( std::make_pair( MASSFLOW_INLET, "MassFlowInlet" ) );
-  d_bc_type_to_string.insert( std::make_pair( PARTMASSFLOW_INLET, "PartMassFlowInlet" ) );
-  d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE, "VelocityFileInput" ) );
-  d_bc_type_to_string.insert( std::make_pair( PRESSURE, "PressureBC" ) );
-  d_bc_type_to_string.insert( std::make_pair( OUTLET, "OutletBC" ) );
-  d_bc_type_to_string.insert( std::make_pair( NEUTRAL_OUTLET, "NOutletBC") );
-  d_bc_type_to_string.insert( std::make_pair( SWIRL, "Swirl" ) );
-  d_bc_type_to_string.insert( std::make_pair( STABL, "StABL" ) );
-  d_bc_type_to_string.insert( std::make_pair( WALL, "WallBC" ) );
 
   // Now actually look for the boundary types
   if ( db_bc ) {
@@ -2017,14 +2031,12 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         if ( type == "VelocityInlet" ) {
 
           my_info.type = VELOCITY_INLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("value", my_info.velocity);
           found_bc = true;
 
         } else if ( type == "TurbulentInlet" ) {
 
           my_info.type = TURBULENT_INLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("inputfile", my_info.filename);
           db_BCType->require("value", my_info.velocity);
           found_bc = true;
@@ -2035,7 +2047,6 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "MassFlowInlet" ) {
 
           my_info.type = MASSFLOW_INLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           my_info.mass_flow_rate = 0.0;
           found_bc = true;
@@ -2078,7 +2089,6 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "VelocityFileInput" ) {
 
           my_info.type = VELOCITY_FILE;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("value", my_info.filename);
           my_info.velocity = Vector(0,0,0);
           found_bc = true;
@@ -2086,11 +2096,9 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "Swirl" ) {
 
           my_info.type = SWIRL;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           my_info.mass_flow_rate = 0.0;
           db_BCType->require("swirl_no", my_info.swirl_no);
-
 
           std::string str_vec; // This block sets the default centroid to the origin unless otherwise specified by swirl_cent
           bool Luse_origin =   db_face->getAttribute("origin", str_vec);
@@ -2164,28 +2172,24 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "PressureBC" ) {
 
           my_info.type = PRESSURE;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           found_bc = true;
 
         } else if ( type == "OutletBC" ) {
 
           my_info.type = OUTLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           found_bc = true;
 
         } else if ( type == "NOutletBC" ) {
 
           my_info.type = NEUTRAL_OUTLET;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           found_bc = true;
 
         } else if ( type == "WallBC" ) {
 
           my_info.type = WALL;
-          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0);
           my_info.mass_flow_rate = 0.0;
           found_bc = true;
@@ -2291,17 +2295,70 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           if (numberOfMomentumBCs > 1){
             throw ProblemSetupException("Arches found multiple gas-momentum boundary conditions.  I don't know which one to apply.", __FILE__, __LINE__);
           }
-          d_bc_information.insert( std::make_pair(bc_type_index, my_info));
+
+          auto i_bc_information = d_bc_information.find(ilvl);
+          if ( i_bc_information == d_bc_information.end()){
+            BCInfoMap tmp;
+            tmp.insert( std::make_pair( bc_type_index, my_info));
+            d_bc_information.insert(std::make_pair(ilvl, tmp));
+          } else {
+            (i_bc_information->second).insert( std::make_pair( bc_type_index, my_info));
+          }
+          //d_bc_information.insert( std::make_pair(bc_type_index, my_info));
           bc_type_index++;
+
         }
       }
     }
   }
 }
 
-//-------------------------------------------------------------
-// Set the cell Type
-//
+//--------------------------------------------------------------------------------------------------
+void
+BoundaryCondition::prune_per_patch_bcinfo( SchedulerP& sched,
+                                           const LevelP& level,
+                                           WBCHelper* bcHelper )
+{
+  BndMapT& bc_map = bcHelper->get_for_edit_boundary_information();
+  std::vector<int> matches_found;
+  const int ilvl = level->getID();
+  for ( auto j = d_bc_information[ilvl].begin(); j != d_bc_information[ilvl].end(); j++ ){
+
+    std::string check_name =  j->second.faceName;
+    bool match_found = false;
+
+    for (auto i = bc_map.begin(); i != bc_map.end(); i++ ){
+      std::string face_name = i->second.name;
+      if ( check_name == face_name ){
+        match_found = true;
+        break;
+      }
+    }
+    if ( ! match_found ){
+      matches_found.push_back(j->first);
+    }
+  }
+
+  if ( d_bc_information[ilvl].size() > 0 ){
+
+    int my_size = d_bc_information[ilvl].size();
+
+    for (int i = 0; i < my_size; i++){
+
+      auto it = std::find(matches_found.begin(), matches_found.end(), i );
+
+      if ( it != matches_found.end() ){
+        //info not on this patch:
+        if ( d_bc_information[ilvl][*it].type == TURBULENT_INLET ){
+          delete d_bc_information[ilvl][*it].TurbIn;
+        }
+        d_bc_information[ilvl].erase(*it);
+      }
+    }
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
 void
 BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
                                       const LevelP& level,
@@ -2331,6 +2388,8 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    const Level* level = getLevel(patches);
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -2351,7 +2410,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 
     }
 
-    const Level* level = patch->getLevel();
     IntVector periodic = level->getPeriodicBoundaries();
 
     for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ) {
@@ -2366,8 +2424,8 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
 
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-          bc_iter != d_bc_information.end(); bc_iter++) {
+    for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+          bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
       for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++) {
 
@@ -2487,22 +2545,24 @@ BoundaryCondition::sched_computeBCArea( SchedulerP& sched,
                                         const LevelP& level,
                                         const MaterialSet* matls)
 {
-  IntVector lo, hi;
-  level->findInteriorCellIndexRange(lo,hi);
-
-  // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::computeBCArea",
-                          this, &BoundaryCondition::computeBCArea, lo, hi);
-
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
-
-    BCInfo the_info = bc_iter->second;
-    tsk->computes( the_info.total_area_label );
-
-  }
-
-  sched->addTask(tsk, level->eachPatch(), matls);
+  // IntVector lo, hi;
+  // level->findInteriorCellIndexRange(lo,hi);
+  //
+  // // cell type initialization
+  // Task* tsk = scinew Task("BoundaryCondition::computeBCArea",
+  //                         this, &BoundaryCondition::computeBCArea, lo, hi);
+  //
+  // const int ilvl = level->getID();
+  //
+  // for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+  //       bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
+  //
+  //   BCInfo the_info = bc_iter->second;
+  //   tsk->computes( the_info.total_area_label );
+  //
+  // }
+  //
+  // sched->addTask(tsk, level->eachPatch(), matls);
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void
@@ -2514,116 +2574,124 @@ BoundaryCondition::computeBCArea( const ProcessorGroup*,
                                   const IntVector lo,
                                   const IntVector hi )
 {
-
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-
-    vector<Patch::FaceType>::const_iterator bf_iter;
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-    Vector Dx = patch->dCell();
-
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-          bc_iter != d_bc_information.end(); bc_iter++) {
-
-      double area = 0;
-
-      for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++) {
-
-        //get the face
-        Patch::FaceType face = *bf_iter;
-
-        //get the number of children
-        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
-
-        for (int child = 0; child < numChildren; child++) {
-
-          double bc_value = 0;
-          Vector bc_v_value(0,0,0);
-          std::string bc_s_value = "NA";
-
-          string bc_kind = "NotSet";
-          Iterator bound_ptr;
-          bool foundIterator = false;
-
-          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ) {
-            foundIterator =
-                    getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
-          } else if ( bc_iter->second.type == VELOCITY_FILE ) {
-            foundIterator =
-                    getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr);
-          } else {
-            foundIterator =
-                    getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
-          }
-
-          double dx_1 = 0.0;
-          double dx_2 = 0.0;
-          IntVector shift;
-          shift = IntVector(0,0,0);
-
-          if ( foundIterator ) {
-
-            switch (face) {
-            case Patch::xminus:
-              dx_1 = Dx.y();
-              dx_2 = Dx.z();
-              shift = IntVector( 1, 0, 0);
-              break;
-            case Patch::xplus:
-              dx_1 = Dx.y();
-              dx_2 = Dx.z();
-              shift = IntVector( 1, 0, 0);
-              break;
-            case Patch::yminus:
-              dx_1 = Dx.x();
-              dx_2 = Dx.z();
-              shift = IntVector( 0, 1, 0);
-              break;
-            case Patch::yplus:
-              dx_1 = Dx.x();
-              dx_2 = Dx.z();
-              shift = IntVector( 0, 1, 0);
-              break;
-            case Patch::zminus:
-              dx_1 = Dx.y();
-              dx_2 = Dx.x();
-              shift = IntVector( 0, 0, 1);
-              break;
-            case Patch::zplus:
-              dx_1 = Dx.y();
-              dx_2 = Dx.x();
-              shift = IntVector( 0, 0, 1);
-              break;
-            default:
-              break;
-            }
-
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-
-              IntVector c = *bound_ptr;
-
-              // "if" needed to ensure that extra cell contributions aren't added
-              if ( c.x() >= lo.x() - shift.x() && c.x() < hi.x() + shift.x() ) {
-                if ( c.y() >= lo.y() - shift.y() && c.y() < hi.y() + shift.y() ) {
-                  if ( c.z() >= lo.z() - shift.z() && c.z() < hi.z() + shift.z() ) {
-
-                    area += dx_1*dx_2;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
-
-    }
-  }
+  //
+  // for (int p = 0; p < patches->size(); p++) {
+  //
+  //   const Patch* patch = patches->get(p);
+  //   const LevelP level = patch->getLevelP();
+  //
+  //   const int ilvl = level->getID();
+  //
+  //   int archIndex = 0;
+  //   int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+  //
+  //   vector<Patch::FaceType>::const_iterator bf_iter;
+  //   vector<Patch::FaceType> bf;
+  //   patch->getBoundaryFaces(bf);
+  //   Vector Dx = patch->dCell();
+  //
+  //   for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+  //         bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
+  //
+  //     double area = 0;
+  //
+  //     for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++) {
+  //
+  //       //get the face
+  //       Patch::FaceType face = *bf_iter;
+  //
+  //       //get the number of children
+  //       int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+  //
+  //       for (int child = 0; child < numChildren; child++) {
+  //
+  //         double bc_value = 0;
+  //         Vector bc_v_value(0,0,0);
+  //         std::string bc_s_value = "NA";
+  //
+  //         string bc_kind = "NotSet";
+  //         Iterator bound_ptr;
+  //         bool foundIterator = false;
+  //
+  //         if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ) {
+  //           foundIterator =
+  //                   getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
+  //         } else if ( bc_iter->second.type == VELOCITY_FILE ) {
+  //           foundIterator =
+  //                   getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr);
+  //         } else {
+  //           foundIterator =
+  //                   getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
+  //         }
+  //
+  //         double dx_1 = 0.0;
+  //         double dx_2 = 0.0;
+  //         IntVector shift;
+  //         shift = IntVector(0,0,0);
+  //
+  //         if ( foundIterator ) {
+  //
+  //           switch (face) {
+  //           case Patch::xminus:
+  //             dx_1 = Dx.y();
+  //             dx_2 = Dx.z();
+  //             shift = IntVector( 1, 0, 0);
+  //             break;
+  //           case Patch::xplus:
+  //             dx_1 = Dx.y();
+  //             dx_2 = Dx.z();
+  //             shift = IntVector( 1, 0, 0);
+  //             break;
+  //           case Patch::yminus:
+  //             dx_1 = Dx.x();
+  //             dx_2 = Dx.z();
+  //             shift = IntVector( 0, 1, 0);
+  //             break;
+  //           case Patch::yplus:
+  //             dx_1 = Dx.x();
+  //             dx_2 = Dx.z();
+  //             shift = IntVector( 0, 1, 0);
+  //             break;
+  //           case Patch::zminus:
+  //             dx_1 = Dx.y();
+  //             dx_2 = Dx.x();
+  //             shift = IntVector( 0, 0, 1);
+  //             break;
+  //           case Patch::zplus:
+  //             dx_1 = Dx.y();
+  //             dx_2 = Dx.x();
+  //             shift = IntVector( 0, 0, 1);
+  //             break;
+  //           default:
+  //             break;
+  //           }
+  //
+  //           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+  //
+  //             IntVector c = *bound_ptr;
+  //
+  //             // "if" needed to ensure that extra cell contributions aren't added
+  //             if ( c.x() >= lo.x() - shift.x() && c.x() < hi.x() + shift.x() ) {
+  //               if ( c.y() >= lo.y() - shift.y() && c.y() < hi.y() + shift.y() ) {
+  //                 if ( c.z() >= lo.z() - shift.z() && c.z() < hi.z() + shift.z() ) {
+  //
+  //                   area += dx_1*dx_2;
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //
+  //     new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
+  //
+  //     const BndMapT& my_map = (*m_bcHelper)[level->getID()]->get_boundary_information();
+  //     auto iter = my_map.begin();
+  //     BndSpec a_spec = iter->second;
+  //
+  //   }
+  // }
 }
 
 //--------------------------------------------------------------------------------
@@ -2649,22 +2717,14 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
   Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities",
                           this, &BoundaryCondition::setupBCInletVelocities,doing_regrid);
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
-
-    BCInfo the_info = bc_iter->second;
-    tsk->requires( Task::NewDW, the_info.total_area_label );
-
-  }
-
   if(doing_regrid){
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
   }else{
     tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
     tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
-    //tsk->modifies(d_lab->d_volFractionLabel ); // to create task dependancy??  Needs further testing
-    //tsk->modifies(d_lab->d_densityCPLabel );   // see sched_checkBCs for more info
+    tsk->modifies(d_lab->d_volFractionLabel ); // to create task dependancy??  Needs further testing
+    tsk->modifies(d_lab->d_densityCPLabel );   // see sched_checkBCs for more info
   }
 
   sched->addTask(tsk, level->eachPatch(), matls);
@@ -2684,6 +2744,8 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    const LevelP level = patch->getLevelP();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -2694,21 +2756,28 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
     constCCVariable<double> density;
     constCCVariable<double> volFraction;
 
-  if(doing_regrid){
-    old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
-    old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
-  }else{
-    new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
-    new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
-  }
+    if(doing_regrid){
+      old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
+      old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
+    }else{
+      new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
+      new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
+    }
 
-    proc0cout << "\nDomain boundary condition summary: \n";
+    proc0cout << "\n Domain boundary condition summary: \n";
 
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); bc_iter != d_bc_information.end(); bc_iter++) {
+    for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+          bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
-      sum_vartype area_var;
-      new_dw->get( area_var, bc_iter->second.total_area_label );
-      double area = area_var;
+      double area = 0.0;
+
+      const BndMapT& my_map =(*m_bcHelper)[level->getID()]->get_boundary_information();
+      for (auto iter = my_map.begin(); iter != my_map.end(); iter++ ){
+        BndSpec a_spec = iter->second;
+        if ( a_spec.name == bc_iter->second.faceName ){
+          area = a_spec.area;
+        }
+      }
 
       for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++) {
 
@@ -2887,6 +2956,8 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    const LevelP level = patch->getLevelP();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -2925,8 +2996,8 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
       ivGridVarMap.insert( make_pair( i->first, variable));
     }
 
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-          bc_iter != d_bc_information.end(); bc_iter++) {
+    for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+          bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
       for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
 
@@ -3018,69 +3089,6 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
     vRhoHat.copyData( vVelocity );
     wRhoHat.copyData( wVelocity );
 
-    //delete BC information not on this patch:
-    BCInfoMap::iterator the_iter = d_bc_information.begin();
-    std::vector<BCInfoMap::iterator> delete_me;
-    while (the_iter != d_bc_information.end()){
-
-      bool i_live_on_this_patch = false;
-
-      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
-
-        //get the face
-        Patch::FaceType face = *bf_iter;
-        IntVector insideCellDir = patch->faceDirection(face);
-
-        //get the number of children
-        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
-
-        for (int child = 0; child < numChildren; child++) {
-
-          double bc_value = 0;
-          Vector bc_v_value(0,0,0);
-          std::string bc_s_value = "NA";
-
-          string bc_kind = "NotSet";
-          Iterator bound_ptr;
-          bool foundIterator = false;
-          string face_name;
-          getBCKind( patch, face, child, the_iter->second.name, matl_index, bc_kind, face_name );
-
-          if ( the_iter->second.type == VELOCITY_INLET ||
-               the_iter->second.type == TURBULENT_INLET ||
-               the_iter->second.type == STABL ) {
-            foundIterator =
-                    getIteratorBCValueBCKind<Vector>( patch, face, child, the_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
-          } else if ( the_iter->second.type == VELOCITY_FILE ) {
-            foundIterator =
-                    getIteratorBCValue<std::string>( patch, face, child, the_iter->second.name, matl_index, bc_s_value, bound_ptr);
-          } else {
-            foundIterator =
-                    getIteratorBCValueBCKind<double>( patch, face, child, the_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
-          }
-
-          if ( foundIterator ){
-            i_live_on_this_patch = true;
-          }
-
-        }
-      }
-
-      if ( !i_live_on_this_patch ){
-
-        BCInfoMap::iterator to_delete = the_iter;
-        the_iter++;
-        //potentially not thread safe.
-        //VarLabel::destroy(to_delete->second.total_area_label);
-        //d_bc_information.erase(to_delete);
-
-      } else {
-
-        the_iter++;
-
-      }
-
-    } //bc_information iterator
   } //patch iterator
 }
 
@@ -3783,17 +3791,20 @@ BoundaryCondition::readInputFile( std::string file_name, BoundaryCondition::FFIn
 
 void
 BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
-                                                  int matl_index,
-                                                  SFCXVariable<double>& uvel,
-                                                  SFCYVariable<double>& vvel,
-                                                  SFCZVariable<double>& wvel,
-                                                  constSFCXVariable<double>& old_uvel,
-                                                  constSFCYVariable<double>& old_vvel,
-                                                  constSFCZVariable<double>& old_wvel )
+                                             int matl_index,
+                                             SFCXVariable<double>& uvel,
+                                             SFCYVariable<double>& vvel,
+                                             SFCZVariable<double>& wvel,
+                                             constSFCXVariable<double>& old_uvel,
+                                             constSFCYVariable<double>& old_vvel,
+                                             constSFCZVariable<double>& old_wvel )
 {
+
   vector<Patch::FaceType>::const_iterator bf_iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
+  const Level* level = patch->getLevel();
+  const int ilvl = level->getID();
 
   // This business is to get the outlet/pressure bcs to behave like the
   // original arches outlet/pressure bc
@@ -3807,8 +3818,8 @@ BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
-        bc_iter != d_bc_information.end(); bc_iter++) {
+  for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
+        bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
 
     if ( bc_iter->second.type == OUTLET || bc_iter->second.type == PRESSURE ) {
 
@@ -4023,7 +4034,9 @@ BoundaryCondition::setHattedIntrusionVelocity( const Patch* p,
                                                constCCVariable<double>& density )
 {
   if ( _using_new_intrusion ) {
-    _intrusionBC->setHattedVelocity( p, u, v, w, density );
+    const Level* level = p->getLevel();
+    const int i = level->getID();
+    _intrusionBC[i]->setHattedVelocity( p, u, v, w, density );
   }
 }
 void
@@ -4033,7 +4046,8 @@ BoundaryCondition::sched_setupNewIntrusionCellType( SchedulerP& sched,
                                                     const bool doing_restart )
 {
   if ( _using_new_intrusion ) {
-    _intrusionBC->sched_setCellType( sched, level, matls, doing_restart );
+    const int i = level->getID();
+    _intrusionBC[i]->sched_setCellType( sched, level, matls, doing_restart );
   }
 }
 
@@ -4045,12 +4059,12 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched,
 {
 
   if ( _using_new_intrusion ) {
-    _intrusionBC->sched_computeBCArea( sched, level, matls );
-    _intrusionBC->sched_computeProperties( sched, level, matls );
-    _intrusionBC->sched_setIntrusionVelocities( sched, level, matls );
-    _intrusionBC->sched_gatherReductionInformation( sched, level, matls );
-    _intrusionBC->sched_printIntrusionInformation( sched, level, matls );
-    _intrusionBC->findRelevantIntrusions( sched, level, matls );
+    const int i = level->getID();
+    _intrusionBC[i]->sched_computeBCArea( sched, level, matls );
+    _intrusionBC[i]->sched_computeProperties( sched, level, matls );
+    _intrusionBC[i]->sched_setIntrusionVelocities( sched, level, matls );
+    _intrusionBC[i]->sched_printIntrusionInformation( sched, level, matls );
+    _intrusionBC[i]->prune_per_patch_intrusions( sched, level, matls );
   }
 
 }
@@ -4078,13 +4092,15 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
 
     if ( _using_new_intrusion ) {
       const Patch* patch = patches->get(p);
+      const Level* level = patch->getLevel();
+      const int ilvl = level->getID();
       int archIndex = 0; // only one arches material
       int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
       CCVariable<double> density;
       new_dw->getModifiable( density, d_lab->d_densityCPLabel, indx, patch );
 
-      _intrusionBC->setDensity( patch, density );
+      _intrusionBC[ilvl]->setDensity( patch, density );
     }
   }
 }

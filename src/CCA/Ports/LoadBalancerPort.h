@@ -1,3 +1,6 @@
+#ifndef CCA_PORTS_LOADBALANCERPORT_H
+#define CCA_PORTS_LOADBALANCERPORT_H
+
 /*
  * The MIT License
  *
@@ -21,10 +24,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
-
-#ifndef CCA_PORTS_LOADBALANCER_H
-#define CCA_PORTS_LOADBALANCER_H
 
 #include <CCA/Ports/SchedulerP.h>
 
@@ -80,13 +79,13 @@ WARNING
 
 //! The Load Balancer is responsible for assigning tasks to do their work
 //! on specified processors.  Different subclasses differ in the way this is done.
-class LoadBalancer : public UintahParallelPort {
+class LoadBalancerPort : public UintahParallelPort {
 
 public:
     
-  LoadBalancer();
+  LoadBalancerPort();
 
-  virtual ~LoadBalancer();
+  virtual ~LoadBalancerPort();
 
   //! Assigns each task in tg to its corresponding processor.
   //! Uses the patchwise processor assignment.
@@ -136,12 +135,14 @@ public:
   //! For dynamic load balancers, Check if we need to rebalance the load, and do so if necessary.
   virtual bool possiblyDynamicallyReallocate(const GridP&, int state) = 0;
 
-  //! Returns the value of n (every n procs it performs output tasks).
-  virtual int getNthProc() { return 1; }
+  //! Returns the value of n (Only every Nth rank (process) will perform output tasks).
+  //! The data from the other (N-1) processes are MPI'd to the Nth process for it to do the I/O.
+  virtual int  getNthRank() = 0;
+  virtual void setNthRank( int nth ) = 0;
 
-  //! Returns the processor the patch will be output on (not patchwiseProcessor
+  //! Returns the process (MPI Rank) the patch will be output by (not patchwiseProcessor
   //! if outputNthProc is set)
-  virtual int getOutputProc( const Patch * patch ) = 0;
+  virtual int getOutputRank( const Patch * patch ) = 0;
 
   //! Tells the load balancer on which procs data was output.
   virtual void restartInitialize( DataArchive * archive, const int time_index, const std::string & ts_url, const GridP & grid ) = 0;
@@ -173,10 +174,10 @@ public:
 private:
 
   // eliminate copy, assignment and move
-  LoadBalancer( const LoadBalancer & )            = delete;
-  LoadBalancer& operator=( const LoadBalancer & ) = delete;
-  LoadBalancer( LoadBalancer && )                 = delete;
-  LoadBalancer& operator=( LoadBalancer && )      = delete;
+  LoadBalancerPort( const LoadBalancerPort & )            = delete;
+  LoadBalancerPort& operator=( const LoadBalancerPort & ) = delete;
+  LoadBalancerPort( LoadBalancerPort && )                 = delete;
+  LoadBalancerPort& operator=( LoadBalancerPort && )      = delete;
 };
 
 } // End namespace Uintah

@@ -57,7 +57,7 @@ namespace Uintah {
 
 class VarLabel;
 class DataWarehouse;
-class LoadBalancer;
+class LoadBalancerPort;
 
 /**************************************
 
@@ -113,11 +113,11 @@ public:
   std::string getParticlePositionName() const { return d_particlePositionName; }
 
   //! Set up data arachive for restarting a Uintah simulation
-  void restartInitialize( const int             timestep,
-                          const GridP         & grid,
-                          DataWarehouse * dw,
-                          LoadBalancer  * lb,
-                          double        * pTime /* passed back */ );
+  void restartInitialize( const int          timestep,
+                          const GridP      & grid,
+                          DataWarehouse    * dw,
+                          LoadBalancerPort * lb,
+                          double           * pTime /* passed back */ );
 
 
   //__________________________________
@@ -127,8 +127,8 @@ public:
                           const int              timestep,
                           const GridP          & grid,
                           const PatchSubset    * patches,
-                          DataWarehouse  * dw,
-                          LoadBalancer   * lb ); 
+                          DataWarehouse        * dw,
+                          LoadBalancerPort     * lb ); 
 
   static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
 

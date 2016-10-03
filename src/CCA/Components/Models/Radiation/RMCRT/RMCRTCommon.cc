@@ -58,10 +58,13 @@ static DebugStream dbg("RAY", false);
 double RMCRTCommon::d_threshold;
 double RMCRTCommon::d_sigma;
 double RMCRTCommon::d_sigmaScat;
+double RMCRTCommon::d_maxRayLength;               // max ray length.
 bool   RMCRTCommon::d_isSeedRandom;
 bool   RMCRTCommon::d_allowReflect;
 int    RMCRTCommon::d_matl;
 string RMCRTCommon::d_abskgBC_tag;
+
+
 vector<IntVector> RMCRTCommon::d_dbgCells;
 
 
@@ -96,9 +99,10 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
   d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
   d_radiationVolqLabel = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
 
-  d_gac     = Ghost::AroundCells;
-  d_gn      = Ghost::None;
-  d_flowCell = -1; //<----HARD CODED FLOW CELL
+  d_gac          = Ghost::AroundCells;
+  d_gn           = Ghost::None;
+  d_flowCell     = -1; //<----HARD CODED FLOW CELL
+  d_maxRayLength = DBL_MAX;
   
 #ifdef FAST_EXP  
   d_fastExp.populateExp_int(-2, 2);
@@ -254,7 +258,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
     tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, radCalc_freq, includeEC );
   }
 
-  printSchedule(level,dbg,taskname);
+  printSchedule(level,dbg,"RMCRTCommon::sched_sigmaT4");
 
   //__________________________________
   // Be careful if you modify this.  This additional logic
@@ -404,9 +408,25 @@ RMCRTCommon::ray_Origin( MTRand& mTwister,
                          Vector& rayOrigin)
 {
   if( useCCRays == false ){
-    rayOrigin[0] =  CC_pos.x() - 0.5*dx.x()  + mTwister.rand() * dx.x(); 
-    rayOrigin[1] =  CC_pos.y() - 0.5*dx.y()  + mTwister.rand() * dx.y(); 
-    rayOrigin[2] =  CC_pos.z() - 0.5*dx.z()  + mTwister.rand() * dx.z();
+    
+    double x = mTwister.rand() * dx.x();
+    double y = mTwister.rand() * dx.y();
+    double z = mTwister.rand() * dx.z();
+    
+    Vector offset(x,y,z);  // Note you HAVE to compute the components separately to ensure that the 
+                           //  random numbers called in the x,y,z order -Todd
+       
+    if ( offset.x() > dx.x() || 
+         offset.y() > dx.y() ||
+         offset.z() > dx.z() ) {
+      cout << "  Warning:ray_Origin  The Mersenne twister random number generator has returned garbage (" << offset 
+           << ") Now forcing the ray origin to be located at the cell-center\n" ;
+      offset = Vector( 0.5*dx.x(), 0.5*dx.y(), 0.5*dx.z() );
+    }
+    
+    rayOrigin[0] =  CC_pos.x() - 0.5*dx.x()  + offset.x(); 
+    rayOrigin[1] =  CC_pos.y() - 0.5*dx.y()  + offset.y(); 
+    rayOrigin[2] =  CC_pos.z() - 0.5*dx.z()  + offset.z();
   }else{
     rayOrigin[0] = CC_pos(0);
     rayOrigin[1] = CC_pos(1);
@@ -501,7 +521,8 @@ RMCRTCommon::updateSumI (const Level* level,
   int nReflect       = 0;                 // Number of reflections
   double optical_thickness      = 0;
   double expOpticalThick_prev   = 1.0;
-  double rayLength              = 0.0;
+  double rayLength_scatter      = 0.0;    // ray length for each scattering event
+  double rayLength              = 0.0;    // total length of the ray
   Vector ray_location           = ray_origin;
 
 
@@ -513,12 +534,14 @@ RMCRTCommon::updateSumI (const Level* level,
   double scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
 #endif
 
-  //+++++++Begin ray tracing+++++++++++++++++++
-  //Threshold while loop
-  while ( intensity > d_threshold ){
+  //______________________________________________________________________
+  
+  while ( intensity > d_threshold && (rayLength < d_maxRayLength) ){
+ 
     DIR dir = NONE;
     
-    while (in_domain){
+    while ( in_domain && (rayLength < d_maxRayLength) ){
+
 
       prevCell = cur;
       double disMin = -9;          // Represents ray segment length.
@@ -550,6 +573,7 @@ RMCRTCommon::updateSumI (const Level* level,
       tMax_prev  = tMax[dir];
       tMax[dir]  = tMax[dir] + tDelta[dir];
       rayLength += disMin;
+      rayLength_scatter += disMin;
 
       ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
       ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
@@ -617,7 +641,7 @@ RMCRTCommon::updateSumI (const Level* level,
       expOpticalThick_prev = expOpticalThick;
 
 #ifdef RAY_SCATTER
-      if (rayLength > scatLength && in_domain ){
+      if (rayLength_scatter > scatLength && in_domain ){
             
         // get new scatLength for each scattering event
         scatLength = -log(mTwister.randDblExc() ) / scatCoeff;
@@ -660,11 +684,19 @@ RMCRTCommon::updateSumI (const Level* level,
 #endif
 /*===========TESTING==========`*/
         tMax_prev = 0;
-        rayLength = 0;  // allow for multiple scattering events per ray
+        rayLength_scatter = 0;  // allow for multiple scattering events per ray
       }
 #endif
 
-    } //end domain while loop.  ++++++++++++++
+      if( rayLength < 0 || std::isnan(rayLength) || std::isinf(rayLength) ) {
+        ostringstream warn;
+        warn<< "ERROR:RMCRTCommon::updateSumI   The ray length is non-physical (" << rayLength << ")"
+            << " origin: " << origin << " cur: " << cur << "\n";
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+      }
+    }  //end domain while loop.  ++++++++++++++
+    //______________________________________________________________________
+
 
     T wallEmissivity = abskg[cur];
 
@@ -692,7 +724,7 @@ if( isDbgCell( origin)  ){
 /*===========TESTING==========`*/
     //__________________________________
     //  Reflections
-    if ( (intensity > d_threshold) && d_allowReflect){
+    if ( intensity > d_threshold && d_allowReflect ){
       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[dir], sign[dir], ray_direction[dir]);
       ++nReflect;
     }
