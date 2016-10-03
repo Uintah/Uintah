@@ -42,7 +42,7 @@
 
 namespace Uintah {
 
-  class LoadBalancer;
+  class LoadBalancerPort;
   class Task;
   class SimulationInterface;
 
@@ -133,7 +133,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
-    virtual LoadBalancer* getLoadBalancer() = 0;
+    virtual LoadBalancerPort * getLoadBalancer() = 0;
 
     virtual void releaseLoadBalancer() = 0;
 
@@ -161,32 +161,34 @@ class Scheduler : public UintahParallelPort {
 
     virtual void setPositionVar( const VarLabel * posLabel ) = 0;
     
-    virtual void scheduleParticleRelocation( const LevelP                                     & coarsestLevelwithParticles
-                                           , const VarLabel                                   * posLabel
-                                           , const std::vector<std::vector<const VarLabel*> > & labels
-                                           , const VarLabel                                   * new_posLabel
-                                           , const std::vector<std::vector<const VarLabel*> > & new_labels
-                                           , const VarLabel* particleIDLabel
-                                           , const MaterialSet* matls
+    using VarLabelList = std::vector<std::vector<const VarLabel*> >;
+    virtual void scheduleParticleRelocation( const LevelP       & coarsestLevelwithParticles
+                                           , const VarLabel     * posLabel
+                                           , const VarLabelList & labels
+                                           , const VarLabel     * new_posLabel
+                                           , const VarLabelList & new_labels
+                                           , const VarLabel     * particleIDLabel
+                                           , const MaterialSet  * matls
                                            ) = 0;
 
-    virtual void scheduleParticleRelocation( const LevelP                                     & level
-                                           , const VarLabel                                   * posLabel
-                                           , const std::vector<std::vector<const VarLabel*> > & labels
-                                           , const VarLabel                                   * new_posLabel
-                                           , const std::vector<std::vector<const VarLabel*> > & new_labels
-                                           , const VarLabel                                   * particleIDLabel
-                                           , const MaterialSet                                * matls
-                                           , int w
+    virtual void scheduleParticleRelocation( const LevelP       & level
+                                           , const VarLabel     * posLabel
+                                           , const VarLabelList & labels
+                                           , const VarLabel     * new_posLabel
+                                           , const VarLabelList & new_labels
+                                           , const VarLabel     * particleIDLabel
+                                           , const MaterialSet  * matls
+                                           ,       int            w
                                            ) = 0;
 
     //////////
     // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
     // is experimental and has not been fully tested yet. Use with caution (tsaad).
-    virtual void scheduleParticleRelocation( const LevelP& coarsestLevelwithParticles,
-                                             const VarLabel* posLabel,
-                                             const std::vector<std::vector<const VarLabel*> >& otherLabels,
-                                             const MaterialSet* matls ) = 0;
+    virtual void scheduleParticleRelocation( const LevelP       & coarsestLevelwithParticles
+                                           , const VarLabel     * posLabel
+                                           , const VarLabelList & otherLabels
+                                           , const MaterialSet  * matls
+                                           ) = 0;
 
     //! Schedule copying data to new grid after regridding
     virtual void scheduleAndDoDataCopy( const GridP & grid, SimulationInterface * sim ) = 0;

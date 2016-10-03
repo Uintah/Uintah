@@ -29,7 +29,7 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/SimulationInterface.h>
 
@@ -452,7 +452,7 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
 {
   bool printedHeader = false;
 
-  LoadBalancer* lb = getLoadBalancer();
+  LoadBalancerPort * lb = getLoadBalancer();
 
   unsigned taskNum;
   for (taskNum = 0; taskNum < m_tracking_tasks.size(); taskNum++) {
@@ -647,11 +647,11 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
 
 //______________________________________________________________________
 //
-LoadBalancer*
+LoadBalancerPort *
 SchedulerCommon::getLoadBalancer()
 {
-  UintahParallelPort* lbp = getPort("load balancer");
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  UintahParallelPort * upp = getPort( "load balancer" );
+  LoadBalancerPort   * lb  = dynamic_cast< LoadBalancerPort * >( upp );
   return lb;
 }
 
@@ -775,7 +775,7 @@ SchedulerCommon::addTask(       Task        * task
 void
 SchedulerCommon::releaseLoadBalancer()
 {
-  releasePort("load balancer");
+  releasePort( "load balancer" );
 }
 
 //______________________________________________________________________
@@ -1102,7 +1102,7 @@ SchedulerCommon::compile()
         DOUT(schedulercommon_dbg, "Rank-" << d_myworld->myrank() << "  Compiling graph#" << i << " of " << m_task_graphs.size());
       }
 
-      DetailedTasks* dts = m_task_graphs[i]->createDetailedTasks(useInternalDeps(), first, grid, oldGrid);
+      DetailedTasks* dts = m_task_graphs[i]->createDetailedTasks( useInternalDeps(), first, grid, oldGrid );
 
       if (!first) {
         first = dts;
@@ -1750,8 +1750,10 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
       ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
     }
     m_reloc_new_pos_label = new_posLabel;
-    UintahParallelPort* lbp = getPort("load balancer");
-    LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+
+    UintahParallelPort * upp = getPort( "load balancer" );
+    LoadBalancerPort   * lb = dynamic_cast< LoadBalancerPort * >( upp );
+
     m_relocate_1.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel, new_labels,
                                        particleIDLabel, matls);
     releasePort("load balancer");
@@ -1762,8 +1764,8 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
       ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
     }
     m_reloc_new_pos_label = new_posLabel;
-    UintahParallelPort* lbp = getPort("load balancer");
-    LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+    UintahParallelPort * upp = getPort( "load balancer" );
+    LoadBalancerPort   * lb  = dynamic_cast< LoadBalancerPort * >( upp );
     m_relocate_2.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel, new_labels,
                                        particleIDLabel, matls);
     releasePort("load balancer");
@@ -1787,8 +1789,8 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & coarsestLevelw
   }
 
   m_reloc_new_pos_label = new_posLabel;
-  UintahParallelPort* lbp = getPort("load balancer");
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  UintahParallelPort * upp = getPort( "load balancer" );
+  LoadBalancerPort   * lb = dynamic_cast< LoadBalancerPort * >( upp );
   m_relocate_1.scheduleParticleRelocation(this, d_myworld, lb, coarsestLevelwithParticles, old_posLabel, old_labels, new_posLabel,
                                      new_labels, particleIDLabel, matls);
   releasePort("load balancer");
@@ -1804,8 +1806,8 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & coarsestLevelw
                                            )
 {
   m_reloc_new_pos_label = posLabel;
-  UintahParallelPort* lbp = getPort("load balancer");
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  UintahParallelPort * upp = getPort( "load balancer" );
+  LoadBalancerPort   * lb  = dynamic_cast< LoadBalancerPort * >( upp );
   m_relocate_1.scheduleParticleRelocation(this, d_myworld, lb, coarsestLevelwithParticles, posLabel, otherLabels, matls);
   releasePort("load balancer");
 }

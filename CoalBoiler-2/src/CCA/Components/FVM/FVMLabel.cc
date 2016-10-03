@@ -43,11 +43,26 @@ FVMLabel::FVMLabel()
                         CCVariable<double>::getTypeDescription());
   ccGridConductivity  = VarLabel::create("cc.GridConductivity",
                           CCVariable<double>::getTypeDescription());
+
   fcxConductivity     = VarLabel::create("fcx.Conductivity",
                         SFCXVariable<double>::getTypeDescription());
   fcyConductivity     = VarLabel::create("fcy.Conductivity",
                         SFCYVariable<double>::getTypeDescription());
   fczConductivity     = VarLabel::create("fcz.Conductivity",
+                        SFCZVariable<double>::getTypeDescription());
+
+  fcxConcentration    = VarLabel::create("fcx.Concentration",
+                        SFCXVariable<double>::getTypeDescription());
+  fcyConcentration    = VarLabel::create("fcy.Concentration",
+                        SFCYVariable<double>::getTypeDescription());
+  fczConcentration    = VarLabel::create("fcz.Concentration",
+                        SFCZVariable<double>::getTypeDescription());
+
+  fcxMass             = VarLabel::create("fcx.Mass",
+                        SFCXVariable<double>::getTypeDescription());
+  fcyMass             = VarLabel::create("fcy.Mass",
+                        SFCYVariable<double>::getTypeDescription());
+  fczMass             = VarLabel::create("fcz.Mass",
                         SFCZVariable<double>::getTypeDescription());
 }
 
@@ -61,5 +76,11 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(fcxConductivity);
   VarLabel::destroy(fcyConductivity);
   VarLabel::destroy(fczConductivity);
+  VarLabel::destroy(fcxConcentration);
+  VarLabel::destroy(fcyConcentration);
+  VarLabel::destroy(fczConcentration);
+  VarLabel::destroy(fcxMass);
+  VarLabel::destroy(fcyMass);
+  VarLabel::destroy(fczMass);
 }
 

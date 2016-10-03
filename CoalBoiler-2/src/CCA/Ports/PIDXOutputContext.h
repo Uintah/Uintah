@@ -35,7 +35,7 @@
 #  include <Core/Grid/Level.h>
 #  include <Core/Grid/Patch.h>
 #  include <Core/Parallel/Parallel.h>
-#  include <Core/Parallel/UintahMPI.h.
+#  include <Core/Parallel/UintahMPI.h>
 
 #  include <PIDX.h>
 #  include <iomanip>  // setw()
@@ -87,9 +87,9 @@ namespace Uintah {
         // ___________________________________________________
         // Empty methods so you can compile without PIDX
 
-        PIDX_flags(){};
-        ~PIDX_flags(){};
-        void print(){};
+        PIDX_flags()  {}
+        ~PIDX_flags() {}
+        void print()  {}
         
         void problemSetup( const Uintah::ProblemSpecP& params ){
           std::ostringstream warn;
@@ -112,12 +112,12 @@ class PIDXOutputContext {
     class PIDX_flags{
       public:
         PIDX_flags();
-        ~PIDX_flags();
+        ~PIDX_flags() {}
 
-        unsigned int  compressionType;
-        bool outputRawIO;
-        bool debugOutput;
-        IntVector outputPatchSize;
+        unsigned int compressionType;
+        bool         outputRawIO;
+        bool         debugOutput;
+        IntVector    outputPatchSize;
 
         //__________________________________
         // debugging
@@ -125,7 +125,7 @@ class PIDXOutputContext {
           std::cout << Parallel::getMPIRank()
                     << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  outputRawIO 
                     << ", compressionType: "<< getCompressTypeName(compressionType)
-                    << ", outputPatchSize: " << outputPatchSize << std::endl;
+                    << ", outputPatchSize: " << outputPatchSize << "\n";
         }  
 
         void problemSetup( const ProblemSpecP& params );
@@ -133,9 +133,9 @@ class PIDXOutputContext {
       private:
         //__________________________________
         // convert user input into compres type
-        unsigned int str2CompressType( const std::string& me );
+        unsigned int str2CompressType( const std::string & type );
         
-        std::string  getCompressTypeName( const int me );
+        std::string  getCompressTypeName( const int type );
         
         std::map<std::string, int> compressMap;
     };
@@ -154,7 +154,7 @@ class PIDXOutputContext {
       void print(std::ostream& out){
         out  << Parallel::getMPIRank()
              << " patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
-             << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << std::endl; 
+             << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << "\n"; 
       }
     };
     
@@ -184,45 +184,40 @@ class PIDXOutputContext {
                           PIDX_point& patchOffset,
                           PIDX_point& nPatchCells );
 
-    void checkReturnCode( const int rc,
-                          const std::string warn,
-                          const char* file, 
-                          int line);
+    void checkReturnCode( const int           rc,
+                          const std::string   warn,
+                          const char        * file, 
+                          const int           line );
                           
     void hardWireBufferValues(unsigned char* patchBuffer, 
                               const patchExtents patchExts,
                               const size_t arraySize,
                               const int samples_per_value );
 
-    void setOutputDoubleAsFloat( bool me){
-      d_outputDoubleAsFloat = me;
-    }
+    void setOutputDoubleAsFloat( bool me) { d_outputDoubleAsFloat = me; }
 
-    bool isOutputDoubleAsFloat(){
-      return d_outputDoubleAsFloat;
-    }
+    bool isOutputDoubleAsFloat(){ return d_outputDoubleAsFloat; }
 
 
     std::vector<TypeDescription::Type> getSupportedVariableTypes();
 
     std::string getDirectoryName(TypeDescription::Type TD);
 
-    void
-    printBufferWrap( const std::string&   desc,
-                     const TypeDescription::Type TD,
-                     int             samples_per_value,
-                     IntVector     & lo_EC,
-                     IntVector     & hi_EC,
-                     unsigned char * dataPIDX,
-                     size_t          arraySize );
+    void printBufferWrap( const std::string           & desc,
+                          const TypeDescription::Type   TD,
+                          const int                     samples_per_value,
+                          const IntVector             & lo_EC,
+                          const IntVector             & hi_EC,
+                          const unsigned char         * dataPIDX,
+                          const size_t                  arraySize ) const;
     template<class T>
-    void printBuffer(const std::string & desc,
-                     const std::string & format,
-                     int samples_per_value,
-                     Uintah::IntVector& lo_EC,
-                     Uintah::IntVector& hi_EC,
-                     unsigned char* dataPIDX,
-                     size_t arraySize );
+    void printBuffer( const std::string       & desc,
+                      const std::string       & format,
+                      const int                 samples_per_value,
+                      const Uintah::IntVector & lo_EC,
+                      const Uintah::IntVector & hi_EC,
+                      const unsigned char     * dataPIDX,
+                      const size_t              arraySize ) const;
                      
     std::string filename;
     unsigned int timestep;
@@ -243,8 +238,8 @@ class PIDXOutputContext {
     bool d_outputDoubleAsFloat;
     int  d_levelExtents[3];
     
-    IntVector getLevelExtents(){
-      IntVector levelExtents (d_levelExtents[0],d_levelExtents[1],d_levelExtents[2]);                                                                          
+    IntVector getLevelExtents() {
+      IntVector levelExtents( d_levelExtents[0],d_levelExtents[1],d_levelExtents[2] );
       return levelExtents;                    
     };
     

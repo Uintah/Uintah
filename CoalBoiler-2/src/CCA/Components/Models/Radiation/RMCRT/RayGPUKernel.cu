@@ -151,13 +151,22 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
   bool doLatinHyperCube = (RT_flags.rayDirSampleAlgo == LATIN_HYPER_CUBE);
   
-    //int rand_i[ doLatinHyperCube ? nDivQRays : 0 ];                                        // only needed for LHC scheme
-  const int size = 1000;                                         // FIX ME Todd
-  int rand_i[ size ];                                      // FIX ME TODD
-  if (doLatinHyperCube){
-    randVectorDevice(rand_i, size,randNumStates);
+  const int nFluxRays = RT_flags.nFluxRays;               // for readability
+
+  // This rand_i array is only needed for LATIN_HYPER_CUBE scheme
+  const int size = 1000;
+  int rand_i[ size ];       //Give it a buffer room of 1000.  But we should only use nFluxRays items in it.
+                            //Hopefully this 1000 will always be greater than nFluxRays.
+  if (nFluxRays > size) {
+    printf("\n\n\nERROR!  rayTraceKernel() - Cannot have more rays than the rand_i array size.  nFluxRays is %d, size of the array is.%d\n\n\n",
+        nFluxRays, size);
+    //We have to return, otherwise the upcoming math in rayDirectionHyperCube_cellFaceDevice will generate nan values.
+    return;
   }
-  
+  if (doLatinHyperCube){
+    randVectorDevice(rand_i, nFluxRays, randNumStates);
+  }
+ 
   //______________________________________________________________________
   //           R A D I O M E T E R
   //______________________________________________________________________
@@ -224,8 +233,6 @@ __global__ void rayTraceKernel( dim3 dimGrid,
           //__________________________________
           // Flux ray loop
           #pragma unroll
-          
-          const int nFluxRays = RT_flags.nFluxRays;               // for readability
           for (int iRay=0; iRay < nFluxRays; iRay++){
 
             GPUVector direction_vector;

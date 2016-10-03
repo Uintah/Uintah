@@ -75,11 +75,11 @@ namespace Uintah{
 
       //__________________________________
       //  public variables
-      bool d_solveBoundaryFlux;              // 
-      
-      enum modifiesComputes{ modifiesVar, 
+      bool d_solveBoundaryFlux;              //
+
+      enum modifiesComputes{ modifiesVar,
                              computesVar};
-                             
+
       //__________________________________
       //  TASKS
       /** @brief Interface to input file information */
@@ -160,38 +160,44 @@ namespace Uintah{
       Radiometer* getRadiometer(){
         return d_radiometer;
       }
-      
+
 
 
     //______________________________________________________________________
     private:
-      double d_sigmaT4_thld;                 // threshold values for determining the extents of ROI
+      double d_sigmaT4_thld;                // threshold values for determining the extents of ROI
       double d_abskg_thld;
-      int    d_nDivQRays;                    // number of rays per cell used to compute divQ
-      int    d_nFluxRays;                    // number of rays per cell used to compute radiative flux
-      int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
-      IntVector d_halo;                      // number of cells surrounding a coarse patch on coarser levels
+      int    d_nDivQRays;                   // number of rays per cell used to compute divQ
+      int    d_nFluxRays;                   // number of rays per cell used to compute radiative flux
+      int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
+      IntVector d_halo;                     // number of cells surrounding a coarse patch on coarser levels
 
-      bool d_solveDivQ;
+      bool d_solveDivQ;                     // switch for enabling computation of divQ
       bool d_CCRays;
       bool d_onOff_SetBCs;                  // switch for setting boundary conditions
       bool d_isDbgOn;
       bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
-      int  d_rayDirSampleAlgo;
-      enum rayDirSampleAlgorithm{NAIVE, LATIN_HYPER_CUBE};   
+      int  d_rayDirSampleAlgo;              // Ray sampling algorithm
+      enum rayDirSampleAlgorithm{ NAIVE,            // random sampled ray direction
+                                  LATIN_HYPER_CUBE
+                                };
 
-      enum Algorithm{ dataOnion,            
-                      coarseLevel, 
+      enum Algorithm{ dataOnion,
+                      coarseLevel,
                       singleLevel
                     };
-      enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box 
+
+      enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box
                       dynamic,              // user specifies thresholds that are used to dynamically determine ROI
                       patch_based,          // The patch extents + halo are the ROI
+                      max_rayLength,        // the patch extents + max_rayLength/Dx are the ROI
+                      entireDomain          // The ROI is the entire computatonal Domain
                     };
+
       int d_cellTypeCoarsenLogic;           // how to coarsen a cell type
       enum cellTypeCoarsenLogic{ ROUNDUP, ROUNDDOWN};
-                    
-      ROI_algo  d_whichROI_algo;
+
+      ROI_algo  d_ROI_algo;
       Point d_ROI_minPt;
       Point d_ROI_maxPt;
 
@@ -201,7 +207,7 @@ namespace Uintah{
       // Boundary flux constant variables  (consider using array container when C++ 11 is used)
       std::map <int,IntVector> d_dirIndexOrder;
       std::map <int,IntVector> d_dirSignSwap;
-      
+
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
@@ -321,7 +327,7 @@ namespace Uintah{
                                 const int &dir );
 
       //__________________________________
-      /** @brief Adjust the location of a ray origin depending on the cell face */                                 
+      /** @brief Adjust the location of a ray origin depending on the cell face */
       void rayLocation_cellFace( MTRand& mTwister,
                                  const int face,
                                  const Vector Dx,
@@ -346,7 +352,7 @@ namespace Uintah{
                                            const IntVector& signOrder,
                                            const int iRay,
                                            Vector& directionVector,
-                                           double& cosTheta, 
+                                           double& cosTheta,
                                            const int ibin,
                                            const int jbin);
       //__________________________________

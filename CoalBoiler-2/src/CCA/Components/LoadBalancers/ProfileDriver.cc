@@ -24,8 +24,10 @@
 
 #include <CCA/Components/LoadBalancers/ProfileDriver.h>
 #include <Core/Util/DebugStream.h>
+
 #include <sstream>
 #include <iomanip>
+
 using namespace std;
 using namespace Uintah;
 
@@ -34,26 +36,27 @@ static DebugStream stats2("ProfileStats2",false);
 
 //______________________________________________________________________
 //
-void ProfileDriver::setMinPatchSize(const vector<IntVector> &min_patch_size)
+void
+ProfileDriver::setMinPatchSize( const vector<IntVector> & min_patch_size )
 {
   d_minPatchSize=min_patch_size;
   costs.resize(d_minPatchSize.size());
   d_minPatchSizeVolume.resize(d_minPatchSize.size());
-  for(int l=0;l<(int)d_minPatchSize.size();l++)
-  {
+  for( int l = 0; l < (int)d_minPatchSize.size(); l++ ) {
     d_minPatchSizeVolume[l]=d_minPatchSize[l][0]*d_minPatchSize[l][1]*d_minPatchSize[l][2];
   }
 }
+
 //______________________________________________________________________
 //
-void ProfileDriver::addContribution(const PatchSubset* patches, double cost)
+
+void
+ProfileDriver::addContribution( const PatchSubset* patches, double cost )
 {
-  if(patches)
-  {
+  if( patches ) {
     //compute number of datapoints
     int num_points=0;
-    for(int p=0;p<patches->size();p++)
-    {
+    for( int p = 0; p < patches->size(); p++ ) {
       const Patch* patch=patches->get(p);
       int l=patch->getLevel()->getIndex();
       num_points+=patch->getNumCells()/d_minPatchSizeVolume[l];
@@ -61,18 +64,16 @@ void ProfileDriver::addContribution(const PatchSubset* patches, double cost)
     double average_cost=cost/num_points;
 
     //loop through patches
-    for(int p=0;p<patches->size();p++)
-    {
+    for( int p = 0; p < patches->size(); p++ ) {
       const Patch* patch=patches->get(p);
-      int l=patch->getLevel()->getIndex();
+      int l = patch->getLevel()->getIndex();
 
       //coarsen region by minimum patch size
       IntVector low =  patch->getCellLowIndex()/d_minPatchSize[l];
       IntVector high = patch->getCellHighIndex()/d_minPatchSize[l];
 
       //loop through datapoints
-      for(CellIterator iter(low,high); !iter.done(); iter++)
-      {
+      for( CellIterator iter(low,high); !iter.done(); iter++ ) {
         //add cost to current contribution
         costs[l][*iter].current+=average_cost;
         //if(d_myworld->myrank()==0)
@@ -80,16 +81,13 @@ void ProfileDriver::addContribution(const PatchSubset* patches, double cost)
       }
     }
   }
-  else
-  {
-      //if(d_myworld->myrank()==0)
-      //   cout << "no patches\n";
-  }
 }
 
 //______________________________________________________________________
 //
-void ProfileDriver::outputError(const GridP currentGrid)
+
+void
+ProfileDriver::outputError( const GridP currentGrid )
 {
   static int iter=0;
   iter++;

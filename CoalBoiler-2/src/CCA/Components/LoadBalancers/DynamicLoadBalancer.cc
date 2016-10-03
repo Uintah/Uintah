@@ -917,7 +917,7 @@ DynamicLoadBalancer::needRecompile(       double /*time*/,
   }
   
   // if it determines we need to re-load-balance, recompile
-  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancer::check)) {
+  if ( do_check && possiblyDynamicallyReallocate( grid, LoadBalancerPort::check ) ) {
     doing << d_myworld->myrank() << " DLB - scheduling recompile " <<endl;
     return true;
   }
@@ -993,8 +993,8 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != LoadBalancer::restart) {
-    if (state != LoadBalancer::check) {
+  if (state != LoadBalancerPort::restart) {
+    if (state != LoadBalancerPort::check) {
       force = true;
       if (d_lbTimestepInterval != 0) {
         d_lastLbTimestep = m_shared_state->getCurrentTopLevelTimeStep();
@@ -1038,13 +1038,13 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 
     //__________________________________
     //
-    if (dynamicAllocate || state != LoadBalancer::check) {
+    if (dynamicAllocate || state != LoadBalancerPort::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       m_processor_assignment = m_temp_assignment;
       m_assignment_base_patch = (*grid->getLevel(0)->patchesBegin())->getID();
 
-      if (state == LoadBalancer::init) {
+      if (state == LoadBalancerPort::init) {
         // set it up so the old and new are in same place
         m_old_assignment = m_processor_assignment;
         m_old_assignment_base_patch = m_assignment_base_patch;
@@ -1078,9 +1078,9 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   
   m_temp_assignment.resize(0);
   
-  int flag = LoadBalancer::check;
-  if ( changed || state == LoadBalancer::restart){
-    flag = LoadBalancer::regrid;
+  int flag = LoadBalancerPort::check;
+  if ( changed || state == LoadBalancerPort::restart ) {
+    flag = LoadBalancerPort::regrid;
   }
   
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.

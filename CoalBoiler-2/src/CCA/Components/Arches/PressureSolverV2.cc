@@ -176,8 +176,8 @@ void PressureSolver::sched_solve(const LevelP& level,
 
   d_periodic_vector = level->getPeriodicBoundaries();
 
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches =  lb->getPerProcessorPatchSet(level);
+  LoadBalancerPort * lb              = sched->getLoadBalancer();
+  const PatchSet   * perproc_patches = lb->getPerProcessorPatchSet(level);
 
   int archIndex = 0; // only one arches material
   d_indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();

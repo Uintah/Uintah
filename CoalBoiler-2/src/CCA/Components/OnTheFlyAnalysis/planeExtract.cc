@@ -433,8 +433,8 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
 {   
-  UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
+  UintahParallelComponent * DA = dynamic_cast<UintahParallelComponent*>( d_dataArchiver );
+  LoadBalancerPort        * lb = dynamic_cast<LoadBalancerPort*>( DA->getPort("load balancer") );
     
   const Level* level = getLevel(patches);
   
@@ -447,7 +447,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
-  double now = d_dataArchiver->getCurrentTime();
+  double now = d_sharedState->getElapsedTime();
   
   if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel);

@@ -31,6 +31,7 @@
 #include <boost/foreach.hpp>
 
 //-- Uintah Includes --//
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Iterator.h>
 #include <Core/Grid/Variables/CellIterator.h> // Uintah::Iterator
@@ -69,9 +70,9 @@ BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr )
 BndTypeEnum select_bnd_type_enum( const std::string& bndTypeStr )
 {
   if      ( bndTypeStr == "Wall"     )  return WALL;
-  else if ( bndTypeStr == "Velocity" )  return VELOCITY;
-  else if ( bndTypeStr == "Open"     )  return OPEN;
-  else if ( bndTypeStr == "Outflow"  )  return OUTFLOW;
+  else if ( bndTypeStr == "Inlet" )     return INLET;
+  else if ( bndTypeStr == "Outlet" )    return OUTLET;
+  else if ( bndTypeStr == "Pressure" )  return PRESSURE;
   else if ( bndTypeStr == "None"
             || bndTypeStr == "User"  )  return USER;
   else                                  return INVALID;
@@ -94,7 +95,7 @@ std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum )
   }
 }
 
-// Given a BndTypeEnum (WALL, VELOCITY,...), this function returns a string
+// Given a BndTypeEnum (WALL, INLET,...), this function returns a string
 // of supported boundary types
 const std::string bnd_type_enum_to_string( const BndTypeEnum bndTypeEnum )
 {
@@ -102,14 +103,14 @@ const std::string bnd_type_enum_to_string( const BndTypeEnum bndTypeEnum )
     case WALL:
       return "Wall";
       break;
-    case VELOCITY:
-      return "Velocity";
+    case INLET:
+      return "Inlet";
       break;
-    case OPEN:
-      return "Open";
+    case OUTLET:
+      return "Outlet";
       break;
-    case OUTFLOW:
-      return "Outflow";
+    case PRESSURE:
+      return "Pressure";
       break;
     case USER:
       return "User";
@@ -274,7 +275,7 @@ const BndCondSpec* BndSpec::find(const std::string& varName) const
 }
 
 // find the BCSpec associated with a given variable name - non-const version
-const BndCondSpec* BndSpec::find(const std::string& varName)
+BndCondSpec* BndSpec::find_to_edit(const std::string& varName)
 {
   std::vector<BndCondSpec>::iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
   if (it != bcSpecVec.end()) {
@@ -317,22 +318,27 @@ void BndSpec::print() const
 //------------------------------------------------------------------------------------------------
 
 WBCHelper::WBCHelper( const Uintah::LevelP& level,
-                   Uintah::SchedulerP& sched,
-                   const Uintah::MaterialSet* const materials )
-: materials_   (materials   )
+                      Uintah::SchedulerP& sched,
+                      const Uintah::MaterialSet* const materials,
+                      ProblemSpecP arches_spec )
+: materials_   (materials   ), m_arches_spec(arches_spec)
 {
   const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
   const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
   localPatches_ = new Uintah::PatchSet;
   localPatches_->addEach( localPatches->getVector() );
-  parse_boundary_conditions();
+  const int ilvl = level->getID();
+  parse_boundary_conditions(ilvl);
 }
 
   //------------------------------------------------------------------------------------------------
 
 WBCHelper::~WBCHelper()
 {
+
   delete localPatches_;
+  delete_area_labels();
+
 }
 
   //------------------------------------------------------------------------------------------------
@@ -368,7 +374,7 @@ void WBCHelper::add_boundary_condition( const BndCondSpec& bcSpec )
 
 //------------------------------------------------------------------------------------------------
 
-void WBCHelper::add_boundary( const std::string&      bndName,
+void WBCHelper::add_boundary( const std::string&     bndName,
                              Uintah::Patch::FaceType face,
                              const BndTypeEnum&      bndType,
                              const int               patchID,
@@ -391,7 +397,7 @@ void WBCHelper::add_boundary( const std::string&      bndName,
   } else {
     DBGBC << " adding new \n";
     // this is the first time that we are adding this boundary. create the necessary info to store this
-    BndSpec myBndSpec = {bndName, face, bndType, std::vector<int>(1, patchID), myPBndSpec };
+    BndSpec myBndSpec = {bndName, face, bndType, 0.0, std::vector<int>(1, patchID), myPBndSpec };
     bndNameBndSpecMap_.insert( BndMapT::value_type(bndName, myBndSpec) );
   }
 }
@@ -473,8 +479,41 @@ void WBCHelper::add_boundary_mask( const BoundaryIterators& myIters,
 
 //------------------------------------------------------------------------------------------------
 
-void WBCHelper::parse_boundary_conditions()
+void WBCHelper::parse_boundary_conditions(const int ilvl)
 {
+  // create area labels for all areas
+  ProblemSpecP db_root = m_arches_spec->getRootNode();
+  ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions");
+  ProblemSpecP db_bc_arches = m_arches_spec->findBlock("BoundaryConditions");
+  bool force_area_calc = false;
+  if ( db_bc_arches->findBlock("force_area_calc") ){
+    force_area_calc = true;
+  }
+  if ( db_bc ) {
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
+          db_face = db_face->findNextBlock("Face") ) {
+      bool found_mass_flux = false;
+      for ( ProblemSpecP db_bc = db_face->findBlock("BCType"); db_bc != 0;
+            db_bc = db_bc->findNextBlock("BCType") ) {
+        std::string var;
+        db_bc->getAttribute("var", var );
+        if ( var == "MassFlowInlet" || var == "Swirl" ){
+          found_mass_flux = true;
+        }
+        if ( force_area_calc ){
+          found_mass_flux = true;
+        }
+      }
+      std::string faceName;
+      db_face->getAttribute("name",faceName);
+      std::string level_index = std::to_string(ilvl);
+      const std::string faceAreaName = faceName+"_"+level_index+"_area";
+      if ( found_mass_flux ){
+        create_new_area_label( faceAreaName );
+      }
+    }
+  }
+
   using namespace std;
   // loop over the material set
   BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
@@ -496,6 +535,15 @@ void WBCHelper::parse_boundary_conditions()
           std::vector<Uintah::Patch::FaceType> bndFaces;
           patch->getBoundaryFaces(bndFaces);
 
+          //BCFunctorStorage bc_functor_storage;
+          //std::vector<BCFunctor<SwirlType> > swirl;
+          //std::vector<BCFunctor<TableLookupType> > table_lookup;
+          //BCFunctorStorageType local_bc_functor_storage( swirl, table_lookup );
+          //std::vector<BCFunctor<SwirlType> > test = std::get<std::vector<BCFunctor<SwirlType> > >(local_bc_functor_storage);
+          //std::tuple<double, int, std::vector<double> > testme(2.,1,std::vector<double>(1.,2.));
+          //(std::get<SWIRL>(testme))=3.;
+
+          //std::tuple<Args...> test;
           // loop over the physical boundaries of this patch. These are the LOGICAL boundaries
           // and do NOT include intrusions
           BOOST_FOREACH(const Uintah::Patch::FaceType face, bndFaces) {
@@ -521,6 +569,9 @@ void WBCHelper::parse_boundary_conditions()
               // Each child is associated with a BCGeomBase object. Grab that
               Uintah::BCGeomBase* thisGeom = bcDataArray->getChild(materialID,chid);
               const std::string bndName = thisGeom->getBCName();
+              //const std::string bndAreaName = bndName+"_area";
+              //create_new_area_label( bndAreaName );
+
               if (bndName.compare("NotSet")==0) {
                 std::ostringstream msg;
                 msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
@@ -536,7 +587,7 @@ void WBCHelper::parse_boundary_conditions()
               //__________________________________________________________________________________
               Uintah::Iterator bndIter; // allocate iterator
               // get the iterator for the extracells for this child
-              bcDataArray->getCellFaceIterator(materialID, bndIter, chid);
+              thisGeom->getCellFaceIterator(bndIter);
 
               BoundaryIterators myIters;
               DBGBC << " Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl;
@@ -553,6 +604,7 @@ void WBCHelper::parse_boundary_conditions()
               thisGeom->getBCData(bcData);
 
               BOOST_FOREACH( Uintah::BoundCondBase* bndCondBase, bcData.getBCData() ) {
+
                 const std::string varName     = bndCondBase->getBCVariable();
                 const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
 
@@ -577,6 +629,15 @@ void WBCHelper::parse_boundary_conditions()
                     functorName = new_bc->getValue();
                     bcValType = FUNCTOR_TYPE;
                     DBGBC << " functor name = " << functorName << std::endl;
+
+                    //Populate the functor and stuff it into the local storage container.
+                    //At the end of the patch loop, the functor storage is put into a map of
+                    //patchID->list of functors
+                    //std::shared_ptr<BaseBCFunctor> funk = get_bc_functor( functorName, patchID );
+                    //const std::string functor_key = get_key_for_functor(bndName, varName, functorName);
+                    //DBGBC << " key for functor storage = " << functor_key << std::endl;
+                    //bc_functor_storage.insert(std::make_pair(functor_key,funk));
+
                     break;
                   }
                   case Uintah::BoundCondBase::VECTOR_TYPE: {
@@ -644,7 +705,7 @@ void WBCHelper::parse_boundary_conditions()
                 //__________________________________________________________________________________
                 Uintah::Iterator bndIter; // allocate iterator
                 // get the iterator for the extracells for this child
-                bcDataArray->getCellFaceIterator(materialID, bndIter, chid);
+                thisGeom->getCellFaceIterator(bndIter);
 
                 BoundaryIterators myIters;
                 DBGBC << " Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl;
@@ -710,6 +771,10 @@ void WBCHelper::parse_boundary_conditions()
               } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
             }
           }
+
+          //put the functors associated with this patch into perma-storage
+          //patch_to_functor_storage.insert(std::make_pair(patchID, bc_functor_storage));
+
         } // patch loop
       } // patch subset loop
     } // material loop
@@ -725,7 +790,168 @@ const BndMapT& WBCHelper::get_boundary_information() const
 
 //------------------------------------------------------------------------------------------------
 
+BndMapT& WBCHelper::get_for_edit_boundary_information()
+{
+  return bndNameBndSpecMap_;
+}
+
+//------------------------------------------------------------------------------------------------
+
 bool WBCHelper::has_boundaries() const
 {
   return !bndNameBndSpecMap_.empty();
+}
+
+//------------------------------------------------------------------------------------------------
+
+void WBCHelper::create_new_area_label( const std::string name ){
+  auto iter = m_area_labels.find(name);
+  if ( iter == m_area_labels.end() ){
+    const VarLabel* label = VarLabel::create( name, ReductionVariable<double,
+                                              Reductions::Sum<double> >::getTypeDescription());
+    m_area_labels.insert(std::make_pair(name, label));
+  }
+}
+
+void WBCHelper::delete_area_labels(){
+  for (auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++){
+    VarLabel::destroy(iter->second);
+  }
+}
+
+void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
+                                const LevelP& level,
+                                const MaterialSet* matls ){
+    IntVector lo;
+    IntVector hi;
+    level->findInteriorCellIndexRange(lo,hi);
+
+    Task* tsk = scinew Task( "WBCHelper::computeBCAreaHelper", this,
+                             &WBCHelper::computeBCAreaHelper, lo, hi );
+
+    for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
+      tsk->computes( iter->second );
+    }
+
+    sched->addTask( tsk, level->eachPatch(), matls );
+}
+
+
+void WBCHelper::computeBCAreaHelper( const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const IntVector lo,
+                          const IntVector hi ){
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
+
+    Vector DX = patch->dCell();
+
+    const BndMapT& my_map = get_boundary_information();
+    for ( auto bndmap_iter = my_map.begin(); bndmap_iter != my_map.end();
+          bndmap_iter++ ){
+
+      BndSpec bc_spec = bndmap_iter->second;
+      const std::string bc_name = bc_spec.name;
+      const int pid = patch->getID();
+
+      //this current bc is only valid for a subset of patches (potentially).
+      // however, the current mpi rank may hold multiple patches. therefore,
+      // only do the following if the bc_spec is valid on the current patch.
+      for ( auto i_valid_pid = bc_spec.patchIDs.begin(); i_valid_pid != bc_spec.patchIDs.end();
+            i_valid_pid++ ){
+
+        if ( *i_valid_pid == pid ){
+
+          double darea = 0;
+          int i=-1; int j=-1;
+          if ( bc_spec.face == Patch::xminus || bc_spec.face == Patch::xplus ){
+            darea = DX.y() * DX.z();
+            i = 1; j = 2;
+          } else if ( bc_spec.face == Patch::yminus || bc_spec.face == Patch::yplus ){
+            darea = DX.x() * DX.z();
+            i = 2; j = 0;
+          } else if ( bc_spec.face == Patch::zminus || bc_spec.face == Patch::zplus ){
+            darea = DX.x() * DX.y();
+            i = 0; j = 1;
+          }
+
+          //get the Uintah Iterator:
+          Uintah::Iterator& grid_iter = get_uintah_extra_bnd_mask( bndmap_iter->second,
+                                                                   patch->getID() );
+          double area = 0.;
+          for ( grid_iter.reset(); !grid_iter.done(); grid_iter++ ){
+
+            //exclude edge cells
+            if ( (*grid_iter)[i] != -1 && (*grid_iter)[i] != hi[i] ){
+              if ( (*grid_iter)[j] != -1 && (*grid_iter)[j] != hi[j] ){
+                area += darea;
+              }
+            }
+          }
+
+          std::string level_index = std::to_string(ilvl);
+          auto bc_area_iter = m_area_labels.find(bc_name+"_"+level_index+"_area");
+          if ( bc_area_iter != m_area_labels.end() ){
+            new_dw->put(sum_vartype( area ), bc_area_iter->second );
+          }
+
+        }
+      }
+    }
+  }
+}
+
+void WBCHelper::sched_bindBCAreaHelper( SchedulerP& sched,
+                                        const LevelP& level,
+                                        const MaterialSet* matls ){
+    Task* tsk = scinew Task( "WBCHelper::bindBCAreaHelper", this,
+                             &WBCHelper::bindBCAreaHelper );
+
+    for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
+      tsk->requires( Task::NewDW, iter->second );
+    }
+
+    sched->addTask( tsk, level->eachPatch(), matls );
+
+}
+
+
+void WBCHelper::bindBCAreaHelper( const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw ){
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
+
+    BndMapT& my_map = get_for_edit_boundary_information();
+    for ( auto bndmap_iter = my_map.begin(); bndmap_iter != my_map.end();
+          bndmap_iter++ ){
+
+      BndSpec bc_spec = bndmap_iter->second;
+      const std::string bc_name = bc_spec.name;
+
+      std::string level_index = std::to_string(ilvl);
+      auto bc_area_iter = m_area_labels.find(bc_name+"_"+level_index+"_area");
+
+      if ( bc_area_iter != m_area_labels.end() ){
+        sum_vartype area_temp;
+        new_dw->get(area_temp, bc_area_iter->second );
+        double area = area_temp;
+        bndmap_iter->second.area = area;
+      } else {
+        bndmap_iter->second.area = 0.0;
+      }
+
+    }
+  }
 }

@@ -39,7 +39,7 @@
 #include <Core/Grid/Variables/VarTypes.h>  // delt_vartype
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -154,10 +154,10 @@ Pressure::schedule_set_pressure_bcs( const Uintah::LevelP& level,
                                            &Pressure::process_bcs);
   const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
   const int ng = get_n_ghost<SVolField>();
-  task->requires(Uintah::Task::NewDW,pressureLabel_, gt, ng);
-  //task->modifies(pressureLabel_);
-  Uintah::LoadBalancer* lb = sched->getLoadBalancer();
-  sched->addTask(task, lb->getPerProcessorPatchSet(level), materials);
+  task->requires( Uintah::Task::NewDW,pressureLabel_, gt, ng );
+  //task->modifies( pressureLabel_);
+  Uintah::LoadBalancerPort * lb = sched->getLoadBalancer();
+  sched->addTask( task, lb->getPerProcessorPatchSet( level ), materials );
 }
 
 //--------------------------------------------------------------------

@@ -404,7 +404,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
                         const VarLabel* label,
                         int matlIndex,
                         const Patch* patch);
-
 #if HAVE_PIDX
      void emitPIDX(PIDXOutputContext&, 
                       const VarLabel* label, 
@@ -413,24 +412,23 @@ class OnDemandDataWarehouse : public DataWarehouse {
                       unsigned char *pidx_buffer,
                       size_t pidx_bufferSize);
 #endif
+    void exchangeParticleQuantities( DetailedTasks    * dts,
+                                     LoadBalancerPort * lb,
+                                     const VarLabel   * pos_var,
+                                     int              iteration );
 
+    void sendMPI( DependencyBatch       * batch,
+                  const VarLabel        * pos_var,
+                  BufferInfo            & buffer,
+                  OnDemandDataWarehouse * old_dw,
+                  const DetailedDep     * dep,
+                  LoadBalancerPort      * lb );
 
-    void exchangeParticleQuantities(DetailedTasks* dts,
-                                    LoadBalancer* lb,
-                                    const VarLabel* pos_var,
-                                    int iteration);
-    void sendMPI(DependencyBatch* batch,
-                 const VarLabel* pos_var,
-                 BufferInfo& buffer,
-                 OnDemandDataWarehouse* old_dw,
-                 const DetailedDep* dep,
-                 LoadBalancer* lb);
-
-    void recvMPI(DependencyBatch* batch,
-                 BufferInfo& buffer,
-                 OnDemandDataWarehouse* old_dw,
-                 const DetailedDep* dep,
-                 LoadBalancer* lb);
+    void recvMPI( DependencyBatch       * batch,
+                  BufferInfo            & buffer,
+                  OnDemandDataWarehouse * old_dw,
+                  const DetailedDep     * dep,
+                  LoadBalancerPort      * lb);
 
     void reduceMPI(const VarLabel* label,
                    const Level* level,
@@ -444,17 +442,17 @@ class OnDemandDataWarehouse : public DataWarehouse {
                        const Patch* patch,
                        int count);
 
-    int decrementScrubCount(const VarLabel* label,
-                            int matlIndex,
-                            const Patch* patch);
+    int decrementScrubCount( const VarLabel * label,
+                                   int        matlIndex,
+                             const Patch    * patch );
 
-    void scrub(const VarLabel* label,
-               int matlIndex,
-               const Patch* patch);
+    void scrub( const VarLabel * label,
+                      int        matlIndex,
+                const Patch    * patch);
 
-    void initializeScrubs(int dwid,
-                          const FastHashTable<ScrubItem>* scrubcounts,
-                          bool add);
+    void initializeScrubs(       int                        dwid,
+                           const FastHashTable<ScrubItem> * scrubcounts,
+                                 bool                       add );
 
     // For timestep abort/restart
     virtual bool timestepAborted();
@@ -465,10 +463,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     virtual void restartTimestep();
 
-    virtual void setRestarted()
-    {
-      hasRestarted_ = true;
-    }
+    virtual void setRestarted() { d_hasRestarted = true; }
 
    struct ValidNeighbors {
      GridVariableBase* validNeighbor;
@@ -689,11 +684,11 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     ScrubMode d_scrubMode;
 
-    bool aborted;
-    bool restart;
+    bool d_aborted;
+    bool d_restart;
 
     // Whether this (Old) DW is being used for a restarted timestep (the new DWs are cleared out)
-    bool hasRestarted_;
+    bool d_hasRestarted;
 
 }; // end class OnDemandDataWarehouse
 

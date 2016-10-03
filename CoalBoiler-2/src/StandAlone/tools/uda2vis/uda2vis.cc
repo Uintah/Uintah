@@ -34,17 +34,17 @@
 
 #include <StandAlone/tools/uda2vis/uda2vis.h>
 
-#include <Core/DataArchive/DataArchive.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancerPort.h>
+#include <Core/DataArchive/DataArchive.h>
 
+#include <algorithm>
+#include <cstdio>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <iomanip>
-#include <cstdio>
-#include <algorithm>
 
 using namespace Uintah;
 
@@ -679,8 +679,8 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
                               int timestep,
                               bool useExtraCells)
 {
-  DataWarehouse *dw = schedulerP->getLastDW();
-  LoadBalancer  *lb = schedulerP->getLoadBalancer();
+  DataWarehouse    * dw = schedulerP->getLastDW();
+  LoadBalancerPort * lb = schedulerP->getLoadBalancer();
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();

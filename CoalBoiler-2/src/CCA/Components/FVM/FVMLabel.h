@@ -41,6 +41,12 @@ namespace Uintah{
       const VarLabel* fcxConductivity;
       const VarLabel* fcyConductivity;
       const VarLabel* fczConductivity;
+      const VarLabel* fcxConcentration;
+      const VarLabel* fcyConcentration;
+      const VarLabel* fczConcentration;
+      const VarLabel* fcxMass;
+      const VarLabel* fcyMass;
+      const VarLabel* fczMass;
   };
 } // End Uintah namespace
 

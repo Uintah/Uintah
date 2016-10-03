@@ -44,7 +44,7 @@ namespace Uintah {
   class Patch;
   class VarLabel;
   class ProcessorGroup;
-  class LoadBalancer;
+  class LoadBalancerPort;
   class Scheduler;
 
   typedef std::vector<IntVector> SizeList;
@@ -158,9 +158,9 @@ namespace Uintah {
 
   protected:
 
-    ProblemSpecP grid_ps_;
-    LoadBalancer *lb_;
-    Scheduler *sched_;
+    ProblemSpecP       grid_ps_;
+    LoadBalancerPort * lb_;
+    Scheduler        * sched_;
 
     SimulationStateP d_sharedState;  ///< Shared global space, to keep track of timesteps
     bool d_isAdaptive;               ///< If false, do not regrid (stick with what you have)

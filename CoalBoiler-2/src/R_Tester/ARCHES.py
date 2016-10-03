@@ -43,15 +43,16 @@ else :
 #  methane_RCCE: 3m fire using the westbrook dryer/RCCE model
 
 NIGHTLYTESTS = [
-   ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"   , ["exactComparison"])   , 
-   ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"   , ["exactComparison"])   , 
+   ("constantMMS"                       , "mms/constantMMS.ups"                                     , 1.1 , "All"   , ["exactComparison"])   , 
+   ("almgrenMMS"                        , "mms/almgrenMMS.ups"                                      , 1.1 , "All"   , ["exactComparison"])   , 
    ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1.1 , "All"   , ["exactComparison"])   , 
-   ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"   , ["exactComparison"     , "no_restart"]) , 
-   ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"   , ["exactComparison"])   , 
-   ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"   , ["exactComparison"])   , 
-   ("methane_fire_8patch__NEW"          , "methane_fire_8patch__NEW.ups"                            , 8   , "All"   , ["exactComparison"])   , 
-   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups"                   , 8   , "All"   , ["exactComparison"])   , 
+   ("isotropic-turbulence-decay"        , "periodicTurb/isotropic-turbulence-decay.ups"             , 1.1 , "All"   , ["exactComparison"     , "no_restart"]) , 
+   ("helium_1m"                         , "helium_1m.ups"                                           , 1.1 , "All"   , ["exactComparison"])   , 
+   ("methane_fire"                      , "methane_fire.ups"                                        , 1.1 , "All"   , ["exactComparison"])   , 
+   ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"   , ["exactComparison"])   , 
+   ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"])   , 
    ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
+   ("rmcrt_bm1_1L_maxLen"               , "RMCRT/rmcrt_bm1_1L_maxLen.ups"                           , 8   , "ALL"   , ["exactComparison"])   ,
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "Linux" , ["exactComparison"])   , 
    ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
    ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"                                 , 8   , "Linux" , ["exactComparison"     , "no_restart"]) , 
@@ -102,13 +103,14 @@ NIGHTLYTESTS = [
    ("partMassFlow"                      , "Coal/partMassFlow.ups"                                   , 8   , "All"  , ["exactComparison"   ]) , 
    ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
+   ("multi-patch-intrusion-test"        , "multi-patch-intrusion-test.ups"                          , 8   , "All"  , ["exactComparison"]) , 
 
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD   "corrupted double-linked list: 0x00000000024b8120 ***"
-   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "Linux" , ["exactComparison"     , "no_cuda"]) , 
-   ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "Linux" , ["exactComparison"     , "no_cuda"]) , 
+   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"     , "no_cuda"]) , 
+   ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"     , "no_cuda"]) , 
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All"  , ["exactComparison"     , "no_cuda"]) , 
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"      ,"do_performance_test",  "no_cuda"   ]) ,
    ("OFC4c"                             , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"      , "no_cuda"]) ,
@@ -127,15 +129,16 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-   ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"  , ["exactComparison"]) , 
-   ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"  , ["exactComparison"]) , 
+   ("constantMMS"                       , "mms/constantMMS.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
+   ("almgrenMMS"                        , "mms/almgrenMMS.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
    ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1.1 , "All"  , ["exactComparison"])   , 
-   ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
-   ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"  , ["exactComparison"]) , 
-   ("methane_fire_8patch__NEW"          , "methane_fire_8patch__NEW.ups"                            , 8   , "All"  , ["exactComparison"]) , 
-   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups"                   , 8   , "All"  , ["exactComparison"]) , 
+   ("isotropic-turbulence-decay"        , "periodicTurb/isotropic-turbulence-decay.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("helium_1m"                         , "helium_1m.ups"                                           , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_fire"                      , "methane_fire.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"  , ["exactComparison"]) , 
+   ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"  , ["exactComparison"]) , 
    ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "All"  , ["exactComparison"]) , 
+   ("rmcrt_bm1_1L_maxLen"               , "RMCRT/rmcrt_bm1_1L_maxLen.ups"                           , 8   , "ALL"  , ["exactComparison"]) ,
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "ALL"  , ["exactComparison"]) , 
    ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "ALL"  , ["exactComparison"]) , 
    ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"                                 , 8   , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -186,6 +189,7 @@ LOCALTESTS = [
    ("partMassFlow"                      , "Coal/partMassFlow.ups"                                   , 8   , "All"  , ["exactComparison"   ]) , 
    ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
+   ("multi-patch-intrusion-test"        , "multi-patch-intrusion-test.ups"                          , 8   , "All"  , ["exactComparison"]) , 
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD, "corrupted double-linked list: 0x00000000024b8120 ***"
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
@@ -237,6 +241,7 @@ DQMOMTESTS = [
 
 RMCRTTESTS = [
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
+   ("rmcrt_bm1_1L_maxLen"         , "RMCRT/rmcrt_bm1_1L_maxLen.ups"               , 8   , "ALL"  , ["exactComparison"]) ,
    ("rmcrt_bm1_ML"                , "RMCRT/rmcrt_bm1_ML.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) , 
    ("rmcrt_bm1_DO"                , "RMCRT/rmcrt_bm1_DO.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
    ("methane_rmcrt"               , "RMCRT/methane_rmcrt.ups"                     , 8   , "ALL"  , ["exactComparison"     , "no_restart"]) ,

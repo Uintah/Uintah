@@ -73,6 +73,9 @@
       <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
       <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
       <do_scalar_diffusion                spec="OPTIONAL BOOLEAN" />
+      <do_auto_cycle_bc                   spec="OPTIONAL BOOLEAN" />
+      <auto_cycle_max                     spec="OPTIONAL DOUBLE" />
+      <auto_cycle_min                     spec="OPTIONAL DOUBLE" />
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
@@ -109,6 +112,7 @@
         <scalar_flux                 spec="MULTIPLE NO_DATA" >
           <geom_object />
           <outward_normal         spec="OPTIONAL BOOLEAN" />
+          <auto_cycle             spec="OPTIONAL BOOLEAN" />
           <load_curve             spec="REQUIRED NO_DATA" >
             <id                   spec="REQUIRED INTEGER" />
             <time_point           spec="MULTIPLE NO_DATA" >

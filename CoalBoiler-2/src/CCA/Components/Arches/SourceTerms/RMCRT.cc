@@ -574,7 +574,9 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
   }
 
   tsk->modifies( _RMCRT->d_sigmaT4Label );
-  tsk->modifies( _abskgLabel );
+  tsk->modifies( _RMCRT->d_abskgLabel );         // this label changes name if using floats
+  
+//  tsk->modifies( _abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
 }
@@ -614,7 +616,7 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
       CCVariable< T > sigmaT4OverPi;
 
       new_dw->allocateTemporary(temp,  patch);
-      new_dw->getModifiable( abskg,         _abskgLabel,             _matl, patch );
+      new_dw->getModifiable( abskg,         _RMCRT->d_abskgLabel,    _matl, patch );
       new_dw->getModifiable( sigmaT4OverPi, _RMCRT->d_sigmaT4Label,  _matl, patch );
       //__________________________________
       // loop over boundary faces and backout the temperature
@@ -648,7 +650,7 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
 //      setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
 //      setBC<double,double>(temp,     d_compTempLabel->getName(),  patch, d_matl);
 
-      string comp_abskg = _abskgLabel->getName();
+      string comp_abskg = _RMCRT->d_abskgLabel->getName();
       string comp_Temp =  _tempLabel->getName();
 
       BoundaryCondition_new* new_BC = _boundaryCondition->getNewBoundaryCondition();

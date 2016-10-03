@@ -5,9 +5,6 @@
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
-  <Scheduler type="DynamicMPI">
-    <small_messages>true</small_messages>
-  </Scheduler>
   <Time>
     <maxTime>100</maxTime>
     <max_Timesteps>10</max_Timesteps>

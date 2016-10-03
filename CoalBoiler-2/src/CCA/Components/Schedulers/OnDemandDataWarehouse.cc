@@ -23,7 +23,8 @@
  */
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
+
+#include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/DependencyException.h>
@@ -149,9 +150,9 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
       d_isInitializationDW( isInitializationDW ),
       d_scrubMode( DataWarehouse::ScrubNone )
 {
-  restart = false;
-  hasRestarted_ = false;
-  aborted = false;
+  d_restart      = false;
+  d_hasRestarted = false;
+  d_aborted      = false;
   doReserve();
 
 #ifdef HAVE_CUDA
@@ -589,12 +590,12 @@ OnDemandDataWarehouse::createGPUReductionVariable(const TypeDescription::Type& t
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
-                                const VarLabel*              pos_var,
-                                      BufferInfo&            buffer,
-                                      OnDemandDataWarehouse* old_dw,
-                                const DetailedDep*           dep,
-                                      LoadBalancer*          lb )
+OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch,
+                                const VarLabel              * pos_var,
+                                      BufferInfo            & buffer,
+                                      OnDemandDataWarehouse * old_dw,
+                                const DetailedDep           * dep,
+                                      LoadBalancerPort      * lb )
 {
   if( dep->isNonDataDependency() ) {
     // A non-data dependency -- send an empty message.
@@ -689,14 +690,14 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
-                                                         LoadBalancer*  lb,
-                                                   const VarLabel*      pos_var,
-                                                         int            iteration )
+OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks    * dts,
+                                                         LoadBalancerPort *  lb,
+                                                   const VarLabel         * pos_var,
+                                                         int                iteration )
 {
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::exchangeParticleQuantities" );
 
-  if( hasRestarted_ ) {
+  if( d_hasRestarted ) {
     // If this DW is being used for a timestep restart, then it has already done this...
     return;
   }
@@ -829,11 +830,11 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
-                                      BufferInfo&            buffer,
-                                      OnDemandDataWarehouse* old_dw,
-                                const DetailedDep*           dep,
-                                      LoadBalancer*          lb )
+OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch,
+                                      BufferInfo            & buffer,
+                                      OnDemandDataWarehouse * old_dw,
+                                const DetailedDep           * dep,
+                                      LoadBalancerPort      * lb )
 {
   if( dep->isNonDataDependency() ) {
     // A non-data dependency -- send an empty message.
@@ -3649,14 +3650,14 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
 bool
 OnDemandDataWarehouse::timestepAborted()
 {
-  return aborted;
+  return d_aborted;
 }
 //__________________________________
 //
 bool
 OnDemandDataWarehouse::timestepRestarted()
 {
-  return restart;
+  return d_restart;
 }
 
 //______________________________________________________________________
@@ -3666,7 +3667,7 @@ OnDemandDataWarehouse::abortTimestep()
 {
   // BJW - timestep aborting does not work in MPI - disabling until we get fixed.
   if( d_myworld->size() == 0 ) {
-    aborted = true;
+    d_aborted = true;
   }
 }
 
@@ -3675,7 +3676,7 @@ OnDemandDataWarehouse::abortTimestep()
 void
 OnDemandDataWarehouse::restartTimestep()
 {
-  restart = true;
+  d_restart = true;
 }
 
 //______________________________________________________________________

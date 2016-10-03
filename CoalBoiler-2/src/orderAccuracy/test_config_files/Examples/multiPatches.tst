@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <start>
-<upsFile>RMCRT_test_1L.ups</upsFile>
+<upsFile>RMCRT_bm1_1L.ups</upsFile>
 <gnuplot>
   <script>plotM-patches.gp</script>
   <title>GPU:RMCRT Error vs Patch configuration \\n 1 Timestep, 64^3, 512 Rays per Cell</title>

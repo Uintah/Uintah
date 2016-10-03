@@ -34,7 +34,7 @@
 
 namespace Uintah {
   class DataWarehouse;
-  class LoadBalancer;
+  class LoadBalancerPort;
   class ProcessorGroup;
   class Scheduler;
   class VarLabel;
@@ -79,26 +79,26 @@ class Relocate {
     
     //////////
     // Insert Documentation Here:
-    void scheduleParticleRelocation(Scheduler*,
-                                    const ProcessorGroup* pg,
-                                    LoadBalancer* lb,
-                                    const LevelP& level,
-                                    const VarLabel* old_posLabel,
-                                    const std::vector<std::vector<const VarLabel*> >& old_labels,
-                                    const VarLabel* new_posLabel,
-                                    const std::vector<std::vector<const VarLabel*> >& new_labels,
-                                    const VarLabel* particleIDLabel,
-                                    const MaterialSet* matls);
+    void scheduleParticleRelocation( Scheduler                                        *,
+                                     const ProcessorGroup                             * pg,
+                                     LoadBalancerPort                                 * lb,
+                                     const LevelP                                     & level,
+                                     const VarLabel                                   * old_posLabel,
+                                     const std::vector<std::vector<const VarLabel*> > & old_labels,
+                                     const VarLabel                                   * new_posLabel,
+                                     const std::vector<std::vector<const VarLabel*> > & new_labels,
+                                     const VarLabel                                   * particleIDLabel,
+                                     const MaterialSet                                * matls );
     //////////
     // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
     // is experimental and has not been fully tested yet. Use with caution (tsaad).
-    void scheduleParticleRelocation(Scheduler*,
-                                    const ProcessorGroup* pg,
-                                    LoadBalancer* lb,
-                                    const LevelP& level,
-                                    const VarLabel* posLabel,
-                                    const std::vector<std::vector<const VarLabel*> >& otherLabels,
-                                    const MaterialSet* matls);
+    void scheduleParticleRelocation(Scheduler                                        *,
+                                    const ProcessorGroup                             * pg,
+                                    LoadBalancerPort                                 * lb,
+                                    const LevelP                                     & level,
+                                    const VarLabel                                   * posLabel,
+                                    const std::vector<std::vector<const VarLabel*> > & otherLabels,
+                                    const MaterialSet                                * matls);
 
     const MaterialSet* getMaterialSet() const { return reloc_matls;}
 
@@ -123,32 +123,33 @@ class Relocate {
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
                            const Level* coarsestLevelwithParticles);
-    void exchangeParticles(const ProcessorGroup*, 
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw, MPIScatterRecords* scatter_records, 
-                           int total_reloc[3]);
+
+    void exchangeParticles( const ProcessorGroup    *, 
+                            const PatchSubset       * patches,
+                            const MaterialSubset    * matls,
+                                  DataWarehouse     * old_dw,
+                                  DataWarehouse     * new_dw,
+                                  MPIScatterRecords * scatter_records, 
+                                  int                 total_reloc[3] );
     
-    void findNeighboringPatches(const Patch* patch,
-                                const Level* level,
-                                const bool findFiner,
-                                const bool findCoarser,
-                                Patch::selectType& AllNeighborPatches);
+    void findNeighboringPatches( const Patch       * patch,
+                                 const Level       * level,
+                                 const bool          findFiner,
+                                 const bool          findCoarser,
+                                 Patch::selectType & AllNeighborPatches);
    
     void finalizeCommunication();
 
-    const VarLabel* reloc_old_posLabel{nullptr};
-    std::vector<std::vector<const VarLabel*> > reloc_old_labels;
-    const VarLabel* reloc_new_posLabel{nullptr};
-    std::vector<std::vector<const VarLabel*> > reloc_new_labels;
-    const VarLabel* particleIDLabel_{nullptr};
-    const MaterialSet* reloc_matls{nullptr};
-    LoadBalancer* lb{nullptr};
-    std::vector<char*> recvbuffers;
-    std::vector<char*> sendbuffers;
-    std::vector<MPI_Request> sendrequests;
-
+    const VarLabel                             * reloc_old_posLabel{ nullptr };
+    std::vector<std::vector<const VarLabel*> >   reloc_old_labels;
+    const VarLabel                             * reloc_new_posLabel{ nullptr };
+    std::vector<std::vector<const VarLabel*> >   reloc_new_labels;
+    const VarLabel                             * particleIDLabel_{   nullptr };
+    const MaterialSet                          * reloc_matls{        nullptr };
+    LoadBalancerPort                           * m_lb{               nullptr };
+    std::vector<char*>                           recvbuffers;
+    std::vector<char*>                           sendbuffers;
+    std::vector<MPI_Request>                     sendrequests;
 
 };
 

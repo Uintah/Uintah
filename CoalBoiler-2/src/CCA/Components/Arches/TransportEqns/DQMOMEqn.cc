@@ -589,7 +589,7 @@ DQMOMEqn::computePsi( const ProcessorGroup* pc,
       SuperBeeStruct sb;
       DQMOM_CONV(sb);
     } else if ( d_which_limiter == ROE ){
-      RoeStruct roe; 
+      RoeStruct roe;
       DQMOM_CONV(roe);
     } else if ( d_which_limiter == CENTRAL ){
       CentralStruct central;
@@ -757,6 +757,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
+    const int ilvl = level->getID();
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
@@ -850,7 +852,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 #endif
 
       if ( _using_new_intrusion ) {
-        _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
+        _intrusions[ilvl]->addScalarRHS( patch, Dx, d_eqnName, RHS );
       }
     }
 
