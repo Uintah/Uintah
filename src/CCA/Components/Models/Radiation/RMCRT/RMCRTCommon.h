@@ -198,10 +198,12 @@ namespace Uintah{
       //______________________________________________________________________
       //    Public variables that are used by Radiometer & RMCRT classes
       enum DIR {X=0, Y=1, Z=2, NONE=-9}; 
+      
       //           -x      +x       -y       +y     -z     +z
       enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};     
-      double d_sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
-      int d_flowCell;                       // HARDWIRED 
+      
+      double d_sigma_over_pi;                       // Stefan Boltzmann divided by pi (W* m-2* K-4)
+      int d_flowCell;                               // HARDWIRED 
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
 
@@ -213,8 +215,10 @@ namespace Uintah{
       // This will create only 1 instance for both Ray() and radiometer() classes to use
       static double d_threshold;
       static double d_sigma;
-      static double d_sigmaScat;      
-      static bool d_isSeedRandom;     
+      static double d_sigmaScat;  
+      static double d_maxRayLength;                 // Maximum length a ray can travel
+          
+      static bool d_isSeedRandom;                   // are seeds random
       static bool d_allowReflect;                   // specify as false when doing DOM comparisons 
            
       // These are initialized once in registerVarLabels().

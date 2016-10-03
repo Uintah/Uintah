@@ -363,16 +363,6 @@ public:
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw );
 
-  void sched_deleteBCAreaHelper( SchedulerP& sched,
-                                 const LevelP& level,
-                                 const MaterialSet* matls );
-
-  void deleteBCAreaHelper( const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw );
-
   /**
    \brief Returns the original Uintah boundary cell iterator.
    */

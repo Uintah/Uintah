@@ -58,7 +58,7 @@ end
 
 #______________________________________________________________________
 
-set upsArray = ( "RMCRT_test_1L.ups" "RMCRT_ML.ups" "RMCRT_bm1_DO.ups")
+set upsArray = ( "RMCRT_bm1_1L.ups" "RMCRT_ML.ups" "RMCRT_bm1_DO.ups")
 set udaArray = ( "rmcrt_1L.uda" "RMCRT_ML.uda" "RMCRT_bm1_DO.uda" )
 set descArray = ( "1L" "ML" "DO" )
 

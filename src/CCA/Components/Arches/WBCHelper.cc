@@ -337,6 +337,8 @@ WBCHelper::~WBCHelper()
 {
 
   delete localPatches_;
+  delete_area_labels();
+
 }
 
   //------------------------------------------------------------------------------------------------
@@ -951,27 +953,5 @@ void WBCHelper::bindBCAreaHelper( const ProcessorGroup*,
       }
 
     }
-  }
-}
-
-void WBCHelper::sched_deleteBCAreaHelper( SchedulerP& sched,
-                                        const LevelP& level,
-                                        const MaterialSet* matls ){
-    Task* tsk = scinew Task( "WBCHelper::deleteBCAreaHelper", this,
-                             &WBCHelper::deleteBCAreaHelper );
-
-    sched->addTask( tsk, level->eachPatch(), matls );
-}
-
-
-void WBCHelper::deleteBCAreaHelper( const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset*,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw ){
-  for (int p = 0; p < patches->size(); p++) {
-
-    delete_area_labels();
-
   }
 }

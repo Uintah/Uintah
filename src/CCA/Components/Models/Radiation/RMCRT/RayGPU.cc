@@ -130,22 +130,23 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
     //__________________________________
     //  RMCRT_flags
     RMCRT_flags RT_flags;
-    RT_flags.modifies_divQ = modifies_divQ;
+    RT_flags.modifies_divQ     = modifies_divQ;                              
 
-    RT_flags.solveDivQ = d_solveDivQ;
-    RT_flags.allowReflect = d_allowReflect;
-    RT_flags.solveBoundaryFlux = d_solveBoundaryFlux;
-    RT_flags.CCRays = d_CCRays;
-    RT_flags.usingFloats = (d_FLT_DBL == TypeDescription::float_type);
+    RT_flags.solveDivQ         = d_solveDivQ;                                
+    RT_flags.allowReflect      = d_allowReflect;                             
+    RT_flags.solveBoundaryFlux = d_solveBoundaryFlux;                        
+    RT_flags.CCRays            = d_CCRays;                                   
+    RT_flags.usingFloats       = (d_FLT_DBL == TypeDescription::float_type); 
 
-    RT_flags.sigma = d_sigma;
-    RT_flags.sigmaScat = d_sigmaScat;
-    RT_flags.threshold = d_threshold;
+    RT_flags.sigma             = d_sigma;
+    RT_flags.sigmaScat         = d_sigmaScat;
+    RT_flags.threshold         = d_threshold;
 
-    RT_flags.nDivQRays = d_nDivQRays;
-    RT_flags.nFluxRays = d_nFluxRays;
+    RT_flags.nDivQRays         = d_nDivQRays;
+    RT_flags.nFluxRays         = d_nFluxRays;
+    RT_flags.rayDirSampleAlgo  = d_rayDirSampleAlgo;
 
-    RT_flags.whichROI_algo = d_whichROI_algo;
+    RT_flags.whichROI_algo    = d_ROI_algo;
     RT_flags.rayDirSampleAlgo = d_rayDirSampleAlgo;
     double start = clock();
 
@@ -172,10 +173,10 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
 
       // Calculate the memory block size
       const IntVector loEC = patch->getExtraCellLowIndex();
-      const IntVector lo = patch->getCellLowIndex();
+      const IntVector lo   = patch->getCellLowIndex();
 
       const IntVector hiEC = patch->getExtraCellHighIndex();
-      const IntVector hi = patch->getCellHighIndex();
+      const IntVector hi   = patch->getCellHighIndex();
       const IntVector patchSize = hiEC - loEC;
 
       const int xdim = patchSize.x();
@@ -357,8 +358,8 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     RT_flags.solveDivQ         = d_solveDivQ;
     RT_flags.allowReflect      = d_allowReflect;
     RT_flags.solveBoundaryFlux = d_solveBoundaryFlux;
-    RT_flags.CCRays = d_CCRays;
-    RT_flags.usingFloats = (d_FLT_DBL == TypeDescription::float_type);
+    RT_flags.CCRays            = d_CCRays;
+    RT_flags.usingFloats       = (d_FLT_DBL == TypeDescription::float_type);
 
     RT_flags.sigma             = d_sigma;
     RT_flags.sigmaScat         = d_sigmaScat;
@@ -366,13 +367,13 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
 
     RT_flags.nDivQRays         = d_nDivQRays;
     RT_flags.nFluxRays         = d_nFluxRays;
-    RT_flags.whichROI_algo     = d_whichROI_algo;
+    RT_flags.whichROI_algo     = d_ROI_algo;
     RT_flags.rayDirSampleAlgo  = d_rayDirSampleAlgo;
 
     double start = clock();
         
     //______________________________________________________________________
-    //
+    //  patch loop
     int numPatches = finePatches->size();
     for (int p = 0; p < numPatches; ++p) {
 

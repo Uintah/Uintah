@@ -489,7 +489,7 @@ AMRSimulationController::run()
         skip      /= rr;
       }
        
-      for( int idw = 0; idw < totalFine; idw += skip ){
+      for( int idw = 0; idw < totalFine; idw += skip ) {
         DataWarehouse* dw = d_scheduler->get_dw( idw );
         dw->override( delt_vartype( delt_fine ), d_sharedState->get_delt_label(), level );
       }
@@ -829,12 +829,11 @@ AMRSimulationController::subCycleExecute( GridP & grid, int startDW, int dwStrid
       d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
       d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
 
-    //if (Uintah::Parallel::getMaxThreads() < 1) { 
       d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
       d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
       d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
       d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
-    //}
+
       if (dbg.active()) {
         dbg << d_myworld->myrank() << "   Executing INT TG on level " << levelNum << " with old DW " 
             << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
@@ -870,6 +869,7 @@ AMRSimulationController::needRecompile( double        time,
                                         const GridP & grid )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::needRecompile()");
+
   // Currently, d_output, d_sim, d_lb, d_regridder can request a recompile.  --bryan
   bool recompile = false;
   
@@ -1132,7 +1132,7 @@ AMRSimulationController::recompile( double time, double delt, GridP & currentGri
     
     for (int i = 0; i < currentGrid->numLevels(); i++) {
       if (d_doAMR && currentGrid->numLevels() > 1) {
-        dbg << d_myworld->myrank() << "   Doing Int TG level " << i << " tg " << endl;
+        dbg << d_myworld->myrank() << "   Doing Intermediate TG level " << i << " tg " << endl;
         // taskgraphs numlevels-2*numlevels-1
         d_scheduler->addTaskGraph(Scheduler::IntermediateTaskGraph);
       }
@@ -1199,101 +1199,99 @@ AMRSimulationController::executeTimestep( double time, double& delt, GridP& curr
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimestep()");
 
   // If the timestep needs to be restarted, this loop will execute multiple times.
-  bool   success   = true;
+  bool success = true;
   double orig_delt = delt;
+
   do {
     bool restartable = d_sim->restartableTimesteps();
     d_scheduler->setRestartable(restartable);
-    
+
     // if (Uintah::Parallel::getMaxThreads() < 1) { 
 
-      // Standard data warehouse scrubbing.
-      if( scrubDataWarehouse && d_lb->getNthRank() == 1 ) {
-	if ( restartable ) {
-	  d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-        }
-	else {
-	  d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-        }
-	// The other data warehouse as well as those for other levels.
-	for( int i = 1; i <= totalFine; ++i ) {
-	  d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-        }
+    // Standard data warehouse scrubbing.
+    if (scrubDataWarehouse && d_lb->getNthRank() == 1) {
+      if (restartable) {
+        d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
-      // If not scubbing or getNthRank requires the variables after
-      // they would have been scrubbed so turn off all scrubbing.
-      else { //if( !scrubDataWarehouse || d_lb->getNthRank() > 1 )
-	for( int i = 0; i <= totalFine; ++i ) {
-	  d_scheduler->get_dw(i)->setScrubbing( DataWarehouse::ScrubNone );
-        }
+      else {
+        d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
       }
+      // The other data warehouse as well as those for other levels.
+      for (int i = 1; i <= totalFine; ++i) {
+        d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+      }
+    }
+    // If not scubbing or getNthRank requires the variables after
+    // they would have been scrubbed so turn off all scrubbing.
+    else {  //if( !scrubDataWarehouse || d_lb->getNthRank() > 1 )
+      for (int i = 0; i <= totalFine; ++i) {
+        d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
+      }
+    }
     // }
-    
-    if( d_scheduler->getNumTaskGraphs() == 1 ) {
+
+    if (d_scheduler->getNumTaskGraphs() == 1) {
       d_scheduler->execute(0, d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
     }
     else {
       subCycleExecute(currentGrid, 0, totalFine, 0, true);
     }
-    
+
     //__________________________________
     //  If timestep has been restarted
-    if( d_scheduler->get_dw( totalFine )->timestepRestarted() ) {
+    if (d_scheduler->get_dw(totalFine)->timestepRestarted()) {
       ASSERT(restartable);
-      
+
       // Figure out new delt
       double new_delt = d_sim->recomputeTimestep(delt);
 
-      proc0cout << "Restarting timestep at " << time << ", changing delt from "
-                << delt << " to " << new_delt << '\n';
-     
+      proc0cout << "Restarting timestep at " << time << ", changing delt from " << delt << " to " << new_delt << '\n';
+
       // bulletproofing
-      if(new_delt < d_timeinfo->delt_min || new_delt <= 0 ){
+      if (new_delt < d_timeinfo->delt_min || new_delt <= 0) {
         ostringstream warn;
-        warn << "The new delT (" << new_delt << ") is either less than delT_min (" << d_timeinfo->delt_min
-             << ") or equal to 0";
+        warn << "The new delT (" << new_delt << ") is either less than delT_min (" << d_timeinfo->delt_min << ") or equal to 0";
         throw InternalError(warn.str(), __FILE__, __LINE__);
       }
-      
-      
+
       d_output->reEvaluateOutputTimestep(orig_delt, new_delt);
       delt = new_delt;
-      
-      d_scheduler->get_dw(0)->override(delt_vartype(new_delt),
-                                       d_sharedState->get_delt_label());
 
-      for (int i=1; i <= totalFine; i++){
+      d_scheduler->get_dw(0)->override(delt_vartype(new_delt), d_sharedState->get_delt_label());
+
+      for (int i = 1; i <= totalFine; i++) {
         d_scheduler->replaceDataWarehouse(i, currentGrid);
       }
 
       double delt_fine = delt;
-      int skip=totalFine;
-      for(int i=0;i<currentGrid->numLevels();i++){
+      int skip = totalFine;
+      for (int i = 0; i < currentGrid->numLevels(); i++) {
         const Level* level = currentGrid->getLevel(i).get_rep();
-        
-        if( i != 0 && !d_sharedState->isLockstepAMR() ) {
+
+        if (i != 0 && !d_sharedState->isLockstepAMR()) {
           int trr = level->getRefinementRatioMaxDim();
           delt_fine /= trr;
           skip /= trr;
         }
-        
-        for( int idw = 0; idw < totalFine; idw += skip ) {
+
+        for (int idw = 0; idw < totalFine; idw += skip) {
           DataWarehouse* dw = d_scheduler->get_dw(idw);
-          dw->override( delt_vartype(delt_fine), d_sharedState->get_delt_label(), level );
+          dw->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(), level);
         }
       }
       success = false;
-      
+
     }
     else {
-      if( d_scheduler->get_dw( 1 )->timestepAborted() ) {
-        throw InternalError( "Execution aborted, cannot restart timestep\n", __FILE__, __LINE__ );
+      if (d_scheduler->get_dw(1)->timestepAborted()) {
+        throw InternalError("Execution aborted, cannot restart timestep\n", __FILE__, __LINE__);
       }
       success = true;
     }
-  } while( !success );
+  }
+  while (!success);
 
-} // end executeTimestep()
+}  // end executeTimestep()
 
 //______________________________________________________________________
 //

@@ -178,7 +178,7 @@ public:
   }
 
   /** @brief Set the intrusion machinery **/
-  inline void set_intrusion( const std::map<const int, IntrusionBC*> intrusions ){
+  inline void set_intrusion( const std::map<int, IntrusionBC*> intrusions ){
     _intrusions = intrusions;
   }
 
@@ -232,7 +232,7 @@ protected:
   BoundaryCondition_new* d_boundaryCond;          ///< Boundary condition object associated with equation object
   ExplicitTimeInt* d_timeIntegrator;              ///< Time integrator object associated with equation object
   Discretization_new* d_disc;                     ///< Discretization object associated with equation object
-  std::map<const int, IntrusionBC*> _intrusions;  ///< Intrusions for boundary conditions.
+  std::map<int, IntrusionBC*> _intrusions;  ///< Intrusions for boundary conditions.
   MixingRxnModel* _table;                         ///< Reference to the table for lookup
 
   const VarLabel* d_transportVarLabel;            ///< Label for scalar being transported, in NEW data warehouse

@@ -50,10 +50,8 @@
   and use it for scheduling.  Add logic to what is actually in that vector.
 
 Critical:
-  - How do you coarsen cell type and retain information?
-  - Memory issues.
   - Fix getRegion() for L-shaped domains.
-
+  
 
 Optimizations:
   - Spatial scheduling, used by radiometer.  Only need to execute & communicate
@@ -111,10 +109,10 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 //  d_dbgCells.push_back( IntVector(0,1,0));
 //  d_dbgCells.push_back( IntVector(5,5,5));
 
-  d_halo          = IntVector(-9,-9,-9);
-  d_rayDirSampleAlgo = NAIVE;
+  d_halo                 = IntVector(-9,-9,-9);
+  d_rayDirSampleAlgo     = NAIVE;
   d_cellTypeCoarsenLogic = ROUNDUP;
-
+  d_ROI_algo             = entireDomain;
   //_____________________________________________
   //   Ordering for Surface Method
   // This block of code is used to properly place ray origins, and orient ray directions
@@ -191,9 +189,9 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   if (rayDirSampleAlgo == "LatinHyperCube" ){
     d_rayDirSampleAlgo = LATIN_HYPER_CUBE;
-    proc0cout << "  RMCRT:  Using Latin Hyper Cube method for selecting ray directions.";
+    proc0cout << "  RMCRT: Using Latin Hyper Cube method for selecting ray directions.";
   } else{
-    proc0cout << "  RMCRT:  Using traditional Monte-Carlo method for selecting ray directions.";
+    proc0cout << "  RMCRT: Using traditional Monte-Carlo method for selecting ray directions.";
   }
 
   //__________________________________
@@ -250,35 +248,44 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     string type="nullptr";
 
     if( !alg_ps->getAttribute("type", type) ){
-      throw ProblemSetupException("RMCRT: No type specified for algorithm.  Please choose dataOnion on RMCRT_coarseLevel", __FILE__, __LINE__);
+      throw ProblemSetupException("RMCRT: No type specified for algorithm.  Please choose singleLevel, dataOnion or RMCRT_coarseLevel", __FILE__, __LINE__);
     }
+    //__________________________________
+    //  single level
+    if (type == "singleLevel" ) {
+           
+      ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
+      ROI_ps->getAttribute( "type", type);
+      ROI_ps->get( "length", d_maxRayLength );
+      d_ROI_algo = max_rayLength;
+      proc0cout << "  RMCRT: The maximum ray length has been set to: ("<< d_maxRayLength << ")\n";
 
     //__________________________________
     //  Data Onion
-    if (type == "dataOnion" ) {
+    } else if (type == "dataOnion" ) {
 
       isMultilevel = true;
       algorithm    = dataOnion;
       alg_ps->getWithDefault( "halo",  d_halo,  IntVector(10,10,10));
 
       //  Method for deteriming the extents of the ROI
-      ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
-      ROI_ps->getAttribute("type", type);
+      ProblemSpecP ROI_ps = alg_ps->findBlock( "ROI_extents" );
+      ROI_ps->getAttribute( "type", type );
 
       if(type == "fixed" ) {
 
-        d_whichROI_algo = fixed;
-        ROI_ps->get("min", d_ROI_minPt );
-        ROI_ps->get("max", d_ROI_maxPt );
+        d_ROI_algo = fixed;
+        ROI_ps->get( "min", d_ROI_minPt );
+        ROI_ps->get( "max", d_ROI_maxPt );
 
       } else if ( type == "dynamic" ) {
 
-        d_whichROI_algo = dynamic;
+        d_ROI_algo = dynamic;
         ROI_ps->getWithDefault( "abskgd_threshold",   d_abskg_thld,   DBL_MAX);
         ROI_ps->getWithDefault( "sigmaT4d_threshold", d_sigmaT4_thld, DBL_MAX);
 
       } else if ( type == "patch_based" ){
-        d_whichROI_algo = patch_based;
+        d_ROI_algo = patch_based;
       }
 
     //__________________________________
@@ -310,7 +317,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  bulletproofing
 
   if( Parallel::usingDevice() ){              // GPU
-    if( (algorithm == dataOnion && d_whichROI_algo != patch_based ) ){
+    if( (algorithm == dataOnion && d_ROI_algo != patch_based ) ){
       ostringstream warn;
       warn << "GPU:RMCRT:ERROR: ";
       warn << "At this time only ROI_extents type=\"patch_based\" work on the GPU";
@@ -326,7 +333,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       ostringstream warn;
       warn << "  RMCRT:ERROR: You're saving a variable ("<< abskgName << ") that doesn't exist on all levels."<< endl;
       warn << "  Use either: " << endl;
-      warn << "    <save label = 'abskgRMCRT' />             (float version of abskg, local to RMCRT)" << endl;
+      warn << "    <save label = 'abskgRMCRT' />             (FLOAT version of abskg, local to RMCRT)" << endl;
       warn << "             or " << endl;
       warn << "    <save label = 'abskg'  levels = -1 />     ( only saved on the finest level )" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -434,7 +441,7 @@ Ray::sched_rayTrace( const LevelP& level,
     }
   }
 
-  printSchedule(level,dbg,taskname);
+  printSchedule(level,dbg,"Ray::sched_rayTrace");
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
@@ -446,18 +453,49 @@ Ray::sched_rayTrace( const LevelP& level,
   // The taskgraph recompilation is controlled with RMCRTCommon:doRecompileTaskgraph()
   if ( !doCarryForward( radCalc_freq) ) {
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl;
-    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
-    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+    
+    int n_ghostCells = SHRT_MAX;
+    
+/*`==========TESTING==========*/
+    //__________________________________
+    // logic for determining number of ghostCells/d_halo
+    if( d_ROI_algo == max_rayLength ){
+      
+      Vector Dx     = level->dCell();
+      Vector nCells = Vector( d_maxRayLength )/Dx;
+      double length = nCells.length();
+      n_ghostCells  = RoundUp( length );
+      
+      // ghost cell can't exceed number of cells on a level
+      IntVector lo, hi;
+      level->findCellIndexRange(lo,hi);
+      IntVector diff = hi-lo;
+      int nCellsLevel = Max( diff.x(), diff.y(), diff.z() );
+      
+      if (n_ghostCells > SHRT_MAX || 
+          n_ghostCells > nCellsLevel ){
+        proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells 
+                  << ") max cells in any direction on a Levels: " << nCellsLevel << "\n\n";
+        n_ghostCells    = SHRT_MAX;
+        d_ROI_algo = entireDomain;
+      }
+      d_halo = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
+    }
+     
+/*===========TESTING==========`*/
+    
+    dbg << "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")\n";
+    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
+    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
   }
 
   // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
-  if (!(Uintah::Parallel::usingDevice())) {
+  if ( !(Uintah::Parallel::usingDevice()) ) {
     // needed for carry Forward
-    tsk->requires(Task::OldDW, d_divQLabel,          d_gn, 0);
-    tsk->requires(Task::OldDW, d_boundFluxLabel,     d_gn, 0);
-    tsk->requires(Task::OldDW, d_radiationVolqLabel, d_gn, 0);
+    tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
+    tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
+    tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
   }
 
   if( modifies_divQ ){
@@ -1050,9 +1088,11 @@ Ray::rayTrace( const ProcessorGroup* pg,
   constCCVariable< T > abskg;
   constCCVariable<int>  celltype;
 
-  abskg_dw->getLevel(   abskg   ,       d_abskgLabel ,   d_matl , level );
-  sigmaT4_dw->getLevel( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level );
-  celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
+  if ( d_ROI_algo == entireDomain ){
+    abskg_dw->getLevel(   abskg   ,       d_abskgLabel ,   d_matl , level );
+    sigmaT4_dw->getLevel( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level );
+    celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
+  }
 
 
   double start=clock();
@@ -1082,7 +1122,33 @@ Ray::rayTrace( const ProcessorGroup* pg,
         IntVector c = *iter;
         boundFlux[c].initialize(0.0);
       }
-   }
+    }
+    
+    //__________________________________
+    //  If ray length distance is used
+    if ( d_ROI_algo == max_rayLength ){
+    
+      IntVector patchLo = patch->getExtraCellLowIndex();
+      IntVector patchHi = patch->getExtraCellHighIndex();
+
+      IntVector ROI_Lo = patchLo - d_halo;
+      IntVector ROI_Hi = patchHi + d_halo;
+      dbg << "  L-"<< level->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << endl;
+
+      // region must be contaned in the Level including extraCells.
+      IntVector levelLo, levelHi;
+      level->findCellIndexRange( levelLo, levelHi );
+
+      ROI_Lo = Max( ROI_Lo, levelLo );
+      ROI_Hi = Min( ROI_Hi, levelHi );
+      dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
+
+      abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
+      sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
+      celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
+    }
+    
+    
     unsigned long int size = 0;                   // current size of PathIndex
     Vector Dx = patch->dCell();                   // cell spacing
 
@@ -1341,7 +1407,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   Ghost::GhostType         gac  = Ghost::AroundCells;
 
   // finest level:
-  if ( d_whichROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
+  if ( d_ROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
 
     int maxElem = Max( d_halo.x(), d_halo.y(), d_halo.z() );
     tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
@@ -1362,7 +1428,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   }
 
 
-  if (d_whichROI_algo == dynamic) {
+  if (d_ROI_algo == dynamic) {
     tsk->requires( Task::NewDW, d_ROI_LoCellLabel );
     tsk->requires( Task::NewDW, d_ROI_HiCellLabel );
   }
@@ -1466,7 +1532,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
   //__________________________________
   //  retrieve fine level data & compute the extents (dynamic and fixed )
-  if ( d_whichROI_algo == fixed || d_whichROI_algo == dynamic ) {
+  if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
     int L = maxLevels - 1;
 
     const Patch* notUsed=0;
@@ -1497,7 +1563,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
      //__________________________________
     //  retrieve fine level data ( patch_based )
-    if ( d_whichROI_algo == patch_based ){
+    if ( d_ROI_algo == patch_based ){
 
       computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,
                      fineLevel_ROI_Lo, fineLevel_ROI_Hi,
@@ -1730,7 +1796,7 @@ Ray::computeExtents(LevelP level_0,
 {
   //__________________________________
   //   fine level region of interest ROI
-  if( d_whichROI_algo == dynamic ){
+  if( d_ROI_algo == dynamic ){
 
     minvec_vartype lo;
     maxvec_vartype hi;
@@ -1739,7 +1805,7 @@ Ray::computeExtents(LevelP level_0,
     fineLevel_ROI_Lo = roundNearest( Vector(lo) );
     fineLevel_ROI_Hi = roundNearest( Vector(hi) );
 
-  } else if ( d_whichROI_algo == fixed ){
+  } else if ( d_ROI_algo == fixed ){
 
     fineLevel_ROI_Lo = fineLevel->getCellIndex( d_ROI_minPt );
     fineLevel_ROI_Hi = fineLevel->getCellIndex( d_ROI_maxPt );
@@ -1750,7 +1816,7 @@ Ray::computeExtents(LevelP level_0,
       warn << "ERROR:  the fixed ROI extents " << d_ROI_minPt << " " << d_ROI_maxPt << " are not contained on the fine level."<< endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-  } else if ( d_whichROI_algo == patch_based ){
+  } else if ( d_ROI_algo == patch_based ){
 
     IntVector patchLo = patch->getExtraCellLowIndex();
     IntVector patchHi = patch->getExtraCellHighIndex();
@@ -2272,15 +2338,18 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    task->requires( Task::NewDW, d_divQLabel,      allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
-    task->requires( Task::NewDW, d_boundFluxLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requires( Task::NewDW, d_divQLabel,          allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requires( Task::NewDW, d_boundFluxLabel,     allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
+    task->requires( Task::NewDW, d_radiationVolqLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
 
     // when carryforward is needed
-    task->requires( Task::OldDW, d_divQLabel,      d_gn, 0 );
-    task->requires( Task::OldDW, d_boundFluxLabel, d_gn, 0 );
+    task->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
+    task->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
+    task->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
 
     task->computes( d_divQLabel );
     task->computes( d_boundFluxLabel );
+    task->computes( d_radiationVolqLabel );
     sched->addTask( task, patches, matls );
   }
 }
@@ -2303,8 +2372,9 @@ void Ray::refine_Q(const ProcessorGroup*,
   if ( doCarryForward( radCalc_freq ) ) {
     printTask( fineLevel->getPatch(0), dbg, "Doing Ray::refine_Q carryForward ( divQ )" );
 
-    new_dw->transferFrom( old_dw, d_divQLabel,      patches, matls, true );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel, patches, matls, true );
+    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, true );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, true );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, true );
     return;
   }
 
@@ -2318,12 +2388,16 @@ void Ray::refine_Q(const ProcessorGroup*,
     finePatch->getCoarseLevelPatches(coarsePatches);
 
     CCVariable<double> divQ_fine;
+    CCVariable<double> radVolQ_fine;
     CCVariable<Stencil7> boundFlux_fine;
 
-    new_dw->allocateAndPut(divQ_fine,      d_divQLabel,      d_matl, finePatch);
-    new_dw->allocateAndPut(boundFlux_fine, d_boundFluxLabel, d_matl, finePatch);
+    new_dw->allocateAndPut(divQ_fine,      d_divQLabel,        d_matl, finePatch);
+    new_dw->allocateAndPut(radVolQ_fine, d_radiationVolqLabel, d_matl, finePatch);
+    new_dw->allocateAndPut(boundFlux_fine, d_boundFluxLabel,   d_matl, finePatch);
 
     divQ_fine.initialize( 0.0 );
+    radVolQ_fine.initialize( 0.0 );
+    
     for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       boundFlux_fine[c].initialize( 0.0 );
@@ -2344,14 +2418,21 @@ void Ray::refine_Q(const ProcessorGroup*,
         <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
         <<" coarseRegion " << cl << " " << ch <<endl;
 
-    // DivQ
+    //__________________________________DivQ
     constCCVariable<double> divQ_coarse;
     new_dw->getRegion( divQ_coarse, d_divQLabel, d_matl, coarseLevel, cl, ch );
 
     selectInterpolator(divQ_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
                        refineRatio, fl, fh, divQ_fine);
+    
+    //__________________________________raditionVolQ                   
+    constCCVariable<double> radVolQ_coarse;
+    new_dw->getRegion( radVolQ_coarse, d_radiationVolqLabel, d_matl, coarseLevel, cl, ch );
 
-    // boundary Flux
+    selectInterpolator(radVolQ_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
+                       refineRatio, fl, fh, radVolQ_fine);
+
+    //__________________________________boundary Flux
     constCCVariable<Stencil7> boundFlux_coarse;
     new_dw->getRegion( boundFlux_coarse, d_boundFluxLabel, d_matl, coarseLevel, cl, ch );
 #if 0               // ----------------------------------------------------------------TO BE FILLED IN   Todd
@@ -2370,7 +2451,7 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
   int maxLevels = level->getGrid()->numLevels() -1;
   int L_indx = level->getIndex();
 
-  if( (L_indx != maxLevels ) || ( d_whichROI_algo != dynamic ) ){     // only schedule on the finest level and dynamic
+  if( (L_indx != maxLevels ) || ( d_ROI_algo != dynamic ) ){     // only schedule on the finest level and dynamic
     return;
   }
 

@@ -165,7 +165,7 @@ inline const FaceOffSets getFaceOffsets( const IntVector& face_normal, const Pat
 
 };
 
-inline const std::map<const int, IntrusionBC*> get_intrusion_ref(){
+inline const std::map<int, IntrusionBC*> get_intrusion_ref(){
   return _intrusionBC;
 };
 
@@ -840,7 +840,7 @@ bool d_check_inlet_obstructions;
 
 bool d_ignore_invalid_celltype;
 
-std::map<const int, IntrusionBC*> _intrusionBC;
+std::map<int, IntrusionBC*> _intrusionBC;
 bool _using_new_intrusion;
 
 // used for calculating wall boundary conditions

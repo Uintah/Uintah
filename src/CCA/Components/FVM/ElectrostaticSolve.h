@@ -76,8 +76,11 @@ WARNING
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                       SchedulerP&);
 
+    virtual void setWithMPM(bool value) { d_with_mpm = value; }
+
   protected:
     FVMLabel* d_lb;
+    friend class ESMPM;
 
   private:
     void initialize(const ProcessorGroup*,
@@ -111,6 +114,8 @@ WARNING
                            DataWarehouse* old_dw, DataWarehouse* new_dw,
                            LevelP, Scheduler*);
 
+    void scheduleSolve(SchedulerP& sched, const LevelP& level,
+                       const MaterialSet* es_matlset);
 
     void scheduleUpdateESPotential(SchedulerP& sched, const LevelP& level,
                                    const MaterialSet* es_matl);
@@ -127,6 +132,7 @@ WARNING
     SolverParameters* d_solver_parameters;
     MaterialSet* d_es_matlset;
     MaterialSubset* d_es_matl;
+    bool d_with_mpm;
     
     ElectrostaticSolve(const ElectrostaticSolve&);
     ElectrostaticSolve& operator=(const ElectrostaticSolve&);
