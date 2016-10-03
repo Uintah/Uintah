@@ -75,7 +75,6 @@ DataArchive::DataArchive( const string & filebase,
                           const int      processor     /* = 0 */,
                           const int      numProcessors /* = 1 */,
                           const bool     verbose       /* = true */ ) :
-  ref_cnt(0),
   timestep_cache_size(10),
   default_cache_size(10),
   d_filebase(filebase),
@@ -95,7 +94,7 @@ DataArchive::DataArchive( const string & filebase,
 #endif  
 
   if( d_filebase == "" ) {
-    throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__ );
   }
 
   while( d_filebase[ d_filebase.length() - 1 ] == '/' ) {
@@ -178,12 +177,11 @@ DataArchive::queryOutputFormat( FILE * doc )
     else if( line.compare( 0, 14, "<outputFormat>" ) == 0 ) {
       vector<string> pieces = UintahXML::splitXMLtag( line );
 
-      if( pieces[1] == "PIDX" || pieces[1] == "pidx" ){
+      if( pieces[1] == "PIDX" || pieces[1] == "pidx" ) {
         d_outputFileFormat = PIDX;
-        //proc0cout << "Restart UDA format:     PIDX \n";
-      } else {
+      }
+      else {
         d_outputFileFormat = UDA;
-        //proc0cout << "Restart UDA format:     uda\n";
       }
       return;
     }
@@ -252,7 +250,7 @@ DataArchive::queryTimesteps( vector<int>    & index,
           ts_doc.getAttributes( attributes );
           string tsfile = attributes[ "href" ];
           if( tsfile == "" ) {
-            throw InternalError("DataArchive::queryTimesteps:timestep href not found", __FILE__, __LINE__);
+            throw InternalError( "DataArchive::queryTimesteps:timestep href not found", __FILE__, __LINE__ );
           }
 
           int          timestepNumber;
@@ -262,7 +260,7 @@ DataArchive::queryTimesteps( vector<int>    & index,
           ProblemSpecP timestepDoc = 0;
 
 	  string::size_type deliminator_index = tsfile.find("/");
-	  string tnumber(tsfile,0,deliminator_index);
+	  string tnumber( tsfile, 0, deliminator_index );
 	  // Usually '.../grid.xml'
 	  string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml";
 
@@ -288,7 +286,7 @@ DataArchive::queryTimesteps( vector<int>    & index,
 
           d_ts_indices.push_back( timestepNumber );
           d_ts_times.push_back( currentTime );
-          d_timeData.push_back( TimeData( this, ts_path_and_filename,grid_path_and_filename ) );
+          d_timeData.push_back( TimeData( this, ts_path_and_filename ) );
         }
       } // end while
     }
@@ -364,30 +362,52 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
   double     start    = Time::currentSeconds();
   TimeData & timedata = getTimeData( index );
 
-  FILE* fp = 0;
-  FILE* fp_grid = fopen( timedata.d_grid_path_and_filename.c_str(), "r" );
+  //  FILE* fp = 0;
+
+  // Based on the timestep path and file name (eg: .../timestep.xml), we need
+  // to cut off the associated path so that we can find the path to grid.xml.
+  string::size_type path_length = timedata.d_ts_path_and_filename.rfind( "/" ) + 1;
+  string path( timedata.d_ts_path_and_filename, 0, path_length );
+  string grid_filename = path + "grid.xml";
+
+  FILE * fp_grid = fopen( grid_filename.c_str(), "r" );
 
   // Check if the grid.xml is present, and use that, if it isn't, then use the grid information
   // that is stored in timestep.xml.
 
-  if (fp_grid == nullptr) {
-    fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
-  } else {
+  bool grid_xml_is_binary = false;
+  if ( fp_grid == nullptr ) {
+    // Could not open grid.xml, just go with timestep.xml.
+    fp_grid = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
+  }
+  else {
+    // Determine if the grid is written in ASCII xml, or in binary.
+    unsigned int marker = -1;
+    fread( &marker, sizeof( marker ), 1, fp_grid );
 
-    fp = fp_grid;
+    if( marker == GRID_MAGIC_NUMBER ) {
+      grid_xml_is_binary = true;
+    }
+    else {
+      // FIXME: do we need to reset the file pointer here?
+    }
   }
 
-  if( fp == nullptr ) {
-    throw InternalError("DataArchive::queryGrid() failed to open input file.\n", __FILE__, __LINE__);
+  if( fp_grid == nullptr ) {
+    throw InternalError( "DataArchive::queryGrid() failed to open input file.\n", __FILE__, __LINE__ );
   }
 
-  GridP grid = scinew Grid;
-
+  GridP                 grid = scinew Grid();
   vector< vector<int> > procMap; // One vector<int> per level.
 
-  grid->readLevelsFromFile( fp, procMap );
+  if( grid_xml_is_binary ) {
+    grid->readLevelsFromFileBinary( fp_grid, procMap );
+  }
+  else {
+    grid->readLevelsFromFile( fp_grid, procMap );
+  }
 
-  fclose( fp );
+  fclose( fp_grid );
 
   // Check to see if the grid has already been reconstructed and that
   // the cell scaling has not changed. Cell scale check can be removed
@@ -403,7 +423,7 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
     old_cell_scale = d_cell_scale;
   }
 
-  if( ups && assignBCs) { // 'ups' is non-null only for restarts.
+  if( ups && assignBCs ) { // 'ups' is non-null only for restarts.
 
     ProblemSpecP grid_ps = ups->findBlock( "Grid" );
     grid->assignBCS( grid_ps, nullptr );
@@ -440,7 +460,9 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
   dbg << "DataArchive::queryGrid completed in " << Time::currentSeconds()-start << " seconds\n";
 
   return grid;
-}
+
+} // end queryGrid()
+
 //______________________________________________________________________
 //
 void
@@ -470,7 +492,7 @@ DataArchive::queryVariables( vector<string>                         & names,
   bool found = ProblemSpec::findBlock( "<variables>", d_indexFile );
 
   if( !found ) {
-    throw InternalError("DataArchive::queryVariables:variables section not found\n", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::queryVariables:variables section not found", __FILE__, __LINE__ );
   }
   queryVariables( d_indexFile, names, types );
 
@@ -532,7 +554,7 @@ DataArchive::queryVariables( FILE                                   * fp,
       ts_doc.getAttributes( attributes );
       string the_type = attributes[ "type" ];
       if( the_type == "" ) {
-        throw InternalError("DataArchive::queryVariables() - 'type' not found", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::queryVariables() - 'type' not found", __FILE__, __LINE__ );
       }
 
       const TypeDescription* td = TypeDescription::lookupType( the_type );
@@ -580,7 +602,7 @@ DataArchive::query(       Variable     & var,
   ASSERT(timedata.d_initialized);
   // make sure info for this patch gets parsed from p*****.xml.
   d_lock.lock();
-  timedata.parsePatch(patch);
+  timedata.parsePatch( patch );
   d_lock.unlock();
 
   VarData & varinfo = timedata.d_varInfo[name];
@@ -620,7 +642,7 @@ DataArchive::query(       Variable     & var,
     // the data to be returned in the virtual coordinate space.
     if (!timedata.d_datafileInfo.lookup(VarnameMatlPatch(name, matlIndex, patchid), datafileinfo)) {
       cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " << timeIndex << "\nPlease make sure the correct material index is specified\n";
-      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
     }
     dfi = &datafileinfo;
   }
@@ -637,8 +659,8 @@ DataArchive::query(       Variable     & var,
       throw InternalError( "DataArchive::query:Cannot get numParticles", __FILE__, __LINE__ );
     }
     if (patch->isVirtual()) {
-      throw InternalError("DataArchive::query: Particle query on virtual patches "
-                          "not finished.  We need to adjust the particle positions to virtual space...", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::query: Particle query on virtual patches "
+                           "not finished.  We need to adjust the particle positions to virtual space...", __FILE__, __LINE__ );
     }
 
     psetDBType::key_type   key( matlIndex, patch );
@@ -704,8 +726,8 @@ DataArchive::query(       Variable     & var,
     ostringstream warn;
     warn << "\nERROR DataArchive::query()\n"
          << "The uda you are trying to open was written using the PIDX file format.\n"
-         << "You must configure and compile with PIDX enabled.\n";
-    throw InternalError(warn.str() , __FILE__, __LINE__);
+         << "You must configure and compile with PIDX enabled.";
+    throw InternalError( warn.str() , __FILE__, __LINE__ );
   }
 
 
@@ -872,7 +894,7 @@ DataArchive::query(       Variable       & var,
     d_lock.lock();
     TimeData & td = getTimeData( timeIndex );
     d_lock.unlock();
-    td.parsePatch(patch); // make sure vars is actually populated
+    td.parsePatch( patch ); // make sure vars is actually populated
     if (td.d_varInfo.find(name) != td.d_varInfo.end()) {
       VarData& varinfo = td.d_varInfo[name];
       const TypeDescription* type = TypeDescription::lookupType(varinfo.type);
@@ -883,7 +905,7 @@ DataArchive::query(       Variable       & var,
     else {
       cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index "
            << timeIndex << "\nPlease make sure the correct material index is specified\n";
-      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
     }
   }
 }
@@ -916,7 +938,7 @@ DataArchive::queryRegion(       Variable  & var,
     const Patch* patch = patches[i];
 
     if (type == 0) {
-      td.parsePatch(patch); // make sure varInfo is loaded
+      td.parsePatch( patch ); // make sure varInfo is loaded
       VarData& varinfo = td.d_varInfo[name];
       type = TypeDescription::lookupType(varinfo.type);
       basis = Patch::translateTypeToBasis(type->getType(), false);
@@ -1242,7 +1264,7 @@ DataArchive::queryRestartTimestep( int & timestep )
     restart_ps->getAttributes( attributes );
     string ts_num_str = attributes[ "timestep" ];
     if( ts_num_str == "" ) {
-      throw InternalError("DataArchive::queryVariables() - 'timestep' not found", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::queryVariables() - 'timestep' not found", __FILE__, __LINE__ );
     }
     timestep = atoi( ts_num_str.c_str() );
     delete restart_ps;
@@ -1298,10 +1320,8 @@ DataArchive::setTimestepCacheSize( int new_size ) {
 }
 
 
-DataArchive::TimeData::TimeData( DataArchive* da, const string& timestepPathAndFilename,
-				 const string& gridPathAndFilename) :
-  d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ),
-  d_grid_path_and_filename( gridPathAndFilename ), d_parent_da( da )
+DataArchive::TimeData::TimeData( DataArchive * da, const string & timestepPathAndFilename ) :
+  d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ), d_parent_da( da )
 {
   d_ts_directory = timestepPathAndFilename.substr( 0, timestepPathAndFilename.find_last_of('/') + 1 );
 }
@@ -1319,8 +1339,7 @@ DataArchive::TimeData::init()
 
   // Pull the list of data xml files from the timestep.xml file.
 
-  FILE * ts_file = fopen( d_ts_path_and_filename.c_str(), "r" );
-  FILE * grid_file = fopen( d_grid_path_and_filename.c_str(), "r" );
+  FILE * ts_file   = fopen( d_ts_path_and_filename.c_str(), "r" );
 
   if( ts_file == nullptr ) {
     // FIXME: add more info to exception.
@@ -1341,105 +1360,37 @@ DataArchive::TimeData::init()
   d_swapBytes = endianness != string(Uintah::endianness());
   d_nBytes    = numbits / 8;
 
-#if 0
-
-    fclose( ts_file );
-
-
-    //// Use the xmlTextReader to parse the file
-  xmlTextReaderPtr reader;
-  reader = xmlNewTextReaderFilename(d_grid_path_and_filename.c_str());
-
-  // If the grid.xml file is not found, then use the timestep.xml file
-  if (reader == nullptr)
-    reader = xmlNewTextReaderFilename(d_ts_path_and_filename.c_str());
-
-  int ret;
-  if (reader != nullptr) {
-    while (xmlTextReaderRead(reader)) {
-      string node_name((char *)xmlTextReaderName(reader));
-
-      printf("%d %d %s %s %d %d\n",
-	     xmlTextReaderDepth(reader),
-	     xmlTextReaderNodeType(reader),
-	     node_name.c_str(),
-	     xmlTextReaderValue(reader),
-	     xmlTextReaderHasAttributes(reader),
-	     xmlTextReaderIsEmptyElement(reader));
-
-      // Find the <Data> node
-      if (node_name == "Data" && xmlTextReaderNodeType(reader) != 15) {
-	cout << "Found the <Data> node" << endl;
-	cout << "Search for the <Datafile> node" << endl;
-	while (xmlTextReaderRead(reader) ) {
-	  string datafile_name((char *)xmlTextReaderName(reader));
-	  cout << "datafile_name = " << datafile_name << endl;
-	  if (datafile_name == "Datafile") {
-	    cout << "Found the <Datafile> node" << endl;
-	    while (xmlTextReaderMoveToNextAttribute(reader) ) {
-	      string attribute_name ((char *)xmlTextReaderName(reader));
-	      string attribute_value ((char *)xmlTextReaderValue(reader));
-	      cout << "attribute name = " << attribute_name << " value = "
-		   << attribute_value << endl;
-
-	      if (attribute_value == "global.xml") {
-		parseFile( d_ts_directory + "global.xml", -1, -1 );
-	      } else {
-
-		// Get the level info out of the xml file: should be lX/pxxxxx.xml.
-		unsigned level = 0;
-		string::size_type start =
-		  attribute_value.find_first_of("l",0,attribute_value.length()-3);
-		string::size_type end = attribute_value.find_first_of("/");
-		if (start != string::npos && end != string::npos && end > start && end-start <= 2) {
-		  level = atoi(attribute_value.substr(start+1, end-start).c_str());
-		}
-
-		if( level >= d_xmlFilenames.size() ) {
-		  d_xmlFilenames.resize( level +1 );
-		  d_xmlParsed.resize(    level + 1 );
-		}
-
-		string filename = d_ts_directory + attribute_value;
-		d_xmlFilenames[ level ].push_back( filename );
-		d_xmlParsed[    level ].push_back( false );
-	      }
-
-	    } // End of search through attributes
-	  }
-	}
-      }
-
-    }
-    xmlFreeTextReader(reader);
-  } else {
-    printf("Unable to open %s\n", d_grid_path_and_filename.c_str());
-  }
-
-#endif
-
-#if 1
   bool found = false;
-  string data_file_name = "";
-  if (grid_file != nullptr) {
-    found = ProblemSpec::findBlock( "<Data>", grid_file );
-    data_file_name = d_grid_path_and_filename;
-  } else {
+
+  // Based on the timestep path and file name (eg: .../timestep.xml), we need
+  // to cut off the associated path so that we can find the path to data.xml.
+  string::size_type path_length = d_ts_path_and_filename.rfind( "/" ) + 1;
+  string path( d_ts_path_and_filename, 0, path_length );
+  string data_filename = path + "data.xml";
+
+  FILE * data_file = fopen( data_filename.c_str(), "r" );
+
+  if ( data_file != nullptr ) {
+    // If the data.xml file exists, look in it.
+    found = ProblemSpec::findBlock( "<Data>", data_file );
+  }
+  else {
+    // Otherwise, look in the original timestep.xml file.
     found = ProblemSpec::findBlock( "<Data>", ts_file );
-    data_file_name = d_ts_path_and_filename;
   }
 
   if( !found ) {
-    throw InternalError( "Cannot find <Data> in " + data_file_name, __FILE__, __LINE__ );
+    throw InternalError( "Cannot find <Data> in " + data_filename, __FILE__, __LINE__ );
   }
 
   bool done = false;
   while( !done ) {
 
     string line = "";
-    if (grid_file != nullptr) {
-      line = UintahXML::getLine( grid_file );
-    } else {
+    if ( data_file != nullptr ) {
+      line = UintahXML::getLine( data_file );
+    }
+    else {
       line = UintahXML::getLine( ts_file );
     }
     if( line == "" || line == "</Data>" ) {
@@ -1453,7 +1404,7 @@ DataArchive::TimeData::init()
       ts_doc.getAttributes( attributes );
       string datafile = attributes[ "href" ];
       if( datafile == "" ) {
-        throw InternalError("DataArchive::TimeData::init() - 'href' not found", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::TimeData::init() - 'href' not found", __FILE__, __LINE__ );
       }
       string proc = attributes["proc"];
 
@@ -1470,8 +1421,7 @@ DataArchive::TimeData::init()
           }
       */
       if( datafile == "global.xml" ) {
-        // Assuming that global.xml will always be small and thus using normal
-        // xml lib parsing...
+        // Assuming that global.xml will always be small and thus using normal xml lib parsing...
         parseFile( d_ts_directory + datafile, -1, -1 );
       }
       else {
@@ -1495,14 +1445,15 @@ DataArchive::TimeData::init()
       }
     }
     else {
-      throw InternalError("DataArchive::TimeData::init() - bad line in <Data> block...", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::TimeData::init() - bad line in <Data> block...", __FILE__, __LINE__ );
     }
   } // end while()
 
   fclose( ts_file );
-  if (grid_file)
-    fclose( grid_file );
-#endif
+
+  if ( data_file ) {
+    fclose( data_file );
+  }
 
 } // end init()
 //______________________________________________________________________
@@ -1535,17 +1486,17 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
     if(vnode->getNodeName() == "Variable") {
       string varname;
       if( !vnode->get("variable", varname) ) {
-        throw InternalError("Cannot get variable name", __FILE__, __LINE__);
+        throw InternalError( "Cannot get variable name", __FILE__, __LINE__ );
       }
 
       int patchid;
       if(!vnode->get("patch", patchid) && !vnode->get("region", patchid)) {
-        throw InternalError("Cannot get patch id", __FILE__, __LINE__);
+        throw InternalError( "Cannot get patch id", __FILE__, __LINE__ );
       }
 
       int index;
       if(!vnode->get("index", index)) {
-        throw InternalError("Cannot get index", __FILE__, __LINE__);
+        throw InternalError( "Cannot get index", __FILE__, __LINE__ );
       }
 
       if (addMaterials) {
@@ -1561,19 +1512,19 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
 
       string type = attributes["type"];
       if( type == "" ) {
-        throw InternalError("DataArchive::query:Variable doesn't have a type", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::query:Variable doesn't have a type", __FILE__, __LINE__ );
       }
       long start;
       if( !vnode->get("start", start) ) {
-        throw InternalError("DataArchive::query:Cannot get start", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::query:Cannot get start", __FILE__, __LINE__ );
       }
       long end;
       if( !vnode->get("end", end) ) {
-        throw InternalError("DataArchive::query:Cannot get end", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::query:Cannot get end", __FILE__, __LINE__ );
       }
       string filename;
       if( !vnode->get("filename", filename) ) {
-        throw InternalError("DataArchive::query:Cannot get filename", __FILE__, __LINE__);
+        throw InternalError( "DataArchive::query:Cannot get filename", __FILE__, __LINE__ );
       }
 
       // Not required
@@ -1612,7 +1563,7 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
         d_globaldata = filename;
       }
       else {
-        ASSERTRANGE(patchid-basePatch, 0, (int)d_patchInfo[levelNum].size());
+        ASSERTRANGE( patchid-basePatch, 0, (int)d_patchInfo[levelNum].size() );
 
         PatchData& patchinfo = d_patchInfo[levelNum][patchid-basePatch];
         if (!patchinfo.parsed) {
@@ -1642,7 +1593,8 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
 void
 DataArchive::TimeData::parsePatch( const Patch * patch )
 {
-  ASSERT(d_grid != 0);
+  ASSERT( d_grid != 0 );
+
   if( !patch ) {
     proc0cout << "parsePatch called with null patch....\n";
     return;
@@ -1657,6 +1609,7 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
   int patchIndex       = real_patch->getLevelIndex();
 
   PatchData & patchinfo = d_patchInfo[levelIndex][patchIndex];
+
   if( patchinfo.parsed ) {
     return;
   }
@@ -1677,9 +1630,9 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
   }
 
   // failed the guess - parse the entire dataset for this level
-  if (!patchinfo.parsed) {
+  if ( !patchinfo.parsed ) {
     for (unsigned proc = 0; proc < d_xmlFilenames[levelIndex].size(); proc++) {
-      parseFile(d_xmlFilenames[levelIndex][proc], levelIndex, levelBasePatchID);
+      parseFile( d_xmlFilenames[levelIndex][proc], levelIndex, levelBasePatchID );
       d_xmlParsed[levelIndex][proc] = true;
     }
   }
@@ -1694,7 +1647,7 @@ DataArchive::getOldDelt( int restart_index )
   TimeData& timedata = getTimeData( restart_index );
   FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
   if( fp == nullptr ) {
-    throw InternalError("DataArchive::setOldDelt() failed open datafile.", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::setOldDelt() failed open datafile.", __FILE__, __LINE__ );
   }
   // Note, old UDAs had a <delt> flag, but that was deprecated long ago in favor of the <oldDelt>
   // flag which is what we are going to look for here.
@@ -1705,7 +1658,7 @@ DataArchive::getOldDelt( int restart_index )
 
     if( line == "" ) {
       fclose( fp );
-      throw InternalError("DataArchive::setOldDelt() failed to find <oldDelt>.", __FILE__, __LINE__);
+      throw InternalError( "DataArchive::setOldDelt() failed to find <oldDelt>.", __FILE__, __LINE__ );
     }
     else if( line.compare( 0, 9, "<oldDelt>" ) == 0 ) {
       vector<string> pieces = UintahXML::splitXMLtag( line );
@@ -1722,16 +1675,17 @@ DataArchive::getOldDelt( int restart_index )
 // is in the correct order - in other words, anything after </Data> is component related,
 // and everything before it can be removed.
 //
-// Now that we are using the grid.xml for <Grid> and <Data> sections, this function is altered
-// slightly.  Read in from the beginning of the <Uintah_timestep> including the <Meta> section.
+// Now that we are using grid.xml for the <Grid> and data.xml for the <Data> sections, this function is
+// altered slightly.  Read in from the beginning of the <Uintah_timestep> including the <Meta> section.
+//
 ProblemSpecP
 DataArchive::getTimestepDocForComponent( int restart_index )
 {
-  TimeData& timedata = getTimeData( restart_index );
-  FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
+  TimeData & timedata = getTimeData( restart_index );
+  FILE     * fp       = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
 
   if( fp == nullptr ) {
-    throw InternalError("DataArchive::getTimespecDocForComponent() failed open datafile.", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::getTimespecDocForComponent() failed open datafile.", __FILE__, __LINE__ );
   }
 
 #if 0
@@ -1742,7 +1696,7 @@ DataArchive::getTimestepDocForComponent( int restart_index )
   }
 
   if( !found ) {
-    throw InternalError("DataArchive::getTimespecDocForComponent() failed to find </Data>.", __FILE__, __LINE__);
+    throw InternalError( "DataArchive::getTimespecDocForComponent() failed to find </Data>.", __FILE__, __LINE__ );
   }
 #endif
 
@@ -1777,7 +1731,7 @@ DataArchive::queryMaterials( const string & varname,
   d_lock.lock();
 
   TimeData& timedata = getTimeData( index );
-  timedata.parsePatch(patch);
+  timedata.parsePatch( patch );
 
   ConsecutiveRangeSet matls;
 
@@ -1807,7 +1761,7 @@ DataArchive::queryNumMaterials(const Patch* patch, int index)
 
   TimeData& timedata = getTimeData( index );
 
-  timedata.parsePatch(patch);
+  timedata.parsePatch( patch );
 
   int numMatls = -1;
 
@@ -1834,7 +1788,7 @@ DataArchive::exists( const string& varname,
   d_lock.lock();
 
   TimeData& timedata = getTimeData(timeStep);
-  timedata.parsePatch(patch);
+  timedata.parsePatch( patch );
 
   int levelIndex = patch->getLevel()->getIndex();
 

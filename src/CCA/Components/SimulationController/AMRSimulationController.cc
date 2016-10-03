@@ -69,16 +69,17 @@
 #endif
 
 #ifdef HAVE_CUDA
-//#include <CCA/Components/Schedulers/GPUUtilities.h>
-#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+//#  include <CCA/Components/Schedulers/GPUUtilities.h>
+#  include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
+
 #include <iostream>
 #include <iomanip>
 
 using namespace std;
 using namespace Uintah;
 
-DebugStream amrout("AMR", false);
+       DebugStream amrout("AMR", false); // Note: also used in SimulationController.cc.
 static DebugStream dbg("AMRSimulationController", false);
 static DebugStream dbg_barrier("MPIBarriers",false);
 static DebugStream dbg_dwmem("LogDWMemory",false);
@@ -86,10 +87,10 @@ static DebugStream gprofile("CPUProfiler",false);
 static DebugStream gheapprofile("HeapProfiler",false);
 static DebugStream gheapchecker("HeapChecker",false);
 
-AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
-                                                 bool doAMR,
-						 ProblemSpecP pspec) :
-  SimulationController(myworld, doAMR, pspec)
+AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld,
+                                                  bool                   doAMR,
+                                                  ProblemSpecP           pspec ) :
+  SimulationController( myworld, doAMR, pspec )
 {
   scrubDataWarehouse = true;
 }
@@ -98,7 +99,7 @@ AMRSimulationController::~AMRSimulationController()
 {
 }
 
-double barrier_times[5]={0};
+double barrier_times[5] = {0};
 
 //______________________________________________________________________
 //

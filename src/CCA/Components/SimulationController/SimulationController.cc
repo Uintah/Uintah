@@ -78,12 +78,6 @@ extern Uintah::DebugStream amrout;
 
 namespace Uintah {
 
-double
-stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
-{
-  return sqrt( (n*sum_of_x_squares - sum_of_x*sum_of_x) / (n*n) );
-}
-
 SimulationController::SimulationController( const ProcessorGroup * myworld,
                                                   bool             doAMR,
                                                   ProblemSpecP     pspec ) :
@@ -182,15 +176,15 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   // some PAPI boiler plate
   retp = PAPI_library_init(PAPI_VER_CURRENT);
   if (retp != PAPI_VER_CURRENT) {
-    proc0cout << "Error: Cannot initialize PAPI library!" << endl
-              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+    proc0cout << "Error: Cannot initialize PAPI library!\n"
+              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
   }
   retp = PAPI_thread_init(pthread_self);
   if (retp != PAPI_OK) {
     if (d_myworld->myrank() == 0) {
-      cout << "Error: Cannot initialize PAPI thread support!" << endl
-           << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+      cout << "Error: Cannot initialize PAPI thread support!\n"
+           << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
     }
     if (Parallel::getNumThreads() > 1) {
       throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
@@ -201,9 +195,9 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   for (map<int, PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
     retp = PAPI_query_event(iter->first);
     if (retp != PAPI_OK) {
-      proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!" << endl
-                << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
-                << "          No stats will be printed for " << iter->second.simStatName << endl;
+      proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!\n"
+                << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n"
+                << "          No stats will be printed for " << iter->second.simStatName << "\n";
     } else {
       iter->second.isSupported = true;
     }
@@ -212,8 +206,8 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   // create a new empty PAPI event set
   retp = PAPI_create_eventset(&d_eventSet);
   if (retp != PAPI_OK) {
-    proc0cout << "Error: Cannot create PAPI event set!" << endl
-              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+    proc0cout << "Error: Cannot create PAPI event set!\n"
+              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
   }
 
@@ -227,9 +221,9 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
       retp = PAPI_add_event(d_eventSet, iter->first);
       if (retp != PAPI_OK) { // this means the event queried OK but could not be added
         if (d_myworld->myrank() == 0) {
-          cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!"  << endl
-               << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
-               << "          No stats will be printed for " << iter->second.simStatName << endl;
+          cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!\n"
+               << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n"
+               << "          No stats will be printed for " << iter->second.simStatName << "\n";
         }
         iter->second.isSupported = false;
       } else {
@@ -241,8 +235,8 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
 
   retp = PAPI_start(d_eventSet);
   if (retp != PAPI_OK) {
-    proc0cout << "WARNNING: Cannot start PAPI event set!"  << endl
-              << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+    proc0cout << "WARNNING: Cannot start PAPI event set!\n"
+              << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI event set start error. Unable to start hardware counter event set.", __FILE__, __LINE__);
   }
 #endif
@@ -385,13 +379,13 @@ SimulationController::gridSetup( void )
   }
 
   if( !d_restarting ) {
-    grid = scinew Grid;
-    d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+    grid = scinew Grid();
+    d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
     if( !d_sim ) {
-      throw InternalError("No simulation component", __FILE__, __LINE__);
+      throw InternalError( "No simulation component", __FILE__, __LINE__ );
     }
-    d_sim->preGridProblemSetup(d_ups, grid, d_sharedState);
-    grid->problemSetup(d_ups, d_myworld, d_doAMR);
+    d_sim->preGridProblemSetup( d_ups, grid, d_sharedState );
+    grid->problemSetup( d_ups, d_myworld, d_doAMR );
   }
   else {
     // tsaad & bisaac: At this point, and during a restart, there not legitimate load balancer. This means
@@ -404,14 +398,14 @@ SimulationController::gridSetup( void )
     // NOTE the "false" argument below.
     grid = d_archive->queryGrid( d_restartIndex, d_ups, false );
   }
-  if(grid->numLevels() == 0){
+  if( grid->numLevels() == 0 ) {
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }
    
   // Print out meta data
-  if (d_myworld->myrank() == 0){
+  if ( d_myworld->myrank() == 0 ) {
     grid->printStatistics();
-    amrout << "Restart grid\n" << *grid.get_rep() << endl;
+    amrout << "Restart grid\n" << *grid.get_rep() << "\n";
   }
 
   // set the dimensionality of the problem.
@@ -624,6 +618,14 @@ SimulationController::initSimulationStatsVars( void )
 
 //______________________________________________________________________
 //
+
+static
+double
+stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
+{
+  return sqrt( (n*sum_of_x_squares - sum_of_x*sum_of_x) / (n*n) );
+}
+
 void
 SimulationController::printSimulationStats( int timestep, double delt, double time )
 {
@@ -934,8 +936,8 @@ SimulationController::getPAPIStats( )
   int retp = PAPI_read(d_eventSet, d_eventValues);
 
   if (retp != PAPI_OK) {
-    proc0cout << "Error: Cannot read PAPI event set!" << endl
-              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+    proc0cout << "Error: Cannot read PAPI event set!\n"
+              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   }
   else {
@@ -953,13 +955,13 @@ SimulationController::getPAPIStats( )
   retp = PAPI_reset(d_eventSet);
 
   if (retp != PAPI_OK) {
-    proc0cout << "WARNNING: Cannot reset PAPI event set!" << endl
+    proc0cout << "WARNNING: Cannot reset PAPI event set!\n"
               << "          Error code = " << retp << " ("
-	      << d_papiErrorCodes.find(retp)->second << ")" << endl;
+	      << d_papiErrorCodes.find(retp)->second << ")\n";
 
-    throw PapiInitializationError("PAPI reset error on hardware event set. "
-				  "Unable to reset event set values.",
-				  __FILE__, __LINE__);
+    throw PapiInitializationError( "PAPI reset error on hardware event set. "
+                                   "Unable to reset event set values.",
+                                   __FILE__, __LINE__ );
   }
 #endif
 }
