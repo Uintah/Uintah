@@ -827,7 +827,12 @@ RMCRTCommon::randVector( vector <int> &int_array,
   }
 
   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
-    int rand_int =  mTwister.randInt(i);
+    int rand_int = 0;
+#ifdef FIXED_RANDOM_NUM
+    rand_int = mTwister.rand() * i;  //The GPU side does it this way, so do it this way host-side to get the same numbers.
+#else
+    rand_int =  mTwister.randInt(i);
+#endif
     int swap = int_array[i];
     int_array[i] = int_array[rand_int];
     int_array[rand_int] = swap;
