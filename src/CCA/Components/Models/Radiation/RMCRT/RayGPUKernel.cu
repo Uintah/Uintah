@@ -134,6 +134,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         GPUIntVector c = make_int3(tidX, tidY, z);
         divQ[c]          = 0.0;
         radiationVolQ[c] = 0.0;
+        boundFlux[c].initialize(0.0);
       }
     }
   }
@@ -150,7 +151,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
 
   bool doLatinHyperCube = (RT_flags.rayDirSampleAlgo == LATIN_HYPER_CUBE);
-  
+
   const int nFluxRays = RT_flags.nFluxRays;               // for readability
 
   // This rand_i array is only needed for LATIN_HYPER_CUBE scheme
@@ -569,7 +570,7 @@ __device__ void rayDirectionHyperCube_cellFaceDevice(curandState* randNumStates,
                                                      const int bin_j,
                                                      const int nFluxRays)
 {
- // randomly sample within each randomly selected region (may not be needed, alternatively choose center of subregion)
+  // randomly sample within each randomly selected region (may not be needed, alternatively choose center of subregion)
   cosTheta = (randDblExcDevice(randNumStates) + (double) bin_i)/(double)nFluxRays;
 
   double theta = acos(cosTheta);      // polar angle for the hemisphere
