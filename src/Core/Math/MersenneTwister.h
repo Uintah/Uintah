@@ -89,7 +89,7 @@
 #include <time.h>
 #include <math.h>
 
-#define FIXED_RANDOM_NUM
+//#define FIXED_RANDOM_NUM
 
 class MTRand {
 // Data
