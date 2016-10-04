@@ -778,6 +778,10 @@ if test "$BUILD_ARCHES"  != "yes"              -a   \
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
+if test "$BUILD_ICE" = "yes" -a "$BUILD_MPM" = "no"; then
+   AC_MSG_ERROR( [If you enable ICE, you must enable MPM too.] )
+fi
+
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" != NOT_SET ; then
    AC_MSG_ERROR( You cannot use both --with-MallocTrace and --enable-sci-malloc! )
 fi

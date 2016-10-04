@@ -77,13 +77,13 @@ include $(SCIRUN_SCRIPTS)/program.mk
 #
 # grid_reader
 #
-# Grid to Human Readable
+# Program used to display a binary grid.xml file in human readable (XML) format.
 #
 LIBS := 
 PSELIBS :=
 
 SRCS    := $(SRCDIR)/grid_reader.cc
-PROGRAM := StandAlone/grid_reader
+PROGRAM := StandAlone/tools/puda/grid_reader
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
