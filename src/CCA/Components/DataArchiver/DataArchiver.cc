@@ -525,7 +525,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
     d_nextCheckpointWalltime = d_checkpointWalltimeInterval + (int)Time::currentSeconds();
     Uintah::MPI::Bcast( &d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm() );
   }
-}
+} // end restartSetup()
 
 //______________________________________________________________________
 // This is called after problemSetup. It will copy the dat & checkpoint files to the new directory.
