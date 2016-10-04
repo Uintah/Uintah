@@ -345,20 +345,20 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
     // Make sure we are all writing at same time.  When node clocks disagree,
     // make decision based on Rank-0 time.
-    Uintah::MPI::Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
+    Uintah::MPI::Bcast( &d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm() );
   }
   
   //__________________________________
   // 
-  if ( d_checkpointInterval > 0 ){
+  if ( d_checkpointInterval > 0 ) {
     proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointInterval << " physical seconds.\n";
   }
-  if  ( d_checkpointTimestepInterval > 0 ){
+  if ( d_checkpointTimestepInterval > 0 ) {
     proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointTimestepInterval << " timesteps.\n";
   }
-  if  ( d_checkpointWalltimeInterval > 0 ){
+  if ( d_checkpointWalltimeInterval > 0 ) {
     proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointWalltimeInterval << " wall clock seconds,"
-              << " starting time:" << d_checkpointWalltimeStart << " sec.\n";
+              << " starting after " << d_checkpointWalltimeStart << " seconds.\n";
   }
 }
 //______________________________________________________________________
@@ -410,7 +410,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
     // create checkpoints/index.xml (if we are saving checkpoints)
     if ( d_checkpointInterval         != 0.0 || 
          d_checkpointTimestepInterval != 0   || 
-         d_checkpointWalltimeInterval != 0) {
+         d_checkpointWalltimeInterval != 0 ) {
       d_checkpointsDir = d_dir.createSubdir("checkpoints");
       createIndexXML(d_checkpointsDir);
     }
@@ -523,7 +523,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
   }
   if( d_checkpointWalltimeInterval > 0 ) {
     d_nextCheckpointWalltime = d_checkpointWalltimeInterval + (int)Time::currentSeconds();
-    Uintah::MPI::Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
+    Uintah::MPI::Bcast( &d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm() );
   }
 }
 
@@ -916,9 +916,8 @@ DataArchiver::finalizeTimestep( double        time,
     if (delt != 0) {
       d_wereSavesAndCheckpointsInitialized = true;
     
-      // can't do checkpoints on init timestep....
-      if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || 
-          d_checkpointWalltimeInterval != 0) {
+      // Can't do checkpoints on init timestep....
+      if( d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || d_checkpointWalltimeInterval != 0 ) {
 
         initCheckpoints( sched );
       }
@@ -978,8 +977,8 @@ DataArchiver::sched_allOutputTasks(       double       delt,
   
   //__________________________________
   //  Schedule Checkpoint (reduction variables)
-  if (delt != 0 && d_checkpointCycle>0 &&
-      (d_checkpointInterval>0 || d_checkpointTimestepInterval>0 || d_checkpointWalltimeInterval>0 ) ) {
+  if (delt != 0 && d_checkpointCycle > 0 &&
+      ( d_checkpointInterval>0 || d_checkpointTimestepInterval>0 || d_checkpointWalltimeInterval > 0 ) ) {
     // output checkpoint timestep
     Task* t = scinew Task( "DataArchiver::outputVariables (CheckpointReduction)", this, &DataArchiver::outputVariables, CHECKPOINT_REDUCTION );
     
@@ -1040,7 +1039,7 @@ DataArchiver::beginOutputTimestep( double time,
   }
   
   int currsecs = -1;
-  if( d_checkpointWalltimeInterval > 0.0 ) {
+  if( d_checkpointWalltimeInterval > 0 ) {
     // If checkpointing based on wall clock time, then have process 0 determine
     // the current time and share it will everyone else.
     if( Parallel::getMPIRank() == 0 ) {
@@ -1225,8 +1224,16 @@ DataArchiver::findNext_OutputCheckPoint_Timestep( double /* delt */, const GridP
       }
     }
     if( d_checkpointWalltimeInterval > 0 ) {
-      if( Time::currentSeconds() >= d_nextCheckpointWalltime ) {
-        d_nextCheckpointWalltime += static_cast<int>( floor( ( Time::currentSeconds() - d_nextCheckpointWalltime ) / d_checkpointWalltimeInterval ) *
+      int currsecs = -1;
+      // If checkpointing based on wall clock time, then have process 0 determine
+      // the current time and share it will everyone else.
+      if( Parallel::getMPIRank() == 0 ) {
+        currsecs = (int)Time::currentSeconds();
+      }
+      Uintah::MPI::Bcast( &currsecs, 1, MPI_INT, 0, d_myworld->getComm() );
+
+      if( currsecs >= d_nextCheckpointWalltime ) {
+        d_nextCheckpointWalltime += static_cast<int>( floor( ( currsecs - d_nextCheckpointWalltime ) / d_checkpointWalltimeInterval ) *
                                                       d_checkpointWalltimeInterval + d_checkpointWalltimeInterval );
       }
     }
@@ -1438,7 +1445,7 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
       
       if (firstCheckpointTimestep) {
         // loop over the blocks in timestep.xml and remove them from input.xml, with
-	// some exceptions.
+        // some exceptions.
         string inputname = d_dir.getName()+"/input.xml";
         ProblemSpecP inputDoc = loadDocument(inputname);
         inputDoc->output((inputname + ".orig").c_str());
@@ -2660,23 +2667,20 @@ DataArchiver::saveLabels_PIDX( std::vector< SaveItem >     & saveLabels,
 
       //__________________________________
       //  patch Loop
-      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
-      {
+      for( int p = 0; p < ( type == CHECKPOINT_REDUCTION ? 1 : patches->size() ); p++ ) {
         const Patch* patch;
-        int patchID;
 
         if (type == CHECKPOINT_REDUCTION) {
           patch = 0;
-          patchID = -1;
-
-        } else {
-          patch   = patches->get(p);      
+        }
+        else {
+          patch = patches->get(p);      
           PIDX_point patchOffset;
           PIDX_point patchSize;
           PIDXOutputContext::patchExtents patchExts;
           
           pidx.setPatchExtents( "DataArchiver::saveLabels_PIDX", patch, level, label->getBoundaryLayer(),
-                              td, patchExts, patchOffset, patchSize );
+                                td, patchExts, patchOffset, patchSize );
                               
           //__________________________________
           // debugging
@@ -3832,22 +3836,22 @@ DataArchiver::setupLocalFileSystems()
     }
     string dirname;
     in >> dirname;
-    d_dir=Dir(dirname);
+    d_dir = Dir( dirname );
   }
-  int count=d_writeMeta?1:0;
+  int count = d_writeMeta ? 1 : 0;
   int nunique;
   // This is an AllReduce, not a reduce.  This is necessary to
   // ensure that all processors wait before they remove the tmp files
   Uintah::MPI::Allreduce(&count, &nunique, 1, MPI_INT, MPI_SUM,
                 d_myworld->getComm());
-  if(d_myworld->myrank() == 0) {
-    double dt=Time::currentSeconds()-start;
+  if( d_myworld->myrank() == 0 ) {
+    double dt = Time::currentSeconds() - start;
     cerr << "Discovered " << nunique << " unique filesystems in " << dt << " seconds\n";
   }
   // Remove the tmp files...
   int s = unlink(myname.str().c_str());
-  if(s != 0) {
+  if( s != 0 ) {
     cerr << "Cannot unlink file: " << myname.str() << '\n';
-    throw ErrnoException("unlink", errno, __FILE__, __LINE__);
+    throw ErrnoException( "unlink", errno, __FILE__, __LINE__ );
   }
 }

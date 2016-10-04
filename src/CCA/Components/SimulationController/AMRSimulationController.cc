@@ -260,8 +260,8 @@ AMRSimulationController::run()
       requested_nth_output_proc = d_lb->getNthRank();
 
       if( requested_nth_output_proc > 1 ) {
-        proc0cout << "Input file requests output to be saved by every " << requested_nth_output_proc << "th processor.\n";
-        proc0cout << "  - However, setting output to every process until we hit a checkpoint\n";
+        proc0cout << "Input file requests output to be saved by every " << requested_nth_output_proc << "th processor.\n"
+                  << "  - However, setting output to every process until we hit a checkpoint\n";
         d_lb->setNthRank( 1 );
         d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
         d_output->setSaveAsPIDX();
@@ -327,12 +327,24 @@ AMRSimulationController::run()
 
       int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep() + 1;
 
+      // When using Wall Clock Time for checkpoints, we need to have rank 0 determine this time and
+      // then send it to all other ranks.
+      int currsecs = -1;
+      if( d_output->getCheckpointWalltimeInterval() > 0 ) {
+        // If checkpointing based on wall clock time, then have process 0 determine
+        // the current time and share it will everyone else.
+        if( Parallel::getMPIRank() == 0 ) {
+          currsecs = (int)Time::currentSeconds();
+        }
+        Uintah::MPI::Bcast( &currsecs, 1, MPI_INT, 0, d_myworld->getComm() );
+      }
+  
       if( ( d_output->getCheckpointTimestepInterval() > 0 && currentTimeStep == d_output->getNextCheckpointTimestep() ) ||
           ( d_output->getCheckpointInterval() > 0         && ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
-          ( d_output->getCheckpointWalltimeInterval() > 0 && ( Time::currentSeconds() >= d_output->getNextCheckpointWalltime() ) ) ) {
+          ( d_output->getCheckpointWalltimeInterval() > 0 && ( currsecs >= d_output->getNextCheckpointWalltime() ) ) ) {
 
         if( requested_nth_output_proc > 1 ) {
-          proc0cout << "this is a checkpoint timestep (" << currentTimeStep
+          proc0cout << "This is a checkpoint timestep (" << currentTimeStep
                     << ") - need to recompile with nth proc set to: " << requested_nth_output_proc << "\n";
           d_lb->setNthRank( requested_nth_output_proc );
           d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
@@ -342,7 +354,7 @@ AMRSimulationController::run()
       }
       if( ( d_output->getOutputTimestepInterval() > 0 && currentTimeStep == d_output->getNextOutputTimestep() ) ||
           ( d_output->getOutputInterval() > 0         && ( time + delt ) >= d_output->getNextOutputTime() ) ) {
-        proc0cout << "this is an output timestep: " << currentTimeStep << "\n";
+        proc0cout << "This is an output timestep: " << currentTimeStep << "\n";
         if( need_to_recompile ) { // If this is also a checkpoint time step
           proc0cout << "   Postposing as this is also a checkpoint time step...\n";
           d_output->postponeNextOutputTimestep();
@@ -437,7 +449,7 @@ AMRSimulationController::run()
       }
 
       if( put_back ) {
-        proc0cout << "this is the timestep following a checkpoint - need to put the task graph back with a recompile - setting nth output to 1\n";
+        proc0cout << "This is the timestep following a checkpoint - need to put the task graph back with a recompile - setting nth output to 1\n";
         d_lb->setNthRank( 1 );
         d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
         d_output->setSaveAsPIDX();
