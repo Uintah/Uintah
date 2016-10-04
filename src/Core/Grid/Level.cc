@@ -180,17 +180,16 @@ Level::addPatch( const IntVector & lowIndex
                ,       Grid      * grid
                )
 {
-  Patch* r = scinew Patch(this, lowIndex, highIndex, inLowIndex, inHighIndex, getIndex());
-  r->setGrid(grid);
+  Patch* r = scinew Patch( this, lowIndex, highIndex, inLowIndex, inHighIndex, getIndex() );
+  r->setGrid( grid );
+  m_real_patches.push_back( r );
+  m_virtual_and_real_patches.push_back( r );
 
-  m_real_patches.push_back(r);
-  m_virtual_and_real_patches.push_back(r);
+  m_int_spatial_range.extend( r->getBox().lower() );
+  m_int_spatial_range.extend( r->getBox().upper() );
 
-  m_int_spatial_range.extend(r->getBox().lower());
-  m_int_spatial_range.extend(r->getBox().upper());
-
-  m_spatial_range.extend(r->getExtraBox().lower());
-  m_spatial_range.extend(r->getExtraBox().upper());
+  m_spatial_range.extend( r->getExtraBox().lower() );
+  m_spatial_range.extend( r->getExtraBox().upper() );
 
   return r;
 }
@@ -403,8 +402,9 @@ Level::getTotalSimulationCellsInRegion(const IntVector& lowIndex, const IntVecto
   // in this range.  If so, add up their cells. This process is similar to how d_totalCells is
   // computed in Level::finalizeLevel().
 
-  long cellsInRegion =0;
-  for(int i=0; i<(int)m_real_patches.size(); i++){
+  long cellsInRegion = 0; // Compute the number of cells in the level.
+
+  for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
     IntVector patchLow =  m_real_patches[i]->getExtraCellLowIndex();
     IntVector patchHigh =  m_real_patches[i]->getExtraCellHighIndex();
     if (lowIndex.x() <= patchLow.x() &&
@@ -596,10 +596,10 @@ void Level::selectPatches( const IntVector  & low
     }
   }
 
-  ASSERTEQ(neighbors.size(), tneighbors.size());
+  ASSERTEQ( neighbors.size(), tneighbors.size() );
 
   sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
-  for(int i=0;i<(int)neighbors.size();i++) {
+  for( int i = 0; i < (int)neighbors.size(); i++ ) {
     ASSERT(neighbors[i] == tneighbors[i]);
   }
 #endif
@@ -748,7 +748,7 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
   Vector vextent = positionToIndex(bbox.max()) - positionToIndex(bbox.min());
   IntVector extent((int)rint(vextent.x()), (int)rint(vextent.y()), (int)rint(vextent.z()));
 
-  m_periodic_boundaries = IntVector(periodicX ? 1 : 0, periodicY ? 1 : 0, periodicZ ? 1 : 0);
+  m_periodic_boundaries = IntVector( periodicX ? 1 : 0, periodicY ? 1 : 0, periodicZ ? 1 : 0 );
   IntVector periodicBoundaryRange = m_periodic_boundaries * extent;
 
   int x, y, z;
@@ -985,12 +985,12 @@ Level::setBCTypes()
 
   //__________________________________
   //  bullet proofing
-  for (int dir = 0; dir < 3; dir++) {
-    if (m_periodic_boundaries[dir] == 1 && m_extra_cells[dir] != 0) {
+  for( int dir = 0; dir < 3; dir++ ) {
+    if( m_periodic_boundaries[dir] == 1 && m_extra_cells[dir] != 0 ) {
       std::ostringstream warn;
       warn << "\n \n INPUT FILE ERROR: \n You've specified a periodic boundary condition on a face with extra cells specified\n"
            << " Please set the extra cells on that face to 0";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      throw ProblemSetupException( warn.str(), __FILE__, __LINE__ );
     }
   }
 

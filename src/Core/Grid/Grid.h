@@ -93,7 +93,8 @@ WARNING
                      const Uintah::Vector & dcell, int id = -1 );
 
     // Reads in XML data line by line to create a level...
-    void readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap );
+    void readLevelsFromFile(       FILE * fp, std::vector< std::vector<int> > & procMap );
+    void readLevelsFromFileBinary( FILE * fp, std::vector< std::vector<int> > & procMap );
    
     void performConsistencyCheck() const;
     void printStatistics() const;

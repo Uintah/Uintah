@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_DataArchive_H
+#define UINTAH_HOMEBREW_DataArchive_H
+
 /*
  * The MIT License
  *
@@ -22,38 +25,34 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_DataArchive_H
-#define UINTAH_HOMEBREW_DataArchive_H
-
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Containers/HashTable.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/GridP.h>
 #include <Core/Grid/Variables/VarnameMatlPatch.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/Handle.h>
-#include <Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Containers/HashTable.h>
+#include <Core/Util/Handle.h>
+#include <Core/Util/Time.h>
 
+#include <list>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <mutex>
-#include <list>
 
 #include <fcntl.h>
 #include <unistd.h>
 
 namespace Uintah {
-
 
 class VarLabel;
 class DataWarehouse;
@@ -275,11 +274,6 @@ public:
   // corresponding documentation.
   void setTimestepCacheSize(int new_size);
 
-  // These are here for the LockingHandle interface.  The names should
-  // match those found in Core/Datatypes/Datatype.h.
-  int ref_cnt;
-  std::mutex lock{};
-
   // This is added to allow simple geometric scaling of the entire domain
   void setCellScale( Vector& s ){ d_cell_scale = s; }
   // This is added so that particles can see if the domain has been scaled
@@ -299,6 +293,9 @@ public:
   // This will be the default number of timesteps cached, determined
   // by the number of processors.
   int default_cache_size;
+
+  // Used as the first byte of the grid.xml file to designate/verify that it is stored in binary format.
+  static const unsigned int GRID_MAGIC_NUMBER{ 0xdeadbeef };
 
 protected:
   DataArchive();
@@ -338,8 +335,7 @@ private:
   //! - containing data for each time step.
   class TimeData {
   public:    
-    TimeData( DataArchive * da, const std::string & timestepPathAndFilename,
-              const std::string & gridPathAndFilename);
+    TimeData( DataArchive * da, const std::string & timestepPathAndFilename );
     ~TimeData();
     VarData& findVariableInfo(const std::string& name, const Patch* patch, int matl);
 
@@ -386,7 +382,6 @@ private:
 
     ProblemSpecP  d_timestep_ps_for_component;    // timestep.xml's xml for components.
     std::string   d_ts_path_and_filename;         // Path to timestep.xml.
-    std::string   d_grid_path_and_filename;       // Path to grid.xml.
     std::string   d_ts_directory;                 // Directory that contains timestep.xml.
     bool          d_swapBytes;
     int           d_nBytes;
