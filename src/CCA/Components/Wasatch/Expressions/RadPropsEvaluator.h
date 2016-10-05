@@ -6,7 +6,7 @@
 #include <radprops/AbsCoeffGas.h>
 #include <complex>
 
-typedef std::map<RadiativeSpecies,Expr::Tag> RadSpecMap;
+typedef std::map<RadProps::RadiativeSpecies,Expr::Tag> RadSpecMap;
 
 /**
  *  \class RadPropsEvaluator
@@ -18,7 +18,7 @@ class RadPropsEvaluator
  : public Expr::Expression<FieldT>
 {
 
-  GreyGas* greyGas_;
+  RadProps::GreyGas* greyGas_;
   
   DECLARE_FIELD(FieldT, temp_)
   DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_)
@@ -64,7 +64,7 @@ enum ParticleRadProp{
   ROSSELAND_ABSORPTION_COEFF,
 };
 
-class ParticleRadCoeffs; // forward declaration
+namespace RadProps{ class ParticleRadCoeffs; } // forward declaration
 
 /**
  *  \class ParticleRadProps
@@ -73,7 +73,7 @@ template< typename FieldT >
 class ParticleRadProps
  : public Expr::Expression<FieldT>
 {
-  const ParticleRadCoeffs* const props_;
+  const RadProps::ParticleRadCoeffs* const props_;
   const ParticleRadProp prop_;
 
   DECLARE_FIELDS(FieldT, temp_, pRadius_)
