@@ -536,6 +536,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
 
       // TODO: Don't make every task run through this
       // TODO: Verify that it only looks for data that's valid in the GPU, and not assuming it's valid.
+      //Load up the prepareDeviceVars by preparing ghost cell regions to copy out.
       findIntAndExtGpuDependencies( task, iteration, thread_id);
 
       // The ghost cell destinations indicate which devices we're using,
@@ -2278,7 +2279,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           // data on in.  Meanwhile B notices it needs to resize.  So A could start trying to copy in B's
           // ghost cell data while B is resizing its own data.
           // I believe both issues can be fixed with proper checkpoints.  But in reality
-          // we shouldn't be resizing variables on the GPU, so this event should never happenn.
+          // we shouldn't be resizing variables on the GPU, so this event should never happen.
           gpudw->remove(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
           std::cerr << "Resizing of GPU grid vars not implemented at this time.  "
                     << "For the GPU, computes need to be declared with scratch computes to have room for ghost cells."
@@ -2294,25 +2295,6 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           // copied in H2D.  If the data doesn't exist in the GPU, then the upcoming allocateAndPut
           // will allocate space for it.  Otherwise if it does exist on the GPU, the upcoming
           // allocateAndPut will notice that and simply configure it to reuse the pointer.
-
-          if (!allocated && !allocating) {
-
-            //It's not allocated, if so, claim we will allocate (don't actually allocate it here, that can come later)
-
-            //bool allocating = compareAndSwapAllocateSuperPatch(curDependency->m_var->getName().c_str(), patchID, matlID, levelID, low, high);
-
-            //Determine superpatch region, find the lowest patch in it.  Fortunately the
-            //level->selectPatches call does both finding the patches and it sorts it.
-            //Patch::selectType neighbors;
-            //level->selectPatches(low, high, neighbors);
-
-            //compareAndSwap goes here
-            //Whoever claims the lowest patch in the superpatch will manage all patches.
-
-            //initiateH2DCopies prepares host variables here, they aren't prepared in prepareDeviceVars().
-
-
-          }
 
           if (type == TypeDescription::CCVariable
               || type == TypeDescription::NCVariable
@@ -3210,7 +3192,7 @@ UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
           }
           cerrLock.unlock();
         }
-        gpudw->setValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
+        gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
                                     make_int3(it->second.m_offset.x(),it->second.m_offset.y(),it->second.m_offset.z()),
                                     make_int3(it->second.m_sizeVector.x(), it->second.m_sizeVector.y(), it->second.m_sizeVector.z()));
       }
@@ -3312,7 +3294,7 @@ UnifiedScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
           }
           cerrLock.unlock();
         }
-        gpudw->setValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       }
     }
   }
@@ -4226,7 +4208,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           posLabel = m_reloc_new_pos_label;
         }
-        // Invoke Kernel to copy this range out of the GPU.
+        // Load information which will be used to later invoke a kernel to copy this range out of the GPU.
         prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherDeviceSameMpiRank);
       }
     }  // end for (DependencyBatch * batch = task->getInteranlComputes() )
@@ -4303,7 +4285,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
           }
           posLabel = m_reloc_new_pos_label;
         }
-        // Invoke Kernel to copy this range out of the GPU.
+        // Load information which will be used to later invoke a kernel to copy this range out of the GPU.
         prepareGpuDependencies(dtask, batch, posLabel, dw, posDW, req, lb, GpuUtilities::anotherMpiRank);
       }
     }  // end for (DependencyBatch * batch = task->getComputes() )
@@ -4486,10 +4468,11 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
 
   // If we put it in ghostVars, then we copied it to an array on the GPU (D2D).  Go through the ones that indicate
   // they are going to another MPI rank.  Copy them out to the host (D2H).  To make the engine cleaner for now,
-  // we'll then do a H2H copy step into the variable.  In the future, to be more efficient, we could skip the
-  // host to host copy and instead have sendMPI() send the array we get from the device instead.  To be even more efficient
-  // than that, if everything is pinned, unified addressing set up, and CUDA aware MPI used, then we could pull
-  // everything out via MPI that way and avoid the manual D2H copy and the H2H copy.
+  // we'll then do a H2H copy step into the variable.
+  // In the future, to be more efficient, we could skip the host to host copy and instead have sendMPI() send the
+  // array we get from the device instead.
+  // To be even more efficient than that, if everything is pinned, unified addressing set up, and CUDA aware MPI
+  // used, then we could pull everything out via MPI that way and avoid the manual D2H copy and the H2H copy.
   const std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> & ghostVarMap = dtask->getGhostVars().getMap();
   for (std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::const_iterator it = ghostVarMap.begin(); it != ghostVarMap.end(); ++it) {
     //TODO: Needs a particle section
@@ -4578,6 +4561,8 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
     }
   }
 
+
+
   if (copiesExist) {
 
     // Wait until all streams are done
@@ -4589,12 +4574,12 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
       //printf("Sleeping\n");
     }
 
-
     for (std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::const_iterator it = ghostVarMap.begin(); it != ghostVarMap.end(); ++it) {
 
       if (it->second.m_dest == GpuUtilities::anotherMpiRank) {
         // TODO: Needs a particle section
         IntVector host_low, host_high, host_offset, host_size, host_strides;
+        OnDemandDataWarehouseP dw = m_dws[(const int)it->first.m_dataWarehouse];
 
         //We created a temporary host variable for this earlier,
         //and the deviceVars collection knows about it.
@@ -4604,20 +4589,15 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
         DeviceGridVariableInfo item = dtask->getDeviceVars().getStagingItem(it->first.m_label, it->second.m_sourcePatchPointer,
                                                                             it->first.m_matlIndx, it->first.m_levelIndx, ghostLow,
                                                                             ghostSize, (const int)it->first.m_dataWarehouse);
-
-        //We created a temporary host variable for this earlier,
-        //and the deviceVars collection knows about it.
-
         GridVariableBase* tempGhostVar = (GridVariableBase*)item.m_var;
-
-        OnDemandDataWarehouseP dw = m_dws[(const int)it->first.m_dataWarehouse];
 
         //Also get the existing host copy
         GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(it->second.m_label->typeDescription()->createInstance());
+
+        //Get the coordinate low/high of the host copy.
         const Patch * patch = it->second.m_sourcePatchPointer;
         TypeDescription::Type type = it->second.m_label->typeDescription()->getType();
         IntVector lowIndex, highIndex;
-
         bool uses_SHRT_MAX = (item.m_dep->m_num_ghost_cells == SHRT_MAX);
         if (uses_SHRT_MAX) {
           const Level * level = patch->getLevel();
