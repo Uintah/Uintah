@@ -207,6 +207,12 @@ MPMLabel::MPMLabel()
   TotalConcLabel = VarLabel::create( "TotalConc",
       sum_vartype::getTypeDescription() );
 
+  MaxConcLabel = VarLabel::create( "MaxConcLabel",
+      max_vartype::getTypeDescription() );
+
+  MinConcLabel = VarLabel::create( "MinConcLabel",
+      min_vartype::getTypeDescription() );
+
   pAvgConcLabel = VarLabel::create( "p.avgConc",
       sum_vartype::getTypeDescription() );
 
