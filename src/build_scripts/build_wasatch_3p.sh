@@ -391,6 +391,7 @@ if test "$BUILD_RADPROPS" = "yes"; then
     "cmake \
       $DEBUG \
       $STATIC \
+      $CUDA \
       -DRadProps_ENABLE_TESTING=OFF \
       -DRadProps_ENABLE_PREPROCESSOR=OFF \
       -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
