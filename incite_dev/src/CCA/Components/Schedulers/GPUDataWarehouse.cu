@@ -3158,7 +3158,7 @@ GPUDataWarehouse::compareAndSwapCopyingIntoCPU(char const* label, int patchID, i
       } else {
       //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
       atomicDataStatus newVarStatus = oldVarStatus | COPYING_IN;
-      newVarStatus = oldVarStatus & ~UNKNOWN;
+      newVarStatus = newVarStatus & ~UNKNOWN;
       copyingin = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
     }
   }
