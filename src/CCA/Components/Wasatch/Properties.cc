@@ -126,7 +126,7 @@ namespace WasatchCore{
          spParams != 0;
          spParams = spParams->findNextBlock("SpeciesMoleFraction") ){
       std::string spnam;   spParams->getAttribute("name",spnam);
-      spMap[ species_enum( spnam ) ] = parse_nametag( spParams->findBlock("NameTag") );
+      spMap[ RadProps::species_enum( spnam ) ] = parse_nametag( spParams->findBlock("NameTag") );
     }
     typedef RadPropsEvaluator<SpatialOps::SVolField>::Builder RadPropsExpr;
     gh.exprFactory->register_expression( scinew RadPropsExpr( parse_nametag(ggParams->findBlock("NameTag")),

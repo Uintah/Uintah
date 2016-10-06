@@ -222,9 +222,9 @@ namespace Uintah {
 
         private: 
 
-          GreyGas* _gg_radprops; 
+          RadProps::GreyGas* _gg_radprops;
           std::vector<std::string> _species;               // to match the Arches varlabels
-          std::vector<RadiativeSpecies> _radprops_species; // for rad props
+          std::vector<RadProps::RadiativeSpecies> _radprops_species; // for rad props
           std::string _mix_mol_weight_name; 
           std::vector<double> _sp_mw; 
 
@@ -366,7 +366,7 @@ namespace Uintah {
           double _ashImag;
           std::complex<double> _complexLo;  
           std::complex<double> _complexHi;  
-          ParticleRadCoeffs3D* _part_radprops; 
+          RadProps::ParticleRadCoeffs3D* _part_radprops;
 
           
 
@@ -463,7 +463,7 @@ namespace Uintah {
 
         private: 
 
-          ParticleRadCoeffs* _part_radprops; 
+          RadProps::ParticleRadCoeffs* _part_radprops;
           double _constAsymmFact;
           bool _p_planck_abskp; 
           bool _p_ros_abskp; 

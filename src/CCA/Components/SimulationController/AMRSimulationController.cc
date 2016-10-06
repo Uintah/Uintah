@@ -320,6 +320,7 @@ AMRSimulationController::run()
       newDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
     }
 #ifdef HAVE_PIDX
+    bool checkpointing = false;
     if( d_output && d_output->savingAsPIDX() ) {
       // Because "incrementCurrentTopLevelTimeStep()" has not yet been called
       // at this point in the loop, we need to add 1 to the currentTimeStep to know if we
@@ -343,6 +344,7 @@ AMRSimulationController::run()
           ( d_output->getCheckpointInterval() > 0         && ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
           ( d_output->getCheckpointWalltimeInterval() > 0 && ( currsecs >= d_output->getNextCheckpointWalltime() ) ) ) {
 
+        checkpointing = true;
         if( requested_nth_output_proc > 1 ) {
           proc0cout << "This is a checkpoint timestep (" << currentTimeStep
                     << ") - need to recompile with nth proc set to: " << requested_nth_output_proc << "\n";
@@ -559,10 +561,7 @@ AMRSimulationController::run()
     if( d_output ) {
 #ifdef HAVE_PIDX
       if ( d_output->savingAsPIDX()) {
-        int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep();
-        if( ( d_output->getCheckpointTimestepInterval() > 0 && ( currentTimeStep + 1 ) == d_output->getNextCheckpointTimestep() ) ||
-            ( d_output->getCheckpointInterval() > 0         && ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
-            ( d_output->getCheckpointWalltimeInterval() > 0 && ( Time::currentSeconds() >= d_output->getNextCheckpointWalltime() ) ) ) {
+        if( checkpointing ) {
           // Only save timestep.xml if we are checkpointing.  Normal time step dumps (using PIDX) do not need to write the xml information.
           d_output->writeto_xml_files( delt, currentGrid );
         }

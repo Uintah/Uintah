@@ -150,8 +150,13 @@ void AutoCycleFluxBC::scheduleApplyExternalScalarFlux(SchedulerP& sched, const P
   }
   t->requires(Task::OldDW, d_mpm_lb->pVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, d_mpm_lb->pDeformationMeasureLabel,Ghost::None);
-  t->requires(Task::OldDW, d_mpm_lb->TotalConcLabel,          Ghost::None);
-  t->requires(Task::OldDW, d_mpm_lb->partCountLabel,          Ghost::None);
+  if(d_mpm_flags->d_autoCycleUseMinMax){
+    t->requires(Task::OldDW, d_mpm_lb->MaxConcLabel,          Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->MinConcLabel,          Ghost::None);
+  }else{
+    t->requires(Task::OldDW, d_mpm_lb->TotalConcLabel,        Ghost::None);
+    t->requires(Task::OldDW, d_mpm_lb->partCountLabel,        Ghost::None);
+  }
 
 #if defined USE_FLUX_RESTRICTION
   if(d_mpm_flags->d_doScalarDiffusion){
@@ -197,20 +202,36 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
 
   sumlong_vartype totalparts;
   sum_vartype totalconc;
+  max_vartype maxconc;
+  min_vartype minconc;
   double avgconc;
 
-  old_dw->get(totalparts, d_mpm_lb->partCountLabel);
-  old_dw->get(totalconc,  d_mpm_lb->TotalConcLabel);
+  if(d_mpm_flags->d_autoCycleUseMinMax){
+    old_dw->get(maxconc, d_mpm_lb->MaxConcLabel);
+    old_dw->get(minconc, d_mpm_lb->MinConcLabel);
 
-  avgconc = totalconc/(double)totalparts;
-
-  if(d_flux_sign > 0){
-    if(avgconc > .94)
-      d_flux_sign = -1.0;
+    if(d_flux_sign > 0){
+      if(minconc > d_auto_cycle_max)
+        d_flux_sign = -1.0;
+    }else{
+      if(maxconc < d_auto_cycle_min)
+        d_flux_sign = 1.0;
+    }
   }else{
-    if(avgconc < .1)
-      d_flux_sign = 1.0;
+    old_dw->get(totalparts, d_mpm_lb->partCountLabel);
+    old_dw->get(totalconc,  d_mpm_lb->TotalConcLabel);
+
+    avgconc = totalconc/(double)totalparts;
+
+    if(d_flux_sign > 0){
+      if(avgconc > d_auto_cycle_max)
+        d_flux_sign = -1.0;
+    }else{
+      if(avgconc < d_auto_cycle_min)
+        d_flux_sign = 1.0;
+    }
   }
+
   // Loop thru patches to update scalar flux
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

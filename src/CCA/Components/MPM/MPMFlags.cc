@@ -112,6 +112,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doScalarDiffusion = false; //for diffusion component found in ReactiveFlow
 
   d_doAutoCycleBC = false; //for scalar flux boundary conditions
+  d_autoCycleUseMinMax = false;
   d_autoCycleMax = .9;
   d_autoCycleMin = .1;
 
@@ -261,6 +262,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
 
   mpm_flag_ps->get("do_auto_cycle_bc", d_doAutoCycleBC);
+  mpm_flag_ps->get("auto_cycle_use_minmax", d_autoCycleUseMinMax);
   mpm_flag_ps->get("auto_cycle_max", d_autoCycleMax);
   mpm_flag_ps->get("auto_cycle_min", d_autoCycleMin);
 

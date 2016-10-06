@@ -29,7 +29,7 @@ if test $? == 0; then
   echo "Running Make..."
   echo ""
   make clean
-  make 
+  make -j4
   make install
 
   echo ""
