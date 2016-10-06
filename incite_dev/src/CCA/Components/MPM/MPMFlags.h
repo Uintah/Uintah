@@ -118,6 +118,7 @@ namespace Uintah {
     //********** End Reactive Flow Section *********************
     
     bool        d_doAutoCycleBC;
+    bool        d_autoCycleUseMinMax;
     double      d_autoCycleMax;
     double      d_autoCycleMin;
     // flags for turning on/off the reduction variable calculations

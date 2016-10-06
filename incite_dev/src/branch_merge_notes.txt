@@ -108,3 +108,14 @@ commit #: 55837
 
 
 
+-------------------------------------------------------------------------------
+October 6, 2016
+-------------------------
+
+commit #: 55847
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55836:55843)
+    
+* Generate new configure script
+

@@ -1330,7 +1330,12 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->pConcentrationLabel_preReloc);
     t->computes(lb->pConcPreviousLabel_preReloc);
     if(flags->d_doAutoCycleBC){
-      t->computes(lb->TotalConcLabel);
+      if(flags->d_autoCycleUseMinMax){
+        t->computes(lb->MinConcLabel);
+        t->computes(lb->MaxConcLabel);
+      }else{
+        t->computes(lb->TotalConcLabel);
+      }
     }
   }
 
@@ -1816,7 +1821,12 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
   if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
-    new_dw->put(sum_vartype(0.0), lb->TotalConcLabel);
+    if(flags->d_autoCycleUseMinMax){
+      new_dw->put(min_vartype(1e9), lb->MinConcLabel);
+      new_dw->put(max_vartype(0.0), lb->MaxConcLabel);
+    }else{
+      new_dw->put(sum_vartype(0.0), lb->TotalConcLabel);
+    }
   }
 }
 //______________________________________________________________________
@@ -3676,6 +3686,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
 
     double totalconc = 0;
+    double minconc = 1e9;
+    double maxconc = 0;
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
@@ -3829,7 +3841,14 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             pConcentrationNew[idx] = 0.0;
           }
           pConcPreviousNew[idx] = pConcentration[idx];
-          totalconc += pConcentration[idx];
+          if(flags->d_autoCycleUseMinMax){
+            if(pConcentration[idx] > maxconc)
+              maxconc = pConcentration[idx];
+            if(pConcentration[idx] < minconc)
+              minconc = pConcentration[idx];
+          }else{
+            totalconc += pConcentration[idx];
+          }
         }
 /*`==========TESTING==========*/
 #ifdef DEBUG_VEL
@@ -3859,7 +3878,12 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(sumvec_vartype(totalMom),     lb->TotalMomentumLabel);
 
       if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
-        new_dw->put(sum_vartype(totalconc),     lb->TotalConcLabel);
+        if(flags->d_autoCycleUseMinMax){
+          new_dw->put(max_vartype(maxconc),  lb->MaxConcLabel);
+          new_dw->put(min_vartype(minconc),    lb->MinConcLabel);
+        }else{
+          new_dw->put(sum_vartype(totalconc),     lb->TotalConcLabel);
+        }
       }
 
 #ifndef USE_DEBUG_TASK

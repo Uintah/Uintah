@@ -297,7 +297,8 @@ SCALARTRANSPORTTESTS=[
 
 GPUTESTS=[
   ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-#  ("gpu-tabprops"         , "TabPropsInterface.ups",   1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("gpu-tabprops"         , "TabPropsInterface.ups",   1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("gpu-radprops"         , "RadPropsInterface.ups",   1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("scalability-test"     , "scalability-test.ups",  1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
   ("bc-test-svol-gpu-x"   , bc_gpu_x_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
   ("bc-test-svol-gpu-y"   , bc_gpu_y_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  

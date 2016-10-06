@@ -482,7 +482,7 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
     db_gg->require("inputfile",inputfile); 
 
     //allocate gray gas object: 
-    _gg_radprops = scinew GreyGas( inputfile ); 
+    _gg_radprops = scinew RadProps::GreyGas( inputfile ); 
 
     //get list of species: 
     _radprops_species = _gg_radprops->species();
@@ -543,8 +543,6 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch
 { 
 
   int N = species.size(); 
-  double plankCff = 0.0;
-  double rossCff  = 0.0; 
   double effCff   = 0.0; 
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -575,7 +573,7 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch
 
     if ( VolFraction > 1.e-16 ){
 
-      _gg_radprops->mixture_coeffs(plankCff, rossCff, effCff, mol_frac, mixT[c]);
+      _gg_radprops->mixture_coeffs(effCff, mol_frac, mixT[c], RadProps::EFF_ABS_COEFF);
 
       abskg[c] = effCff*100.0; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
 
@@ -732,7 +730,7 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
     throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
   }   
 
-  _part_radprops = scinew ParticleRadCoeffs3D( _LowComplex, _HighComplex,3, 1e-6, 3e-4, 10  );
+  _part_radprops = scinew RadProps::ParticleRadCoeffs3D( _LowComplex, _HighComplex,3, 1e-6, 3e-4, 10  );
 
   _computeComplexIndex = true; // complex index of refraction needed
 }
@@ -949,7 +947,7 @@ RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool sca
     db->findBlock("particles")->require("complex_ir_imag",imagCIF); 
     db->findBlock("particles")->getWithDefault("const_asymmFact",_constAsymmFact,0.0); 
     std::complex<double>  CIF(realCIF, imagCIF );  
-    _part_radprops = scinew ParticleRadCoeffs(CIF,1e-6,3e-4,10);  
+    _part_radprops = scinew RadProps::ParticleRadCoeffs(CIF,1e-6,3e-4,10);  
     std::string which_model = "none"; 
     db->findBlock("particles")->require("model_type", which_model);
     if ( which_model == "planck" ){ 

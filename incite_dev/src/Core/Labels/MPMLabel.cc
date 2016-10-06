@@ -207,6 +207,12 @@ MPMLabel::MPMLabel()
   TotalConcLabel = VarLabel::create( "TotalConc",
       sum_vartype::getTypeDescription() );
 
+  MaxConcLabel = VarLabel::create( "MaxConcLabel",
+      max_vartype::getTypeDescription() );
+
+  MinConcLabel = VarLabel::create( "MinConcLabel",
+      min_vartype::getTypeDescription() );
+
   pAvgConcLabel = VarLabel::create( "p.avgConc",
       sum_vartype::getTypeDescription() );
 
@@ -839,6 +845,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
   VarLabel::destroy(TotalConcLabel);
+  VarLabel::destroy(MaxConcLabel);
+  VarLabel::destroy(MinConcLabel);
   VarLabel::destroy(pAvgConcLabel);
   VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pDiffusivityLabel_preReloc);

@@ -124,6 +124,8 @@ namespace Uintah {
       const VarLabel* pDiffusivityLabel; //for scalar diffusion
       const VarLabel* pDiffusivityLabel_preReloc; //for scalar diffusion
       const VarLabel* TotalConcLabel;
+      const VarLabel* MaxConcLabel;
+      const VarLabel* MinConcLabel;
       const VarLabel* pAvgConcLabel;
       
       const VarLabel* gLambdaDotLabel;

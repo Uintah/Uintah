@@ -74,6 +74,7 @@
       <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
       <do_scalar_diffusion                spec="OPTIONAL BOOLEAN" />
       <do_auto_cycle_bc                   spec="OPTIONAL BOOLEAN" />
+      <auto_cycle_use_minmax              spec="OPTIONAL BOOLEAN" />
       <auto_cycle_max                     spec="OPTIONAL DOUBLE" />
       <auto_cycle_min                     spec="OPTIONAL DOUBLE" />
     </MPM>
