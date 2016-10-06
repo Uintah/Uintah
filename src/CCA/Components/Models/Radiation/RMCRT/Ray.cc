@@ -421,12 +421,6 @@ Ray::sched_rayTrace( const LevelP& level,
 
   if (Parallel::usingDevice()) {          // G P U
 
-    if(radCalc_freq != 1){                // FIXME
-       ostringstream warn;
-       warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );

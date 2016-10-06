@@ -38,6 +38,7 @@
 #define FIXED_RAY_DIR -9    // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                             //                     4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
 #define SIGN 1              // Multiply the FIXED_RAY_DIRs by value
+#define FUZZ 1e-12          // numerical fuzz
 
 //#define FAST_EXP          // This uses a fast approximate exp() function that is 
                             // significantly faster.
@@ -572,6 +573,12 @@ RMCRTCommon::updateSumI (const Level* level,
       disMin     = (tMax[dir] - tMax_prev);
       tMax_prev  = tMax[dir];
       tMax[dir]  = tMax[dir] + tDelta[dir];
+
+      // occassionally disMin ~ -1e-15ish
+      if( disMin > -FUZZ && disMin < FUZZ){  
+        disMin += FUZZ;
+      }
+      
       rayLength += disMin;
       rayLength_scatter += disMin;
 
