@@ -2476,7 +2476,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
 
       std::cout << std::endl << " Original region: " << low << " " << high << std::endl;
       std::cout << " copied cells: " << totalCells << " requested cells: " << requestedCells << std::endl;
-      throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
+      throw InternalError("Missing patches in getRegionModifiable().  If this is a non-cubic domain problem, this error will happen, so comment out #define BULLETPROOFING_FOR_CUBIC_DOMAINS", __FILE__, __LINE__);
     }
   #endif
     if (dbg.active()) {
