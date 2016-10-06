@@ -845,6 +845,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
   VarLabel::destroy(TotalConcLabel);
+  VarLabel::destroy(MaxConcLabel);
+  VarLabel::destroy(MinConcLabel);
   VarLabel::destroy(pAvgConcLabel);
   VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pDiffusivityLabel_preReloc);
