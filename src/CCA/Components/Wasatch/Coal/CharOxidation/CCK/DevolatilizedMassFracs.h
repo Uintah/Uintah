@@ -94,7 +94,7 @@ public:
 
   void evaluate()
   {
-    std::vector<FieldT*>&  result = this->get_value_vec();
+    typename Expr::Expression<FieldT>::ValVec&  result = this->get_value_vec();
     FieldT& xChar   = *result[0];
     FieldT& xAsh    = *result[1];
     FieldT& xChar_d = *result[2];

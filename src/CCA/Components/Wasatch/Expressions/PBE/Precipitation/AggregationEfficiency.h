@@ -144,10 +144,10 @@ AggregationEfficiency<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  typedef std::vector<FieldT*> ResultsVec;
+  typedef typename Expr::Expression<FieldT>::ValVec ResultsVec;
   ResultsVec& results = this->get_value_vec();
   const FieldT& rho = rho_->field_ref();
-  const FieldT& g0 = g0_->field_ref();
+  const FieldT& g0  = g0_->field_ref();
   const FieldT& eps = eps_->field_ref();
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( *results[0] );
 

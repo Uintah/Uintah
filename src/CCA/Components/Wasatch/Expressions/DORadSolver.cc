@@ -359,7 +359,7 @@ namespace WasatchCore {
   void DORadSolver::evaluate()
   {
     using namespace SpatialOps;
-    typedef std::vector<SVolField*> SVolFieldVec;
+    typedef typename Expr::Expression<SVolField>::ValVec SVolFieldVec;
 
     SVolFieldVec& results = this->get_value_vec();
     SVolField& intensity = *results[0];

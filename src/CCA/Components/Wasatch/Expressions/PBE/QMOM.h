@@ -154,7 +154,7 @@ evaluate()
   using namespace SpatialOps;
   // the results vector is organized as follows:
   // (w0, a0, w1, a1, et...)
-  typedef std::vector<FieldT*> ResultsVec;
+  typedef typename Expr::Expression<FieldT>::ValVec ResultsVec;
   ResultsVec& results = this->get_value_vec();
 
   const int nEnvironments = nMoments_/2;

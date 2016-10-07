@@ -67,7 +67,7 @@ dy_gi<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  std::vector<FieldT*>& dyi = this->get_value_vec();
+  typename Expr::Expression<FieldT>::ValVec& dyi = this->get_value_vec();
 
   const SpecContributeVec& spSum = specSum_.get_vec_comp();
   for( size_t i=0; i<dyi.size(); ++i ){

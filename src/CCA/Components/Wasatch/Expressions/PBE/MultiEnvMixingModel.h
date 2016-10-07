@@ -130,7 +130,7 @@ MultiEnvMixingModel<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  typedef std::vector<FieldT*> ResultsVec;
+  typedef typename Expr::Expression<FieldT>::ValVec ResultsVec;
 
   ResultsVec& results = this->get_value_vec();
 

@@ -91,7 +91,7 @@ KobayashiSarofim<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  std::vector<FieldT*>& mvcharrhs = this->get_value_vec();
+  typename Expr::Expression<FieldT>::ValVec& mvcharrhs = this->get_value_vec();
 
   FieldT& mvrhs   = *mvcharrhs[0]; // Volitle RHS
   FieldT& charrhs = *mvcharrhs[1]; // Char    RHS
