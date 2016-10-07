@@ -1146,6 +1146,31 @@ Ray::rayTrace( const ProcessorGroup* pg,
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
+
+      //__________________________________
+      //  BULLETPROOFING
+      IntVector l = abskg.getLowIndex();
+      IntVector h = abskg.getHighIndex();    
+      CellIterator iterLim = CellIterator(l,h);
+      
+      for(CellIterator iter=iterLim; !iter.done();iter++) {
+        IntVector c = *iter;
+
+        if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] ) ||
+             std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
+             std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
+          cout << "______________________________________________________________________\n";
+          cout << "     L-"<< level->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << " d_halo " << d_halo << endl;
+          cout << "     c:   " << c << endl;
+          cout << "     ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
+          cout << "          " << *patch << endl;
+          ostringstream warn;
+          warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical "
+              << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
+          throw InternalError( warn.str(), __FILE__, __LINE__ );
+        
+        }
+      } 
     }
     
     

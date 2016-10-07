@@ -717,6 +717,30 @@ RMCRTCommon::updateSumI (const Level* level,
 
     intensity = intensity * fs;
 
+    //__________________________________
+    //  BULLETPROOFING
+    if ( std::isinf(sumI) || std::isnan(sumI) ){
+      printf( "\n\n______________________________________________________________________\n");
+      cout <<  " cur: " << cur << " prevCell: " << prevCell << "\n";
+      cout <<  " dir: " << dir << " sumI: " << sumI << "\n";
+      cout <<  " tMax: " << tMax  << "\n";
+      cout <<  " rayLoc:    " << ray_location << "\n";
+      cout <<  " tMax[dir]: " << tMax[dir] << " tMax_prev: " << tMax_prev << " Dx[dir]: " << Dx[dir] << "\n";
+      cout <<  " tDelta:    " << tDelta << " \n";
+      cout <<  "     abskg[prev]: " << abskg[prevCell] << " \t sigmaT4OverPi[prev]: " << sigmaT4OverPi[prevCell]  << "\n";
+      cout <<  "     abskg[cur]:  " << abskg[cur]      << " \t sigmaT4OverPi[cur]:  " << sigmaT4OverPi[cur] << "\t  cellType: " <<celltype[cur] << "\n";
+      cout <<  "     optical_thickkness: " <<  optical_thickness << " \t rayLength: " << rayLength << "\n";
+      
+      IntVector l = abskg.getLowIndex();
+      IntVector h = abskg.getHighIndex();
+      printf( "     abskg:  [%d,%d,%d]  -> [%d,%d,%d] \n", l.x(), l.y(), l.z() , h.x(), h.y(), h.z() );
+      
+      ostringstream warn;
+        warn<< "ERROR:RMCRTCommon::updateSumI   sumI is non-physical (" << sumI << ")"
+            << " origin: " << origin << " cur: " << cur << "\n";
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+    } 
+
     // when a ray reaches the end of the domain, we force it to terminate.
     if(!d_allowReflect) intensity = 0;
 
@@ -736,6 +760,7 @@ if( isDbgCell( origin)  ){
       ++nReflect;
     }
   }  // threshold while loop.
+  
 } // end of updateSumI function
 
 
