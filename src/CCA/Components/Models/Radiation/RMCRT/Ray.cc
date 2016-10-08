@@ -1151,26 +1151,28 @@ Ray::rayTrace( const ProcessorGroup* pg,
       //  BULLETPROOFING
       IntVector l = abskg.getLowIndex();
       IntVector h = abskg.getHighIndex();    
-      CellIterator iterLim = CellIterator(l,h);
       
-      for(CellIterator iter=iterLim; !iter.done();iter++) {
-        IntVector c = *iter;
+      for (int p_bp=0; p_bp < patches->size(); p_bp++){
+        const Patch* patch_bp =  patches->get(p_bp);
+        CellIterator iterLim = CellIterator(patch_bp->getExtraCellLowIndex(), patch_bp->getExtraCellHighIndex());
+        for(CellIterator iter = iterLim; !iter.done();iter++) {
+          IntVector c = *iter;
+          if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] ) ||
+               std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
+               std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
+            cout << "______________________________________________________________________\n";
+            cout << "     L-"<< level->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << " d_halo " << d_halo << endl;
+            cout << "     c:   " << c << " contained within patch: (" << patch_bp->getID() << ")" << endl;
+            cout << "     ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
+            cout << "          " << *patch << endl;
+            ostringstream warn;
+            warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical "
+                << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
+            throw InternalError( warn.str(), __FILE__, __LINE__ );
 
-        if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] ) ||
-             std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
-             std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
-          cout << "______________________________________________________________________\n";
-          cout << "     L-"<< level->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << " d_halo " << d_halo << endl;
-          cout << "     c:   " << c << endl;
-          cout << "     ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
-          cout << "          " << *patch << endl;
-          ostringstream warn;
-          warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical "
-              << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
-          throw InternalError( warn.str(), __FILE__, __LINE__ );
-        
+          }
         }
-      } 
+      }
     }
     
     
