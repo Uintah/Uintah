@@ -424,12 +424,12 @@ SimulationController::gridSetup( void )
 //
 
 void
-SimulationController::postGridSetup( GridP& grid, double& t )
+SimulationController::postGridSetup( GridP & grid, double & time )
 {
   // Set up regridder with initial information about grid.
   // do before sim - so that Switcher (being a sim) can reset the state of the regridder
-  d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-  if (d_regridder) {
+  d_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
+  if ( d_regridder ) {
     d_regridder->problemSetup( d_ups, grid, d_sharedState );
   }
     
@@ -461,7 +461,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
 
   if( d_restarting ) {
     simdbg << "Restarting... loading data\n";    
-    d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t );
+    d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &time );
       
     // Set prevDelt to what it was in the last simulation.  If in the last 
     // sim we were clamping delt based on the values of prevDelt, then
@@ -503,8 +503,8 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   d_output->initializeOutput(d_ups);
 
   if( d_restarting ) {
-    Dir dir(d_fromDir);
-    d_output->restartSetup( dir, 0, d_restartTimestep, t, d_restartFromScratch, d_restartRemoveOldDir );
+    Dir dir( d_fromDir );
+    d_output->restartSetup( dir, 0, d_restartTimestep, time, d_restartFromScratch, d_restartRemoveOldDir );
   }
 } // end postGridSetup()
 
@@ -642,12 +642,14 @@ SimulationController::initSimulationStatsVars( void )
 //______________________________________________________________________
 //
 
+#if 0
 static
 double
 stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 {
   return sqrt( (n*sum_of_x_squares - sum_of_x*sum_of_x) / (n*n) );
 }
+#endif
 
 void
 SimulationController::printSimulationStats( int timestep, double delt, double time )

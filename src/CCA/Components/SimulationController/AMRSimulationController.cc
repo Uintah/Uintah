@@ -614,12 +614,10 @@ AMRSimulationController::run()
     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
 
     // Reduce the mpi run time stats.
-    MPIScheduler *mpiScheduler = 
-      dynamic_cast<MPIScheduler*>(d_scheduler.get_rep());
+    MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( d_scheduler.get_rep() );
     
     if( mpiScheduler ) {
-      mpiScheduler->mpi_info_.reduce( d_regridder && 
-                                      d_regridder->useDynamicDilation(),
+      mpiScheduler->mpi_info_.reduce( d_regridder && d_regridder->useDynamicDilation(),
                                       d_myworld );
     }
 

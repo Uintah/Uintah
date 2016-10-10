@@ -674,6 +674,14 @@ HYPRE_LIB_FLAG
 INC_HYPRE_H
 DEF_HYPRE
 HAVE_HYPRE
+POKITT_LIB_DIR_FLAG
+POKITT_LIB_FLAG
+INC_POKITT_H
+DEF_POKITT
+HAVE_POKITT
+INC_NSCBC_H
+DEF_NSCBC
+HAVE_NSCBC
 RADPROPS_LIB_DIR_FLAG
 RADPROPS_LIB_FLAG
 INC_RADPROPS_H
@@ -689,11 +697,6 @@ EXPRLIB_LIB_FLAG
 INC_EXPRLIB_H
 DEF_EXPRLIB
 HAVE_EXPRLIB
-POKITT_LIB_DIR_FLAG
-POKITT_LIB_FLAG
-INC_POKITT_H
-DEF_POKITT
-HAVE_POKITT
 SPATIALOPS_LIB_DIR_FLAG
 SPATIALOPS_LIB_FLAG
 INC_SPATIALOPS_H
@@ -1717,10 +1720,10 @@ Optional Packages:
                           Use the Boost library in DIR
 --with-boost-include=DIR
                           Use the Boost include files in DIR
---with-spatialops=DIR   Use the SpatialOps library in DIR
---with-exprlib=DIR      Use the ExprLib library in DIR
---with-tabprops=DIR     Use the TabProps library in DIR
---with-radprops=DIR     Use the RadProps library in DIR
+--with-spatialops=DIR   Use the Wasatch 3P SpatialOps library in DIR
+--with-exprlib=DIR      Use the Wasatch 3P ExprLib library in DIR
+--with-tabprops=DIR     Use the Wasatch 3P TabProps library in DIR
+--with-radprops=DIR     Use the Wasatch 3P RadProps library in DIR
 --with-wasatch3p=DIR    Use the SpatialOps/ExprLib/TabPros/RadProps
                           libraries in DIR
 --with-zoltan=DIR       Use the Zoltan installation in DIR
@@ -3119,10 +3122,12 @@ sci_arg_enable_list=""
 # Setting variables to 'no' isn't required, but is useful in displaying
 # some error condition information to the user.
 HAVE_BOOST=no
-HAVE_TABPROPS=no
-HAVE_RADPROPS=no
 HAVE_SPATIALOPS=no
 HAVE_EXPRLIB=no
+HAVE_TABPROPS=no
+HAVE_RADPROPS=no
+HAVE_NSCBC=no
+HAVE_POKITT=no
 
 ##  --------------------------------------------------------------------
 ##  ------------------  check for all arguments     --------------------
@@ -39977,8 +39982,8 @@ if test "$build_wasatch_3p" != "no"; then
   if test "$build_wasatch_3p" != "yes"; then
     PIECES=$(echo $build_wasatch_3p | tr "," "\n")
     for piece in $PIECES; do
-      if test $piece != "radprops" -a $piece != "tabprops" -a $piece != "exprlib" -a $piece != "spatialops"; then
-        as_fn_error $? "build_wasatch_3p value of $piece is invalid - should be one of: spatialops, exprlib, tabprops, or radprops. " "$LINENO" 5
+      if test $piece != "spatialops" -a $piece != "exprlib" -a $piece != "tabprops" -a $piece != "radprops" -a $piece != "nscbc"; then
+        as_fn_error $? "build_wasatch_3p value of $piece is invalid - should be one of: spatialops, exprlib, tabprops, radprops, or nscbc. " "$LINENO" 5
       else
         case $piece in
           spatialops)
@@ -39993,6 +39998,9 @@ if test "$build_wasatch_3p" != "no"; then
           radprops)
             with_radprops=`$sci_pwd`/Wasatch3P/install/RadProps
           ;;
+          nscbc)
+            with_nscbc=`$sci_pwd`/Wasatch3P/install/NSCBC
+          ;;
         esac
       fi
     done
@@ -40001,6 +40009,7 @@ if test "$build_wasatch_3p" != "no"; then
     with_exprlib=`$sci_pwd`/Wasatch3P/install/ExprLib
     with_tabprops=`$sci_pwd`/Wasatch3P/install/TabProps
     with_radprops=`$sci_pwd`/Wasatch3P/install/RadProps
+    with_nscbc=`$sci_pwd`/Wasatch3P/install/NSCBC
   fi
 
   mkdir -p Wasatch3P
@@ -40033,6 +40042,7 @@ $as_echo "$as_me: Using the Wastach 3p libs in: $with_wasatch3p" >&6;}
   with_exprlib=$with_wasatch3p/ExprLib
   with_tabprops=$with_wasatch3p/TabProps
   with_radprops=$with_wasatch3p/RadProps
+  with_nscbc=$with_wasatch3p/NSCBC
 fi
 
 ##  --  search for SpatialOps Library ------------------------
@@ -40091,66 +40101,6 @@ fi
 
 
 
-
-##  --  search for PoKiTT Library ------------------------
-
-if test "$with_pokitt" != NOT_SET; then
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Pokitt files (For now we are just verifying the existence of lib and .h files)" >&5
-$as_echo_n "checking for Pokitt files (For now we are just verifying the existence of lib and .h files)... " >&6; }
-  POKITT_INCLUDE_DIR="include/pokitt"
-  # Check includes
-  for file in CanteraObjects.h  MixtureFractionExpr.h PoKiTTVersion.h   SpeciesN.h thermo \
-              MixtureFraction.h MixtureMolWeight.h    SpecFromMixfrac.h kinetics   transport; do
-    if test ! -e $with_pokitt/$POKITT_INCLUDE_DIR/$file; then
-      echo ""
-      as_fn_error $? "'$with_pokitt/$POKITT_INCLUDE_DIR/$file' does not exist. " "$LINENO" 5
-    fi
-  done
-  # Check lib
-  the_lib=$with_pokitt/lib/pokitt/libpokitt.a
-  if test ! -f $the_lib; then
-    echo ""
-    as_fn_error $? "'$the_lib' does not exist. " "$LINENO" 5
-  fi
-
-  ## Now check for Cantera based on POKITT installation...
-  cantera_info=$with_pokitt/share/PoKiTTConfig.cmake
-  if test ! -f $cantera_info; then
-    echo ""
-    as_fn_error $? "'$cantera_info' does not exist. " "$LINENO" 5
-  fi
-
-  # The CANTERA_LIB_FLAG is the whole path to (and including) the .a file.
-  CANTERA_LIB_FLAG=`grep Cantera_LIBRARIES   $cantera_info | cut -f3 -d" "`
-  INC_CANTERA_H=`grep Cantera_INCLUDE_DIR $cantera_info | cut -f3 -d" "`
-
-  if test ! -d "$INC_CANTERA_H"; then
-    echo ""
-    as_fn_error $? "Cantera include dir ($INC_CANTERA_H) does not exist." "$LINENO" 5
-  fi
-
-  # Add -I to include var:
-  INC_CANTERA_H=-I$INC_CANTERA_H
-
-  DEF_POKITT="#define HAVE_POKITT 1"
-  INC_POKITT_H="-I$with_pokitt/include $INC_CANTERA_H"
-
-  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
-  POKITT_LIB_FLAG="-lpokitt $CANTERA_LIB_FLAG"
-
-  HAVE_POKITT="yes"
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-fi
-
-
-
-
-
-
-
-sci_defs_files="$sci_defs_files include/sci_defs/wasatch_testdefs.h"
 
 ##  --  search for Exprlib Library ------------------------
 
@@ -40253,15 +40203,100 @@ fi
 
 
 
+##  --  search for Wasatch 3P NSCBC Library ------------------------
+
+if test "$with_nscbc" != NOT_SET; then
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Wasatch 3P NSCBC files (Header only - verifying .h files)" >&5
+$as_echo_n "checking for Wasatch 3P NSCBC files (Header only - verifying .h files)... " >&6; }
+  for file in include/nscbc/CharacteristicBCBuilder.h include/nscbc/NSCBCToolsAndDefs.h include/nscbc/SppedOfSound.h include/nscbc/TagManager.h; do
+    if test ! -f $with_nscbc/$file; then
+      as_fn_error $? "'$with_nscbc/$file' does not exist. " "$LINENO" 5
+    fi
+  done
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+  DEF_NSCBC="#define HAVE_NSCBC 1"
+  INC_NSCBC_H="-I$with_nscbc/include"
+  HAVE_NSCBC="yes"
+fi
+
+
+
+
+
+##  --  search for PoKiTT Library ------------------------
+
+if test "$with_pokitt" != NOT_SET; then
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Pokitt files (For now we are just verifying the existence of lib and .h files)" >&5
+$as_echo_n "checking for Pokitt files (For now we are just verifying the existence of lib and .h files)... " >&6; }
+  POKITT_INCLUDE_DIR="include/pokitt"
+  # Check includes
+  for file in CanteraObjects.h  MixtureFractionExpr.h PoKiTTVersion.h   SpeciesN.h thermo \
+              MixtureFraction.h MixtureMolWeight.h    SpecFromMixfrac.h kinetics   transport; do
+    if test ! -e $with_pokitt/$POKITT_INCLUDE_DIR/$file; then
+      echo ""
+      as_fn_error $? "'$with_pokitt/$POKITT_INCLUDE_DIR/$file' does not exist. " "$LINENO" 5
+    fi
+  done
+  # Check lib
+  the_lib=$with_pokitt/lib/pokitt/libpokitt.a
+  if test ! -f $the_lib; then
+    echo ""
+    as_fn_error $? "'$the_lib' does not exist. " "$LINENO" 5
+  fi
+
+  ## Now check for Cantera based on POKITT installation...
+  cantera_info=$with_pokitt/share/PoKiTTConfig.cmake
+  if test ! -f $cantera_info; then
+    echo ""
+    as_fn_error $? "'$cantera_info' does not exist. " "$LINENO" 5
+  fi
+
+  # The CANTERA_LIB_FLAG is the whole path to (and including) the .a file.
+  CANTERA_LIB_FLAG=`grep Cantera_LIBRARIES   $cantera_info | cut -f3 -d" "`
+  INC_CANTERA_H=`grep Cantera_INCLUDE_DIR $cantera_info | cut -f3 -d" "`
+
+  if test ! -d "$INC_CANTERA_H"; then
+    echo ""
+    as_fn_error $? "Cantera include dir ($INC_CANTERA_H) does not exist." "$LINENO" 5
+  fi
+
+  # Add -I to include var:
+  INC_CANTERA_H=-I$INC_CANTERA_H
+
+  DEF_POKITT="#define HAVE_POKITT 1"
+  INC_POKITT_H="-I$with_pokitt/include $INC_CANTERA_H"
+
+  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
+  POKITT_LIB_FLAG="-lpokitt $CANTERA_LIB_FLAG"
+
+  HAVE_POKITT="yes"
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+fi
+
+
+
+
+
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/wasatch_testdefs.h"
+
 ##  --  Make sure Wasatch 3P is found if WASATCH or ARCHES is requested -------
 
 if test "$BUILD_WASATCH" = "yes"; then
   if test "$HAVE_BOOST"      != "yes" -o \
+          "$HAVE_SPATIALOPS" != "yes" -o \
+          "$HAVE_EXPRLIB"    != "yes" -o \
           "$HAVE_TABPROPS"   != "yes" -o \
           "$HAVE_RADPROPS"   != "yes" -o \
-          "$HAVE_SPATIALOPS" != "yes" -o \
-          "$HAVE_EXPRLIB"    != "yes"; then
-    as_fn_error $? "You enabled the Wasatch component but do not have all of the prereqs: Boost ($HAVE_BOOST), TabProps ($HAVE_TABPROPS), RadProps ($HAVE_RADPROPS), SpatialOps ($HAVE_SPATIALOPS), and ExprLib ($HAVE_EXPRLIB). " "$LINENO" 5
+          "$HAVE_NSCBC"      != "yes"; then
+    as_fn_error $? "You enabled the Wasatch component but do not have all of the prereqs: Boost ($HAVE_BOOST), TabProps ($HAVE_TABPROPS), RadProps ($HAVE_RADPROPS), SpatialOps ($HAVE_SPATIALOPS), ExprLib ($HAVE_EXPRLIB), and NSCBC ($HAVE_NSCBC). " "$LINENO" 5
   fi
 fi
 

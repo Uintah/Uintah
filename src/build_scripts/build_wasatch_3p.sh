@@ -25,12 +25,14 @@ BUILD_SPATIALOPS=no
 BUILD_EXPRLIB=no
 BUILD_TABPROPS=no
 BUILD_RADPROPS=no
+BUILD_NSCBC=no
 
 if test $component_list = "all"; then
   BUILD_SPATIALOPS=yes
   BUILD_EXPRLIB=yes
   BUILD_TABPROPS=yes
   BUILD_RADPROPS=yes
+  BUILD_NSCBC=yes
 else
 
   PIECES=$(echo $component_list | tr "," "\n")
@@ -47,6 +49,9 @@ else
         ;;
       radprops)
         BUILD_RADPROPS=yes
+        ;;
+      nscbc)
+        BUILD_NSCBC=yes
         ;;
     esac
   done
@@ -405,6 +410,58 @@ if test "$BUILD_RADPROPS" = "yes"; then
   run "cd ../../.."  # back to Wasatch3P
 
 fi  
+
+############################################################################
+# NSCBC
+
+if test "$BUILD_NSCBC" = "yes"; then
+
+  run "cd src"
+  needsrecompile=true
+  if [ -d "NSCBC" ]; then
+    run "cd NSCBC"
+    run "git remote update"
+
+    LOCAL=$(git rev-parse HEAD)
+    REMOTE=$(git rev-parse origin/master)
+
+    if [ $LOCAL = $REMOTE ]; then
+      echo "NSCBC is current - not rebuilding"
+      needsrecompile=false
+    else
+      echo "updating NSCBC..."
+      run "git pull"
+    fi
+    run "cd .."
+  else
+    run "git clone $DEPTH https://software.crsim.utah.edu:8443/James_Research_Group/NSCBC.git NSCBC"
+    run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/NSCBC/build"
+  fi
+  if test ! -z $NSCBC_TAG ; then
+    run "cd NSCBC"
+    run "git reset --hard $NSCBC_TAG"
+    run "cd .."
+  fi
+  run "cd $BASE_BUILD_DIR/Wasatch3P/src/NSCBC/build"
+
+  if [ "$needsrecompile" = true ]; then
+
+    INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/NSCBC
+
+    run \
+      "cmake \
+         $DEBUG \
+         $STATIC \
+         -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+         -DCMAKE_CXX_FLAGS=-fPIC \
+         .."
+
+    run "make install"
+  fi
+
+  run "cd ../../.."  # back to Wasatch3P
+
+fi
 
 ############################################################################
   
