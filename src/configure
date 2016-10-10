@@ -40205,7 +40205,7 @@ fi
 
 ##  --  search for Wasatch 3P NSCBC Library ------------------------
 
-if test "$with_nscbc" != NOT_SET; then
+if test "$BUILD_WASATCH" = "yes"; then
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Wasatch 3P NSCBC files (Header only - verifying .h files)" >&5
 $as_echo_n "checking for Wasatch 3P NSCBC files (Header only - verifying .h files)... " >&6; }

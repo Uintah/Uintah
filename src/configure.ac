@@ -4324,7 +4324,7 @@ AC_SUBST(RADPROPS_LIB_DIR_FLAG)
 
 ##  --  search for Wasatch 3P NSCBC Library ------------------------
 
-if test "$with_nscbc" != NOT_SET; then
+if test "$BUILD_WASATCH" = "yes"; then
 
   AC_MSG_CHECKING(for Wasatch 3P NSCBC files (Header only - verifying .h files)) 
   for file in include/nscbc/CharacteristicBCBuilder.h include/nscbc/NSCBCToolsAndDefs.h include/nscbc/SpeedOfSound.h include/nscbc/TagManager.h; do
