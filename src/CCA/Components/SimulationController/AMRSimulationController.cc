@@ -194,7 +194,7 @@ AMRSimulationController::run()
                                         d_myworld );
   calcWallTime();
       
-  printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), 0, time );
+  printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), d_prev_delt, time );
   //
   //////////////////////////////////////////////////////////
 
