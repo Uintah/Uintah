@@ -40209,7 +40209,7 @@ if test "$with_nscbc" != NOT_SET; then
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Wasatch 3P NSCBC files (Header only - verifying .h files)" >&5
 $as_echo_n "checking for Wasatch 3P NSCBC files (Header only - verifying .h files)... " >&6; }
-  for file in include/nscbc/CharacteristicBCBuilder.h include/nscbc/NSCBCToolsAndDefs.h include/nscbc/SppedOfSound.h include/nscbc/TagManager.h; do
+  for file in include/nscbc/CharacteristicBCBuilder.h include/nscbc/NSCBCToolsAndDefs.h include/nscbc/SpeedOfSound.h include/nscbc/TagManager.h; do
     if test ! -f $with_nscbc/$file; then
       as_fn_error $? "'$with_nscbc/$file' does not exist. " "$LINENO" 5
     fi
