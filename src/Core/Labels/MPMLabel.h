@@ -136,6 +136,7 @@ namespace Uintah {
       const VarLabel* gVelocityLabel;
       const VarLabel* gVelocityBCLabel;
       const VarLabel* gVelocityStarLabel;
+      const VarLabel* gPositionLabel;
       const VarLabel* gExternalForceLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;

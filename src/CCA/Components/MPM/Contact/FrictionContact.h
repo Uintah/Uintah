@@ -83,6 +83,7 @@ WARNING
          double d_mu;
          // Nodal volume fraction that must occur before contact is applied
          double d_vol_const;
+         double d_sepFac;
          int NGP;
          int NGN;
 
