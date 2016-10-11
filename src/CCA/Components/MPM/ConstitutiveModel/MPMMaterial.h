@@ -151,6 +151,8 @@ WARNING
                                    CCVariable<double>& vfCC,
                                    const Patch* patch);
 
+   bool doConcReduction(){ return d_do_conc_reduction; };
+
  private:
 
    MPMLabel* d_lb;
@@ -173,6 +175,9 @@ WARNING
 
    // for implicit rigid body contact
    bool d_is_rigid;
+
+   // for autocycleflux boundary condtions
+   bool d_do_conc_reduction;
 
    std::vector<GeometryObject*> d_geom_objs;
 

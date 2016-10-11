@@ -190,6 +190,7 @@
           </crack_segments>
         </crack>
         <include href="diffusion_models.xml" />
+        <do_conc_reduction               spec="OPTIONAL BOOLEAN" />
       </material>
       <cohesive_zone                     spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >

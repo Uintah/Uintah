@@ -123,6 +123,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMF
   // be put to use in the explicit code as well.
   d_is_rigid=false;
   ps->get("is_rigid", d_is_rigid);
+
+  // This is used for the autocycleflux boundary conditions
+  d_do_conc_reduction = false;
+  ps->get("do_conc_reduction", d_do_conc_reduction);
    
   d_includeFlowWork = false;
   ps->get("includeFlowWork",d_includeFlowWork);

@@ -98,7 +98,6 @@ void AutoCycleFluxBC::initializeScalarFluxBC(const ProcessorGroup*, const PatchS
                                          const MaterialSubset*, DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
-  std::cout << "doing Initialize flux bc" << std::endl;
   double time = 0.0;
   printTask(patches,patches->get(0),cout_doing,"Doing initialize ScalarFluxBC");
   if (cout_doing.active())
@@ -209,13 +208,14 @@ void AutoCycleFluxBC::applyExternalScalarFlux(const ProcessorGroup* , const Patc
   if(d_mpm_flags->d_autoCycleUseMinMax){
     old_dw->get(maxconc, d_mpm_lb->MaxConcLabel);
     old_dw->get(minconc, d_mpm_lb->MinConcLabel);
-
     if(d_flux_sign > 0){
-      if(minconc > d_auto_cycle_max)
+      if(minconc > d_auto_cycle_max && minconc < 4e11){
         d_flux_sign = -1.0;
+      }
     }else{
-      if(maxconc < d_auto_cycle_min)
+      if(maxconc < d_auto_cycle_min && maxconc > -4e11){
         d_flux_sign = 1.0;
+      }
     }
   }else{
     old_dw->get(totalparts, d_mpm_lb->partCountLabel);
