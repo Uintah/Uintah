@@ -458,11 +458,19 @@ SCI_ARG_WITH(radprops,
   DIR,
   WITHOUT-IS-NOT-VALID)
   
+SCI_ARG_WITH(nscbc,
+  AC_HELP_STRING(--with-nscbc=DIR,
+                 Use the Wasatch 3P NSCBC library in DIR),
+  [with_nscbc="$withval"],
+  [with_nscbc=NOT_SET],
+  DIR,
+  WITHOUT-IS-NOT-VALID)
+  
 # This specification must be after the individual W3P flags,
-# and is used as a shortcut so you don't have to specify all 4 individual flags...
+# and is used as a shortcut so you don't have to specify all 5 individual flags...
 SCI_ARG_WITH(wasatch3p,
   AC_HELP_STRING(--with-wasatch3p=DIR,
-                 Use the SpatialOps/ExprLib/TabPros/RadProps libraries in DIR),
+                 Use the SpatialOps/ExprLib/TabPros/RadProps/NSCBC libraries in DIR),
   [with_wasatch3p="$withval"],
   [with_wasatch3p=NOT_SET],
   DIR,
@@ -590,7 +598,7 @@ SCI_ARG_WITH(MallocTrace,
 
 SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
-                 Download and build the Wasatch Thirdparty libraries - TabProps ExprLibs SpatialOps RadProps.),
+                 Download and build the Wasatch Thirdparty libraries - TabProps ExprLibs SpatialOps RadProps NSCBC.),
   [build_wasatch_3p="$enableval"],
   [build_wasatch_3p="no"])
 
@@ -4094,17 +4102,20 @@ if test "$build_wasatch_3p" != "no"; then
   if test "$with_wasatch3p" != NOT_SET; then
      AC_MSG_ERROR( Do NOT specify both --with-wasatch3p and --enable-wasatch_3p )
   fi
-  if test "$with_radprops" != NOT_SET; then
-     AC_MSG_ERROR( Do NOT specify both --with-radprops and --enable-wasatch_3p )
-  fi
-  if test "$with_tabprops" != NOT_SET; then
-     AC_MSG_ERROR( Do NOT specify both --with-tabprops and --enable-wasatch_3p )
-  fi
   if test "$with_spatialops" != NOT_SET; then
      AC_MSG_ERROR( Do NOT specify both --with-spatialops and --enable-wasatch_3p )
   fi
   if test "$with_exprlib" != NOT_SET; then
      AC_MSG_ERROR( Do NOT specify both --with-exprlib and --enable-wasatch_3p )
+  fi
+  if test "$with_tabprops" != NOT_SET; then
+     AC_MSG_ERROR( Do NOT specify both --with-tabprops and --enable-wasatch_3p )
+  fi
+  if test "$with_radprops" != NOT_SET; then
+     AC_MSG_ERROR( Do NOT specify both --with-radprops and --enable-wasatch_3p )
+  fi
+  if test "$with_nscbc" != NOT_SET; then
+     AC_MSG_ERROR( Do NOT specify both --with-nscbc and --enable-wasatch_3p )
   fi
 
   if test "$build_wasatch_3p" != "yes"; then
@@ -4160,8 +4171,8 @@ fi
 
 if test "$with_wasatch3p" != NOT_SET; then
 
-  if test "$with_spatialops" != NOT_SET -o "$with_exprlib" != NOT_SET -o "$with_tabprops" != NOT_SET -o "$with_radprops" != NOT_SET; then
-    AC_MSG_ERROR([Do not use --with-wasatch3p with any of: --with-spatialops, --with-exprlib,--with-tabprops, or --with-radprops.])
+  if test "$with_spatialops" != NOT_SET -o "$with_exprlib" != NOT_SET -o "$with_tabprops" != NOT_SET -o "$with_radprops" != NOT_SET -o "$with_nscbc" != NOT_SET; then
+    AC_MSG_ERROR([Do not use --with-wasatch3p with any of: --with-spatialops, --with-exprlib,--with-tabprops, --with-radprops, or --with-nscbc.])
   fi
 
   AC_MSG_NOTICE(Using the Wastach 3p libs in: $with_wasatch3p)
@@ -4324,7 +4335,7 @@ AC_SUBST(RADPROPS_LIB_DIR_FLAG)
 
 ##  --  search for Wasatch 3P NSCBC Library ------------------------
 
-if test "$BUILD_WASATCH" = "yes"; then
+if test "$with_nscbc" != NOT_SET; then
 
   AC_MSG_CHECKING(for Wasatch 3P NSCBC files (Header only - verifying .h files)) 
   for file in include/nscbc/CharacteristicBCBuilder.h include/nscbc/NSCBCToolsAndDefs.h include/nscbc/SpeedOfSound.h include/nscbc/TagManager.h; do

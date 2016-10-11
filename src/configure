@@ -976,6 +976,7 @@ with_spatialops
 with_exprlib
 with_tabprops
 with_radprops
+with_nscbc
 with_wasatch3p
 with_zoltan
 with_papi
@@ -1649,7 +1650,7 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
 --enable-wasatch_3p     Download and build the Wasatch Thirdparty libraries
-                          - TabProps ExprLibs SpatialOps RadProps.
+                          - TabProps ExprLibs SpatialOps RadProps NSCBC.
 --enable-static         Build a statically linked version of Uintah. Set to
                           'full' to force full static link.
 --enable-verbose        Turn on verbose configure output
@@ -1724,7 +1725,8 @@ Optional Packages:
 --with-exprlib=DIR      Use the Wasatch 3P ExprLib library in DIR
 --with-tabprops=DIR     Use the Wasatch 3P TabProps library in DIR
 --with-radprops=DIR     Use the Wasatch 3P RadProps library in DIR
---with-wasatch3p=DIR    Use the SpatialOps/ExprLib/TabPros/RadProps
+--with-nscbc=DIR        Use the Wasatch 3P NSCBC library in DIR
+--with-wasatch3p=DIR    Use the SpatialOps/ExprLib/TabPros/RadProps/NSCBC
                           libraries in DIR
 --with-zoltan=DIR       Use the Zoltan installation in DIR
 --with-papi=DIR         Use the papi installation in DIR
@@ -4680,8 +4682,69 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
   fi
 
 
+
+
+# Check whether --with-nscbc was given.
+if test "${with_nscbc+set}" = set; then :
+  withval=$with_nscbc; with_nscbc="$withval"
+else
+  with_nscbc=NOT_SET
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-nscbc --without-nscbc"
+  if test -n "$with_nscbc"; then
+
+    # Check that params 5 and 6 have valid values
+    if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
+      as_fn_error FILE "Internal Uintah configure error for '--with-nscbc': invalid value of 'DIR' used for 5th parameter - should be DIR" "$LINENO" 5
+    fi
+    if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID" -a "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-NOT-VALID" ; then
+      as_fn_error $? "Internal Uintah configure error for '--with-nscbc': invalid value of 'WITHOUT-IS-NOT-VALID' used for 6th parameter - should be WITHOUT-IS-NOT-VALID.  Please report." "$LINENO" 5
+    fi
+
+    # Verify --without is valid
+    if test "$with_nscbc" = "no" ; then
+      if test "WITHOUT-IS-NOT-VALID" != "WITHOUT-IS-VALID"; then
+        as_fn_error $? "'--without-nscbc' is not supported!" "$LINENO" 5
+      fi
+    fi
+
+    # Verify tha a DIR or FILE was provided.
+    if test "$with_nscbc" = "yes" ; then
+      if test "DIR" = "FILE" ; then
+        as_fn_error $? "When using '--with-nscbc' you must specify the appropriate file." "$LINENO" 5
+      else
+        as_fn_error $? "When using '--with-nscbc' you must specify the appropriate directory." "$LINENO" 5
+      fi
+    fi
+    if test "$with_nscbc" != "built-in" -a "$with_nscbc" != NOT_SET -a "$with_nscbc" != "no"; then
+      if test "DIR" = "FILE"; then
+        # Verify that it is a regular file (or a symbolic link).
+        if test ! -f "$with_nscbc" ; then
+          as_fn_error $? "The parameter \"$with_nscbc\" provided to --with-nscbc is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+        fi
+      else
+        if test "DIR" = "FILES"; then
+          # Verify that valid files are listed...
+          the_files=$(echo $with_nscbc | tr "," "\n")
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: the files are $the_files " >&5
+$as_echo "$as_me: WARNING: the files are $the_files " >&2;}
+          for the_file in $the_files; do
+            if test ! -f "$the_file"; then
+              as_fn_error $? "The parameter \"$the_file\" provided to --with-nscbc is not a file!  Please verify that the path and file are correct." "$LINENO" 5
+            fi
+          done
+        elif test ! -d "$with_nscbc"; then
+          # Verify that a valid directory is listed...
+          as_fn_error $? "The parameter \"$with_nscbc\" provided to --with-nscbc is not a directory!  Please verify that the path is correct." "$LINENO" 5
+        fi
+      fi
+    fi
+  fi
+
+
 # This specification must be after the individual W3P flags,
-# and is used as a shortcut so you don't have to specify all 4 individual flags...
+# and is used as a shortcut so you don't have to specify all 5 individual flags...
 
 
 # Check whether --with-wasatch3p was given.
@@ -39966,17 +40029,20 @@ if test "$build_wasatch_3p" != "no"; then
   if test "$with_wasatch3p" != NOT_SET; then
      as_fn_error $? "Do NOT specify both --with-wasatch3p and --enable-wasatch_3p " "$LINENO" 5
   fi
-  if test "$with_radprops" != NOT_SET; then
-     as_fn_error $? "Do NOT specify both --with-radprops and --enable-wasatch_3p " "$LINENO" 5
-  fi
-  if test "$with_tabprops" != NOT_SET; then
-     as_fn_error $? "Do NOT specify both --with-tabprops and --enable-wasatch_3p " "$LINENO" 5
-  fi
   if test "$with_spatialops" != NOT_SET; then
      as_fn_error $? "Do NOT specify both --with-spatialops and --enable-wasatch_3p " "$LINENO" 5
   fi
   if test "$with_exprlib" != NOT_SET; then
      as_fn_error $? "Do NOT specify both --with-exprlib and --enable-wasatch_3p " "$LINENO" 5
+  fi
+  if test "$with_tabprops" != NOT_SET; then
+     as_fn_error $? "Do NOT specify both --with-tabprops and --enable-wasatch_3p " "$LINENO" 5
+  fi
+  if test "$with_radprops" != NOT_SET; then
+     as_fn_error $? "Do NOT specify both --with-radprops and --enable-wasatch_3p " "$LINENO" 5
+  fi
+  if test "$with_nscbc" != NOT_SET; then
+     as_fn_error $? "Do NOT specify both --with-nscbc and --enable-wasatch_3p " "$LINENO" 5
   fi
 
   if test "$build_wasatch_3p" != "yes"; then
@@ -40032,8 +40098,8 @@ fi
 
 if test "$with_wasatch3p" != NOT_SET; then
 
-  if test "$with_spatialops" != NOT_SET -o "$with_exprlib" != NOT_SET -o "$with_tabprops" != NOT_SET -o "$with_radprops" != NOT_SET; then
-    as_fn_error $? "Do not use --with-wasatch3p with any of: --with-spatialops, --with-exprlib,--with-tabprops, or --with-radprops." "$LINENO" 5
+  if test "$with_spatialops" != NOT_SET -o "$with_exprlib" != NOT_SET -o "$with_tabprops" != NOT_SET -o "$with_radprops" != NOT_SET -o "$with_nscbc" != NOT_SET; then
+    as_fn_error $? "Do not use --with-wasatch3p with any of: --with-spatialops, --with-exprlib,--with-tabprops, --with-radprops, or --with-nscbc." "$LINENO" 5
   fi
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: Using the Wastach 3p libs in: $with_wasatch3p" >&5
@@ -40205,7 +40271,7 @@ fi
 
 ##  --  search for Wasatch 3P NSCBC Library ------------------------
 
-if test "$BUILD_WASATCH" = "yes"; then
+if test "$with_nscbc" != NOT_SET; then
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Wasatch 3P NSCBC files (Header only - verifying .h files)" >&5
 $as_echo_n "checking for Wasatch 3P NSCBC files (Header only - verifying .h files)... " >&6; }
