@@ -4586,6 +4586,14 @@ for testfile in $sci_defs_files; do
        $path_to_src/build_scripts/repair.sh -quiet hypre
     fi
 
+    if test -d StandAlone -a "$file" = "include/sci_defs/wasatch_defs.h"; then
+       echo "WARNING: Wasatch 3P dependent .o files are probably out of date... removing..."
+       $path_to_src/build_scripts/repair.sh -quiet SpatialOps
+       $path_to_src/build_scripts/repair.sh -quiet ExprLib
+       $path_to_src/build_scripts/repair.sh -quiet TabProps
+       $path_to_src/build_scripts/repair.sh -quiet RadProps
+    fi
+
   fi
 done
 
