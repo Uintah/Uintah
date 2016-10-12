@@ -10,12 +10,27 @@
 /** 
 * @class  fvSootFromYsoot
 * @author David Lignell
-* @date   4/2015
+* @date   9/2015
 * 
-* @brief Computes the soot volume fraction from the soot mass fraction (which is assumed transported)
+* @brief Computes the soot volume fraction from the soot mass fraction (which is assumed transported) and the absorption coefficient
 *
 * Here is the UPS spec: 
 *
+* <model label="my_soot" type="fv_soot">
+   <!-- fv_soot --> 
+   <opl                          spec="OPTIONAL DOUBLE 'positive'"
+                                 need_applies_to="type fv_soot"/> <!-- this is optional because the radiation model may specify it --> 
+   <soot_density                 spec="OPTIONAL DOUBLE 'positive'"
+                                 need_applies_to="type fv_soot"/> <!-- default of 1950.0 --> 
+   <density_label                spec="OPTIONAL STRING"
+                                 need_applies_to="type fv_soot"/> <!-- default of "density" --> 
+   <temperature_label            spec="OPTIONAL STRING"
+                                 need_applies_to="type fv_soot"/> <!-- default of "temperature" --> 
+   <absorption_label             spec="OPTIONAL STRING"
+                                 need_applies_to="type fv_soot"/> <!-- default of "absorpIN" -->
+   <Ysoot_label			 spec="OPTIONAL STRING"
+				 need_applies_to="type fv_soot"/> 
+ </model>
 *
 *  
 */ 
@@ -66,11 +81,16 @@ namespace Uintah{
 
     private: 
 
+     double _rho_soot;
+     double _opl;
+
      const VarLabel* _den_label; 
+     const VarLabel* _T_label;
      const VarLabel* _Ys_label; 
      const VarLabel* _absorp_label;  
 
-     std::string _den_label_name; 
+     std::string _den_label_name;
+     std::string _T_label_name; 
      std::string _Ys_label_name; 
      std::string _absorp_label_name;
 
