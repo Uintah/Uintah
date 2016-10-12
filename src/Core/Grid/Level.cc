@@ -640,6 +640,46 @@ bool Level::containsCell( const IntVector & idx ) const
 
 //______________________________________________________________________
 //
+void Level::setNonCubicFlag ( bool& test ) 
+{ 
+  m_upsBoxes.isNonCubic = test; 
+}
+//______________________________________________________________________
+//   Add the bounding box from the ups file
+void Level::addBox_ups( const BBox &b )
+{
+  
+  m_upsBoxes.boxes.push_back( b );
+  
+  // We are assuming that if the user has more than one box in a level the level
+  // is non-cubic.  This is obvious not always true.  -Todd
+  
+  if ( m_upsBoxes.boxes.size() > 1 ){
+    m_upsBoxes.isNonCubic = true;
+  }
+}
+
+//______________________________________________________________________
+//  is the cell inside of boxes specifid in ups file?
+bool Level::insideBoxes_ups( const IntVector& c ) const
+{
+  if( m_upsBoxes.isNonCubic ) {
+    return true;
+  }
+  
+  const Point p = getCellPosition( c );
+  for( unsigned i = 0; i < m_upsBoxes.boxes.size(); i++ ) {
+    BBox box = m_upsBoxes.boxes[i];
+    
+    if( box.inside(p) ){
+      return true;
+    } 
+  }
+  return false;
+}
+
+//______________________________________________________________________
+//
 void
 Level::finalizeLevel()
 {

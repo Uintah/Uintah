@@ -836,7 +836,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
    if( !grid_ps ) {
       return;
    }
-
+      
    // anchor/highpoint on the grid
    Point anchor(DBL_MAX, DBL_MAX, DBL_MAX);
 
@@ -1192,6 +1192,10 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       IntVector anchorCell(level->getCellIndex(    levelAnchor   + Vector(1.e-14,1.e-14,1.e-14)) );
       IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-14,1.e-14,1.e-14)) );
 
+      bool nonCubic = false;
+      grid_ps->get( "nonCubic_domain", nonCubic );
+      level->setNonCubicFlag( nonCubic );
+        
       //______________________________________________________________________
       // second pass - set up patches and cells
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
@@ -1373,6 +1377,10 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
         IntVector refineRatio = level->getRefinementRatio();
         level->setPatchDistributionHint(patches);
+        
+        IntVector boxLo_cell( SHRT_MAX, SHRT_MAX, SHRT_MAX );
+        IntVector boxHi_cell(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
+        
         for(int i=0;i<patches.x();i++){
           for(int j=0;j<patches.y();j++){
             for(int k=0;k<patches.z();k++){
@@ -1402,9 +1410,22 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
                 throw InvalidGrid(desc.str(),__FILE__,__LINE__);
               }
               level->addPatch(startcell, endcell, inStartCell, inEndCell,this);
+              
+              boxLo_cell = Uintah::Min( boxLo_cell, startcell );
+              boxHi_cell = Uintah::Max( boxHi_cell, endcell );
             }
           }
         } // end for(int i=0;i<patches.x();i++){
+
+        // Keep a list of the boxes specified in the ups files
+        // Needed by RMCRT + getRegion when the domain is non_cubic
+        // Below includes the extraCells
+        Point boxLo_pt = level->getNodePosition( boxLo_cell );
+        Point boxHi_pt = level->getNodePosition( boxHi_cell );
+                
+        BBox box( boxLo_pt, boxHi_pt );
+        level->addBox_ups(box);
+        
       } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 
       if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {

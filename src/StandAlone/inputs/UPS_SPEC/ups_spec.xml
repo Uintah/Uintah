@@ -662,6 +662,7 @@
                           attribute2="spacing OPTIONAL STRING" />
       </Stretch>
     </Level>
+    <nonCubic_domain    spec="OPTIONAL BOOLEAN" />
 
   </Grid>
 
