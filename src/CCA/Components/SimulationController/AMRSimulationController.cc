@@ -619,6 +619,11 @@ AMRSimulationController::run()
     // Print MPI statistics
     d_scheduler->printMPIStats();
    
+    if( first ) {
+      d_scheduler->setRestartInitTimestep( false );
+      first = false;
+    }
+
     // Update the time.
     time += delt;
 
@@ -634,11 +639,6 @@ AMRSimulationController::run()
     newDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
     
     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, d_prev_delt, time );
-
-    if( first ) {
-      d_scheduler->setRestartInitTimestep( false );
-      first = false;
-    }
 
     // If VisIt has been included into the build, check the lib sim
     // state to see if there is a connection and if so check to see if
