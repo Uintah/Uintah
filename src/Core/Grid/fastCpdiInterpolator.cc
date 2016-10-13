@@ -36,21 +36,31 @@ fastCpdiInterpolator::fastCpdiInterpolator()
 {
   d_size = 27;
   d_patch = 0;
+  d_lcrit = 1.e10;
 }
 
 fastCpdiInterpolator::fastCpdiInterpolator(const Patch* patch)
 {
   d_size = 27;
   d_patch = patch;
+  d_lcrit = 1.e10;
 }
     
 fastCpdiInterpolator::~fastCpdiInterpolator()
 {
 }
 
+fastCpdiInterpolator::fastCpdiInterpolator(const Patch* patch,
+                                           const double lcrit)
+{
+  d_size = 64;
+  d_patch = patch;
+  d_lcrit = lcrit;
+}
+
 fastCpdiInterpolator* fastCpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew fastCpdiInterpolator(patch);
+  return scinew fastCpdiInterpolator(patch, d_lcrit);
 }
     
 void fastCpdiInterpolator::findCellAndWeights(const Point& pos,

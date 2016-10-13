@@ -22,6 +22,27 @@
  * IN THE SOFTWARE.
  */
 
+/* CPDI interpolator based on the paper by Sadeghirad, Burghardt and Brannon
+"A convected particle domain interpolation technique to extend applicability of the material point method for problems involving massive deformations"
+International Journal for Numerical Methods in Engineering
+Volume 86, Issue 12, pages 1435–1456, 24 June 2011
+
+An additional feature of this implementation, not described above, is the
+ability to restrict the particle domains from exceeding a user specified
+length, defined here as "lcrit".  An algorithm, developed by Michael Homel and
+Rebecca Brannon, is used to scale the deformed particle such that no corners
+of that particle will fall outside of a sphere with radius lcrit, co-centered
+with the particle.  This feature was added to avoid particles from getting
+so large that they have influence with nodes that lie beyond the ghost nodes
+of neighboring patches, or outside of the computational domain, as they approach
+node boundaries.  Note that lcrit is a dimension relative to the cell size.
+Thus, lcrit=1 implies that a particle can have no length as measured from the
+center to any corner that exceeds the side length of a computational cell.
+
+This "fast" version uses a hash table to consolidate the 64 entries that are
+the result of the standard implementation into 27 entries.
+*/
+
 #ifndef FAST_CPDI_INTERPOLATOR_H
 #define FAST_CPDI_INTERPOLATOR_H
 
@@ -37,11 +58,12 @@ namespace Uintah {
     
     fastCpdiInterpolator();
     fastCpdiInterpolator(const Patch* patch);
+    fastCpdiInterpolator(const Patch* patch, const double lcrit);
     virtual ~fastCpdiInterpolator();
     
     virtual fastCpdiInterpolator* clone(const Patch*);
     
-    virtual void findCellAndWeights(const Point& p,std::vector<IntVector>& ni, 
+    virtual void findCellAndWeights(const Point& p,std::vector<IntVector>& ni,
                                     std::vector<double>& S, const Matrix3& size, const Matrix3& defgrad);
     virtual void findCellAndShapeDerivatives(const Point& pos,
                                              std::vector<IntVector>& ni,
@@ -55,11 +77,15 @@ namespace Uintah {
                                                        const Matrix3& size,
                                                        const Matrix3& defgrad);
     virtual int size();
+
+    virtual void setLcrit(double lcrit){
+      d_lcrit = lcrit;
+    }
     
   private:
     const Patch* d_patch;
     int d_size;
-    
+    double d_lcrit;
   };
 }
 
