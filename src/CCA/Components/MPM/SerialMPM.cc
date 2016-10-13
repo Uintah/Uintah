@@ -761,7 +761,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
-  t->requires(Task::OldDW, lb->pColorLabel,            gan,NGP);
+//  t->requires(Task::OldDW, lb->pColorLabel,            gan,NGP);
   t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
   if (flags->d_GEVelProj) {
     t->requires(Task::OldDW, lb->pVelGradLabel,             gan,NGP);
@@ -791,7 +791,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
               Task::OutOfDomain);
   t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
-  t->computes(lb->gColorLabel);
+//  t->computes(lb->gColorLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gTemperatureLabel);
