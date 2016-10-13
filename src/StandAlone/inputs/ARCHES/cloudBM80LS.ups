@@ -16,7 +16,7 @@
     <delt_min>1.0e-6</delt_min>
     <delt_max>0.1</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>1</max_Timesteps>
+    <max_Timesteps>2</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -40,7 +40,7 @@
     <save label="radiationFluxE" />
     <save label="radiationFluxW" />
     <save label="Intensity0000"/>
-    <checkpoint cycle = "2" timestepInterval = "2"/>
+    <checkpoint cycle = "2" timestepInterval = "1"/>
   </DataArchiver>
 
   <Grid>
