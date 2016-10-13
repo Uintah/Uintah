@@ -25,13 +25,13 @@
 #include <Core/Grid/fastCpdiInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
+#include <iostream>
 
 using namespace Uintah;
+using namespace std;
 
-    
 fastCpdiInterpolator::fastCpdiInterpolator()
 {
   d_size = 27;
@@ -183,7 +183,7 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
           hash = xMjx + yMjy + 9*((zM)+jz);
           if( hash < 0 || hash > 26 )
           {
-             proc0cout << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
+             cerr << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
                        << "\nThis is due to the large deformation nature of your problem."
                        << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations"
                        << "of fastCpdiInterpolator." << std::endl;
@@ -370,7 +370,7 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
           hash = xMjx + yMjy + 9*((zM)+jz);
           if( hash < 0 || hash > 26 )
           {
-             proc0cout << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
+             cerr << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
                        << "\nThis is due to the large deformation nature of your problem." 
                        << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations" 
                        << "of fastCpdiInterpolator." << std::endl;
@@ -560,7 +560,7 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
           hash = xMjx + yMjy + 9*((zM)+jz);
           if( hash < 0 || hash > 26 )
           {
-             proc0cout << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
+             cerr << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
                        << "\nThis is due to the large deformation nature of your problem."
                        << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations"
                        << "of fastCpdiInterpolator." << std::endl;

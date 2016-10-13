@@ -41,17 +41,17 @@ namespace Uintah {
     
     virtual fastCpdiInterpolator* clone(const Patch*);
     
-    virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
-                                    vector<double>& S, const Matrix3& size, const Matrix3& defgrad);
+    virtual void findCellAndWeights(const Point& p,std::vector<IntVector>& ni, 
+                                    std::vector<double>& S, const Matrix3& size, const Matrix3& defgrad);
     virtual void findCellAndShapeDerivatives(const Point& pos,
-                                             vector<IntVector>& ni,
-                                             vector<Vector>& d_S,
+                                             std::vector<IntVector>& ni,
+                                             std::vector<Vector>& d_S,
                                              const Matrix3& size,
                                              const Matrix3& defgrad);
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                       vector<IntVector>& ni,
-                                                       vector<double>& S,
-                                                       vector<Vector>& d_S,
+                                                       std::vector<IntVector>& ni,
+                                                       std::vector<double>& S,
+                                                       std::vector<Vector>& d_S,
                                                        const Matrix3& size,
                                                        const Matrix3& defgrad);
     virtual int size();
