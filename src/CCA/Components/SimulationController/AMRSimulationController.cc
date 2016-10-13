@@ -108,6 +108,9 @@ AMRSimulationController::run()
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
 
+  calcStartTime();
+  initSimulationStatsVars();
+
 #ifdef USE_GPERFTOOLS
   if (gprofile.active()){
     char gprofname[512];
@@ -132,11 +135,7 @@ AMRSimulationController::run()
   }
 #endif
 
-  bool log_dw_mem=false;
-
-  if( dbg_dwmem.active() ) {
-    log_dw_mem = true;
-  }
+  bool log_dw_mem = dbg_dwmem.active();
 
   // Sets up sharedState, timeinfo, output, scheduler, lb.
   preGridSetup();
@@ -144,29 +143,24 @@ AMRSimulationController::run()
   // Create grid:
   GridP currentGrid = gridSetup();
 
-  d_scheduler->initialize( 1, 1 );
-
 #ifdef HAVE_CUDA
    GpuUtilities::assignPatchesToGpus(currentGrid);
 #endif
 
+  d_scheduler->initialize( 1, 1 );
   d_scheduler->advanceDataWarehouse( currentGrid, true );
-
   d_scheduler->setInitTimestep( true );
-  
-  bool first = true;
-  
-  if( d_restarting ) {
-    d_scheduler->setRestartInitTimestep( true );
-  }
+  d_scheduler->setRestartInitTimestep( d_restarting );
 
-  double time;
+  bool         first = true;  
+  double       time, delt;
+  delt_vartype delt_var;
 
-  // set up sim, regridder, and finalize sharedState
-  // also reload from the DataArchive on restart
+  // set up sim, regridder, and finalize sharedState also reload from
+  // the DataArchive on restart
   postGridSetup( currentGrid, time );
 
-  calcStartTime();
+  setStartSimTime( time );
 
   //__________________________________
   //  reduceUda
@@ -186,21 +180,40 @@ AMRSimulationController::run()
   doInitialTimestep( currentGrid, time );
 
   //////////////////////////////////////////////////////////
-  // Display stats for 0th time step:
+  // Get and reduce the performace run time stats for 0th time step:
   getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep() );
   getPAPIStats();
   d_sharedState->d_runTimeStats.reduce( d_regridder &&
                                         d_regridder->useDynamicDilation(),
                                         d_myworld );
   calcWallTime();
-      
-  printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), d_prev_delt, time );
-  //
+  
+  // Reduce the mpi run time stats.
+  MPIScheduler *mpiScheduler = 
+    dynamic_cast<MPIScheduler*>(d_scheduler.get_rep());
+    
+  if( mpiScheduler ) {
+    mpiScheduler->mpi_info_.reduce( d_regridder && 
+				    d_regridder->useDynamicDilation(),
+				    d_myworld );
+  }
+
+  // Print MPI statistics
+  d_scheduler->printMPIStats();
+
+  // Retrieve delta T and adjust it:
+  DataWarehouse* newDW = d_scheduler->getLastDW();
+  newDW->get( delt_var, d_sharedState->get_delt_label() );
+  delt = delt_var;
+  // delt adjusted based on timeinfo parameters
+  adjustDelT( delt, d_prev_delt, first, time );
+
+  newDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
+
+  printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, d_prev_delt, time );
+
   //////////////////////////////////////////////////////////
-
-  setStartSimTime( time );
-  initSimulationStatsVars();
-
+  //
 #ifndef DISABLE_SCI_MALLOC
   AllocatorSetDefaultTagLineNumber( d_sharedState->getCurrentTopLevelTimeStep() );
 #endif
@@ -241,15 +254,6 @@ AMRSimulationController::run()
 
   ////////////////////////////////////////////////////////////////////////////
   // The main time loop; here the specified problem is actually getting solved
-   
-  int          iterations = d_sharedState->getCurrentTopLevelTimeStep();
-  double       delt = 0;
-  delt_vartype delt_var;
-  
-  d_lb->resetCostForecaster();
-
-  d_scheduler->setInitTimestep(false);
-
   static int  requested_nth_output_proc = -1;
   static bool need_to_recompile = false;
   static bool put_back          = false;
@@ -270,22 +274,43 @@ AMRSimulationController::run()
   }
 #endif
 
+  // Put the current time into the shared state so other components
+  // can access it.  Also increment (by one) the current time step
+  // number so components can tell what timestep they are on. 
+  d_sharedState->setElapsedTime( time );
+  d_sharedState->incrementCurrentTopLevelTimeStep();
+    
+  // Reset the runtime performance stats
+  d_sharedState->resetStats();
+  // Reset memory use tracking variable
+  d_scheduler->resetMaxMemValue();
+
+  d_scheduler->setInitTimestep(false);
+
+  d_lb->resetCostForecaster();
+
   //
-  // Note, the 'current timestep' (d_sharedState->getCurrentTopLevelTimeStep()) changes in the middle
-  // of this loop.  It is actually the previous time step number until it hits d_sharedState->incrementCurrentTopLevelTimeStep();
-  // I'm not sure that this effects anything, but the 'recompile for checkpoint' and 'regridding' sections,
-  // in theory, if they look at it, will see the previous time step number.  However, the 'executeTimestep()' sees
-  // the 'current' time step number.
+  // Note, the 'current timestep'
+  // (d_sharedState->getCurrentTopLevelTimeStep()) changes in the
+  // middle of this loop.  It is actually the previous time step
+  // number until it hits
+  // d_sharedState->incrementCurrentTopLevelTimeStep(); I'm not sure
+  // that this effects anything, but the 'recompile for checkpoint'
+  // and 'regridding' sections, in theory, if they look at it, will
+  // see the previous time step number.  However, the
+  // 'executeTimestep()' sees the 'current' time step number.
   //
+
+  // ARS - getCurrentTopLevelTimeStep has been moved to the bottom of
+  // the loop as well being before the loop. This eliminates the issue
+  // noted above by Dav.
   
-  while( ( time < d_timeinfo->maxTime ) &&
-         ( iterations < d_timeinfo->maxTimestep ) && 
-         ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
+  while( !isLast( time ) ) {
 
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
       char heapename[512];
-      sprintf(heapename, "Timestep %d", iterations);
+      sprintf(heapename, "Timestep %d", timestep);
       HeapProfilerDump(heapename);
     }
 #endif
@@ -296,67 +321,63 @@ AMRSimulationController::run()
         barrier_times[i] = 0;
       }
     }
-     
-    // Retrieve delta T and adjust it:
-    DataWarehouse* newDW = d_scheduler->getLastDW();
-    newDW->get( delt_var, d_sharedState->get_delt_label() );
-    delt = delt_var;
-    
-#ifdef HAVE_VISIT
-    // If the user modified delt during the previous time step skip
-    // calling adjustDelT for this next time step.
 
-    // Note: this code is not explicit to VisIt but it is currently
-    // the only component that is making use of the ability to
-    // overirde adjusting delta T.
-    if( d_sharedState->getVisIt() && d_sharedState->adjustDelT() == false ) {
-      d_sharedState->adjustDelT( true );
-    }
-    else
-#endif
-    {
-      // delt adjusted based on timeinfo parameters
-      adjustDelT( delt, d_prev_delt, first, time );
-      newDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
-    }
 #ifdef HAVE_PIDX
     bool checkpointing = false;
     if( d_output && d_output->savingAsPIDX() ) {
-      // Because "incrementCurrentTopLevelTimeStep()" has not yet been called
-      // at this point in the loop, we need to add 1 to the currentTimeStep to know if we
-      // really are on a checkpoint or output time step.
+      // Because "incrementCurrentTopLevelTimeStep()" has not yet been
+      // called at this point in the loop, we need to add 1 to the
+      // currentTimeStep to know if we really are on a checkpoint or
+      // output time step.
+      // int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep() + 1;
 
-      int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep() + 1;
+      // ARS - getCurrentTopLevelTimeStep has been moved to the bottom
+      // of the loop as well being before the loop. This eliminates
+      // the issue noted above by Dav.
+      int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep();
 
-      // When using Wall Clock Time for checkpoints, we need to have rank 0 determine this time and
-      // then send it to all other ranks.
+      // When using Wall Clock Time for checkpoints, we need to have
+      // rank 0 determine this time and then send it to all other
+      // ranks.
       int currsecs = -1;
       if( d_output->getCheckpointWalltimeInterval() > 0 ) {
-        // If checkpointing based on wall clock time, then have process 0 determine
-        // the current time and share it will everyone else.
+        // If checkpointing based on wall clock time, then have
+        // process 0 determine the current time and share it will
+        // everyone else.
         if( Parallel::getMPIRank() == 0 ) {
           currsecs = (int)Time::currentSeconds();
         }
         Uintah::MPI::Bcast( &currsecs, 1, MPI_INT, 0, d_myworld->getComm() );
       }
   
-      if( ( d_output->getCheckpointTimestepInterval() > 0 && currentTimeStep == d_output->getNextCheckpointTimestep() ) ||
-          ( d_output->getCheckpointInterval() > 0         && ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
-          ( d_output->getCheckpointWalltimeInterval() > 0 && ( currsecs >= d_output->getNextCheckpointWalltime() ) ) ) {
+      if( ( d_output->getCheckpointTimestepInterval() > 0 &&
+	    currentTimeStep == d_output->getNextCheckpointTimestep() ) ||
+          ( d_output->getCheckpointInterval() > 0         &&
+	    ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
+          ( d_output->getCheckpointWalltimeInterval() > 0 &&
+	    ( currsecs >= d_output->getNextCheckpointWalltime() ) ) ) {
 
         checkpointing = true;
+
         if( requested_nth_output_proc > 1 ) {
           proc0cout << "This is a checkpoint timestep (" << currentTimeStep
-                    << ") - need to recompile with nth proc set to: " << requested_nth_output_proc << "\n";
+                    << ") - need to recompile with nth proc set to: "
+		    << requested_nth_output_proc << "\n";
+
           d_lb->setNthRank( requested_nth_output_proc );
-          d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
+          d_lb->possiblyDynamicallyReallocate( currentGrid,
+					       LoadBalancerPort::regrid );
           d_output->setSaveAsUDA();
           need_to_recompile = true;
         }
       }
-      if( ( d_output->getOutputTimestepInterval() > 0 && currentTimeStep == d_output->getNextOutputTimestep() ) ||
-          ( d_output->getOutputInterval() > 0         && ( time + delt ) >= d_output->getNextOutputTime() ) ) {
+      if( ( d_output->getOutputTimestepInterval() > 0 &&
+	    currentTimeStep == d_output->getNextOutputTimestep() ) ||
+          ( d_output->getOutputInterval() > 0         &&
+	    ( time + delt ) >= d_output->getNextOutputTime() ) ) {
+
         proc0cout << "This is an output timestep: " << currentTimeStep << "\n";
+
         if( need_to_recompile ) { // If this is also a checkpoint time step
           proc0cout << "   Postposing as this is also a checkpoint time step...\n";
           d_output->postponeNextOutputTimestep();
@@ -422,12 +443,6 @@ AMRSimulationController::run()
     // finalize and advance the Datawarehouse
     d_scheduler->advanceDataWarehouse( currentGrid );
 
-    // Put the current time into the shared state so other components
-    // can access it.  Also increment (by one) the current time step
-    // number so components can tell what timestep they are on. 
-    d_sharedState->setElapsedTime( time );
-    d_sharedState->incrementCurrentTopLevelTimeStep();
-
 #ifndef DISABLE_SCI_MALLOC
     AllocatorSetDefaultTagLineNumber( d_sharedState->getCurrentTopLevelTimeStep() );
 #endif
@@ -440,7 +455,8 @@ AMRSimulationController::run()
     double old_init_delt = d_timeinfo->max_initial_delt;
     double new_init_delt = 0.;
 
-    bool nr = needRecompile( time, delt, currentGrid ) || need_to_recompile || put_back;
+    bool nr = (needRecompile( time, delt, currentGrid ) ||
+	       need_to_recompile || put_back);
 
     if( nr || first ) {
         
@@ -451,15 +467,19 @@ AMRSimulationController::run()
       }
 
       if( put_back ) {
-        proc0cout << "This is the timestep following a checkpoint - need to put the task graph back with a recompile - setting nth output to 1\n";
+        proc0cout << "This is the timestep following a checkpoint - "
+		  << "need to put the task graph back with a recompile - "
+		  << "setting nth output to 1\n";
         d_lb->setNthRank( 1 );
         d_lb->possiblyDynamicallyReallocate( currentGrid, LoadBalancerPort::regrid );
         d_output->setSaveAsPIDX();
         put_back = false;
       }
+
       if( need_to_recompile ) {
-        // Don't need to recompile on the next time step (as we are about to do it on this one).
-        // However, we will need to put it back after this time step, so set put_back to true.
+        // Don't need to recompile on the next time step (as we are
+        // about to do it on this one).  However, we will need to put
+        // it back after this time step, so set put_back to true.
         need_to_recompile = false;
         put_back = true;
       }
@@ -494,6 +514,7 @@ AMRSimulationController::run()
     // adjust the delt for each level and store it in all applicable dws.
     double delt_fine = delt;
     int    skip      = totalFine;
+
     for( int i = 0; i < currentGrid->numLevels(); i++ ) {
       const Level* level = currentGrid->getLevel(i).get_rep();
       
@@ -561,48 +582,23 @@ AMRSimulationController::run()
     if( d_output ) {
 #ifdef HAVE_PIDX
       if ( d_output->savingAsPIDX()) {
+	// Only save timestep.xml if we are checkpointing.  Normal
+	// time step dumps (using PIDX) do not need to write the xml
+	// information.
         if( checkpointing ) {
-          // Only save timestep.xml if we are checkpointing.  Normal time step dumps (using PIDX) do not need to write the xml information.
           d_output->writeto_xml_files( delt, currentGrid );
         }
       }
-      else {
-        // PIDX is not being used at time time so write timestep.xml for both checkpoints and time step dumps.
+      else
+#endif    
+      {
+        // If PIDX is not being used write timestep.xml for both
+        // checkpoints and time step dumps.
         d_output->writeto_xml_files( delt, currentGrid );
       }
-#else
-      // Not using PIDX, write timestep.xml for both checkpoints and time step dumps.
-      d_output->writeto_xml_files( delt, currentGrid );
-#endif    
-    }
 
-    // Update the time.
-    time += delt;
-
-    d_prev_delt = delt;
-
-    ++iterations;
-    
-    if( first ) {
-      d_scheduler->setRestartInitTimestep( false );
-      first = false;
-    }
-    
-    if( d_output ) {
       d_output->findNext_OutputCheckPoint_Timestep( delt, currentGrid );
     }
-
-    calcWallTime();
-
-#ifdef HAVE_VISIT
-    bool last  = false;
-
-    // Check to see if at the last iteration
-    last = ( ( time >= d_timeinfo->maxTime ) ||
-	     ( iterations >= d_timeinfo->maxTimestep ) ||
-	     ( d_timeinfo->max_wall_time != 0 && getWallTime() >= d_timeinfo->max_wall_time ) );
-#endif
-    
 
     // Get and reduce the performace run time stats
     getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep() );
@@ -610,9 +606,8 @@ AMRSimulationController::run()
     d_sharedState->d_runTimeStats.reduce(d_regridder &&
 					 d_regridder->useDynamicDilation(),
 					 d_myworld );
+    calcWallTime();
     
-    printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
-
     // Reduce the mpi run time stats.
     MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>( d_scheduler.get_rep() );
     
@@ -623,23 +618,38 @@ AMRSimulationController::run()
 
     // Print MPI statistics
     d_scheduler->printMPIStats();
+   
+    // Update the time.
+    time += delt;
+
+    d_prev_delt = delt;
+
+    // Retrieve next delta T and adjust it:
+    DataWarehouse* newDW = d_scheduler->getLastDW();
+    newDW->get( delt_var, d_sharedState->get_delt_label() );
+    delt = delt_var;
+    // delt adjusted based on timeinfo parameters
+    adjustDelT( delt, d_prev_delt, first, time );
+
+    newDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
+    
+    printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, d_prev_delt, time );
+
+    if( first ) {
+      d_scheduler->setRestartInitTimestep( false );
+      first = false;
+    }
 
     // If VisIt has been included into the build, check the lib sim
     // state to see if there is a connection and if so check to see if
     // anything needs to be done.
-
 #ifdef HAVE_VISIT
     if( d_sharedState->getVisIt() )
     {
-      // Get the new delt so the user can change the value.
-      d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
-      double delt_next = delt_var;
-      adjustDelT( delt_next, delt, first, time );
-
       // Update all of the simulation grid and time dependent variables.
       visit_UpdateSimData( &visitSimData, currentGrid,
-			   time, delt, delt_next, getWallTime(),
-			   last );
+			   time, d_prev_delt, delt, getWallTime(),
+			   isLast( time ) );
       
       // Check the state - if the return value is true the issued a
       // termination.
@@ -647,18 +657,31 @@ AMRSimulationController::run()
       if( visit_CheckState( &visitSimData ) )
 	break;
 
+      // This function is no longer used as last is now used in the
+      // check state. 
       // Check to see if at the last iteration. If so stop so the
       // user can have once last chance see the data.
       // if( visitSimData.stopAtLastTimeStep && last )
-      // 	visit_EndLibSim( &visitSimData );
-    }    
-#endif
+      // visit_EndLibSim( &visitSimData );
 
+      // The user may have adjusted delt so get it from the data
+      // warehouse. If not then this call is a no-op.
+      newDW->get( delt_var, d_sharedState->get_delt_label() );
+      delt = delt_var;
+    }
+#endif
+    
+    // Put the updated time into the shared state so other components
+    // can access it.  Also increment (by one) the current time step
+    // number so components can tell what timestep they are on.
+    d_sharedState->setElapsedTime( time );
+    d_sharedState->incrementCurrentTopLevelTimeStep();
+    
     // Reset the runtime performance stats
     d_sharedState->resetStats();
     // Reset memory use tracking variable
     d_scheduler->resetMaxMemValue();
-
+    
   } // end while main time loop ( time is not up, etc )
   
   // d_ups->releaseDocument();
@@ -806,8 +829,9 @@ AMRSimulationController::subCycleExecute( GridP & grid, int startDW, int dwStrid
     d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
     //}
     
-    // we need to unfinalize because execute finalizes all new DWs, and we need to write into them still
-    // (even if we finalized only the NewDW in execute, we will still need to write into that DW)
+    // we need to unfinalize because execute finalizes all new DWs,
+    // and we need to write into them still (even if we finalized only
+    // the NewDW in execute, we will still need to write into that DW)
     d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
 
     // iteration only matters if it's zero or greater than 0

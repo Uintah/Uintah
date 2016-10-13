@@ -231,9 +231,6 @@ public:
   bool isRegridTimestep() const { return d_isRegridTimestep; }
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
-  bool adjustDelT() const { return d_adjustDelT; }
-  void adjustDelT(bool ans) { d_adjustDelT = ans; }
-  
   bool isLockstepAMR() const { return d_lockstepAMR; }
   void setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
   

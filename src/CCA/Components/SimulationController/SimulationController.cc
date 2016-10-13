@@ -59,6 +59,8 @@
 #include <sys/param.h>
 #include <vector>
 
+#include <pwd.h>
+
 #define SECONDS_PER_MINUTE        60.0
 #define SECONDS_PER_HOUR        3600.0
 #define SECONDS_PER_DAY        86400.0
@@ -639,6 +641,16 @@ SimulationController::initSimulationStatsVars( void )
   //d_sumOfWallTimeSquares = 0; // sum all squares of walltimes
 }
 
+bool
+SimulationController::isLast( double time )
+{
+  return ( ( time >= d_timeinfo->maxTime ) ||
+	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
+	     d_timeinfo->maxTimestep ) ||
+	   ( d_timeinfo->max_wall_time != 0 &&
+	     getWallTime() >= d_timeinfo->max_wall_time ) );
+}
+
 //______________________________________________________________________
 //
 
@@ -652,7 +664,7 @@ stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 #endif
 
 void
-SimulationController::printSimulationStats( int timestep, double delt, double time )
+SimulationController::printSimulationStats( int timestep, double next_delt, double prev_delt, double time )
 {
   ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats = d_sharedState->d_runTimeStats;
 
@@ -770,10 +782,37 @@ SimulationController::printSimulationStats( int timestep, double delt, double ti
     }
 
     ostringstream message;
+
+#ifdef HAVE_VISIT
+    std::string userName;
+    
+    uid_t uid = geteuid();
+    struct passwd *pw = getpwuid(uid);
+    if (pw)
+      userName = std::string(pw->pw_name);
+
+    if( userName.find("Todd") != std::string::npos ||
+	userName.find("todd") != std::string::npos ||
+	userName.find("Harm") != std::string::npos ||
+	userName.find("harm") != std::string::npos ||
+	userName.find("u0112585") != std::string::npos )
+      message << "Time="        << time
+	      << " (timestep "  << timestep 
+	      << "), delT="     << prev_delt;
+    else
+      message << "Timestep "  << timestep  << ", "
+	      << "time="      << time      << ", "
+	      << "delT="      << prev_delt << ", "
+	      << "next delT=" << next_delt;
+
+#else
     message << "Time="        << time
-            << " (timestep "  << timestep 
-            << "), delT="     << delt
-            << walltime;
+	    << " (timestep "  << timestep 
+	    << "), delT="     << prev_delt;
+#endif
+    
+    message << walltime;
+
     message << "Memory Use = ";
 
     if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
@@ -824,7 +863,7 @@ SimulationController::printSimulationStats( int timestep, double delt, double ti
     }
 
     if ( d_nSamples > 0 ) {
-      double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
+      double realSecondsNow = (d_wallTime - d_prevWallTime)/prev_delt;
       double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
 
       dbgTime << "1 sim second takes ";

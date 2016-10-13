@@ -415,7 +415,6 @@ void visit_DeltaTCallback(char *val, void *cbdata)
 
   double delt = atof(val);
 
-  simStateP->adjustDelT( false );
   dw->override(delt_vartype(delt), simStateP->get_delt_label());
 
   visit_VarModifiedMessage( sim, "DeltaT", val);
