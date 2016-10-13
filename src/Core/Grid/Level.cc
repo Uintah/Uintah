@@ -662,11 +662,7 @@ void Level::addBox_ups( const BBox &b )
 //______________________________________________________________________
 //  is the cell inside of boxes specifid in ups file?
 bool Level::insideBoxes_ups( const IntVector& c ) const
-{
-  if( m_upsBoxes.isNonCubic ) {
-    return true;
-  }
-  
+{  
   const Point p = getCellPosition( c );
   for( unsigned i = 0; i < m_upsBoxes.boxes.size(); i++ ) {
     BBox box = m_upsBoxes.boxes[i];
