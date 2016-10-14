@@ -65,6 +65,8 @@ ESMPM::ESMPM(const ProcessorGroup* myworld) : UintahParallelComponent(myworld)
   d_one_matl  = d_esfvm->d_es_matl;
 
   d_one_matlset  = d_esfvm->d_es_matlset;
+
+  d_conductivity_model = 0;
 }
 
 ESMPM::~ESMPM()
@@ -73,6 +75,8 @@ ESMPM::~ESMPM()
   delete d_esfvm;
   delete d_mpm_lb;
   delete d_fvm_lb;
+  if(!d_conductivity_model)
+    delete d_conductivity_model;
 }
 
 void ESMPM::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& restart_prob_spec,
@@ -114,6 +118,9 @@ void ESMPM::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& rest
   }
 
   d_mpm_flags = d_amrmpm->flags;
+
+  d_conductivity_model = scinew ESConductivityModel(d_shared_state,
+                                                    d_mpm_flags, d_mpm_lb, d_fvm_lb);
 }
 
 void ESMPM::outputProblemSpec(ProblemSpecP& prob_spec)
@@ -190,7 +197,8 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     const PatchSet* patches = level->eachPatch();
     d_amrmpm->scheduleNormalizeNodalVelTempConc(sched, patches, mpm_matls);
     d_amrmpm->scheduleExMomInterpolated(        sched, patches, mpm_matls);
-    scheduleInterpolateParticlesToCellFC(sched, patches, mpm_matls, all_matls);
+    //scheduleInterpolateParticlesToCellFC(sched, patches, mpm_matls, all_matls);
+    d_conductivity_model->scheduleComputeConductivity(sched, patches, all_matls, d_one_matl);
   }
 
   for (int l = 0; l < maxLevels; l++) {
