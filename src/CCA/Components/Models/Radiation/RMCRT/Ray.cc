@@ -1148,9 +1148,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
 
       //__________________________________
-      //  BULLETPROOFING
-      cout << " nonCubic: " << level->isNonCubic() << endl;
-  
+      //  BULLETPROOFING  
       if ( level->isNonCubic() ){
 
         IntVector l = abskg.getLowIndex();
