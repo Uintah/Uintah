@@ -1124,6 +1124,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
       }
     }
     
+    IntVector ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
+    IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
     //__________________________________
     //  If ray length distance is used
     if ( d_ROI_algo == max_rayLength ){
@@ -1131,8 +1133,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
       IntVector patchLo = patch->getExtraCellLowIndex();
       IntVector patchHi = patch->getExtraCellHighIndex();
 
-      IntVector ROI_Lo = patchLo - d_halo;
-      IntVector ROI_Hi = patchHi + d_halo;
+      ROI_Lo = patchLo - d_halo;
+      ROI_Hi = patchHi + d_halo;
       dbg << "  L-"<< level->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << endl;
 
       // region must be contaned in the Level including extraCells.
@@ -1146,40 +1148,39 @@ Ray::rayTrace( const ProcessorGroup* pg,
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
+    }
+  
+    //__________________________________
+    //  BULLETPROOFING  
+    if ( level->isNonCubic() ){
 
-      //__________________________________
-      //  BULLETPROOFING  
-      if ( level->isNonCubic() ){
+      IntVector l = abskg.getLowIndex();
+      IntVector h = abskg.getHighIndex();
 
-        IntVector l = abskg.getLowIndex();
-        IntVector h = abskg.getHighIndex();
-         
-        CellIterator iterLim = CellIterator(l, h);
-        for(CellIterator iter = iterLim; !iter.done();iter++) {
-          IntVector c = *iter;
-          
-          if (level->insideBoxes_ups(c)) {
-        
-            if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] ) ||
-                 std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
-                 std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
-              cout << "______________________________________________________________________\n";
-              cout << "     L-"<< level->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << " d_halo " << d_halo << "\n";
-              cout << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n";
-              cout << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n";
-              cout << "          " << *patch << "\n";
-              ostringstream warn;
-              warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical "
-                  << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
-              throw InternalError( warn.str(), __FILE__, __LINE__ );
+      CellIterator iterLim = CellIterator(l, h);
+      for(CellIterator iter = iterLim; !iter.done();iter++) {
+        IntVector c = *iter;
 
-            }
+        if (level->insideBoxes_ups(c)) {
+
+          if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
+               std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
+               std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
+            ostringstream warn;
+            warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical \n"
+                << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
+                << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
+                << "          " << *patch << "\n"
+                << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
+
+            cout << warn.str() << endl;
+            //throw InternalError( warn.str(), __FILE__, __LINE__ );
+
           }
         }
       }
     }
-    
-    
+
     unsigned long int size = 0;                   // current size of PathIndex
     Vector Dx = patch->dCell();                   // cell spacing
 

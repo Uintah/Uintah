@@ -236,6 +236,14 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       abskg_F[c] = (float)abskg_D[c];
+      
+      // bulletproofing
+      if(std::isinf( abskg_F[c] ) || std::isnan( abskg_F[c] ) ){
+        ostringstream warn;
+        warn<< "RMCRTCommon::DoubleToFloat A non-physical abskg detected (" << abskg_F[c] << ") at cell: " << c << "\n";
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+        
+      } 
     }
   }
 }
