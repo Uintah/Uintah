@@ -106,6 +106,41 @@ double barrier_times[5] = {0};
 void
 AMRSimulationController::run()
 {
+  // If VisIt has been included into the build, initialize the lib sim
+  // so that a user can connect to the simulation via VisIt.
+#ifdef HAVE_VISIT
+  visit_simulation_data visitSimData;
+
+  if( d_sharedState->getVisIt() )
+  {
+    visitSimData.simController = this;
+    visitSimData.runMode = d_sharedState->getVisIt();
+
+    // Running with VisIt so add in the variables that the user can
+    // modify.
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    SimulationState::interactiveVar var;
+    var.name     = "Scrub-Data-Warehouse";
+    var.type     = Uintah::TypeDescription::bool_type;
+    var.value    = (void *) &(scrubDataWarehouse);
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_stateVars.push_back( var );
+
+    d_sharedState->d_debugStreams.push_back( &amrout );
+    d_sharedState->d_debugStreams.push_back( &dbg );
+    d_sharedState->d_debugStreams.push_back( &dbg_barrier );
+    d_sharedState->d_debugStreams.push_back( &dbg_dwmem );
+    d_sharedState->d_debugStreams.push_back( &gprofile );
+    d_sharedState->d_debugStreams.push_back( &gheapprofile );
+    d_sharedState->d_debugStreams.push_back( &gheapchecker );
+
+    visit_InitLibSim( &visitSimData );
+  }
+#endif
+    
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
 
   calcStartTime();
@@ -220,40 +255,12 @@ AMRSimulationController::run()
   // Print the stats for the initalization or restart.
   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, d_prev_delt, time );
 
-
-  // If VisIt has been included into the build, initialize the lib sim
-  // so that a user can connect to the simulation via VisIt.
+  // If VisIt has been included into the build, check the lib sim
+  // state to see if there is a connection and if so check to see if
+  // anything needs to be done.
 #ifdef HAVE_VISIT
-  visit_simulation_data visitSimData;
-
   if( d_sharedState->getVisIt() )
   {
-    visitSimData.simController = this;
-    visitSimData.runMode = d_sharedState->getVisIt();
-
-    // Running with VisIt so add in the variables that the user can
-    // modify.
-    // variable 1 - Must start with the component name and have NO
-    // spaces in the var name.
-    SimulationState::interactiveVar var;
-    var.name     = "Scrub-Data-Warehouse";
-    var.type     = Uintah::TypeDescription::bool_type;
-    var.value    = (void *) &(scrubDataWarehouse);
-    var.modifiable = true;
-    var.recompile  = false;
-    var.modified   = false;
-    d_sharedState->d_stateVars.push_back( var );
-
-    d_sharedState->d_debugStreams.push_back( &amrout );
-    d_sharedState->d_debugStreams.push_back( &dbg );
-    d_sharedState->d_debugStreams.push_back( &dbg_barrier );
-    d_sharedState->d_debugStreams.push_back( &dbg_dwmem );
-    d_sharedState->d_debugStreams.push_back( &gprofile );
-    d_sharedState->d_debugStreams.push_back( &gheapprofile );
-    d_sharedState->d_debugStreams.push_back( &gheapchecker );
-
-    visit_InitLibSim( &visitSimData );
-
     // Update all of the simulation grid and time dependent variables.
     visit_UpdateSimData( &visitSimData, currentGrid,
 			 time, d_prev_delt, delt, getWallTime(),
@@ -268,6 +275,19 @@ AMRSimulationController::run()
     // warehouse. If not then this call is a no-op.
     newDW->get( delt_var, d_sharedState->get_delt_label() );
     delt = delt_var;
+
+    // Report on the modiied variables. 
+    for (std::map<std::string,std::string>::iterator
+	   it = visitSimData.modifiedVars.begin();
+	 it != visitSimData.modifiedVars.end();
+	 ++it)
+      proc0cout << "Visit libsim - At time step "
+		<< d_sharedState->getCurrentTopLevelTimeStep() << " "
+		<< "the user modified the variable " << it->first << " "
+		<< "to be " << it->second << ". "
+		<< std::endl;
+
+    // Put this information into the NEXT time step xml.
   }
 #endif
 
@@ -665,6 +685,19 @@ AMRSimulationController::run()
       // warehouse. If not then this call is a no-op.
       newDW->get( delt_var, d_sharedState->get_delt_label() );
       delt = delt_var;
+
+      // Report on the modiied variables. 
+      for (std::map<std::string,std::string>::iterator
+	     it = visitSimData.modifiedVars.begin();
+	   it != visitSimData.modifiedVars.end();
+	   ++it)
+	proc0cout << "Visit libsim - At time step "
+		  << d_sharedState->getCurrentTopLevelTimeStep() << " "
+		  << "the user modified the variable " << it->first << " "
+		  << "to be " << it->second << ". "
+		  << std::endl;
+
+      // Put this information into the NEXT time step xml.
     }
 #endif
     

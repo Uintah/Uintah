@@ -427,7 +427,7 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( d_sharedState->getVisIt() & !initialized ) {
+  if( d_sharedState->getVisIt() && !initialized ) {
     d_sharedState->d_debugStreams.push_back( &dbg  );
     d_sharedState->d_debugStreams.push_back( &dbgPIDX );
 

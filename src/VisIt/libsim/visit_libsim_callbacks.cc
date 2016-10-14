@@ -25,6 +25,7 @@
 #include "VisItControlInterface_V2.h"
 
 #include "visit_libsim.h"
+#include "visit_libsim_database.h"
 #include "visit_libsim_callbacks.h"
 #include "visit_libsim_customUI.h"
 
@@ -184,7 +185,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else if(strcmp(cmd, "Refresh") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
-    VisItTimeStepChanged();
+    visit_SimGetCustomUIData(cbdata);
   }
   else if(strcmp(cmd, "Save") == 0)
   {
@@ -205,7 +206,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
-                        "Can not save a timestep unless the simulation is stopped", 0);
+                        "Can not save a timestep unless the simulation has "
+			"run for at least one time step and is stopped.", 0);
   }
 
   else if(strcmp(cmd, "Checkpoint") == 0)
@@ -227,7 +229,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
-                        "Can not save a checkpoint unless the simulation is stopped", 0);
+                        "Can not save a checkpoint unless the simulation has "
+			"run for at least one time step and is stopped.", 0);
   }
 
   // Only allow the runMode to finish if the simulation is finished.
@@ -848,10 +851,11 @@ void visit_VarModifiedMessage( visit_simulation_data *sim,
     VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
     
-    visitdbg << msg.str().c_str() << std::endl;
-    visitdbg.flush();
+    // visitdbg << msg.str().c_str() << std::endl;
+    // visitdbg.flush();
   }
+
+  sim->modifiedVars[ name ] = value;
 }
   
 } // End namespace Uintah
-
