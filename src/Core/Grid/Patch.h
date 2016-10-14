@@ -1755,7 +1755,19 @@ namespace Uintah {
                         const IntVector& lowOffset,
                         const IntVector& highOffset,
                         IntVector& low, IntVector& high ) const;
-    
+
+    /**
+     * Computes the variables extents (high and low points)
+     * for the given type, boundary layer, and ghost cells.
+     * This one adds an additional check to make sure the low and high
+     * don't go outside the bounds of the level.
+     */
+
+    void computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Type basis,
+                                const IntVector& boundaryLayer,
+                                Ghost::GhostType gtype, int numGhostCells,
+                                IntVector& low, IntVector& high) const;
+
     /**
      * Verifies that the patch is valid
      */
