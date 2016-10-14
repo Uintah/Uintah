@@ -274,12 +274,6 @@ AMRSimulationController::run()
   }
 #endif
 
-  // Put the current time into the shared state so other components
-  // can access it.  Also increment (by one) the current time step
-  // number so components can tell what timestep they are on. 
-  d_sharedState->setElapsedTime( time );
-  d_sharedState->incrementCurrentTopLevelTimeStep();
-    
   // Reset the runtime performance stats
   d_sharedState->resetStats();
   // Reset memory use tracking variable
@@ -301,11 +295,16 @@ AMRSimulationController::run()
   // 'executeTimestep()' sees the 'current' time step number.
   //
 
-  // ARS - getCurrentTopLevelTimeStep has been moved to the bottom of
-  // the loop as well being before the loop. This eliminates the issue
-  // noted above by Dav.
+  // ARS - getCurrentTopLevelTimeStep has been moved to the top of the
+  // loop. This eliminates the issue noted above by Dav.
   
   while( !isLast( time ) ) {
+
+    // Put the current time into the shared state so other components
+    // can access it.  Also increment (by one) the current time step
+    // number so components can tell what timestep they are on.
+    d_sharedState->setElapsedTime( time );
+    d_sharedState->incrementCurrentTopLevelTimeStep();
 
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
@@ -331,9 +330,8 @@ AMRSimulationController::run()
       // output time step.
       // int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep() + 1;
 
-      // ARS - getCurrentTopLevelTimeStep has been moved to the bottom
-      // of the loop as well being before the loop. This eliminates
-      // the issue noted above by Dav.
+      // ARS - getCurrentTopLevelTimeStep has been moved to the top of
+      // the loop. This eliminates the issue noted above by Dav.
       int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep();
 
       // When using Wall Clock Time for checkpoints, we need to have
@@ -670,12 +668,6 @@ AMRSimulationController::run()
       delt = delt_var;
     }
 #endif
-    
-    // Put the updated time into the shared state so other components
-    // can access it.  Also increment (by one) the current time step
-    // number so components can tell what timestep they are on.
-    d_sharedState->setElapsedTime( time );
-    d_sharedState->incrementCurrentTopLevelTimeStep();
     
     // Reset the runtime performance stats
     d_sharedState->resetStats();
