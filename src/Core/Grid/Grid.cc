@@ -871,6 +871,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
          box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
          
+        string boxLabel = "";
+        box_ps->getAttribute("label",boxLabel);
+         
         Point lower;
         box_ps->require("lower", lower);
         Point upper;
@@ -886,7 +889,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         IntVector resolution;
         if( box_ps->get("resolution", resolution) ){
           if( have_levelspacing ){
-            throw ProblemSetupException("Cannot specify level spacing and patch resolution", 
+            throw ProblemSetupException("Cannot specify level spacing and patch resolution" + boxLabel, 
                                         __FILE__, __LINE__);
           } else {
             // all boxes on same level must have same spacing
@@ -894,8 +897,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             if( have_patchspacing ){
               Vector diff = spacing-newspacing;
               if( diff.length() > 1.e-14 ) {
-                throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent",
-                                             __FILE__, __LINE__);
+                ostringstream msg;
+                msg<< "\nAll boxes on same level must have same cell spacing. Box (" << boxLabel 
+                   << ") is inconsistent with the previous box by: (" << diff << ").  Box spacing is ("
+                   << newspacing << ")\n";
+                throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
               }
             } else {
               spacing = newspacing;
@@ -1201,8 +1207,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
         box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
          
-        string boxLabel="None";
-
+        string boxLabel="";
         box_ps->getAttribute( "label", boxLabel );
          
         Point lower, upper;
@@ -1403,10 +1408,13 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               if (inStartCell.x() % refineRatio.x() || inEndCell.x() % refineRatio.x() || 
                   inStartCell.y() % refineRatio.y() || inEndCell.y() % refineRatio.y() || 
                   inStartCell.z() % refineRatio.z() || inEndCell.z() % refineRatio.z()) {
+                Vector startRatio = inStartCell.asVector()/refineRatio.asVector();
+                Vector endRatio   = inEndCell.asVector()/refineRatio.asVector();
                 ostringstream desc;
-                desc << "The finer patch boundaries (" << inStartCell << "->" << inEndCell 
-                     << ") do not coincide with a coarse cell"
-                     << "\n(i.e., they are not divisible by te refinement ratio " << refineRatio << ')';
+                desc << "Level Box: (" << boxLabel << "), the finer patch boundaries (" << inStartCell << "->" << inEndCell 
+                     << ") does not coincide with a coarse cell"
+                     << "\n(i.e., they are not divisible by the refinement ratio " << refineRatio << ')'
+                     << "\n startCell/refineRatio (" << startRatio << "), endCell/refineRatio ("<<endRatio << ")\n";
                 throw InvalidGrid(desc.str(),__FILE__,__LINE__);
               }
               level->addPatch(startcell, endcell, inStartCell, inEndCell,this);
