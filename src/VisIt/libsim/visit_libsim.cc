@@ -119,13 +119,11 @@ void visit_LibSimArguments(int argc, char **argv)
 //---------------------------------------------------------------------
 void visit_InitLibSim( visit_simulation_data *sim )
 {
-#ifdef VISIT_STOP
   // The simulation will wait for VisIt to connect after first step.
-  sim->runMode = VISIT_SIMMODE_STOPPED;
-#else
-    // Default is to run the simulation and VisIt can connect any time.
-  sim->runMode = VISIT_SIMMODE_RUNNING;
-#endif
+  // sim->runMode = VISIT_SIMMODE_STOPPED;
+
+  // Default is to run the simulation and VisIt can connect any time.
+  // sim->runMode = VISIT_SIMMODE_RUNNING;
 
   // Assume the simulation will be running (or about to run) when
   // initializing.

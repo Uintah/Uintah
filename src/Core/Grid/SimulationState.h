@@ -429,11 +429,11 @@ public:
   // Debug streams that can be turned on or off.
   std::vector< DebugStream * > d_debugStreams;
   
-  void setVisIt( bool val ) { d_doVisIt = val; }
-  bool getVisIt() { return d_doVisIt; }
+  void setVisIt( int val ) { d_doVisIt = val; }
+  int  getVisIt() { return d_doVisIt; }
 
 private:
-  bool d_doVisIt;
+  unsigned int d_doVisIt;
 #endif
 }; // end class SimulationState
 

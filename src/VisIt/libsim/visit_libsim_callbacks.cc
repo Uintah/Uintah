@@ -182,6 +182,10 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
   }
+  else if(strcmp(cmd, "Refresh") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  {
+    VisItTimeStepChanged();
+  }
   else if(strcmp(cmd, "Save") == 0)
   {
     // Do not call unless the simulation is stopped or finished as it

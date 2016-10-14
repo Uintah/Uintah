@@ -64,9 +64,9 @@ namespace Uintah {
 class SimulationController;
 
 /* Simulation Mode */
-//#define VISIT_SIMMODE_UNKNOWN  0
-//#define VISIT_SIMMODE_RUNNING  1
-//#define VISIT_SIMMODE_STOPPED  2
+#define VISIT_SIMMODE_UNKNOWN  0
+#define VISIT_SIMMODE_RUNNING  1
+#define VISIT_SIMMODE_STOPPED  2
 
 #define VISIT_SIMMODE_STEP       3
 #define VISIT_SIMMODE_FINISHED   4

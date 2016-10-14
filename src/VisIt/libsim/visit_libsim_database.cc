@@ -579,11 +579,11 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
     /* Add some commands. */
     // const char *cmd_names[] = {"Stop", "Step", "Run",
-    //                            "Save", "Checkpoint", "Unused",
+    //                            "Save", "Checkpoint", "Refresh",
     //                            "Finish", "Terminate", "Abort"};
 
     const char *cmd_names[] = {"Stop", "Step", "Run",
-                               "Save", "Checkpoint", "Unused",
+                               "Save", "Checkpoint", "Refresh",
                                "Terminate", "Abort"};
 
 
