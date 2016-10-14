@@ -1165,7 +1165,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
                  std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
               cout << "______________________________________________________________________\n";
               cout << "     L-"<< level->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << " d_halo " << d_halo << "\n";
-              cout << "     c:   " << c << "\n";
+              cout << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n";
               cout << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n";
               cout << "          " << *patch << "\n";
               ostringstream warn;
