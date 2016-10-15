@@ -144,6 +144,10 @@ HAVE_POKITT    := @HAVE_POKITT@
 POKITT_INCLUDE := @INC_POKITT_H@
 POKITT_LIBRARY := @POKITT_LIB_DIR_FLAG@ @POKITT_LIB_FLAG@
 
+# NSCBC - Wasatch 3P
+HAVE_NSCBC    := @HAVE_NSCBC@
+NSCBC_INCLUDE =  @INC_NSCBC_H@
+
 #############################################################################
 
 HAVE_BLAS      := @HAVE_BLAS@

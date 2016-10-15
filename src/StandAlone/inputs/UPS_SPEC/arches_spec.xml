@@ -271,7 +271,7 @@
           <carbon_content_ox            spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- carbon content, mass of carbon atoms/mass of oxidizer -->
           <opl                          spec="REQUIRED DOUBLE 'positive'"
-                                        need_applies_to="type empirical_soot"/> <!-- make sure that you use the same value as in the radiation properties if appropriate -->
+                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- make sure that you use the same value as in the radiation properties if appropriate -->
           <C1                           spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- default of 0.1, valid values range between 0-0.2 (see Hottel & Sarofim, 1978) -->
           <E_cr                         spec="OPTIONAL DOUBLE 'positive'"
@@ -281,22 +281,18 @@
           <E_st                         spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- Equivilence ratio at stoich -->
           <soot_density                 spec="OPTIONAL DOUBLE 'positive'"
-                                        need_applies_to="type empirical_soot"/> <!-- default of 1950.0 -->
+                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- default of 1950.0 -->
           <density_label                spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "density" -->
+                                        need_applies_to="type empirical_soot, scalsim_variance, fv_soot"/> <!-- default of "density" -->
           <temperature_label            spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot"/> <!-- default of "temperature" -->
+                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- default of "temperature" -->
           <absorption_label             spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" -->
+                                        need_applies_to="type empirical_soot, fv_soot"/> <!-- default of "absorpIN" -->
           <mixture_fraction_label       spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "mixture_fraction" -->
 
           <!-- fv_soot -->
-          <density_label                spec="OPTIONAL STRING"
-                                        need_applies_to="type fv_soot"/>
           <Ysoot_label                  spec="OPTIONAL STRING"
-                                        need_applies_to="type fv_soot"/>
-          <absorption_label             spec="OPTIONAL STRING"
                                         need_applies_to="type fv_soot"/>
 
 
@@ -1357,6 +1353,7 @@
             <!-- mixture_fraction_label, and temperature_label are also required
                  but are listed below as they span other sources -->
             <tar_label                  spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance" />
+            <mix_mol_weight_label       spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance" />
             <Ysoot_label                spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance" />
             <Ns_label                   spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance" />
             <soot_off_gas_label   	spec="OPTIONAL STRING" need_applies_to="type SootMassBalance" />
@@ -1533,7 +1530,8 @@
               </temperature_dependence>
 
             </flammability_limit>
-            <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) -->
+            <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox,BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance"/> <!-- o2 label (default = O2) -->
+            <co2_label                  spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance"/> <!-- o2 label (default = O2) -->
             <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- n2 label (default = N2) -->
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer,
                                                                                      bowman_nox,
@@ -1544,7 +1542,11 @@
             <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src,
                                                                                      dissipation_src,
                                                                                      westbrook_dryer,
-                                                                                     bowman_nox"/>
+                                                                                     bowman_nox,
+                                                                                     BrownSootFormation_rhoYs,
+                                                                                     BrownSootFormation_nd,
+                                                                                     BrownSootFormation_Tar, 
+                                                                                     SootMassBalance"/>
             <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light -->
               <geom_object/>                                                                            <!-- defines the location of the pilot -->
               <start_time               spec="REQUIRED DOUBLE 'positive'"/>                             <!-- pilot turns on at this time -->

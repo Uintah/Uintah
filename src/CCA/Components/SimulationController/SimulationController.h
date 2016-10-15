@@ -115,6 +115,8 @@ public:
 
   bool                 doAMR() { return d_doAMR; }
 
+  bool                 isLast( double time );
+    
 protected:
 
   double getWallTime     ( void );
@@ -132,7 +134,7 @@ protected:
   //    'first' is whether this is the first time adjustDelT is called.
   void adjustDelT( double& delt, double prev_delt, bool first, double t );
   void initSimulationStatsVars ( void );
-  void printSimulationStats    ( int timestep, double delt, double time );
+  void printSimulationStats    ( int timestep, double next_delt, double prev_delt, double time );
 
   void getMemoryStats ( int timestep, bool create = false );
   void getPAPIStats   ( );

@@ -29,6 +29,7 @@
 #include <Core/Grid/GIMPInterpolator.h>
 #include <Core/Grid/AxiGIMPInterpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
+#include <Core/Grid/fastCpdiInterpolator.h>
 #include <Core/Grid/axiCpdiInterpolator.h>
 #include <Core/Grid/cptiInterpolator.h>
 #include <Core/Grid/axiCptiInterpolator.h>
@@ -342,6 +343,13 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
       d_interpolator = scinew axiCpdiInterpolator();
     } else{
       d_interpolator = scinew cpdiInterpolator();
+      d_interpolator->setLcrit(d_cpdi_lcrit);
+    }
+  } else if(d_interpolator_type=="fast_cpdi"){
+    if(d_axisymmetric){
+      d_interpolator = scinew axiCpdiInterpolator();
+    } else{
+      d_interpolator = scinew fastCpdiInterpolator();
       d_interpolator->setLcrit(d_cpdi_lcrit);
     }
   } else if(d_interpolator_type=="cpti"){

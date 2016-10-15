@@ -168,7 +168,7 @@ evaluate()
 {
   using namespace SpatialOps;
   typedef typename FieldT::const_iterator FieldIter;
-  std::vector<FieldT*>&  result = this->get_value_vec();
+  typename Expr::Expression<FieldT>::ValVec&  result = this->get_value_vec();
 
   /*
    * There will be 5 results (in this order) for the following species:

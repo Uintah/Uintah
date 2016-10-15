@@ -116,7 +116,7 @@ void
 LogFrequencyDistributionRHS<FieldT>::
 evaluate()
 {
-  std::vector<FieldT*>& result = this->get_value_vec();
+  typename Expr::Expression<FieldT>::ValVec& result = this->get_value_vec();
 
   const FieldT& pTemp  = prtTemp_    ->field_ref();
   const FieldT& pMass0 = initPrtMass_->field_ref();

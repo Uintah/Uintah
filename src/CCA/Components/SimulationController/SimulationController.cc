@@ -59,6 +59,8 @@
 #include <sys/param.h>
 #include <vector>
 
+#include <pwd.h>
+
 #define SECONDS_PER_MINUTE        60.0
 #define SECONDS_PER_HOUR        3600.0
 #define SECONDS_PER_DAY        86400.0
@@ -105,6 +107,8 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_doMultiTaskgraphing    = false;
   d_archive                = nullptr;
   d_sim                    = 0;
+
+  d_prev_delt              = 0;
 
   d_grid_ps                = d_ups->findBlock( "Grid" );
 
@@ -422,12 +426,12 @@ SimulationController::gridSetup( void )
 //
 
 void
-SimulationController::postGridSetup( GridP& grid, double& t )
+SimulationController::postGridSetup( GridP & grid, double & time )
 {
   // Set up regridder with initial information about grid.
   // do before sim - so that Switcher (being a sim) can reset the state of the regridder
-  d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-  if (d_regridder) {
+  d_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
+  if ( d_regridder ) {
     d_regridder->problemSetup( d_ups, grid, d_sharedState );
   }
     
@@ -459,7 +463,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
 
   if( d_restarting ) {
     simdbg << "Restarting... loading data\n";    
-    d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t );
+    d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &time );
       
     // Set prevDelt to what it was in the last simulation.  If in the last 
     // sim we were clamping delt based on the values of prevDelt, then
@@ -501,8 +505,8 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   d_output->initializeOutput(d_ups);
 
   if( d_restarting ) {
-    Dir dir(d_fromDir);
-    d_output->restartSetup( dir, 0, d_restartTimestep, t, d_restartFromScratch, d_restartRemoveOldDir );
+    Dir dir( d_fromDir );
+    d_output->restartSetup( dir, 0, d_restartTimestep, time, d_restartFromScratch, d_restartRemoveOldDir );
   }
 } // end postGridSetup()
 
@@ -510,7 +514,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
 //
 
 void
-SimulationController::adjustDelT( double& delt, double prev_delt, bool first, double t ) 
+SimulationController::adjustDelT( double& delt, double prev_delt, bool first, double time )
 {
 #if 0
   cout << "maxTime = " << d_timeinfo->maxTime << "\n";
@@ -528,48 +532,68 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
 
   delt *= d_timeinfo->delt_factor;
       
+  // Check to see if delt is below the delt_min
   if( delt < d_timeinfo->delt_min ) {
     proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << d_timeinfo->delt_min << '\n';
     delt = d_timeinfo->delt_min;
   }
+
+  // If not the first increase check to see if delt was not increased
+  // too much over the previous delt.
   if( !first && 
       d_timeinfo->max_delt_increase < 1.e90 &&
-      delt > (1+d_timeinfo->max_delt_increase)*prev_delt) {
+      delt > (1.0+d_timeinfo->max_delt_increase)*prev_delt) {
     proc0cout << "WARNING (a): lowering delt from " << delt 
-              << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
+              << " to maxmimum: " << (1.0+d_timeinfo->max_delt_increase)*prev_delt
               << " (maximum increase of " << d_timeinfo->max_delt_increase
               << ")\n";
     delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
   }
-  if( t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt ) {
+
+  // Check to see if delt exceeds the max_initial_delt
+  if( time <= d_timeinfo->initial_delt_range &&
+      delt > d_timeinfo->max_initial_delt ) {
     proc0cout << "WARNING (b): lowering delt from " << delt 
               << " to maximum: " << d_timeinfo->max_initial_delt
               << " (for initial timesteps)\n";
     delt = d_timeinfo->max_initial_delt;
   }
+
+  // Check to see if delt exceeds the delt_max
   if( delt > d_timeinfo->delt_max ) {
-    proc0cout << "WARNING (c): lowering delt from " << delt << " to maximum: " << d_timeinfo->delt_max << '\n';
+    proc0cout << "WARNING (c): lowering delt from " << delt
+	      << " to maximum: " << d_timeinfo->delt_max << '\n';
     delt = d_timeinfo->delt_max;
   }
-  // Clamp timestep to output/checkpoint.
+
+  // Clamp the delt to match the requested output and/or checkpoint
+  // times.
   if( d_timeinfo->timestep_clamping && d_output ) {
     double orig_delt = delt;
-    double nextOutput = d_output->getNextOutputTime();
+    double nextOutput     = d_output->getNextOutputTime();
     double nextCheckpoint = d_output->getNextCheckpointTime();
-    if (nextOutput != 0 && t + delt > nextOutput) {
-      delt = nextOutput - t;       
+
+    // Clamp to the output time
+    if (nextOutput != 0 && time + delt > nextOutput) {
+      delt = nextOutput - time;
     }
-    if (nextCheckpoint != 0 && t + delt > nextCheckpoint) {
-      delt = nextCheckpoint - t;
+
+    // Clamp to the checkpoint time
+    if (nextCheckpoint != 0 && time + delt > nextCheckpoint) {
+      delt = nextCheckpoint - time;
     }
+
+    // Report if delt was changed.
     if (delt != orig_delt) {
       proc0cout << "WARNING (d): lowering delt from " << orig_delt 
                 << " to " << delt
                 << " to line up with output/checkpoint time\n";
     }
   }
-  if (d_timeinfo->end_on_max_time && t + delt > d_timeinfo->maxTime){
-    delt = d_timeinfo->maxTime - t;
+  
+  // Clamp delt to the max end time,
+  if (d_timeinfo->end_on_max_time && time + delt > d_timeinfo->maxTime) {
+    delt = d_timeinfo->maxTime - time;
   }
 }
 
@@ -617,18 +641,30 @@ SimulationController::initSimulationStatsVars( void )
   //d_sumOfWallTimeSquares = 0; // sum all squares of walltimes
 }
 
+bool
+SimulationController::isLast( double time )
+{
+  return ( ( time >= d_timeinfo->maxTime ) ||
+	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
+	     d_timeinfo->maxTimestep ) ||
+	   ( d_timeinfo->max_wall_time != 0 &&
+	     getWallTime() >= d_timeinfo->max_wall_time ) );
+}
+
 //______________________________________________________________________
 //
 
+#if 0
 static
 double
 stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 {
   return sqrt( (n*sum_of_x_squares - sum_of_x*sum_of_x) / (n*n) );
 }
+#endif
 
 void
-SimulationController::printSimulationStats( int timestep, double delt, double time )
+SimulationController::printSimulationStats( int timestep, double next_delt, double prev_delt, double time )
 {
   ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats = d_sharedState->d_runTimeStats;
 
@@ -746,10 +782,37 @@ SimulationController::printSimulationStats( int timestep, double delt, double ti
     }
 
     ostringstream message;
+
+#ifdef HAVE_VISIT
+    std::string userName;
+    
+    uid_t uid = geteuid();
+    struct passwd *pw = getpwuid(uid);
+    if (pw)
+      userName = std::string(pw->pw_name);
+
+    if( userName.find("Todd") != std::string::npos ||
+	userName.find("todd") != std::string::npos ||
+	userName.find("Harm") != std::string::npos ||
+	userName.find("harm") != std::string::npos ||
+	userName.find("u0112585") != std::string::npos )
+      message << "Time="        << time
+	      << " (timestep "  << timestep 
+	      << "), delT="     << prev_delt;
+    else
+      message << "Timestep "  << timestep  << ", "
+	      << "time="      << time      << ", "
+	      << "delT="      << prev_delt << ", "
+	      << "next delT=" << next_delt;
+
+#else
     message << "Time="        << time
-            << " (timestep "  << timestep 
-            << "), delT="     << delt
-            << walltime;
+	    << " (timestep "  << timestep 
+	    << "), delT="     << prev_delt;
+#endif
+    
+    message << walltime;
+
     message << "Memory Use = ";
 
     if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
@@ -800,7 +863,7 @@ SimulationController::printSimulationStats( int timestep, double delt, double ti
     }
 
     if ( d_nSamples > 0 ) {
-      double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
+      double realSecondsNow = (d_wallTime - d_prevWallTime)/prev_delt;
       double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
 
       dbgTime << "1 sim second takes ";

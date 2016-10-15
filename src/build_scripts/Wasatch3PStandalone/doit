@@ -11,7 +11,7 @@ source HelperBuildScripts/checkEnv.sh
 
 export GIT_SSL_NO_VERIFY=true 
 
-for dir in SpatialOps ExprLib TabProps RadProps
+for dir in SpatialOps ExprLib TabProps RadProps NSCBC
 do
 
   echo "--- Building $dir ---"
@@ -24,6 +24,7 @@ do
     git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git
     git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git
     git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/NSCBC.git
   fi
 
   echo "----- Updating GIT files ---"

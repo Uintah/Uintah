@@ -775,7 +775,7 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( m_shared_state->getVisIt() & !initialized ) {
+  if( m_shared_state->getVisIt() && !initialized ) {
     SimulationState::interactiveVar var;
     var.name     = "LoadBalancer-DoSpaceCurve";
     var.type     = Uintah::TypeDescription::bool_type;

@@ -138,7 +138,7 @@ evaluate()
    * All will be in kg/s produced.
    */
 
-  std::vector<FieldT*>& results = this->get_value_vec();
+  typename Expr::Expression<FieldT>::ValVec& results = this->get_value_vec();
 
   FieldT& rhs_CO2  = *results[0];
   FieldT& rhs_CO   = *results[1];

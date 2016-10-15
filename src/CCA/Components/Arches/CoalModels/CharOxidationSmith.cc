@@ -314,7 +314,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( d_sharedState->getVisIt() & !initialized ) {
+  if( d_sharedState->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name.
     SimulationState::interactiveVar var;

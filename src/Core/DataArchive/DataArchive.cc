@@ -1370,6 +1370,8 @@ DataArchive::TimeData::init()
 
   FILE * data_file = fopen( data_filename.c_str(), "r" );
 
+  string looked_in = data_filename;
+
   if ( data_file != nullptr ) {
     // If the data.xml file exists, look in it.
     found = ProblemSpec::findBlock( "<Data>", data_file );
@@ -1377,10 +1379,11 @@ DataArchive::TimeData::init()
   else {
     // Otherwise, look in the original timestep.xml file.
     found = ProblemSpec::findBlock( "<Data>", ts_file );
+    looked_in = d_ts_path_and_filename;
   }
 
   if( !found ) {
-    throw InternalError( "Cannot find <Data> in " + data_filename, __FILE__, __LINE__ );
+    throw InternalError( "Cannot find <Data> in " + looked_in, __FILE__, __LINE__ );
   }
 
   bool done = false;

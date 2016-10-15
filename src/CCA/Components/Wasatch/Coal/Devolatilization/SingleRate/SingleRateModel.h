@@ -26,7 +26,7 @@ template <typename FieldT>
 class SingleRateModel
  : public Expr::Expression<FieldT>
 {
-  typedef std::vector<FieldT*> SpecT;
+  typedef typename Expr::Expression<FieldT>::ValVec SpecT;
 
   DECLARE_FIELDS( FieldT, tempP_, mv_, initprtmas_ )
   const double mw_, h_, o_, volatilefrac_, tarMW_;

@@ -1416,34 +1416,37 @@ IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched, const LevelP& level,
   auto mypatches = localPatches->getVector();
   std::vector<std::string> intrusion_map_idx;
 
-  for( auto ipatches = (mypatches).begin(); ipatches != mypatches.end(); ipatches++ ){
+  for ( IntrusionMap::iterator i_intrusion = _intrusion_map.begin();
+          i_intrusion != _intrusion_map.end(); ++i_intrusion ){
 
-    std::vector<Patch::FaceType>::const_iterator bf_iter;
-    std::vector<Patch::FaceType> bf;
-    (*ipatches)->getBoundaryFaces(bf);
-    Box patch_box = (*ipatches)->getBox();
+    bool patch_geom_intersection = false;
 
-    for ( IntrusionMap::iterator the_iter = _intrusion_map.begin();
-            the_iter != _intrusion_map.end(); ++the_iter ){
+    for( auto ipatches = (mypatches).begin(); ipatches != mypatches.end(); ipatches++ ){
 
-      bool i_live_on_this_patch = false;
+      std::vector<Patch::FaceType>::const_iterator bf_iter;
+      std::vector<Patch::FaceType> bf;
+      (*ipatches)->getBoundaryFaces(bf);
+      Box patch_box = (*ipatches)->getBox();
 
-      for ( int i = 0; i < (int)the_iter->second.geometry.size(); i++ ){
+      for ( int i = 0; i < (int)i_intrusion->second.geometry.size(); i++ ){
 
-        GeometryPieceP piece = the_iter->second.geometry[i];
+        GeometryPieceP piece = i_intrusion->second.geometry[i];
         Box geometry_box  = piece->getBoundingBox();
         Box intersect_box = geometry_box.intersect( patch_box );
+
         if ( !(intersect_box.degenerate()) ) {
-          i_live_on_this_patch = true;
+          patch_geom_intersection = true;
         }
 
-      }// end geometry object loop
-
-      if ( !i_live_on_this_patch ){
-        intrusion_map_idx.push_back(the_iter->first);
       }
+    } // patch loop
+
+    // add non-intersecting geometry to a list
+    if ( !patch_geom_intersection ){
+      intrusion_map_idx.push_back(i_intrusion->first);
     }
-  }// patch loop
+
+  } // intrusion loop
 
   // now delete the intrusions that aren't resident on this patch
   for ( auto it = intrusion_map_idx.begin(); it != intrusion_map_idx.end(); ++it ){

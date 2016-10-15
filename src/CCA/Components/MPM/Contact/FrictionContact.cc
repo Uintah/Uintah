@@ -56,9 +56,11 @@ FrictionContact::FrictionContact(const ProcessorGroup* myworld,
 {
   // Constructor
   d_vol_const=0.;
+  d_sepFac=0.8;
   
   ps->require("mu",d_mu);
   ps->get("volume_constraint",d_vol_const);
+  ps->get("separation_factor",d_sepFac);
 
   d_sharedState = d_sS;
 
@@ -80,11 +82,11 @@ void FrictionContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
   contact_ps->appendElement("type","friction");
-  contact_ps->appendElement("mu",d_mu);
-  contact_ps->appendElement("volume_constraint",d_vol_const);
+  contact_ps->appendElement("mu",                d_mu);
+  contact_ps->appendElement("volume_constraint", d_vol_const);
+  contact_ps->appendElement("separation_factor", d_sepFac);
   d_matls.outputProblemSpec(contact_ps);
 }
-
 
 void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                                         const PatchSubset* patches,
@@ -101,13 +103,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   // Need access to all velocity fields at once
   StaticArray<constNCVariable<double> >  gmass(numMatls);
   StaticArray<constNCVariable<double> >  gvolume(numMatls);
+  StaticArray<NCVariable<Point> >        gposition(numMatls);
   StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
   StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
   StaticArray<NCVariable<double> >       frictionWork(numMatls);
   StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
   StaticArray<NCVariable<double> >       gnormtraction(numMatls);
-
-  constNCVariable<double> gm;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -138,6 +139,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->get(gvolume[m],         lb->gVolumeLabel,dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,       dwi,patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,       dwi,patch);
+      new_dw->allocateAndPut(gposition[m], lb->gPositionLabel,       dwi,patch);
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -152,9 +154,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       old_dw->get(pmass,               lb->pMassLabel,               pset);
       old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
       old_dw->get(psize,               lb->pSizeLabel,               pset);
-      old_dw->get(deformationGradient,  lb->pDeformationMeasureLabel, pset);
+      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
+      gposition[m].initialize(Point(0.0,0.0,0.0));
 
       if(!d_matls.requested(m)) continue;
 
@@ -163,13 +166,15 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+          interpolator->findCellAndWeightsAndShapeDerivatives(
+                          px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
           double rho = pmass[idx]/pvolume[idx];
 
            for(int k = 0; k < flag->d_8or27; k++) {
              if (patch->containsNode(ni[k])){
                Vector G(d_S[k].x(),d_S[k].y(),0.0);
                gsurfnorm[m][ni[k]] += rho * G;
+               gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
              }
            }
         }
@@ -177,13 +182,14 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
-
+          interpolator->findCellAndWeightsAndShapeDerivatives(
+                          px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
            for(int k = 0; k < flag->d_8or27; k++) {
              if (patch->containsNode(ni[k])){
                Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                            d_S[k].z()*oodx[2]);
                gsurfnorm[m][ni[k]] += pmass[idx] * grad;
+               gposition[m][ni[k]] += px[idx].asVector()*pmass[idx] * S[k];
              }
            }
         }
@@ -204,12 +210,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
          }
        }  // loop over matls
        for(int m=0; m<numMatls; m++){
+        gposition[m][c] /= gmass[m][c];
         if(m!=max_mag_matl){
           gsurfnorm[m][c] = -gsurfnorm[max_mag_matl][c];
         }
        }  // loop over matls
     }
-
 
     for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
@@ -270,17 +276,21 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     }  // loop over matls
 
 #if 1
+    double sepDis=d_sepFac*cbrt(cell_vol);
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
+      Point centerOfMassPos(0.,0.,0.);
       double centerOfMassMass=0.0; 
       double totalNodalVol=0.0; 
       for(int n = 0; n < numMatls; n++){
         if(!d_matls.requested(n)) continue;
         centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
+        centerOfMassPos+=gposition[n][c].asVector() * gmass[n][c];
         centerOfMassMass+= gmass[n][c]; 
         totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
       }
+      centerOfMassPos/=centerOfMassMass;
 
       // Apply Coulomb friction contact
       // For grid points with mass calculate velocity
@@ -341,6 +351,11 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               // OR the surface is stress free and approaching.
               // Otherwise apply free surface conditions (do nothing).
               Vector normal = gsurfnorm[n][c];
+              Vector sepvec = (centerOfMassMass/(centerOfMassMass - mass))*
+                              (centerOfMassPos - gposition[n][c]);
+              double sepscal= Dot(sepvec,normal);
+//              double sepscal= sepvec.length();
+//              if(sepscal < sepDis){
               double normalDeltaVel=Dot(deltaVelocity,normal);
               Vector Dv(0.,0.,0.);
               double Tn = gnormtraction[n][c];
@@ -404,11 +419,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                 Dv=scale_factor*Dv;
                 gvelocity[n][c]+=Dv;
               }  // if traction
+//             }   // if sepscal
             }    // if !compare && !compare
           }      // matls
-        }       // if (volume constraint)
-      }        // if(!compare(centerOfMassMass,0.0))
-    }          // NodeIterator
+        }        // if (volume constraint)
+      }          // if(!compare(centerOfMassMass,0.0))
+    }            // NodeIterator
 #endif
 
     delete interpolator;
@@ -431,6 +447,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   // vectors of NCVariables
   StaticArray<constNCVariable<double> > gmass(numMatls);
   StaticArray<constNCVariable<double> > gvolume(numMatls);
+  StaticArray<constNCVariable<Point> >  gposition(numMatls);
   StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
   StaticArray<constNCVariable<double> > normtraction(numMatls);
   StaticArray<NCVariable<double> >      frictionWork(numMatls);
@@ -449,6 +466,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->get(normtraction[m],lb->gNormTractionLabel,dwi, patch, gnone, 0);
       new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    dwi, patch, gnone, 0);
+      new_dw->get(gposition[m],   lb->gPositionLabel,    dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],     lb->gVolumeLabel,      dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
                             dwi, patch);
@@ -460,18 +478,23 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     double epsilon_max_max=0.0;
 
+    double sepDis=d_sepFac*cbrt(cell_vol);
+
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
+      Point centerOfMassPos(0.,0.,0.);
       double totalNodalVol=0.0; 
       for(int  n = 0; n < numMatls; n++){
         if(!d_matls.requested(n)) continue;
         double mass = gmass[n][c];
         centerOfMassMom+=gvelocity_star[n][c] * mass;
+        centerOfMassPos+=gposition[n][c].asVector() * gmass[n][c];
         centerOfMassMass+= mass; 
         totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
       }
+      centerOfMassPos/=centerOfMassMass;
 
       // Apply Coulomb friction contact
       // For grid points with mass calculate velocity
@@ -530,6 +553,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
               // OR the surface is stress free and approaching.
               // Otherwise apply free surface conditions (do nothing).
               Vector normal = gsurfnorm[n][c];
+              Vector sepvec = (centerOfMassMass/(centerOfMassMass - mass))*
+                              (centerOfMassPos - gposition[n][c]);
+              double sepscal= Dot(sepvec,normal);
+//              double sepscal= sepvec.length();
+
+//              if(sepscal < sepDis){
               double normalDeltaVel=Dot(deltaVelocity,normal);
 
               Vector Dv(0.,0.,0.);
@@ -589,11 +618,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                 Dv=scale_factor*Dv;
                 gvelocity_star[n][c]+=Dv;
               } // traction
+//             }  // if sepscal
             }   // if !compare && !compare
           }     // for numMatls
-        }      // volume constraint
-      }       // if centerofmass > 0
-    }         // nodeiterator
+        }       // volume constraint
+      }         // if centerofmass > 0
+    }           // nodeiterator
 
     //  print out epsilon_max_max
     //  static int ts=0;
@@ -654,6 +684,7 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
   t->computes(lb->gStressLabel);
+  t->computes(lb->gPositionLabel);
   t->modifies(lb->frictionalWorkLabel, mss);
   t->modifies(lb->gVelocityLabel, mss);
   
@@ -681,6 +712,7 @@ void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gSurfNormLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->gPositionLabel,         Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
 

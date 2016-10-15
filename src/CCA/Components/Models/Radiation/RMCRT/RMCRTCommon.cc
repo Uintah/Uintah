@@ -38,6 +38,7 @@
 #define FIXED_RAY_DIR -9    // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                             //                     4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
 #define SIGN 1              // Multiply the FIXED_RAY_DIRs by value
+#define FUZZ 1e-12          // numerical fuzz
 
 //#define FAST_EXP          // This uses a fast approximate exp() function that is 
                             // significantly faster.
@@ -241,6 +242,14 @@ RMCRTCommon::DoubleToFloat( DetailedTask* dtask,
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       abskg_F[c] = (float)abskg_D[c];
+      
+      // bulletproofing
+      if(std::isinf( abskg_F[c] ) || std::isnan( abskg_F[c] ) ){
+        ostringstream warn;
+        warn<< "RMCRTCommon::DoubleToFloat A non-physical abskg detected (" << abskg_F[c] << ") at cell: " << c << "\n";
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+        
+      } 
     }
   }
 }
@@ -584,6 +593,12 @@ RMCRTCommon::updateSumI (const Level* level,
       disMin     = (tMax[dir] - tMax_prev);
       tMax_prev  = tMax[dir];
       tMax[dir]  = tMax[dir] + tDelta[dir];
+
+      // occassionally disMin ~ -1e-15ish
+      if( disMin > -FUZZ && disMin < FUZZ){  
+        disMin += FUZZ;
+      }
+      
       rayLength += disMin;
       rayLength_scatter += disMin;
 
@@ -722,6 +737,30 @@ RMCRTCommon::updateSumI (const Level* level,
 
     intensity = intensity * fs;
 
+    //__________________________________
+    //  BULLETPROOFING
+    if ( std::isinf(sumI) || std::isnan(sumI) ){
+      printf( "\n\n______________________________________________________________________\n");
+      cout <<  " cur: " << cur << " prevCell: " << prevCell << "\n";
+      cout <<  " dir: " << dir << " sumI: " << sumI << "\n";
+      cout <<  " tMax: " << tMax  << "\n";
+      cout <<  " rayLoc:    " << ray_location << "\n";
+      cout <<  " tMax[dir]: " << tMax[dir] << " tMax_prev: " << tMax_prev << " Dx[dir]: " << Dx[dir] << "\n";
+      cout <<  " tDelta:    " << tDelta << " \n";
+      cout <<  "     abskg[prev]: " << abskg[prevCell] << " \t sigmaT4OverPi[prev]: " << sigmaT4OverPi[prevCell]  << "\n";
+      cout <<  "     abskg[cur]:  " << abskg[cur]      << " \t sigmaT4OverPi[cur]:  " << sigmaT4OverPi[cur] << "\t  cellType: " <<celltype[cur] << "\n";
+      cout <<  "     optical_thickkness: " <<  optical_thickness << " \t rayLength: " << rayLength << "\n";
+      
+      IntVector l = abskg.getLowIndex();
+      IntVector h = abskg.getHighIndex();
+      printf( "     abskg:  [%d,%d,%d]  -> [%d,%d,%d] \n", l.x(), l.y(), l.z() , h.x(), h.y(), h.z() );
+      
+      ostringstream warn;
+        warn<< "ERROR:RMCRTCommon::updateSumI   sumI is non-physical (" << sumI << ")"
+            << " origin: " << origin << " cur: " << cur << "\n";
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+    } 
+
     // when a ray reaches the end of the domain, we force it to terminate.
     if(!d_allowReflect) intensity = 0;
 
@@ -741,6 +780,7 @@ if( isDbgCell( origin)  ){
       ++nReflect;
     }
   }  // threshold while loop.
+  
 } // end of updateSumI function
 
 

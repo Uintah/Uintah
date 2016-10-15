@@ -121,7 +121,7 @@ evaluate()
 {
   using namespace SpatialOps;
   typedef typename FieldT::const_iterator FieldIter;
-  std::vector<FieldT*>&  result = this->get_value_vec();
+  typename Expr::Expression<FieldT>::ValVec& result = this->get_value_vec();
 
   typename FieldT::iterator itheta  = result[0]->begin();  // ash film porosity
   typename FieldT::iterator idelta  = result[1]->begin();  // ash film thickness

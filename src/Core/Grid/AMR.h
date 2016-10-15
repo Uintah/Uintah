@@ -193,7 +193,109 @@ template<class T>
 #endif
   }
 }
+//______________________________________________________________________
+//   This implementation is identical linearInterpolation except for the loop
+//   over elements. 
+//______________________________________________________________________
+template<class T>
+  void linearInterpolationStencil(constCCVariable<T>& q_CL,// course level
+                                  const std::vector<int> elements,
+                                  const Level* coarseLevel,
+                                  const Level* fineLevel,
+                                  const Uintah::IntVector& refineRatio,
+                                  const Uintah::IntVector& fl,
+                                  const Uintah::IntVector& fh,
+                                  CCVariable<T>& q_FineLevel)
+{
+  // Bulletproofing
+  ASSERT(elements.size() == 0 )
 
+  // compute the normalized distance between the fine and coarse cell centers
+  std::vector<double> norm_dist_x(refineRatio.x());
+  std::vector<double> norm_dist_y(refineRatio.y());
+  std::vector<double> norm_dist_z(refineRatio.z());
+  normalizedDistance_CC(refineRatio.x(),norm_dist_x);
+  normalizedDistance_CC(refineRatio.y(),norm_dist_y);
+  normalizedDistance_CC(refineRatio.z(),norm_dist_z);
+
+  for(CellIterator iter(fl,fh); !iter.done(); iter++){
+    Uintah::IntVector f_cell = *iter;
+    Uintah::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    //__________________________________
+    // compute the index of the fine cell, relative to the
+    // coarse cell center.
+    Uintah::IntVector relativeIndx = f_cell - (c_cell * refineRatio);
+
+    Vector dist;  // normalized distance
+    dist.x(norm_dist_x[relativeIndx.x()]);
+    dist.y(norm_dist_y[relativeIndx.y()]);
+    dist.z(norm_dist_z[relativeIndx.z()]);
+
+    //__________________________________
+    // Offset for coarse level surrounding cells:
+    // determine the direction to the surrounding interpolation cells
+    int i = Uintah::Sign(dist.x());   // returns +/- 1.0
+    int j = Uintah::Sign(dist.y());
+    int k = Uintah::Sign(dist.z());
+
+    i *= Uintah::RoundUp(fabs(dist.x()));  // if dist.x,y,z() = 0 then set (i,j,k) = 0
+    j *= Uintah::RoundUp(fabs(dist.y()));  // Only need surrounding coarse cell data if dist != 0
+    k *= Uintah::RoundUp(fabs(dist.z()));  // This is especially true for 1D and 2D problems
+
+    //__________________________________
+    //  Find the weights
+    double x = fabs(dist.x());  // The normalized distance is always +
+    double y = fabs(dist.y());
+    double z = fabs(dist.z());
+
+    double w0 = (1.0 - x) * (1.0 - y);
+    double w1 = x * (1.0 - y);
+    double w2 = y * (1.0 - x);
+    double w3 = x * y;
+
+    for(unsigned i=0; i<elements.size(); i++){
+      int e = elements[i];
+      
+      T q_XY_Plane_1   // X-Y plane closest to the fine level cell
+          = w0 * q_CL[c_cell][e]
+          + w1 * q_CL[c_cell + Uintah::IntVector( i, 0, 0)][e]
+          + w2 * q_CL[c_cell + Uintah::IntVector( 0, j, 0)][e]
+          + w3 * q_CL[c_cell + Uintah::IntVector( i, j, 0)][e];
+
+      T q_XY_Plane_2   // X-Y plane furthest from the fine level cell
+          = w0 * q_CL[c_cell + Uintah::IntVector( 0, 0, k)][e]
+          + w1 * q_CL[c_cell + Uintah::IntVector( i, 0, k)][e]
+          + w2 * q_CL[c_cell + Uintah::IntVector( 0, j, k)][e]
+          + w3 * q_CL[c_cell + Uintah::IntVector( i, j, k)][e];
+
+      // interpolate the two X-Y planes in the k direction
+      q_FineLevel[f_cell][e] = (1.0 - z) * q_XY_Plane_1 + z * q_XY_Plane_2;
+
+
+      //__________________________________
+      //  Debugging
+  #if 0
+        Uintah::IntVector half  = (fh - fl )/Uintah::IntVector(2,2,2) + fl;
+        if ((f_cell.y() == half.y() && f_cell.z() == half.z())){
+         cout.setf(ios::scientific,ios::floatfield);
+         cout.precision(5);
+         cout << " f_cell " << f_cell << " c_cell "<< c_cell << " offset ["<<i<<","<<j<<","<<k<<"]  " << endl;
+         cout << " relative indx " << relativeIndx  << endl;
+         cout << "dist "<< dist << " dir " << dir <<  endl;
+         cout << " q_CL[c_cell]                       "                           << q_CL[c_cell][e]                       << " w0 " << w0 << endl;
+         cout << " q_CL[c_cell + Uintah::IntVector( " << i << ", 0, 0)] "                 << q_CL[c_cell + Uintah::IntVector( i, 0, 0)][e] << " w1 " << w1 << endl;
+         cout << " q_CL[c_cell + Uintah::IntVector( 0, " << j << ", 0)] "                 << q_CL[c_cell + Uintah::IntVector( 0, j, 0)][e] << " w2 " << w2 << endl;
+         cout << " q_CL[c_cell + Uintah::IntVector( "<< i << ", " << j << ", 0)] "        << q_CL[c_cell + Uintah::IntVector( i, j, 0)][e] << " w3 " << w3 << endl;
+         cout << " q_CL[c_cell + Uintah::IntVector( 0, 0, "<<k<<")] "                     << q_CL[c_cell + Uintah::IntVector( 0, 0, k)][e] << " w0 " << w0 << endl;
+         cout << " q_CL[c_cell + Uintah::IntVector( "<< i << ", 0, "<<k<<")] "            << q_CL[c_cell + Uintah::IntVector( i, 0, k)][e] << " w1 " << w1 << endl;
+         cout << " q_CL[c_cell + Uintah::IntVector( 0, "<< j <<", "<<k<<")] "             << q_CL[c_cell + Uintah::IntVector( 0, j, k)][e] << " w2 " << w2 << endl;
+         cout << " q_CL[c_cell + Uintah::IntVector( "<< i << ", " << j << ", "<< k <<")] " << q_CL[c_cell + Uintah::IntVector( i, j, k)][e] << " w3 " << w3 <<endl;
+         cout << " q_XY_Plane_1 " << q_XY_Plane_1 << " q_XY_Plane_2 " << q_XY_Plane_2 << " q_FineLevel[f_cell] "<< q_FineLevel[f_cell][e] << endl;
+      }
+  #endif
+    }
+  }
+}
 
 /*___________________________________________________________________
  Function~  QuadraticInterpolation--

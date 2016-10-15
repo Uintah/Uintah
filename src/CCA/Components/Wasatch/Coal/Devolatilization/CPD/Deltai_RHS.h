@@ -108,7 +108,7 @@ namespace CPD{
     const std::vector<double>& fgi  = cpd_.get_fgi();
     const std::vector<double>& mwfg = cpd_.get_mwVec();
 
-    std::vector<FieldT*>& rhs = this->get_value_vec();
+    typename Expr::Expression<FieldT>::ValVec& rhs = this->get_value_vec();
     const FieldT& kb   = kb_  ->field_ref();
     const FieldT& l    = l_   ->field_ref();
 

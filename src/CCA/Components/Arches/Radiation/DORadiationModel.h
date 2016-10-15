@@ -145,6 +145,10 @@ private:
       OffsetArray1<double> srcpone;
       OffsetArray1<double> qfluxbbm;
 
+      double d_xfluxAdjust;
+      double d_yfluxAdjust;
+      double d_zfluxAdjust;
+
       bool d_print_all_info; 
       bool reflectionsTurnedOn;
       bool _scatteringOn;
@@ -159,7 +163,7 @@ private:
       std::vector< const VarLabel*> _radiationFluxLabels;
 
       std::vector< std::vector < double > > cosineTheta;
-      std::vector< std::vector < double > > solidAngleQuad;
+      std::vector < double >  solidAngleWeight;
 
       template<class TYPE> 
       void computeScatteringIntensities(int direction,

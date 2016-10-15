@@ -176,7 +176,7 @@ void
 LewisNumberDiffFluxes<FluxT>::
 evaluate()
 {
-  std::vector<FluxT*>& fluxes = this->get_value_vec();
+  typename Expr::Expression<FluxT>::ValVec& fluxes = this->get_value_vec();
 
   SpatialOps::SpatFldPtr<FluxT> fluxSum = SpatialOps::SpatialFieldStore::get<FluxT>( *(fluxes[0]) );
 

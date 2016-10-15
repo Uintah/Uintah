@@ -109,7 +109,7 @@ Gi_RHS<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  std::vector<FieldT*>& rhs = this->get_value_vec();
+  typename Expr::Expression<FieldT>::ValVec& rhs = this->get_value_vec();
   const double rho = 0.9;
   const double sumfg = cpd_.get_sumfg();
   const double mwl0  = cpd_.l0_molecular_weight();

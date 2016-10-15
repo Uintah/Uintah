@@ -1354,6 +1354,70 @@ void Patch::computeExtents(VariableBasis basis,
   high = origHighIndex + neighborsHigh()*highOffset;
 }
 
+
+/*______________________________________________________________________
+
+                                                    +-------+-------+
+                                                    |       |       |  Level Hi
+                                        +***************14*****+15  |
+                                        *           |       |  *    |
+ExtraCells not drawn             Region of interest +----------*----+
+                                        *           |       |  *    |
+                                        *    void   |   12  |  *13  |
+                                        *           |       |  *    |
+                    +-------+-------+---*---+------------------*----+
+                    |       |       |   *   |       |       |  *    |
+                    |   6   |   7   |   +*******9*******10*****+11  |
+                    |       |       |       |       |       |       |
+                    +-----------------------------------------------+
+                    |       |       |       |       |       |       |
+        Patches     |   0   |   1   |   2   |   3   |   4   |   5   |
+                    |       |       |       |       |       |       |
+                    |       |       |       |       |       |       |
+                    +-------+-------+-------+-------+-------+-------+
+                    
+This will return the low and high cell index of the region of interest in non-cubic computational domains.
+Note the low and high point encompasses the void region show above.  This just
+adds a clamp so the low and high indices don't exceed the level's extents.
+               
+//______________________________________________________________________*/
+void Patch::computeVariableExtentsWithBoundaryCheck(Uintah::TypeDescription::Type basis,
+                                                    const IntVector& boundaryLayer,
+                                                    Ghost::GhostType gtype, 
+                                                    int numGhostCells,
+                                                    IntVector& low, 
+                                                    IntVector& high) const
+{ 
+  // Note that 5  is semi-arbitrary and may need to be adjusted.
+  // Brad:  you'll have to explain what's special about ID 0.
+  
+  if ( getLevel()->isNonCubic() && numGhostCells >= 5 && this->getID() >= 0 ) {
+    bool basisMustExist = (gtype != Ghost::None);
+    VariableBasis vbasis = translateTypeToBasis(basis, basisMustExist); 
+
+    low  = getLowIndex(vbasis);
+    high = getHighIndex(vbasis);
+
+    IntVector ghostLowOffset, ghostHighOffset;    
+    getGhostOffsets(basis, gtype, numGhostCells, ghostLowOffset, ghostHighOffset);
+
+    IntVector ghostLow  = low - ghostLowOffset;
+    IntVector ghostHigh = high + ghostHighOffset;
+                                         
+    // get extents over entire level including extra cells
+    IntVector levelLow, levelHigh;
+    this->getLevel()->computeVariableExtents(basis, levelLow, levelHigh);
+
+    low  = Uintah::Max( ghostLow, levelLow);
+    high = Uintah::Min( ghostHigh, levelHigh);
+  } else {
+    //Do it the usual way 
+    computeVariableExtents( basis, boundaryLayer, gtype, numGhostCells, low, high);
+  }  
+}
+
+//______________________________________________________________________
+// d
 void Patch::getOtherLevelPatches(int levelOffset,
                                  Patch::selectType& selected_patches,
                                  int nPaddingCells /*=0*/) const

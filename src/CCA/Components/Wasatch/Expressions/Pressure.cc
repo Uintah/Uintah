@@ -404,7 +404,7 @@ Pressure::evaluate()
 {
   using namespace SpatialOps;
 
-  typedef std::vector<SVolField*> SVolFieldVec;
+  typedef typename Expr::Expression<SVolField>::ValVec SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
 
   // jcs: can we do the linear solve in place? We probably can. If so,

@@ -45,7 +45,7 @@ public:
   void evaluate()
   {
     using namespace SpatialOps;
-    std::vector<FieldT*>& results = this->get_value_vec();
+    typename Expr::Expression<FieldT>::ValVec& results = this->get_value_vec();
     FieldT& H2rhs = *results[0];
     FieldT& H2Orhs = *results[1];
     const FieldT& hetroh2o = hetroh2o_->field_ref();
