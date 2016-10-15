@@ -131,9 +131,6 @@ struct ParticleSend : public RefCounted {
 #define PARTICLESET_TAG 0x4000|batch->messageTag
 #define DAV_DEBUG 0
 
-#define  BULLETPROOFING_FOR_CUBIC_DOMAINS  // comment out when running on non-cubic domains.
-                                           // The getRegion() exceptions don't apply.
-
 bool OnDemandDataWarehouse::d_combineMemory=false;
 
 
@@ -2291,11 +2288,9 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
     totalCells += diff.x() * diff.y() * diff.z();
   }  // patches loop
 
+  //bulletproofing
   long totalLevelCells = level->totalCells();
 
-#ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
-  //__________________________________
-  //  This is not a valid check on non-cubic domains
   if (totalLevelCells != totalCells && missing_patches.size() > 0) {
     std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
          << ", for patch(es): ";
@@ -2304,10 +2299,9 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
       std::cout << *missing_patches[i] << " ";
     }
     std::cout << " copied cells: " << totalCells << " requested cells: " << totalLevelCells << std::endl;
-    std::cout << "  *** If the computational domain is non-cubic, (L-shaped or necked down)  you can remove this bulletproofing" << std::endl;
-    throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
+    throw InternalError("Missing patch variable in geLevel().  This method attempted to gather this variable into a larger region, but was unable to find the patch variable.", __FILE__, __LINE__);
+
   }
-#endif
 
   //__________________________________
   //  Diagnostics
@@ -2463,9 +2457,6 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
 
     long requestedCells = level->getTotalSimulationCellsInRegion(low, high);
 
-  #ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
-    //__________________________________
-    //  This is not a valid check on non-cubic domains
     if (requestedCells > totalCells && missing_patches.size() > 0) {
       std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
            << ", for patch(es): ";
@@ -2476,9 +2467,9 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
 
       std::cout << std::endl << " Original region: " << low << " " << high << std::endl;
       std::cout << " copied cells: " << totalCells << " requested cells: " << requestedCells << std::endl;
-      throw InternalError("Missing patches in getRegionModifiable().  If this is a non-cubic domain problem, this error will happen, so comment out #define BULLETPROOFING_FOR_CUBIC_DOMAINS", __FILE__, __LINE__);
+      throw InternalError("Missing patch variable in getRegionModifiable().  This method attempted to gather this variable into a larger region, but was unable to find the patch variable.", __FILE__, __LINE__);
     }
-  #endif
+
     if (dbg.active()) {
       cerrLock.lock();
       dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
