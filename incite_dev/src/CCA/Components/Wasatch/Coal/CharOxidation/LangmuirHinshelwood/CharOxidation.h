@@ -141,7 +141,7 @@ namespace CHAR{
     // results[0]  :   Char Oxidation
     // results[1]  :   CO2/CO;
 
-    std::vector<FieldT*>& results = this->get_value_vec();
+    typename Expr::Expression<FieldT>::ValVec& results = this->get_value_vec();
     double st1_, err_, st2_;
     const double R_ = 8.314;  // Gas constant
     const double f0err = 1e-15;

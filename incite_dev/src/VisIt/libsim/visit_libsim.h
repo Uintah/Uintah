@@ -64,9 +64,9 @@ namespace Uintah {
 class SimulationController;
 
 /* Simulation Mode */
-//#define VISIT_SIMMODE_UNKNOWN  0
-//#define VISIT_SIMMODE_RUNNING  1
-//#define VISIT_SIMMODE_STOPPED  2
+#define VISIT_SIMMODE_UNKNOWN  0
+#define VISIT_SIMMODE_RUNNING  1
+#define VISIT_SIMMODE_STOPPED  2
 
 #define VISIT_SIMMODE_STEP       3
 #define VISIT_SIMMODE_FINISHED   4
@@ -117,6 +117,9 @@ typedef struct
 
   // The first row is the strip chart name.
   std::string stripChartNames[5][5];
+
+  // Container for storing modiied vairables
+  std::map< std::string, std::string> modifiedVars;
   
 } visit_simulation_data;
 

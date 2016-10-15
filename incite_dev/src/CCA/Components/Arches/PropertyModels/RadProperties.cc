@@ -505,6 +505,39 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
         
       }//----------end of scattering props----------//
     } // Finish computing particle absorption coefficient
+
+    //______________________________________________________________________
+    //  Bulletproofing
+    IntVector l = abskg.getLowIndex();
+    IntVector h = abskg.getHighIndex();
+
+    CellIterator iterLim = CellIterator(l, h);
+    for(CellIterator iter = iterLim; !iter.done();iter++) {
+      IntVector c = *iter;
+      
+      bool abskp_isNan = false;
+      for( int i=0; i< _nQn_part; i++){
+        if( std::isinf( abskp[i][c] )|| std::isnan( abskp[i][c] ) ){
+          abskp_isNan = true;
+          continue;
+        }
+      }
+
+      if ( std::isinf( abskg[c] )    || std::isnan( abskg[c] ) ||         
+           std::isinf( absk_tot[c] ) || std::isnan( absk_tot[c] ) ||      
+           abskp_isNan ){
+        std::ostringstream warn;
+        warn<< "ERROR:Ray::RadProperties::computeProp   abskg or absk_tot or abskp is non-physical \n"
+            << "     c: " << c << " patch: ("<< *patch << "\n"
+            << " ( abskg[c]: " << abskg[c] << ", absk_tot[c]: " << absk_tot[c] << " abskp: ";
+        for( int i=0; i< _nQn_part; i++){
+          warn <<  abskp[i][c] << ", ";
+        }
+        
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+      }
+    }
+    
   } // end patch loop
 }
 

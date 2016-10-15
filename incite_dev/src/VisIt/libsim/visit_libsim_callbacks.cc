@@ -25,6 +25,7 @@
 #include "VisItControlInterface_V2.h"
 
 #include "visit_libsim.h"
+#include "visit_libsim_database.h"
 #include "visit_libsim_callbacks.h"
 #include "visit_libsim_customUI.h"
 
@@ -182,6 +183,10 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
   }
+  else if(strcmp(cmd, "Refresh") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  {
+    visit_SimGetCustomUIData(cbdata);
+  }
   else if(strcmp(cmd, "Save") == 0)
   {
     // Do not call unless the simulation is stopped or finished as it
@@ -201,7 +206,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
-                        "Can not save a timestep unless the simulation is stopped", 0);
+                        "Can not save a timestep unless the simulation has "
+			"run for at least one time step and is stopped.", 0);
   }
 
   else if(strcmp(cmd, "Checkpoint") == 0)
@@ -223,7 +229,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
-                        "Can not save a checkpoint unless the simulation is stopped", 0);
+                        "Can not save a checkpoint unless the simulation has "
+			"run for at least one time step and is stopped.", 0);
   }
 
   // Only allow the runMode to finish if the simulation is finished.
@@ -415,7 +422,6 @@ void visit_DeltaTCallback(char *val, void *cbdata)
 
   double delt = atof(val);
 
-  simStateP->adjustDelT( false );
   dw->override(delt_vartype(delt), simStateP->get_delt_label());
 
   visit_VarModifiedMessage( sim, "DeltaT", val);
@@ -845,10 +851,11 @@ void visit_VarModifiedMessage( visit_simulation_data *sim,
     VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
     
-    visitdbg << msg.str().c_str() << std::endl;
-    visitdbg.flush();
+    // visitdbg << msg.str().c_str() << std::endl;
+    // visitdbg.flush();
   }
+
+  sim->modifiedVars[ name ] = value;
 }
   
 } // End namespace Uintah
-

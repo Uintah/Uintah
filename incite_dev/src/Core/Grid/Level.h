@@ -161,7 +161,14 @@ public:
 
   void getSpatialRange( BBox & b ) const { b.extend(m_spatial_range); };
   void getInteriorSpatialRange( BBox & b ) const { b.extend(m_int_spatial_range); };
-
+  
+  // methods to identify if this is non-cubic level
+  void addBox_ups( const BBox &b );
+  bool insideBoxes_ups( const IntVector& d ) const;
+  bool isNonCubic() const { return m_upsBoxes.isNonCubic; };
+  void setNonCubicFlag ( bool& test );
+  
+  
   void findIndexRange(     IntVector & lowIndex, IntVector & highIndex ) const { findNodeIndexRange(lowIndex, highIndex); }
   void findNodeIndexRange( IntVector & lowIndex, IntVector & highIndex ) const;
   void findCellIndexRange( IntVector & lowIndex, IntVector & highIndex ) const;
@@ -278,8 +285,15 @@ private:
   BBox      m_spatial_range;
   BBox      m_int_spatial_range;
   
+  // let the component know that this is a non-cubic level
+  struct upsBoxes{
+    std::vector<BBox> boxes;                              // boxes in a level pulled from ups file
+    bool isNonCubic{false};                               // is non cubic level                      
+  };
+  upsBoxes m_upsBoxes;
+  
   bool      m_finalized{false};
-  int       m_index; // number of the level
+  int       m_index;                                      // number of the level
   IntVector m_patch_distribution;
   IntVector m_periodic_boundaries;
 
@@ -290,8 +304,8 @@ private:
   IntVector m_extra_cells{IntVector(0,0,0)};
   IntVector m_numcells_patch_max{IntVector(0,0,0)};
 
-  std::vector<Patch*> m_real_patches; // only real patches
-  std::vector<Patch*> m_virtual_and_real_patches; // real and virtual
+  std::vector<Patch*> m_real_patches;                    // only real patches
+  std::vector<Patch*> m_virtual_and_real_patches;        // real and virtual
 
   int       m_id;
   IntVector m_refinement_ratio;

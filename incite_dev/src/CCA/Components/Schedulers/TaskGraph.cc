@@ -1052,7 +1052,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
           //Finer patches probably shouldn't be using SHRT_MAX ghost cells, but just in case they do, at least compute the low and high correctly...
           origPatch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
         } else {
-          origPatch->computeVariableExtents(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
+          origPatch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
                                           req->m_num_ghost_cells, otherLevelLow, otherLevelHigh);
         }
         otherLevelLow = origLevel->mapCellToFiner(otherLevelLow);
@@ -1071,14 +1071,13 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         static Patch::selectType neighbors;
         neighbors.resize(0);
 
-        IntVector low, high;
-        
+        IntVector low  = IntVector(-9,-9,-9);
+        IntVector high = IntVector(-9,-9,-9);
         Patch::VariableBasis basis = Patch::translateTypeToBasis(req->m_var->typeDescription()->getType(), false);
-
         if (uses_SHRT_MAX) {
           patch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), low, high);
         } else {
-          patch->computeVariableExtents(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
+          patch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
                                         req->m_num_ghost_cells, low, high);
         }
 

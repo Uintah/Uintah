@@ -104,7 +104,10 @@ NIGHTLYTESTS = [
    ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
    ("multi-patch-intrusion-test"        , "multi-patch-intrusion-test.ups"                          , 8   , "All"  , ["exactComparison"]) , 
-
+   ("cloudBM24LS"                       , "cloudBM24LS.ups"                                         , 8 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("cloudBM48LS"                       , "cloudBM48LS.ups"                                         , 8 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("cloudBM80GLC"                      , "cloudBM80GLC.ups"                                        , 8 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("cloudBM80LS"                       , "cloudBM80LS.ups"                                         , 8 , "All"  , ["exactComparison", "no_restart"]) ,
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD   "corrupted double-linked list: 0x00000000024b8120 ***"
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"     , "no_cuda"]) , 

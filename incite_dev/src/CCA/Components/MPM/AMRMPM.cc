@@ -1822,8 +1822,8 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
 
   if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
     if(flags->d_autoCycleUseMinMax){
-      new_dw->put(min_vartype(1e9), lb->MinConcLabel);
-      new_dw->put(max_vartype(0.0), lb->MaxConcLabel);
+      new_dw->put(min_vartype(5e11), lb->MinConcLabel);
+      new_dw->put(max_vartype(-5e11), lb->MaxConcLabel);
     }else{
       new_dw->put(sum_vartype(0.0), lb->TotalConcLabel);
     }
@@ -3686,7 +3686,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
 
     double totalconc = 0;
-    double minconc = 1e9;
+    double minconc = 5e11;
     double maxconc = 0;
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
@@ -3709,6 +3709,10 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+
+      // Used for AutoCycleFluxBC, scalar flux boundary conditions
+      bool do_conc_reduction = mpm_matl->doConcReduction();
+
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
@@ -3841,13 +3845,15 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             pConcentrationNew[idx] = 0.0;
           }
           pConcPreviousNew[idx] = pConcentration[idx];
-          if(flags->d_autoCycleUseMinMax){
-            if(pConcentration[idx] > maxconc)
-              maxconc = pConcentration[idx];
-            if(pConcentration[idx] < minconc)
-              minconc = pConcentration[idx];
-          }else{
-            totalconc += pConcentration[idx];
+          if(do_conc_reduction){
+            if(flags->d_autoCycleUseMinMax){
+              if(pConcentrationNew[idx] > maxconc)
+                maxconc = pConcentrationNew[idx];
+              if(pConcentrationNew[idx] < minconc)
+                minconc = pConcentrationNew[idx];
+            }else{
+              totalconc += pConcentration[idx];
+            }
           }
         }
 /*`==========TESTING==========*/
@@ -3880,7 +3886,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(flags->d_doAutoCycleBC && flags->d_doScalarDiffusion){
         if(flags->d_autoCycleUseMinMax){
           new_dw->put(max_vartype(maxconc),  lb->MaxConcLabel);
-          new_dw->put(min_vartype(minconc),    lb->MinConcLabel);
+          new_dw->put(min_vartype(minconc),  lb->MinConcLabel);
         }else{
           new_dw->put(sum_vartype(totalconc),     lb->TotalConcLabel);
         }

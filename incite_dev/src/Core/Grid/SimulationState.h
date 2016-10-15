@@ -231,9 +231,6 @@ public:
   bool isRegridTimestep() const { return d_isRegridTimestep; }
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
-  bool adjustDelT() const { return d_adjustDelT; }
-  void adjustDelT(bool ans) { d_adjustDelT = ans; }
-  
   bool isLockstepAMR() const { return d_lockstepAMR; }
   void setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
   
@@ -432,11 +429,11 @@ public:
   // Debug streams that can be turned on or off.
   std::vector< DebugStream * > d_debugStreams;
   
-  void setVisIt( bool val ) { d_doVisIt = val; }
-  bool getVisIt() { return d_doVisIt; }
+  void setVisIt( int val ) { d_doVisIt = val; }
+  int  getVisIt() { return d_doVisIt; }
 
 private:
-  bool d_doVisIt;
+  unsigned int d_doVisIt;
 #endif
 }; // end class SimulationState
 

@@ -114,7 +114,7 @@ void
 DensFromMixfrac<FieldT>::
 evaluate()
 {
-  typedef std::vector<FieldT*> SVolFieldVec;
+  typedef typename Expr::Expression<FieldT>::ValVec SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
   
   // jcs: can we do the linear solve in place? We probably can. If so,

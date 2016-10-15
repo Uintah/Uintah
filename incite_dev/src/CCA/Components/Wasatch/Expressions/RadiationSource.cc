@@ -229,7 +229,7 @@ namespace WasatchCore {
   {
     using namespace SpatialOps;
     
-    typedef std::vector<SVolField*> SVolFieldVec;
+    typedef typename Expr::Expression<SVolField>::ValVec SVolFieldVec;
     SVolFieldVec& results = this->get_value_vec();
     SVolField& radvolq = *results[1];
     radvolq <<= 0.0;

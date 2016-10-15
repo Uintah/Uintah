@@ -71,7 +71,7 @@ public:
   {
     using namespace SpatialOps;
 
-    std::vector<FieldT*>& dyi = this->get_value_vec();
+    typename Expr::Expression<FieldT>::ValVec& dyi = this->get_value_vec();
     assert( dyi.size() == 2 );
 
     const FieldT& charOxidRHS   = charoxidationRHS_->field_ref();

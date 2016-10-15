@@ -65,7 +65,8 @@ SRCS += \
         $(SRCDIR)/cptiInterpolator.cc      \
         $(SRCDIR)/axiCptiInterpolator.cc   \
         $(SRCDIR)/cpdiInterpolator.cc      \
-        $(SRCDIR)/axiCpdiInterpolator.cc
+        $(SRCDIR)/axiCpdiInterpolator.cc   \
+        $(SRCDIR)/fastCpdiInterpolator.cc
 
 PSELIBS := \
         Core/Geometry    \

@@ -112,7 +112,7 @@ evaluate()
 {
   using namespace SpatialOps;
 
-  std::vector<FieldT*>& kgi = this->get_value_vec();
+  typename Expr::Expression<FieldT>::ValVec& kgi = this->get_value_vec();
 
   const double vm = cpd_.get_coal_composition().get_vm();
 

@@ -2441,7 +2441,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
       // After regridding selected patches may return stale patches so
       // make sure the variable exists on the patch.
       if( !exists( label, matlIndex, patch ) ) {
-  continue;
+	continue;
       }
 
       IntVector l, h;
@@ -2505,58 +2505,28 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
       totalCells += diff.x() * diff.y() * diff.z();
     }  // patches loop
 
-    //Now do some bulletproofing.  The bullet proofing works as follows.
-    //Step #1 - See if the low/high parameters region matches the total number of cells
-    //in the entire level
-    //Step #2 - See if the box formed by the low/high coordinates contains the same number of cells as
-    //counted number of cells found from the call to level->selectPatches(tmpLow, tmpHigh, patches);
-    //Step #3 - Go through all patches, see if they're inside the box formed by the low/high coordinates,
-    //and if so, add up their cells.  See if that total matches the cells found from the call to
-    //level->selectPatches(tmpLow, tmpHigh, patches);
 
-
-    //Step #1
-    long totalLevelCells = level->totalCells();
-    if (totalLevelCells == totalCells) {
-      return;
-    }
-
-    //Step #2
+    //Now do some bulletproofing
     IntVector diff(high - low);
-    if (diff.x() * diff.y() * diff.z() == totalCells)  {
-      return;
-    }
 
-    //Step #3
-    //Now check the slower approach, where we count up all cells in all patches in the level.
-    //This test is needed for level shapes that aren't cubic (i.e. L shaped,
-    //donut shaped, blotchy and noncontiguous, etc.).  This has the potential to be very slow if
-    //the amount of patches grows to hundreds of thousands.
-    long cellsFoundInThisLevel = level->getTotalSimulationCellsInRegion(low, high);
-    if (level->getTotalSimulationCellsInRegion(low, high) == totalLevelCells) {
-      return;
-    }
+    long requestedCells = level->getTotalSimulationCellsInRegion(low, high);
 
-
-    if (missing_patches.size() > 0) {
-
-      std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() << ", for patch(es): ";
+  #ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
+    //__________________________________
+    //  This is not a valid check on non-cubic domains
+    if (requestedCells > totalCells && missing_patches.size() > 0) {
+      std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+           << ", for patch(es): ";
 
       for (size_t i = 0; i < missing_patches.size(); i++) {
         std::cout << *missing_patches[i] << " ";
       }
 
       std::cout << std::endl << " Original region: " << low << " " << high << std::endl;
-      std::cout << " copied cells: " << totalCells
-          << ". This does not match the amount of cells in the entire level: " << totalLevelCells
-          << ". It also does not match the amount of cells in the "
-          << "low (" << low.x() << ", " << low.y() << ", " << low.z() << ") "
-          << "high (" <<high.x() << ", " << high.y() << ", " << high.z() << ")."
-          << "It also does not match this amount of cells found in patches in this level: "
-          << cellsFoundInThisLevel << "." << std::endl;
-      throw InternalError("Missing patches in OnDemandDataWarehouse::getRegionModifiable()", __FILE__, __LINE__);
+      std::cout << " copied cells: " << totalCells << " requested cells: " << requestedCells << std::endl;
+      throw InternalError("Missing patches in getRegionModifiable().  If this is a non-cubic domain problem, this error will happen, so comment out #define BULLETPROOFING_FOR_CUBIC_DOMAINS", __FILE__, __LINE__);
     }
-
+  #endif
     if (dbg.active()) {
       cerrLock.lock();
       dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
@@ -2564,8 +2534,7 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase& var,
       cerrLock.unlock();
     }
 
-    throw InternalError("OnDemandDataWarehouse::getRegionModifiable() - Counted cells from level->selectPatches() does not match expected number of cells", __FILE__, __LINE__);
-
+    ASSERT(requestedCells <= totalCells );
 }
 
 //______________________________________________________________________

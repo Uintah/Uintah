@@ -28,6 +28,17 @@
 // Define for having POKITT (which also means CANTERA exists) will be found below 
 // (if it was specified during configure).
 
+/* 
+   For reference, (if Wasatch is enabled, then) you are linking versus this SpatialOps (W3P):
+
+   @INC_SPATIALOPS_H@
+
+   @SPATIALOPS_LIB_DIR_FLAG@
+
+   (Note, the above info is used to tell when the user configures
+   versus a new SpatialOps library, so please leave it here.)
+*/
+
 @DEF_POKITT@
 
 #endif // WASATCH_DEFS_H

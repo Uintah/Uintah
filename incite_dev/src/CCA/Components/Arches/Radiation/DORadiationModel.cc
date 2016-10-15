@@ -204,6 +204,11 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
       if (ordinates_specified == false){
         proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
       }
+      if ((d_sn)%2 || d_sn <2){
+        throw ProblemSetupException("Error:Only positive, even, and non-zero ordinate numbers for discrete-ordinates radiation are permitted.", __FILE__, __LINE__);
+      }
+
+
     } else {
       throw ProblemSetupException("Error: <DORadiation> node not found.", __FILE__, __LINE__);
     }
@@ -262,7 +267,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 //______________________________________________________________________
 //
 void
-DORadiationModel::computeOrdinatesOPL() {
+DORadiationModel::computeOrdinatesOPL(){
 
 
 
@@ -294,18 +299,36 @@ DORadiationModel::computeOrdinatesOPL() {
     fort_rordr(d_sn, oxi, omu, oeta, wt);
   }
 
+   double sumx=0;  double sumy=0;  double sumz=0; 
+  for (int i=0; i< d_totalOrds/8; i++){
+   sumx+=omu[i+1]*wt[i+1];
+   sumy+=oeta[i+1]*wt[i+1];
+   sumz+=oxi[i+1]*wt[i+1];
+  }
+
+  d_xfluxAdjust=M_PI/sumx/4.0;  // sumx, sumy, sumz should equal pi/4 because: Int->0:pi/2 cos(theta) dOmega = pi, 
+  d_yfluxAdjust=M_PI/sumy/4.0;
+  d_zfluxAdjust=M_PI/sumz/4.0;
+
   _sigma=5.67e-8;  //  w / m^2 k^4
 
   if(_scatteringOn){
     cosineTheta    = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
-    solidAngleQuad = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
-
+    solidAngleWeight = vector< double >  (d_totalOrds,0.0);
     for (int i=0; i<d_totalOrds ; i++){
+        solidAngleWeight[i]=  wt[i+1]/(4.0 * M_PI);  
       for (int j=0; j<d_totalOrds ; j++){
         cosineTheta[i][j]=oxi[j+1]*oxi[i+1]+oeta[j+1]*oeta[i+1]+omu[j+1]*omu[i+1];
-        solidAngleQuad[i][j]=  wt[i+1]/(4.0 * M_PI);
       }
     }
+    // No adjustment factor appears to be needed for this form of the phase function. PHI=1+f*cos(theta)
+    //for (int direction=0; direction<d_totalOrds ; direction++){
+        //double  sumpF=0.0;
+      //for (int i=0; i<d_totalOrds ; i++){
+         //sumpF += (1.0 + 0.333333*cosineTheta[direction][i])*solidAngleWeight[i];
+      //}
+     //proc0cout << sumpF << "\n";
+    //}
   }
 }
 
@@ -878,8 +901,15 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      //vars->qfluxe, vars->qfluxw,
                      //vars->qfluxn, vars->qfluxs,
                      //vars->qfluxt, vars->qfluxb);
+                     //
+                     //
+                     //
 
-      compute4Flux doFlux(wt[direcn]*abs(omu[direcn]),wt[direcn]*abs(oeta[direcn]),wt[direcn]*abs(oxi[direcn]),
+
+
+
+
+      compute4Flux doFlux(wt[direcn]*abs(omu[direcn])*d_xfluxAdjust,wt[direcn]*abs(oeta[direcn])*d_yfluxAdjust,wt[direcn]*abs(oxi[direcn])*d_zfluxAdjust,
                                                                     wt[direcn],  vars->cenint,
                                                                     plusX ? vars->qfluxe :  vars->qfluxw,
                                                                     plusY ? vars->qfluxn :  vars->qfluxs,
@@ -969,8 +999,8 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
       continue;
 
     for (int i=0; i < d_totalOrds ; i++) {
-      double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])*solidAngleQuad[i][direction];
-      scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
+      double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])*solidAngleWeight[i];
+      scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter]; // wt could be comuted up with the phase function in the j loop
     }
   }
 

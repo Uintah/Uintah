@@ -27,6 +27,7 @@
 
 #include <CCA/Components/FVM/FVMLabel.h>
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
+#include <CCA/Components/MPMFVM/ESConductivityModel.h>
 #include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -86,7 +87,6 @@ namespace Uintah {
                                                 DataWarehouse* old_dw,
                                                 DataWarehouse* new_dw);
 
-    protected:
       virtual void fcLinearInterpolator(const Patch* patch, const Point& pos,
                                         std::vector<IntVector>& ni,
                                         std::vector<double>& S);
@@ -102,6 +102,7 @@ namespace Uintah {
       MPMLabel* d_mpm_lb;
       FVMLabel* d_fvm_lb;
       MPMFlags* d_mpm_flags;
+      ESConductivityModel* d_conductivity_model;
 
       MaterialSet* d_one_matlset;
       MaterialSubset* d_one_matl;

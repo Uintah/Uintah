@@ -116,7 +116,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    
   d_timeRefinementRatio       = 0;
   
-  d_adjustDelT                = true;
   d_lockstepAMR               = false;
   d_updateOutputInterval      = false;
   d_updateCheckpointInterval  = false;

@@ -202,6 +202,7 @@ usage( const std::string& message, const std::string& badarg, const std::string&
 #ifdef HAVE_VISIT
     std::cerr << "\n";
     std::cerr << "-visit <filename>        : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
+    std::cerr << "-visit_connect           : Wait for a visit connection before executing the simulation\n";
     std::cerr << "-visit_comment <comment> : A comment about the simulation\n";
     std::cerr << "-visit_dir <directory>   : Top level directory for the VisIt installation\n";
     std::cerr << "-visit_option <string>   : Optional args for the VisIt launch script\n";
@@ -287,8 +288,9 @@ main( int argc, char *argv[], char *env[] )
   std::string solver = "";  // empty string defaults to CGSolver
 
 #ifdef HAVE_VISIT
-  bool   do_VisIt  =  false; // Assume if VisIt is compiled
-				      // in that the user may want to connect with VisIt.
+  // Assume if VisIt is compiled in that the user may want to connect
+  // with VisIt.
+  unsigned int do_VisIt = VISIT_SIMMODE_UNKNOWN;
 #endif
 
   IntVector layout(1,1,1);
@@ -421,43 +423,46 @@ main( int argc, char *argv[], char *env[] )
       if (++i == argc) {
         usage("You must provide file name for -visit", arg, argv[0]);
       }
-      else
-	do_VisIt = true;
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+	do_VisIt = VISIT_SIMMODE_RUNNING;
+    }
+    else if (arg == "-visit_connect" ) {
+      do_VisIt = VISIT_SIMMODE_STOPPED;
     }
     else if (arg == "-visit_comment" ) {
       if (++i == argc) {
         usage("You must provide a string for -visit_comment", arg, argv[0]);
       }
-      else
-	do_VisIt = true;
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+	do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {
         usage("You must provide a directory for -visit_dir", arg, argv[0]);
       }
-      else
-	do_VisIt = true;
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+	do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_option" ) {
       if (++i == argc) {
         usage("You must provide a string for -visit_option", arg, argv[0]);
       }
-      else
-	do_VisIt = true;
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+	do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_trace" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_trace", arg, argv[0]);
       }
-      else
-	do_VisIt = true;
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+	do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_ui" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_ui", arg, argv[0]);
       }
-      else
-	do_VisIt = true;
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+	do_VisIt = VISIT_SIMMODE_RUNNING;
     }
 #endif
     else {

@@ -1217,7 +1217,7 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
 
   // Running with VisIt so add in the variables that the user can
   // modify.
-  if( m_shared_state->getVisIt() & !initialized ) {
+  if( m_shared_state->getVisIt() && !initialized ) {
     m_shared_state->d_debugStreams.push_back( &doing  );
     m_shared_state->d_debugStreams.push_back( &lb );
     m_shared_state->d_debugStreams.push_back( &dbg );

@@ -103,9 +103,9 @@ evaluate()
 {
   using namespace SpatialOps;
   typedef SpatFldPtr<SVolField> SVolFldPtr;
-  typedef std::vector<SVolField*> SVolFieldVec;
-  SVolFieldVec& results = this->get_value_vec();
-  SVolField& strTsrMag = *results[0];
+  typedef typename Expr::Expression<SVolField>::ValVec SVolFieldVec;
+  SVolFieldVec& results   = this->get_value_vec();
+  SVolField& strTsrMag    = *results[0];
   SVolField& dynSmagConst = *results[1];
   // No need to initialize strTsrMag or dynSmagConst. These will be filled in
   // with values further downstream
