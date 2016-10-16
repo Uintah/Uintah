@@ -34,6 +34,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <time.h>
 #include <fstream>
@@ -73,7 +74,11 @@ using namespace std;
 static Uintah::DebugStream dbg("RAY",       false);
 static Uintah::DebugStream dbg2("RAY_DEBUG",false);
 static Uintah::DebugStream dbg_BC("RAY_BC", false);
+namespace {
 
+  Dout        extentsdbg( "extents_dbg", false);
+
+}
 
 //---------------------------------------------------------------------------
 // Class: Constructor.
@@ -1144,9 +1149,11 @@ Ray::rayTrace( const ProcessorGroup* pg,
       ROI_Lo = Max( ROI_Lo, levelLo );
       ROI_Hi = Min( ROI_Hi, levelHi );
       dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
-
+      DOUT(extentsdbg, "Calling getRegion for abskgRMCRT for patch: " << patch->getID());
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
+      DOUT(extentsdbg, "Calling getRegion for sigmaT4 for patch: " << patch->getID());
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
+      DOUT(extentsdbg, "Calling getRegion for cellTypeLabel for patch: " << patch->getID());
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
     }
   
