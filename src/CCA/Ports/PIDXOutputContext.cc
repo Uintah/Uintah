@@ -41,10 +41,10 @@ PIDXOutputContext::PIDX_flags::PIDX_flags()
   compressMap["CHUNKING"]          = PIDX_CHUNKING_ONLY;
   compressMap["PIDX_CHUNKING_ZFP"] = PIDX_CHUNKING_ZFP;
   
-  outputRawIO    = false;
-  debugOutput    = false;
-  outputPatchSize = IntVector(-9,-9,-9);
-  compressionType = PIDX_NO_COMPRESSION;
+  d_outputRawIO    = false;
+  d_debugOutput    = false;
+  d_outputPatchSize = IntVector( -9, -9, -9 );
+  d_compressionType = PIDX_NO_COMPRESSION;
 }
 
 //______________________________________________________________________
@@ -84,17 +84,25 @@ PIDXOutputContext::PIDX_flags::getCompressTypeName( const int type )
 void
 PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
 {
-  ProblemSpecP pidx_ps = DA_ps->findBlock("PIDX");
+  ProblemSpecP pidx_ps = DA_ps->findBlock( "PIDX" );
 
   if( pidx_ps != 0 ) {
   
     string type;
     pidx_ps->getWithDefault( "compressionType",  type, "NONE" );
     
-    compressionType = str2CompressType( type );
-    pidx_ps->get( "debugOutput",     debugOutput );
-    pidx_ps->get( "outputRawIO",     outputRawIO );
-    pidx_ps->get( "outputPatchSize", outputPatchSize );
+    d_compressionType = str2CompressType( type );
+    pidx_ps->get( "debugOutput",     d_debugOutput );
+    pidx_ps->get( "outputRawIO",     d_outputRawIO );
+    pidx_ps->get( "outputPatchSize", d_outputPatchSize );
+  }
+  else {
+    proc0cout << "Warning: In input .ups file, the <PIDX> tag was not found in tag <DataArchiver type=\"PIDX\">.  Using defaults...\n";
+
+    d_compressionType = PIDX_NO_COMPRESSION;
+    d_debugOutput = false;
+    d_outputRawIO = true;
+    d_outputPatchSize = IntVector( 16, 16, 16 );
   }
 }
 
@@ -193,15 +201,15 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   
   //__________________________________
   //  override the logic if user specifies somthing
-  if ( flags.outputPatchSize != IntVector(-9,-9,-9) ){
-    box = flags.outputPatchSize;
+  if ( flags.d_outputPatchSize != IntVector( -9, -9, -9 ) ) {
+    box = flags.d_outputPatchSize;
   }
   
-  if (flags.debugOutput){
+  if ( flags.d_debugOutput ) {
     cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level- "<< level->getIndex() << " box: " << box  
-         << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << endl;
+         << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << "\n";
   }
-  PIDX_set_point_5D(newBox, box.x(), box.y(), box.z(), 1, 1);
+  PIDX_set_point_5D( newBox, box.x(), box.y(), box.z(), 1, 1 );
 }
 
 
@@ -233,12 +241,12 @@ PIDXOutputContext::initialize( string filename,
   checkReturnCode( rc, desc+" - PIDX_file_create", __FILE__, __LINE__);
   
   //__________________________________
-  if ( flags.debugOutput ){
+  if ( flags.d_debugOutput ){
     PIDX_debug_output( (this->file) );
   }
 
   //__________________________________
-  if ( flags.outputRawIO ){
+  if ( flags.d_outputRawIO ){
     PIDX_enable_raw_io(this->file);  //Possible performance improvement at low core counts
     checkReturnCode( rc, desc+" - PIDX_enable_raw_io", __FILE__, __LINE__);
   }
@@ -267,10 +275,11 @@ PIDXOutputContext::initialize( string filename,
   //__________________________________
   // Set compresssion settings
   if( typeOutput == CHECKPOINT){
-    PIDX_set_compression_type(this->file, PIDX_NO_COMPRESSION);
+    PIDX_set_compression_type( this->file, PIDX_NO_COMPRESSION );
     checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
-  } else {
-    PIDX_set_compression_type(this->file, flags.compressionType);
+  }
+  else {
+    PIDX_set_compression_type( this->file, flags.d_compressionType );
     checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
     //  PIDX_set_lossy_compression_bit_rate(this->file, 8);                // What to do here?
   }

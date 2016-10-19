@@ -114,18 +114,18 @@ class PIDXOutputContext {
         PIDX_flags();
         ~PIDX_flags() {}
 
-        unsigned int compressionType;
-        bool         outputRawIO;
-        bool         debugOutput;
-        IntVector    outputPatchSize;
+        unsigned int d_compressionType;
+        bool         d_outputRawIO;
+        bool         d_debugOutput;
+        IntVector    d_outputPatchSize;
 
         //__________________________________
         // debugging
         void print(){
           std::cout << Parallel::getMPIRank()
-                    << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  outputRawIO 
-                    << ", compressionType: "<< getCompressTypeName(compressionType)
-                    << ", outputPatchSize: " << outputPatchSize << "\n";
+                    << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  d_outputRawIO 
+                    << ", compressionType: "<< getCompressTypeName( d_compressionType )
+                    << ", outputPatchSize: " << d_outputPatchSize << "\n";
         }  
 
         void problemSetup( const ProblemSpecP& params );
