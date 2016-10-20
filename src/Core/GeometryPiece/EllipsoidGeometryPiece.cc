@@ -207,7 +207,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     
     // Find vector with largest deviation in each direction
     Vector one = d_v1;
-    double highX = d_v1.x();
+    double highX = fabs(d_v1.x());
     if(fabs(d_v2.x()) > highX){
       highX = fabs(d_v2.x());
       one = d_v2;
@@ -216,7 +216,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
       one = d_v3;
     }
     Vector two = d_v1;
-    double highY = d_v1.y();
+    double highY = fabs(d_v1.y());
     if(fabs(d_v2.y()) > highY){
       highY = fabs(d_v2.y());
       two = d_v2;
@@ -225,7 +225,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
       two = d_v3;
     }    
     Vector three = d_v1;
-    double highZ = d_v1.z();
+    double highZ = fabs(d_v1.z());
     if(fabs(d_v2.z()) > highZ){
       highZ = fabs(d_v2.z());
       three = d_v2;
