@@ -442,7 +442,10 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 #else
       mpibuff.get_type(buf, count, datatype);
 #endif
-
+      if (!buf) {
+        printf("postMPISends() - ERROR, the receive MPI buffer is null\n");
+        SCI_THROW( InternalError("The receive MPI buffer is null", __FILE__, __LINE__) );
+      }
       DOUT(g_mpi_dbg, "Rank-" << me << " Posting send for message number " << batch->m_message_tag << " to   rank-"
                    << to << ", length: " << count << " (bytes)");;
 
