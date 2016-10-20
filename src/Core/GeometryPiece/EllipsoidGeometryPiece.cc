@@ -154,21 +154,21 @@ Box EllipsoidGeometryPiece::getBoundingBox() const
   // X
   highX = fabs(d_v1.x());
   if(fabs(d_v2.x()) > highX)
-    highX = d_v2.x();
+    highX = fabs(d_v2.x());
   if(fabs(d_v3.x()) > highX)
-    highX = d_v3.x();
+    highX = fabs(d_v3.x());
   // Y
   highY = fabs(d_v1.y());
   if(fabs(d_v2.y()) > highY)
-    highY = d_v2.y();
+    highY = fabs(d_v2.y());
   if(fabs(d_v3.y()) > highY)
-    highY = d_v3.y();
+    highY = fabs(d_v3.y());
   // X
   highZ = fabs(d_v1.z());
   if(fabs(d_v2.z()) > highZ)
-    highZ = d_v2.z();
+    highZ = fabs(d_v2.z());
   if(fabs(d_v3.z()) > highZ)
-    highZ = d_v3.z();
+    highZ = fabs(d_v3.z());
   
     Point low( d_origin.x()-fabs(highX),d_origin.y()-fabs(highY),
            d_origin.z()-fabs(highZ) );
@@ -238,10 +238,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     // Compute degree to which it is rotated
     // Find rotation about Z
     Vector projection = temporary - unitZ*(Dot(unitZ,temporary));
-    if(projection[0] > 0.0)
-      thetaz = atan2(projection[1],projection[0]);
-    else 
-      thetaz = 0.0;
+    thetaz = atan2(projection[1],projection[0]);
     
     // Find rotation about Y
     // rotate second vector about z and then find rotation about y
@@ -250,23 +247,16 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
                            one.z()));
     
     projection = temporary - unitY*(Dot(unitY,temporary));
-    if(projection[0] > 0.0)
-      thetay = -atan2(projection[2],projection[0]);
-    else 
-      thetay = 0.0;
-    
+    thetay = -atan2(projection[2],projection[0]);
+
     // Find rotation about X
     temporary = *(new Vector(cos(-thetay)*three.z() - sin(-thetay)*three.y(), 
                              three.y(),
                              cos(-thetay)*three.y() + sin(-thetay)*three.z()));
     
     projection = temporary - unitX*(Dot(unitX,temporary));
-    if(projection[1] > 0.0)
-      thetax = atan2(projection[2],projection[1]);
-    else 
-      thetax = 0.0;
-    
-    
+    thetax = atan2(projection[2],projection[1]);
+
     // set flag so that each time a point is checked using inside() the 
     //   point is rotated the correct amount
     xyzAligned = false;
