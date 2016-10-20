@@ -37,6 +37,7 @@ const string EllipsoidGeometryPiece::TYPE_NAME = "ellipsoid";
 
 EllipsoidGeometryPiece::EllipsoidGeometryPiece(ProblemSpecP& ps)
 {
+
   name_ = "Unnamed " + TYPE_NAME + " from PS";
 
   Vector zero = Vector(0.,0.,0.);
@@ -46,7 +47,7 @@ EllipsoidGeometryPiece::EllipsoidGeometryPiece(ProblemSpecP& ps)
   ps->getWithDefault("v1",d_v1,     zero);
   ps->getWithDefault("v2",d_v2,     zero);
   ps->getWithDefault("v3",d_v3,     zero);
-  
+
   // Get orthagonal axes
   ps->getWithDefault("rx",d_radiusX, 0.0);
   ps->getWithDefault("ry",d_radiusY, 0.0);
@@ -117,10 +118,9 @@ bool EllipsoidGeometryPiece::inside(const Point& p) const
 {
   // Variable initialization
   Point *pTransformed = new Point(p.x()-d_origin.x(),p.y()-d_origin.y(),p.z()-d_origin.z());
-  
+
   // create rotate
-  if(!xyzAligned)
-  {
+  if(!xyzAligned) {
     // Rotate point
     // Note, angles are negated so that it's opposite of what ellipse is rotated
     pTransformed = new Point(cos(-thetaz)*pTransformed->x() - sin(-thetaz)*pTransformed->y(), 
@@ -152,29 +152,29 @@ Box EllipsoidGeometryPiece::getBoundingBox() const
 
   // Use vectors to find highest xyz
   // X
-  highX = d_v1.x();
-  if(abs(d_v2.x()) > highX)
+  highX = fabs(d_v1.x());
+  if(fabs(d_v2.x()) > highX)
     highX = d_v2.x();
-  if(abs(d_v3.x()) > highX)
+  if(fabs(d_v3.x()) > highX)
     highX = d_v3.x();
   // Y
-  highY = d_v1.y();
-  if(abs(d_v2.y()) > highY)
+  highY = fabs(d_v1.y());
+  if(fabs(d_v2.y()) > highY)
     highY = d_v2.y();
-  if(abs(d_v3.y()) > highY)
+  if(fabs(d_v3.y()) > highY)
     highY = d_v3.y();
   // X
-  highZ = d_v1.z();
-  if(abs(d_v2.z()) > highZ)
+  highZ = fabs(d_v1.z());
+  if(fabs(d_v2.z()) > highZ)
     highZ = d_v2.z();
-  if(abs(d_v3.z()) > highZ)
+  if(fabs(d_v3.z()) > highZ)
     highZ = d_v3.z();
   
-    Point low( d_origin.x()-abs(highX),d_origin.y()-abs(highY),
-           d_origin.z()-abs(highZ) );
+    Point low( d_origin.x()-fabs(highX),d_origin.y()-fabs(highY),
+           d_origin.z()-fabs(highZ) );
 
-    Point high( d_origin.x()+abs(highX),d_origin.y()+abs(highY),
-           d_origin.z()+abs(highZ) );
+    Point high( d_origin.x()+fabs(highX),d_origin.y()+fabs(highY),
+           d_origin.z()+fabs(highZ) );
 
     return Box(low,high);
 }
@@ -197,8 +197,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     d_radiusX = d_v1.length();
     d_radiusY = d_v2.length();
     d_radiusZ = d_v3.length();
-    
-    
+
     // Initialize variables for rotation
     thetaz = 0.0, thetay = 0.0, thetax = 0.0;
     
@@ -209,29 +208,29 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     // Find vector with largest deviation in each direction
     Vector one = d_v1;
     double highX = d_v1.x();
-    if(abs(d_v2.x()) > highX){
-      highX = abs(d_v2.x());
+    if(fabs(d_v2.x()) > highX){
+      highX = fabs(d_v2.x());
       one = d_v2;
     }
-    if(abs(d_v3.x()) > highX){
+    if(fabs(d_v3.x()) > highX){
       one = d_v3;
     }
     Vector two = d_v1;
     double highY = d_v1.y();
-    if(abs(d_v2.y()) > highY){
-      highY = abs(d_v2.y());
+    if(fabs(d_v2.y()) > highY){
+      highY = fabs(d_v2.y());
       two = d_v2;
     }
-    if(abs(d_v3.y()) > highY){
+    if(fabs(d_v3.y()) > highY){
       two = d_v3;
     }    
     Vector three = d_v1;
     double highZ = d_v1.z();
-    if(abs(d_v2.z()) > highZ){
-      highZ = abs(d_v2.z());
+    if(fabs(d_v2.z()) > highZ){
+      highZ = fabs(d_v2.z());
       three = d_v2;
     }
-    if(abs(d_v3.z()) > highZ){
+    if(fabs(d_v3.z()) > highZ){
       three = d_v3;
     }
     
@@ -240,7 +239,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     // Find rotation about Z
     Vector projection = temporary - unitZ*(Dot(unitZ,temporary));
     if(projection[0] > 0.0)
-      thetaz = atan(projection[1]/projection[0]);
+      thetaz = atan2(projection[1],projection[0]);
     else 
       thetaz = 0.0;
     
@@ -252,7 +251,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     
     projection = temporary - unitY*(Dot(unitY,temporary));
     if(projection[0] > 0.0)
-      thetay = -atan(projection[2]/projection[0]);
+      thetay = -atan2(projection[2],projection[0]);
     else 
       thetay = 0.0;
     
@@ -263,7 +262,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     
     projection = temporary - unitX*(Dot(unitX,temporary));
     if(projection[1] > 0.0)
-      thetax = atan(projection[2]/projection[1]);
+      thetax = atan2(projection[2],projection[1]);
     else 
       thetax = 0.0;
     
