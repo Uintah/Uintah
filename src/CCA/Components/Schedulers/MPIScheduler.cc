@@ -634,7 +634,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         mpibuff.get_type(buf, count, datatype);
 #endif
         if (!buf) {
-          printf("postMPISends() - ERROR, the receive MPI buffer is null\n");
+          printf("postMPIRecvs() - ERROR, the receive MPI buffer is null\n");
           SCI_THROW( InternalError("The receive MPI buffer is null", __FILE__, __LINE__) );
         }
 
