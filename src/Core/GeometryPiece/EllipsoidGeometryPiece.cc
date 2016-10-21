@@ -238,11 +238,13 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     // Compute degree to which it is rotated
     // Find rotation about Z
     Vector projection = temporary - unitZ*(Dot(unitZ,temporary));
-    if(fabs(projection[0]) > 1.e-12){
-      thetaz = atan2(projection[1],projection[0]);
-    } else {
-      thetaz = 0.0;
-    }
+//    cout << "projection Z = " << projection << endl;
+//    if(fabs(projection[0]) > 1.e-12){
+//      thetaz = atan2(projection[1],projection[0]);
+//    } else {
+//      thetaz = 0.0;
+//    }
+      thetaz = atan2(d_v1.y(),d_v1.x());
     
     // Find rotation about Y
     // rotate second vector about z and then find rotation about y
@@ -252,7 +254,7 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     
     projection = temporary - unitY*(Dot(unitY,temporary));
     if(fabs(projection[0]) > 1.e-12){
-      thetay = -atan2(projection[2],projection[0]);
+      thetay = atan2(projection[2],projection[0]);
     } else {
       thetay = 0.0;
     }
@@ -268,6 +270,12 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     } else {
       thetax = 0.0;
     }
+//    cout << "thetax = " << thetax << endl;
+//    cout << "thetay = " << thetay << endl;
+//    cout << "thetaz = " << thetaz << endl;
+//    cout << "radX = " << d_radiusX << endl;
+//    cout << "radY = " << d_radiusY << endl;
+//    cout << "radZ = " << d_radiusZ << endl;
 
     // set flag so that each time a point is checked using inside() the 
     //   point is rotated the correct amount
