@@ -1477,7 +1477,6 @@ void Patch::getOtherLevelPatches(int levelOffset,
     IntVector hi = patches[i]->getExtraCellHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
     if (levelOffset < 0 || intersect) {
-      cout << "patch " << patches[i]->getID() << " intersects " << endl;
       selected_patches.push_back(patches[i]);
     }
   }
