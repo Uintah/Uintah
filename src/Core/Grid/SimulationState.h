@@ -282,7 +282,7 @@ public:
     TaskWaitCommTime,          // SimulationController::printSimulationStats
     TaskWaitThreadTime,        // and SimulationState::getTotalTime.
 
-    OutputFileIOTime ,         // These two enumerators are not used in
+    OutputFileIOTime,          // These two enumerators are not used in
     OutputFileIORate,	       // SimulationState::getTotalTime.
 
 
