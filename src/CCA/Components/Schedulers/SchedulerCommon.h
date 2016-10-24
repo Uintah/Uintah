@@ -92,10 +92,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual void doEmitTaskGraphDocs();
 
-    virtual void checkMemoryUse( unsigned long & memuse
-                               , unsigned long & highwater
-                               , unsigned long & maxMemUse
-                               );
+    virtual void checkMemoryUse( unsigned long & memUsed,
+				 unsigned long & highwater,
+				 unsigned long & maxMemUsed );
 
     // sbrk memory start location (for memory tracking)
     virtual void   setStartAddr( char * start ) { start_addr = start; }
@@ -369,8 +368,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::set<const VarLabel*, VarLabel::Compare> m_init_required_vars;
     std::set<const VarLabel*, VarLabel::Compare> m_computed_vars;
 
-    // Maximum memory use as sampled across a given timestep.
-    unsigned long               m_max_mem_use{0};
+    // Maximum memory used as sampled across a given timestep.
+    unsigned long               m_max_mem_used{0};
 
     // max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
     int m_max_ghost_cells{0};
