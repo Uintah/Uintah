@@ -117,13 +117,19 @@ public:
 
   bool                 isLast( double time );
     
+  void   initWallTimes      ( void );
+  void   calcTotalWallTime ( void );
+  void   calcExecWallTime  ( void );
+  void   calcInSituWallTime( void );
+
+  double getTotalWallTime    ( void );
+  double getTotalExecWallTime( void );
+  double getExecWallTime     ( void );
+  double getExpMovingAverage ( void );
+  double getInSituWallTime   ( void );
+
 protected:
 
-  double getWallTime     ( void );
-  void   calcWallTime    ( void );
-
-  double getStartTime    ( void );
-  void   calcStartTime   ( void );
   void   setStartSimTime ( double t );
 
   void preGridSetup();
@@ -132,12 +138,12 @@ protected:
 
   //! adjust delt based on timeinfo and other parameters
   //    'first' is whether this is the first time adjustDelT is called.
-  void adjustDelT( double& delt, double prev_delt, bool first, double t );
-  void initSimulationStatsVars ( void );
-  void printSimulationStats    ( int timestep, double next_delt, double prev_delt, double time );
+  void adjustDelT( double& delt, double prev_delt, double time );
+  void printSimulationStats( int timestep,
+			     double next_delt, double prev_delt, double time );
 
-  void getMemoryStats ( int timestep, bool create = false );
-  void getPAPIStats   ( );
+  void getMemoryStats( int timestep, bool create = false );
+  void getPAPIStats  ( );
   
   ProblemSpecP         d_ups;
   ProblemSpecP         d_grid_ps;         // Problem Spec for the Grid
@@ -202,15 +208,17 @@ private:
   int    overheadIndex; // Next sample for writing
 
   int    d_nSamples;
-  double d_wallTime;              // current wall time
-  double d_startTime;             // starting wall time
+
+  double d_startWallTime;      // starting wall time
+  double d_totalWallTime;      // total wall time
+  double d_totalExecWallTime;  // total execution wall time for all time steps
+  double d_execWallTime;       // execution wall time for last time step
+  double d_inSituWallTime;     // in-situ wall time
+
+  // For calculating an exponential moving average of the execution wall time
+  double d_expMovingAverage;
+
   double d_startSimTime;          // starting sim time
-  double d_prevWallTime;
-  //double d_sumOfWallTimes;
-  //double d_sumOfWallTimeSquares;
-     
-  // this is for calculating an exponential moving average
-  double d_movingAverage;
 
   // void problemSetup( const ProblemSpecP&, GridP& ) = 0;
   // bool needRecompile( double t, double delt, const LevelP& level,
