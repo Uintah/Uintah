@@ -47,31 +47,92 @@ namespace Uintah {
 
 //---------------------------------------------------------------------
 // SetTimeVars
-//    Set the output checkpoints so they can be displayed in the Custon UI
+//    Set the times values so they can be displayed in the Custon UI
 //---------------------------------------------------------------------
-void visit_SetTimeVars( visit_simulation_data *sim )
+void visit_SetTimeValues( visit_simulation_data *sim )
 {
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  VisItUI_setValueI("TimeStep",     sim->cycle, 0);
-  VisItUI_setValueI("MaxTimeStep",  simTime->maxTimestep, 1);
+  VisItUI_setValueI("TimeStep",      sim->cycle, 0);
+  VisItUI_setValueI("MaxTimeStep",   simTime->maxTimestep, 1);
 
-  VisItUI_setValueD("Time",         sim->time, 0);
-  VisItUI_setValueD("MaxTime",      simTime->maxTime, 1);
+  VisItUI_setValueD("Time",          sim->time, 0);
+  VisItUI_setValueD("MaxTime",       simTime->maxTime, 1);
 
-  VisItUI_setValueD("DeltaT",       sim->delt, 0);
-  VisItUI_setValueD("DeltaTNext",   sim->delt_next, 1);
-  VisItUI_setValueD("DeltaTFactor", simTime->delt_factor, 1);
-  VisItUI_setValueD("DeltaTMin",    simTime->delt_min, 1);
-  VisItUI_setValueD("DeltaTMax",    simTime->delt_max, 1);
-  VisItUI_setValueD("ElapsedTime",  sim->elapsedt, 0);
-  VisItUI_setValueD("MaxWallTime",  simTime->max_wall_time, 1);
+  visit_SetStripChartValue( sim, "TimeStep", (double) sim->cycle );
+}
+
+//---------------------------------------------------------------------
+// SetWallTimes
+//    Set the wall times so they can be displayed in the Custon UI
+//---------------------------------------------------------------------
+void visit_SetDeltaTValues( visit_simulation_data *sim )
+{
+  SimulationTime* simTime = sim->simController->getSimulationTime();
+
+  VisItUI_setTableValueS("DeltaTVariableTable", -1, -1, "CLEAR_TABLE", 0);
+
+  VisItUI_setTableValueS("DeltaTVariableTable", 0, 0, "DeltaT", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", 0, 1, sim->delt, 0);
+
+  VisItUI_setTableValueS("DeltaTVariableTable", 1, 0, "DeltaTNext", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", 1, 1, sim->delt_next, 1);
+
+  VisItUI_setTableValueS("DeltaTVariableTable", 2, 0, "DeltaTFactor", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", 2, 1, simTime->delt_factor, 1);
+
+  VisItUI_setTableValueS("DeltaTVariableTable", 3, 0, "DeltaTMin", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", 3, 1, simTime->delt_min, 1);
+
+  VisItUI_setTableValueS("DeltaTVariableTable", 4, 0, "DeltaTMax", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", 4, 1, simTime->delt_max, 1);
 
   visit_SetStripChartValue( sim, "DeltaT", sim->delt );
   visit_SetStripChartValue( sim, "DeltaTNext", sim->delt_next );
-  visit_SetStripChartValue( sim, "TimeStep", (double) sim->cycle );
 }
-  
+
+//---------------------------------------------------------------------
+// SetWallTimes
+//    Set the wall times so they can be displayed in the Custon UI
+//---------------------------------------------------------------------
+void visit_SetWallTimes( visit_simulation_data *sim )
+{
+  SimulationTime* simTime = sim->simController->getSimulationTime();
+
+  VisItUI_setTableValueS("WallTimesVariableTable", -1, -1, "CLEAR_TABLE", 0);
+
+  VisItUI_setTableValueS("WallTimesVariableTable", 0, 0, "InSitu",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", 0, 1,
+			 sim->inSituWallTime, 0);
+
+  VisItUI_setTableValueS("WallTimesVariableTable", 1, 0, "ExpMovingAve",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", 1, 1,
+			 sim->expMovingAverage, 0);
+
+  VisItUI_setTableValueS("WallTimesVariableTable", 2, 0, "Execution",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", 2, 1,
+			 sim->execWallTime, 0);
+
+  VisItUI_setTableValueS("WallTimesVariableTable", 3, 0, "TotalExecuction",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", 3, 1,
+			 sim->totalExecWallTime, 0);
+
+  VisItUI_setTableValueS("WallTimesVariableTable", 4, 0, "Total",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", 4, 1,
+			 sim->totalWallTime, 0);
+
+  VisItUI_setTableValueS("WallTimesVariableTable", 5, 0, "Maximum",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", 5, 1,
+			 simTime->max_wall_time, 1);
+
+  visit_SetStripChartValue( sim, "InSituWallTime",    sim->inSituWallTime );
+  visit_SetStripChartValue( sim, "ExpMovingAve",      sim->expMovingAverage );
+  visit_SetStripChartValue( sim, "ExecWallTime",      sim->execWallTime );
+  visit_SetStripChartValue( sim, "TotalExecWallTime", sim->totalExecWallTime );
+  visit_SetStripChartValue( sim, "TotalWallTime",     sim->totalWallTime );
+}
+
+
 //---------------------------------------------------------------------
 // SetOutputIntervals
 //    Set the output checkpoints so they can be displayed in the Custon UI

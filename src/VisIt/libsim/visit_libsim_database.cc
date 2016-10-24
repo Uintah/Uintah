@@ -65,7 +65,13 @@ void visit_SimGetCustomUIData(void *cbdata)
   visit_SetStripChartNames( sim );
 
   // Set the custom UI time values.
-  visit_SetTimeVars( sim );
+  visit_SetTimeValues( sim );
+    
+  // Set the custom UI delta t values.
+  visit_SetDeltaTValues( sim );
+    
+  // Set the custom UI wall time values.
+  visit_SetWallTimes( sim );
     
   // Set the custom UI optional UPS variable table
   visit_SetUPSVars( sim );
