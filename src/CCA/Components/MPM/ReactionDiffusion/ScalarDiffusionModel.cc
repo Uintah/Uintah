@@ -22,6 +22,9 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Components/MPMFVM/ConductivityEquation.h>
+#include <CCA/Components/MPMFVM/BinaryEquation.h>
+#include <CCA/Components/MPMFVM/FixedEquation.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>
@@ -34,13 +37,14 @@
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
-using namespace std;
+
 using namespace Uintah;
 
 static DebugStream cout_doing("AMRMPM", false);
 
 
-ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type)
+ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS,
+                                           MPMFlags* Mflag, std::string diff_type)
 {
   d_Mflag = Mflag;
   d_sharedState = sS;
@@ -64,6 +68,20 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
   d_one_matl = scinew MaterialSubset();
   d_one_matl->add(0);
   d_one_matl->addReference();
+
+  d_conductivity_equation = 0;
+  ProblemSpecP cond_eq_ps = ps->findBlock("conductivity_equation");
+  if(cond_eq_ps){
+    std::string equation_type;
+    cond_eq_ps->getAttribute("type", equation_type);
+    if(equation_type == "fixed"){
+      d_conductivity_equation = scinew FixedEquation(cond_eq_ps);
+    }else if(equation_type == "binary"){
+      d_conductivity_equation = scinew BinaryEquation(cond_eq_ps);
+    }else{
+      d_conductivity_equation = scinew ConductivityEquation(cond_eq_ps);
+    }
+  }
 }
 
 ScalarDiffusionModel::~ScalarDiffusionModel() {
@@ -71,9 +89,12 @@ ScalarDiffusionModel::~ScalarDiffusionModel() {
 
   if (d_one_matl->removeReference())
     delete d_one_matl;
+
+  if(d_conductivity_equation)
+    delete d_conductivity_equation;
 }
 
-string ScalarDiffusionModel::getDiffusionType(){
+std::string ScalarDiffusionModel::getDiffusionType(){
   return diffusion_type;
 }
 
@@ -102,7 +123,7 @@ void ScalarDiffusionModel::initializeTimeStep(const Patch* patch,
 {
   Vector dx = patch->dCell();
   double timestep = 1.0e99;
-  timestep = min(timestep, computeStableTimeStep(diffusivity, dx));
+  timestep = std::min(timestep, computeStableTimeStep(diffusivity, dx));
 
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
@@ -152,8 +173,8 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
   int dwi = matl->getDWIndex();
 
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
-  vector<IntVector> ni(interpolator->size());
-  vector<Vector> d_S(interpolator->size());
+  std::vector<IntVector> ni(interpolator->size());
+  std::vector<Vector> d_S(interpolator->size());
 
   Vector dx = patch->dCell();
   double oodx[3];
@@ -328,9 +349,9 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
                                       iter != pset_coarse->end();  iter++){
           particleIndex idx = *iter;
 
-          vector<IntVector> ni;
-          vector<double> S;
-          vector<Vector> div;
+          std::vector<IntVector> ni;
+          std::vector<double> S;
+          std::vector<Vector> div;
           interpolator->findCellAndWeightsAndShapeDerivatives_CFI(
                                        px_coarse[idx], ni, S, div, zoi_fine);
 
@@ -367,12 +388,12 @@ void ScalarDiffusionModel::splitSDMSpecificParticleData(const Patch* patch, cons
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
-	cout << "Fill this in for the model that you are using" << endl;
+	std::cout << "Fill this in for the model that you are using" << std::endl;
 }
 
 void ScalarDiffusionModel::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
 {
-   cout << "Fill this in for the model that you are using." << endl;
+   std::cout << "Fill this in for the model that you are using." << std::endl;
 }
 
 double ScalarDiffusionModel::computeStableTimeStep(double Dif, Vector dx)
@@ -390,4 +411,8 @@ double ScalarDiffusionModel::computeDiffusivityTerm(double concentration, double
   // component. JH, AH, CG
 
   return diffusivity;
+}
+
+ConductivityEquation* ScalarDiffusionModel::getConductivityEquation(){
+  return d_conductivity_equation;
 }

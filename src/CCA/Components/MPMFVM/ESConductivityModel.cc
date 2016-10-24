@@ -23,15 +23,24 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Ghost.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Math/MiscMath.h>
+
+#include <vector>
+#include <iostream>
 
 using namespace Uintah;
 
@@ -46,6 +55,7 @@ ESConductivityModel::ESConductivityModel(SimulationStateP& shared_state,
   d_mpm_lb = mpm_lb;
   d_fvm_lb = fvm_lb;
 
+  d_gac = Ghost::AroundCells;
   d_TINY_RHO  = 1.e-12;
 }
 
@@ -69,8 +79,10 @@ void ESConductivityModel::scheduleComputeConductivity(SchedulerP& sched,
   Task* task = scinew Task("ESConductivityModel::computeConductivity", this,
                            &ESConductivityModel::computeConductivity);
 
-  task->requires(Task::NewDW, d_mpm_lb->gConcentrationLabel, Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_mpm_lb->gMassLabel,          Ghost::AroundCells, 1);
+  //task->requires(Task::NewDW, d_mpm_lb->gConcentrationLabel, Ghost::AroundCells, 1);
+  //task->requires(Task::NewDW, d_mpm_lb->gMassLabel,          Ghost::AroundCells, 1);
+  task->requires(Task::OldDW, d_mpm_lb->pConcentrationLabel, d_gac, 1);
+  task->requires(Task::OldDW, d_mpm_lb->pXLabel,             d_gac, 1);
 
   task->computes(d_fvm_lb->fcxConductivity, one_matl, Task::OutOfDomain);
   task->computes(d_fvm_lb->fcyConductivity, one_matl, Task::OutOfDomain);
@@ -79,6 +91,163 @@ void ESConductivityModel::scheduleComputeConductivity(SchedulerP& sched,
   sched->addTask(task, level->eachPatch(), all_matls);
 }
 
+void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
+                                              const PatchSubset* patches,
+                                              const MaterialSubset*,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw)
+{
+  std::vector<IntVector> ni(6);
+  std::vector<double> S(6);
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    Vector cell_dim = patch->getLevel()->dCell();
+    Point anchor = patch->getLevel()->getAnchor();
+    //Point norm_pos = Point((pos - anchor)/cell_dim);
+    double cell_vol = cell_dim.x() * cell_dim.y() * cell_dim.z();
+
+    IntVector low_idx     = patch->getCellLowIndex();
+    IntVector high_idx    = patch->getExtraCellHighIndex();
+
+    SFCXVariable<double> fcx_conductivity;
+    SFCYVariable<double> fcy_conductivity;
+    SFCZVariable<double> fcz_conductivity;
+
+    SFCXVariable<double> fcx_mass;
+    SFCYVariable<double> fcy_mass;
+    SFCZVariable<double> fcz_mass;
+
+    new_dw->allocateAndPut(fcx_conductivity, d_fvm_lb->fcxConductivity, 0, patch, d_gac, 1);
+    new_dw->allocateAndPut(fcy_conductivity, d_fvm_lb->fcyConductivity, 0, patch, d_gac, 1);
+    new_dw->allocateAndPut(fcz_conductivity, d_fvm_lb->fczConductivity, 0, patch, d_gac, 1);
+
+    new_dw->allocateTemporary(fcx_mass, patch, d_gac, 1);
+    new_dw->allocateTemporary(fcy_mass, patch, d_gac, 1);
+    new_dw->allocateTemporary(fcz_mass, patch, d_gac, 1);
+
+    fcx_conductivity.initialize(0.0);
+    fcy_conductivity.initialize(0.0);
+    fcz_conductivity.initialize(0.0);
+
+    fcx_mass.initialize(d_TINY_RHO * cell_vol);
+    fcy_mass.initialize(d_TINY_RHO * cell_vol);
+    fcz_mass.initialize(d_TINY_RHO * cell_vol);
+
+    int numMatls = d_shared_state->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      d_conductivity_equation = mpm_matl->getScalarDiffusionModel()->getConductivityEquation();
+      constParticleVariable<Point>  px;
+      constParticleVariable<double> pconcentration;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, d_gac,
+                                                       1, d_mpm_lb->pXLabel);
+
+      old_dw->get(px,             d_mpm_lb->pXLabel,                  pset);
+      old_dw->get(pconcentration, d_mpm_lb->pConcentrationLabel,      pset);
+
+      for (ParticleSubset::iterator iter  = pset->begin(); iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        Point norm_pos = Point((px[idx] - anchor)/cell_dim);
+
+        IntVector cell_idx(Floor(norm_pos.x()), Floor(norm_pos.y()),
+                                     Floor(norm_pos.z()));
+
+        Point px(norm_pos.x() - (double)cell_idx.x(),
+                 norm_pos.y() - (double)cell_idx.y(),
+                 norm_pos.z() - (double)cell_idx.z());
+
+        double conductivity = d_conductivity_equation->computeConductivity(pconcentration[idx]);
+
+        ni[0] = cell_idx;                       // face center x-
+        ni[1] = cell_idx + IntVector(1, 0, 0);  // face center x+
+        ni[2] = cell_idx;                       // face center y-
+        ni[3] = cell_idx + IntVector(0, 1, 0);  // face center y+
+        ni[4] = cell_idx;                       // face center z-
+        ni[5] = cell_idx + IntVector(0, 0, 1);  // face center z+
+
+        S[0] = distanceFunc(px, Point(0.0, 0.5, 0.5));
+        S[1] = distanceFunc(px, Point(1.0, 0.5, 0.5));
+        S[2] = distanceFunc(px, Point(0.5, 0.0, 0.5));
+        S[3] = distanceFunc(px, Point(0.5, 1.0, 0.5));
+        S[4] = distanceFunc(px, Point(0.5, 0.5, 0.0));
+        S[5] = distanceFunc(px, Point(0.5, 0.5, 1.0));
+
+        if(cell_idx.x() < low_idx.x()){
+          if(cell_idx.y() >= low_idx.y() && cell_idx.y() < high_idx.y()){
+            if(cell_idx.z() >= low_idx.z() && cell_idx.z() < high_idx.z()){
+              fcx_conductivity[ni[1]] += conductivity * S[1];
+              fcx_mass[ni[1]] += S[1];
+            }
+          }
+        }else if(cell_idx.x() >= high_idx.x()){
+          if(cell_idx.y() >= low_idx.y() && cell_idx.y() < high_idx.y()){
+            if(cell_idx.z() >= low_idx.z() && cell_idx.z() < high_idx.z()){
+              fcx_conductivity[ni[0]] += conductivity * S[0];
+              fcx_mass[ni[0]] += S[0];
+            }
+          }
+        }else{
+          if(cell_idx.y() < low_idx.y()){
+            if(cell_idx.z() >= low_idx.z() && cell_idx.z() < high_idx.z()){
+              fcy_conductivity[ni[3]] += conductivity * S[3];
+              fcy_mass[ni[3]] += S[3];
+            }
+          }else if(cell_idx.y() >= high_idx.y()){
+            if(cell_idx.z() >= low_idx.z() && cell_idx.z() < high_idx.z()){
+              fcy_conductivity[ni[2]] += conductivity * S[2];
+              fcy_mass[ni[2]] += S[2];
+            }
+          }else{
+            if(cell_idx.z() < low_idx.z()){
+              fcz_conductivity[ni[5]] += conductivity * S[5];
+              fcz_mass[ni[5]] += S[5];
+            }else if(cell_idx.z() >= high_idx.z()){
+              fcz_conductivity[ni[4]] += conductivity * S[4];
+              fcz_mass[ni[4]] += S[4];
+            }else{
+              fcx_conductivity[ni[0]] += conductivity * S[0];
+              fcx_mass[ni[0]] += S[0];
+              fcx_conductivity[ni[1]] += conductivity * S[1];
+              fcx_mass[ni[1]] += S[1];
+              fcy_conductivity[ni[2]] += conductivity * S[2];
+              fcy_mass[ni[2]] += S[2];
+              fcy_conductivity[ni[3]] += conductivity * S[3];
+              fcy_mass[ni[3]] += S[3];
+              fcz_conductivity[ni[4]] += conductivity * S[4];
+              fcz_mass[ni[4]] += S[4];
+              fcz_conductivity[ni[5]] += conductivity * S[5];
+              fcz_mass[ni[5]] += S[5];
+            }
+          }
+        }
+      } // End Particle Loop
+    } // End Material Loop
+
+    for(CellIterator iter=CellIterator(low_idx, high_idx); !iter.done(); iter++){
+      IntVector c = *iter;
+      fcx_conductivity[c] = fcx_conductivity[c] / fcx_mass[c];
+      fcy_conductivity[c] = fcy_conductivity[c] / fcy_mass[c];
+      fcz_conductivity[c] = fcz_conductivity[c] / fcz_mass[c];
+    } // End Cell Loop
+  } // End Patch Loop
+}
+
+double ESConductivityModel::distanceFunc(Point p1, Point p2)
+{
+  double dist = (p1.x() - p2.x()) * (p1.x() - p2.x());
+  dist += (p1.y() - p2.y()) * (p1.y() - p2.y());
+  dist += (p1.z() - p2.z()) * (p1.z() - p2.z());
+
+  return dist;
+}
+
+/*
 void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
                                               const PatchSubset* patches,
                                               const MaterialSubset*,
@@ -180,3 +349,4 @@ void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
     }
   } // End patch loop
 }
+*/

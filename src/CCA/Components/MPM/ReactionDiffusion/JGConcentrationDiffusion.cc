@@ -32,7 +32,8 @@ using namespace std;
 using namespace Uintah;
 
 
-JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type ):
+JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS,
+                                                   MPMFlags* Mflag, string diff_type ):
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 }
 

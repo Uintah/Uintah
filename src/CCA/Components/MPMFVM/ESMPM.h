@@ -74,24 +74,6 @@ namespace Uintah {
       virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched);
 
 
-    protected:
-
-      virtual void scheduleInterpolateParticlesToCellFC(SchedulerP& sched,
-                                                 const PatchSet* patches,
-                                                 const MaterialSet* mpm_matls,
-                                                 const MaterialSet* all_matls);
-
-      virtual void interpolateParticlesToCellFC(const ProcessorGroup* pg,
-                                                const PatchSubset* patches,
-                                                const MaterialSubset* matls,
-                                                DataWarehouse* old_dw,
-                                                DataWarehouse* new_dw);
-
-      virtual void fcLinearInterpolator(const Patch* patch, const Point& pos,
-                                        std::vector<IntVector>& ni,
-                                        std::vector<double>& S);
-
-
     private:
       double d_TINY_RHO;
 

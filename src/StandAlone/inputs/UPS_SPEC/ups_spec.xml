@@ -901,8 +901,9 @@
     <stairstep                         spec="REQUIRED BOOLEAN" />              
   </Multimaterial>
 
-  <include href="mpm_spec.xml" section="Uintah_specification/MPM" />
-  <include href="fvm_spec.xml" section="Uintah_specification/FVM" />
+  <include href="mpm_spec.xml" section="Uintah_specification/MPM"   />
+  <include href="fvm_spec.xml" section="Uintah_specification/FVM"   />
+  <include href="fvm_spec.xml" section="Uintah_specification/ESMPM" />
 
   <MaterialProperties                    spec="MULTIPLE NO_DATA"
                                            attribute1="add OPTIONAL BOOLEAN" >

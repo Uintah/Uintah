@@ -27,7 +27,10 @@
 
 #include <CCA/Components/FVM/FVMLabel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPMFVM/ConductivityEquation.h>
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Labels/MPMLabel.h>
@@ -70,12 +73,16 @@ namespace Uintah{
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+      virtual double distanceFunc(Point p1, Point p2);
+
     private:
+      Ghost::GhostType d_gac;
       double d_TINY_RHO;
       SimulationStateP d_shared_state;
       MPMLabel* d_mpm_lb;
       FVMLabel* d_fvm_lb;
       MPMFlags* d_mpm_flags;
+      ConductivityEquation* d_conductivity_equation;
   };
 }
 #endif // End of UINTAH_CCA_COMPONENTS_MPMFVM_ESCONDUCTIVITYMODEL_H

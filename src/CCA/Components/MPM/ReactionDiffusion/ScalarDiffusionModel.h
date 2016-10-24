@@ -42,7 +42,7 @@ namespace Uintah {
   class MPMMaterial;
   class DataWarehouse;
   class ProcessorGroup;
-
+  class ConductivityEquation;
   
   class ScalarDiffusionModel {
   public:
@@ -50,6 +50,7 @@ namespace Uintah {
     ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS,
                          MPMFlags* Mflag,
                          std::string diff_type);
+
     virtual ~ScalarDiffusionModel();
 
     virtual std::string getDiffusionType();
@@ -108,10 +109,13 @@ namespace Uintah {
     virtual double computeStableTimeStep(double Dif, Vector dx);
     virtual double computeDiffusivityTerm(double concentration, double pressure);
 
+    virtual ConductivityEquation* getConductivityEquation();
+
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
+    ConductivityEquation* d_conductivity_equation;
 
     int NGP, NGN;
     std::string diffusion_type;
