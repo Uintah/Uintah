@@ -713,20 +713,22 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
   }
 
-
   // update SimulationState
-  stats[SimulationState::TaskExecTime]       += TripTimer< TaskExecTag >::max().seconds()
-                                                - stats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
-                                                - stats[SimulationState::OutputFileIORate];
-  stats[SimulationState::TaskLocalCommTime]  += 1.0e-9 * (MPI::Impl::RecvTimer::total() + MPI::Impl::SendTimer::total());
-  stats[SimulationState::TaskWaitCommTime]   += 1.0e-9 * (MPI::Impl::TestTimer::total() + MPI::Impl::WaitTimer::total());
-  stats[SimulationState::TaskGlobalCommTime] += 1.0e-9 * ( MPI::Impl::AlltoallTimer::total()
-                                                         + MPI::Impl::BcastTimer::total()
-                                                         + MPI::Impl::GatherTimer::total()
-                                                         + MPI::Impl::ReduceTimer::total()
-                                                         + MPI::Impl::ScanTimer::total()
-                                                         + MPI::Impl::ScatterTimer::total()
-                                                         );
+  stats[SimulationState::TaskExecTime]       +=
+    TripTimer< TaskExecTag >::max().seconds() -
+    // don't count output time
+    stats[SimulationState::OutputFileIOTime];
+
+  stats[SimulationState::TaskLocalCommTime]  += 1.0e-9 *
+    (MPI::Impl::RecvTimer::total() + MPI::Impl::SendTimer::total());
+
+  stats[SimulationState::TaskWaitCommTime]   += 1.0e-9 *
+    (MPI::Impl::TestTimer::total() + MPI::Impl::WaitTimer::total());
+
+  stats[SimulationState::TaskGlobalCommTime] += 1.0e-9 *
+    (MPI::Impl::AlltoallTimer::total() + MPI::Impl::BcastTimer::total() +
+     MPI::Impl::GatherTimer::total()   + MPI::Impl::ReduceTimer::total() +
+     MPI::Impl::ScanTimer::total()     + MPI::Impl::ScatterTimer::total());
 
   // clear the registered report values
   g_report_values.clear();
