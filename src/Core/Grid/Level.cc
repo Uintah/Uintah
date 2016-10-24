@@ -1243,6 +1243,55 @@ Level::mapCellToFiner( const IntVector & idx ) const
   return fineCell + offset;
 }
 
+//______________________________________________________________________
+//Provides the (x-,y-,z-) corner of a fine cell given a coarser coordinate
+//If any of the coordinates are negative, assume the fine cell coordiantes
+//went too far into the negative and adjust forward by 1
+//This adjusting approach means that for L-shaped domains the results are 
+//not always consistent with what is expected.
+//(Note: Does this adjustment mean this only works in a 2:1 refinement ratio
+//and only on cubic domains? -- Brad P)
+IntVector
+Level::mapCellToFinest( const IntVector & idx ) const
+{
+
+  IntVector r_ratio  = IntVector(1,1,1);
+  for (int i=m_index; i< m_grid->numLevels()-1; i++){
+    r_ratio  = r_ratio*m_grid->getLevel(i+1)->getRefinementRatio();
+  }
+
+  IntVector fineCell = idx * r_ratio;
+  IntVector offset(0,0,0);
+  if (idx.x()< 0 && r_ratio.x() > 1){
+    offset.x(1);
+  }
+
+  if (idx.y()< 0 && r_ratio.y() > 1){ // If the coarse cell index is negative
+    offset.y(1);                      // you must add an offset to get the right
+  }                                   // fine cell. -Todd
+
+  if (idx.z()< 0 && r_ratio.z() > 1){
+    offset.z(1);
+  }
+
+  return fineCell + offset;
+}
+
+//______________________________________________________________________
+//Provides the x-,y-,z- corner of a fine cell given a coarser coordinate.
+//This does not attempt to adjust the cell in the + direction if it goes 
+//negative. It is left up to the caller of this method to determine if 
+//those coordinates are too far past any level boundary.    
+IntVector
+Level::mapCellToFinestNoAdjustments( const IntVector & idx ) const
+{
+
+      IntVector r_ratio  = IntVector(1,1,1);
+      for (int i=m_index; i< m_grid->numLevels()-1; i++){
+       r_ratio  = r_ratio*m_grid->getLevel(i+1)->getRefinementRatio();
+      }
+      return idx * r_ratio;
+}
 
 //______________________________________________________________________
 //
