@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPMFVM/ConductivityEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityEquation.h>
 
 #include <iostream>
 

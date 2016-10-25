@@ -22,9 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPMFVM/ConductivityEquation.h>
-#include <CCA/Components/MPMFVM/BinaryEquation.h>
-#include <CCA/Components/MPMFVM/FixedEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/BinaryEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/FixedEquation.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>

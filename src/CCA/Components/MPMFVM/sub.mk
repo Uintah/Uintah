@@ -31,10 +31,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/MPMFVM
 
-SRCS   += $(SRCDIR)/ConductivityEquation.cc \
-          $(SRCDIR)/FixedEquation.cc \
-          $(SRCDIR)/BinaryEquation.cc \
-          $(SRCDIR)/ESMPM.cc \
+SRCS   += $(SRCDIR)/ESMPM.cc \
           $(SRCDIR)/ESConductivityModel.cc \
           $(SRCDIR)/ESConductivityModelFactory.cc
 

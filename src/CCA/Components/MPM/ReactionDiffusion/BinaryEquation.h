@@ -22,35 +22,42 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_CCA_COMPONENTS_MPMFVM_CONDUCTIVITYEQUATION_H
-#define UINTAH_CCA_COMPONENTS_MPMFVM_CONDUCTIVITYEQUATION_H
+#ifndef UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_BINARYEQUATION_H
+#define UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_BINARYEQUATION_H
 
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityEquation.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah{
 /*************************************************
  *
  * CLASS
- *   ConductivityEquation
+ *   BinaryEquation
  *
  *   This class computes the conductivity of a
  *   particle based on concentration levels.
- *
- *   The is a base class that can be extended to
- *   implement new conductivity equations.
+ *   Conductivity values are either a min conductivity
+ *   value or a max conductivity value based on
+ *   the level of concentration and a user specified
+ *   concentration threshold.
  *
  *************************************************/
 
 
-  class ConductivityEquation{
+  class BinaryEquation : public ConductivityEquation {
     public:
-      ConductivityEquation(ProblemSpecP& ps);
+      BinaryEquation(ProblemSpecP& ps);
 
-      virtual ~ConductivityEquation();
+      virtual ~BinaryEquation();
 
       virtual double computeConductivity(double conductivity);
 
+    private:
+      double d_min_concentration;
+      double d_min_conductivity;
+      double d_max_conductivity;
+      double d_slope;
+
   };
 }
-#endif // End of UINTAH_CCA_COMPONENTS_MPMFVM_ESCONDUCTIVITYMODEL_H
+#endif // End of UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_BINARYEQUATION_H

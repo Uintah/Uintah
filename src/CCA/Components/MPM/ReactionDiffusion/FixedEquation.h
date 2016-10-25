@@ -25,7 +25,7 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
 #define UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
 
-#include <CCA/Components/MPMFVM/ConductivityEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityEquation.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah{

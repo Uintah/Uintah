@@ -22,24 +22,35 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPMFVM/FixedEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/BinaryEquation.h>
 
 #include <iostream>
 
 using namespace Uintah;
 
-FixedEquation::FixedEquation(ProblemSpecP& ps) :
+BinaryEquation::BinaryEquation(ProblemSpecP& ps) :
   ConductivityEquation(ps)
 {
-  ps->require("conductivity", d_conductivity);
+  ps->require("min_conc", d_min_concentration);
+  ps->require("min_conductivity", d_min_conductivity);
+  ps->require("max_conductivity", d_max_conductivity);
+
+  d_slope = d_max_conductivity - d_min_conductivity;
 }
 
-FixedEquation::~FixedEquation()
+BinaryEquation::~BinaryEquation()
 {
 
 }
 
-double FixedEquation::computeConductivity(double concentration)
+double BinaryEquation::computeConductivity(double concentration)
 {
-  return d_conductivity;
+  /*
+  if(concentration > d_min_concentration)
+    return d_max_conductivity;
+  else
+    return d_min_conductivity;
+  */
+
+  return d_min_conductivity + d_slope * concentration;
 }

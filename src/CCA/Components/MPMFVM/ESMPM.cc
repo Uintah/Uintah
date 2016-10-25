@@ -198,7 +198,6 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     const PatchSet* patches = level->eachPatch();
     d_amrmpm->scheduleNormalizeNodalVelTempConc(sched, patches, mpm_matls);
     d_amrmpm->scheduleExMomInterpolated(        sched, patches, mpm_matls);
-    //scheduleInterpolateParticlesToCellFC(sched, patches, mpm_matls, all_matls);
     d_conductivity_model->scheduleComputeConductivity(sched, patches, all_matls, d_one_matl);
   }
 

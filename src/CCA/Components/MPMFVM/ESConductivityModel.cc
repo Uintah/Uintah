@@ -57,6 +57,8 @@ ESConductivityModel::ESConductivityModel(SimulationStateP& shared_state,
 
   d_gac = Ghost::AroundCells;
   d_TINY_RHO  = 1.e-12;
+
+  d_conductivity_equation = 0;
 }
 
 ESConductivityModel::~ESConductivityModel()

@@ -40,4 +40,8 @@ SRCS     += \
 	$(SRCDIR)/RFConcDiffusion1MPM.cc         \
 	$(SRCDIR)/NonLinearDiff1.cc              \
 	$(SRCDIR)/NonLinearDiff2.cc              \
-	$(SRCDIR)/ConstantRate.cc
+	$(SRCDIR)/ConstantRate.cc                \
+	$(SRCDIR)/ConductivityEquation.cc        \
+	$(SRCDIR)/BinaryEquation.cc              \
+	$(SRCDIR)/FixedEquation.cc
+	
