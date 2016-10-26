@@ -64,7 +64,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
       
       IntVector l(0,0,0),h(0,0,0),off(0,0,0);
       
-      if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi" || interp_type=="cpti"){
+      if(interp_type=="gimp" || interp_type=="cpdi" ||
+         interp_type=="cpti" || interp_type=="3rdorderBS" ||
+         interp_type=="fast_cpdi"){
         patch->getFaceExtraNodes(face,0,l,h);
       }
       
@@ -90,8 +92,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
                 IntVector nd = *nbound_ptr;
                 variable[nd] = bcv;
               }
-              if(interp_type=="gimp" || interp_type=="3rdorderBS" 
-                                     || interp_type=="cpdi"  || interp_type=="cpti"){
+              if(interp_type=="gimp" || interp_type=="3rdorderBS" ||
+                 interp_type=="cpdi" || interp_type=="cpti" ||
+                 interp_type=="fast_cpdi"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = bcv;
@@ -130,8 +133,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
                }
               } // linear
       
-              if(interp_type=="gimp" || interp_type=="cpdi" || interp_type=="cpti" 
-                                     || interp_type=="3rdorderBS"){
+              if(interp_type=="gimp" || interp_type=="cpdi" ||
+                 interp_type=="cpti" || interp_type=="3rdorderBS" ||
+                 interp_type=="fast_cpdi"){
                 IntVector off = IntVector(1,0,0);
                 IntVector L(0,0,0),H(0,0,0);
                 IntVector inner;
@@ -178,8 +182,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
                }
               } // linear
       
-              if(interp_type=="gimp" || interp_type=="cpdi" || interp_type=="cpti" 
-                                     || interp_type=="3rdorderBS"){
+              if(interp_type=="gimp" || interp_type=="cpdi" ||
+                 interp_type=="cpti" || interp_type=="3rdorderBS" ||
+                 interp_type=="fast_cpdi"){
                 IntVector off = IntVector(0,1,0);
                 IntVector L(0,0,0),H(0,0,0);
                 IntVector inner;
@@ -226,8 +231,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
                }
               } // linear
               
-              if(interp_type=="gimp" || interp_type=="cpdi" || interp_type=="cpti" 
-                                     || interp_type=="3rdorderBS"){
+              if(interp_type=="gimp" || interp_type=="cpdi" ||
+                 interp_type=="cpti" || interp_type=="3rdorderBS" ||
+                 interp_type=="fast_cpdi"){
                 IntVector off = IntVector(0,0,1);
                 IntVector L(0,0,0),H(0,0,0);
                 IntVector inner;
@@ -306,7 +312,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       IntVector l(0,0,0),h(0,0,0);
       
-      if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi" || interp_type=="cpti"){
+      if(interp_type=="gimp" || interp_type=="cpdi" ||
+         interp_type=="cpti" || interp_type=="3rdorderBS" ||
+         interp_type=="fast_cpdi"){
         patch->getFaceExtraNodes(face,0,l,h);
       }
       
@@ -338,7 +346,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
                 variable[nd] = bcv;
               }
               
-              if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"  || interp_type=="cpti"){
+              if(interp_type=="gimp" || interp_type=="cpdi" ||
+                 interp_type=="cpti" || interp_type=="3rdorderBS" ||
+                 interp_type=="fast_cpdi"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = bcv;
@@ -380,9 +390,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
               double gradv = bc->getValue();
 
               for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-                IntVector nd = *nbound_ptr;
-                variable[nd] = variable[nd-off] - gradv*dx;
-              }
+		IntVector nd = *nbound_ptr;
+		variable[nd] = variable[nd-off] - gradv*dx;
+	      }
 
               for(NodeIterator it(l,h); !it.done(); it++) {
                 IntVector nd = *it;
