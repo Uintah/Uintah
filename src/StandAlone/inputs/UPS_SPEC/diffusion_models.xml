@@ -23,6 +23,12 @@
         <flux_direction    spec="REQUIRED STRING 'in, out, transition'" />
       </time_point>
     </diff_curve>
-  
+    <conductivity_equation   spec="OPTIONAL NO_DATA"
+                             attribute1="type REQUIRED STRING 'fixed, binary'">
+      <min_conc              spec="OPTIONAL DOUBLE" />
+      <conductivity          spec="OPTIONAL DOUBLE" />
+      <min_conductivity      spec="OPTIONAL DOUBLE" />
+      <max_conductivity      spec="OPTIONAL DOUBLE" />
+    </conductivity_equation>
   </diffusion_model>
 </Uintah_Include>

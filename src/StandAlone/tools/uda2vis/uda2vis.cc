@@ -713,41 +713,44 @@ TimeStepInfo* getTimeStepInfo(SchedulerP schedulerP,
       Scheduler::VarLabelMaterialMap::iterator matMapIter =
         pLabelMatlMap->find( varInfo.name );
     
-      std::list< int > &materials = matMapIter->second;
-      std::list< int >::iterator matIter;
-
-      for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
+      if( matMapIter != pLabelMatlMap->end() )
       {
-        const int material = *matIter;
-
-        // Check to make sure the variable exists on at least one patch
-        // for at least one level.
-        bool exists = false;
-
-        for (int l=0; l<numLevels; ++l)
-        {
-          LevelP level = gridP->getLevel(l);
-          int numPatches = level->numPatches();
-          
-          for (int p=0; p<numPatches; ++p)
-          {
-            const Patch* patch = level->getPatch(p);
-            
-            if( dw->exists( varLabel, material, patch ) )
-            {
-              // The variable exists on this level and patch.
-              varInfo.materials.push_back( material );
-              exists = true;
-              break;
-            }
-          }
-          
-          if( exists == true )
-            break;
-        }
+	std::list< int > &materials = matMapIter->second;
+	std::list< int >::iterator matIter;
+	
+	for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
+	{
+	  const int material = *matIter;
+	  
+	  // Check to make sure the variable exists on at least one patch
+	  // for at least one level.
+	  bool exists = false;
+	  
+	  for (int l=0; l<numLevels; ++l)
+	  {
+	    LevelP level = gridP->getLevel(l);
+	    int numPatches = level->numPatches();
+	    
+	    for (int p=0; p<numPatches; ++p)
+	    {
+	      const Patch* patch = level->getPatch(p);
+	      
+	      if( dw->exists( varLabel, material, patch ) )
+	      {
+		// The variable exists on this level and patch.
+		varInfo.materials.push_back( material );
+		exists = true;
+		break;
+	      }
+	    }
+	    
+	    if( exists == true )
+	      break;
+	  }
+	}
+	
+	stepInfo->varInfo.push_back( varInfo );
       }
-
-      stepInfo->varInfo.push_back( varInfo );
     }
   }
   

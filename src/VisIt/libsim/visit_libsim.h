@@ -86,13 +86,22 @@ typedef struct
   double time;
   double delt;
   double delt_next;
-  double elapsedt;
 
-  int blocking;
+  // Note these variables are part of the simulaiton controller but
+  // can not be accessed directly because doing so creates a circular
+  // dependency.
+  double totalWallTime;
+  double totalExecWallTime;
+  double execWallTime;
+  double expMovingAverage;
+  double inSituWallTime;
 
+  // UDA archieve variables.
   bool useExtraCells;
   bool nodeCentered;
   bool forceMeshReload;
+
+  int blocking;
 
   // Simulation control members
   int  runMode;  // What the libsim is doing.
@@ -131,7 +140,10 @@ bool visit_CheckState(visit_simulation_data *sim);
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
                           double time, double delt, double delt_next,
-                          double wallTime, bool last );
+			  double totalWallTime, double totalExecWallTime,
+			  double execWallTime, double expMovingAve,
+                          double inSituWallTime,
+			  bool last );
 
 void visit_Initialize( visit_simulation_data *sim );
   

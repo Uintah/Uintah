@@ -88,10 +88,9 @@ class Scheduler : public UintahParallelPort {
 
     virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state ) = 0;
 
-    virtual void checkMemoryUse( unsigned long & memuse
-                               , unsigned long & highwater
-                               , unsigned long & maxMemUse
-                               ) = 0;
+    virtual void checkMemoryUse( unsigned long & memUsed,
+				 unsigned long & highwater,
+				 unsigned long & maxMemUsed ) = 0;
     
     virtual void setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
 

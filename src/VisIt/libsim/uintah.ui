@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>770</height>
+    <width>657</width>
+    <height>802</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>11</x>
       <y>10</y>
       <width>631</width>
-      <height>730</height>
+      <height>751</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -36,42 +36,12 @@
         <x>10</x>
         <y>0</y>
         <width>240</width>
-        <height>390</height>
+        <height>161</height>
        </rect>
       </property>
       <property name="title">
        <string>TIme Info</string>
       </property>
-      <widget class="QLineEdit" name="DeltaTFactor">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>290</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="DeltaTMax">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>260</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="DeltaTMin">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>230</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
       <widget class="QLineEdit" name="MaxTime">
        <property name="geometry">
         <rect>
@@ -80,45 +50,6 @@
          <width>100</width>
          <height>20</height>
         </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="DeltaTFactorLabel">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>290</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Delta T Factor</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="DeltaTMinLabel">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>230</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Delta T Min</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="DeltaTMaxLabel">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>260</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Delta T Max</string>
        </property>
       </widget>
       <widget class="QLabel" name="MaxTimeLabel">
@@ -132,29 +63,6 @@
        </property>
        <property name="text">
         <string>Max Time</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="ElapsedTimeLabel">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>330</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Elapsed Time</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="ElapsedTime">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>330</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
        </property>
       </widget>
       <widget class="QLabel" name="TimeStepLabel">
@@ -203,29 +111,6 @@
         <string>Time</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="DeltaTNext">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>200</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="DeltaTNextLabel">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>200</y>
-         <width>80</width>
-         <height>15</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Delta T Next</string>
-       </property>
-      </widget>
       <widget class="QLabel" name="TimeStepLabel_2">
        <property name="geometry">
         <rect>
@@ -249,60 +134,14 @@
         </rect>
        </property>
       </widget>
-      <widget class="QLabel" name="ElapsedTimeLabel_2">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>360</y>
-         <width>90</width>
-         <height>15</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Max Wall Time</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="MaxWallTime">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>360</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="DeltaTLabel">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>170</y>
-         <width>60</width>
-         <height>15</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Delta T</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="DeltaT">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>170</y>
-         <width>100</width>
-         <height>20</height>
-        </rect>
-       </property>
-      </widget>
      </widget>
      <widget class="QGroupBox" name="OutputIntervalGroupBox">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>390</y>
+        <y>440</y>
         <width>240</width>
-        <height>150</height>
+        <height>131</height>
        </rect>
       </property>
       <property name="title">
@@ -314,7 +153,7 @@
          <x>10</x>
          <y>30</y>
          <width>220</width>
-         <height>110</height>
+         <height>91</height>
         </rect>
        </property>
        <column>
@@ -333,7 +172,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>540</y>
+        <y>570</y>
         <width>601</width>
         <height>151</height>
        </rect>
@@ -388,7 +227,7 @@
         <x>260</x>
         <y>310</y>
         <width>350</width>
-        <height>230</height>
+        <height>261</height>
        </rect>
       </property>
       <property name="title">
@@ -400,7 +239,7 @@
          <x>10</x>
          <y>30</y>
          <width>330</width>
-         <height>190</height>
+         <height>221</height>
         </rect>
        </property>
        <column>
@@ -449,6 +288,72 @@
        <column>
         <property name="text">
          <string>Value</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="WallTimesGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>310</y>
+        <width>240</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Wall times</string>
+      </property>
+      <widget class="QTableWidget" name="WallTimesVariableTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>220</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Seconds</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="DeltaTGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>160</y>
+        <width>240</width>
+        <height>151</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Delta T</string>
+      </property>
+      <widget class="QTableWidget" name="DeltaTVariableTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>220</width>
+         <height>111</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Seconds</string>
         </property>
        </column>
       </widget>
@@ -517,7 +422,7 @@
         <x>10</x>
         <y>380</y>
         <width>600</width>
-        <height>300</height>
+        <height>331</height>
        </rect>
       </property>
       <property name="title">
@@ -529,7 +434,7 @@
          <x>10</x>
          <y>30</y>
          <width>580</width>
-         <height>260</height>
+         <height>291</height>
         </rect>
        </property>
        <column>
@@ -722,9 +627,9 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>90</y>
+        <y>110</y>
         <width>600</width>
-        <height>311</height>
+        <height>341</height>
        </rect>
       </property>
       <property name="title">
@@ -736,7 +641,7 @@
          <x>10</x>
          <y>130</y>
          <width>251</width>
-         <height>161</height>
+         <height>201</height>
         </rect>
        </property>
        <property name="title">
@@ -748,7 +653,7 @@
           <x>10</x>
           <y>30</y>
           <width>231</width>
-          <height>121</height>
+          <height>161</height>
          </rect>
         </property>
         <column>
@@ -769,7 +674,7 @@
          <x>270</x>
          <y>20</y>
          <width>321</width>
-         <height>271</height>
+         <height>311</height>
         </rect>
        </property>
        <property name="title">
@@ -781,7 +686,7 @@
           <x>10</x>
           <y>30</y>
           <width>301</width>
-          <height>231</height>
+          <height>271</height>
          </rect>
         </property>
         <column>
@@ -800,8 +705,6 @@
          </property>
         </column>
        </widget>
-       <zorder>DebugStreamTable</zorder>
-       <zorder>StateVariableGroupBox</zorder>
       </widget>
       <widget class="QGroupBox" name="TimeStepGroupBox">
        <property name="geometry">
@@ -857,7 +760,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>450</y>
+        <y>480</y>
         <width>600</width>
         <height>230</height>
        </rect>
@@ -934,7 +837,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>650</width>
+     <width>657</width>
      <height>22</height>
     </rect>
    </property>

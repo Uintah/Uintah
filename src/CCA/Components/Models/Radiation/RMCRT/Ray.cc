@@ -74,7 +74,6 @@ static Uintah::DebugStream dbg("RAY",       false);
 static Uintah::DebugStream dbg2("RAY_DEBUG",false);
 static Uintah::DebugStream dbg_BC("RAY_BC", false);
 
-
 //---------------------------------------------------------------------------
 // Class: Constructor.
 //---------------------------------------------------------------------------
@@ -1129,22 +1128,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //__________________________________
     //  If ray length distance is used
     if ( d_ROI_algo == max_rayLength ){
-    
-      IntVector patchLo = patch->getExtraCellLowIndex();
-      IntVector patchHi = patch->getExtraCellHighIndex();
 
-      ROI_Lo = patchLo - d_halo;
-      ROI_Hi = patchHi + d_halo;
-      dbg << "  L-"<< level->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << endl;
-
-      // region must be contaned in the Level including extraCells.
-      IntVector levelLo, levelHi;
-      level->findCellIndexRange( levelLo, levelHi );
-
-      ROI_Lo = Max( ROI_Lo, levelLo );
-      ROI_Hi = Min( ROI_Hi, levelHi );
+      patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0), 
+                                                     Ghost::AroundCells, d_halo.x(), ROI_Lo, ROI_Hi);    
       dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
-
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
@@ -1849,7 +1836,8 @@ Ray::computeExtents(LevelP level_0,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   } else if ( d_ROI_algo == patch_based ){
-
+    //TODO: This section of code grabs both the extra cells and then appends on the ghost cells past that
+    //This approach doesn't work in L-shaped domains.  Double check this section.  Brad P. 10/15/2016
     IntVector patchLo = patch->getExtraCellLowIndex();
     IntVector patchHi = patch->getExtraCellHighIndex();
 

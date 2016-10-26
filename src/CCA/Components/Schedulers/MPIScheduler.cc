@@ -442,7 +442,10 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 #else
       mpibuff.get_type(buf, count, datatype);
 #endif
-
+      if (!buf) {
+        printf("postMPISends() - ERROR, the send MPI buffer is null\n");
+        SCI_THROW( InternalError("The send MPI buffer is null", __FILE__, __LINE__) );
+      }
       DOUT(g_mpi_dbg, "Rank-" << me << " Posting send for message number " << batch->m_message_tag << " to   rank-"
                    << to << ", length: " << count << " (bytes)");;
 
@@ -630,6 +633,10 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 #else
         mpibuff.get_type(buf, count, datatype);
 #endif
+        if (!buf) {
+          printf("postMPIRecvs() - ERROR, the receive MPI buffer is null\n");
+          SCI_THROW( InternalError("The receive MPI buffer is null", __FILE__, __LINE__) );
+        }
 
         int from = batch->m_from_task->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
@@ -1047,10 +1054,17 @@ MPIScheduler::outputTimingStats( const char* label )
 //  Take the various timers and compute the net results
 void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats)
 {
-    runTimeStats[SimulationState::TaskExecTime]       += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
-                                                                              - runTimeStats[SimulationState::OutputFileIORate];
+    runTimeStats[SimulationState::TaskExecTime]       +=
+      mpi_info_[TotalTask] -
+      // don't count output time
+      runTimeStats[SimulationState::OutputFileIOTime];
      
-    runTimeStats[SimulationState::TaskLocalCommTime]  += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    runTimeStats[SimulationState::TaskWaitCommTime]   += mpi_info_[TotalWaitMPI];
-    runTimeStats[SimulationState::TaskGlobalCommTime] += mpi_info_[TotalReduce];
+    runTimeStats[SimulationState::TaskLocalCommTime]  +=
+      mpi_info_[TotalRecv] + mpi_info_[TotalSend];
+
+    runTimeStats[SimulationState::TaskWaitCommTime]   +=
+      mpi_info_[TotalWaitMPI];
+
+    runTimeStats[SimulationState::TaskGlobalCommTime] +=
+      mpi_info_[TotalReduce];
 }

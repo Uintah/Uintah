@@ -838,7 +838,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 
     // Scope the multi-reader CrowdMonitor
     {
-      intrusion_map_monitor intrusion_map_lock { intrusion_map_monitor::READER };
+      intrusion_map_monitor intrusion_map_lock { intrusion_map_monitor::WRITER };
 
       for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
 
@@ -894,7 +894,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
                 if (neighbor_cell) {
                   af -= Vector(1., 0, 0);
                 }
-                // -y direciton
+                // -y direction
                 n = c - IntVector(0, 1, 0);
                 neighbor_cell = in_or_out(n, piece, patch, iter->second.inverted);
 
@@ -902,7 +902,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
                   af -= Vector(0, 1., 0);
                 }
 
-                // -z direciton
+                // -z direction
                 n = c - IntVector(0, 0, 1);
                 neighbor_cell = in_or_out(n, piece, patch, iter->second.inverted);
 
