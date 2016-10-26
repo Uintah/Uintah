@@ -143,7 +143,7 @@ namespace Uintah {
     std::list<std::string> d_vars;
     bool                   d_usePFS;
     bool                   d_useCPTI;
-    
+
     void checkFileType(std::ifstream & source, std::string& fileType, std::string& filename);
     
     bool read_line(std::istream & is, Point & xmin, Point & xmax);

@@ -97,13 +97,19 @@ BufferInfo::get_type( void*&        out_buf,
       d_free_datatype = false; // Will get freed with array
     }
     else {
-      std::vector<MPI_Aint> indices(count());
-      for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
-        indices[i] = (MPI_Aint)d_startbufs[i];
+      //MPI_Type_create_struct allows for multiple things to be sent in a single message.  
+      std::vector<MPI_Aint> displacements(count());
+      displacements[0] = 0; //relative to itself, should always start at zero
+      for( unsigned int i = 1; i < d_startbufs.size(); i++ ) {
+        //Find how far this address is displaced from the first address.
+        //From MPI's point of view, it won't know whether these offsets are from the same array or 
+        //from entirely different variables.  We'll take advantage of that second point.  
+        //It also appears to allow for negative displacements.
+        displacements[i] = (MPI_Aint)((char*)d_startbufs.at(i) - (char*)d_startbufs.at(0));
       }
-      Uintah::MPI::Type_create_struct( count(), &d_counts[0], &indices[0], &d_datatypes[0], &datatype );
+      Uintah::MPI::Type_create_struct( count(), &d_counts[0], &displacements[0], &d_datatypes[0], &datatype );
       Uintah::MPI::Type_commit( &datatype );
-      buf = 0;
+      buf = d_startbufs[0];
       cnt = 1;
       d_free_datatype = true;
     }

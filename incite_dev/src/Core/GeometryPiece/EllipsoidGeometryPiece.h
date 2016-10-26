@@ -27,6 +27,7 @@
 
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Math/Matrix3.h>
 
 #ifndef M_PI
 # define M_PI           3.14159265358979323846  /* pi */
@@ -130,7 +131,7 @@ public:
   // Returns the voulme of the sphere
   inline double volume() const
   {
-    return ( 4.0*M_PI*d_radiusX*d_radiusY*d_radiusZ );
+    return ( 4.0*M_PI*d_r1*d_r2*d_r3 );
   }
 
   //////////
@@ -138,9 +139,9 @@ public:
   inline double surfaceArea() const
   {
     //  Knud Thomsen's formula (1.061% max error in surface area)
-    double ap = pow(d_radiusX, 1.6075);
-    double bp = pow(d_radiusY, 1.6075);
-    double cp = pow(d_radiusZ, 1.6075);
+    double ap = pow(d_r1, 1.6075);
+    double bp = pow(d_r2, 1.6075);
+    double cp = pow(d_r3, 1.6075);
     
     return ( 4.0*M_PI*pow(((ap*bp + ap*cp + bp*cp)/3.0), 1.6075) );
   }
@@ -149,6 +150,7 @@ public:
   // Calculate the unit normal vector to center from point
   inline Vector radialDirection(const Point& pt) const
   {
+    // THIS IS WRONG - JBH Fixm 10/2016
     Vector normal = pt-d_origin;  
     return (normal/normal.length());
   }
@@ -156,28 +158,30 @@ public:
   // Get the center and radius
   //
   inline Point  origin() const {return d_origin;}
-  inline double rX() const {return d_radiusX;}
-  inline double rY() const {return d_radiusY;}
-  inline double rZ() const {return d_radiusZ;}
+  inline double rX() const {return d_r1;}
+  inline double rY() const {return d_r2;}
+  inline double rZ() const {return d_r3;}
 
 private:
 
+  static const double geomTol;
   virtual void outputHelper( ProblemSpecP & ps ) const;
   virtual void initializeEllipsoidData();
          
   Point d_origin;
-  // Radii of each axis
-  double d_radiusX;
-  double d_radiusY;
-  double d_radiusZ;
-  
-  double thetax, thetay, thetaz;
 
   // Vectors of each axis
   Vector d_v1;
   Vector d_v2;
   Vector d_v3;
+
+  // Radii of each axis
+  double d_r1;
+  double d_r2;
+  double d_r3;
   
+  Matrix3 d_m3E; // Matrix representation of the ellipsoid.
+
   bool xyzAligned;
 };
 

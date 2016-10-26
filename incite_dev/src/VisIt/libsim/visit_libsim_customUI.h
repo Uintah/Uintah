@@ -58,7 +58,9 @@ class visit_simulation_data;
 
 namespace Uintah {
  
-void visit_SetTimeVars       ( visit_simulation_data *sim );
+void visit_SetTimeValues     ( visit_simulation_data *sim );
+void visit_SetDeltaTValues   ( visit_simulation_data *sim );
+void visit_SetWallTimes      ( visit_simulation_data *sim );
 void visit_SetOutputIntervals( visit_simulation_data *sim );
 void visit_SetAnalysisVars   ( visit_simulation_data *sim );
 void visit_SetUPSVars        ( visit_simulation_data *sim );

@@ -76,7 +76,7 @@ Dout schedulercommon_dbg("SchedulerCommon_DBG", false);
 }
 
 
-// for calculating memory usage when sci-malloc is disabled.
+// for calculating memory use when sci-malloc is disabled.
 char* SchedulerCommon::start_addr = nullptr;
 
 
@@ -126,13 +126,12 @@ SchedulerCommon::~SchedulerCommon()
 //______________________________________________________________________
 //
 void
-SchedulerCommon::checkMemoryUse( unsigned long & memuse
-                               , unsigned long & highwater
-                               , unsigned long & maxMemUse
-                               )
+SchedulerCommon::checkMemoryUse( unsigned long & memUsed,
+				 unsigned long & highwater,
+				 unsigned long & maxMemUsed )
 {
   highwater = 0; 
-  memuse    = 0;
+  memUsed   = 0;
 
 #if !defined(DISABLE_SCI_MALLOC)
   size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
@@ -144,24 +143,24 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse
                   nfillbin, nmmap, sizemmap, nmunmap,
                   sizemunmap, highwater_alloc, highwater_mmap,
                   bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks );
-  memuse = sizealloc - sizefree;
+  memUsed   = sizealloc - sizefree;
   highwater = highwater_mmap;
 
 #else
 
   if ( ProcessInfo::isSupported( ProcessInfo::MEM_SIZE ) ) {
-    memuse = ProcessInfo::getMemoryResident();
+    memUsed = ProcessInfo::getMemoryResident();
     // printf("1) memuse is %ld (on proc %d)\n", memuse, Uintah::Parallel::getMPIRank() );
   } else {
-    memuse = (char*)sbrk(0)-start_addr;
+    memUsed = (char*)sbrk(0)-start_addr;
     // printf("2) memuse is %ld (on proc %d)\n", memuse, Uintah::Parallel::getMPIRank() );
   }
 #endif
 
-  if( memuse > m_max_mem_use ) {
-    m_max_mem_use = memuse;
+  if( memUsed > m_max_mem_used ) {
+    m_max_mem_used = memUsed;
   }
-  maxMemUse = m_max_mem_use;
+  maxMemUsed = m_max_mem_used;
 }
 
 //______________________________________________________________________
@@ -169,7 +168,7 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse
 void
 SchedulerCommon::resetMaxMemValue()
 {
-  m_max_mem_use = 0;
+  m_max_mem_used = 0;
 }
 
 //______________________________________________________________________

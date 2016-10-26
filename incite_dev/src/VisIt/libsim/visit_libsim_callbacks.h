@@ -53,44 +53,36 @@ WARNING
 
 namespace Uintah {
 
-  int visit_BroadcastIntCallback(int *value, int sender);
-  int visit_BroadcastStringCallback(char *str, int len, int sender);
+  int visit_BroadcastIntCallback   ( int *value, int sender );
+  int visit_BroadcastStringCallback( char  *str, int len, int sender );
   void visit_SlaveProcessCallback();
 
-  void visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata);
+  void visit_ControlCommandCallback( const char *cmd,
+				     const char *args, void *cbdata );
 
   int visit_ProcessVisItCommand( visit_simulation_data *sim );
 
-  void visit_MaxTimeStepCallback (char *val, void *cbdata);
-  void visit_MaxTimeCallback     (char *val, void *cbdata);
-  void visit_DeltaTCallback      (char *val, void *cbdata);
-  void visit_DeltaTMinCallback   (char *val, void *cbdata);
-  void visit_DeltaTMaxCallback   (char *val, void *cbdata);
-  void visit_DeltaTFactorCallback(char *val, void *cbdata);
-  void visit_MaxWallTimeCallback (char *val, void *cbdata);
+  void visit_MaxTimeStepCallback( char *val, void *cbdata );
+  void visit_MaxTimeCallback    ( char *val, void *cbdata );
+
+  void visit_DeltaTVariableCallback   ( char *val, void *cbdata );
+  void visit_WallTimesVariableCallback( char *val, void *cbdata );
  
-  void visit_UPSVariableTableCallback(char *val, void *cbdata);
-  void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata);
+  void visit_UPSVariableCallback           ( char *val, void *cbdata );
+  void visit_OutputIntervalVariableCallback( char *val, void *cbdata );
 
-  void visit_ImageGenerateCallback(int val, void *cbdata);
-  void visit_ImageFilenameCallback(char *val, void *cbdata);
-  void visit_ImageHeightCallback(char *val, void *cbdata);
-  void visit_ImageWidthCallback(char *val, void *cbdata);
-  void visit_ImageFormatCallback(int val, void *cbdata);
+  void visit_ImageGenerateCallback( int   val, void *cbdata );
+  void visit_ImageFilenameCallback( char *val, void *cbdata );
+  void visit_ImageHeightCallback  ( char *val, void *cbdata );
+  void visit_ImageWidthCallback   ( char *val, void *cbdata );
+  void visit_ImageFormatCallback  ( int   val, void *cbdata );
 
-  void visit_StopAtTimeStepCallback(char *val, void *cbdata);
-  void visit_StopAtLastTimeStepCallback(int val, void *cbdata);
+  void visit_StopAtTimeStepCallback    ( char *val, void *cbdata );
+  void visit_StopAtLastTimeStepCallback( int   val, void *cbdata );
 
-  void visit_StateVariableTableCallback(char *val, void *cbdata);
-
-  void visit_StripChartCallback (char *val, void *cbdata);
-
-  void visit_DebugStreamTableCallback(char *val, void *cbdata);
-
-  void visit_VarModifiedMessage( visit_simulation_data *sim,
-                                 std::string name,
-                                 std::string value );
-
+  void visit_StateVariableCallback( char *val, void *cbdata );
+  void visit_StripChartCallback   ( char *val, void *cbdata );
+  void visit_DebugStreamCallback  ( char *val, void *cbdata );
 } // End namespace Uintah
 
 #endif

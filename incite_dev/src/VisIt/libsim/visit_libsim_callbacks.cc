@@ -49,6 +49,39 @@ static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 #define VISIT_COMMAND_FAILURE 2
 
 //---------------------------------------------------------------------
+// VarModifiedMessage
+//  This method reports to the user when a variable is modified.
+//---------------------------------------------------------------------
+template< class varType >
+void visit_VarModifiedMessage( visit_simulation_data *sim,
+                               std::string name,
+                               varType value )
+{
+  // Depending on the GUI widget the reporting might be on a key
+  // stroke key stroke basis or after a return is sent.
+  if( sim->isProc0 )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - At time step " << sim->cycle << " "
+        << "the user modified the variable " << name << " "
+        << "to be " << value << ". ";
+      
+    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+    
+    // visitdbg << msg.str().c_str() << std::endl;
+    // visitdbg.flush();
+  }
+
+  // Using a map - update the value so it can be recorded by Uintah.
+  std::stringstream tmpstr;
+  tmpstr << value;
+  
+  sim->modifiedVars[ name ] = tmpstr.str();
+}
+
+
+//---------------------------------------------------------------------
 // getNextString
 //   This method is called to get the next string value and return
 //   the remaining part.
@@ -92,7 +125,8 @@ void getTableCMD( char *cmd,
   str = getNextString( strcmd, " | " );
   value = atof( str.c_str() );
 }
- 
+
+
 //---------------------------------------------------------------------
 // getTableCMD
 //   This method is called to parse the table cmd to get the
@@ -383,9 +417,10 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
   return 1;
 }
 
+
 //---------------------------------------------------------------------
 // MaxTimeStepCallback
-//     Custom UI callback
+//     Custom UI callback for a line edit box
 //---------------------------------------------------------------------
 void visit_MaxTimeStepCallback(char *val, void *cbdata)
 {
@@ -396,9 +431,10 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
   visit_VarModifiedMessage( sim, "MaxTimeStep", val);
 }
 
+
 //---------------------------------------------------------------------
 // MaxTimeCallback
-//     Custom UI callback
+//     Custom UI callback for a line edit box
 //---------------------------------------------------------------------
 void visit_MaxTimeCallback(char *val, void *cbdata)
 {
@@ -409,81 +445,68 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
   visit_VarModifiedMessage( sim, "MaxTime", val);
 }
 
+
 //---------------------------------------------------------------------
-// DeltaTCallback
-//     Custom UI callback
+// DeltaTVariableCallback
+//     Custom UI callback for a table
 //---------------------------------------------------------------------
-void visit_DeltaTCallback(char *val, void *cbdata)
+void visit_DeltaTVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
   DataWarehouse          *dw = sim->simController->getSchedulerP()->getLastDW();
 
-  double delt = atof(val);
+  unsigned int row, column;
+  double value;
+  
+  getTableCMD( val, row, column, value);
 
-  dw->override(delt_vartype(delt), simStateP->get_delt_label());
-
-  visit_VarModifiedMessage( sim, "DeltaT", val);
+  switch( row )
+  {
+  case 1:
+    dw->override(delt_vartype(value), simStateP->get_delt_label());
+    visit_VarModifiedMessage( sim, "DeltaTNext", value );
+    break;
+  case 2:
+    sim->simController->getSimulationTime()->delt_factor = value;
+    visit_VarModifiedMessage( sim, "DeltaTFactor", value );
+    break;
+  case 3:
+    sim->simController->getSimulationTime()->delt_min = value;
+    visit_VarModifiedMessage( sim, "DeltaTMin", value );
+    break;
+  case 4:
+    sim->simController->getSimulationTime()->delt_max = value;
+    visit_VarModifiedMessage( sim, "DeltaTMax", value );
+    break;
+  }
 }
 
 //---------------------------------------------------------------------
-// DeltaTMinCallback
-//     Custom UI callback
+// WallTimesVariableCallback
+//     Custom UI callback for a table
 //---------------------------------------------------------------------
-void visit_DeltaTMinCallback(char *val, void *cbdata)
+void visit_WallTimesVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->simController->getSimulationTime()->delt_min = atof(val);
+  unsigned int row, column;
+  double value;
 
-  visit_VarModifiedMessage( sim, "DeltaTMin", val);
+  getTableCMD( val, row, column, value);
+
+  if( row == 5 )
+  {
+    sim->simController->getSimulationTime()->max_wall_time = value;
+    visit_VarModifiedMessage( sim, "MaxWallTime", value );
+  }
 }
 
 //---------------------------------------------------------------------
-// DeltaTMaxCallback
-//     Custom UI callback
+// UPSVariableCallback
+//     Custom UI callback for a table
 //---------------------------------------------------------------------
-void visit_DeltaTMaxCallback(char *val, void *cbdata)
-{
-  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-
-  sim->simController->getSimulationTime()->delt_max = atof(val);
-
-  visit_VarModifiedMessage( sim, "DeltaTMax", val);
-}
-
-//---------------------------------------------------------------------
-// DeltaTFactorCallback
-//     Custom UI callback
-//---------------------------------------------------------------------
-void visit_DeltaTFactorCallback(char *val, void *cbdata)
-{
-  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-
-  sim->simController->getSimulationTime()->delt_factor = atof(val);
-
-  visit_VarModifiedMessage( sim, "DeltaTFactor", val);
-}
-
-//---------------------------------------------------------------------
-// MaxWallTimeCallback
-//     Custom UI callback
-//---------------------------------------------------------------------
-void visit_MaxWallTimeCallback(char *val, void *cbdata)
-{
-  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-
-  sim->simController->getSimulationTime()->max_wall_time = atof(val);
-
-  visit_VarModifiedMessage( sim, "MaxWallTime", val);
-}
-
-//---------------------------------------------------------------------
-// UPSVariableTableCallback
-//     Custom UI callback
-//---------------------------------------------------------------------
-void visit_UPSVariableTableCallback(char *val, void *cbdata)
+void visit_UPSVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
@@ -561,10 +584,10 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// OutputIntervalVariableTableCallback
-//     Custom UI callback
+// OutputIntervalVariableCallback
+//     Custom UI callback for a table
 //---------------------------------------------------------------------
-void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
+void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
@@ -600,7 +623,7 @@ void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
 
 //---------------------------------------------------------------------
 // ImageCallback
-//     Custom UI callback
+//     Custom UI callback for a check box
 //---------------------------------------------------------------------
 void visit_ImageGenerateCallback(int val, void *cbdata)
 {
@@ -611,7 +634,7 @@ void visit_ImageGenerateCallback(int val, void *cbdata)
 
 //---------------------------------------------------------------------
 // ImageFilenameCallback
-//     Custom UI callback
+//     Custom UI callback for a line edit
 //---------------------------------------------------------------------
 void visit_ImageFilenameCallback(char *val, void *cbdata)
 {
@@ -622,7 +645,7 @@ void visit_ImageFilenameCallback(char *val, void *cbdata)
 
 //---------------------------------------------------------------------
 // ImageHeightCallback
-//     Custom UI callback
+//     Custom UI callback for a line edit
 //---------------------------------------------------------------------
 void visit_ImageHeightCallback(char *val, void *cbdata)
 {
@@ -633,7 +656,7 @@ void visit_ImageHeightCallback(char *val, void *cbdata)
 
 //---------------------------------------------------------------------
 // ImageWidthCallback
-//     Custom UI callback
+//     Custom UI callback for a line edit
 //---------------------------------------------------------------------
 void visit_ImageWidthCallback(char *val, void *cbdata)
 {
@@ -644,7 +667,7 @@ void visit_ImageWidthCallback(char *val, void *cbdata)
 
 //---------------------------------------------------------------------
 // ImageFormatCallback
-//     Custom UI callback
+//     Custom UI callback for a drop down menu
 //---------------------------------------------------------------------
 void visit_ImageFormatCallback(int val, void *cbdata)
 {
@@ -655,7 +678,7 @@ void visit_ImageFormatCallback(int val, void *cbdata)
 
 //---------------------------------------------------------------------
 // StopAtTimeStepCallback
-//     Custom UI callback
+//     Custom UI callback for a line edit
 //---------------------------------------------------------------------
 void visit_StopAtTimeStepCallback(char *val, void *cbdata)
 {
@@ -666,7 +689,7 @@ void visit_StopAtTimeStepCallback(char *val, void *cbdata)
 
 //---------------------------------------------------------------------
 // StopAtLastTimeStepCallback
-//     Custom UI callback
+//     Custom UI callback for a check box
 //---------------------------------------------------------------------
 void visit_StopAtLastTimeStepCallback(int val, void *cbdata)
 {
@@ -676,10 +699,10 @@ void visit_StopAtLastTimeStepCallback(int val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// StateVariableTableCallback
-//     Custom UI callback
+// StateVariableCallback
+//     Custom UI callback for a table
 //---------------------------------------------------------------------
-void visit_StateVariableTableCallback(char *val, void *cbdata)
+void visit_StateVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
@@ -759,7 +782,7 @@ void visit_StateVariableTableCallback(char *val, void *cbdata)
 
 //---------------------------------------------------------------------
 // StripChartCallback
-//     Custom UI callback
+//     Custom UI callback for a table
 //---------------------------------------------------------------------
 void visit_StripChartCallback(char *val, void *cbdata)
 {
@@ -777,10 +800,10 @@ void visit_StripChartCallback(char *val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// DebugStreamTableCallback
-//     Custom UI callback
+// DebugStreamCallback
+//     Custom UI callback for a table
 //---------------------------------------------------------------------
-void visit_DebugStreamTableCallback(char *val, void *cbdata)
+void visit_DebugStreamCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
@@ -833,29 +856,4 @@ void visit_DebugStreamTableCallback(char *val, void *cbdata)
   }
 }
 
-//---------------------------------------------------------------------
-// ProcessVisItCommand
-//     Process commands from the viewer on all processors.
-//---------------------------------------------------------------------
-void visit_VarModifiedMessage( visit_simulation_data *sim,
-                               std::string name,
-                               std::string value )
-{
-  if( sim->isProc0 )
-  {
-    std::stringstream msg;
-    msg << "Visit libsim - At time step " << sim->cycle << " "
-        << "the user modified the variable " << name << " "
-        << "to be " << value << ". ";
-      
-    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
-    
-    // visitdbg << msg.str().c_str() << std::endl;
-    // visitdbg.flush();
-  }
-
-  sim->modifiedVars[ name ] = value;
-}
-  
 } // End namespace Uintah

@@ -500,18 +500,27 @@ bool visit_CheckState( visit_simulation_data *sim )
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
                           double time, double delt, double delt_next,
-                          double wallTime, bool last )
+                          double totalWallTime,
+			  double execWallTime,     double totalExecWallTime,
+			  double expMovingAverage, double inSituWallTime,
+			  bool last )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
   // Update all of the simulation grid and time dependent
   // variables.
-  sim->gridP      = currentGrid;
-  sim->time       = time;
-  sim->delt       = delt;
-  sim->delt_next  = delt_next;
-  sim->elapsedt   = wallTime;
-  sim->cycle      = simStateP->getCurrentTopLevelTimeStep();
+  sim->gridP         = currentGrid;
+  sim->time          = time;
+  sim->delt          = delt;
+  sim->delt_next     = delt_next;
+  
+  sim->totalWallTime     = totalWallTime;
+  sim->totalExecWallTime = totalExecWallTime;
+  sim->execWallTime      = execWallTime;
+  sim->expMovingAverage  = expMovingAverage;
+  sim->inSituWallTime    = inSituWallTime;
+
+  sim->cycle             = simStateP->getCurrentTopLevelTimeStep();
 
   // Check to see if at the last iteration. If so stop so the
   // user can have once last chance see the data.
@@ -589,17 +598,17 @@ void visit_Initialize( visit_simulation_data *sim )
   if( Parallel::usingMPI() )
     VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
-  VisItUI_textChanged("MaxTimeStep",  visit_MaxTimeStepCallback,  (void*) sim);
-  VisItUI_textChanged("MaxTime",      visit_MaxTimeCallback,      (void*) sim);
-  VisItUI_textChanged("DeltaTNext",   visit_DeltaTCallback,       (void*) sim);
-  VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
-  VisItUI_textChanged("DeltaTMin",    visit_DeltaTMinCallback,    (void*) sim);
-  VisItUI_textChanged("DeltaTMax",    visit_DeltaTMaxCallback,    (void*) sim);
-  VisItUI_textChanged("MaxWallTime",  visit_MaxWallTimeCallback,  (void*) sim);
+  VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
+  VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
+
+  VisItUI_cellChanged("DeltaTVariableTable",
+                      visit_DeltaTVariableCallback,          (void*) sim);
+  VisItUI_cellChanged("WallTimesVariableTable",
+                      visit_WallTimesVariableCallback,       (void*) sim);
   VisItUI_cellChanged("UPSVariableTable",
-                      visit_UPSVariableTableCallback, (void*) sim);
+                      visit_UPSVariableCallback,             (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
-                      visit_OutputIntervalVariableTableCallback,  (void*) sim);
+                      visit_OutputIntervalVariableCallback,  (void*) sim);
         
   VisItUI_valueChanged("ImageGroupBox",
                        visit_ImageGenerateCallback, (void*) sim);
@@ -615,10 +624,10 @@ void visit_Initialize( visit_simulation_data *sim )
                        visit_StopAtLastTimeStepCallback, (void*) sim);
 
   VisItUI_cellChanged("StateVariableTable",
-                      visit_StateVariableTableCallback, (void*) sim);
+                      visit_StateVariableCallback, (void*) sim);
 
   VisItUI_cellChanged("DebugStreamTable",
-                      visit_DebugStreamTableCallback,  (void*) sim);
+                      visit_DebugStreamCallback,  (void*) sim);
 
   VisItUI_cellChanged("StripChartTable",
                       visit_StripChartCallback, (void*) sim);

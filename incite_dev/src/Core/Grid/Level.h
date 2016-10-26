@@ -141,6 +141,9 @@ public:
   IntVector     mapNodeToFiner(   const IntVector & idx ) const;
   IntVector     mapCellToCoarser( const IntVector & idx, int level_offset=1 ) const;
   IntVector     mapCellToFiner(   const IntVector & idx ) const;
+  IntVector     mapCellToFinest(const IntVector& idx) const;
+  IntVector     mapCellToFinestNoAdjustments( const IntVector & idx ) const;
+
 
   //////////
   // Find a patch containing the point, return 0 if non exists

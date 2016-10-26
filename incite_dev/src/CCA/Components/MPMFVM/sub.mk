@@ -32,7 +32,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/MPMFVM
 
 SRCS   += $(SRCDIR)/ESMPM.cc \
-          $(SRCDIR)/ESConductivityModel.cc
+          $(SRCDIR)/ESConductivityModel.cc \
+          $(SRCDIR)/ESConductivityModelFactory.cc
 
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 

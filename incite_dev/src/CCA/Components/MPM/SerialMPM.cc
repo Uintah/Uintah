@@ -2030,6 +2030,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   }
   else if(((interp_type=="gimp"       || 
             interp_type=="3rdorderBS" ||
+            interp_type=="fast_cpdi" ||
             interp_type=="cpdi")                          && 
             ((num_extra_cells+periodic)!=IntVector(1,1,1) && 
             ((num_extra_cells+periodic)!=IntVector(1,1,0) && 
@@ -2038,6 +2039,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
           << " or <interpolator>3rdorderBS</interpolator> \n"
           << " or <interpolator>cpdi</interpolator> \n"
+          << " or <interpolator>fast_cpdi</interpolator> \n"
           << " you must also use extraCells and/or periodicBCs such\n"
           << " the sum of the two is [1,1,1].\n"
           << " If using axisymmetry, the sum of the two can be [1,1,0].\n";
