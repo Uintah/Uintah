@@ -217,7 +217,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
   }
-  else if(strcmp(cmd, "Refresh") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  else if(strcmp(cmd, "Unused") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
     visit_SimGetCustomUIData(cbdata);
   }
@@ -305,6 +305,10 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     }
 
     exit( 0 );
+  }
+  else if(strcmp(cmd, "ActivateCustomUI") == 0 )
+  {
+    visit_SimGetCustomUIData(cbdata);    
   }
   else if(strcmp(cmd, "TimeLimitsEnabled") == 0 )
   {
