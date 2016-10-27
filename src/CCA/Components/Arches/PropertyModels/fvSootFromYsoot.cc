@@ -126,7 +126,6 @@ void fvSootFromYsoot::computeProp(const ProcessorGroup* pc,
       new_dw->getModifiable(  absorp_coef,  _absorp_label,   matlIndex, patch );
 
       soot_vf.initialize(0.0);
-      absorp_coef.initialize(0.0);
 
       old_dw->get( temperature, _T_label,   matlIndex, patch, gn, 0 );
       old_dw->get( density,     _den_label, matlIndex, patch, gn, 0 );
@@ -141,7 +140,7 @@ void fvSootFromYsoot::computeProp(const ProcessorGroup* pc,
       IntVector c = *iter;
       soot_vf[c] = density[c] * Ysoot[c] / _rho_soot;
 
-      absorp_coef[c] += 0.01 + std::min( 0.5, (4.0/_opl)*log( 1.0 +
+      absorp_coef[c] += std::min( 0.5, (4.0/_opl)*log( 1.0 +
 		       350.0 * soot_vf[c] * temperature[c] * _opl));
     }
   }
