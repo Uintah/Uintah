@@ -28,6 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+#include <cmath>
 
 using namespace Uintah;
 using namespace std;
@@ -128,19 +129,9 @@ bool EllipsoidGeometryPiece::inside(const Point& p) const
 
 Box EllipsoidGeometryPiece::getBoundingBox() const
 {
-  Vector high(0.0);
 
-  for (int direction = 0; direction < 3; ++direction)
-  {
-    high[direction] = fabs(d_v1[direction]);
-    double check = fabs(d_v2[direction]);
-    if (check > high[direction]) high[direction] = check;
-    check = fabs(d_v3[direction]);
-    if (check > high[direction]) high[direction] = check;
-  }
-
-  Point minCorner(d_origin-high);
-  Point maxCorner(d_origin+high);
+  Point minCorner(d_origin-boundOffset);
+  Point maxCorner(d_origin+boundOffset);
 
   return Box(minCorner,maxCorner);
 }
@@ -182,11 +173,19 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     Matrix3 U(u1[0], u2[0], u3[0],
               u1[1], u2[1], u3[1],
               u1[2], u2[2], u3[2]);
+
     Matrix3 S(1.0/(d_r1*d_r1), 0.0            , 0.0,
               0.0            , 1.0/(d_r2*d_r2), 0.0,
               0.0            , 0.0            , 1.0/(d_r3*d_r3) );
+    Matrix3 SInv(d_r1*d_r1,       0.0,       0.0,
+                       0.0, d_r2*d_r2,       0.0,
+                       0.0,       0.0, d_r3*d_r3);
 
     d_m3E = U*S*U.Transpose();
+    Matrix3 d_m3E_Inv = U*SInv*U.Transpose();
+    boundOffset = Vector(sqrt(d_m3E_Inv(0,0)),
+                         sqrt(d_m3E_Inv(1,1)),
+                         sqrt(d_m3E_Inv(2,2)));
 
   } else if(d_r1 > 0.0 && d_r2 > 0.0 && d_r3 > 0.0) {
     // create vector representation along the cartesian axes
