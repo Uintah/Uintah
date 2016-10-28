@@ -88,10 +88,11 @@ fi
 ###########################################################################
 # GIT Hash Tags for the various libraries
 
-# SPATIAL_OPS_TAG=
-# EXPR_LIB_TAG=
-# TAB_PROPS_TAG=
-# RAD_PROPS_TAG=
+SPATIAL_OPS_TAG=b2197579447241ead961aeb2906e542816a5b126
+TAB_PROPS_TAG=0a671fcdaf53cb517666ba760513a7ce141ecb6e
+RAD_PROPS_TAG=a2626cdccfbb97ccb7d68d43bfe085194cccf4d5
+EXPR_LIB_TAG=8bc66f83eb3b2ca8035e4ee0d66f768628f4775d
+NSCBC_TAG=5b880c9c39befcaa22d2165104e5d7d7f6df0edc
 
 ############################################################################
 
@@ -146,16 +147,6 @@ run "mkdir -p install"
 #run "rm -rf install/*"
 
 ############################################################################
-
-#DATE="Jan 3, 2016"
-
-DEPTH="--depth 1"
-
-#if test "$DATE" != ""; then
-#   DEPTH=""
-#fi
-
-############################################################################
 # SpatialOps
 
 if test "$BUILD_SPATIALOPS" = "yes"; then
@@ -165,9 +156,10 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
   if [ -d "SpatialOps" ]; then
       run "cd SpatialOps"
       run "git remote update"
-  
+      
       LOCAL=$(git rev-parse HEAD)
-      REMOTE=$(git rev-parse origin/master)
+      #REMOTE=$(git rev-parse origin/master)
+      REMOTE=$SPATIAL_OPS_TAG
       
       if [ $LOCAL = $REMOTE ]; then
           echo "SpatialOps is current - not rebuilding"
@@ -178,7 +170,7 @@ if test "$BUILD_SPATIALOPS" = "yes"; then
       fi
       run "cd .."
   else
-    run "git clone $DEPTH https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git SpatialOps"
+    run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git SpatialOps"
     run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
   fi
   if test ! -z $SPATIAL_OPS_TAG ; then
@@ -245,7 +237,8 @@ if test "$BUILD_EXPRLIB" = "yes"; then
       run "git remote update"
 
       LOCAL=$(git rev-parse HEAD)
-      REMOTE=$(git rev-parse origin/master)
+      #REMOTE=$(git rev-parse origin/master)
+      REMOTE=$EXPR_LIB_TAG
 
       if [ $LOCAL = $REMOTE ]; then
           echo "ExprLib is current - not rebuilding"
@@ -256,7 +249,7 @@ if test "$BUILD_EXPRLIB" = "yes"; then
       fi
       run "cd .."
   else
-      run "git clone $DEPTH https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
+      run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
       run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
   fi
   if test ! -z $EXPR_LIB_TAG ; then
@@ -306,7 +299,8 @@ if test "$BUILD_TABPROPS" = "yes"; then
       run "git remote update"
 
       LOCAL=$(git rev-parse HEAD)
-      REMOTE=$(git rev-parse origin/master)
+      #REMOTE=$(git rev-parse origin/master)
+      REMOTE=$TAB_PROPS_TAG
 
       if [ $LOCAL = $REMOTE ]; then
           echo "TabProps is current - not rebuilding"
@@ -317,7 +311,7 @@ if test "$BUILD_TABPROPS" = "yes"; then
       fi
       run "cd .."
   else
-      run "git clone $DEPTH https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git TabProps"
+      run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git TabProps"
       run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
   fi
   if test ! -z $TAB_PROPS_TAG ; then
@@ -363,7 +357,8 @@ if test "$BUILD_RADPROPS" = "yes"; then
       run "git remote update"
 
       LOCAL=$(git rev-parse HEAD)
-      REMOTE=$(git rev-parse origin/master)
+      #REMOTE=$(git rev-parse origin/master)
+      REMOTE=$RAD_PROPS_TAG
 
       if [ $LOCAL = $REMOTE ]; then
           echo "RadProps is current - not rebuilding"
@@ -374,7 +369,7 @@ if test "$BUILD_RADPROPS" = "yes"; then
       fi
       run "cd .."
   else
-     run "git clone $DEPTH https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git RadProps"
+     run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git RadProps"
      run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
   fi
   if test ! -z $RAD_PROPS_TAG ; then
@@ -423,7 +418,8 @@ if test "$BUILD_NSCBC" = "yes"; then
     run "git remote update"
 
     LOCAL=$(git rev-parse HEAD)
-    REMOTE=$(git rev-parse origin/master)
+    #REMOTE=$(git rev-parse origin/master)
+    REMOTE=$NSCBC_TAG
 
     if [ $LOCAL = $REMOTE ]; then
       echo "NSCBC is current - not rebuilding"
@@ -434,7 +430,7 @@ if test "$BUILD_NSCBC" = "yes"; then
     fi
     run "cd .."
   else
-    run "git clone $DEPTH https://software.crsim.utah.edu:8443/James_Research_Group/NSCBC.git NSCBC"
+    run "git clone https://software.crsim.utah.edu:8443/James_Research_Group/NSCBC.git NSCBC"
     run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/NSCBC/build"
   fi
   if test ! -z $NSCBC_TAG ; then
