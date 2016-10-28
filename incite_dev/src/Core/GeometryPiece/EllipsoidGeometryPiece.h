@@ -181,6 +181,7 @@ private:
   double d_r3;
   
   Matrix3 d_m3E; // Matrix representation of the ellipsoid.
+  Vector boundOffset;
 
   bool xyzAligned;
 };
