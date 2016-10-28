@@ -703,11 +703,11 @@ main( int argc, char *argv[], char *env[] )
 #endif
 
 
-    RegridderCommon* reg = nullptr;
+    RegridderCommon* regridder = nullptr;
     if(do_AMR) {
-      reg = RegridderFactory::create(ups, world);
-      if (reg) {
-        ctl->attachPort("regridder", reg);
+      regridder = RegridderFactory::create( ups, world );
+      if ( regridder ) {
+        ctl->attachPort( "regridder", regridder );
       }
     }
 
@@ -735,9 +735,9 @@ main( int argc, char *argv[], char *env[] )
       ctl->setReduceUdaFlags( udaDir );
     }
 
-    ctl->attachPort("sim", sim);
-    comp->attachPort("solver", solve);
-    comp->attachPort("regridder", reg);
+    ctl->attachPort(  "sim",       sim );
+    comp->attachPort( "solver",    solve );
+    comp->attachPort( "regridder", regridder );
     
 #ifndef NO_ICE
     //__________________________________
@@ -750,9 +750,9 @@ main( int argc, char *argv[], char *env[] )
     // Load balancer
     LoadBalancerCommon* lbc = LoadBalancerFactory::create( ups, world );
     lbc->attachPort("sim", sim);
-    if(reg) {
-      reg->attachPort("load balancer", lbc);
-      lbc->attachPort("regridder",reg);
+    if( regridder ) {
+      regridder->attachPort( "load balancer", lbc );
+      lbc->attachPort(       "regridder",     regridder );
     }
     
     //__________________________________
@@ -767,26 +767,26 @@ main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
-    sched->attachPort("load balancer", lbc);
-    ctl->attachPort("scheduler", sched);
-    lbc->attachPort("scheduler", sched);
-    comp->attachPort("scheduler", sched);
+    sched->attachPort( "load balancer", lbc );
+    ctl->attachPort(   "scheduler",     sched );
+    lbc->attachPort(   "scheduler",     sched );
+    comp->attachPort(  "scheduler",     sched );
 
     sched->setStartAddr( start_addr );
     
-    if (reg) {
-      reg->attachPort("scheduler", sched);
+    if ( regridder ) {
+      regridder->attachPort( "scheduler", sched );
     }
     sched->addReference();
 
-    if (emit_graphs) {
+    if ( emit_graphs ) {
       sched->doEmitTaskGraphDocs();
     }
 
     //__________________________________
     // Start the simulation controller
-    if (restart) {
-      ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
+    if ( restart ) {
+      ctl->doRestart( udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir );
     }
     
     // This gives memory held by the 'ups' back before the simulation starts... Assuming
@@ -798,8 +798,8 @@ main( int argc, char *argv[], char *env[] )
 
     sched->removeReference();
     delete sched;
-    if (reg) {
-      delete reg;
+    if ( regridder ) {
+      delete regridder;
     }
     delete lbc;
     delete sim;
