@@ -140,7 +140,8 @@ protected:
   //    'first' is whether this is the first time adjustDelT is called.
   void adjustDelT( double& delt, double prev_delt, double time );
   void printSimulationStats( int timestep,
-			     double next_delt, double prev_delt, double time );
+			     double next_delt, double prev_delt, double time,
+			     bool header = false );
 
   void getMemoryStats( int timestep, bool create = false );
   void getPAPIStats  ( );

@@ -720,8 +720,19 @@ void
 SimulationController::printSimulationStats( int timestep,
 					    double next_delt,
 					    double prev_delt,
-					    double time )
+					    double time,
+					    bool header )
 {
+  if( d_myworld->myrank() == 0 && header ) {
+    dbg << std::endl;
+    dbg << "Simulation and run time stats are reported at the end of each time step" << std::endl;
+    dbg << "Wall Time == Total wall time, including execution, stats, and in-situ" << std::endl;
+    dbg << "EMA == Execution wall time as an exponential moving average using a window of " << AVERAGE_WINDOW << " time steps" << std::endl;
+
+    dbg.flush();
+    cout.flush();
+  }
+  
   ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats = d_sharedState->d_runTimeStats;
 
   // With the sum reduces, use double, since with memory it is possible that
@@ -803,35 +814,35 @@ SimulationController::printSimulationStats( int timestep,
   {
     ostringstream message;
     message << left
-	    << "Finished Timestep " << setw(6) << timestep 
-	    << "Time="              << setw(12) << time     
-	    << "delT="              << setw(12) << prev_delt
-	    << "Next delT="         << setw(12) << next_delt
+	    << "Timestep "  << setw(6) << timestep 
+	    << "Time="      << setw(12) << time     
+//	    << "delT="      << setw(12) << prev_delt
+	    << "Next delT=" << setw(12) << next_delt
       
-	    << "Total Wall Time = "      << setw(10) << d_totalWallTime
-	    // << "Total Exec Wall Time = " << setw(10) << d_totalExecWallTime
-	    // << "Exec Wall Time = "       << setw(10) << d_execWallTime <<
-	    // << "In-situ Wall Time = "    << setw(10) << d_inSituWallTime
-	    << "Exp Moving Ave: "        << setw(10) << d_expMovingAverage;
+	    << "Wall Time= "      << setw(10) << d_totalWallTime
+	    // << "Total Exec Wall Time=" << setw(10) << d_totalExecWallTime
+	    // << "Exec Wall Time="       << setw(10) << d_execWallTime <<
+	    // << "In-situ Wall Time="    << setw(10) << d_inSituWallTime
+	    << "EMA="                   << setw(10) << d_expMovingAverage;
 
     // Report on the memory used.
     if (avg_memused == max_memused && avg_highwater == max_highwater) {
-      message << "Memory Use = " << setw(8)
+      message << "Memory Use=" << setw(8)
 	      << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
       if(avg_highwater)
-	message << "    Highwater Memory Use = " << setw(8)
+	message << "    Highwater Memory Use=" << setw(8)
 		<< ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
     }
     else {
-      message << "Memory Used = " << setw(8)
+      message << "Memory Used=" << setw(8)
 	      << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
 	      << " (avg) " << setw(10)
 	      << ProcessInfo::toHumanUnits(max_memused)
 	      << " (max on rank:" << setw(6) << max_memused_rank << ")";
 
       if(avg_highwater)
-	message << "    Highwater Memory Used = " << setw(8)
+	message << "    Highwater Memory Used=" << setw(8)
 		<< ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
 		<< " (avg) " << setw(8)
 		<< ProcessInfo::toHumanUnits(max_highwater)
