@@ -50,7 +50,7 @@ NIGHTLYTESTS = [
    ("helium_1m"                         , "helium_1m.ups"                                           , 1.1 , "All"   , ["exactComparison"])   , 
    ("methane_fire"                      , "methane_fire.ups"                                        , 1.1 , "All"   , ["exactComparison"])   , 
    ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"   , ["exactComparison"])   , 
-   ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"])   , 
+   ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"     , "no_cuda" ])   ,    #11/1/6 gpu machine doesn't have petsc 
    ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
    ("rmcrt_bm1_1L_maxLen"               , "RMCRT/rmcrt_bm1_1L_maxLen.ups"                           , 8   , "ALL"   , ["exactComparison"])   ,
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "Linux" , ["exactComparison"])   , 
@@ -85,7 +85,7 @@ NIGHTLYTESTS = [
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "Linux" , ["exactComparison"])   , 
    ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "Linux" , ["exactComparison"])   , 
+   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "Linux" , ["exactComparison"     , "no_cuda"   ])   ,   # 11/1/16 bug in radProps with cuda
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("CQMOM_scalar_transport"            , "CQMOM_regression/CQMOM_Transport.ups"                    , 6   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("CQMOM_scalar_transport2x2x2"       , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"              , 6   , "Linux" , ["exactComparison"     , "no_restart"]) , 
@@ -99,7 +99,7 @@ NIGHTLYTESTS = [
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,  
+   ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart", "no_cuda"]) ,  # 11/1/16 bug with gpu support with particles  
    ("partMassFlow"                      , "Coal/partMassFlow.ups"                                   , 8   , "All"  , ["exactComparison"   ]) , 
    ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
