@@ -158,7 +158,7 @@ void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
         Point norm_pos = Point((px[idx] - anchor)/cell_dim);
 
         IntVector cell_idx(Floor(norm_pos.x()), Floor(norm_pos.y()),
-                                     Floor(norm_pos.z()));
+                           Floor(norm_pos.z()));
 
         Point px(norm_pos.x() - (double)cell_idx.x(),
                  norm_pos.y() - (double)cell_idx.y(),

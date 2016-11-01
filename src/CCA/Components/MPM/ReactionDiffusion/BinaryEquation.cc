@@ -52,5 +52,5 @@ double BinaryEquation::computeConductivity(double concentration)
     return d_min_conductivity;
   */
 
-  return d_min_conductivity + d_slope * concentration;
+  return (d_min_conductivity + d_slope * concentration);
 }
