@@ -298,10 +298,10 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
       d_checkpointTimestepInterval = atoi( timestepInterval.c_str() );
     }
     if( walltimeStart != "" ) {
-      d_checkpointWalltimeStart = atof( walltimeStart.c_str() );
+      d_checkpointWalltimeStart = atoi( walltimeStart.c_str() );
     }      
     if( walltimeInterval != "" ) {
-      d_checkpointWalltimeInterval = atof( walltimeInterval.c_str() );
+      d_checkpointWalltimeInterval = atoi( walltimeInterval.c_str() );
     }
     if( walltimeStartHours != "" ) {
       d_checkpointWalltimeStart = atof( walltimeStartHours.c_str() ) * 3600.0;
