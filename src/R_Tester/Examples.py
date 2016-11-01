@@ -25,6 +25,7 @@ system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_bm1_1L.ups       RMCRT_GPU_1L.ups" 
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_ML.ups           RMCRT_GPU_ML.ups"         % the_dir )
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_1L_reflect.ups   RMCRT_GPU_1L_reflect.ups" % the_dir )
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_bm1_DO.ups       RMCRT_GPU_bm1_DO.ups"     % the_dir )
+system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_+Domain.ups      RMCRT_GPU_+Domain.ups"    % the_dir )
 
 # Modify base files
 RMCRT_isoScat_LHC_ups = modUPS( the_dir, \
@@ -77,6 +78,7 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL")
                    ("RMCRT_1L_maxlen",  "RMCRT_bm1_1L_maxLen.ups",     8, "ALL", ["exactComparison"]),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
+                   ("RMCRT_+Domain",    "RMCRT_+Domain.ups",           8, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",                1, "ALL", ["abs_tolerance=1e-14","rel_tolerance=1e-11"]),
                    ("RMCRT_radiometer", "RMCRT_radiometer.ups",        8, "ALL", ["exactComparison"]),
                    ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
@@ -92,6 +94,7 @@ LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL",
                    ("RMCRT_1L_maxlen",  "RMCRT_bm1_1L_maxLen.ups",     8, "ALL", ["exactComparison"]),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1 , "ALL",["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
+                   ("RMCRT_+Domain",    "RMCRT_+Domain.ups",           8, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",                1, "ALL", ["exactComparison"]),
                    ("RMCRT_radiometer", "RMCRT_radiometer.ups",        8, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups",        1, "ALL", ["exactComparison"]),
@@ -109,7 +112,8 @@ THREADEDTESTS = [  ("RMCRT_test_1L_thread",           "RMCRT_bm1_1L.ups",       
                    ("RMCRT_bm1_DO_thread",            "RMCRT_bm1_DO.ups",         1.1, "ALL", ["exactComparison", "sus_options=-nthreads 8"]),
                    ("RMCRT_bm1_DO_thread_2proc",      "RMCRT_bm1_DO.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_ML_thread",                "RMCRT_ML.ups",             1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_ML_thread_2proc",          "RMCRT_ML.ups",             2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
+                   ("RMCRT_ML_thread_2proc",          "RMCRT_ML.ups",             2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_thread_2proc",     "RMCRT_+Domain.ups",        2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
                  ]
 
 GPUTESTS      = [
