@@ -126,6 +126,12 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
     }
   }
 }
+
+void ElectrostaticSolve::outputProblemSpec(ProblemSpecP& ps)
+{
+
+}
+
 //__________________________________
 // 
 void ElectrostaticSolve::scheduleInitialize(const LevelP& level,

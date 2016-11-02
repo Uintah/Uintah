@@ -29,7 +29,6 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <iostream>
-#include <string>
 
 using namespace Uintah;
 
@@ -48,7 +47,7 @@ ESConductivityModel* ESConductivityModelFactory::create(const ProblemSpecP& ps,
   child->require("conductivity_model", model_type);
 
   if (model_type == "ivd")
-    return scinew ESConductivityModel(shared_state, mpm_flags, mpm_lb, fvm_lb);
+    return scinew ESConductivityModel(shared_state, mpm_flags, mpm_lb, fvm_lb, model_type);
 
   else
     throw ProblemSetupException("Unknown Conductivity Model: ("+model_type+")", __FILE__, __LINE__);

@@ -125,13 +125,21 @@ void ESMPM::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& rest
 
   d_mpm_flags = d_amrmpm->flags;
 
+  ProblemSpecP esmpm_ps = prob_spec->findBlock("ESMPM");
+  esmpm_ps->require("conductivity_model", d_cd_model_name);
+
   d_conductivity_model = ESConductivityModelFactory::create(prob_spec, d_shared_state,
                                                       d_mpm_flags, d_mpm_lb, d_fvm_lb);
 }
 
 void ESMPM::outputProblemSpec(ProblemSpecP& prob_spec)
 {
+  ProblemSpecP root = prob_spec->getRootNode();
+  ProblemSpecP esmpm_ps = root->appendChild("ESMPM");
+  esmpm_ps->appendElement("conductivity_model", d_cd_model_name);
+
   d_amrmpm->outputProblemSpec(prob_spec);
+
 }
 
 void ESMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)

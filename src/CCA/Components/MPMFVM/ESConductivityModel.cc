@@ -48,7 +48,8 @@ static DebugStream cout_doing("ESMPM_DOING_COUT", false);
 
 ESConductivityModel::ESConductivityModel(SimulationStateP& shared_state,
                                          MPMFlags* mpm_flags,
-                                         MPMLabel* mpm_lb, FVMLabel* fvm_lb)
+                                         MPMLabel* mpm_lb, FVMLabel* fvm_lb,
+                                         std::string& model_type)
 {
   d_shared_state = shared_state;
   d_mpm_flags = mpm_flags;
@@ -59,6 +60,8 @@ ESConductivityModel::ESConductivityModel(SimulationStateP& shared_state,
   d_TINY_RHO  = 1.e-12;
 
   d_conductivity_equation = 0;
+
+  d_model_type = model_type;
 }
 
 ESConductivityModel::~ESConductivityModel()

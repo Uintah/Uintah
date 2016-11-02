@@ -64,6 +64,8 @@ WARNING
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid, SimulationStateP&);
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
                               
     virtual void scheduleInitialize(const LevelP& level,
                                     SchedulerP& sched);

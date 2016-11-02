@@ -49,6 +49,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <vector>
+#include <string>
 
 namespace Uintah {
   class ESMPM : public UintahParallelComponent, public SimulationInterface {
@@ -94,6 +95,7 @@ namespace Uintah {
 
     private:
       double d_TINY_RHO;
+      std::string d_cd_model_name;
 
       SimulationStateP d_shared_state;
       Output* d_data_archiver;

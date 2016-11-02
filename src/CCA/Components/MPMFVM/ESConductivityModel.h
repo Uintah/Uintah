@@ -35,6 +35,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Labels/MPMLabel.h>
 
+#include <string>
 
 namespace Uintah{
 /*************************************************
@@ -57,7 +58,8 @@ namespace Uintah{
     public:
       ESConductivityModel(SimulationStateP& shared_state,
                           MPMFlags* mpm_flags,
-                          MPMLabel* mpm_lb, FVMLabel* fvm_lb);
+                          MPMLabel* mpm_lb, FVMLabel* fvm_lb,
+                          std::string& model_type);
 
       virtual ~ESConductivityModel();
 
@@ -76,6 +78,8 @@ namespace Uintah{
       virtual double distanceFunc(Point p1, Point p2);
 
     private:
+      std::string d_model_type;
+
       Ghost::GhostType d_gac;
       double d_TINY_RHO;
       SimulationStateP d_shared_state;
