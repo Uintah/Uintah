@@ -358,8 +358,9 @@ Arches::scheduleTimeAdvance( const LevelP& level,
                              SchedulerP& sched)
 {
   // Only schedule
-  if(level->getIndex() != d_archesLevelIndex)
+  if(level->getIndex() != d_archesLevelIndex) {
     return;
+  }
 
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
@@ -371,7 +372,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     d_sharedState->setRegridTimestep(false);
   }
 
-  if (d_doingRestart  ) {
+  if ( d_doingRestart ) {
     if(d_recompile_taskgraph) {
       d_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
   }}

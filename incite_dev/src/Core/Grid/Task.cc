@@ -122,8 +122,9 @@ Task::initialize()
 void
 Task::setSets(const PatchSet* ps, const MaterialSet* ms)
 {
-  ASSERT(m_patch_set == nullptr);
-  ASSERT(m_matl_set  == nullptr);
+  // TODO: cgange these, they don't make sense when this task is added to more then one "Normal" task-graph
+//  ASSERT(m_patch_set == nullptr);
+//  ASSERT(m_matl_set  == nullptr);
   m_patch_set = ps;
   if (m_patch_set) {
     m_patch_set->addReference();

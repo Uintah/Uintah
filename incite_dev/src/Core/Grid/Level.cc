@@ -389,19 +389,12 @@ Level::totalCells() const
 //
 long
 Level::getTotalSimulationCellsInRegion(const IntVector& lowIndex, const IntVector& highIndex) const {
-  // Note: This method was mainly designed to be called by getRegion() only for bulletproofing to ensure
-  // the selectPatches() cell count matches what we hope it is.
 
-  // This method can be slow if it iterates through potentially hundreds of thousands of patches.
-
-  // For something faster selectPatches() and count up cells it returns.
-
-  // Not all simulations are cubic.  Some levels might be L shaped, T shaped, donut shaped,
-  // even non-contiguous blotches, etc.  It is not enough to simply do a high - low to figure
-  // out the amount of simulation cells.  We instead need to go all patches and see if they exist
-  // in this range.  If so, add up their cells. This process is similar to how d_totalCells is
-  // computed in Level::finalizeLevel().
-
+  // Not all simulations are cubic.  Some simulations might be L shaped, or T shaped, or + shaped, etc.
+  // It is not enough to simply do a high - low to figure out the amount of simulation cells.  We instead
+  // need to go all patches and see if they exist in this range.  If so, add up their cells.
+  // This process is similar to how d_totalCells is computed in Level::finalizeLevel().
+  
   long cellsInRegion = 0; // Compute the number of cells in the level.
 
   for( int i = 0; i < (int)m_real_patches.size(); i++ ) {
@@ -553,12 +546,12 @@ Level::positionToIndex( const Point & p ) const
 void Level::selectPatches( const IntVector  & low
                          , const IntVector  & high
                          ,       selectType & neighbors
-                         ,       bool         withExtraCells
-                         ,       bool         useCache /* =false */
+                         ,       bool         withExtraCells /* =false */
+                         ,       bool         cache_patches  /* =false */
                          ) const
 {
 
-  if (useCache) {
+  if (cache_patches) {
     // look it up in the cache first
     patch_cache_mutex.lock();
     {
@@ -577,15 +570,15 @@ void Level::selectPatches( const IntVector  & low
     patch_cache_mutex.unlock();
   }
 
+
   m_bvh->query(low, high, neighbors, withExtraCells);
   std::sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
+
 #ifdef CHECK_SELECT
-  // Double-check the more advanced selection algorithms against the
-  // slow (exhaustive) one.
-  vector<const Patch*> tneighbors;
-  for(const_patch_iterator iter=m_virtual_and_real_patches.begin();
-      iter != m_virtual_and_real_patches.end(); iter++) {
+  // Double-check the more advanced selection algorithms against the slow (exhaustive) one.
+  std::vector<const Patch*> tneighbors;
+  for(const_patch_iterator iter=m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); iter++) {
     const Patch* patch = *iter;
 
     IntVector l=Max(patch->getCellLowIndex(), low);
@@ -598,33 +591,26 @@ void Level::selectPatches( const IntVector  & low
 
   ASSERTEQ( neighbors.size(), tneighbors.size() );
 
-  sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
+  std::sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
   for( int i = 0; i < (int)neighbors.size(); i++ ) {
     ASSERT(neighbors[i] == tneighbors[i]);
   }
 #endif
 
-  if (useCache) {
+
+  if (cache_patches) {
     patch_cache_mutex.lock();
     {
-      // Put it in the cache
-
-      // See if another thread already filled up this cache entry
-      select_cache::const_iterator iter = m_select_cache.find(std::make_pair(low, high));
-
-      if (iter == m_select_cache.end()) {
-        //This cache entry doesn't exist yet, so lets add it.
-        std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
-        cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-        for (int i = 0; i < neighbors.size(); i++) {
-         cache.push_back(neighbors[i]);
-        }
+      // put it in the cache - start at orig_size in case there was something in
+      // neighbors before this query
+      std::vector<const Patch*>& cache = m_select_cache[std::make_pair(low, high)];
+      cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
+      for (int i = 0; i < neighbors.size(); i++) {
+        cache.push_back(neighbors[i]);
       }
     }
     patch_cache_mutex.unlock();
   }
-
-
 }
 
 //______________________________________________________________________

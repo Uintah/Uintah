@@ -104,7 +104,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
                             )
   : sc_(sc)
   , d_myworld(pg)
-  , first(first)
+  , m_first(first)
   , taskgraph_(taskgraph)
   , mustConsiderInternalDependencies_(mustConsiderInternalDependencies)
 {
@@ -123,10 +123,10 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
 
   // Create a send old detailed task for every processor in my neighborhood.
   for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
-    DetailedTask* newtask = scinew DetailedTask( stask_, 0, 0, this );
+    DetailedTask* newtask = scinew DetailedTask( stask_, nullptr, nullptr, this );
     newtask->assignResource(*iter);
 
-    //use a map because the processors in this map are likely to be sparse
+    // use a map because the processors in this map are likely to be sparse
     sendoldmap_[*iter] = tasks_.size();
     tasks_.push_back(newtask);
   }
@@ -137,7 +137,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
 DetailedTasks::~DetailedTasks()
 {
   // Free dynamically allocated SrubItems
-  (first ? first->scrubCountTable_ : scrubCountTable_).remove_all();
+  (m_first ? m_first->scrubCountTable_ : scrubCountTable_).remove_all();
 
   for (size_t i = 0; i < batches_.size(); i++) {
     delete batches_[i];
@@ -384,14 +384,14 @@ DetailedTasks::initializeScrubs( std::vector<OnDemandDataWarehouseP> & dws, int 
         // if we're intermediate, we're going to need to make sure we don't scrub CoarseOld before we finish using it
         DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << " Initializing scrubs on dw: " << dw->getID()
                                << " for DW type " << i << " ADD=" << initialized[dwmap[i]]);
-        dw->initializeScrubs(i, &(first ? first->scrubCountTable_ : scrubCountTable_), initialized[dwmap[i]]);
+        dw->initializeScrubs(i, &(m_first ? m_first->scrubCountTable_ : scrubCountTable_), initialized[dwmap[i]]);
       }
       if (i != Task::OldDW && tgtype != Scheduler::IntermediateTaskGraph && dwmap[Task::NewDW] - dwmap[Task::OldDW] > 1) {
         // add the CoarseOldDW's scrubs to the OldDW, so we keep it around for future task graphs
         OnDemandDataWarehouse* olddw = dws[dwmap[Task::OldDW]].get_rep();
         DOUT(scrubout, "Rank-" << Parallel::getMPIRank() << " Initializing scrubs on dw: " << olddw->getID() << " for DW type " << i << " ADD=" << 1);
         ASSERT(initialized[dwmap[Task::OldDW]]);
-        olddw->initializeScrubs(i, &(first ? first->scrubCountTable_ : scrubCountTable_), true);
+        olddw->initializeScrubs(i, &(m_first ? m_first->scrubCountTable_ : scrubCountTable_), true);
       }
       initialized[dwmap[i]] = true;
     }
@@ -579,10 +579,10 @@ DetailedTasks::addScrubCount( const VarLabel * var
     patch = patch->getRealPatch();
   ScrubItem key(var, matlindex, patch, dw);
   ScrubItem* result;
-  result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
+  result = (m_first ? m_first->scrubCountTable_ : scrubCountTable_).lookup(&key);
   if (!result) {
     result = scinew ScrubItem(var, matlindex, patch, dw);
-    (first ? first->scrubCountTable_ : scrubCountTable_).insert(result);
+    (m_first ? m_first->scrubCountTable_ : scrubCountTable_).insert(result);
   }
   result->m_count++;
   if (scrubout && (var->getName() == dbgScrubVar || dbgScrubVar == "")
@@ -632,7 +632,7 @@ DetailedTasks::getScrubCount( const VarLabel * label
 {
   ASSERT(!patch->isVirtual());
   ScrubItem key(label, matlIndex, patch, dw);
-  ScrubItem* result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
+  ScrubItem* result = (m_first ? m_first->scrubCountTable_ : scrubCountTable_).lookup(&key);
   if (result) {
     count = result->m_count;
     return true;
@@ -648,7 +648,7 @@ void
 DetailedTasks::createScrubCounts()
 {
   // Clear old ScrubItems
-  (first ? first->scrubCountTable_ : scrubCountTable_).remove_all();
+  (m_first ? m_first->scrubCountTable_ : scrubCountTable_).remove_all();
 
   // Go through each of the tasks and determine which variables it will require
   for (int i = 0; i < (int)localtasks_.size(); i++) {
@@ -696,7 +696,7 @@ DetailedTasks::createScrubCounts()
     std::ostringstream message;
     message << Parallel::getMPIRank() << " scrub counts:\n";
     message << Parallel::getMPIRank() << " DW/Patch/Matl/Label\tCount\n";
-    for (FastHashTableIter<ScrubItem> iter(&(first ? first->scrubCountTable_ : scrubCountTable_)); iter.ok(); ++iter) {
+    for (FastHashTableIter<ScrubItem> iter(&(m_first ? m_first->scrubCountTable_ : scrubCountTable_)); iter.ok(); ++iter) {
       const ScrubItem* rec = iter.get_key();
       message << rec->m_dw << '/' << (rec->m_patch ? rec->m_patch->getID() : 0) << '/' << rec->m_matl << '/' << rec->m_label->getName()
                << "\t\t" << rec->m_count << '\n';
@@ -737,13 +737,13 @@ DetailedDep*
 DetailedTasks::findMatchingDetailedDep(       DependencyBatch  * batch
                                       ,       DetailedTask     * toTask
                                       ,       Task::Dependency * req
-                                      ,  const Patch           * fromPatch
-                                      ,        int               matl
-                                      ,        IntVector         low
-                                      ,        IntVector         high
-                                      ,        IntVector       & totalLow
-                                      ,        IntVector       & totalHigh
-                                      ,        DetailedDep    *& parent_dep
+                                      , const Patch            * fromPatch
+                                      ,       int                matl
+                                      ,       IntVector          low
+                                      ,       IntVector          high
+                                      ,       IntVector        & totalLow
+                                      ,       IntVector        & totalHigh
+                                      ,       DetailedDep     *& parent_dep
                                       )
 {
   totalLow = low;

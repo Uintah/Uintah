@@ -44,6 +44,7 @@
 
 #include <cfloat>
 #include <climits>
+#include <iomanip>
 #include <mutex>
 #include <sstream>
 
@@ -51,8 +52,9 @@ using namespace Uintah;
 
 namespace {
 
-Dout g_lb_dbg(           "LoadBalancer", false );
-Dout g_neighborhood_dbg( "Neighborhood", false );
+Dout g_lb_dbg(                "LoadBalancer"    , false );
+Dout g_neighborhood_dbg(      "Neighborhood"    , false );
+Dout g_neighborhood_size_dbg( "NeighborhoodSize", false);
 
 std::mutex g_pidx_mutex{};
 
@@ -87,7 +89,7 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
 
   DOUT(g_lb_dbg, d_myworld->myrank() << " Assigning Tasks to Resources! (" << nTasks << " tasks)");
 
-  for(int i=0;i<nTasks;i++){
+  for (int i = 0; i < nTasks; i++) {
     DetailedTask* task = graph.getTask(i);
 
     const PatchSubset* patches = task->getPatches();
@@ -513,9 +515,12 @@ LoadBalancerCommon::createOutputPatchSet( const LevelP & level )
 //______________________________________________________________________
 //
 void
-LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGrid )
+LoadBalancerCommon::createNeighborhoods( const GridP & grid
+                                       , const GridP & oldGrid
+                                       , const bool    hasDistalReqs /* = false */
+                                       )
 {
-  int me = d_myworld->myrank();
+  int my_rank = d_myworld->myrank();
   // TODO consider this old warning from Steve:
   //    WARNING - this should be determined from the taskgraph? - Steve
 
@@ -523,19 +528,25 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
   m_neighborhood_processors.clear();
   
   //this processor should always be in the neighborhood
-  m_neighborhood_processors.insert(d_myworld->myrank());
+  m_neighborhood_processors.insert(my_rank);
+
+  if (hasDistalReqs) {
+    m_distal_neighbors.clear();
+    m_distal_neighborhood_processors.clear();
+    m_distal_neighborhood_processors.insert(my_rank);
+  }
  
   // go through all patches on all levels, and if the patch-wise
   // processor assignment equals the current processor, then store the 
   // patch's neighbors in the load balancer array
   int num_levels = grid->numLevels();
-  for( int l = 0; l < num_levels; l++ ) {
+  for (int l = 0; l < num_levels; l++) {
     LevelP level = grid->getLevel(l);
 
     // get the max ghost cells to consider for neighborhood creation
     int maxGhost = m_scheduler->getMaxGhost();
 
-    for(Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+    for (Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
 
       // we need to check both where the patch is and where
@@ -545,21 +556,20 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
 
       // we also need to see if the output processor for patch is this proc,
       // in case it wouldn't otherwise have been in the neighborhood
-      int outputproc = (static_cast<long long>(proc) / static_cast<long long>(m_output_Nth_proc))*m_output_Nth_proc;
+      int outputproc = (static_cast<long long>(proc) / static_cast<long long>(m_output_Nth_proc)) * m_output_Nth_proc;
 
-      if(proc == me || oldproc == me || outputproc == me) {
-        // one for current level, coarse level, find level, old level
+      if (proc == my_rank || oldproc == my_rank || outputproc == my_rank) {
+        // one for current level, coarse level, fine level, old level
         // each call to level->selectPatches must be done with an empty patch set
         // or otherwise it will conflict with the sorted order of the cached patches
         Patch::selectType neighbor;
-
-        IntVector ghost(maxGhost,maxGhost,maxGhost);
-
+        IntVector ghost(maxGhost, maxGhost, maxGhost);
         IntVector low( patch->getExtraLowIndex( Patch::CellBased, IntVector(0,0,0)));
         IntVector high(patch->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0)));
+
         level->selectPatches(low-ghost, high+ghost, neighbor);
         
-        //add owning processors
+        // add owning processors (local)
         for (int i = 0; i < neighbor.size(); i++) {
           m_neighbors.insert(neighbor[i]->getRealPatch());
           int nproc = getPatchwiseProcessorAssignment(neighbor[i]);
@@ -572,15 +582,39 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
             m_neighborhood_processors.insert(oproc);
           }
         }
-        
-        if (m_shared_state->isCopyDataTimestep() && proc == me) {
+
+        // add owning processors (distal)
+        if (hasDistalReqs) {
+          int maxDistalGhost = m_scheduler->getMaxDistallGhost();
+
+          Patch::selectType distal_neighbors;
+          IntVector distalGhost(maxDistalGhost, maxDistalGhost, maxDistalGhost);
+          level->selectPatches(low-distalGhost, high+distalGhost, distal_neighbors);
+          // add owning global processors.   Because we're looking for multiple regions of
+          // patches from multiple source patches, we will find some duplicates.  But it's should be
+          // a handful, so as not to cause any concern
+          for (int i = 0; i < distal_neighbors.size(); i++) {
+            m_distal_neighbors.insert(distal_neighbors[i]->getRealPatch());
+            int nproc = getPatchwiseProcessorAssignment(distal_neighbors[i]);
+            if (nproc >= 0) {
+              m_distal_neighborhood_processors.insert(nproc);
+            }
+
+            int oproc = getOldProcessorAssignment(distal_neighbors[i]);
+            if (oproc >= 0) {
+              m_distal_neighborhood_processors.insert(oproc);
+            }
+          }
+        }
+
+        if (m_shared_state->isCopyDataTimestep() && proc == my_rank) {
           if (oldGrid->numLevels() > l) {
             // on copy data timestep we need old patches that line up with this proc's patches,
             // get the other way around at the end
             Patch::selectType old;
             const LevelP& oldLevel = oldGrid->getLevel(l);
             oldLevel->selectPatches(patch->getExtraCellLowIndex() - ghost, patch->getExtraCellHighIndex() + ghost, old);
-            for (int i = 0; i < old.size(); i++)  //add owning processors (they are the old owners)
+            for (int i = 0; i < old.size(); i++)  // add owning processors (they are the old owners)
                 {
               m_neighbors.insert(old[i]->getRealPatch());
               int nproc = getPatchwiseProcessorAssignment(old[i]);
@@ -596,7 +630,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
         }
 
         // add AMR stuff - so the patch will know about coarsening and refining
-        if (l > 0 && (proc == me || (oldproc == me && !m_shared_state->isCopyDataTimestep()))) {
+        if (l > 0 && (proc == my_rank || (oldproc == my_rank && !m_shared_state->isCopyDataTimestep()))) {
           LevelP coarseLevel = level;
 
           // get the max level offset and max ghost cells to consider for neighborhood creation
@@ -626,7 +660,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
           }
         }
 
-        if (l < grid->numLevels() - 1 && (proc == me || (oldproc == me && !m_shared_state->isCopyDataTimestep()))) {
+        if (l < grid->numLevels() - 1 && (proc == my_rank || (oldproc == my_rank && !m_shared_state->isCopyDataTimestep()))) {
 
           IntVector ghost(maxGhost, maxGhost, maxGhost);
           const LevelP& fineLevel = level->getFinerLevel();
@@ -673,7 +707,7 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
         // it used to be (in the case of a dynamic reallocation)
         int oldproc = getOldProcessorAssignment(oldPatch);
 
-        if (oldproc == me) {
+        if (oldproc == my_rank) {
           // don't get extra cells or ghost cells
           Patch::selectType n;
           newLevel->selectPatches(oldPatch->getExtraCellLowIndex() - ghost, oldPatch->getExtraCellHighIndex() + ghost, n);
@@ -708,20 +742,28 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
   }
 
 #if 0
-  std::cout << d_myworld->myrank() << " np: ";
-  for(std::set<int>::iterator iter=m_neighborhood_processors.begin();iter!=m_neighborhood_processors.end();iter++)
-  {
-    std::cout << *iter << " ";
+  std::ostringstream message;
+  message << "Rank: " << my_rank << " neighborhood contains procs: ";
+  for (std::set<int>::iterator iter = m_neighborhood_processors.begin(); iter != m_neighborhood_processors.end(); iter++) {
+    message << *iter << " ";
   }
-  std::cout << std::endl;
+  DOUT(true, message.str());
 #endif
 
   if (g_neighborhood_dbg) {
     std::ostringstream message;
     for (std::set<const Patch*>::iterator iter = m_neighbors.begin(); iter != m_neighbors.end(); iter++) {
-      message << "Rank-" << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc "
-                << getPatchwiseProcessorAssignment(*iter) << std::endl;
+      message << "Rank-" << my_rank
+              << "  Neighborhood contains patch: " << (*iter)->getID() << " from proc "
+              << getPatchwiseProcessorAssignment(*iter) << std::endl;
     }
+    DOUT(true, message.str());
+  }
+
+  if (g_neighborhood_size_dbg) {
+    std::ostringstream message;
+    message << "Rank-" << std::left << std::setw(5) << my_rank << "        m_neighbors size: " << std::setw(4) << m_neighbors.size()        << "             m_neighborhood_processors size: " << std::setw(4) << m_neighborhood_processors.size() << "\n";
+    message << "Rank-" << std::left << std::setw(5) << my_rank << " m_distal_neighbors size: " << std::setw(4) << m_distal_neighbors.size() << "      m_distal_neighborhood_processors size: " << std::setw(4) << m_distal_neighborhood_processors.size();
     DOUT(true, message.str());
   }
 
@@ -730,26 +772,39 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
 //______________________________________________________________________
 //
 bool
-LoadBalancerCommon::inNeighborhood( const PatchSubset * ps )
+LoadBalancerCommon::inNeighborhood( const PatchSubset * pss, const bool hasDistalReqs /* = false */ )
 {
-  for (int i = 0; i < ps->size(); i++) {
-    const Patch* patch = ps->get(i);
-    if (m_neighbors.find(patch) != m_neighbors.end())
-      return true;
+  // accept a subset with no patches as being inNeighborhood.
+  if (pss->size() == 0) {
+    return true;
   }
-  // also count a subset with no patches
-  return ps->size() == 0;
+
+  bool found = false;
+  int i = 0;
+
+  while (!found && i < pss->size()) {
+    const Patch* patch = pss->get(i);
+    if (hasDistalReqs) {
+      found = (m_distal_neighbors.find(patch) != m_distal_neighbors.end());
+    }
+    else {
+      found = (m_neighbors.find(patch) != m_neighbors.end());
+    }
+    i++;
+  }
+  return found;
 }
 
 //______________________________________________________________________
 //
 bool
-LoadBalancerCommon::inNeighborhood( const Patch * patch )
+LoadBalancerCommon::inNeighborhood( const Patch * patch, const bool hasDistalReqs /* = false */ )
 {
-  if (m_neighbors.find(patch) != m_neighbors.end()) {
-    return true;
-  } else {
-    return false;
+  if (hasDistalReqs) {
+    return m_distal_neighbors.find(patch) != m_distal_neighbors.end();
+  }
+  else {
+    return m_neighbors.find(patch) != m_neighbors.end();
   }
 }
 
@@ -766,7 +821,7 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   m_output_Nth_proc = 1;
 
-  if (p != 0) {
+  if (p != nullptr) {
     p->getWithDefault("outputNthProc", m_output_Nth_proc, 1);
   }
 

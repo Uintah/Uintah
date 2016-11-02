@@ -86,7 +86,7 @@ public:
     return d_foreign;
   }
 
-  //marks a variable as invalid (for example, it is in the process of receiving mpi)
+  //marks a variable as invalid (for example, it is in the process of receiving MPI)
   void setValid() { d_valid=true;}
 
   void setInvalid() { d_valid=false;} 

@@ -820,6 +820,7 @@
                             attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
+    <num_task_graphs      spec="OPTIONAL INTEGER" />
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
@@ -866,7 +867,7 @@
                              attribute1="type REQUIRED STRING 'Simple SimpleLoadBalancer RoundRobin DLB PLB'" >
                              
     <costAlgorithm         spec="OPTIONAL STRING 'Model,ModelLS,Kalman,Memory'" />
-    <dynamicAlgorithm      spec="OPTIONAL STRING 'particle3, patchFactor, patchFactorParticles, random, Zoltan'" />
+    <dynamicAlgorithm      spec="OPTIONAL STRING 'particle3, patchFactor, patchFactorParticles, random, cyclic, Zoltan'" />
     <doSpaceCurve          spec="OPTIONAL BOOLEAN" /> <!-- default is true-->
     <hasParticles          spec="OPTIONAL BOOLEAN" /> <!-- should the cost algorithms take into account particles-->
     <timestepInterval      spec="REQUIRED INTEGER 'positive'" />

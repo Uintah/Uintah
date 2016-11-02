@@ -165,8 +165,8 @@ VarLabel::getFullName( int matlIndex, const Patch * patch ) const
 void
 VarLabel::allowMultipleComputes()
 {
-   if (!d_td->isReductionVariable())
-     SCI_THROW(InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable."), __FILE__, __LINE__));
+//   if (!d_td->isReductionVariable())
+//     SCI_THROW(InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable."), __FILE__, __LINE__));
    d_allowMultipleComputes = true;
 }
 

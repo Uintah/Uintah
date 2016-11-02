@@ -85,17 +85,6 @@ DependencyBatch::received( const ProcessorGroup * pg )
 {
   m_received.store(true, std::memory_order_seq_cst);
 
-  if (g_received_dbg) {
-    std::ostringstream message;
-    message << "Received batch message " << m_message_tag << " from task " << *m_from_task << "\n";
-
-    for (DetailedDep* dep = m_head; dep != nullptr; dep = dep->m_next) {
-      message << "\tSatisfying " << *dep << "\n";
-    }
-    DOUT(true, message.str());
-  }
-
-
   // set all the toVars to valid, meaning the MPI has been completed
   for (std::vector<Variable*>::iterator iter = m_to_vars.begin(); iter != m_to_vars.end(); iter++) {
     (*iter)->setValid();
@@ -110,6 +99,18 @@ DependencyBatch::received( const ProcessorGroup * pg )
 
   // clear the variables that have outstanding MPI as they are completed now.
   m_to_vars.clear();
+
+
+  // DEBUG
+  if (g_received_dbg) {
+    std::ostringstream message;
+    message << "Received batch message " << m_message_tag << " from task " << *m_from_task << "\n";
+
+    for (DetailedDep* dep = m_head; dep != nullptr; dep = dep->m_next) {
+      message << "\tSatisfying " << *dep << "\n";
+    }
+    DOUT(true, message.str());
+  }
 }
 
 } // namespace Uintah

@@ -683,7 +683,7 @@ private:
   const ProcessorGroup* d_myworld;
 
   // store the first so we can share the scrubCountTable
-  DetailedTasks*             first;
+  DetailedTasks*             m_first;
   std::vector<DetailedTask*> tasks_;
   KeyDatabase<Patch>         varKeyDB;
   KeyDatabase<Level>         levelKeyDB;

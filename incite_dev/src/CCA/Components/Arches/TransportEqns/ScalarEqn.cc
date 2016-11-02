@@ -22,10 +22,10 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Containers/StaticArray.h>
@@ -48,7 +48,9 @@
 using namespace std;
 using namespace Uintah;
 
+
 static DebugStream dbg("ARCHES", false);
+
 
 //---------------------------------------------------------------------------
 // Builder:
@@ -339,6 +341,7 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 
   }
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule compute the sources.
 //---------------------------------------------------------------------------
@@ -346,6 +349,7 @@ void
 ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule build the transport equation.
 //---------------------------------------------------------------------------
@@ -357,26 +361,29 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
   printSchedule(level,dbg,taskname);
 
-  if ( timeSubStep == 0 ){
+  if ( timeSubStep == 0 ) {
     tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   } else {
     tsk->requires(Task::NewDW, d_transportVarLabel, Ghost::AroundCells, 2);
   }
   //----NEW----
   // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
-  if ( _stage == 0 ){
+  if ( _stage == 0 ) {
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1);
   } else {
     tsk->requires(Task::NewDW, VarLabel::find("density_old"), Ghost::AroundCells, 1);
   }
   tsk->requires(Task::NewDW, d_fieldLabels->d_turbViscosLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
+
 #ifdef YDIM
   tsk->requires(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
+
 #ifdef ZDIM
   tsk->requires(Task::NewDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
+
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
@@ -384,8 +391,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
 
   // srcs
   SourceTermFactory& src_factory = SourceTermFactory::self();
-  for (vector<SourceContainer>::iterator iter = d_sources.begin();
-       iter != d_sources.end(); iter++){
+  for (vector<SourceContainer>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++) {
     SourceTermBase& temp_src = src_factory.retrieve_source_term( iter->name );
     tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 );
   }
@@ -399,8 +405,8 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
 
   //---- time substep dependent ---
-  if ( !d_use_constant_D ){
-    if ( timeSubStep == 0 ){
+  if ( !d_use_constant_D ) {
+    if ( timeSubStep == 0 ) {
       tsk->requires( Task::OldDW, d_mol_D_label, Ghost::AroundCells, 1 );
     } else {
       tsk->requires( Task::NewDW, d_mol_D_label, Ghost::AroundCells, 1 );

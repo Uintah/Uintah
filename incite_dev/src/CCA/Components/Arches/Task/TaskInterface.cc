@@ -226,7 +226,7 @@ void TaskInterface::schedule_task( const LevelP& level,
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
-      throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
+      throw InvalidValue("Arches Task Error: Cannot schedule task because of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
 
     }
@@ -235,10 +235,17 @@ void TaskInterface::schedule_task( const LevelP& level,
   //other variables:
   tsk->requires(Task::OldDW, VarLabel::find("delT"));
 
-  if ( counter > 0 )
-    sched->addTask( tsk, level->eachPatch(), matls );
-  else
+  // TODO: this is a hack and will need to be cleanly resolved once things are working correctly - APH, 10/27/16
+  if ( counter > 0 ) {
+    int tg_num = -1;
+    if (tsk->getName() == "time_ave_scalars") {
+      tg_num = 1;
+    }
+    sched->addTask( tsk, level->eachPatch(), matls, tg_num );
+  }
+  else {
     delete tsk;
+  }
 
 }
 
@@ -283,16 +290,18 @@ void TaskInterface::schedule_init( const LevelP& level,
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
-      throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
+      throw InvalidValue("Arches Task Error: Cannot schedule task because of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
       break;
 
     }
   }
 
-  if ( counter > 0 )
-    sched->addTask( tsk, level->eachPatch(), matls );
-  else
+  if (counter > 0) {
+    sched->addTask(tsk, level->eachPatch(), matls);
+  }
+  else {
     delete tsk;
+  }
 
 }
 
