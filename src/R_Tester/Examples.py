@@ -78,7 +78,6 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",                1, "ALL")
                    ("RMCRT_1L_maxlen",  "RMCRT_bm1_1L_maxLen.ups",     8, "ALL", ["exactComparison"]),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1, "ALL", ["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
-                   ("RMCRT_+Domain",    "RMCRT_+Domain.ups",           8, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",                1, "ALL", ["abs_tolerance=1e-14","rel_tolerance=1e-11"]),
                    ("RMCRT_radiometer", "RMCRT_radiometer.ups",        8, "ALL", ["exactComparison"]),
                    ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
@@ -94,7 +93,6 @@ LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL",
                    ("RMCRT_1L_maxlen",  "RMCRT_bm1_1L_maxLen.ups",     8, "ALL", ["exactComparison"]),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",            1 , "ALL",["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",                8, "ALL", ["exactComparison"]),
-                   ("RMCRT_+Domain",    "RMCRT_+Domain.ups",           8, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",                1, "ALL", ["exactComparison"]),
                    ("RMCRT_radiometer", "RMCRT_radiometer.ups",        8, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups",        1, "ALL", ["exactComparison"]),
@@ -113,7 +111,9 @@ THREADEDTESTS = [  ("RMCRT_test_1L_thread",           "RMCRT_bm1_1L.ups",       
                    ("RMCRT_bm1_DO_thread_2proc",      "RMCRT_bm1_DO.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_ML_thread",                "RMCRT_ML.ups",             1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_ML_thread_2proc",          "RMCRT_ML.ups",             2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_thread_2proc",     "RMCRT_+Domain.ups",        2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
+                   ("RMCRT_+Domain_thread_2proc",     "RMCRT_+Domain.ups",        2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_ML_thread_2proc",  "RMCRT_+Domain_ML.ups",     2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
+                   
                  ]
 
 GPUTESTS      = [
@@ -124,27 +124,33 @@ GPUTESTS      = [
                    ("RMCRT_1L_perf_GPU",      RMCRT_1L_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"]),
                    ("RMCRT_DO_perf_GPU",      RMCRT_DO_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"])
                ]
+               
+DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL", ["exactComparison"]),              
+                   ("RMCRT_+Domain_ML",      "RMCRT_+Domain_ML.ups",     8, "ALL", ["exactComparison"])               
+              ]
 
 DEBUGTESTS   =[]
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS
+#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS
 #__________________________________
 
 # returns the list
 def getTestList(me) :
   if me == "LOCALTESTS":
-    TESTS = LOCALTESTS + THREADEDTESTS + FLOATTESTS
+    TESTS = LOCALTESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS 
   elif me == "FLOATTESTS":
     TESTS = FLOATTESTS
   elif me == "GPUTESTS":
     TESTS = GPUTESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
+  elif me == "DOMAINTESTS":
+    TESTS = DOMAINTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS + THREADEDTESTS + FLOATTESTS + GPUTESTS
+    TESTS = NIGHTLYTESTS + DOMAINTESTS + THREADEDTESTS + FLOATTESTS + GPUTESTS
   else:
     print "\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

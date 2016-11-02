@@ -92,7 +92,68 @@
         </BCType>
       </Face>
     </BoundaryConditions>
+    
     <!--__________________________________-->
+    <!--      Coarse level                -->
+          
+    <Level>
+        <Box label = "Left horizontalLeg">
+           <lower>        [ 0.0, 0.45, 0.45]    </lower>
+           <upper>        [ 0.45, 0.55, 0.55]   </upper>
+           <extraCells>   [1,1,1]               </extraCells>
+           <patches>      [2,1,1]               </patches>
+           <resolution>   [36,8,8]            </resolution>
+        </Box>
+        <Box label = "Right horizontalLeg">
+           <lower>        [ 0.55, 0.45, 0.45]   </lower>
+           <upper>        [ 1.0, 0.55, 0.55]    </upper>
+           <extraCells>   [1,1,1]               </extraCells>
+           <patches>      [2,1,1]               </patches>
+           <resolution>   [36,8,8]            </resolution>
+        </Box>
+        <Box label = "center patch">
+           <lower>        [ 0.45, 0.45, 0.45]   </lower>
+           <upper>        [ 0.55, 0.55, 0.55]   </upper>
+           <extraCells>   [1,1,1]               </extraCells>
+           <patches>      [1,1,1]               </patches>
+           <resolution>   [8,8,8]            </resolution>
+        </Box>        
+        
+        <Box label = "Lower verticalLeg">
+           <lower>        [ 0.45, 0.0, 0.45]    </lower>
+           <upper>        [ 0.55, 0.45, 0.55]   </upper>
+           <extraCells>   [1,1,1]               </extraCells>
+           <patches>      [1,2,1]               </patches>
+           <resolution>   [8,36,8]            </resolution>
+        </Box>
+
+        <Box label = "Upper verticalLeg">
+           <lower>        [ 0.45, 0.55, 0.45]   </lower>
+           <upper>        [ 0.55, 1.0, 0.55]    </upper>
+           <extraCells>   [1,1,1]               </extraCells>
+           <patches>      [1,2,1]               </patches>
+           <resolution>   [8,36,8]            </resolution>
+        </Box>
+        <Box label = "back Leg">
+           <lower>        [ 0.45, 0.45, 0.0]    </lower>
+           <upper>        [ 0.55, 0.55, 0.45]   </upper>
+           <extraCells>   [1,1,1]               </extraCells>
+           <patches>      [1,1,2]               </patches>
+           <resolution>   [8,8,36]            </resolution>
+        </Box>
+
+        <Box label = "Front Leg">
+           <lower>        [ 0.45, 0.45, 0.55]   </lower>
+           <upper>        [ 0.55, 0.55, 1.0]    </upper>
+           <extraCells>   [1,1,1]               </extraCells>
+           <patches>      [1,1,2]               </patches>
+           <resolution>   [8,8,36]            </resolution>
+        </Box>
+    </Level>   
+    
+    
+    <!--__________________________________-->
+    <!--      Fine level                  -->
     <Level>
         <Box label = "Left horizontalLeg">
            <lower>        [ 0.0, 0.45, 0.45]    </lower>
@@ -150,11 +211,17 @@
 
 
   </Grid>
+
+  <!--__________________________________-->
+  <AMR>
+    <useLockStep> true </useLockStep>
+  </AMR>
+  
   <!--__________________________________-->
   <DataArchiver>
-  <filebase>RMCRT_+_domain.uda</filebase>
+  <filebase>RMCRT_+_domain_ML.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <save label = "color"   />
+      <save label = "color"   levels="-1"/>
       <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
@@ -176,10 +243,9 @@
     <solveBoundaryFlux> false      </solveBoundaryFlux>
     <CCRays>            false      </CCRays>
     
-    <algorithm type='singleLevel'>
-      <ROI_extents type='max_rayLength'>
-        <length>    0.1     </length>
-      </ROI_extents>
+    <!-- compute rmcrt on coarse level -->
+    <algorithm type='RMCRT_coarseLevel'>
+      <orderOfInterpolation>  1    </orderOfInterpolation>
     </algorithm>
 
   </RMCRT>
