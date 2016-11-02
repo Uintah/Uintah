@@ -216,6 +216,9 @@ MPMLabel::MPMLabel()
   pAvgConcLabel = VarLabel::create( "p.avgConc",
       sum_vartype::getTypeDescription() );
 
+  pESPotential = VarLabel::create( "p.esPotential",
+      ParticleVariable<double>::getTypeDescription());
+
   pFiberDirLabel  = VarLabel::create( "p.fiberdir",
                         ParticleVariable<Vector>::getTypeDescription() );
 
@@ -851,6 +854,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(MaxConcLabel);
   VarLabel::destroy(MinConcLabel);
   VarLabel::destroy(pAvgConcLabel);
+  VarLabel::destroy(pESPotential);
   VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pDiffusivityLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);

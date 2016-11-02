@@ -28,8 +28,10 @@
 #include <CCA/Components/MPMFVM/ESMPM.h>
 
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Ghost.h>
+
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
@@ -41,6 +43,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace Uintah;
 
@@ -63,9 +66,11 @@ ESMPM::ESMPM(const ProcessorGroup* myworld) : UintahParallelComponent(myworld)
 
   d_TINY_RHO  = 1.e-12;
 
-  d_one_matl  = d_esfvm->d_es_matl;
+  d_gac = Ghost::AroundCells;
 
-  d_one_matlset  = d_esfvm->d_es_matlset;
+  d_es_matl  = d_esfvm->d_es_matl;
+
+  d_es_matlset  = d_esfvm->d_es_matlset;
 
   d_conductivity_model = 0;
 }
@@ -132,7 +137,25 @@ void ESMPM::outputProblemSpec(ProblemSpecP& prob_spec)
 void ESMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
   printSchedule(level,cout_doing,"ESMPM::scheduleInitialize");
+  Task* task = scinew Task("ESMPM::initialize", this, &ESMPM::initialize);
+  task->computes(d_fvm_lb->ccESPotential);
+  sched->addTask(task, level->eachPatch(), d_es_matlset);
+
   d_amrmpm->scheduleInitialize(level, sched);
+}
+
+void ESMPM::initialize(const ProcessorGroup*, const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*,
+                       DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    CCVariable<double>   es_potential;
+    new_dw->allocateAndPut(es_potential, d_fvm_lb->ccESPotential, 0, patch);
+    es_potential.initialize(0.0);
+  }
 }
 
 void ESMPM::scheduleRestartInitialize(const LevelP& level, SchedulerP& sched)
@@ -162,6 +185,7 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   const MaterialSet* mpm_matls = d_shared_state->allMPMMaterials();
   const MaterialSet* all_matls = d_shared_state->allMaterials();
+  const MaterialSubset* mpm_matlsub = mpm_matls->getUnion();
 
   int maxLevels = level->getGrid()->numLevels();
   GridP grid = level->getGrid();
@@ -198,28 +222,38 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     const PatchSet* patches = level->eachPatch();
     d_amrmpm->scheduleNormalizeNodalVelTempConc(sched, patches, mpm_matls);
     d_amrmpm->scheduleExMomInterpolated(        sched, patches, mpm_matls);
-    d_conductivity_model->scheduleComputeConductivity(sched, patches, all_matls, d_one_matl);
+    d_conductivity_model->scheduleComputeConductivity(sched, patches, all_matls, d_es_matl);
   }
 
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
-    d_esfvm->scheduleBuildMatrixAndRhs(     sched, level, d_one_matlset);
+    d_esfvm->scheduleBuildMatrixAndRhs(     sched, level, d_es_matlset);
     d_amrmpm->scheduleComputeInternalForce( sched, patches, mpm_matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
-    d_esfvm->scheduleSolve(sched, level, d_one_matlset);
+    d_esfvm->scheduleSolve(sched, level, d_es_matlset);
     d_amrmpm->scheduleComputeInternalForce_CFI( sched, patches, mpm_matls);
+  }
+
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    d_esfvm->scheduleUpdateESPotential(sched, level, d_es_matlset);
+  }
+
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleInterpESPotentialToPart(sched, patches, mpm_matlsub, d_es_matl, all_matls);
   }
 
   if(d_mpm_flags->d_doScalarDiffusion){
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      d_esfvm->scheduleUpdateESPotential(  sched, level, d_one_matlset);
       d_amrmpm->scheduleComputeFlux(       sched, patches, mpm_matls);
       d_amrmpm->scheduleComputeDivergence( sched, patches, mpm_matls);
     }
@@ -295,4 +329,122 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 void ESMPM::scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched)
 {
   d_amrmpm->scheduleFinalizeTimestep(level, sched);
+}
+
+void ESMPM::scheduleInterpESPotentialToPart(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSubset* mpm_matls,
+                                            const MaterialSubset* es_matls,
+                                            const MaterialSet* all_matls)
+{
+  printSchedule(patches,cout_doing,"ESMPM::scheduleInterpESPotentialToPart");
+
+  Task* task = scinew Task("ESMPM::interpESPotentialToPart", this,
+                           &ESMPM::interpESPotentialToPart);
+
+  task->requires(Task::NewDW, d_fvm_lb->ccESPotential, es_matls,  d_gac, 1);
+  task->requires(Task::OldDW, d_mpm_lb->pXLabel,       mpm_matls, d_gac, 0);
+  task->computes(d_mpm_lb->pESPotential, mpm_matls);
+
+  sched->addTask(task, patches, all_matls);
+
+}
+
+void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* patches,
+                                    const MaterialSubset* ,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
+  std::vector<IntVector> ni(8);
+  std::vector<double> S(8);
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    Vector cell_dim = patch->getLevel()->dCell();
+
+    // Normally the anchor is associated with a node position but
+    // since interpolation is based on cell centers the anchor needs
+    // to be shifted so that it associated with the cell center of the
+    // anchor cell.
+    Point anchor = patch->getLevel()->getAnchor();
+    anchor.x(anchor.x() + cell_dim.x()/2);
+    anchor.y(anchor.y() + cell_dim.y()/2);
+    anchor.z(anchor.z() + cell_dim.z()/2);
+
+    double cell_vol = cell_dim.x() * cell_dim.y() * cell_dim.z();
+
+    IntVector low_idx  = patch->getCellLowIndex();
+    IntVector high_idx = patch->getExtraCellHighIndex();
+
+    constCCVariable<double> cc_espotential;
+    new_dw->get(cc_espotential, d_fvm_lb->ccESPotential, 0, patch, d_gac, 1);
+
+    int numMatls = d_shared_state->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_shared_state->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      constParticleVariable<Point> p_position;
+      ParticleVariable<double> p_espotential;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, d_gac,
+                                                             0, d_mpm_lb->pXLabel);
+
+      old_dw->get(p_position, d_mpm_lb->pXLabel, pset);
+
+      new_dw->allocateAndPut(p_espotential, d_mpm_lb->pESPotential, pset);
+
+      ParticleSubset::iterator iter;
+
+      for(iter  = pset->begin(); iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        Point norm_pos = Point((p_position[idx] - anchor)/cell_dim);
+
+        IntVector cell_idx(Floor(norm_pos.x()), Floor(norm_pos.y()),
+                           Floor(norm_pos.z()));
+
+        Point cell_center = Point(cell_idx.x() + .5, cell_idx.y() + .5,
+                                  cell_idx.z() + .5);
+
+        double fx = norm_pos.x() - cell_idx.x();
+        double fy = norm_pos.y() - cell_idx.y();
+        double fz = norm_pos.z() - cell_idx.z();
+        double fx1 = 1 - fx;
+        double fy1 = 1 - fy;
+        double fz1 = 1 - fz;
+
+        ni[0] = cell_idx;
+        ni[1] = cell_idx + IntVector(0, 0, 1);
+        ni[2] = cell_idx + IntVector(0, 1, 0);
+        ni[3] = cell_idx + IntVector(0, 1, 1);
+        ni[4] = cell_idx + IntVector(1, 0, 0);
+        ni[5] = cell_idx + IntVector(1, 0, 1);
+        ni[6] = cell_idx + IntVector(1, 1, 0);
+        ni[7] = cell_idx + IntVector(1, 1, 1);
+
+        S[0] = fx1 * fy1 * fz1;
+        S[1] = fx1 * fy1 * fz;
+        S[2] = fx1 * fy * fz1;
+        S[3] = fx1 * fy * fz;
+        S[4] = fx * fy1 * fz1;
+        S[5] = fx * fy1 * fz;
+        S[6] = fx * fy * fz1;
+        S[7] = fx * fy * fz;
+
+        double espotential = 0;
+
+        for(int i = 0; i < 8; i++){
+          espotential += cc_espotential[ni[i]] * S[i];
+        }
+
+        p_espotential[idx] = espotential;
+
+      }
+
+
+    }// End of materials loop
+  }// End of patch loop
+
 }

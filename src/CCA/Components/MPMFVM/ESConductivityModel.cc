@@ -158,7 +158,7 @@ void ESConductivityModel::computeConductivity(const ProcessorGroup* pg,
         Point norm_pos = Point((px[idx] - anchor)/cell_dim);
 
         IntVector cell_idx(Floor(norm_pos.x()), Floor(norm_pos.y()),
-                                     Floor(norm_pos.z()));
+                           Floor(norm_pos.z()));
 
         Point px(norm_pos.x() - (double)cell_idx.x(),
                  norm_pos.y() - (double)cell_idx.y(),
@@ -246,7 +246,7 @@ double ESConductivityModel::distanceFunc(Point p1, Point p2)
   dist += (p1.y() - p2.y()) * (p1.y() - p2.y());
   dist += (p1.z() - p2.z()) * (p1.z() - p2.z());
 
-  return dist;
+  return 1/dist;
 }
 
 /*

@@ -48,6 +48,8 @@ namespace Uintah{
 
       virtual double computeConductivity(double conductivity);
 
+      virtual void outputProblemSpec(ProblemSpecP& ps);
+
     private:
       double d_conductivity;
 

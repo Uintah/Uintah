@@ -52,6 +52,8 @@ namespace Uintah{
 
       virtual double computeConductivity(double conductivity);
 
+      virtual void outputProblemSpec(ProblemSpecP& ps);
+
   };
 }
 #endif // End of UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_CONDUCTIVITYEQUATION_H

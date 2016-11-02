@@ -283,7 +283,7 @@ AMRSimulationController::run()
   calcExecWallTime();
   
   // Print the stats for the initalization or restart.
-  printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, d_prev_delt, time );
+  printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, d_prev_delt, time, true );
 
   // If VisIt has been included into the build, check the lib sim
   // state to see if there is a connection and if so check to see if
@@ -679,7 +679,7 @@ AMRSimulationController::run()
     calcExecWallTime();
   
     // Print the stats for this time step
-    printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, d_prev_delt, time );
+    printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, d_prev_delt, time, false );
 
     // If VisIt has been included into the build, check the lib sim
     // state to see if there is a connection and if so check to see if
