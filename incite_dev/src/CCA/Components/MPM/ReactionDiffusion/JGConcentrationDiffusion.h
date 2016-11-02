@@ -62,6 +62,8 @@ namespace Uintah {
     virtual void computeFlux(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+    virtual void outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag);
+
   private:
     JGConcentrationDiffusion(const JGConcentrationDiffusion&);
     JGConcentrationDiffusion& operator=(const JGConcentrationDiffusion&);

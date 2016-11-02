@@ -127,6 +127,7 @@ namespace Uintah {
       const VarLabel* MaxConcLabel;
       const VarLabel* MinConcLabel;
       const VarLabel* pAvgConcLabel;
+      const VarLabel* pESPotential;
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;

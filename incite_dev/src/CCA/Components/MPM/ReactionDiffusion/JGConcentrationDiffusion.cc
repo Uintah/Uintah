@@ -111,3 +111,20 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
   delete interpolator;
 }
+
+void JGConcentrationDiffusion::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
+{
+  ProblemSpecP rdm_ps = ps;
+
+  if (output_rdm_tag) {
+    rdm_ps = ps->appendChild("diffusion_model");
+    rdm_ps->setAttribute("type","jg");
+  }
+
+  rdm_ps->appendElement("diffusivity",diffusivity);
+  rdm_ps->appendElement("max_concentration",max_concentration);
+
+  if(d_conductivity_equation){
+    d_conductivity_equation->outputProblemSpec(rdm_ps);
+  }
+}

@@ -25,6 +25,7 @@
 #ifndef UINTAH_RF_SCALARDIFFUSIONMODEL_H
 #define UINTAH_RF_SCALARDIFFUSIONMODEL_H
 
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityEquation.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -42,7 +43,6 @@ namespace Uintah {
   class MPMMaterial;
   class DataWarehouse;
   class ProcessorGroup;
-  class ConductivityEquation;
   
   class ScalarDiffusionModel {
   public:

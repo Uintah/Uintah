@@ -641,7 +641,11 @@ DataArchive::query(       Variable     & var,
     // If this is a virtual patch, grab the real patch, but only do that here - in the next query, we want
     // the data to be returned in the virtual coordinate space.
     if (!timedata.d_datafileInfo.lookup(VarnameMatlPatch(name, matlIndex, patchid), datafileinfo)) {
-      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " << timeIndex << "\nPlease make sure the correct material index is specified\n";
+      cerr << "VARIABLE NOT FOUND: " << name 
+           << ", material index " << matlIndex 
+           << ", Level " << patch->getLevel()->getIndex() 
+           << ", patch " << patch->getID() 
+           << ", time index " << timeIndex << "\n";
       throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
     }
     dfi = &datafileinfo;
@@ -903,8 +907,11 @@ DataArchive::query(       Variable       & var,
       queryRegion(var, name, matlIndex, patch->getLevel(), timeIndex, low, high);
     }
     else {
-      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index "
-           << timeIndex << "\nPlease make sure the correct material index is specified\n";
+      cerr << "VARIABLE NOT FOUND: " << name 
+           << ", material index " << matlIndex 
+           << ", Level " << patch->getLevel()->getIndex() 
+           << ", patch " << patch->getID() 
+           << ", time index " << timeIndex << "\n";
       throw InternalError( "DataArchive::query:Variable not found", __FILE__, __LINE__ );
     }
   }

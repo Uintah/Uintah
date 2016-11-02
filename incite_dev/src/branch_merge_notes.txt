@@ -2,6 +2,19 @@
 October 27, 2016
 -------------------------
 
+commit #: 55938
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55925:55937)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+October 27, 2016
+-------------------------
+
 commit #: 55926
 
 * Merge of trunk with /branches/incite_dev
@@ -34,7 +47,6 @@ commit #: 55888
     (svn merge -r55843:55887)
     
 * Generate new configure script
-
 
 
 

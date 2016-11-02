@@ -219,7 +219,6 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else if(strcmp(cmd, "Unused") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
-    visit_SimGetCustomUIData(cbdata);
   }
   else if(strcmp(cmd, "Save") == 0)
   {

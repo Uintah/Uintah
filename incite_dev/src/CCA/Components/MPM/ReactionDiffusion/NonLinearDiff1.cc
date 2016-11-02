@@ -398,6 +398,10 @@ void NonLinearDiff1::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
   rdm_ps->appendElement("tuning1", d_tuning1);
   rdm_ps->appendElement("tuning2", d_tuning2);
 
+  if(d_conductivity_equation){
+    d_conductivity_equation->outputProblemSpec(rdm_ps);
+  }
+
   if(d_use_pressure){
     rdm_ps->appendElement("tuning3", d_tuning3);
     rdm_ps->appendElement("tuning4", d_tuning4);

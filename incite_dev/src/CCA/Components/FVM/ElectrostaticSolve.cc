@@ -428,7 +428,7 @@ void ElectrostaticSolve::scheduleSolve(SchedulerP& sched,
                           d_lb->ccESPotentialMatrix, Task::NewDW,
                           d_lb->ccESPotential, false,
                           d_lb->ccRHS_ESPotential, Task::NewDW,
-                          0, Task::OldDW,
+                          d_lb->ccESPotential, Task::OldDW,
                           d_solver_parameters,false);
 }
 
@@ -439,7 +439,7 @@ void ElectrostaticSolve::scheduleUpdateESPotential(SchedulerP& sched, const Leve
                            &ElectrostaticSolve::updateESPotential,
                            level, sched.get_rep());
 
-  task->modifies(d_lb->ccESPotential , d_es_matl, Task::OutOfDomain);
+  task->modifies(d_lb->ccESPotential , d_es_matl);
   sched->addTask(task, level->eachPatch(), es_matl);
 }
 

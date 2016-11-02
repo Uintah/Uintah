@@ -38,6 +38,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Grid/Ghost.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationState.h>
@@ -73,6 +74,23 @@ namespace Uintah {
 
       virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched);
 
+      virtual void scheduleInterpESPotentialToPart(SchedulerP& sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSubset* mpm_matls,
+                                                   const MaterialSubset* es_matls,
+                                                   const MaterialSet* all_matls);
+
+    protected:
+      virtual void initialize(const ProcessorGroup*, const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw);
+
+      virtual void interpESPotentialToPart(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* ,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw);
 
     private:
       double d_TINY_RHO;
@@ -86,9 +104,11 @@ namespace Uintah {
       MPMFlags* d_mpm_flags;
       ESConductivityModel* d_conductivity_model;
 
-      MaterialSet* d_one_matlset;
-      MaterialSubset* d_one_matl;
+      MaterialSet* d_es_matlset;
+      MaterialSubset* d_es_matl;
       SwitchingCriteria* d_switch_criteria;
+
+      Ghost::GhostType d_gac;
 
   };
 }
