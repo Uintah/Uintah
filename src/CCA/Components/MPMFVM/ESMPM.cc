@@ -134,12 +134,7 @@ void ESMPM::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& rest
 
 void ESMPM::outputProblemSpec(ProblemSpecP& prob_spec)
 {
-  ProblemSpecP root = prob_spec->getRootNode();
-  ProblemSpecP esmpm_ps = root->appendChild("ESMPM");
-  esmpm_ps->appendElement("conductivity_model", d_cd_model_name);
-
   d_amrmpm->outputProblemSpec(prob_spec);
-
 }
 
 void ESMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)

@@ -106,6 +106,7 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
     root_ps = prob_spec;
   }
 
+
   ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 
   d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver",
@@ -114,7 +115,7 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
     
   fvm_ps->require("delt", d_delt);
 
-  ProblemSpecP mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
+  ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
 
   if(!d_with_mpm){
