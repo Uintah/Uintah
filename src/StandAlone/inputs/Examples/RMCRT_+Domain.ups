@@ -177,7 +177,7 @@
     <CCRays>            false      </CCRays>
     
     <algorithm type='singleLevel'>
-      <ROI_extents type='max_rayLength'>
+      <ROI_extents type='boundedRayLength'>
         <length>    0.1     </length>
       </ROI_extents>
     </algorithm>

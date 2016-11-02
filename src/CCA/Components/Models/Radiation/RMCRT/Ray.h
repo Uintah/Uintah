@@ -190,7 +190,7 @@ namespace Uintah{
       enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box
                       dynamic,              // user specifies thresholds that are used to dynamically determine ROI
                       patch_based,          // The patch extents + halo are the ROI
-                      max_rayLength,        // the patch extents + max_rayLength/Dx are the ROI
+                      boundedRayLength,     // the patch extents + boundedRayLength/Dx are the ROI
                       entireDomain          // The ROI is the entire computatonal Domain
                     };
 

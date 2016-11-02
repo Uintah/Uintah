@@ -256,8 +256,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
       ROI_ps->getAttribute( "type", type);
       ROI_ps->get( "length", d_maxRayLength );
-      d_ROI_algo = max_rayLength;
-      proc0cout << "  RMCRT: The maximum ray length has been set to: ("<< d_maxRayLength << ")\n";
+      d_ROI_algo = boundedRayLength;
+      proc0cout << "  RMCRT: The bounded ray length has been set to: ("<< d_maxRayLength << ")\n";
 
     //__________________________________
     //  Data Onion
@@ -458,7 +458,7 @@ Ray::sched_rayTrace( const LevelP& level,
 /*`==========TESTING==========*/
     //__________________________________
     // logic for determining number of ghostCells/d_halo
-    if( d_ROI_algo == max_rayLength ){
+    if( d_ROI_algo == boundedRayLength ){
       
       Vector Dx     = level->dCell();
       Vector nCells = Vector( d_maxRayLength )/Dx;
@@ -1127,7 +1127,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
     //__________________________________
     //  If ray length distance is used
-    if ( d_ROI_algo == max_rayLength ){
+    if ( d_ROI_algo == boundedRayLength ){
 
       patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0), 
                                                      Ghost::AroundCells, d_halo.x(), ROI_Lo, ROI_Hi);    
