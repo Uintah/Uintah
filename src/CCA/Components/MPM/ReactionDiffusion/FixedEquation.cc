@@ -43,3 +43,11 @@ double FixedEquation::computeConductivity(double concentration)
 {
   return d_conductivity;
 }
+
+void FixedEquation::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP eq_ps;
+  eq_ps = ps->appendChild("conductivity_equation");
+  eq_ps->setAttribute("type", "fixed");
+  eq_ps->appendElement("conductivity", d_conductivity);
+}

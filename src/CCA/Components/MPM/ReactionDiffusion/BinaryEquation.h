@@ -52,6 +52,8 @@ namespace Uintah{
 
       virtual double computeConductivity(double conductivity);
 
+      virtual void outputProblemSpec(ProblemSpecP& ps);
+
     private:
       double d_min_concentration;
       double d_min_conductivity;

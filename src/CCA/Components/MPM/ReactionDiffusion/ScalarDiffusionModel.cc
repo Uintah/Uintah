@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityEquation.h>
 #include <CCA/Components/MPM/ReactionDiffusion/BinaryEquation.h>
 #include <CCA/Components/MPM/ReactionDiffusion/FixedEquation.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
@@ -90,8 +89,10 @@ ScalarDiffusionModel::~ScalarDiffusionModel() {
   if (d_one_matl->removeReference())
     delete d_one_matl;
 
-  if(d_conductivity_equation)
+  if(d_conductivity_equation){
     delete d_conductivity_equation;
+    d_conductivity_equation = 0;
+  }
 }
 
 std::string ScalarDiffusionModel::getDiffusionType(){

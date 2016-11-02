@@ -42,3 +42,8 @@ double ConductivityEquation::computeConductivity(double concentration)
 {
   return concentration;
 }
+
+void ConductivityEquation::outputProblemSpec(ProblemSpecP& ps)
+{
+
+}
