@@ -52,7 +52,7 @@ NIGHTLYTESTS = [
    ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"   , ["exactComparison"])   , 
    ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"   , ["exactComparison"     , "no_cuda" ])   ,    #11/1/6 gpu machine doesn't have petsc 
    ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
-   ("rmcrt_bm1_1L_maxLen"               , "RMCRT/rmcrt_bm1_1L_maxLen.ups"                           , 8   , "ALL"   , ["exactComparison"])   ,
+   ("rmcrt_bm1_1L_bounded"               , "RMCRT/rmcrt_bm1_1L_bounded.ups"                         , 8   , "ALL"   , ["exactComparison"])   ,
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "Linux" , ["exactComparison"])   , 
    ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
    ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"                                 , 8   , "Linux" , ["exactComparison"     , "no_restart"]) , 
@@ -141,7 +141,7 @@ LOCALTESTS = [
    ("methane_fire_8patch"               , "methane_fire_8patch.ups"                                 , 8   , "All"  , ["exactComparison"]) , 
    ("methane_fire_8patch_petscrad"      , "methane_fire_8patch_petscrad.ups"                        , 8   , "All"  , ["exactComparison"]) , 
    ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "All"  , ["exactComparison"]) , 
-   ("rmcrt_bm1_1L_maxLen"               , "RMCRT/rmcrt_bm1_1L_maxLen.ups"                           , 8   , "ALL"  , ["exactComparison"]) ,
+   ("rmcrt_bm1_1L_bounded"               , "RMCRT/rmcrt_bm1_1L_bounded.ups"                         , 8   , "ALL"  , ["exactComparison"]) ,
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "ALL"  , ["exactComparison"]) , 
    ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "ALL"  , ["exactComparison"]) , 
    ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"                                 , 8   , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -244,7 +244,7 @@ DQMOMTESTS = [
 
 RMCRTTESTS = [
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
-   ("rmcrt_bm1_1L_maxLen"         , "RMCRT/rmcrt_bm1_1L_maxLen.ups"               , 8   , "ALL"  , ["exactComparison"]) ,
+   ("rmcrt_bm1_1L_bounded"         , "RMCRT/rmcrt_bm1_1L_bounded.ups"             , 8   , "ALL"  , ["exactComparison"]) ,
    ("rmcrt_bm1_ML"                , "RMCRT/rmcrt_bm1_ML.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) , 
    ("rmcrt_bm1_DO"                , "RMCRT/rmcrt_bm1_DO.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
    ("methane_rmcrt"               , "RMCRT/methane_rmcrt.ups"                     , 8   , "ALL"  , ["exactComparison"     , "no_restart"]) ,
