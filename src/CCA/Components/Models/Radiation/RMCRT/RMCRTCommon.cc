@@ -199,34 +199,20 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   tsk->requires( Task::OldDW, d_abskgLabel,    d_gn, 0 );  // for carryforward
   tsk->computes(d_abskgLabel);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 //______________________________________________________________________
 //
 //______________________________________________________________________
 void
-RMCRTCommon::DoubleToFloat( DetailedTask* dtask,
-                            Task::CallBackEvent event,
-                            const ProcessorGroup* pg,
+RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
-                            void* oldTaskGpuDW,
-                            void* newTaskGpuDW,
-                            void* stream,
-                            int deviceID,
                             Task::WhichDW which_dw,
                             const int radCalc_freq )
 {
-  //__________________________________
-  //  Carry Forward
-  if ( doCarryForward( radCalc_freq ) ) {
-    printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::DoubleToFloat carryForward (abskgRMCRT)" );
-    new_dw->transferFrom( old_dw, d_abskgLabel, patches, matls, dtask, true, nullptr );
-    return;
-  }
-
   //__________________________________
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -236,7 +222,7 @@ RMCRTCommon::DoubleToFloat( DetailedTask* dtask,
     CCVariable< float > abskg_F;
 
     DataWarehouse* myDW = new_dw->getOtherDataWarehouse(which_dw);
-    myDW->get(abskg_D,             d_compAbskgLabel, d_matl, patch, Ghost::None, 0);
+    myDW->get(abskg_D, d_compAbskgLabel, d_matl, patch, Ghost::None, 0);
     new_dw->allocateAndPut(abskg_F, d_abskgLabel, d_matl, patch);
 
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -294,38 +280,22 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
   tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
   tsk->computes(d_sigmaT4Label);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 //______________________________________________________________________
 // Compute total intensity over all wave lengths (sigma * Temperature^4/pi)
 //______________________________________________________________________
 template< class T>
 void
-RMCRTCommon::sigmaT4( DetailedTask* dtask,
-                      Task::CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
-                      void* stream,
-                      int deviceID,
-                      Task::WhichDW which_temp_dw,
-                      const int radCalc_freq,
-                      const bool includeEC )
+RMCRTCommon::sigmaT4( const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw,
+                     Task::WhichDW which_temp_dw,
+                     const int radCalc_freq,
+                     const bool includeEC )
 {
-
-  //__________________________________
-  //  Carry Forward
-  if ( doCarryForward( radCalc_freq ) ) {
-    printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::sigmaT4 carryForward (sigmaT4)" );
-
-    new_dw->transferFrom( old_dw, d_sigmaT4Label, patches, matls, dtask, true, nullptr);
-    return;
-  }
-
   //__________________________________
   //  do the work
   for (int p=0; p < patches->size(); p++){
@@ -355,6 +325,7 @@ RMCRTCommon::sigmaT4( DetailedTask* dtask,
     }
   }
 }
+
 
 //______________________________________________________________________
 //
@@ -737,29 +708,29 @@ RMCRTCommon::updateSumI (const Level* level,
 
     intensity = intensity * fs;
 
-    //__________________________________
-    //  BULLETPROOFING
-    if ( std::isinf(sumI) || std::isnan(sumI) ){
-      printf( "\n\n______________________________________________________________________\n");
-      cout <<  " cur: " << cur << " prevCell: " << prevCell << "\n";
-      cout <<  " dir: " << dir << " sumI: " << sumI << "\n";
-      cout <<  " tMax: " << tMax  << "\n";
-      cout <<  " rayLoc:    " << ray_location << "\n";
-      cout <<  " tMax[dir]: " << tMax[dir] << " tMax_prev: " << tMax_prev << " Dx[dir]: " << Dx[dir] << "\n";
-      cout <<  " tDelta:    " << tDelta << " \n";
-      cout <<  "     abskg[prev]: " << abskg[prevCell] << " \t sigmaT4OverPi[prev]: " << sigmaT4OverPi[prevCell]  << "\n";
-      cout <<  "     abskg[cur]:  " << abskg[cur]      << " \t sigmaT4OverPi[cur]:  " << sigmaT4OverPi[cur] << "\t  cellType: " <<celltype[cur] << "\n";
-      cout <<  "     optical_thickkness: " <<  optical_thickness << " \t rayLength: " << rayLength << "\n";
-      
-      IntVector l = abskg.getLowIndex();
-      IntVector h = abskg.getHighIndex();
-      printf( "     abskg:  [%d,%d,%d]  -> [%d,%d,%d] \n", l.x(), l.y(), l.z() , h.x(), h.y(), h.z() );
-      
-      ostringstream warn;
-        warn<< "ERROR:RMCRTCommon::updateSumI   sumI is non-physical (" << sumI << ")"
-            << " origin: " << origin << " cur: " << cur << "\n";
-        throw InternalError( warn.str(), __FILE__, __LINE__ );
-    } 
+//    //__________________________________
+//    //  BULLETPROOFING
+//    if ( std::isinf(sumI) || std::isnan(sumI) ){
+//      printf( "\n\n______________________________________________________________________\n");
+//      cout <<  " cur: " << cur << " prevCell: " << prevCell << "\n";
+//      cout <<  " dir: " << dir << " sumI: " << sumI << "\n";
+//      cout <<  " tMax: " << tMax  << "\n";
+//      cout <<  " rayLoc:    " << ray_location << "\n";
+//      cout <<  " tMax[dir]: " << tMax[dir] << " tMax_prev: " << tMax_prev << " Dx[dir]: " << Dx[dir] << "\n";
+//      cout <<  " tDelta:    " << tDelta << " \n";
+//      cout <<  "     abskg[prev]: " << abskg[prevCell] << " \t sigmaT4OverPi[prev]: " << sigmaT4OverPi[prevCell]  << "\n";
+//      cout <<  "     abskg[cur]:  " << abskg[cur]      << " \t sigmaT4OverPi[cur]:  " << sigmaT4OverPi[cur] << "\t  cellType: " <<celltype[cur] << "\n";
+//      cout <<  "     optical_thickkness: " <<  optical_thickness << " \t rayLength: " << rayLength << "\n";
+//
+//      IntVector l = abskg.getLowIndex();
+//      IntVector h = abskg.getHighIndex();
+//      printf( "     abskg:  [%d,%d,%d]  -> [%d,%d,%d] \n", l.x(), l.y(), l.z() , h.x(), h.y(), h.z() );
+//
+//      ostringstream warn;
+//        warn<< "ERROR:RMCRTCommon::updateSumI   sumI is non-physical (" << sumI << ")"
+//            << " origin: " << origin << " cur: " << cur << "\n";
+//        throw InternalError( warn.str(), __FILE__, __LINE__ );
+//    }
 
     // when a ray reaches the end of the domain, we force it to terminate.
     if(!d_allowReflect) intensity = 0;
@@ -783,7 +754,52 @@ if( isDbgCell( origin)  ){
   
 } // end of updateSumI function
 
+//______________________________________________________________________
+//    Move all computed variables from old_dw -> new_dw
+//______________________________________________________________________
+void
+RMCRTCommon::sched_CarryForward_AllLabels ( const LevelP& level,
+                                            SchedulerP& sched,
+                                            const int radCalc_freq )
+{
 
+  string taskname = "RMCRTCommon::sched_CarryForward_AllLabels";
+  printSchedule( level, dbg, taskname );
+
+  Task* tsk = scinew Task( taskname, this, 
+                           &RMCRTCommon::carryForward_AllLabels,
+                           radCalc_freq );
+
+  tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
+  tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
+  tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
+  tsk->requires( Task::OldDW, d_sigmaT4Label,       d_gn, 0 );
+  
+  tsk->computes( d_divQLabel );
+  tsk->computes( d_boundFluxLabel );
+  tsk->computes( d_radiationVolqLabel );
+  tsk->computes( d_sigmaT4Label );
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
+}
+
+//______________________________________________________________________
+//
+void
+RMCRTCommon::carryForward_AllLabels ( const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      const int radCalc_freq )
+{
+  printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::carryForward_AllLabels" );
+  bool replaceVar = true;
+  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, replaceVar );
+  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, replaceVar );  
+  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
+  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, replaceVar );
+}
 
 //______________________________________________________________________
 // Utility task:  move variable from old_dw -> new_dw
@@ -791,7 +807,8 @@ if( isDbgCell( origin)  ){
 void
 RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
                                      SchedulerP& sched,
-                                     const VarLabel* variable)
+                                     const VarLabel* variable,
+                                     const int tg_num /* == -1 */)
 {
   string taskname = "        carryForward_Var: " + variable->getName();
   printSchedule(level, dbg, taskname);
@@ -801,27 +818,22 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
   tsk->requires(Task::OldDW, variable,   d_gn, 0);
   tsk->computes(variable);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, tg_num);
 }
 
 //______________________________________________________________________
 void
-RMCRTCommon::carryForward_Var ( DetailedTask* dtask,
-                               Task::CallBackEvent event,
-                               const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               void* oldTaskGpuDW,
-                               void* newTaskGpuDW,
-                               void* stream,
-                               int deviceID,
-                               const VarLabel* variable) {
-
-  new_dw->transferFrom(old_dw, variable, patches, matls, dtask, true, nullptr);
-
+RMCRTCommon::carryForward_Var ( const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                const VarLabel* variable)
+{
+  new_dw->transferFrom(old_dw, variable, patches, matls, true);
 }
+
+
 //______________________________________________________________________
 //  Trigger a taskgraph recompilation if the *next* timestep is a
 //  calculation timestep
@@ -849,7 +861,7 @@ RMCRTCommon::doRecompileTaskgraph( const int radCalc_freq ){
 }
 
 //______________________________________________________________________
-//  Logic for determing when to carry forward
+//  Logic for determining when to carry forward
 //______________________________________________________________________
 bool
 RMCRTCommon::doCarryForward( const int radCalc_freq ){
@@ -899,12 +911,7 @@ RMCRTCommon::randVector( vector <int> &int_array,
   }
 
   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
-    int rand_int = 0;
-#ifdef FIXED_RANDOM_NUM
-    rand_int = mTwister.rand() * i;  //The GPU side does it this way, so do it this way host-side to get the same numbers.
-#else
-    rand_int =  mTwister.randInt(i);
-#endif
+    int rand_int =  mTwister.randInt(i);
     int swap = int_array[i];
     int_array[i] = int_array[rand_int];
     int_array[rand_int] = swap;

@@ -74,6 +74,7 @@ static Uintah::DebugStream dbg("RAY",       false);
 static Uintah::DebugStream dbg2("RAY_DEBUG",false);
 static Uintah::DebugStream dbg_BC("RAY_BC", false);
 
+
 //---------------------------------------------------------------------------
 // Class: Constructor.
 //---------------------------------------------------------------------------
@@ -402,7 +403,7 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
 //---------------------------------------------------------------------------
 // Method: Schedule the ray tracer
 // This task has both temporal and spatial scheduling and is tricky to follow
-// The temporal scheduling is controlled by doCarryForward() and doRecompileTaskgraph()
+// The temporal scheduling is controlled by support for multiple, primary task-graphs
 // The spatial scheduling only occurs if the radiometer is used and is specified
 // by the radiometerPatchSet.
 //---------------------------------------------------------------------------
@@ -444,16 +445,8 @@ Ray::sched_rayTrace( const LevelP& level,
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
-  //
-  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
-  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
-  //
-  // For temporal scheduling the taskgraph must be recompiled to detect a change in the conditional.
-  // The taskgraph recompilation is controlled with RMCRTCommon:doRecompileTaskgraph()
-  if ( !doCarryForward( radCalc_freq) ) {
-    Ghost::GhostType  gac  = Ghost::AroundCells;
-    
-    int n_ghostCells = SHRT_MAX;
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  int n_ghostCells = SHRT_MAX;
     
 /*`==========TESTING==========*/
     //__________________________________
@@ -463,7 +456,7 @@ Ray::sched_rayTrace( const LevelP& level,
       Vector Dx     = level->dCell();
       Vector nCells = Vector( d_maxRayLength )/Dx;
       double length = nCells.length();
-      n_ghostCells  = RoundUp( length );
+      n_ghostCells  = std::ceil( length );
       
       // ghost cell can't exceed number of cells on a level
       IntVector lo, hi;
@@ -471,8 +464,7 @@ Ray::sched_rayTrace( const LevelP& level,
       IntVector diff = hi-lo;
       int nCellsLevel = Max( diff.x(), diff.y(), diff.z() );
       
-      if (n_ghostCells > SHRT_MAX || 
-          n_ghostCells > nCellsLevel ){
+      if (n_ghostCells > SHRT_MAX || n_ghostCells > nCellsLevel ) {
         proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells 
                   << ") max cells in any direction on a Levels: " << nCellsLevel << "\n\n";
         n_ghostCells    = SHRT_MAX;
@@ -484,10 +476,10 @@ Ray::sched_rayTrace( const LevelP& level,
 /*===========TESTING==========`*/
     
     dbg << "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")\n";
+
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
     tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
-  }
 
   // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
   if ( !(Uintah::Parallel::usingDevice()) ) {
@@ -518,7 +510,7 @@ Ray::sched_rayTrace( const LevelP& level,
 
     tsk->modifies( VRFluxLabel );
   }
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 
 }
 //______________________________________________________________________
@@ -1062,19 +1054,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
   const Level* level = getLevel(patches);
 
-  // Control code to recompile the task graph
-  // This provides temporal scheduling mechanism
-  doRecompileTaskgraph( radCalc_freq );
-
-  if ( doCarryForward( radCalc_freq ) ) {
-    printTask(patches,patches->get(0), dbg,"Doing Ray::rayTrace (carryForward)");
-    bool replaceVar = true;
-    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
-    return;
-  }
-
   //__________________________________
   //
   MTRand mTwister;
@@ -1182,7 +1161,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //______________________________________________________________________
     //          B O U N D A R Y F L U X
     //______________________________________________________________________
-    if( d_solveBoundaryFlux){
+    if( d_solveBoundaryFlux ) {
 
       //__________________________________
       //
@@ -1395,12 +1374,6 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
 
-    if (radCalc_freq != 1) {                // FIXME
-      ostringstream warn;
-      warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
       tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>,
                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
@@ -1475,7 +1448,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->computes( d_radiationVolqLabel );
 
   }
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
 
@@ -1497,16 +1470,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 {
 
   const Level* fineLevel = getLevel(finePatches);
-   //__________________________________
-  //  Carry Forward (old_dw -> new_dw)
-  if ( doCarryForward( radCalc_freq ) ) {
-    printTask( finePatches, dbg, "Doing Ray::rayTrace_dataOnion carryForward ( divQ )" );
-    bool replaceVar = true;
-    new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, replaceVar );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     finePatches, matls, replaceVar );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, replaceVar );
-    return;
-  }
 
   //__________________________________
   //
@@ -2145,13 +2108,13 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   printSchedule(level,dbg,taskname);
 
   if(!backoutTemp){
-    tsk->requires( temp_dw, d_compTempLabel, Ghost::None,0 );
+    tsk->requires( temp_dw, d_compTempLabel, Ghost::None, 0 );
   }
 
   tsk->modifies( d_sigmaT4Label );
   tsk->modifies( d_abskgLabel );
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 //---------------------------------------------------------------------------
 template<class T>
@@ -2164,15 +2127,11 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
                                  const int radCalc_freq,
                                  const bool backoutTemp )
 {
-  // Only run if it's time
-  if ( doCarryForward( radCalc_freq ) ) {
+  if ( d_onOff_SetBCs == false ) {
     return;
   }
 
-  if ( d_onOff_SetBCs == false )
-    return;
-
-  for (int p=0; p < patches->size(); p++){
+  for (int p=0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 
@@ -2370,7 +2329,7 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
     task->computes( d_divQLabel );
     task->computes( d_boundFluxLabel );
     task->computes( d_radiationVolqLabel );
-    sched->addTask( task, patches, matls );
+    sched->addTask( task, patches, matls, RMCRTCommon::TG_RMCRT );
   }
 }
 
@@ -2386,17 +2345,6 @@ void Ray::refine_Q(const ProcessorGroup*,
 
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
-
-  //__________________________________
-  //  Carry Forward (old_dw -> new_dw)
-  if ( doCarryForward( radCalc_freq ) ) {
-    printTask( fineLevel->getPatch(0), dbg, "Doing Ray::refine_Q carryForward ( divQ )" );
-
-    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, true );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, true );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, true );
-    return;
-  }
 
   //__________________________________
   //
@@ -2493,7 +2441,7 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
   tsk->computes(d_ROI_LoCellLabel);
   tsk->computes(d_ROI_HiCellLabel);
 
-  scheduler->addTask( tsk, level->eachPatch(), d_matlSet );
+  scheduler->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
 //______________________________________________________________________
@@ -2574,6 +2522,8 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel,   radCalc_freq );
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4,  d_sigmaT4Label, radCalc_freq );
+    sched_CarryForward_Var(coarseLevel, sched, d_abskgLabel, RMCRTCommon::TG_CARRY_FORWARD);
+    sched_CarryForward_Var(coarseLevel, sched, d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
   }
 }
 
@@ -2614,7 +2564,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
     tsk->computes(variable);
   }
 
-  sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet );
+  sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
 //______________________________________________________________________
@@ -2630,13 +2580,6 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                       Task::WhichDW which_dw,
                       const int radCalc_freq )
 {
-  if ( doCarryForward( radCalc_freq ) ) {
-    bool replaceVar = true;
-    new_dw->transferFrom( old_dw, variable, patches, matls, replaceVar );
-    printTask(patches,dbg,"Doing Ray::coarsen_Q carryForward : " + variable->getName());
-    return;
-  }
-
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
 
@@ -2686,7 +2629,7 @@ void Ray::sched_computeCellType ( const LevelP& level,
   }else if ( which == Ray::computesVar ){
     tsk->computes( d_cellTypeLabel );
   }
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
 //______________________________________________________________________

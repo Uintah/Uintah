@@ -82,7 +82,7 @@ std::mutex g_GridVarSuperPatch_mutex{}; // An ugly hack to get superpatches for 
 
 #ifdef HAVE_CUDA
 
-  DebugStream gpu_stats(              "GPUStats"     , false );
+  DebugStream gpu_stats(              "GPUStats"             , false );
   DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
 
@@ -496,7 +496,7 @@ UnifiedScheduler::runTask( DetailedTask*         task
     }
 
     std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
-    for (int i = 0; i < (int)m_dws.size(); i++) {
+    for (int i = 0; i < static_cast<int>(m_dws.size()); i++) {
       plain_old_dws[i] = m_dws[i].get_rep();
     }
 
@@ -645,7 +645,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   m_detailed_tasks = tg->getDetailedTasks();
 
-  if (m_detailed_tasks == 0) {
+  if (m_detailed_tasks == nullptr) {
     proc0cout << "UnifiedScheduler skipping execute, no tasks\n";
     return;
   }
@@ -664,6 +664,8 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   }
 
   int my_rank = d_myworld->myrank();
+
+//  DOUT(true, "Rank-" << my_rank << ", (TS: " << m_shared_state->getCurrentTopLevelTimeStep() << ")  Unified Scheduler executing taskgraph-" << tgnum << " with " << m_detailed_tasks->numTasks() << " tasks (" << m_num_tasks << " local)");
 
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
@@ -755,8 +757,8 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   }
   //---------------------------------------------------------------------------
 
-  ASSERT(m_sends.size() == 0);
-  ASSERT(m_recvs.size() == 0);
+  ASSERT(m_sends.size() == 0u);
+  ASSERT(m_recvs.size() == 0u);
 
 
   if (g_queuelength) {
@@ -791,7 +793,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
 
   // compute the net timings
-  if (m_shared_state != 0) {
+  if (m_shared_state != nullptr) {
 
     computeNetRunTimeStats(m_shared_state->d_runTimeStats);
 
@@ -4677,6 +4679,7 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler )
   : m_scheduler{ scheduler }
   , m_rank{ scheduler->getProcessorGroup()->myrank() }
 {
+  // Nothing else to do with current design
 }
 
 

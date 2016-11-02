@@ -6,6 +6,9 @@
       <title>RMCRT</title>
   </Meta>
 
+  <Scheduler>
+    <num_task_graphs>  2  </num_task_graphs>
+  </Scheduler>
   <SimulationComponent type="RMCRT_Test" />
   
   <!--__________________________________-->

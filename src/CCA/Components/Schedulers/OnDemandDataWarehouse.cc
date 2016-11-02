@@ -2200,7 +2200,7 @@ OnDemandDataWarehouse::put(       PerPatchBase& var,
 //______________________________________________________________________
 // This returns a constGridVariable for *ALL* patches on a level.
 // This method is essentially identical to "getRegion" except the call to
-// level->selectPatches( ) has been replaced by level->allPactches()
+// level->selectPatches( ) has been replaced by level->allPatches()
 // For grids containing a large number of patches selectPatches() is very slow
 // This assumes that the variable is not in the DWDatabase<Level>  d_levelDB;
 //______________________________________________________________________
@@ -2296,8 +2296,7 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
   long totalLevelCells = level->totalCells();
 
   if (totalLevelCells != totalCells && missing_patches.size() > 0) {
-    std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
-         << ", for patch(es): ";
+    std::cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() << ", for patch(es): ";
 
     for (size_t i = 0; i < missing_patches.size(); i++) {
       std::cout << *missing_patches[i] << " ";
@@ -2310,9 +2309,7 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase& constGridVar,
   //__________________________________
   //  Diagnostics
   if (dbg.active()) {
-    cerrLock.lock();
-    dbg << d_myworld->myrank() << "getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() << std::endl;
-    cerrLock.unlock();
+    DOUT(true, "Rank-" << d_myworld->myrank() << "  getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() <<  " total cells: " << totalCells << "/" << totalLevelCells);
   }
 
   ASSERT(totalLevelCells <= totalCells);

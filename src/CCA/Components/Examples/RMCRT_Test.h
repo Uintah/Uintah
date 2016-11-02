@@ -140,7 +140,6 @@ WARNING
     bool doCarryForward( const int radCalc_freq);
 
    protected:
-    const ProcessorGroup* d_myworld;
     
     Ray* d_RMCRT;
     

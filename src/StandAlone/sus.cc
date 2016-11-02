@@ -281,7 +281,7 @@ main( int argc, char *argv[], char *env[] )
 
   int    restartTimestep     = -1;
   int    udaSuffix           = -1;
-  int    numThreads          = 0;
+  int    numThreads          =  0;
 
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory

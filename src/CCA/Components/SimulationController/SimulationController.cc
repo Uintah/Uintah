@@ -22,10 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
-#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #include <CCA/Components/SimulationController/SimulationController.h>
+#include <CCA/Ports/LoadBalancerPort.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SimulationInterface.h>
 
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/InternalError.h>
@@ -42,13 +46,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Time.h>
 
-#include <CCA/Ports/LoadBalancerPort.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/ProblemSpecInterface.h>
-#include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
-
+#include <sci_defs/malloc_defs.h>
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 #include <sci_defs/visit_defs.h>
 
 #include <cstring>
@@ -59,8 +58,6 @@
 #include <sys/param.h>
 #include <vector>
 
-#include <pwd.h>
-
 #define SECONDS_PER_MINUTE        60.0
 #define SECONDS_PER_HOUR        3600.0
 #define SECONDS_PER_DAY        86400.0
@@ -69,53 +66,42 @@
 
 #define AVERAGE_WINDOW 10
 
-using namespace std;
 
-static Uintah::DebugStream dbg(     "SimulationStats",            true  );
-static Uintah::DebugStream dbgTime( "SimulationTimeStats",        false );
-static Uintah::DebugStream simdbg(  "SimulationController",       false );
-static Uintah::DebugStream stats(   "ComponentTimings",           false );
-static Uintah::DebugStream istats(  "IndividualComponentTimings", false );
-extern Uintah::DebugStream amrout;
+namespace {
+
+Uintah::DebugStream dbg(     "SimulationStats",            true  );
+Uintah::DebugStream dbgTime( "SimulationTimeStats",        false );
+Uintah::DebugStream simdbg(  "SimulationController",       false );
+Uintah::DebugStream stats(   "ComponentTimings",           false );
+Uintah::DebugStream istats(  "IndividualComponentTimings", false );
+
+}
+
 
 namespace Uintah {
 
-SimulationController::SimulationController( const ProcessorGroup * myworld,
-                                                  bool             doAMR,
-                                                  ProblemSpecP     pspec ) :
-  UintahParallelComponent( myworld ), d_ups( pspec ), d_doAMR( doAMR )
+//______________________________________________________________________
+//
+SimulationController::SimulationController( const ProcessorGroup * myworld
+                                          ,       bool             doAMR
+                                          ,       ProblemSpecP     pspec
+                                          )
+  : UintahParallelComponent( myworld )
+  , m_ups( pspec )
+  , m_do_amr( doAMR )
 {
-  //initialize the overhead percentage
-  overheadIndex = 0;
   
-  for(int i=0; i<OVERHEAD_WINDOW; ++i) {
-    double x = (double) i / (double) (OVERHEAD_WINDOW/2);
-    overheadValues[i] = 0;
-    overheadWeights[i]= 8.0 - x*x*x;
+  for (int i = 0; i < OVERHEAD_WINDOW; ++i) {
+    double x = (double)i / (double)(OVERHEAD_WINDOW / 2);
+    m_overhead_values[i] = 0;
+    m_overhead_weights[i] = 8.0 - x * x * x;
   }
 
-  d_nSamples               = 0;
-  d_startWallTime          = 0;
-  d_totalWallTime          = 0;
-  d_totalExecWallTime      = 0;
-  d_execWallTime           = 0;
-  d_inSituWallTime         = 0;
-  d_expMovingAverage       = 0;
+  m_grid_ps      = m_ups->findBlock( "Grid" );
+  m_time_info    = scinew SimulationTime( m_ups );
+  m_shared_state = scinew SimulationState( m_ups );
+  m_shared_state->setSimulationTime( m_time_info );
 
-  d_restarting             = false;
-  d_reduceUda              = false;
-  d_doMultiTaskgraphing    = false;
-  d_archive                = nullptr;
-  d_sim                    = 0;
-
-  d_prev_delt              = 0;
-
-  d_grid_ps                = d_ups->findBlock( "Grid" );
-
-  d_timeinfo    = scinew SimulationTime( d_ups );
-  d_sharedState = scinew SimulationState( d_ups );
-
-  d_sharedState->setSimulationTime( d_timeinfo );
   
 #ifdef USE_PAPI_COUNTERS
   /*
@@ -146,54 +132,54 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
    * PAPI_L2_TCM - level 2 total cache misses
    * PAPI_L3_TCM - level 3 total cache misses
    */
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
+  m_papi_events.insert(std::pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
 
   // For meaningful error reporting - PAPI Version: 5.1.0 has 25 error return codes:
-  d_papiErrorCodes.insert(pair<int, string>( 0,  "No error"));
-  d_papiErrorCodes.insert(pair<int, string>(-1,  "Invalid argument"));
-  d_papiErrorCodes.insert(pair<int, string>(-2,  "Insufficient memory"));
-  d_papiErrorCodes.insert(pair<int, string>(-3,  "A System/C library call failed"));
-  d_papiErrorCodes.insert(pair<int, string>(-4,  "Not supported by substrate"));
-  d_papiErrorCodes.insert(pair<int, string>(-5,  "Access to the counters was lost or interrupted"));
-  d_papiErrorCodes.insert(pair<int, string>(-6,  "Internal error, please send mail to the developers"));
-  d_papiErrorCodes.insert(pair<int, string>(-7,  "Hardware event does not exist"));
-  d_papiErrorCodes.insert(pair<int, string>(-8,  "Hardware event exists, but cannot be counted due to counter resource limitations"));
-  d_papiErrorCodes.insert(pair<int, string>(-9,  "EventSet is currently not running"));
-  d_papiErrorCodes.insert(pair<int, string>(-10, "EventSet is currently counting"));
-  d_papiErrorCodes.insert(pair<int, string>(-11, "No such EventSet available"));
-  d_papiErrorCodes.insert(pair<int, string>(-12, "Event in argument is not a valid preset"));
-  d_papiErrorCodes.insert(pair<int, string>(-13, "Hardware does not support performance counters"));
-  d_papiErrorCodes.insert(pair<int, string>(-14, "Unknown error code"));
-  d_papiErrorCodes.insert(pair<int, string>(-15, "Permission level does not permit operation"));
-  d_papiErrorCodes.insert(pair<int, string>(-16, "PAPI hasn't been initialized yet"));
-  d_papiErrorCodes.insert(pair<int, string>(-17, "Component index isn't set"));
-  d_papiErrorCodes.insert(pair<int, string>(-18, "Not supported"));
-  d_papiErrorCodes.insert(pair<int, string>(-19, "Not implemented"));
-  d_papiErrorCodes.insert(pair<int, string>(-20, "Buffer size exceeded"));
-  d_papiErrorCodes.insert(pair<int, string>(-21, "EventSet domain is not supported for the operation"));
-  d_papiErrorCodes.insert(pair<int, string>(-22, "Invalid or missing event attributes"));
-  d_papiErrorCodes.insert(pair<int, string>(-23, "Too many events or attributes"));
-  d_papiErrorCodes.insert(pair<int, string>(-24, "Bad combination of features"));
+  m_papi_error_codes.insert(std::pair<int, std::string>( 0,  "No error"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-1,  "Invalid argument"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-2,  "Insufficient memory"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-3,  "A System/C library call failed"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-4,  "Not supported by substrate"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-5,  "Access to the counters was lost or interrupted"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-6,  "Internal error, please send mail to the developers"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-7,  "Hardware event does not exist"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-8,  "Hardware event exists, but cannot be counted due to counter resource limitations"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-9,  "EventSet is currently not running"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-10, "EventSet is currently counting"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-11, "No such EventSet available"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-12, "Event in argument is not a valid preset"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-13, "Hardware does not support performance counters"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-14, "Unknown error code"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-15, "Permission level does not permit operation"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-16, "PAPI hasn't been initialized yet"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-17, "Component index isn't set"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-18, "Not supported"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-19, "Not implemented"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-20, "Buffer size exceeded"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-21, "EventSet domain is not supported for the operation"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-22, "Invalid or missing event attributes"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-23, "Too many events or attributes"));
+  m_papi_error_codes.insert(std::pair<int, std::string>(-24, "Bad combination of features"));
 
-  d_eventValues = scinew long long[d_papiEvents.size()];
-  d_eventSet = PAPI_NULL;
+  m_event_values = scinew long long[m_papi_events.size()];
+  m_event_set = PAPI_NULL;
   int retp = -1;
 
   // some PAPI boiler plate
   retp = PAPI_library_init(PAPI_VER_CURRENT);
   if (retp != PAPI_VER_CURRENT) {
     proc0cout << "Error: Cannot initialize PAPI library!\n"
-              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
+              << "       Error code = " << retp << " (" << m_papi_error_codes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
   }
   retp = PAPI_thread_init(pthread_self);
   if (retp != PAPI_OK) {
     if (d_myworld->myrank() == 0) {
-      cout << "Error: Cannot initialize PAPI thread support!\n"
-           << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
+      std::cout << "Error: Cannot initialize PAPI thread support!\n"
+           << "       Error code = " << retp << " (" << m_papi_error_codes.find(retp)->second << ")\n";
     }
     if (Parallel::getNumThreads() > 1) {
       throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
@@ -202,11 +188,11 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
 
   // query all the events to find that are supported, flag those that
   // are unsupported
-  for (map<int, PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
+  for (std::map<int, PapiEvent>::iterator iter=m_papi_events.begin(); iter!=m_papi_events.end(); iter++) {
     retp = PAPI_query_event(iter->first);
     if (retp != PAPI_OK) {
       proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!\n"
-                << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n"
+                << "          Error code = " << retp << " (" << m_papi_error_codes.find(retp)->second << ")\n"
                 << "          No stats will be printed for " << iter->second.simStatName << "\n";
     } else {
       iter->second.isSupported = true;
@@ -214,10 +200,10 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   }
 
   // create a new empty PAPI event set
-  retp = PAPI_create_eventset(&d_eventSet);
+  retp = PAPI_create_eventset(&m_event_set);
   if (retp != PAPI_OK) {
     proc0cout << "Error: Cannot create PAPI event set!\n"
-              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
+              << "       Error code = " << retp << " (" << m_papi_error_codes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
   }
 
@@ -227,13 +213,13 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
    *   this block of code.
    */
   int index = 0;
-  for (map<int, PapiEvent>::iterator iter = d_papiEvents.begin(); iter != d_papiEvents.end(); iter++) {
+  for (std::map<int, PapiEvent>::iterator iter = m_papi_events.begin(); iter != m_papi_events.end(); iter++) {
     if (iter->second.isSupported) {
-      retp = PAPI_add_event(d_eventSet, iter->first);
+      retp = PAPI_add_event(m_event_set, iter->first);
       if (retp != PAPI_OK) { // this means the event queried OK but could not be added
         if (d_myworld->myrank() == 0) {
-          cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!\n"
-               << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n"
+          std::cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!\n"
+               << "          Error code = " << retp << " (" << m_papi_error_codes.find(retp)->second << ")\n"
                << "          No stats will be printed for " << iter->second.simStatName << "\n";
         }
         iter->second.isSupported = false;
@@ -244,22 +230,23 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
     }
   }
 
-  retp = PAPI_start(d_eventSet);
+  retp = PAPI_start(m_event_set);
   if (retp != PAPI_OK) {
     proc0cout << "WARNNING: Cannot start PAPI event set!\n"
-              << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
+              << "          Error code = " << retp << " (" << m_papi_error_codes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI event set start error. Unable to start hardware counter event set.", __FILE__, __LINE__);
   }
 #endif
-} // end SimulationController constructor
+
+} // end SimulationController CTOR
 
 //______________________________________________________________________
 //
-
 SimulationController::~SimulationController()
 {
-  delete d_archive;
-  delete d_timeinfo;
+  delete m_archive;
+  delete m_time_info;
+
 #ifdef USE_PAPI_COUNTERS
   delete d_eventValues;
 #endif
@@ -267,123 +254,141 @@ SimulationController::~SimulationController()
   
 //______________________________________________________________________
 //
-
 void
-SimulationController::setReduceUdaFlags( const string & fromDir )
+SimulationController::setReduceUdaFlags( const std::string & fromDir )
 {
-  d_doAMR       = false;
-  d_reduceUda   = true;
-  d_fromDir     = fromDir;
+  m_do_amr       = false;
+  m_reduce_uda   = true;
+  m_from_dir     = fromDir;
 }
 
 //______________________________________________________________________
 //
-
 void
-SimulationController::doRestart( const string & restartFromDir, int timestep,
-                                 bool fromScratch, bool removeOldDir )
+SimulationController::doRestart( const std::string & restartFromDir
+                               ,       int           timestep
+                               ,       bool          fromScratch
+                               ,       bool          removeOldDir
+                               )
 {
-  d_restarting          = true;
-  d_fromDir             = restartFromDir;
-  d_restartTimestep     = timestep;
-  d_restartFromScratch  = fromScratch;
-  d_restartRemoveOldDir = removeOldDir;
+  m_restarting          = true;
+  m_from_dir             = restartFromDir;
+  m_restart_timestep     = timestep;
+  m_restart_from_scratch  = fromScratch;
+  m_restart_remove_old_dir = removeOldDir;
 }
 
 //______________________________________________________________________
 //
-
 void
 SimulationController::preGridSetup( void )
 {
-  d_output = dynamic_cast<Output*>(getPort("output"));
-  if( !d_output ) {
-    cout << "dynamic_cast of 'd_output' failed!\n";
-    throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
+  m_output = dynamic_cast<Output*>(getPort("output"));
+    
+  if( !m_output ) {
+    std::cout << "dynamic_cast of 'm_output' failed!\n";
+    throw InternalError("dynamic_cast of 'm_output' failed!", __FILE__, __LINE__);
   }
 
-  d_output->problemSetup( d_ups, d_sharedState.get_rep() );
 
-  d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  d_scheduler->problemSetup(d_ups, d_sharedState);
+  m_output->problemSetup( m_ups, m_shared_state.get_rep() );
+
+  m_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  m_scheduler->problemSetup(m_ups, m_shared_state);
     
-  ProblemSpecP amr_ps = d_ups->findBlock("AMR");
+  ProblemSpecP amr_ps = m_ups->findBlock("AMR");
   if( amr_ps ) {
-    amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
+    amr_ps->get( "doMultiTaskgraphing", m_do_multi_taskgraphing );
+  }
+
+  // TODO: is there a cleaner way of doing this and should it be in postGridSetup? - APH, 10/19/16
+  // Alan, note that this also crashes in as something as simple as unifiedSchedulerTest on 1 MPI rank and 2 nthreads - Brad
+  // Find the radiation calculation frequency for Arches and RMCRT_Test components
+  ProblemSpecP bm_ps = m_ups->get( "calc_frequency",  m_rad_calc_frequency );
+  if (!bm_ps) {
+    ProblemSpecP root_ps = m_ups->getRootNode();
+    ProblemSpecP arches_ps = root_ps->findBlock("CFD")->findBlock("ARCHES");
+    ProblemSpecP rad_src_ps = arches_ps->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src");
+
+    // find the "divQ" src block for the radiation calculation frequency
+    std::string src_name = "";
+    rad_src_ps->getAttribute("label", src_name);
+    while (src_name != "divQ") {
+      rad_src_ps = rad_src_ps->findNextBlock("src");
+      rad_src_ps->getAttribute("label", src_name);
+    }
+    rad_src_ps->getWithDefault("calc_frequency", m_rad_calc_frequency, 1);
   }
 
 #ifdef HAVE_VISIT
-  if( d_sharedState->getVisIt() )
-  {
-    d_sharedState->d_debugStreams.push_back( &dbg );
-    d_sharedState->d_debugStreams.push_back( &dbgTime );
-    d_sharedState->d_debugStreams.push_back( &simdbg );
-    d_sharedState->d_debugStreams.push_back( &stats );
-    d_sharedState->d_debugStreams.push_back( &istats );
+  if( m_shared_state->getVisIt() ) {
+    m_shared_state->d_debugStreams.push_back( &dbg );
+    m_shared_state->d_debugStreams.push_back( &dbgTime );
+    m_shared_state->d_debugStreams.push_back( &simdbg );
+    m_shared_state->d_debugStreams.push_back( &stats );
+    m_shared_state->d_debugStreams.push_back( &istats );
   }
 #endif
 }
 
 //______________________________________________________________________
 //
-
 GridP
 SimulationController::gridSetup( void )
 {
   GridP grid;
 
-  if( d_restarting ) {
+  if( m_restarting ) {
     // Create the DataArchive here, and store it, as we use it a few times...
     // We need to read the grid before ProblemSetup, and we can't load all
     // the data until after problemSetup, so we have to do a few 
     // different DataArchive operations
 
-    Dir restartFromDir( d_fromDir );
-    Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
-    d_archive = scinew DataArchive( checkpointRestartDir.getName(),
-                                    d_myworld->myrank(), d_myworld->size() );
+    Dir restartFromDir(m_from_dir);
+    Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
+    m_archive = scinew DataArchive(checkpointRestartDir.getName(), d_myworld->myrank(), d_myworld->size());
 
-    vector<int>    indices;
-    vector<double> times;
+    std::vector<int>    indices;
+    std::vector<double> times;
 
     try {
-      d_archive->queryTimesteps( indices, times );
+      m_archive->queryTimesteps( indices, times );
     }
     catch( InternalError & ie ) {
-      cerr << "\n";
-      cerr << "An internal error was caught while trying to restart:\n";
-      cerr << "\n";
-      cerr << ie.message() << "\n";
-      cerr << "This most likely means that the simulation UDA that you have specified\n";
-      cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
-      cerr << "in <uda>/checkpoints/ for timestep directories (t#####/) to verify.\n";
-      cerr << "\n";
+      std::cerr << "\n";
+      std::cerr << "An internal error was caught while trying to restart:\n";
+      std::cerr << "\n";
+      std::cerr << ie.message() << "\n";
+      std::cerr << "This most likely means that the simulation UDA that you have specified\n";
+      std::cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
+      std::cerr << "in <uda>/checkpoints/ for timestep directories (t#####/) to verify.\n";
+      std::cerr << "\n";
       Parallel::exitAll(1);
     }
 
     // Find the right time to query the grid
-    if (d_restartTimestep == 0) {
-      d_restartIndex = 0; // timestep == 0 means use the first timestep
-      // reset d_restartTimestep to what it really is
-      d_restartTimestep = indices[0];
+    if (m_restart_timestep == 0) {
+      m_restart_index = 0;  // timestep == 0 means use the first timestep
+      // reset m_restart_timestep to what it really is
+      m_restart_timestep = indices[0];
     }
-    else if (d_restartTimestep == -1 && indices.size() > 0) {
-      d_restartIndex = (unsigned int)(indices.size() - 1); 
-      // reset d_restartTimestep to what it really is
-      d_restartTimestep = indices[indices.size() - 1];
+    else if (m_restart_timestep == -1 && indices.size() > 0) {
+      m_restart_index = (unsigned int)(indices.size() - 1);
+      // reset m_restart_timestep to what it really is
+      m_restart_timestep = indices[indices.size() - 1];
     }
     else {
       for (int index = 0; index < (int)indices.size(); index++)
-        if (indices[index] == d_restartTimestep) {
-          d_restartIndex = index;
+        if (indices[index] == m_restart_timestep) {
+          m_restart_index = index;
           break;
         }
     }
-      
-    if (d_restartIndex == (int) indices.size()) {
+
+    if (m_restart_index == (int)indices.size()) {
       // timestep not found
-      ostringstream message;
-      message << "Timestep " << d_restartTimestep << " not found";
+      std::ostringstream message;
+      message << "Timestep " << m_restart_timestep << " not found";
       throw InternalError(message.str(), __FILE__, __LINE__);
     }
 
@@ -398,52 +403,50 @@ SimulationController::gridSetup( void )
     // conditions. Once that is done, a legitimate load balancer will
     // be created later on - after which we use said balancer and
     // assign BCs to the grid.  NOTE the "false" argument below.
-    grid = d_archive->queryGrid( d_restartIndex, d_ups, false );
+    grid = m_archive->queryGrid( m_restart_index, m_ups, false );
   }
   else {
     grid = scinew Grid();
     
-    d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
-    if( !d_sim ) {
+    m_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
+    if( !m_sim ) {
       throw InternalError( "No simulation component", __FILE__, __LINE__ );
     }
     
-    d_sim->preGridProblemSetup( d_ups, grid, d_sharedState );
+    m_sim->preGridProblemSetup( m_ups, grid, m_shared_state );
     
-    grid->problemSetup( d_ups, d_myworld, d_doAMR );
+    grid->problemSetup( m_ups, d_myworld, m_do_amr );
   }
-
-  if( grid->numLevels() == 0 ) {
+  
+  if (grid->numLevels() == 0) {
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }
-   
+
   // Print out meta data
-  if ( d_myworld->myrank() == 0 ) {
+  if (d_myworld->myrank() == 0) {
     grid->printStatistics();
-    amrout << "Restart grid\n" << *grid.get_rep() << "\n";
   }
 
   // set the dimensionality of the problem.
   IntVector low, high, size;
   grid->getLevel(0)->findCellIndexRange(low, high);
-  size = high-low - grid->getLevel(0)->getExtraCells()*IntVector(2,2,2);
-  d_sharedState->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+  size = high - low - grid->getLevel(0)->getExtraCells() * IntVector(2, 2, 2);
+  m_shared_state->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
 
   return grid;
 }
 
 //______________________________________________________________________
 //
-
 void
 SimulationController::postGridSetup( GridP & grid, double & time )
 {
   // Set up regridder with initial information about grid.  Do before
   // sim - so that Switcher (being a sim) can reset the state of the
   // regridder
-  d_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
-  if ( d_regridder ) {
-    d_regridder->problemSetup( d_ups, grid, d_sharedState );
+  m_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+  if (m_regridder) {
+    m_regridder->problemSetup( m_ups, grid, m_shared_state );
   }
     
   // Initialize load balancer.  Do here since we have the
@@ -451,134 +454,132 @@ SimulationController::postGridSetup( GridP & grid, double & time )
   // initialization time. In addition do it after regridding since we
   // need to know the minimum patch size that the regridder will
   // create
-  d_lb = d_scheduler->getLoadBalancer();
-  d_lb->problemSetup( d_ups, grid, d_sharedState );
+  m_lb = m_scheduler->getLoadBalancer();
+  m_lb->problemSetup( m_ups, grid, m_shared_state );
 
   // Initialize the CFD and/or MPM components
-  d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
-  if( !d_sim ) {
+  m_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+  if( !m_sim ) {
     throw InternalError("No simulation component", __FILE__, __LINE__);
   }
 
-  ProblemSpecP restart_prob_spec_for_component = 0;
+  ProblemSpecP restart_prob_spec_for_component = nullptr;
 
-  if( d_restarting ) {
-    // Do these before calling archive->restartInitialize, since
-    // problemSetup creates VarLabels the DA needs.
-    restart_prob_spec_for_component =
-      d_archive->getTimestepDocForComponent( d_restartIndex );
+  if( m_restarting ) {
+    // Do these before calling archive->restartInitialize, since problemSetup creates VarLabels the DA needs.
+    restart_prob_spec_for_component = m_archive->getTimestepDocForComponent( m_restart_index );
   }
 
   // Pass the restart_prob_spec_for_component to the Component's
   // problemSetup.  For restarting, pull the <MaterialProperties> from
   // the restart_prob_spec.  If it is not available, then we will pull
-  // the properties from the d_ups instead.  Needs to be done before
+  // the properties from the m_ups instead.  Needs to be done before
   // DataArchive::restartInitialize
-  d_sim->problemSetup(d_ups, restart_prob_spec_for_component, grid, d_sharedState);
+  m_sim->problemSetup(m_ups, restart_prob_spec_for_component, grid, m_shared_state);
 
-  if( d_restarting ) {
+  if( m_restarting ) {
     simdbg << "Restarting... loading data\n";    
-    d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &time );
+    m_archive->restartInitialize( m_restart_index, grid, m_scheduler->get_dw(1), m_lb, &time );
       
     // Set prevDelt to what it was in the last simulation.  If in the last 
     // sim we were clamping delt based on the values of prevDelt, then
     // delt will be off if it doesn't match.
-    d_prev_delt = d_archive->getOldDelt( d_restartIndex );
+    m_prev_delt = m_archive->getOldDelt( m_restart_index );
 
     // Set the time step to the restart time step.
-    d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
+    m_shared_state->setCurrentTopLevelTimeStep( m_restart_timestep );
 
     // Tell the scheduler the generation of the re-started simulation.
-    // (Add +1 because the scheduler will be starting on the next
-    // timestep.)
-    d_scheduler->setGeneration( d_restartTimestep + 1);
+    // (Add +1 because the scheduler will be starting on the next timestep.)
+    m_scheduler->setGeneration( m_restart_timestep + 1 );
       
     // Check to see if the user has set a restart delt
-    if (d_timeinfo->override_restart_delt != 0) {
-      double delt = d_timeinfo->override_restart_delt;
-      proc0cout << "Overriding restart delt with " << delt << "\n";
-      d_scheduler->get_dw(1)->override( delt_vartype(delt), d_sharedState->get_delt_label() );
+    if (m_time_info->override_restart_delt != 0) {
+      double newdelt = m_time_info->override_restart_delt;
+      proc0cout << "Overriding restart delt with " << newdelt << "\n";
+      m_scheduler->get_dw(1)->override( delt_vartype(newdelt), m_shared_state->get_delt_label() );
     }
-    
-    // This delete is an enigma... I think if it is called then memory
-    // is not leaked, but sometimes if it it is called, then
-    // everything segfaults...
-    //
-    // delete d_archive;
+
+//    // This delete is an enigma... I think if it is called then memory is not leaked, but sometimes if it
+//    // it is called, then everything segfaults...
+//
+//     delete m_archive;
+
   }
 
   // Finalize the shared state/materials
-  d_sharedState->finalizeMaterials();
+  m_shared_state->finalizeMaterials();
     
   // Done after the sim->problemSetup to get defaults into the
   // input.xml, which it writes along with index.xml
-  d_output->initializeOutput(d_ups);
+  m_output->initializeOutput(m_ups);
 
-  if( d_restarting ) {
-    Dir dir( d_fromDir );
-    d_output->restartSetup( dir, 0, d_restartTimestep, time, d_restartFromScratch, d_restartRemoveOldDir );
+  if( m_restarting ) {
+    Dir dir(m_from_dir);
+    m_output->restartSetup( dir, 0, m_restart_timestep, time, m_restart_from_scratch, m_restart_remove_old_dir );
   }
 } // end postGridSetup()
 
 //______________________________________________________________________
 //
-
 void
 SimulationController::adjustDelT( double& delt, double prev_delt, double time )
 {
+
 #if 0
-  proc0cout << "maxTime = " << d_timeinfo->maxTime << "\n";
-  proc0cout << "initTime = " << d_timeinfo->initTime << "\n";
-  proc0cout << "delt_min = " << d_timeinfo->delt_min << "\n";
-  proc0cout << "delt_max = " << d_timeinfo->delt_max << "\n";
-  proc0cout << "timestep_multiplier = " << d_timeinfo->delt_factor << "\n";
-  proc0cout << "delt_init = " << d_timeinfo->max_initial_delt << "\n";
-  proc0cout << "initial_delt_range = " << d_timeinfo->initial_delt_range << "\n";
-  proc0cout << "max_delt_increase = " << d_timeinfo->max_delt_increase << "\n";
-  proc0cout << "delt = " << delt << "\n";
-  proc0cout << "prev_delt = " << prev_delt << "\n";
+  proc0cout << "maxTime = "             << m_time_info->maxTime << "\n";
+  proc0cout << "initTime = "            << m_time_info->initTime << "\n";
+  proc0cout << "delt_min = "            << m_time_info->delt_min << "\n";
+  proc0coutt << "delt_max = "           << m_time_info->delt_max << "\n";
+  proc0cout << "timestep_multiplier = " << m_time_info->delt_factor << "\n";
+  proc0cout << "delt_init = "           << m_time_info->max_initial_delt << "\n";
+  proc0cout << "initial_delt_range = "  << m_time_info->initial_delt_range << "\n";
+  proc0cout << "max_delt_increase = "   << m_time_info->max_delt_increase << "\n";
+  proc0cout << "first = "               << first << "\n";
+  proc0cout << "delt = "                << delt << "\n";
+  proc0cout << "prev_delt = "           << prev_delt << "\n";
 #endif
 
-  delt *= d_timeinfo->delt_factor;
+  delt *= m_time_info->delt_factor;
       
   // Check to see if delt is below the delt_min
-  if( delt < d_timeinfo->delt_min ) {
-    proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << d_timeinfo->delt_min << '\n';
-    delt = d_timeinfo->delt_min;
+  if( delt < m_time_info->delt_min ) {
+    proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << m_time_info->delt_min << '\n';
+    delt = m_time_info->delt_min;
   }
 
   // Check to see if delt was increased too much over the previous delt
   if( prev_delt > 0.0 &&
-      d_timeinfo->max_delt_increase < 1.e90 &&
-      delt > (1.0+d_timeinfo->max_delt_increase)*prev_delt) {
+      m_time_info->max_delt_increase < 1.e90 &&
+      delt > (1.0 + m_time_info->max_delt_increase) * prev_delt) {
     proc0cout << "WARNING (a): lowering delt from " << delt 
-              << " to maxmimum: " << (1.0+d_timeinfo->max_delt_increase)*prev_delt
-              << " (maximum increase of " << d_timeinfo->max_delt_increase
+              << " to maxmimum: " << (1.0 + m_time_info->max_delt_increase) * prev_delt
+              << " (maximum increase of " << m_time_info->max_delt_increase
               << ")\n";
-    delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
+    delt = (1 + m_time_info->max_delt_increase) * prev_delt;
   }
 
   // Check to see if delt exceeds the max_initial_delt
-  if( time <= d_timeinfo->initial_delt_range &&
-      delt > d_timeinfo->max_initial_delt ) {
+  if( time <= m_time_info->initial_delt_range &&
+      delt > m_time_info->max_initial_delt ) {
     proc0cout << "WARNING (b): lowering delt from " << delt 
-              << " to maximum: " << d_timeinfo->max_initial_delt
+              << " to maximum: " << m_time_info->max_initial_delt
               << " (for initial timesteps)\n";
-    delt = d_timeinfo->max_initial_delt;
+    delt = m_time_info->max_initial_delt;
   }
 
   // Check to see if delt exceeds the delt_max
-  if( delt > d_timeinfo->delt_max ) {
+  if( delt > m_time_info->delt_max ) {
     proc0cout << "WARNING (c): lowering delt from " << delt
-	      << " to maximum: " << d_timeinfo->delt_max << '\n';
-    delt = d_timeinfo->delt_max;
+	      << " to maximum: " << m_time_info->delt_max << '\n';
+    delt = m_time_info->delt_max;
   }
 
   // Clamp delt to match the requested output and/or checkpoint times
-  if( d_timeinfo->timestep_clamping && d_output ) {
+  if( m_time_info->timestep_clamping && m_output ) {
     double orig_delt = delt;
-    double nextOutput     = d_output->getNextOutputTime();
-    double nextCheckpoint = d_output->getNextCheckpointTime();
+    double nextOutput     = m_output->getNextOutputTime();
+    double nextCheckpoint = m_output->getNextCheckpointTime();
 
     // Clamp to the output time
     if (nextOutput != 0 && time + delt > nextOutput) {
@@ -599,8 +600,8 @@ SimulationController::adjustDelT( double& delt, double prev_delt, double time )
   }
   
   // Clamp delt to the max end time,
-  if (d_timeinfo->end_on_max_time && time + delt > d_timeinfo->maxTime) {
-    delt = d_timeinfo->maxTime - time;
+  if (m_time_info->end_on_max_time && time + delt > m_time_info->maxTime) {
+    delt = m_time_info->maxTime - time;
   }
 }
 
@@ -609,119 +610,128 @@ SimulationController::adjustDelT( double& delt, double prev_delt, double time )
 void
 SimulationController::initWallTimes( void )
 {
-  d_nSamples = 0;
+  m_num_samples = 0;
 
   // vars used to calculate standard deviation
-  d_startWallTime = Time::currentSeconds();
-  d_totalWallTime = 0;
-  d_totalExecWallTime = 0;
-  d_execWallTime = 0;
-  d_inSituWallTime = 0;
-
-  d_expMovingAverage = 0;
-}
-
-void
-SimulationController::calcTotalWallTime ( void )
-{
-  // Calulate the total wall time.
-  d_totalWallTime += Time::currentSeconds() - d_startWallTime;
-
-  // Reset the start time for relative clocking.
-  d_startWallTime = Time::currentSeconds();
-}
-
-void
-SimulationController::calcExecWallTime ( void )
-{
-  // Calculate the execution wall times and update total wall time.
-  d_execWallTime = Time::currentSeconds() - d_startWallTime;
-  d_totalExecWallTime += d_execWallTime;
-  d_totalWallTime     += d_execWallTime;
-  
-  // Reset the start time for relative clocking.
-  d_startWallTime = Time::currentSeconds();
-
-  // Calulate the exponential moving average for this time step.
-  // Multiplier: (2 / (Time periods + 1) )
-  // EMA: {Close - EMA(previous day)} x multiplier + EMA(previous day).
-  
-  // Ignore the first sample as that is for initalization.
-  if( d_nSamples )
-  {
-    double mult = 2.0 / (min(d_nSamples,AVERAGE_WINDOW)+1);  
-    d_expMovingAverage =
-      mult * d_execWallTime + (1.0-mult) * d_expMovingAverage;
-  }
-  else
-    d_expMovingAverage = d_execWallTime;  
-}
-
-void
-SimulationController::calcInSituWallTime ( void )
-{
-  // Calculate the in-situ wall times and update total wall time.
-  d_inSituWallTime = Time::currentSeconds() - d_startWallTime;
-  d_totalWallTime     += d_inSituWallTime;
-  
-  // Reset the start time for relative clocking.
-  d_startWallTime = Time::currentSeconds();
-}
-
-double
-SimulationController::getTotalWallTime( void )
-{
-  return d_totalWallTime;
-}
-
-double
-SimulationController::getTotalExecWallTime( void )
-{
-  return d_totalExecWallTime;
-}
-
-double
-SimulationController::getExecWallTime( void )
-{
-  return d_execWallTime;
-}
-
-double
-SimulationController::getInSituWallTime( void )
-{
-  return d_inSituWallTime;
-}
-
-double
-SimulationController::getExpMovingAverage( void )
-{
-  return d_expMovingAverage;
-}
-
-void
-SimulationController::setStartSimTime ( double t )
-{
-  d_startSimTime = t;
-}
-
-bool
-SimulationController::isLast( double time )
-{
-  return ( ( time >= d_timeinfo->maxTime ) ||
-	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
-	     d_timeinfo->maxTimestep ) ||
-	   ( d_timeinfo->max_wall_time != 0 &&
-	     d_totalWallTime >= d_timeinfo->max_wall_time ) );
+  m_start_wall_time = Time::currentSeconds();
+  m_total_wall_time      = 0.0;
+  m_total_exec_wall_time = 0.0;
+  m_exec_wall_time       = 0.0;
+  m_insitu_wall_time     = 0.0;
+  m_exp_moving_average   = 0.0;
 }
 
 //______________________________________________________________________
 //
 void
-SimulationController::printSimulationStats( int timestep,
-					    double next_delt,
-					    double prev_delt,
-					    double time,
-					    bool header )
+SimulationController::calcTotalWallTime ( void )
+{
+  // Calculate the total wall time.
+  m_total_wall_time += Time::currentSeconds() - m_start_wall_time;
+
+  // Reset the start time for relative clocking.
+  m_start_wall_time = Time::currentSeconds();
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::calcExecWallTime ( void )
+{
+  // Calculate the execution wall times and update total wall time.
+  m_exec_wall_time = Time::currentSeconds() - m_start_wall_time;
+  m_total_exec_wall_time += m_exec_wall_time;
+  m_total_wall_time      += m_exec_wall_time;
+
+  // Reset the start time for relative clocking.
+  m_start_wall_time = Time::currentSeconds();
+
+  // Calculate the exponential moving average for this time step.
+  // Multiplier: (2 / (Time periods + 1) )
+  // EMA: {Close - EMA(previous day)} x multiplier + EMA(previous day).
+
+  // Ignore the first sample as that is for initialization.
+  if (m_num_samples) {
+    double mult = 2.0 / (std::min(m_num_samples, AVERAGE_WINDOW) + 1);
+    m_exp_moving_average = mult * m_exec_wall_time + (1.0 - mult) * m_exp_moving_average;
+  }
+  else
+    m_exp_moving_average = m_exec_wall_time;
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::calcInSituWallTime ( void )
+{
+  // Calculate the in-situ wall times and update total wall time.
+  m_insitu_wall_time = Time::currentSeconds() - m_start_wall_time;
+  m_total_wall_time += m_insitu_wall_time;
+
+  // Reset the start time for relative clocking.
+  m_start_wall_time = Time::currentSeconds();
+}
+
+//______________________________________________________________________
+//
+double
+SimulationController::getTotalWallTime( void )
+{
+  return m_total_wall_time;
+}
+
+//______________________________________________________________________
+//
+double
+SimulationController::getTotalExecWallTime( void )
+{
+  return m_total_exec_wall_time;
+}
+
+//______________________________________________________________________
+//
+double
+SimulationController::getExecWallTime( void )
+{
+  return m_exec_wall_time;
+}
+
+//______________________________________________________________________
+//
+double
+SimulationController::getInSituWallTime( void )
+{
+  return m_insitu_wall_time;
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::setStartSimTime ( double time )
+{
+  m_start_sim_time = time;
+}
+
+//______________________________________________________________________
+//
+bool
+SimulationController::isLast( double time )
+{
+  return ( ( time >= m_time_info->maxTime ) ||
+	   ( m_shared_state->getCurrentTopLevelTimeStep() >=
+	       m_time_info->maxTimestep ) ||
+	   ( m_time_info->max_wall_time != 0 &&
+	       m_total_wall_time >= m_time_info->max_wall_time ) );
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::printSimulationStats( int    timestep,
+					                                  double next_delt,
+					                                  double prev_delt,
+					                                  double time,
+					                                  bool   header )
 {
   if( d_myworld->myrank() == 0 && header ) {
     dbg << std::endl;
@@ -730,10 +740,10 @@ SimulationController::printSimulationStats( int timestep,
     dbg << "EMA == Execution wall time as an exponential moving average using a window of " << AVERAGE_WINDOW << " time steps" << std::endl;
 
     dbg.flush();
-    cout.flush();
+    std::cout.flush();
   }
   
-  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats = d_sharedState->d_runTimeStats;
+  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats = m_shared_state->d_runTimeStats;
 
   // With the sum reduces, use double, since with memory it is possible that
   // it will overflow
@@ -767,137 +777,126 @@ SimulationController::printSimulationStats( int timestep,
     // Calculate percentage of time spent in overhead.
   double percent_overhead = overhead_time / total_time;
   
-  // Set the overhead percentage. Ignore the first sample as that is
-  // for initalization.
-  if( d_nSamples )
-  {
-    overheadValues[overheadIndex] = percent_overhead;
+  // Set the overhead percentage. Ignore the first sample as that is for initialization.
+  if (m_num_samples) {
+    m_overhead_values[m_overhead_index] = percent_overhead;
 
     double overhead = 0;
     double weight = 0;
 
-    int t = min(d_nSamples, OVERHEAD_WINDOW);
-    
-    // Calcualte total weight by incrementing through the overhead
+    int t = std::min(m_num_samples, OVERHEAD_WINDOW);
+
+    // Calculate total weight by incrementing through the overhead
     // sample array backwards and multiplying samples by the weights
-    for( int i=0; i<t; ++i )
-    {
-      unsigned int index = (overheadIndex-i+OVERHEAD_WINDOW) % OVERHEAD_WINDOW;
-      overhead += overheadValues[index] * overheadWeights[i];
-      weight += overheadWeights[i];
+    for (int i = 0; i < t; ++i) {
+      unsigned int index = (m_overhead_index - i + OVERHEAD_WINDOW) % OVERHEAD_WINDOW;
+      overhead += m_overhead_values[index] * m_overhead_weights[i];
+      weight += m_overhead_weights[i];
     }
 
     // Increment the overhead index
-    overheadIndex = (overheadIndex+1) % OVERHEAD_WINDOW;
+    m_overhead_index = (m_overhead_index + 1) % OVERHEAD_WINDOW;
 
-    d_sharedState->setOverheadAvg( overhead / weight );
+    m_shared_state->setOverheadAvg(overhead / weight);
   } 
 
   // Output timestep statistics...
-  if (istats.active())
-  {
-    for (unsigned int i=0; i<runTimeStats.size(); i++)
-    {
-      SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
-      
-      if (runTimeStats[e] > 0)
-      {
-        istats << "rank: " << d_myworld->myrank() << " "
-	       << left << setw(19) << runTimeStats.getName(e)
-	       << " [" << runTimeStats.getUnits(e) << "]: "
-	       << runTimeStats[e] << "\n";
+  if (istats.active()) {
+    for (unsigned int i = 0; i < runTimeStats.size(); i++) {
+      SimulationState::RunTimeStat e = (SimulationState::RunTimeStat)i;
+
+      if (runTimeStats[e] > 0) {
+        istats << "rank: " << d_myworld->myrank() << " " << std::left << std::setw(19) << runTimeStats.getName(e) << " ["
+        << runTimeStats.getUnits(e) << "]: " << runTimeStats[e] << "\n";
       }
     }
   } 
 
-  if( d_myworld->myrank() == 0 )
-  {
-    ostringstream message;
-    message << left
-	    << "Timestep "  << setw(6) << timestep 
-	    << "Time="      << setw(12) << time     
-//	    << "delT="      << setw(12) << prev_delt
-	    << "Next delT=" << setw(12) << next_delt
+  if( d_myworld->myrank() == 0 ) {
+    std::ostringstream message;
+    message << std::left
+	    << "Timestep "  << std::setw(6) << timestep
+	    << "Time="      << std::setw(12) << time
+//	    << "delT="      << std::setw(12) << prev_delt
+	    << "Next delT=" << std::setw(12) << next_delt
       
-	    << "Wall Time= "      << setw(10) << d_totalWallTime
-	    // << "Total Exec Wall Time=" << setw(10) << d_totalExecWallTime
-	    // << "Exec Wall Time="       << setw(10) << d_execWallTime <<
+	    << "Wall Time= "      << std::setw(10) << m_total_wall_time
+	    // << "Total Exec Wall Time=" << std::setw(10) << d_totalExecWallTime
+	    // << "Exec Wall Time="       << std::setw(10) << d_execWallTime <<
 	    // << "In-situ Wall Time="    << setw(10) << d_inSituWallTime
-	    << "EMA="                   << setw(10) << d_expMovingAverage;
+	    << "EMA="                   << std::setw(10) << m_exp_moving_average;
 
     // Report on the memory used.
     if (avg_memused == max_memused && avg_highwater == max_highwater) {
-      message << "Memory Use=" << setw(8)
+      message << "Memory Use=" << std::setw(8)
 	      << ProcessInfo::toHumanUnits((unsigned long) avg_memused);
 
       if(avg_highwater)
-	message << "    Highwater Memory Use=" << setw(8)
+	message << "    Highwater Memory Use=" << std::setw(8)
 		<< ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
     }
     else {
-      message << "Memory Used=" << setw(8)
+      message << "Memory Used=" << std::setw(8)
 	      << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
-	      << " (avg) " << setw(10)
+	      << " (avg) " << std::setw(10)
 	      << ProcessInfo::toHumanUnits(max_memused)
-	      << " (max on rank:" << setw(6) << max_memused_rank << ")";
+	      << " (max on rank:" << std::setw(6) << max_memused_rank << ")";
 
       if(avg_highwater)
-	message << "    Highwater Memory Used=" << setw(8)
+	message << "    Highwater Memory Used=" << std::setw(8)
 		<< ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
-		<< " (avg) " << setw(8)
+		<< " (avg) " << std::setw(8)
 		<< ProcessInfo::toHumanUnits(max_highwater)
-		<< " (max on rank:" << setw(6) << max_highwater_rank << ")";
+		<< " (max on rank:" << std::setw(6) << max_highwater_rank << ")";
     }
 
     dbg << message.str() << "\n";
     dbg.flush();
-    cout.flush();
+    std::cout.flush();
 
-    // Ignore the first sample as that is for initalization.
-    if (stats.active() && d_nSamples) {
-	  stats << "  " << left
-		<< setw(21) << "Description"
-		<< setw(15) << "Units"
-		<< setw(15) << "Average"
-		<< setw(15) << "Maximum"
-		<< setw(13) << "Rank"
-		<< setw(13) << "100*(1-ave/max) '% load imbalance'"
-		<< "\n";
+    // Ignore the first sample as that is for initialization.
+    if (stats.active() && m_num_samples) {
+	    stats << "  " << std::left
+		        << std::setw(21) << "Description"
+		        << std::setw(15) << "Units"
+		        << std::setw(15) << "Average"
+		        << std::setw(15) << "Maximum"
+		        << std::setw(13) << "Rank"
+		        << std::setw(13) << "100*(1-ave/max) '% load imbalance'"
+		        << "\n";
 
-      for (unsigned int i=0; i<runTimeStats.size(); ++i)
-      {
-	SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
-	
-	if (runTimeStats.getMaximum(e) > 0)
-	{
-	  stats << "  " << left
-                << setw(21) << runTimeStats.getName(e)
-		<< "[" << setw(10) << runTimeStats.getUnits(e) << "]"
-		<< " : " << setw(12) << runTimeStats.getAverage(e)
-		<< " : " << setw(12) << runTimeStats.getMaximum(e)
-		<< " : " << setw(10) << runTimeStats.getRank(e)
-		<< " : " << setw(10)
-		<< 100.0 * (1.0 - (runTimeStats.getAverage(e) /
-				   runTimeStats.getMaximum(e)))
-		<< "\n";
-	}
+      for (unsigned int i = 0; i < runTimeStats.size(); ++i) {
+        SimulationState::RunTimeStat e = (SimulationState::RunTimeStat)i;
+
+        if (runTimeStats.getMaximum(e) > 0) {
+	        stats << "  " << std::left
+                << std::setw(21) << runTimeStats.getName(e)
+		            << "[" << std::setw(10) << runTimeStats.getUnits(e) << "]"
+		            << " : " << std::setw(12) << runTimeStats.getAverage(e)
+		            << " : " << std::setw(12) << runTimeStats.getMaximum(e)
+		            << " : " << std::setw(10) << runTimeStats.getRank(e)
+		            << " : " << std::setw(10)
+		            << 100.0 * (1.0 - (runTimeStats.getAverage(e) / runTimeStats.getMaximum(e)))
+		            << "\n";
+        }
       }
       
       // Report the overhead percentage.
-      if( !std::isnan(d_sharedState->getOverheadAvg()) ) {
+      if (!std::isnan(m_shared_state->getOverheadAvg())) {
         stats << "  Percentage of time spent in overhead : "
-              << d_sharedState->getOverheadAvg()*100.0 <<  "\n";
+              << m_shared_state->getOverheadAvg() * 100.0
+              << "\n";
       }
     }
 
-    // Ignore the first sample as that is for initalization.
-    if (dbgTime.active() && d_nSamples ) {
-      double realSecondsNow = d_execWallTime / prev_delt;
-      double realSecondsAvg = d_totalExecWallTime / (time-d_startSimTime);
+    // Ignore the first sample as that is for initialization.
+    if (dbgTime.active() && m_num_samples ) {
+      double realSecondsNow = m_exec_wall_time / prev_delt;
+      double realSecondsAvg = m_total_exec_wall_time / (time-m_start_sim_time);
 
       dbgTime << "1 simulation second takes ";
 
-      dbgTime << left << showpoint << setprecision(3) << setw(4);
+      dbgTime << std::left << std::showpoint << std::setprecision(3) << std::setw(4);
 
       if (realSecondsNow < SECONDS_PER_MINUTE) {
         dbgTime << realSecondsNow << " seconds (now), ";
@@ -918,7 +917,7 @@ SimulationController::printSimulationStats( int timestep,
         dbgTime << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
       }
 
-      dbgTime << setw(4);
+      dbgTime << std::setw(4);
 
       if (realSecondsAvg < SECONDS_PER_MINUTE) {
         dbgTime << realSecondsAvg << " seconds (avg) ";
@@ -943,7 +942,7 @@ SimulationController::printSimulationStats( int timestep,
     }
   }
 
-  ++d_nSamples;
+  ++m_num_samples;
 
 } // end printSimulationStats()
 
@@ -953,24 +952,25 @@ SimulationController::printSimulationStats( int timestep,
 void
 SimulationController::getMemoryStats( int timestep, bool create /* = false */ )
 {
-  unsigned long memUsed, highwater, maxMemUsed;
-  d_scheduler->checkMemoryUse(memUsed, highwater, maxMemUsed);
+  int my_rank = d_myworld->myrank();
+  unsigned long memUse, highwater, maxMemUse;
+  m_scheduler->checkMemoryUse(memUse, highwater, maxMemUse);
 
-  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryUsed] = memUsed;
-  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryMaxUsed] = maxMemUsed;
-  d_sharedState->d_runTimeStats[SimulationState::SCIMemoryHighwater] = highwater;
+  m_shared_state->d_runTimeStats[SimulationState::SCIMemoryUsed] = memUse;
+  m_shared_state->d_runTimeStats[SimulationState::SCIMemoryMaxUsed] = maxMemUse;
+  m_shared_state->d_runTimeStats[SimulationState::SCIMemoryHighwater] = highwater;
 
   if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) {
-    d_sharedState->d_runTimeStats[SimulationState::MemoryUsed] = ProcessInfo::getMemoryUsed();
+    m_shared_state->d_runTimeStats[SimulationState::MemoryUsed] = ProcessInfo::getMemoryUsed();
   }
 
   if (ProcessInfo::isSupported(ProcessInfo::MEM_RSS)) {
-    d_sharedState->d_runTimeStats[SimulationState::MemoryResident] = ProcessInfo::getMemoryResident();
+    m_shared_state->d_runTimeStats[SimulationState::MemoryResident] = ProcessInfo::getMemoryResident();
   }
 
   // Get memory stats for each proc if MALLOC_PERPROC is in the environment.
   if (getenv("MALLOC_PERPROC")) {
-    ostream* mallocPerProcStream = nullptr;
+   std::ostream* mallocPerProcStream = nullptr;
     char* filenamePrefix = getenv("MALLOC_PERPROC");
 
     if (!filenamePrefix || strlen(filenamePrefix) == 0) {
@@ -978,13 +978,13 @@ SimulationController::getMemoryStats( int timestep, bool create /* = false */ )
     }
     else {
       char filename[256];
-      sprintf(filename, "%s.%d", filenamePrefix, d_myworld->myrank());
+      sprintf(filename, "%s.%d", filenamePrefix, my_rank);
 
       if ( create ) {
-        mallocPerProcStream = scinew ofstream(filename, ios::out | ios::trunc);
+        mallocPerProcStream = scinew std::ofstream(filename, std::ios::out | std::ios::trunc);
       }
       else {
-        mallocPerProcStream = scinew ofstream(filename, ios::out | ios::app);
+        mallocPerProcStream = scinew std::ofstream(filename, std::ios::out | std::ios::app);
       }
 
       if( !mallocPerProcStream ) {
@@ -993,7 +993,7 @@ SimulationController::getMemoryStats( int timestep, bool create /* = false */ )
       }
     }
 
-    *mallocPerProcStream << "Proc " << d_myworld->myrank() << "   ";
+    *mallocPerProcStream << "Proc " << my_rank << "   ";
     *mallocPerProcStream << "Timestep " << timestep << "   ";
 
     if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) {
@@ -1004,12 +1004,14 @@ SimulationController::getMemoryStats( int timestep, bool create /* = false */ )
       *mallocPerProcStream << "RSS " << ProcessInfo::getMemoryResident() << "   ";
     }
 
-    *mallocPerProcStream << "Sbrk " << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
+    *mallocPerProcStream << "Sbrk " << (char*)sbrk(0) - m_scheduler->getStartAddr() << "   ";
+    
 #ifndef DISABLE_SCI_MALLOC
-    *mallocPerProcStream << "Sci_Malloc_MemUsed " << memUsed << "   ";
-    *mallocPerProcStream << "Sci_Malloc_MaxMemUsed " << maxMemUsed << "   ";
+    *mallocPerProcStream << "Sci_Malloc_Memuse "    << memUse << "   ";
+    *mallocPerProcStream << "Sci_Malloc_MaxMemuse " << maxMemUse << "   ";
     *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
 #endif
+
     *mallocPerProcStream << "\n";
 
     if( mallocPerProcStream != &dbg ) {
@@ -1021,38 +1023,32 @@ SimulationController::getMemoryStats( int timestep, bool create /* = false */ )
 //______________________________________________________________________
 //
 void
-SimulationController::getPAPIStats( )
+SimulationController::getPAPIStats( void )
 {
 #ifdef USE_PAPI_COUNTERS
-  int retp = PAPI_read(d_eventSet, d_eventValues);
+  int retp = PAPI_read(m_event_set, m_event_values);
 
   if (retp != PAPI_OK) {
     proc0cout << "Error: Cannot read PAPI event set!\n"
-              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")\n";
+              << "       Error code = " << retp << " (" << m_papi_error_codes.find(retp)->second << ")\n";
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   }
   else {
-    d_sharedState->d_runTimeStats[ SimulationState::TotalFlops ] =
-      (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
-    d_sharedState->d_runTimeStats[ SimulationState::TotalVFlops ] =
-      (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
-    d_sharedState->d_runTimeStats[ SimulationState::L2Misses ] =
-      (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
-    d_sharedState->d_runTimeStats[ SimulationState::L3Misses ] =
-      (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
+    m_shared_state->d_runTimeStats[ SimulationState::TotalFlops ]  = (double) m_event_values[m_papi_events.find(PAPI_FP_OPS)->second.eventValueIndex];
+    m_shared_state->d_runTimeStats[ SimulationState::TotalVFlops ] = (double) m_event_values[m_papi_events.find(PAPI_DP_OPS)->second.eventValueIndex];
+    m_shared_state->d_runTimeStats[ SimulationState::L2Misses ]    = (double) m_event_values[m_papi_events.find(PAPI_L2_TCM)->second.eventValueIndex];
+    m_shared_state->d_runTimeStats[ SimulationState::L3Misses ]    = (double) m_event_values[m_papi_events.find(PAPI_L3_TCM)->second.eventValueIndex];
   }
 
   // zero the values in the hardware counter event set array
-  retp = PAPI_reset(d_eventSet);
+  retp = PAPI_reset(m_event_set);
 
   if (retp != PAPI_OK) {
     proc0cout << "WARNNING: Cannot reset PAPI event set!\n"
               << "          Error code = " << retp << " ("
-	      << d_papiErrorCodes.find(retp)->second << ")\n";
+	            << m_papi_error_codes.find(retp)->second << ")\n";
 
-    throw PapiInitializationError( "PAPI reset error on hardware event set. "
-                                   "Unable to reset event set values.",
-                                   __FILE__, __LINE__ );
+    throw PapiInitializationError( "PAPI reset error on hardware event set. Unable to reset event set values.",  __FILE__, __LINE__ );
   }
 #endif
 }

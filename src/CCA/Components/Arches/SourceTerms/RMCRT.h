@@ -1,5 +1,30 @@
-#ifndef Uintah_Component_Arches_RMCRT_h
-#define Uintah_Component_Arches_RMCRT_h
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2016 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+#ifndef CCA_COMPONENTS_ARCHES_SOURCETERMS_RMCRT_H
+#define CCA_COMPONENTS_ARCHES_SOURCETERMS_RMCRT_H
+
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
@@ -81,8 +106,7 @@ public:
                    DataWarehouse* new_dw );
 
   //______________________________________________________________________
-  class Builder
-    : public SourceTermBase::Builder {
+  class Builder : public SourceTermBase::Builder {
 
     public:
 
@@ -93,9 +117,8 @@ public:
         : _name(name),
           _labels(labels),
           _my_world(my_world),
-          _required_label_names(required_label_names){
-          _type = "rmcrt_radiation";
-        }
+          _required_label_names(required_label_names)
+        {}
 
       ~Builder(){}
 
@@ -107,12 +130,15 @@ public:
     private:
 
       std::string         _name;
-      std::string         _type;
-      ArchesLabel*        _labels;
-      MPMArchesLabel*     _MAlab;
+      std::string         _type{"rmcrt_radiation"};
+      ArchesLabel*        _labels{nullptr};
+      MPMArchesLabel*     _MAlab{nullptr};
       const ProcessorGroup* _my_world;
       std::vector<std::string> _required_label_names;
+
   }; // class Builder
+
+
   //______________________________________________________________________
   //
 private:
@@ -174,39 +200,42 @@ private:
 
   //__________________________________
   //
-  int _radiation_calc_freq;
-  int _matl;
-  int _archesLevelIndex;
-  bool _all_rk;
+  int  _radiation_calc_freq{1};
+  int  _matl;
+  int  _archesLevelIndex{-9};
+  bool _all_rk{false};
 
-  int  _whichAlgo;
+  int  _whichAlgo{singleLevel};
   enum Algorithm{ dataOnion, coarseLevel, singleLevel};
 
-  Ray* _RMCRT;
-  ArchesLabel*    _labels;
-  MPMArchesLabel* _MAlab;
-  BoundaryCondition* _boundaryCondition;
-  Properties* d_props;
-  const ProcessorGroup* _my_world;
-  SimulationStateP      _sharedState;
-  ProblemSpecP          _ps;              // needed for extraSetup()
+  Ray                  * _RMCRT{nullptr};
+  ArchesLabel          * _labels{nullptr};
+  MPMArchesLabel       * _MAlab{nullptr};
+  BoundaryCondition    * _boundaryCondition{nullptr};
+  Properties           * d_props{nullptr};
+  const ProcessorGroup * _my_world;
+  SimulationStateP       _sharedState;
+  ProblemSpecP           _ps;              // needed for extraSetup()
 
-  std::string _abskg_label_name;
-  std::string _T_label_name;
+  std::string   _abskg_label_name;
+  std::string   _T_label_name;
 
-  const VarLabel* _abskgLabel;
-  const VarLabel* _tempLabel;
-  const VarLabel* _radFluxE_Label;
-  const VarLabel* _radFluxW_Label;
-  const VarLabel* _radFluxN_Label;
-  const VarLabel* _radFluxS_Label;
-  const VarLabel* _radFluxT_Label;
-  const VarLabel* _radFluxB_Label;
+  const VarLabel * _abskgLabel{nullptr};
+  const VarLabel * _tempLabel{nullptr};
+  const VarLabel * _radFluxE_Label{nullptr};
+  const VarLabel * _radFluxW_Label{nullptr};
+  const VarLabel * _radFluxN_Label{nullptr};
+  const VarLabel * _radFluxS_Label{nullptr};
+  const VarLabel * _radFluxT_Label{nullptr};
+  const VarLabel * _radFluxB_Label{nullptr};
 
-  Ghost::GhostType _gn;
-  Ghost::GhostType _gac;
-  TypeDescription::Type _FLT_DBL;        // Is RMCRT algorithm using doubles or floats for communicated variables
+  Ghost::GhostType _gn{Ghost::None};
+  Ghost::GhostType _gac{Ghost::AroundCells};
+
+  TypeDescription::Type _FLT_DBL{TypeDescription::double_type};        // Is RMCRT algorithm using doubles or floats for communicated variables
 
 }; // end RMCRT
+
 } // end namespace Uintah
-#endif
+
+#endif // CCA_COMPONENTS_ARCHES_SOURCETERMS_RMCRT_H

@@ -202,6 +202,7 @@ class TaskGraph {
     TaskGraph(       SchedulerCommon   * sched
              , const ProcessorGroup    * proc_group
              ,       Scheduler::tgType   tg_type
+             ,       int                 index
              );
 
     ~TaskGraph();
@@ -232,6 +233,7 @@ class TaskGraph {
                                       ,       DetailedTasks * first
                                       , const GridP         & grid
                                       , const GridP         & oldGrid
+                                      , const bool            hasDistalReqs = false
                                       );
 
     inline DetailedTasks* getDetailedTasks()
@@ -242,6 +244,11 @@ class TaskGraph {
     inline Scheduler::tgType getType() const
     {
       return m_type;
+    }
+
+    inline int getIndex()
+    {
+      return m_index;
     }
 
     /// This will go through the detailed tasks and create the
@@ -343,10 +350,10 @@ class TaskGraph {
     /// what addDependencyEdges does for setupTaskConnections.  This will
     /// set up the data dependencies that need to be communicated between
     /// processors.
-    void createDetailedDependencies( DetailedTask     * task
-                                   , Task::Dependency * req
-                                   , CompTable        & ct
-                                   , bool               modifies
+    void createDetailedDependencies(       DetailedTask     * task
+                                   ,       Task::Dependency * req
+                                   ,       CompTable        & ct
+                                   ,       bool               modifies
                                    );
 
     /// Makes a DetailedTask from task with given PatchSubset and MaterialSubset.
@@ -392,10 +399,14 @@ class TaskGraph {
     // how many task phases this taskgraph has been through
     int m_num_task_phases{0};
 
+    int m_index{-1};
+
     std::vector<Task*>        m_tasks;
     std::vector<Task::Edge*>  m_edges;
 
     DetailedReductionTasksMap m_reduction_tasks;
+
+    std::map<std::string, int> max_ghost_for_varlabelmap;
 }; // class TaskGraph
 
 }  // namespace Uintah

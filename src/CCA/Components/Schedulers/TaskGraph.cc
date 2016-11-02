@@ -40,11 +40,13 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <sci_defs/config_defs.h>
 
+#include <algorithm>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -63,6 +65,8 @@ DebugStream tgphasedbg(  "TaskGraphPhase"   , false);
 DebugStream detaileddbg( "TaskGraphDetailed", false);
 DebugStream compdbg(     "FindComp"         , false);
 
+Dout neighbor_location(  "NeighborLocation" , false);
+
 }
 
 //______________________________________________________________________
@@ -70,10 +74,12 @@ DebugStream compdbg(     "FindComp"         , false);
 TaskGraph::TaskGraph(       SchedulerCommon   * sched
                     , const ProcessorGroup    * pg
                     ,       Scheduler::tgType   type
+                    ,       int                 index
                     )
   : m_scheduler{sched}
   , m_proc_group{pg}
   , m_type{type}
+  , m_index{index}
 {
   m_load_balancer = dynamic_cast<LoadBalancerPort*>( m_scheduler->getPort("load balancer") );
 }
@@ -94,9 +100,9 @@ TaskGraph::initialize()
     delete m_detailed_tasks;
   }
 
-  for (std::vector<Task*>::iterator iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    delete *iter;
-  }
+//  for (std::vector<Task*>::iterator iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
+//    delete *iter;
+//  }
 
   for (std::vector<Task::Edge*>::iterator iter = m_edges.begin(); iter != m_edges.end(); iter++) {
     delete *iter;
@@ -266,7 +272,7 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
 
   // Add the new reduction tasks to the list of tasks
   for(ReductionTasksMap::iterator it = reductionTasks.begin(); it != reductionTasks.end(); it++) {
-    addTask(it->second, 0, 0);
+    addTask(it->second, nullptr, nullptr);
   }
 
   // Gather the comps for the tasks into a map
@@ -650,6 +656,7 @@ TaskGraph::addTask(       Task        * task
                   )
 {
   task->setSets(patchset, matlset);
+
   if ((patchset && patchset->totalsize() == 0) || (matlset && matlset->totalsize() == 0)) {
     delete task;
     if (detaileddbg.active()) {
@@ -708,31 +715,173 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
                               ,       DetailedTasks * first
                               , const GridP         & grid
                               , const GridP         & oldGrid
+                              , const bool            hasDistalReqs /* = false */
                               )
 {
   std::vector<Task*> sorted_tasks;
-
-  // TODO plz leave this commented line alone, APH 01/07/15
-  //topologicalSort(sorted_tasks);
   nullSort(sorted_tasks);
+
+//  TODO: plz leave this commented line alone, APH 01/07/15
+//  topologicalSort(sorted_tasks);
 
   m_reduction_tasks.clear();
 
   ASSERT(grid != nullptr);
-  m_load_balancer->createNeighborhood(grid, oldGrid);
 
-  const std::set<int> neighborhood_procs=m_load_balancer->getNeighborhoodProcessors();
-  m_detailed_tasks = scinew DetailedTasks(m_scheduler, m_proc_group, first, this, neighborhood_procs, useInternalDeps );
-  
-  for (int i = 0; i < (int)sorted_tasks.size(); i++) {
+  //Create two neighborhoods.  One that keeps track of patches and procs within just a few ghost cells
+  //and another that keeps track of patches and procs to within the maximum known ghost cell among all
+  //tasks in the task graph.  The idea is that if a DetailedTask only has simulation variables which 
+  //throughout the simulation never go beyond 1 or 2 ghost cells, then those tasks do not concern 
+  //themselves with patch variables far away.  No need to create tasks on the task graph as we'll never bother with 
+  //their dependencies.  These tasks would then use the local neighborhood of the two neighborhoods.
+  //But some tasks (like radiation tasks) require ghost cells hundreds or thousands of cells out.  
+  //So we need many more of these tasks in the task graph so we can process their dependencies.
+  //Uintah history moment: The older neighborhood approach before this one was to only use one, and so if there were hundreds
+  //of tasks and one of those hundreds needed, say, 250 ghost cells, then a taskgraph was made to check for
+  //the possibility of every task's variables going out 250 ghost cells.  Even though most variables only
+  //go out 1 or 2 ghost cells out.  This resulted in a taskgraph of way too many DetailedTasks, the vast
+  //majority of which were useless as they were far away from this proc and would never depend on tasks on this proc.
+  //On one Titan run, this resulted in task graph compilation times hitting several hours.  So we made a second
+  //neighborhood to fix that.   
+  //(Note, it's possible to create more neighborhoods for each kind of ghost cell configuration,
+  //but the total savings seems not important at the time of this writing).  
+  m_load_balancer->createNeighborhoods(grid, oldGrid, hasDistalReqs);
+
+  const std::set<int> local_procs  = m_load_balancer->getNeighborhoodProcessors();
+  const std::set<int> distal_procs = m_load_balancer->getDistalNeighborhoodProcessors();
+
+  m_detailed_tasks = scinew DetailedTasks(m_scheduler, m_proc_group, first, this, (hasDistalReqs ? distal_procs : local_procs), useInternalDeps );
+ 
+  //Go through every task, find the max ghost cell associated with each varlabel/matl, and remember that.
+  //This will come in handy so we can create DetailedTasks for any var containing a requires, modifies, or 
+  //computes within range of that particular data.  For example, if a task's varlabel/matl requires variable 
+  //needs ghost cells of 250, then that DetailedTask needs to have a requirements dependency set up for all tasks
+  //250 cells away.  Also, if a task needing that varlabel/matl as a requires with 250 ghost cells, it will
+  //also need to have knowledge of what other task originally computed it.  This is so MPI sends and receives 
+  //can be created to know where to send these ghost cells and also where to receive them from.  This means
+  //that if one task only computes a variable, but another task requires 250 ghost cells of that variable,
+  //we still need many instances of DetailedTasks for the computing task in the task graph.
+  //(Note, this has an underlying assumption that tasks are assigned uniformly to patches.  If for some reason 
+  //we had very different tasks which ran on some patches but not on others, this approach overestimates and
+  //should be refined).  
+  const int number_of_tasks = static_cast<int>(sorted_tasks.size());
+  for (int i = 0; i < number_of_tasks; i++) {
+    Task* task = sorted_tasks[i];
+    DOUT(neighbor_location, "Looking at task: " << task->getName());
+    //const PatchSet    * ps = task->getPatchSet();
+    //const MaterialSet * ms = task->getMaterialSet();
+    //const int ps_size = ps->size();
+
+    //assuming all patches get the same amount of ghost cells...
+    //for (int ps_index = 0; p < ps_size; p++) {
+    //  const PatchSubset* pss = ps->getSubset(ps_index);
+      //for (int p = 0; i < pss->; pss?) {
+        //Also assume same amount of ghost cells across materials
+        //for ( int m = 0; m < ms->size(); m++ ) {
+          for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
+            std::string key = req->m_var->getName();
+            DOUT(neighbor_location, "Checking for max ghost cell for requirements var " << key << " which has: " << req->m_num_ghost_cells << " ghost cells.");
+            auto it = max_ghost_for_varlabelmap.find(key);
+            if (it != max_ghost_for_varlabelmap.end()) {
+              if (it->second < req->m_num_ghost_cells) {
+                it->second = req->m_num_ghost_cells;
+              }
+            } else {
+              max_ghost_for_varlabelmap.emplace(key, req->m_num_ghost_cells);
+            }
+          }
+    //Can modifies have ghost cells?
+    for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
+      std::string key = modifies->m_var->getName();
+      DOUT(
+          neighbor_location,
+          "Checking for max ghost cell for modifies var " << key << " which has: " << modifies->m_num_ghost_cells << " ghost cells.");
+      auto it = max_ghost_for_varlabelmap.find(key);
+      if (it != max_ghost_for_varlabelmap.end()) {
+        if (it->second < modifies->m_num_ghost_cells) {
+          it->second = modifies->m_num_ghost_cells;
+        }
+      }
+      else {
+        max_ghost_for_varlabelmap.emplace(key, modifies->m_num_ghost_cells);
+      }
+    }
+          //We don't care about computes ghost cells
+          //for (Task::Dependency* comps = task->getComputes(); comps != nullptr; comps = comps->m_next) {
+          //  std::string key = comps->m_var->getName();
+          //  std::cout << "Checking for modifies for " << key << " which has: " << comps->m_num_ghost_cells << " ghost cells." <<  std::endl;
+          //  auto it = max_ghost_for_varlabelmap.find(key);
+          //  if (it != max_ghost_for_varlabelmap.end()) {
+          //    if (it->second < comps->m_num_ghost_cells) {
+          //      it->second = comps->m_num_ghost_cells;
+          //    }
+          //  } else {
+          //    max_ghost_for_varlabelmap.emplace(key, comps->m_num_ghost_cells);
+          //  }
+          //}
+        //}
+      //}
+    //}
+  }
+  if (neighbor_location) {
+    for (auto kv : max_ghost_for_varlabelmap) {
+    	DOUT(neighbor_location, "For varlabel " << kv.first << " the max ghost cell is: " << kv.second);
+    }
+  }
+
+  //Now loop again, setting the task's max ghost cells to the max ghost cell for a given varLabel  
+  for (int i = 0; i < number_of_tasks; i++) {
+    Task* task = sorted_tasks[i];
+    //const PatchSet    * ps = task->getPatchSet();
+    //const MaterialSet * ms = task->getMaterialSet();
+    //const int ps_size = ps->size();
+
+    //assuming all patches get the same amount of ghost cells...
+    //for (int ps_index = 0; p < ps_size; p++) {
+    //  const PatchSubset* pss = ps->getSubset(ps_index);
+      //for (int p = 0; i < pss->; pss?) {
+        //Also assume same amount of ghost cells across materials
+        //for ( int m = 0; m < ms->size(); m++ ) {
+          for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
+            std::string key = req->m_var->getName();
+            if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
+              task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+            }
+          }
+          for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
+            std::string key = modifies->m_var->getName();
+            if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
+              task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+            }
+          }
+          for (Task::Dependency* comps = task->getComputes(); comps != nullptr; comps = comps->m_next) {
+            std::string key = comps->m_var->getName();
+            if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
+              task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+            }
+          }
+        //}
+      //}
+    //}
+    DOUT(neighbor_location, "For task: " << task->getName() << " the max ghost cells is: " << task->m_max_ghost_cells);
+  }
+
+  //Now proceed looking within the neighborhood defined by the max ghost cells a
+  //task needs to know about.
+  size_t num_normal_tasks = 0;
+  for (int i = 0; i < number_of_tasks; i++) {
 
     Task* task = sorted_tasks[i];
-    const PatchSet* ps = task->getPatchSet();
-    const MaterialSet* ms = task->getMaterialSet();
+
+    const PatchSet    * ps = task->getPatchSet();
+    const MaterialSet * ms = task->getMaterialSet();
+
+    // OncePerProc tasks
     if (ps && ms) {
-      //only create OncePerProc tasks and output tasks once on each processor.
+      // only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc) {
-        //only schedule this task on processors in the neighborhood
+        // only schedule this task on processors in the neighborhood
+        const std::set<int> neighborhood_procs = (task->m_max_ghost_cells >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
         for (std::set<int>::iterator p = neighborhood_procs.begin(); p != neighborhood_procs.end(); p++) {
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {
@@ -741,6 +890,8 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
           }
         }
       }
+
+      // Output tasks
       else if ( task->getType() == Task::Output ) {
         // Compute rank that handles output for this process.
         int handling_rank = (m_proc_group->myrank() / m_load_balancer->getNthRank()) * m_load_balancer->getNthRank();
@@ -755,21 +906,35 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
             createDetailedTask( task, pss, mss );
           }
         }
-
       }
+
+      // Normal tasks
       else {
-        for (int p = 0; p < ps->size(); p++) {
-          const PatchSubset* pss = ps->getSubset(p);
+        size_t num_dts  = 0;
+        const int ps_size = ps->size(); 
+        for (int ps_index = 0; ps_index < ps_size; ps_index++) {
+          const PatchSubset* pss = ps->getSubset(ps_index);
+           
+          //Go through every patch in the patch subset
+          //go through every computes and modifies in the task.  Find the max ghost cell
+          //associated with each label/matl.  Set the task's max ghost cell to that?    
+          //G
           // don't make tasks that are not in our neighborhood or tasks that do not have patches
-          if (m_load_balancer->inNeighborhood(pss) && pss->size() > 0) {
+          const bool search_distal_requires = (task->m_max_ghost_cells >= MAX_HALO_DEPTH);
+
+          if (m_load_balancer->inNeighborhood(pss, search_distal_requires) && pss->size() > 0) {
             for (int m = 0; m < ms->size(); m++) {
               const MaterialSubset* mss = ms->getSubset(m);
               createDetailedTask(task, pss, mss);
+              ++num_dts;
+              ++num_normal_tasks;
             }
           }
         }
+        DOUT(neighbor_location, "Rank-" << m_proc_group->myrank() << " created: " << num_dts << " tasks for " << task->getName());
       }
     }
+
     else if (!ps && !ms) {
       createDetailedTask(task, nullptr, nullptr);
     }
@@ -781,17 +946,16 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
     }
   }
   
-  
-// this can happen if a processor has no patches (which may happen at the beginning of some AMR runs)
-//  if(dts_->numTasks() == 0)
-//    cerr << "WARNING: Compiling scheduler with no tasks\n";
+  DOUT(neighbor_location, "Rank-" << m_proc_group->myrank() << " created: " << num_normal_tasks << " detailed tasks in TG: " << m_index);
 
   m_load_balancer->assignResources(*m_detailed_tasks);
 
   // use this, even on a single processor, if for nothing else than to get scrub counts
   bool doDetailed = Parallel::usingMPI() || useInternalDeps || grid->numLevels() > 1;
   if (doDetailed) {
+
     createDetailedDependencies();
+
     if (m_detailed_tasks->getExtraCommunication() > 0 && m_proc_group->myrank() == 0) {
       std::cout << m_proc_group->myrank() << "  Warning: Extra communication.  This taskgraph on this rank overcommunicates about "
            << m_detailed_tasks->getExtraCommunication() << " cells\n";
@@ -834,14 +998,17 @@ TaskGraph::createDetailedDependencies()
 
   // Assign task phase number based on the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
-  int currphase = 0;
+  int currphase      = 0;
   int curr_num_comms = 0;
+
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
     task->task->m_phase = currphase;
+
     if (tgphasedbg.active()) {
       tgphasedbg << "Rank-" << m_proc_group->myrank() << " Task: " << *task << " phase: " << currphase << "\n";
     }
+
     if (task->task->getType() == Task::Reduction) {
       task->task->m_comm = curr_num_comms;
       curr_num_comms++;
@@ -857,6 +1024,7 @@ TaskGraph::createDetailedDependencies()
   // Go through the modifies/requires and create data dependencies as appropriate
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
+
 
     if (detaileddbg.active() && (task->task->getRequires() != nullptr)) {
       detaileddbg << m_proc_group->myrank() << " Looking at requires of detailed task: " << *task << "\n";
@@ -884,6 +1052,7 @@ TaskGraph::remembercomps( DetailedTask     * task
                         , CompTable        & ct
                         )
 {
+  // TODO: Let's put this to the test using time on ALCC - APH 10/18/16
   //calling getPatchesUnderDomain can get expensive on large processors.  Thus we 
   //cache results and use them on the next call.  This works well because comps
   //are added in order and they share the same patches under the domain
@@ -983,24 +1152,21 @@ TaskGraph::remapTaskDWs( int dwmap[] )
 //______________________________________________________________________
 //
 void
-TaskGraph::createDetailedDependencies( DetailedTask     * task
-                                     , Task::Dependency * req
-                                     , CompTable        & ct
-                                     , bool               modifies
+TaskGraph::createDetailedDependencies(       DetailedTask     * task
+                                     ,       Task::Dependency * req
+                                     ,       CompTable        & ct
+                                     ,       bool               modifies
                                      )
 {
-  int me = m_proc_group->myrank();
+  int my_rank = m_proc_group->myrank();
 
-  for( ; req != nullptr; req = req->m_next) {
-    
-    //if(req->var->typeDescription()->isReductionVariable())
-    //  continue;
+  for (; req != nullptr; req = req->m_next) {
 
-    if(m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse()+1)) {
+    if (m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse() + 1)) {
       continue;
     }
-    
-    if(detaileddbg.active()) {
+
+    if (detaileddbg.active()) {
       detaileddbg << m_proc_group->myrank() << "  req: " << *req << "\n";
     }
 
@@ -1052,8 +1218,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
           //Finer patches probably shouldn't be using SHRT_MAX ghost cells, but just in case they do, at least compute the low and high correctly...
           origPatch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
         } else {
-          origPatch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
-                                          req->m_num_ghost_cells, otherLevelLow, otherLevelHigh);
+          origPatch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(),
+                                                             req->m_var->getBoundaryLayer(), req->m_gtype,
+                                                             req->m_num_ghost_cells, otherLevelLow, otherLevelHigh);
         }
         otherLevelLow = origLevel->mapCellToFiner(otherLevelLow);
         otherLevelHigh = origLevel->mapCellToFiner(otherLevelHigh);
@@ -1061,9 +1228,11 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
     }
 
     if (patches && !patches->empty() && matls && !matls->empty()) {
+
       if (req->m_var->typeDescription()->isReductionVariable()) {
         continue;
       }
+
       for (int i = 0; i < patches->size(); i++) {
         const Patch* patch = patches->get(i);
 
@@ -1122,11 +1291,11 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         for (int i = 0; i < neighbors.size(); i++) {
           const Patch* neighbor = neighbors[i];
 
-          //if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
-          if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch())) {
+          // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
+          const bool search_distal_reqs = (task->getTask()->m_max_ghost_cells >= MAX_HALO_DEPTH);
+          if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
             continue;
           }
-
           static Patch::selectType fromNeighbors;
           fromNeighbors.resize(0);
 
@@ -1152,8 +1321,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
           for (int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
-            //only add the requirements both fromNeighbor is in my neighborhood
-            if (!m_load_balancer->inNeighborhood(fromNeighbor)) {
+            // only add the requirements if fromNeighbor is in my neighborhood
+            const bool search_distal_requires = (task->getTask()->m_max_ghost_cells >= MAX_HALO_DEPTH);
+            if (!m_load_balancer->inNeighborhood(fromNeighbor, search_distal_requires)) {
               continue;
             }
 
@@ -1201,6 +1371,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
                 comp = nullptr;
               }
               else {
+                
                 if (!ct.findcomp(req, neighbor, matl, creator, comp, m_proc_group)) {
                   if (m_type == Scheduler::IntermediateTaskGraph && req->m_look_in_old_tg) {
                     // same stuff as above - but do the check for findcomp first, as this is a "if you don't find it here, assign it
@@ -1222,9 +1393,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
                       std::cout << "creator=" << *creator << "\n";
                     }
                     std::cout << "neighbor=" << *fromNeighbor << ", matl=" << matl << "\n";
-                    std::cout << "me=" << me << "\n";
+                    std::cout << "Rank-" << my_rank << "\n";
 
-                    //WAIT_FOR_DEBUGGER();
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
                 }
@@ -1345,7 +1515,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->size());
         for (unsigned i = 0; i < creators.size(); i++) {
           DetailedTask* creator = creators[i];
-          if (task->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && task->getAssignedResourceIndex() == me) {
+          if (task->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && task->getAssignedResourceIndex() == my_rank) {
             task->addInternalDependency(creator, req->m_var);
             if (detaileddbg.active()) {
               detaileddbg << m_proc_group->myrank() << "   Created reduction dependency between " << *task << " and " << *creator << "\n";
@@ -1446,7 +1616,8 @@ TaskGraph::getTask( int idx )
 void
 TaskGraph::makeVarLabelMaterialMap( Scheduler::VarLabelMaterialMap * result )
 {
-  for (int i = 0; i < (int)m_tasks.size(); i++) {
+  size_t num_tasks = m_tasks.size();
+  for (size_t i = 0; i < num_tasks; i++) {
     Task* task = m_tasks[i];
     for (Task::Dependency* comp = task->getComputes(); comp != nullptr; comp = comp->m_next) {
       // assume all patches will compute the same labels on the same materials
@@ -1501,7 +1672,7 @@ CompTable::remembercomp( Data* newData, const ProcessorGroup* pg )
       std::cout << "  " << *newData->m_dtask << "\n\n";
       std::cout << "  It was originally computed by the following task(s):\n";
       for (Data* old = m_data.lookup(newData); old != nullptr; old = m_data.nextMatch(newData, old)) {
-        std::cout << "  " << *old->m_dtask << std::endl;
+        std::cout << "  " << (*old->m_dtask).getTask()->getName() << std::endl;
         //old->comp->task->displayAll(cout);
       }
       SCI_THROW(InternalError("Multiple computes for variable: "+newData->m_comp->m_var->getName(), __FILE__, __LINE__));
@@ -1509,7 +1680,6 @@ CompTable::remembercomp( Data* newData, const ProcessorGroup* pg )
   }
   m_data.insert(newData);
 }
-
 //______________________________________________________________________
 //
 void
@@ -1526,6 +1696,9 @@ CompTable::remembercomp(        DetailedTask     * task
       for (int m = 0; m < matls->size(); m++) {
         int matl = matls->get(m);
         Data* newData = scinew Data(task, comp, patch, matl);
+        if (task->getName() == "ExplicitSolver::initializeVariables") {
+          std:: cout << "remembercomp 1  ExplicitSolver::initializeVariables" << std::endl;
+        }
         remembercomp(newData, pg);
       }
     }
@@ -1534,6 +1707,9 @@ CompTable::remembercomp(        DetailedTask     * task
     for (int m = 0; m < matls->size(); m++) {
       int matl = matls->get(m);
       Data* newData = scinew Data(task, comp, 0, matl);
+      if (task->getName() == "ExplicitSolver::initializeVariables") {
+        std:: cout << "remembercomp 2  ExplicitSolver::initializeVariables" << std::endl;
+      }
       remembercomp(newData, pg);
     }
   }
@@ -1541,11 +1717,17 @@ CompTable::remembercomp(        DetailedTask     * task
     for (int p = 0; p < patches->size(); p++) {
       const Patch* patch = patches->get(p);
       Data* newData = scinew Data(task, comp, patch, 0);
+      if (task->getName() == "ExplicitSolver::initializeVariables") {
+        std:: cout << "remembercomp 3  ExplicitSolver::initializeVariables" << std::endl;
+      }
       remembercomp(newData, pg);
     }
   }
   else {
     Data* newData = scinew Data(task, comp, nullptr, 0);
+    if (task->getName() == "ExplicitSolver::initializeVariables") {
+      std:: cout << "remembercomp 4  ExplicitSolver::initializeVariables" << std::endl;
+    }
     remembercomp(newData, pg);
   }
 }

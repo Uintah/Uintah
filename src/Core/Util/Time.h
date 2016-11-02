@@ -42,19 +42,21 @@ namespace Uintah {
 /**************************************
 
  CLASS
- Time
+   Time
 
  KEYWORDS
- Util, Time
+   Util, Time
 
  DESCRIPTION
- Utility class to manage Time.  This class is implemented using
- standard unix system calls.
+   Utility class to manage Time.
+   This class is implemented using standard unix system calls.
 
  ****************************************/
 class Time {
 
-  public:
+
+public:
+
   typedef unsigned long long SysClock;
 
   //////////
@@ -92,11 +94,14 @@ class Time {
   // Wait for the specified time in seconds
   static void waitFor(double seconds);
 
-  private:
+
+private:
+
   Time();
+
   static void initialize();
 };
 
-} // end namespace Uintah
+} // namespace Uintah
 
-#endif // end CORE_UTIL_TIME_H
+#endif // CORE_UTIL_TIME_H
