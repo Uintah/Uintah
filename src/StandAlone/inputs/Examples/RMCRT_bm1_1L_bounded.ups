@@ -8,6 +8,10 @@
 
   <SimulationComponent type="RMCRT_Test" />
   
+  <Scheduler>
+    <num_task_graphs>  2  </num_task_graphs>
+  </Scheduler>
+  
   <!--__________________________________-->
   <!-- run for 10 timesteps for RT memory -->
   <!-- and checkpoint testing             -->

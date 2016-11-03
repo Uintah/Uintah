@@ -6,10 +6,11 @@
       <title>RMCRT</title>
   </Meta>
 
+  <SimulationComponent type="RMCRT_Test" />
+  
   <Scheduler>
     <num_task_graphs>  2  </num_task_graphs>
   </Scheduler>
-  <SimulationComponent type="RMCRT_Test" />
   
   <!--__________________________________-->
   <!-- run for 10 timesteps for RT memory -->
