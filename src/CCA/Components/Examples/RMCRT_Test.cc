@@ -53,11 +53,15 @@
 
 using namespace std;
 
-static Uintah::DebugStream dbg("RMCRT_Test", false);
+namespace {
+
+Uintah::DebugStream dbg("RMCRT_Test", false);
+
+}
 
 
-namespace Uintah
-{
+namespace Uintah {
+
 //______________________________________________________________________
 //
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
@@ -116,6 +120,11 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 
   //manually manipulate the scheduling of copy data for the shootRay task
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  
+  // TG-0 = carry forward tasks
+  // TG-1 = normal RMCRT computations
+  sched->setNumTaskGraphs(RMCRTCommon::NUM_GRAPHS);
+
   sched->overrideVariableBehavior("color",false, false, true, false, false);
 
   //__________________________________

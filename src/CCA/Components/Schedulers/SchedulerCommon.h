@@ -121,6 +121,11 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual int getNumTaskGraphs() { return m_task_graphs.size(); }
 
+    virtual void setNumTaskGraphs( const int num_task_graphs ) {
+      ASSERT( num_task_graphs  >= 1 );
+      m_num_task_graphs = num_task_graphs;
+    }
+
     virtual void addTask(       Task        * task
                         , const PatchSet    * patches
                         , const MaterialSet * matls

@@ -121,6 +121,8 @@ class Scheduler : public UintahParallelPort {
 
     virtual int getNumTaskGraphs() = 0;
 
+    virtual void setNumTaskGraphs( const int num_task_graphs = 1) = 0;
+    
     virtual bool useSmallMessages() = 0;
     
     virtual void addTask( Task* t, const PatchSet*, const MaterialSet*, const int tgnum = -1 ) = 0;
