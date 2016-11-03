@@ -191,6 +191,7 @@ namespace Uintah{
       enum tg_num {
           TG_CARRY_FORWARD = 0              // carry forward task graph
         , TG_RMCRT         = 1              // rmcrt taskgraph
+        , NUM_GRAPHS
       };
       
       double d_sigma_over_pi{0.0};                  // Stefan Boltzmann divided by pi (W* m-2* K-4)
