@@ -94,8 +94,7 @@ namespace Uintah{
                            Task::WhichDW abskg_dw,
                            Task::WhichDW sigma_dw,
                            Task::WhichDW celltype_dw,
-                           bool modifies_divQ,
-                           const int radCalc_freq );
+                           bool modifies_divQ );
 
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/
       void sched_rayTrace_dataOnion( const LevelP& level,
@@ -103,8 +102,7 @@ namespace Uintah{
                                      Task::WhichDW abskg_dw,
                                      Task::WhichDW sigma_dw,
                                      Task::WhichDW celltype_dw,
-                                     bool modifies_divQ,
-                                     const int radCalc_freq );
+                                     bool modifies_divQ );
 
 
       /** @brief Schedule filtering of q and divQ */
@@ -225,8 +223,7 @@ namespace Uintah{
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
                      Task::WhichDW whichd_sigmaT4_dw,
-                     Task::WhichDW which_celltype_dw,
-                     const int radCalc_freq );
+                     Task::WhichDW which_celltype_dw );
 
       //__________________________________
       template<class T>
@@ -244,8 +241,7 @@ namespace Uintah{
                         bool modifies_divQ,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
-                        Task::WhichDW which_celltype_dw,
-                        const int radCalc_freq );
+                        Task::WhichDW which_celltype_dw );
 
       //__________________________________
       template<class T>
@@ -257,8 +253,7 @@ namespace Uintah{
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW whichd_sigmaT4_dw,
-                               Task::WhichDW which_celltype_dw,
-                               const int radCalc_freq );
+                               Task::WhichDW which_celltype_dw );
 
       //__________________________________
       template<class T>
@@ -276,8 +271,7 @@ namespace Uintah{
                                  bool modifies_divQ,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW whichd_sigmaT4_dw,
-                                 Task::WhichDW which_celltype_dw,
-                                 const int radCalc_freq );
+                                 Task::WhichDW which_celltype_dw );
       //__________________________________
       template<class T>
       void updateSumI_ML ( Vector& ray_direction,

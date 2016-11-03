@@ -21,11 +21,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
+#include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
 #include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -360,7 +361,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   // move fields to the new_dw to mimic what a component would compute
   // The variables temperature, cellType, and abskg are computed on the finest level
   const LevelP& finestLevel = grid->getLevel( maxLevels -1 );
-  sched_initProperties( finestLevel, sched, d_radCalc_freq );
+  sched_initProperties( finestLevel, sched );
 
   Radiometer* radiometer = d_RMCRT->getRadiometer();
 
@@ -377,7 +378,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
 
-    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw, d_radCalc_freq );
+    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
 
     // carry forward if it's time
     d_RMCRT->sched_CarryForward_AllLabels ( fineLevel, sched );
@@ -404,7 +405,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW sigmaT4_dw  = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
     const bool modifies_divQ = false;
-    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq);
+    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
 
   }
 
@@ -448,7 +449,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
           radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
         }
 
-        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
+        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ );
       }
     }
 
@@ -488,7 +489,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
     }
 
-    d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
+    d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ );
   }
   
   //______________________________________________________________________
@@ -870,8 +871,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
 //
 //______________________________________________________________________
 void RMCRT_Test::sched_initProperties( const LevelP& finestLevel,
-                                        SchedulerP& sched,
-                                        const int radCalc_freq )
+                                        SchedulerP& sched )
 {
   // Move the labels forward. They were computed in initialize()
   //  This mimics what the component will handoff to RMCRT.
