@@ -429,8 +429,8 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       d_RMCRT->sched_CarryForward_AllLabels ( level, sched );
     }
   
-  
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
+
     Task::WhichDW temp_dw  = Task::NewDW;
     Task::WhichDW abskg_dw = Task::NewDW;
     
@@ -474,7 +474,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   //______________________________________________________________________
   //   1 - L E V E L   A P P R O A C H
   //  RMCRT is performed on one level
-  if( d_whichAlgo == singleLevel ){
+  if( d_whichAlgo == singleLevel ) {
 
     // carry forward if it's time
     d_RMCRT->sched_CarryForward_AllLabels ( level, sched );

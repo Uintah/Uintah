@@ -1352,7 +1352,7 @@ AMRSimulationController::executeTimestep( double   time
     else {
       int curr_timestep = m_shared_state->getCurrentTopLevelTimeStep();
       int tg_num = ( (curr_timestep % m_rad_calc_frequency != 0) && (curr_timestep != 1) ) ? 0 : 1;
-      m_scheduler->execute(tg_num, (m_last_recompile_timestep == curr_timestep) ? 0 : 1);
+      m_scheduler->execute( (m_scheduler->getNumTaskGraphs() == 1) ? 0 : tg_num, (m_last_recompile_timestep == curr_timestep) ? 0 : 1);
     }
 
     //__________________________________
