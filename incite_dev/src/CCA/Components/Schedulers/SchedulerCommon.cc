@@ -288,9 +288,6 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
       proc0cout << "   Using large, combined MPI messages\n";
     }
 
-    // for multiple "Normal" task graphs
-    params->getWithDefault("num_task_graphs", m_num_task_graphs, 1);
-
     ProblemSpecP track = params->findBlock("VarTracker");
     if (track) {
       track->require("start_time", m_tracking_start_time);

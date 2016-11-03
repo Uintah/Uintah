@@ -629,7 +629,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
           }
         }
 
-        // add AMR stuff - so the patch will know about coarsening and refining
+        // add multi-level (AMR) stuff - so the patch will know about coarsening and refining
         // First look down levels (coarser)
         if (l > 0 && (proc == my_rank || (oldproc == my_rank && !m_shared_state->isCopyDataTimestep()))) {
           LevelP coarseLevel = level;

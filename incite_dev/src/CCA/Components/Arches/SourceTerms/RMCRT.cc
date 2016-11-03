@@ -76,6 +76,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _radFluxB_Label = VarLabel::create("radiationFluxB",  CC_double);
 
 }
+
 //______________________________________________________________________
 //
 RMCRT_Radiation::~RMCRT_Radiation()
@@ -90,6 +91,7 @@ RMCRT_Radiation::~RMCRT_Radiation()
   VarLabel::destroy(_radFluxT_Label);
   VarLabel::destroy(_radFluxB_Label);
 }
+
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------

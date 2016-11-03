@@ -67,6 +67,7 @@ namespace Uintah{
   class BoundaryCondition;
 
 class RMCRT_Radiation: public SourceTermBase {
+
 public:
 
   RMCRT_Radiation( std::string srcName,

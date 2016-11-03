@@ -129,6 +129,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   _arches_spec = db;
 
+  // TODO: this is a hack, come up with a cleaner way based on doing RMCRT or not - APH, 11/03/16
+  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  sched->setNumTaskGraphs(2);
+
   //__________________________________
   //  Multi-level related
   d_archesLevelIndex = grid->numLevels()-1; // this is the finest level

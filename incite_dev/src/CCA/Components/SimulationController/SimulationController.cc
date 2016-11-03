@@ -302,22 +302,23 @@ SimulationController::preGridSetup( void )
   }
 
   // TODO: is there a cleaner way of doing this and should it be in postGridSetup? - APH, 10/19/16
-  // Alan, note that this also crashes in as something as simple as unifiedSchedulerTest on 1 MPI rank and 2 nthreads - Brad
   // Find the radiation calculation frequency for Arches and RMCRT_Test components
-  ProblemSpecP bm_ps = m_ups->get( "calc_frequency",  m_rad_calc_frequency );
+  ProblemSpecP bm_ps = m_ups->get("calc_frequency", m_rad_calc_frequency);
   if (!bm_ps) {
     ProblemSpecP root_ps = m_ups->getRootNode();
-    ProblemSpecP arches_ps = root_ps->findBlock("CFD")->findBlock("ARCHES");
-    ProblemSpecP rad_src_ps = arches_ps->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src");
-
-    // find the "divQ" src block for the radiation calculation frequency
-    std::string src_name = "";
-    rad_src_ps->getAttribute("label", src_name);
-    while (src_name != "divQ") {
-      rad_src_ps = rad_src_ps->findNextBlock("src");
+    ProblemSpecP cfd_ps = root_ps->findBlock("CFD");
+    if (cfd_ps) {
+      ProblemSpecP arches_ps = cfd_ps->findBlock("ARCHES");
+      ProblemSpecP rad_src_ps = arches_ps->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src");
+      // find the "divQ" src block for the radiation calculation frequency
+      std::string src_name = "";
       rad_src_ps->getAttribute("label", src_name);
+      while (src_name != "divQ") {
+        rad_src_ps = rad_src_ps->findNextBlock("src");
+        rad_src_ps->getAttribute("label", src_name);
+      }
+      rad_src_ps->getWithDefault("calc_frequency", m_rad_calc_frequency, 1);
     }
-    rad_src_ps->getWithDefault("calc_frequency", m_rad_calc_frequency, 1);
   }
 
 #ifdef HAVE_VISIT
