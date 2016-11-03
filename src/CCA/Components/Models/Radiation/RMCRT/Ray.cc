@@ -1033,9 +1033,9 @@ struct solveDivQFunctor {
       //divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
       m_divQ( i, j, k ) = -4.0 * M_PI * m_abskg( i, j, k ) * ( m_sigmaT4OverPi( i, j, k ) - (sumI / m_d_nDivQRays) );
 
-      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      //radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
-      m_radiationVolq( i, j, k ) = 4.0 * M_PI * m_abskg( i, j, k ) * (sumI / m_d_nDivQRays);
+      // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+      m_radiationVolq( i, j, k ) = 4.0 * M_PI * (sumI / m_d_nDivQRays);
+
 
     }  // end operator()
 };  // end solveDivQFunctor
@@ -1338,8 +1338,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
       //  Compute divQ
       divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
 
-      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
+      // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+      radiationVolq[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
 /*`==========TESTING==========*/
 #if DEBUG == 1
     if( isDbgCell(origin) ) {
@@ -1770,8 +1770,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         //  Compute divQ
         divQ_fine[origin] = -4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/d_nDivQRays) );
 
-        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-        radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/d_nDivQRays) ;
+        // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+        radiationVolq_fine[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
