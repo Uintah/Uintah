@@ -585,7 +585,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
 
         // add owning processors (distal)
         if (hasDistalReqs) {
-          int maxDistalGhost = m_scheduler->getMaxDistallGhost();
+          int maxDistalGhost = m_scheduler->getMaxDistalGhost();
 
           Patch::selectType distal_neighbors;
           IntVector distalGhost(maxDistalGhost, maxDistalGhost, maxDistalGhost);
@@ -630,6 +630,7 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
         }
 
         // add AMR stuff - so the patch will know about coarsening and refining
+        // First look down levels (coarser)
         if (l > 0 && (proc == my_rank || (oldproc == my_rank && !m_shared_state->isCopyDataTimestep()))) {
           LevelP coarseLevel = level;
 
@@ -637,13 +638,15 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
           int maxLevelOffset = m_scheduler->getMaxLevelOffset();
           IntVector ghost(maxGhost, maxGhost, maxGhost);
           for (int offset = 1; offset <= maxLevelOffset && coarseLevel->hasCoarserLevel(); ++offset) {
+
+            // add owning processors (local)
             ghost = ghost * coarseLevel->getRefinementRatio();
             coarseLevel = coarseLevel->getCoarserLevel();
             Patch::selectType coarse;
 
-            coarseLevel->selectPatches(level->mapCellToCoarser(low - ghost, offset), level->mapCellToCoarser(high + ghost, offset),
+            coarseLevel->selectPatches(level->mapCellToCoarser(low - ghost, offset),
+                                       level->mapCellToCoarser(high + ghost, offset),
                                        coarse);
-            // add owning processors
             for (int i = 0; i < coarse.size(); i++) {
               m_neighbors.insert(coarse[i]->getRealPatch());
 
@@ -657,9 +660,33 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
                 m_neighborhood_processors.insert(oproc);
               }
             }
+
+            // add owning processors (distal)
+            if (hasDistalReqs) {
+              int maxDistalGhost = m_scheduler->getMaxDistalGhost();
+
+              Patch::selectType coarse_distal_neighbors;
+              IntVector distalGhost(maxDistalGhost, maxDistalGhost, maxDistalGhost);
+              distalGhost = distalGhost * coarseLevel->getRefinementRatio();
+              coarseLevel->selectPatches(level->mapCellToCoarser(low - distalGhost, offset),
+                                         level->mapCellToCoarser(high + distalGhost, offset),
+                                         coarse_distal_neighbors);
+              for (int i = 0; i < coarse_distal_neighbors.size(); i++) {
+                m_distal_neighbors.insert(coarse_distal_neighbors[i]->getRealPatch());
+                int nproc = getPatchwiseProcessorAssignment(coarse_distal_neighbors[i]);
+                if (nproc >= 0) {
+                  m_distal_neighborhood_processors.insert(nproc);
+                }
+
+                int oproc = getOldProcessorAssignment(coarse_distal_neighbors[i]);
+                if (oproc >= 0) {
+                  m_distal_neighborhood_processors.insert(oproc);
+                }
+              }
+            }
           }
         }
-
+        // Second look up a single level (finer)
         if (l < grid->numLevels() - 1 && (proc == my_rank || (oldproc == my_rank && !m_shared_state->isCopyDataTimestep()))) {
 
           IntVector ghost(maxGhost, maxGhost, maxGhost);
@@ -678,7 +705,6 @@ LoadBalancerCommon::createNeighborhoods( const GridP & grid
             }
           }
         }
-
       }
     }
   }

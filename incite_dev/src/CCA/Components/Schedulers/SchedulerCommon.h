@@ -253,7 +253,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     int getMaxGhost() { return m_max_ghost_cells; }
 
-    int getMaxDistallGhost() { return m_max_distal_ghost_cells; }
+    int getMaxDistalGhost() { return m_max_distal_ghost_cells; }
 
     int getMaxLevelOffset() { return m_max_level_offset; }
 
