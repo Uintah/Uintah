@@ -50,6 +50,72 @@ ConstantRate::~ConstantRate() {
 
 }
 
+void ConstantRate::addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
+                                                   const PatchSet* patch) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(d_lb->pFluxLabel,        matlset);
+}
+
+void ConstantRate::initializeSDMData(const Patch* patch, const MPMMaterial* matl,
+                                       DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleVariable<Vector>  pFlux;
+
+  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
+
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+    pFlux[*iter] = Vector(0,0,0);
+  }
+}
+
+void ConstantRate::addParticleState(std::vector<const VarLabel*>& from,
+                                            std::vector<const VarLabel*>& to)
+{
+  from.push_back(d_lb->pFluxLabel);
+  to.push_back(d_lb->pFluxLabel_preReloc);
+}
+
+void ConstantRate::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
+                                              const PatchSet* patch) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  task->computes(d_lb->pFluxLabel_preReloc,        matlset);
+}
+
+void ConstantRate::computeFlux(const Patch* patch,
+                                 const MPMMaterial* matl,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
+{
+
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
+  std::vector<IntVector> ni(interpolator->size());
+  std::vector<double> S(interpolator->size());
+
+  double current_time1 = d_sharedState->getElapsedTime();
+
+  int dwi = matl->getDWIndex();
+  Vector dx = patch->dCell();
+  double comp_diffusivity;
+
+  ParticleVariable<Vector>       pFlux;
+
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel_preReloc,        pset);
+
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
+                                                      iter++){
+    particleIndex idx = *iter;
+
+    pFlux[idx] = Vector(0.0, 0.0, 0.0);
+  } //End of Particle Loop
+}
+
 void ConstantRate::scheduleComputeDivergence(Task* task, 
                                                     const MPMMaterial* matl, 
                                                     const PatchSet* patch) const
@@ -69,7 +135,7 @@ void ConstantRate::computeDivergence(const Patch* patch,
   Ghost::GhostType gn  = Ghost::None;
 
   //*********Start - Used for testing purposes - CG *******
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  //int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   //*********End   - Used for testing purposes - CG *******
 
   constNCVariable<double> gMass;
@@ -80,11 +146,7 @@ void ConstantRate::computeDivergence(const Patch* patch,
 
   for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done();iter++){
     IntVector n = *iter;
-    if(timestep <= 1000){
-      gConcRate[n] = d_constant_rate * gMass[n];
-    }else{
-      gConcRate[n] = 0.0;
-    }
+    gConcRate[n] = d_constant_rate * gMass[n];
   }
 }
 

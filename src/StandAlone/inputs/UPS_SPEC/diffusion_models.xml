@@ -23,6 +23,7 @@
         <flux_direction    spec="REQUIRED STRING 'in, out, transition'" />
       </time_point>
     </diff_curve>
+    <constant_rate         spec="OPTIONAL DOUBLE" />
     <conductivity_equation   spec="OPTIONAL NO_DATA"
                              attribute1="type REQUIRED STRING 'fixed, binary'">
       <min_conc              spec="OPTIONAL DOUBLE" />

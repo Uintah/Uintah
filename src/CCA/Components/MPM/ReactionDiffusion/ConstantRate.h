@@ -57,6 +57,21 @@ namespace Uintah {
                          std::string diff_type);
     virtual ~ConstantRate();
 
+    virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
+                                               const PatchSet* patch) const;
+
+    virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
+                                   DataWarehouse* new_dw);
+
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to);
+
+    virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl,
+                                     const PatchSet* patch) const;
+
+    virtual void computeFlux(const Patch* patch, const MPMMaterial* matl,
+                             DataWarehouse* old_dw, DataWarehouse* new_dw);
+
     virtual void scheduleComputeDivergence(Task* task, const MPMMaterial* matl, 
                                            const PatchSet* patch) const;
 

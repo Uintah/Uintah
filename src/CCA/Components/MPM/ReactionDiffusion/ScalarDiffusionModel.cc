@@ -136,7 +136,7 @@ void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
 
 void ScalarDiffusionModel::scheduleComputeFlux(Task* task,
                                                const MPMMaterial* matl, 
-		                               const PatchSet* patch) const
+                                               const PatchSet* patch) const
 {
 }
 
