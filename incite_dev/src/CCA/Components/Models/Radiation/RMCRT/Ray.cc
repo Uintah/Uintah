@@ -2089,7 +2089,6 @@ void
 Ray::sched_setBoundaryConditions( const LevelP& level,
                                   SchedulerP& sched,
                                   Task::WhichDW temp_dw,
-                                  const int radCalc_freq,
                                   const bool backoutTemp )
 {
 
@@ -2098,11 +2097,9 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   Task* tsk = nullptr;
   if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
 
-    tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< double >,
-                      temp_dw, radCalc_freq, backoutTemp );
+    tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< double >, temp_dw, backoutTemp );
   } else {
-    tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< float >,
-                      temp_dw, radCalc_freq, backoutTemp );
+    tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< float >, temp_dw, backoutTemp );
   }
 
   printSchedule(level,dbg,taskname);
@@ -2124,7 +2121,6 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
                                  DataWarehouse*,
                                  DataWarehouse* new_dw,
                                  Task::WhichDW temp_dw,
-                                 const int radCalc_freq,
                                  const bool backoutTemp )
 {
   if ( d_onOff_SetBCs == false ) {
@@ -2300,10 +2296,9 @@ void Ray::setBC(CCVariable< T >& Q_CC,
 
 //______________________________________________________________________
 //
-void Ray::sched_Refine_Q(SchedulerP& sched,
-                         const PatchSet* patches,
-                         const MaterialSet* matls,
-                         const int radCalc_freq)
+void Ray::sched_Refine_Q( SchedulerP& sched,
+                          const PatchSet* patches,
+                          const MaterialSet* matls )
 {
   const Level* fineLevel = getLevel(patches);
   int L_indx = fineLevel->getIndex();
@@ -2311,8 +2306,7 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
   if(L_indx > 0 ){
      printSchedule(patches,dbg,"Ray::scheduleRefine_Q (divQ)");
 
-    Task* task = scinew Task("Ray::refine_Q",this,
-                             &Ray::refine_Q,  radCalc_freq);
+    Task* task = scinew Task("Ray::refine_Q",this, &Ray::refine_Q);
 
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
@@ -2335,12 +2329,11 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
 
 //______________________________________________________________________
 //
-void Ray::refine_Q(const ProcessorGroup*,
-                   const PatchSubset* patches,
-                   const MaterialSubset* matls,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw,
-                   const int radCalc_freq)
+void Ray::refine_Q( const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw )
 {
 
   const Level* fineLevel = getLevel(patches);
@@ -2515,13 +2508,12 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
                             SchedulerP& sched,
                             const bool modifies_abskg,
-                            const bool modifiesd_sigmaT4,
-                            const int radCalc_freq)
+                            const bool modifiesd_sigmaT4 )
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel,   radCalc_freq );
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4,  d_sigmaT4Label, radCalc_freq );
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel );
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4,  d_sigmaT4Label );
     sched_CarryForward_Var(coarseLevel, sched, d_abskgLabel, RMCRTCommon::TG_CARRY_FORWARD);
     sched_CarryForward_Var(coarseLevel, sched, d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
   }
@@ -2532,8 +2524,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                             SchedulerP& sched,
                             Task::WhichDW this_dw,
                             const bool modifies,
-                            const VarLabel* variable,
-                            const int radCalc_freq)
+                            const VarLabel* variable )
 {
   string taskname = "        Coarsen_Q_" + variable->getName();
   printSchedule(coarseLevel,dbg,taskname);
@@ -2544,12 +2535,10 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
   Task* tsk = nullptr;
   switch( subtype ) {
     case TypeDescription::double_type:
-      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< double >,
-                         variable, modifies, this_dw, radCalc_freq );
+      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< double >, variable, modifies, this_dw );
       break;
     case TypeDescription::float_type:
-      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< float >,
-                         variable, modifies, this_dw, radCalc_freq );
+      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< float >, variable, modifies, this_dw );
       break;
     default:
       throw InternalError("Ray::sched_Coarsen_Q: (CCVariable) invalid data type", __FILE__, __LINE__);
@@ -2577,8 +2566,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                       DataWarehouse* new_dw,
                       const VarLabel* variable,
                       const bool modifies,
-                      Task::WhichDW which_dw,
-                      const int radCalc_freq )
+                      Task::WhichDW which_dw )
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
@@ -3080,7 +3068,6 @@ template void Ray::setBoundaryConditions< double >( const ProcessorGroup*,
                                                     DataWarehouse*,
                                                     DataWarehouse* ,
                                                     Task::WhichDW ,
-                                                    const int ,
                                                     const bool );
 
 template void Ray::setBoundaryConditions< float >( const ProcessorGroup*,
@@ -3089,7 +3076,6 @@ template void Ray::setBoundaryConditions< float >( const ProcessorGroup*,
                                                    DataWarehouse*,
                                                    DataWarehouse* ,
                                                    Task::WhichDW ,
-                                                   const int ,
                                                    const bool );
 
 template void  Ray::updateSumI_ML< double> ( Vector&,
@@ -3111,19 +3097,19 @@ template void  Ray::updateSumI_ML< double> ( Vector&,
                                              MTRand&);
 
 template void  Ray::updateSumI_ML< float> ( Vector&,
-                                             Vector&,
-                                             const IntVector&,
-                                             const vector<Vector>&,
-                                             const BBox&,
-                                             const int,
-                                             const Level* ,
-                                             const IntVector&,
-                                             const IntVector&,
-                                             vector<IntVector>&,
-                                             vector<IntVector>&,
-                                             StaticArray< constCCVariable< float > >& sigmaT4OverPi,
-                                             StaticArray< constCCVariable< float > >& abskg,
-                                             StaticArray< constCCVariable< int > >& cellType,
-                                             unsigned long int& ,
-                                             double& ,
-                                             MTRand&);
+                                            Vector&,
+                                            const IntVector&,
+                                            const vector<Vector>&,
+                                            const BBox&,
+                                            const int,
+                                            const Level* ,
+                                            const IntVector&,
+                                            const IntVector&,
+                                            vector<IntVector>&,
+                                            vector<IntVector>&,
+                                            StaticArray< constCCVariable< float > >& sigmaT4OverPi,
+                                            StaticArray< constCCVariable< float > >& abskg,
+                                            StaticArray< constCCVariable< int > >& cellType,
+                                            unsigned long int& ,
+                                            double& ,
+                                            MTRand&);

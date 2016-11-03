@@ -90,7 +90,6 @@ namespace Uintah{
       void sched_sigmaT4( const LevelP& level, 
                           SchedulerP& sched,
                           Task::WhichDW temp_dw,
-                          const int radCalc_freq,
                           const bool includeEC = true );
       //__________________________________
       //
@@ -101,7 +100,6 @@ namespace Uintah{
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw,
                     Task::WhichDW which_temp_dw,
-                    const int radCalc_freq,
                     const bool includeEC );
       
       //__________________________________
@@ -147,15 +145,13 @@ namespace Uintah{
       // transfer a variable from old_dw -> new_dw for convenience */
       
       void sched_CarryForward_AllLabels ( const LevelP& level,
-                                          SchedulerP& sched,
-                                          const int radCalc_freq );
+                                          SchedulerP& sched );
                                           
       void carryForward_AllLabels ( const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const int radCalc_freq );
+                                    DataWarehouse* new_dw );
        
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
@@ -172,20 +168,16 @@ namespace Uintah{
       // If needed convert abskg double -> float
       void sched_DoubleToFloat( const LevelP& level,
                                 SchedulerP& sched,
-                                Task::WhichDW myDW,
-                                const int radCalc_freq );
+                                Task::WhichDW myDW );
 
       void DoubleToFloat( const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          Task::WhichDW which_dw,
-                          const int radCalc_freq );
+                          Task::WhichDW which_dw );
 
       bool doCarryForward( const int radCalc_freq );
-
-      void doRecompileTaskgraph( const int radCalc_freq );
 
       bool isDbgCell( IntVector me);
                             

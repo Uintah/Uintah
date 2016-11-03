@@ -125,7 +125,6 @@ namespace Uintah{
       void  sched_setBoundaryConditions( const LevelP& level,
                                          SchedulerP& sched,
                                          Task::WhichDW temp_dw,
-                                         const int radCalc_freq,
                                          const bool backoutTemp = false);
 
       void BC_bulletproofing( const ProblemSpecP& rmcrtps );
@@ -139,20 +138,18 @@ namespace Uintah{
 
       //__________________________________
       //  Multilevel tasks
-      void sched_Refine_Q(SchedulerP& sched,
-                          const PatchSet* patches,
-                          const MaterialSet* matls,
-                          const int radCalc_freq);
+      void sched_Refine_Q( SchedulerP& sched,
+                           const PatchSet* patches,
+                           const MaterialSet* matls );
 
       void sched_CoarsenAll( const LevelP& coarseLevel,
                              SchedulerP& sched,
                              const bool modifies_abskg,
-                             const bool modifiesd_sigmaT4,
-                             const int radCalc_freq );
+                             const bool modifiesd_sigmaT4 );
 
       void sched_computeCellType ( const LevelP& coarseLevel,
                                    SchedulerP& sched,
-                                   const Ray::modifiesComputes which);
+                                   const Ray::modifiesComputes which );
 
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
@@ -377,29 +374,26 @@ namespace Uintah{
                                   DataWarehouse*,
                                   DataWarehouse* new_dw,
                                   Task::WhichDW temp_dw,
-                                  const int radCalc_freq,
                                   const bool backoutTemp );
 
-    int numFaceCells(const Patch* patch,
-                     const Patch::FaceIteratorType type,
-                     const Patch::FaceType face);
+    int numFaceCells( const Patch* patch,
+                      const Patch::FaceIteratorType type,
+                      const Patch::FaceType face );
 
     //_____________________________________________________________________
     //    Multiple Level tasks
-    void refine_Q(const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse*,
-                  DataWarehouse* new_dw,
-                  const int radCalc_freq);
+    void refine_Q( const ProcessorGroup*,
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse*,
+                   DataWarehouse* new_dw );
 
     // coarsen a single variable
     void sched_Coarsen_Q( const LevelP& coarseLevel,
                           SchedulerP& scheduler,
                           Task::WhichDW this_dw,
                           const bool modifies,
-                          const VarLabel* variable,
-                          const int radCalc_freq);
+                          const VarLabel* variable );
 
     template< class T >
     void coarsen_Q ( const ProcessorGroup*,
@@ -409,8 +403,7 @@ namespace Uintah{
                      DataWarehouse* new_dw,
                      const VarLabel* variable,
                      const bool modifies,
-                     Task::WhichDW this_dw,
-                     const int radCalc_freq);
+                     Task::WhichDW this_dw );
 
     void computeCellType( const ProcessorGroup*,
                           const PatchSubset* patches,
@@ -424,7 +417,7 @@ namespace Uintah{
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
                        DataWarehouse*,
-                       DataWarehouse* new_dw);
+                       DataWarehouse* new_dw );
 
     //______________________________________________________________________
     //  Helpers

@@ -289,10 +289,10 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
     // modify Radiative properties on the finest level
     // convert abskg:dbl -> abskg:flt if needed
-    _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw, _radiation_calc_freq);
+    _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw);
 
     // compute sigmaT4 on the finest level
-    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, _radiation_calc_freq, includeExtraCells);
+    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, includeExtraCells);
 
     sched_setBoundaryConditions(fineLevel, sched, temp_dw, _radiation_calc_freq);
 
@@ -306,7 +306,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_abskg = false;
       const bool modifies_sigmaT4 = false;
 
-      _RMCRT->sched_CoarsenAll(level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq);
+      _RMCRT->sched_CoarsenAll(level, sched, modifies_abskg, modifies_sigmaT4);
       sched_setBoundaryConditions(level, sched, notUsed, _radiation_calc_freq, backoutTemp);
     }
 
@@ -335,10 +335,10 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW abskg_dw = Task::NewDW;
 
     // convert abskg:dbl -> abskg:flt if needed
-    _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw, _radiation_calc_freq);
+    _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw);
 
     // compute sigmaT4 on the finest level
-    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, _radiation_calc_freq, includeExtraCells);
+    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, includeExtraCells);
 
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
@@ -347,7 +347,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_sigmaT4 = false;
       const bool backoutTemp = true;
 
-      _RMCRT->sched_CoarsenAll(level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq);
+      _RMCRT->sched_CoarsenAll(level, sched, modifies_abskg, modifies_sigmaT4);
 
       if (level->hasFinerLevel()) {
         Task::WhichDW sigmaT4_dw = Task::NewDW;
@@ -363,7 +363,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      _RMCRT->sched_Refine_Q(sched, patches, _sharedState->allArchesMaterials(), _radiation_calc_freq);
+      _RMCRT->sched_Refine_Q(sched, patches, _sharedState->allArchesMaterials());
     }
 
     // convert boundaryFlux<Stencil7> -> 6 doubles
@@ -378,7 +378,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     const LevelP& level = grid->getLevel(_archesLevelIndex);
 
     // carry forward if it's time
-    _RMCRT->sched_CarryForward_AllLabels(level, sched, _radiation_calc_freq);
+    _RMCRT->sched_CarryForward_AllLabels(level, sched);
 
     Task::WhichDW temp_dw = Task::OldDW;
     Task::WhichDW abskg_dw = Task::NewDW;
@@ -386,10 +386,10 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     includeExtraCells = true;
 
     // convert abskg:dbl -> abskg:flt if needed
-    _RMCRT->sched_DoubleToFloat(level, sched, abskg_dw, _radiation_calc_freq);
+    _RMCRT->sched_DoubleToFloat(level, sched, abskg_dw);
 
     // compute sigmaT4 on the CFD level
-    _RMCRT->sched_sigmaT4(level, sched, temp_dw, _radiation_calc_freq, includeExtraCells);
+    _RMCRT->sched_sigmaT4(level, sched, temp_dw, includeExtraCells);
 
     Task::WhichDW sigmaT4_dw = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
@@ -540,7 +540,7 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
     // on the arches level
     if (!new_dw->exists(_RMCRT->d_sigmaT4Label, _matl, firstPatch)) {
       bool includeExtraCells = true;
-      _RMCRT->sched_sigmaT4(archesLevel, sched, Task::NewDW, 1, includeExtraCells);
+      _RMCRT->sched_sigmaT4(archesLevel, sched, Task::NewDW, includeExtraCells);
     }
   }
 }
