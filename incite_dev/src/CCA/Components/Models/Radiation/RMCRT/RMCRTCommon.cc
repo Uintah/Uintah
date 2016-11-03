@@ -199,7 +199,7 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   tsk->requires( Task::OldDW, d_abskgLabel,    d_gn, 0 );  // for carryforward
   tsk->computes(d_abskgLabel);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet);
 }
 //______________________________________________________________________
 //
