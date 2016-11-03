@@ -179,8 +179,7 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
 void
 RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
                                   SchedulerP& sched,
-                                  Task::WhichDW myDW,
-                                  const int radCalc_freq )
+                                  Task::WhichDW myDW )
 {
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
@@ -188,7 +187,7 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   // only run task if a conversion is needed.
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&  subtype == TypeDescription::double_type ){
-    tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, myDW, radCalc_freq);
+    tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, myDW);
   } else {
     return;
   }
@@ -210,8 +209,7 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
-                            Task::WhichDW which_dw,
-                            const int radCalc_freq )
+                            Task::WhichDW which_dw )
 {
   //__________________________________
   for (int p=0; p < patches->size(); p++){
@@ -234,7 +232,6 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
         ostringstream warn;
         warn<< "RMCRTCommon::DoubleToFloat A non-physical abskg detected (" << abskg_F[c] << ") at cell: " << c << "\n";
         throw InternalError( warn.str(), __FILE__, __LINE__ );
-        
       } 
     }
   }
@@ -247,16 +244,15 @@ void
 RMCRTCommon::sched_sigmaT4( const LevelP& level,
                            SchedulerP& sched,
                            Task::WhichDW temp_dw,
-                           const int radCalc_freq,
                            const bool includeEC )
 {
   std::string taskname = "RMCRTCommon::sigmaT4";
 
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, radCalc_freq, includeEC );
+    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, includeEC );
   } else {
-    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, radCalc_freq, includeEC );
+    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, includeEC );
   }
 
   printSchedule(level,dbg,"RMCRTCommon::sched_sigmaT4");
@@ -293,7 +289,6 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw,
                      Task::WhichDW which_temp_dw,
-                     const int radCalc_freq,
                      const bool includeEC )
 {
   //__________________________________
@@ -759,16 +754,13 @@ if( isDbgCell( origin)  ){
 //______________________________________________________________________
 void
 RMCRTCommon::sched_CarryForward_AllLabels ( const LevelP& level,
-                                            SchedulerP& sched,
-                                            const int radCalc_freq )
+                                            SchedulerP& sched )
 {
 
   string taskname = "RMCRTCommon::sched_CarryForward_AllLabels";
   printSchedule( level, dbg, taskname );
 
-  Task* tsk = scinew Task( taskname, this, 
-                           &RMCRTCommon::carryForward_AllLabels,
-                           radCalc_freq );
+  Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_AllLabels );
 
   tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
   tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
@@ -790,8 +782,7 @@ RMCRTCommon::carryForward_AllLabels ( const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      const int radCalc_freq )
+                                      DataWarehouse* new_dw )
 {
   printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::carryForward_AllLabels" );
   bool replaceVar = true;
@@ -831,33 +822,6 @@ RMCRTCommon::carryForward_Var ( const ProcessorGroup*,
                                 const VarLabel* variable)
 {
   new_dw->transferFrom(old_dw, variable, patches, matls, true);
-}
-
-
-//______________________________________________________________________
-//  Trigger a taskgraph recompilation if the *next* timestep is a
-//  calculation timestep
-//______________________________________________________________________
-void
-RMCRTCommon::doRecompileTaskgraph( const int radCalc_freq ){
-
-  if( radCalc_freq > 1 ){
-
-    int timestep     = d_sharedState->getCurrentTopLevelTimeStep();
-    int nextTimestep = timestep + 1;
-
-    // if the _next_ timestep is a calculation timestep
-    if( nextTimestep%radCalc_freq == 0 ){
-      // proc0cout << "  RMCRT recompile taskgraph to turn on all-to-all communications" << endl;
-      d_sharedState->setRecompileTaskGraph( true );
-    }
-
-    // if the _current_ timestep is a calculation timestep
-    if( timestep%radCalc_freq == 0 ){
-      // proc0cout << "  RMCRT recompile taskgraph to turn off all-to-all communications" << endl;
-      d_sharedState->setRecompileTaskGraph( true );
-    }
-  }
 }
 
 //______________________________________________________________________
