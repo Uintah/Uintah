@@ -318,7 +318,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW sigmaT4_dw = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
     bool modifies_divQ = false;
-    _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq);
+    _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
 
     // convert boundaryFlux<Stencil7> -> 6 doubles
     sched_stencilToDBLs(fineLevel, sched);
@@ -355,7 +355,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
         sched_setBoundaryConditions(level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
 
-        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq);
+        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }
     }
 
@@ -394,7 +394,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW sigmaT4_dw = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
 
-    _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq);
+    _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
 
     // convert boundaryFlux<Stencil7> -> 6 doubles
     sched_stencilToDBLs(level, sched);

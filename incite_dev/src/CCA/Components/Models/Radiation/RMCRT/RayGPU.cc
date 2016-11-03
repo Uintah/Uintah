@@ -57,21 +57,11 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                       bool modifies_divQ,
                       Task::WhichDW which_abskg_dw,
                       Task::WhichDW which_sigmaT4_dw,
-                      Task::WhichDW which_celltype_dw,
-                      const int radCalc_freq)
+                      Task::WhichDW which_celltype_dw )
 {
   if (event == Task::GPU) {
 #ifdef HAVE_CUDA
 
-    if ( doCarryForward( radCalc_freq ) ) {
-      printTask(patches,patches->get(0), dbggpu,"Doing Ray::rayTraceGPU (carryForward)");
-      bool replaceVar = true;
-      new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, dtask, replaceVar, nullptr );
-      new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, dtask, replaceVar, nullptr );
-      new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, dtask, replaceVar, nullptr );
-      return;
-    }
-    
     const Level* level = getLevel(patches);
 
     //__________________________________
@@ -268,22 +258,11 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW which_sigmaT4_dw,
-                               Task::WhichDW which_celltype_dw,
-                               const int radCalc_freq )
+                               Task::WhichDW which_celltype_dw )
 {
   if (event == Task::GPU) {
 
 #ifdef HAVE_CUDA
-
-    //__________________________________
-    //  Carry Forward (old_dw -> new_dw)
-    if ( doCarryForward( radCalc_freq ) ) {
-      printTask( finePatches, dbggpu, "Doing Ray::rayTrace_dataOnionGPU carryForward ( divQ )" );
-
-      new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, dtask, true, nullptr );
-      new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, dtask, true, nullptr );
-      return;
-    }
 
     //__________________________________
     //  bulletproofing   FIX ME 
@@ -502,8 +481,7 @@ void Ray::rayTraceGPU< float > ( DetailedTask* dtask,
                                  bool,
                                  Task::WhichDW,
                                  Task::WhichDW,
-                                 Task::WhichDW,
-                                 const int );
+                                 Task::WhichDW );
 
 template
 void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
@@ -520,8 +498,7 @@ void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
                                   bool,
                                   Task::WhichDW,
                                   Task::WhichDW,
-                                  Task::WhichDW,
-                                  const int );
+                                  Task::WhichDW );
 
 template
 void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
@@ -538,8 +515,7 @@ void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
                                           bool,
                                           Task::WhichDW,
                                           Task::WhichDW,
-                                          Task::WhichDW,
-                                          const int );
+                                          Task::WhichDW );
 
 template
 void Ray::rayTraceDataOnionGPU< double > ( DetailedTask* dtask,
@@ -556,5 +532,4 @@ void Ray::rayTraceDataOnionGPU< double > ( DetailedTask* dtask,
                                            bool,
                                            Task::WhichDW,
                                            Task::WhichDW,
-                                           Task::WhichDW,
-                                           const int );
+                                           Task::WhichDW );

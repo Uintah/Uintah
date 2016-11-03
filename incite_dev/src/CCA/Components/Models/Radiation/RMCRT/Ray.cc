@@ -413,8 +413,7 @@ Ray::sched_rayTrace( const LevelP& level,
                      Task::WhichDW abskg_dw,
                      Task::WhichDW sigma_dw,
                      Task::WhichDW celltype_dw,
-                     bool modifies_divQ,
-                     const int radCalc_freq )
+                     bool modifies_divQ )
 {
   std::string taskname = "Ray::rayTrace";
   Task *tsk = nullptr;
@@ -423,10 +422,10 @@ Ray::sched_rayTrace( const LevelP& level,
 
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
-                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     } else {
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,
-                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
 
     }
     tsk->usesDevice(true);
@@ -434,10 +433,10 @@ Ray::sched_rayTrace( const LevelP& level,
 
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTrace<double>,
-                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     } else {
       tsk = scinew Task( taskname, this, &Ray::rayTrace<float>,
-                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     }
   }
 
@@ -1048,8 +1047,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
                Task::WhichDW which_sigmaT4_dw,
-               Task::WhichDW which_celltype_dw,
-               const int radCalc_freq )
+               Task::WhichDW which_celltype_dw )
 {
 
   const Level* level = getLevel(patches);
@@ -1358,8 +1356,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                                Task::WhichDW abskg_dw,
                                Task::WhichDW sigma_dw,
                                Task::WhichDW celltype_dw,
-                               bool modifies_divQ,
-                               const int radCalc_freq )
+                               bool modifies_divQ )
 {
   int maxLevels = level->getGrid()->numLevels() - 1;
   int L_indx = level->getIndex();
@@ -1376,20 +1373,20 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
       tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     } else {
       tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     }
     tsk->usesDevice(true);
   } else {                                // CPU
     taskname = "Ray::rayTrace_dataOnion";
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
       tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     } else {
       tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq);
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     }
   }
 
@@ -1465,8 +1462,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                          bool modifies_divQ,
                          Task::WhichDW which_abskg_dw,
                          Task::WhichDW which_sigmaT4_dw,
-                         Task::WhichDW which_celltype_dw,
-                         const int radCalc_freq )
+                         Task::WhichDW which_celltype_dw )
 {
 
   const Level* fineLevel = getLevel(finePatches);

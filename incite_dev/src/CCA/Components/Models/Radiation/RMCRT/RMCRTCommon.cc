@@ -46,7 +46,7 @@
 //______________________________________________________________________
 //
 using namespace Uintah;
-using namespace std;
+
 static DebugStream dbg("RAY", false);
 
 //______________________________________________________________________
@@ -56,17 +56,17 @@ static DebugStream dbg("RAY", false);
 // static variables
 //______________________________________________________________________
 
-double RMCRTCommon::d_threshold;
-double RMCRTCommon::d_sigma;
-double RMCRTCommon::d_sigmaScat;
-double RMCRTCommon::d_maxRayLength;               // max ray length.
-bool   RMCRTCommon::d_isSeedRandom;
-bool   RMCRTCommon::d_allowReflect;
-int    RMCRTCommon::d_matl;
-string RMCRTCommon::d_abskgBC_tag;
+double      RMCRTCommon::d_threshold;
+double      RMCRTCommon::d_sigma;
+double      RMCRTCommon::d_sigmaScat;
+double      RMCRTCommon::d_maxRayLength;               // max ray length.
+bool        RMCRTCommon::d_isSeedRandom;
+bool        RMCRTCommon::d_allowReflect;
+int         RMCRTCommon::d_matl;
+std::string RMCRTCommon::d_abskgBC_tag;
 
 
-vector<IntVector> RMCRTCommon::d_dbgCells;
+std::vector<IntVector> RMCRTCommon::d_dbgCells;
 
 
 
@@ -90,11 +90,11 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 {
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type){
     d_sigmaT4Label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
-    proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
+    proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << std::endl;
   } else {
     d_sigmaT4Label = VarLabel::create( "sigmaT4",    CCVariable<float>::getTypeDescription() );
     d_abskgLabel   = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
-    proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
+    proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << std::endl;
   }
 
   d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
@@ -163,7 +163,7 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
   // The constructor can be called twice, so only create matlSet once.
   if (d_matlSet == 0) {
     d_matlSet = scinew MaterialSet();
-    vector<int> m;
+    std::vector<int> m;
     m.push_back(matlIndex);
     d_matlSet->addAll(m);
     d_matlSet->addReference();
@@ -229,7 +229,7 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
       
       // bulletproofing
       if(std::isinf( abskg_F[c] ) || std::isnan( abskg_F[c] ) ){
-        ostringstream warn;
+        std::ostringstream warn;
         warn<< "RMCRTCommon::DoubleToFloat A non-physical abskg detected (" << abskg_F[c] << ") at cell: " << c << "\n";
         throw InternalError( warn.str(), __FILE__, __LINE__ );
       } 
@@ -392,7 +392,7 @@ RMCRTCommon::ray_Origin( MTRand& mTwister,
                          const Point  CC_pos,
                          const Vector dx,
                          const bool   useCCRays,
-                         Vector& rayOrigin)
+                         Vector& rayOrigin )
 {
   if( useCCRays == false ){
     
@@ -406,8 +406,8 @@ RMCRTCommon::ray_Origin( MTRand& mTwister,
     if ( offset.x() > dx.x() || 
          offset.y() > dx.y() ||
          offset.z() > dx.z() ) {
-      cout << "  Warning:ray_Origin  The Mersenne twister random number generator has returned garbage (" << offset 
-           << ") Now forcing the ray origin to be located at the cell-center\n" ;
+      std::cout << "  Warning:ray_Origin  The Mersenne twister random number generator has returned garbage (" << offset
+                << ") Now forcing the ray origin to be located at the cell-center\n" ;
       offset = Vector( 0.5*dx.x(), 0.5*dx.y(), 0.5*dx.z() );
     }
     
@@ -444,7 +444,7 @@ RMCRTCommon::reflect(double& fs,
   step *= -1;                // begin stepping in opposite direction
   sign *= -1;
   ray_direction *= -1;
-  //dbg2 << " REFLECTING " << endl;
+  //dbg2 << " REFLECTING " << std::endl;
 }
 
 //______________________________________________________________________
@@ -682,7 +682,7 @@ RMCRTCommon::updateSumI (const Level* level,
 #endif
 
       if( rayLength < 0 || std::isnan(rayLength) || std::isinf(rayLength) ) {
-        ostringstream warn;
+        std::ostringstream warn;
         warn<< "ERROR:RMCRTCommon::updateSumI   The ray length is non-physical (" << rayLength << ")"
             << " origin: " << origin << " cur: " << cur << "\n";
         throw InternalError( warn.str(), __FILE__, __LINE__ );
@@ -707,21 +707,21 @@ RMCRTCommon::updateSumI (const Level* level,
 //    //  BULLETPROOFING
 //    if ( std::isinf(sumI) || std::isnan(sumI) ){
 //      printf( "\n\n______________________________________________________________________\n");
-//      cout <<  " cur: " << cur << " prevCell: " << prevCell << "\n";
-//      cout <<  " dir: " << dir << " sumI: " << sumI << "\n";
-//      cout <<  " tMax: " << tMax  << "\n";
-//      cout <<  " rayLoc:    " << ray_location << "\n";
-//      cout <<  " tMax[dir]: " << tMax[dir] << " tMax_prev: " << tMax_prev << " Dx[dir]: " << Dx[dir] << "\n";
-//      cout <<  " tDelta:    " << tDelta << " \n";
-//      cout <<  "     abskg[prev]: " << abskg[prevCell] << " \t sigmaT4OverPi[prev]: " << sigmaT4OverPi[prevCell]  << "\n";
-//      cout <<  "     abskg[cur]:  " << abskg[cur]      << " \t sigmaT4OverPi[cur]:  " << sigmaT4OverPi[cur] << "\t  cellType: " <<celltype[cur] << "\n";
-//      cout <<  "     optical_thickkness: " <<  optical_thickness << " \t rayLength: " << rayLength << "\n";
+//      std::cout <<  " cur: " << cur << " prevCell: " << prevCell << "\n";
+//      std::cout <<  " dir: " << dir << " sumI: " << sumI << "\n";
+//      std::cout <<  " tMax: " << tMax  << "\n";
+//      std::cout <<  " rayLoc:    " << ray_location << "\n";
+//      std::cout <<  " tMax[dir]: " << tMax[dir] << " tMax_prev: " << tMax_prev << " Dx[dir]: " << Dx[dir] << "\n";
+//      std::cout <<  " tDelta:    " << tDelta << " \n";
+//      std::cout <<  "     abskg[prev]: " << abskg[prevCell] << " \t sigmaT4OverPi[prev]: " << sigmaT4OverPi[prevCell]  << "\n";
+//      std::cout <<  "     abskg[cur]:  " << abskg[cur]      << " \t sigmaT4OverPi[cur]:  " << sigmaT4OverPi[cur] << "\t  cellType: " <<celltype[cur] << "\n";
+//      std::cout <<  "     optical_thickkness: " <<  optical_thickness << " \t rayLength: " << rayLength << "\n";
 //
 //      IntVector l = abskg.getLowIndex();
 //      IntVector h = abskg.getHighIndex();
 //      printf( "     abskg:  [%d,%d,%d]  -> [%d,%d,%d] \n", l.x(), l.y(), l.z() , h.x(), h.y(), h.z() );
 //
-//      ostringstream warn;
+//      std::ostringstream warn;
 //        warn<< "ERROR:RMCRTCommon::updateSumI   sumI is non-physical (" << sumI << ")"
 //            << " origin: " << origin << " cur: " << cur << "\n";
 //        throw InternalError( warn.str(), __FILE__, __LINE__ );
@@ -757,7 +757,7 @@ RMCRTCommon::sched_CarryForward_AllLabels ( const LevelP& level,
                                             SchedulerP& sched )
 {
 
-  string taskname = "RMCRTCommon::sched_CarryForward_AllLabels";
+  std::string taskname = "RMCRTCommon::sched_CarryForward_AllLabels";
   printSchedule( level, dbg, taskname );
 
   Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_AllLabels );
@@ -797,11 +797,11 @@ RMCRTCommon::carryForward_AllLabels ( const ProcessorGroup*,
 //______________________________________________________________________
 void
 RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
-                                     SchedulerP& sched,
-                                     const VarLabel* variable,
-                                     const int tg_num /* == -1 */)
+                                      SchedulerP& sched,
+                                      const VarLabel* variable,
+                                      const int tg_num /* == -1 */)
 {
-  string taskname = "        carryForward_Var: " + variable->getName();
+  std::string taskname = "        carryForward_Var: " + variable->getName();
   printSchedule(level, dbg, taskname);
 
   Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
@@ -845,12 +845,13 @@ RMCRTCommon::isDbgCell( const IntVector me)
   if(me == IntVector(0,0,0) ){
     return true;
   }
+
   for( unsigned int i = 0; i<d_dbgCells.size(); i++) {
     if( me == d_dbgCells[i]) {
       return true;
-
     }
   }
+
   return false;
 }
 
@@ -861,7 +862,7 @@ RMCRTCommon::isDbgCell( const IntVector me)
 //  modern fisher-yates shuffle.
 //______________________________________________________________________
 void
-RMCRTCommon::randVector( vector <int> &int_array,
+RMCRTCommon::randVector( std::vector <int> &int_array,
                          MTRand& mTwister,
                          const IntVector& cell ){
   int max= int_array.size();

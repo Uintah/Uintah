@@ -122,15 +122,13 @@ WARNING
     //__________________________________
     // initialize the temperature/abskg/abskp 
     void sched_initProperties( const LevelP&, 
-                               SchedulerP& sched,
-                               const int radCalc_freq );
+                               SchedulerP& sched );
 
     void initProperties( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw,
-                         const int radCalc_freq );
+                         DataWarehouse* new_dw );
     //__________________________________
     //                     
     void areGridsEqual( const GridP& uda_grid, 
