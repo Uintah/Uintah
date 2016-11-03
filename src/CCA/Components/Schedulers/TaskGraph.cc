@@ -768,33 +768,42 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
   for (int i = 0; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
     DOUT(neighbor_location, "Looking at task: " << task->getName());
-    //const PatchSet    * ps = task->getPatchSet();
-    //const MaterialSet * ms = task->getMaterialSet();
-    //const int ps_size = ps->size();
+    //Assuming that variables on patches get the same amount of ghost cells on any patch
+    //in the simulation.  This goes for multimaterial vars as well.
+    //const Patch* origPatch = task->patches->get(0);
+    // change the ghost cells to reflect coarse level
+    for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
+      DOUT(neighbor_location, "Checking for max ghost cell for requirements var " << req->m_var->getName() << " which has: " << req->m_num_ghost_cells << " ghost cells.");
 
-    //assuming all patches get the same amount of ghost cells...
-    //for (int ps_index = 0; p < ps_size; p++) {
-    //  const PatchSubset* pss = ps->getSubset(ps_index);
-      //for (int p = 0; i < pss->; pss?) {
-        //Also assume same amount of ghost cells across materials
-        //for ( int m = 0; m < ms->size(); m++ ) {
-          for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
-            std::string key = req->m_var->getName();
-            DOUT(neighbor_location, "Checking for max ghost cell for requirements var " << key << " which has: " << req->m_num_ghost_cells << " ghost cells.");
-            auto it = max_ghost_for_varlabelmap.find(key);
-            if (it != max_ghost_for_varlabelmap.end()) {
-              if (it->second < req->m_num_ghost_cells) {
-                it->second = req->m_num_ghost_cells;
-              }
-            } else {
-              max_ghost_for_varlabelmap.emplace(key, req->m_num_ghost_cells);
-            }
-          }
+      int ngc = req->m_num_ghost_cells;
+      /*
+      if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
+        LevelP nextLevel = origPatch->getLevelP();
+        int levelOffset = req->m_level_offset;
+        IntVector ratio = origPatch->getLevel()->getRefinementRatio();
+        while (--levelOffset) {
+          nextLevel = nextLevel->getCoarserLevel();
+          ratio = ratio * nextLevel->getRefinementRatio();
+        }
+        //Just assume the max ghost cell is our ghost cell number
+        ngc = req->m_num_ghost_cells * Max(Max(ratio.x(), ratio.y()), ratio.z());
+        DOUT(neighbor_location, "For task " << task << " the max_ghost_cell relative to the coarsest layer has been updated to: " << ngc << " ghost cells");
+      }*/
+
+      std::string key = req->m_var->getName();
+      auto it = max_ghost_for_varlabelmap.find(key);
+      if (it != max_ghost_for_varlabelmap.end()) {
+        if (it->second < ngc) {
+          it->second = ngc;
+        }
+      } else {
+        max_ghost_for_varlabelmap.emplace(key, ngc);
+      }
+    }
     //Can modifies have ghost cells?
     for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
       std::string key = modifies->m_var->getName();
-      DOUT(
-          neighbor_location,
+      DOUT(neighbor_location,
           "Checking for max ghost cell for modifies var " << key << " which has: " << modifies->m_num_ghost_cells << " ghost cells.");
       auto it = max_ghost_for_varlabelmap.find(key);
       if (it != max_ghost_for_varlabelmap.end()) {
@@ -806,23 +815,9 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
         max_ghost_for_varlabelmap.emplace(key, modifies->m_num_ghost_cells);
       }
     }
-          //We don't care about computes ghost cells
-          //for (Task::Dependency* comps = task->getComputes(); comps != nullptr; comps = comps->m_next) {
-          //  std::string key = comps->m_var->getName();
-          //  std::cout << "Checking for modifies for " << key << " which has: " << comps->m_num_ghost_cells << " ghost cells." <<  std::endl;
-          //  auto it = max_ghost_for_varlabelmap.find(key);
-          //  if (it != max_ghost_for_varlabelmap.end()) {
-          //    if (it->second < comps->m_num_ghost_cells) {
-          //      it->second = comps->m_num_ghost_cells;
-          //    }
-          //  } else {
-          //    max_ghost_for_varlabelmap.emplace(key, comps->m_num_ghost_cells);
-          //  }
-          //}
-        //}
-      //}
-    //}
+    //We don't care about computes ghost cells
   }
+
   if (neighbor_location) {
     for (auto kv : max_ghost_for_varlabelmap) {
     	DOUT(neighbor_location, "For varlabel " << kv.first << " the max ghost cell is: " << kv.second);
@@ -832,37 +827,25 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
   //Now loop again, setting the task's max ghost cells to the max ghost cell for a given varLabel  
   for (int i = 0; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
-    //const PatchSet    * ps = task->getPatchSet();
-    //const MaterialSet * ms = task->getMaterialSet();
-    //const int ps_size = ps->size();
-
-    //assuming all patches get the same amount of ghost cells...
-    //for (int ps_index = 0; p < ps_size; p++) {
-    //  const PatchSubset* pss = ps->getSubset(ps_index);
-      //for (int p = 0; i < pss->; pss?) {
-        //Also assume same amount of ghost cells across materials
-        //for ( int m = 0; m < ms->size(); m++ ) {
-          for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
-            std::string key = req->m_var->getName();
-            if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
-              task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
-            }
-          }
-          for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
-            std::string key = modifies->m_var->getName();
-            if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
-              task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
-            }
-          }
-          for (Task::Dependency* comps = task->getComputes(); comps != nullptr; comps = comps->m_next) {
-            std::string key = comps->m_var->getName();
-            if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
-              task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
-            }
-          }
-        //}
-      //}
-    //}
+    //Again assuming all vars for a label get the same amount of ghost cells,
+    for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
+      std::string key = req->m_var->getName();
+      if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
+        task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+      }
+    }
+    for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
+      std::string key = modifies->m_var->getName();
+      if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
+        task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+      }
+    }
+    for (Task::Dependency* comps = task->getComputes(); comps != nullptr; comps = comps->m_next) {
+      std::string key = comps->m_var->getName();
+      if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
+        task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+      }
+    }
     DOUT(neighbor_location, "For task: " << task->getName() << " the max ghost cells is: " << task->m_max_ghost_cells);
   }
 
@@ -1213,7 +1196,8 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
         otherLevelLow = origLevel->mapCellToCoarser(otherLevelLow, req->m_level_offset);
         otherLevelHigh = origLevel->mapCellToCoarser(otherLevelHigh, req->m_level_offset) + ratio - IntVector(1, 1, 1);
       }
-      else {
+      else { //This covers when req->m_patches_dom == Task::ThisLevel (single level problems)
+             //or when req->m_patches_dom == Task::OtherGridDomain. (AMR problems)
         if (uses_SHRT_MAX) {  
           //Finer patches probably shouldn't be using SHRT_MAX ghost cells, but just in case they do, at least compute the low and high correctly...
           origPatch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
@@ -1296,6 +1280,7 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
           if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
             continue;
           }
+
           static Patch::selectType fromNeighbors;
           fromNeighbors.resize(0);
 
@@ -1401,7 +1386,6 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
               }
 
               if (modifies && comp) {  // comp means NOT send-old-data tasks
-
                 // find the tasks that up to this point require the variable
                 // that we are modifying (i.e., the ones that use the computed
                 // variable before we modify it), and put a dependency between
@@ -1487,6 +1471,7 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
                   }
                 }
               }
+
               m_detailed_tasks->possiblyCreateDependency(creator, comp, fromNeighbor,
                   task, req, patch,
                   matl, from_l, from_h, cond);

@@ -229,7 +229,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual int getMaxGhost() = 0;
 
-    virtual int getMaxDistallGhost() = 0;
+    virtual int getMaxDistalGhost() = 0;
 
     virtual int getMaxLevelOffset() = 0;
 
