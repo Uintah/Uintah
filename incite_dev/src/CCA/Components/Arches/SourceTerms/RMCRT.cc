@@ -100,7 +100,6 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 {
 
   _ps = inputdb;
-  _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 );
   _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk, false );
 
   _T_label_name = "radiation_temperature";                        // HARDWIRED
@@ -269,16 +268,15 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     const LevelP& level = grid->getLevel(l);
     if (level->getIndex() != _archesLevelIndex) {
       _RMCRT->sched_CarryForward_Var(level, sched, _labels->d_cellTypeLabel);
-
     }
   }
 
-  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxE_Label, RMCRTCommon::TG_CARRY_FORWARD );
-  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxW_Label, RMCRTCommon::TG_CARRY_FORWARD );
-  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxN_Label, RMCRTCommon::TG_CARRY_FORWARD );
-  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxS_Label, RMCRTCommon::TG_CARRY_FORWARD );
-  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxT_Label, RMCRTCommon::TG_CARRY_FORWARD );
-  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxB_Label, RMCRTCommon::TG_CARRY_FORWARD );
+  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxE_Label, RMCRT_Radiation::TG_CARRY_FORWARD );
+  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxW_Label, RMCRT_Radiation::TG_CARRY_FORWARD );
+  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxN_Label, RMCRT_Radiation::TG_CARRY_FORWARD );
+  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxS_Label, RMCRT_Radiation::TG_CARRY_FORWARD );
+  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxT_Label, RMCRT_Radiation::TG_CARRY_FORWARD );
+  _RMCRT->sched_CarryForward_Var ( level,  sched, _radFluxB_Label, RMCRT_Radiation::TG_CARRY_FORWARD );
 
 
   //______________________________________________________________________
@@ -296,7 +294,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     // compute sigmaT4 on the finest level
     _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, includeExtraCells);
 
-    sched_setBoundaryConditions(fineLevel, sched, temp_dw, _radiation_calc_freq);
+    sched_setBoundaryConditions(fineLevel, sched, temp_dw);
+
+    _RMCRT->sched_CarryForward_AllLabels ( fineLevel, sched );
 
     // coarsen data to the coarser levels.
     // do it in reverse order
@@ -309,7 +309,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_sigmaT4 = false;
 
       _RMCRT->sched_CoarsenAll(level, sched, modifies_abskg, modifies_sigmaT4);
-      sched_setBoundaryConditions(level, sched, notUsed, _radiation_calc_freq, backoutTemp);
+      sched_setBoundaryConditions(level, sched, notUsed, backoutTemp);
     }
 
     //__________________________________
@@ -355,7 +355,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
         Task::WhichDW sigmaT4_dw = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
 
-        sched_setBoundaryConditions(level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
+        sched_setBoundaryConditions(level, sched, temp_dw, backoutTemp);
 
         _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }
@@ -582,7 +582,6 @@ void
 RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
                                               SchedulerP& sched,
                                               Task::WhichDW temp_dw,
-                                              const int radCalc_freq,
                                               const bool backoutTemp )
 {
 
@@ -591,23 +590,21 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
   Task* tsk = nullptr;
   if( _FLT_DBL == TypeDescription::double_type ){
 
-    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >,
-                      temp_dw, radCalc_freq, backoutTemp );
+    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >, temp_dw, backoutTemp );
   } else {
-    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< float >,
-                      temp_dw, radCalc_freq, backoutTemp );
+    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< float >, temp_dw, backoutTemp );
   }
 
   printSchedule(level, dbg, "RMCRT_radiation::sched_setBoundaryConditions");
 
   if(!backoutTemp){
-    tsk->requires( temp_dw, _tempLabel, Ghost::None,0 );
+    tsk->requires( temp_dw, _tempLabel, Ghost::None, 0 );
   }
 
   tsk->modifies( _RMCRT->d_sigmaT4Label );
   tsk->modifies( _RMCRT->d_abskgLabel );         // this label changes name if using floats
   
-  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRTCommon::TG_RMCRT );
+  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRT_Radiation::TG_RMCRT );
 }
 //______________________________________________________________________
 
@@ -618,14 +615,8 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
                                              DataWarehouse*,
                                              DataWarehouse* new_dw,
                                              Task::WhichDW temp_dw,
-                                             const int radCalc_freq,
                                              const bool backoutTemp )
 {
-
-  // Only run if it's time
-  if ( _RMCRT->doCarryForward( radCalc_freq ) ) {
-    return;
-  }
 
   for (int p=0; p < patches->size(); p++){
 
@@ -673,7 +664,6 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
         temp.copyData(varTmp);
       }
 
-
       //__________________________________
       // set the boundary conditions
 //      setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
@@ -712,7 +702,6 @@ void RMCRT_Radiation::setBoundaryConditions< double >( const ProcessorGroup*,
                                                        DataWarehouse*,
                                                        DataWarehouse* ,
                                                        Task::WhichDW ,
-                                                       const int ,
                                                        const bool );
 
 template
@@ -722,7 +711,6 @@ void RMCRT_Radiation::setBoundaryConditions< float >( const ProcessorGroup*,
                                                       DataWarehouse*,
                                                       DataWarehouse* ,
                                                       Task::WhichDW ,
-                                                      const int ,
                                                       const bool );
 
 //______________________________________________________________________
@@ -738,8 +726,7 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
   }
 
   if(_RMCRT->d_solveBoundaryFlux) {
-    Task* tsk = scinew Task( "RMCRT_Radiation::stencilToDBLs", this,
-                             &RMCRT_Radiation::stencilToDBLs );
+    Task* tsk = scinew Task( "RMCRT_Radiation::stencilToDBLs", this, &RMCRT_Radiation::stencilToDBLs );
 
     printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
 
@@ -753,7 +740,7 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
     tsk->computes( _radFluxT_Label );
     tsk->computes( _radFluxB_Label );
 
-    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRTCommon::TG_RMCRT );
+    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRT_Radiation::TG_RMCRT );
   }
 }
 
@@ -768,8 +755,7 @@ RMCRT_Radiation::sched_fluxInit( const LevelP& level,
   }
 
   if(_RMCRT->d_solveBoundaryFlux) {
-    Task* tsk = scinew Task( "RMCRT_Radiation::fluxInit", this,
-                             &RMCRT_Radiation::fluxInit );
+    Task* tsk = scinew Task( "RMCRT_Radiation::fluxInit", this, &RMCRT_Radiation::fluxInit );
 
     printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
 
@@ -879,7 +865,7 @@ RMCRT_Radiation::sched_DBLsToStencil( const LevelP& level,
 
     tsk->computes( _RMCRT->d_boundFluxLabel );
 
-    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRTCommon::TG_RMCRT );
+    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRT_Radiation::TG_RMCRT );
   }
 }
 

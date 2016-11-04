@@ -188,7 +188,7 @@ namespace Uintah{
       //           -x      +x       -y       +y     -z     +z
       enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};     
       
-      enum tg_num {
+      enum GRAPH_TYPE {
           TG_CARRY_FORWARD = 0              // carry forward task graph
         , TG_RMCRT         = 1              // rmcrt taskgraph
         , NUM_GRAPHS

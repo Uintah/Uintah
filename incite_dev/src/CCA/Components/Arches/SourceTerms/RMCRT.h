@@ -106,6 +106,12 @@ public:
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw );
 
+  enum GRAPH_TYPE {
+      TG_CARRY_FORWARD = 0              // carry forward task graph
+    , TG_RMCRT         = 1              // RMCRT radiation taskgraph
+    , NUM_GRAPHS
+  };
+
   //______________________________________________________________________
   class Builder : public SourceTermBase::Builder {
 
@@ -155,7 +161,6 @@ private:
     void  sched_setBoundaryConditions( const LevelP& level,
                                        SchedulerP& sched,
                                        Task::WhichDW temp_dw,
-                                       const int radCalc_freq,
                                        const bool backoutTemp = false);
 
     template< class T >
@@ -165,7 +170,6 @@ private:
                                 DataWarehouse*,
                                 DataWarehouse* new_dw,
                                 Task::WhichDW temp_dw,
-                                const int radCalc_freq,
                                 const bool backoutTemp );
 
      //__________________________________
@@ -201,7 +205,6 @@ private:
 
   //__________________________________
   //
-  int  _radiation_calc_freq{1};
   int  _matl;
   int  _archesLevelIndex{-9};
   bool _all_rk{false};
