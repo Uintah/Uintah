@@ -170,7 +170,10 @@ namespace Uintah{
       int    d_nDivQRays;                   // number of rays per cell used to compute divQ
       int    d_nFluxRays;                   // number of rays per cell used to compute radiative flux
       int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
-      IntVector d_halo;                     // number of cells surrounding a coarse patch on coarser levels
+      IntVector d_haloCells;                // Number of cells a ray will traverse after it exceeds a fine patch boundary before
+                                            // it moves to a coarser level
+      double  d_haloLength;                 // Physical length a ray will traverse after it exceeds a fine patch boundary before
+                                            // it moves to a coarser level. 
 
       bool d_solveDivQ;                     // switch for enabling computation of divQ
       bool d_CCRays;

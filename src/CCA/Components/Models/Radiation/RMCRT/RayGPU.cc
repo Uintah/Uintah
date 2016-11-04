@@ -144,6 +144,7 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
 
     RT_flags.nDivQRays         = d_nDivQRays;
     RT_flags.nFluxRays         = d_nFluxRays;
+    RT_flags.whichROI_algo     = d_ROI_algo;
     RT_flags.rayDirSampleAlgo  = d_rayDirSampleAlgo;
 
     double start = clock();

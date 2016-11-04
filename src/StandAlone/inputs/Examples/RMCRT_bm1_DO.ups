@@ -161,7 +161,8 @@
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
 
     <algorithm type='dataOnion'>
-      <halo>           [4,4,4]      </halo>
+      <haloCells>          [4,4,4]  </haloCells> 
+ <!--     <haloLength>          .1      </haloLength> -->
            
       <ROI_extents type='patch_based'/>
 <!--       

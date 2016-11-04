@@ -4,7 +4,7 @@
 # RMCRT_doubleToFloat:
 #    This script modifies the input file so they will run on a GPU
 #   cal_frequency -> 1
-#   halo = [0,0,0]
+#   haloCells = [0,0,0]
 #
 # Usage:  RMCRT_gpuWorkAround  <ups file> < output file>
 #  
