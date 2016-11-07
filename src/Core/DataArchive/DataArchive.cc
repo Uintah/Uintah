@@ -1624,26 +1624,41 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
     return;
   }
 
-  // If this is a newer uda, the patch info in the grid will store the processor where the data is.
+  // If this is a newer uda, the patch info in the grid will store the
+  // processor where the data is.
   if( patchinfo.proc != -1 ) {
     ostringstream file;
     file << d_ts_directory << "l" << (int) real_patch->getLevel()->getIndex() << "/p" << setw(5) << setfill('0') << (int) patchinfo.proc << ".xml";
     parseFile( file.str(), levelIndex, levelBasePatchID );
+
+    if( !patchinfo.parsed )
+    {
+      throw InternalError( "DataArchive::parsePatch() - found patch processor "
+			   "id but could find the data in the coresponding "
+			   "processor data file. Check for zero length "
+			   "processor data files and remove their reference "
+			   "from the timestep.xml via this script: "
+			   "sed -i.bak '/Datafile href=\"l0/d' t*/timestep.xml.",
+			   __FILE__, __LINE__ );
+    }
   }
+  else
+  {
+    // Try making a guess as to the processor.  First go is to try the
+    // processor of the same index as the patch.  Many datasets have
+    // only one patch per processor, so this is a reasonable first
+    // attempt.  Future attemps could perhaps be smarter.
+    if (!patchinfo.parsed && patchIndex < (int)d_xmlParsed[levelIndex].size() && !d_xmlParsed[levelIndex][patchIndex]) {
+      parseFile( d_xmlFilenames[levelIndex][patchIndex], levelIndex, levelBasePatchID );
+      d_xmlParsed[levelIndex][patchIndex] = true;
+    }
 
-  // Try making a guess as to the processor.  First go is to try the processor of the same index as the patch.  Many datasets
-  // have only one patch per processor, so this is a reasonable first attempt.  Future attemps could perhaps be smarter.
-
-  if (!patchinfo.parsed && patchIndex < (int)d_xmlParsed[levelIndex].size() && !d_xmlParsed[levelIndex][patchIndex]) {
-    parseFile( d_xmlFilenames[levelIndex][patchIndex], levelIndex, levelBasePatchID );
-    d_xmlParsed[levelIndex][patchIndex] = true;
-  }
-
-  // failed the guess - parse the entire dataset for this level
-  if ( !patchinfo.parsed ) {
-    for (unsigned proc = 0; proc < d_xmlFilenames[levelIndex].size(); proc++) {
-      parseFile( d_xmlFilenames[levelIndex][proc], levelIndex, levelBasePatchID );
-      d_xmlParsed[levelIndex][proc] = true;
+    // Failed the guess - parse the entire dataset for this level
+    if ( !patchinfo.parsed ) {
+      for (unsigned proc = 0; proc < d_xmlFilenames[levelIndex].size(); proc++) {
+	parseFile( d_xmlFilenames[levelIndex][proc], levelIndex, levelBasePatchID );
+	d_xmlParsed[levelIndex][proc] = true;
+      }
     }
   }
 }
