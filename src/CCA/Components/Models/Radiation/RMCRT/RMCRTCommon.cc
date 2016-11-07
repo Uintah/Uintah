@@ -29,10 +29,8 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
-#include <time.h>
-#include <fstream>
 
-#include <include/sci_defs/uintah_testdefs.h.in>
+#include <fstream>
 
 #define DEBUG -9             // 1: divQ, 2: boundFlux, 3: scattering
 #define FIXED_RAY_DIR -9    // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
@@ -68,9 +66,8 @@ std::string RMCRTCommon::d_abskgBC_tag;
 
 std::vector<IntVector> RMCRTCommon::d_dbgCells;
 
-
-
 MaterialSet* RMCRTCommon::d_matlSet = 0;
+
 const VarLabel* RMCRTCommon::d_sigmaT4Label;
 const VarLabel* RMCRTCommon::d_abskgLabel;
 const VarLabel* RMCRTCommon::d_divQLabel;
@@ -778,18 +775,25 @@ RMCRTCommon::sched_CarryForward_AllLabels ( const LevelP& level,
 //______________________________________________________________________
 //
 void
-RMCRTCommon::carryForward_AllLabels ( const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* matls,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw )
+RMCRTCommon::carryForward_AllLabels(DetailedTask* dtask,
+                                    Task::CallBackEvent event,
+                                    const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    void* old_TaskGpuDW,
+                                    void* new_TaskGpuDW,
+                                    void* stream,
+                                    int deviceID)
 {
   printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::carryForward_AllLabels" );
+
   bool replaceVar = true;
-  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, replaceVar );
-  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, replaceVar );  
-  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
-  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, replaceVar );
+  new_dw->transferFrom(old_dw, d_divQLabel,          patches, matls, dtask, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_boundFluxLabel,     patches, matls, dtask, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, dtask, replaceVar, nullptr );
+  new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, dtask, replaceVar, nullptr );
 }
 
 //______________________________________________________________________
@@ -804,31 +808,39 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
   std::string taskname = "        carryForward_Var: " + variable->getName();
   printSchedule(level, dbg, taskname);
 
-  Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
+  Task* task = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
 
-  tsk->requires(Task::OldDW, variable,   d_gn, 0);
-  tsk->computes(variable);
+  task->requires(Task::OldDW, variable,   d_gn, 0);
+  task->computes(variable);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet, tg_num);
+  sched->addTask( task, level->eachPatch(), d_matlSet, tg_num);
 }
 
 //______________________________________________________________________
 void
-RMCRTCommon::carryForward_Var ( const ProcessorGroup*,
+RMCRTCommon::carryForward_Var ( DetailedTask* dtask,
+                                Task::CallBackEvent event,
+                                const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
-                                const VarLabel* variable)
+                                void* old_TaskGpuDW,
+                                void* new_TaskGpuDW,
+                                void* stream,
+                                int deviceID,
+                                const VarLabel* variable )
 {
-  new_dw->transferFrom(old_dw, variable, patches, matls, true);
+  new_dw->transferFrom(old_dw, variable, patches, matls, dtask, true, nullptr);
 }
 
 //______________________________________________________________________
 //  Logic for determining when to carry forward
 //______________________________________________________________________
 bool
-RMCRTCommon::doCarryForward( const int radCalc_freq ){
+RMCRTCommon::doCarryForward( const int radCalc_freq )
+{
+
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   bool test = (timestep%radCalc_freq != 0 && timestep != 1);
 
@@ -864,7 +876,8 @@ RMCRTCommon::isDbgCell( const IntVector me)
 void
 RMCRTCommon::randVector( std::vector <int> &int_array,
                          MTRand& mTwister,
-                         const IntVector& cell ){
+                         const IntVector& cell )
+{
   int max= int_array.size();
 
   for (int i=0; i<max; i++){   // populate sequential array from 0 to max-1

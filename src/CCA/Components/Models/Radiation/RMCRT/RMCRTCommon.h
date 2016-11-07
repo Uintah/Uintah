@@ -26,15 +26,17 @@
 #define RMCRTCOMMON_H
 
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/Expon.h>
 #include <Core/Disclosure/TypeDescription.h>
+
 #include <sci_defs/uintah_defs.h>
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -147,23 +149,36 @@ namespace Uintah{
       void sched_CarryForward_AllLabels ( const LevelP& level,
                                           SchedulerP& sched );
                                           
-      void carryForward_AllLabels ( const ProcessorGroup*,
+      void carryForward_AllLabels ( DetailedTask* dtask,
+                                    Task::CallBackEvent event,
+                                    const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw );
+                                    DataWarehouse* new_dw,
+                                    void* old_TaskGpuDW,
+                                    void* new_TaskGpuDW,
+                                    void* stream,
+                                    int deviceID );
        
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable,
-                                    const int tg_num  = -1);
+                                    const int tg_num  = -1 );
 
-      void carryForward_Var ( const ProcessorGroup*,
-                              const PatchSubset* ,
-                              const MaterialSubset*,
-                              DataWarehouse*,
-                              DataWarehouse*,
-                              const VarLabel* variable);
+      void carryForward_Var( DetailedTask* dtask,
+                             Task::CallBackEvent event,
+                             const ProcessorGroup*,
+                             const PatchSubset*,
+                             const MaterialSubset*,
+                             DataWarehouse*,
+                             DataWarehouse*,
+                             void* old_TaskGpuDW,
+                             void* new_TaskGpuDW,
+                             void* stream,
+                             int deviceID,
+                             const VarLabel* variable );
+
       //__________________________________
       // If needed convert abskg double -> float
       void sched_DoubleToFloat( const LevelP& level,
