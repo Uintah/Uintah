@@ -29,11 +29,13 @@
       <include href="RMCRT_radiometer.xml" section="Radiometer" />
 
       <algorithm                spec="OPTIONAL NO_DATA"
-                                    attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
+                                    attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'"
+                                    children1="ONE_OF(CHILD haloCells, haloLength)">
 
         <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
-        <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
-
+        <haloCells              spec="OPTIONAL VECTOR  'positive'" need_applies_to="type dataOnion" />
+        <haloLength             spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion" />
+        
         <ROI_extents            spec="OPTIONAL NO_DATA"
                                   attribute1="type REQUIRED STRING 'fixed dynamic patch_based boundedRayLength'">
 

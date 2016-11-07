@@ -265,7 +265,7 @@
                 <cellTypeCoarsenLogic> ROUNDDOWN    </cellTypeCoarsenLogic>
                 
                 <algorithm type='dataOnion'>
-                  <halo>           [2,2,2]     </halo>
+                  <haloCells>           [2,2,2]     </haloCells>
 
                   <ROI_extents type='patch_based'/>
             <!--       

@@ -541,7 +541,12 @@ enum DIR {X=0, Y=1, Z=2, NONE=-9};
 //           -x      +x       -y       +y     -z     +z
 enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
 //
-enum ROI_algo{fixed, dynamic, patch_based};
+enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box 
+                dynamic,              // user specifies thresholds that are used to dynamically determine ROI
+                patch_based,          // The patch extents + halo are the ROI
+                boundedRayLength,     // the patch extents + boundedRayLength/Dx are the ROI
+                entireDomain          // The ROI is the entire computatonal Domain
+             };
 //
 
 //______________________________________________________________________
