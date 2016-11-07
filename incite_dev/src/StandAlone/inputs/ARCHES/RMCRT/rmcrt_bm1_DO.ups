@@ -168,12 +168,8 @@
       <Box label = "0">           <!-- coarse Level -->                     
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>   
-      <!--      
          <resolution> [20,20,20]  </resolution>    
          <patches>    [1,1,1]     </patches> 
-      -->
-         <resolution> [40,40,40]  </resolution>    
-         <patches>    [2,2,2]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
@@ -247,7 +243,8 @@
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 
                 <algorithm type='dataOnion'>
-                  <halo>           [4,4,4]     </halo>
+            <!--      <haloCells>           [4,4,4]  </haloCells>   -->
+                  <haloLength>          .1       </haloLength>  
 
                   <ROI_extents type='patch_based'/>
             <!--       

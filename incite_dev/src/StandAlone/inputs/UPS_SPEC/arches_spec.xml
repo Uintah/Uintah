@@ -1463,7 +1463,8 @@
               <VRLocationsMax            spec="OPTIONAL VECTOR 'positive'"/>
               <nRadRays                  spec="OPTIONAL INTEGER 'positive'"/>
               <nFluxRays                 spec="OPTIONAL INTEGER 'positive'"/>
-              <halo                      spec="OPTIONAL VECTOR 'positive'"/>
+
+              
               <ScatteringOn              spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
@@ -1473,10 +1474,12 @@
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
 
               <algorithm                 spec="OPTIONAL NO_DATA"
-                                             attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
+                                             attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'"
+                                             children1="ONE_OF(CHILD haloCells, haloLength)">
 
                 <orderOfInterpolation    spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
-                <halo                    spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
+                <haloCells               spec="OPTIONAL VECTOR  'positive'" need_applies_to="type dataOnion" />
+                <haloLength              spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion" />
 
                 <ROI_extents             spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'fixed dynamic patch_based boundedRayLength'">

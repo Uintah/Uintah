@@ -106,10 +106,8 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_radiometer     = nullptr;
   d_dbgCells.push_back( IntVector(0,0,0));
 
-//  d_dbgCells.push_back( IntVector(0,1,0));
-//  d_dbgCells.push_back( IntVector(5,5,5));
-
-  d_halo                 = IntVector(-9,-9,-9);
+  d_haloCells            = IntVector(-9,-9,-9);
+  d_haloLength           = -9;
   d_rayDirSampleAlgo     = NAIVE;
   d_cellTypeCoarsenLogic = ROUNDUP;
   d_ROI_algo             = entireDomain;
@@ -266,7 +264,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
       isMultilevel = true;
       algorithm    = dataOnion;
-      alg_ps->getWithDefault( "halo",  d_halo,  IntVector(10,10,10));
+      alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
+      alg_ps->get( "haloLength",  d_haloLength );
 
       //  Method for deteriming the extents of the ROI
       ProblemSpecP ROI_ps = alg_ps->findBlock( "ROI_extents" );
@@ -469,7 +468,7 @@ Ray::sched_rayTrace( const LevelP& level,
         n_ghostCells    = SHRT_MAX;
         d_ROI_algo = entireDomain;
       }
-      d_halo = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
+      d_haloCells = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
     }
      
 /*===========TESTING==========`*/
@@ -1024,9 +1023,9 @@ struct solveDivQFunctor {
       //divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
       m_divQ( i, j, k ) = -4.0 * M_PI * m_abskg( i, j, k ) * ( m_sigmaT4OverPi( i, j, k ) - (sumI / m_d_nDivQRays) );
 
-      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      //radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
-      m_radiationVolq( i, j, k ) = 4.0 * M_PI * m_abskg( i, j, k ) * (sumI / m_d_nDivQRays);
+      // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+      m_radiationVolq( i, j, k ) = 4.0 * M_PI * (sumI / m_d_nDivQRays);
+
 
     }  // end operator()
 };  // end solveDivQFunctor
@@ -1107,7 +1106,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     if ( d_ROI_algo == boundedRayLength ){
 
       patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0), 
-                                                     Ghost::AroundCells, d_halo.x(), ROI_Lo, ROI_Hi);    
+                                                     Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);    
       dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
@@ -1315,8 +1314,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
       //  Compute divQ
       divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
 
-      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
+      // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+      radiationVolq[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
 /*`==========TESTING==========*/
 #if DEBUG == 1
     if( isDbgCell(origin) ) {
@@ -1397,8 +1396,18 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   // finest level:
   if ( d_ROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
-
-    int maxElem = Max( d_halo.x(), d_halo.y(), d_halo.z() );
+  
+    //__________________________________
+    // logic for determining number d_haloCells
+    if( d_haloLength > 0 ){
+      Vector Dx     = level->dCell();
+      Vector nCells = Vector( d_haloLength )/Dx;
+      double length = nCells.length();
+      int n_Cells   = RoundUp( length );
+      d_haloCells   = IntVector( n_Cells, n_Cells, n_Cells );
+    }
+     
+    int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
     tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
     tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, maxElem );
@@ -1729,8 +1738,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         //  Compute divQ
         divQ_fine[origin] = -4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/d_nDivQRays) );
 
-        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-        radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/d_nDivQRays) ;
+        // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+        radiationVolq_fine[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
@@ -1800,9 +1809,9 @@ Ray::computeExtents(LevelP level_0,
     IntVector patchLo = patch->getExtraCellLowIndex();
     IntVector patchHi = patch->getExtraCellHighIndex();
 
-    fineLevel_ROI_Lo = patchLo - d_halo;
-    fineLevel_ROI_Hi = patchHi + d_halo;
-    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << endl;
+    fineLevel_ROI_Lo = patchLo - d_haloCells;
+    fineLevel_ROI_Hi = patchHi + d_haloCells;
+    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells << endl;
 
   }
 
@@ -1831,8 +1840,8 @@ Ray::computeExtents(LevelP level_0,
 
     if( level->hasCoarserLevel() ){
 
-      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - d_halo;
-      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + d_halo;
+      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - d_haloCells;
+      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + d_haloCells;
 
       // region must be within a level
       IntVector levelLo, levelHi;
