@@ -446,8 +446,8 @@ ArchesTable::setup(const bool cerrSwitch)
   // Down-slice the table if necessary
   int dim_diff = in_inds.size()-inds.size();
   long interp_size = 1<<dim_diff;
-  long* idx = scinew long[interp_size];
-  double* w =scinew double[interp_size];
+  long* idx = scinew   long[interp_size];
+  double* w = scinew double[interp_size];
 
   for(int idep=0;idep<static_cast<int>(deps.size());idep++){
     Dep* dep = deps[idep];
@@ -580,8 +580,8 @@ ArchesTable::setup(const bool cerrSwitch)
   }
 
   // Free up the input deps
-  delete idx;
-  delete w;
+  delete[] idx;
+  delete[] w;
   for(int i=0;i<(int)in_inds.size();i++)
     delete in_inds[i];
   for(int i=1;i<(int)in_axes.size();i++)
