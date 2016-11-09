@@ -33,13 +33,16 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Labels/MPMLabel.h>
 
 namespace Uintah {
 
   class SDInterfaceModel {
   public:
     
-    SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
+    SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS,
+                     MPMFlags* mpm_flags, MPMLabel* mpm_lb);
+
     virtual ~SDInterfaceModel();
 
     virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
@@ -66,6 +69,8 @@ namespace Uintah {
 
   protected:
 
+    MPMLabel* d_mpm_lb;
+    SimulationStateP d_shared_state;
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);
     

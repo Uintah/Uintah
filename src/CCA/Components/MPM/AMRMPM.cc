@@ -127,7 +127,7 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 
   d_SMALL_NUM_MPM=1e-200;
   contactModel   = 0;
-  sdInterfaceModel = 0;
+  d_sdInterfaceModel = 0;
   NGP     = -9;
   NGN     = -9;
   d_nPaddingCells_Coarse = -9;
@@ -171,7 +171,7 @@ AMRMPM::~AMRMPM()
 //  delete lb;
 //  delete flags;
   if(flags->d_doScalarDiffusion){
-    delete sdInterfaceModel;
+    delete d_sdInterfaceModel;
   }
   
   delete d_fluxbc;
@@ -398,7 +398,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   materialProblemSetup(mat_ps, d_sharedState,flags);
 
   if(flags->d_doScalarDiffusion){
-    sdInterfaceModel=SDInterfaceModelFactory::create(mat_ps, d_sharedState,flags);
+    d_sdInterfaceModel = SDInterfaceModelFactory::create(mat_ps, d_sharedState, flags, lb);
   }
   d_fluxbc = FluxBCModelFactory::create(d_sharedState, flags);
 }
@@ -425,7 +425,7 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
   }
   contactModel->outputProblemSpec(mpm_ps);
   if (flags->d_doScalarDiffusion){
-    sdInterfaceModel->outputProblemSpec(mpm_ps);
+    d_sdInterfaceModel->outputProblemSpec(mpm_ps);
   }
 
   ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
@@ -614,6 +614,9 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleNormalizeNodalVelTempConc(sched, patches, matls);
     scheduleExMomInterpolated(        sched, patches, matls);
+    if(flags->d_doScalarDiffusion){
+      scheduleConcInterpolated(sched, patches, matls);
+    }
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -654,6 +657,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
     scheduleExMomIntegrated(                sched, patches, matls);
+    //scheduleDiffusionInterfaceDiv(    sched, patches, matls);
     scheduleSetGridBoundaryConditions(      sched, patches, matls);
   }
 
@@ -5256,6 +5260,19 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
   }  // End loop over patches
 }
 #endif
+
+void AMRMPM::scheduleConcInterpolated(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+  printSchedule(patches,cout_doing,"MPM::scheduleExMomInterpolated");
+
+  d_sdInterfaceModel->addComputesAndRequiresInterpolated(sched, patches, matls);
+}
+
 //______________________________________________________________________
 //
 void AMRMPM::scheduleComputeFlux(SchedulerP& sched, 
@@ -5389,6 +5406,18 @@ void AMRMPM::computeDivergence_CFI(const ProcessorGroup*,
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->computeDivergence_CFI(patches, mpm_matl, old_dw, new_dw);
   }
+}
+
+void AMRMPM::scheduleDiffusionInterfaceDiv(SchedulerP& sched,
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                             getLevel(patches)->getGrid()->numLevels()))
+      return;
+    printSchedule(patches,cout_doing,"MPM::scheduleExMomInterpolated");
+
+    d_sdInterfaceModel->addComputesAndRequiresDivergence(sched, patches, matls);
 }
 
 /*

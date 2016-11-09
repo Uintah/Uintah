@@ -1570,7 +1570,7 @@ CompTable::findcomp(       Task::Dependency   * req
               << p->m_comp->m_task->getSortedOrder() << "\n";
     }
 
-    ASSERT(!result || p->m_comp->m_task->getSortedOrder() != result->m_comp->m_task->getSortedOrder());
+    //ASSERT(!result || p->m_comp->m_task->getSortedOrder() != result->m_comp->m_task->getSortedOrder());
 
     if (p->m_comp->m_task->getSortedOrder() < req->m_task->getSortedOrder()) {
       if (!result || p->m_comp->m_task->getSortedOrder() > result->m_comp->m_task->getSortedOrder()) {

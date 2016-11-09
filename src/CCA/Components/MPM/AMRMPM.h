@@ -55,7 +55,7 @@ class AMRMPM : public SerialMPM {
 public:
   AMRMPM(const ProcessorGroup* myworld);
   virtual ~AMRMPM();
-  SDInterfaceModel* sdInterfaceModel;
+  SDInterfaceModel* d_sdInterfaceModel;
 
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec,
@@ -546,6 +546,10 @@ private:
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
+  virtual void scheduleConcInterpolated(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls);
+
   virtual void scheduleComputeFlux(SchedulerP&,
                                    const PatchSet*, const MaterialSet*);
 
@@ -572,6 +576,10 @@ private:
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
+
+  virtual void scheduleDiffusionInterfaceDiv(SchedulerP& sched,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls);
 
   /*
    * Scalar Flux Boundary Conditions have been moved to the FluxBCModel

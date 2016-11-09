@@ -32,11 +32,36 @@ namespace Uintah {
   class CommonIFConcDiff : public SDInterfaceModel {
   public:
     
-    CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
+    CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS,
+                     MPMFlags* mpm_flags, MPMLabel* mpm_lb);
+
     ~CommonIFConcDiff();
+
+    virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
+                                              const PatchSet* patches,
+                                              const MaterialSet* matls);
+
+    virtual void sdInterfaceInterpolated(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
+
+    virtual void addComputesAndRequiresDivergence(SchedulerP & sched,
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls);
+
+    virtual void sdInterfaceDivergence(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 
   protected:
 
+    std::vector<int> d_materials_list;
     CommonIFConcDiff(const CommonIFConcDiff&);
     CommonIFConcDiff& operator=(const CommonIFConcDiff&);
     

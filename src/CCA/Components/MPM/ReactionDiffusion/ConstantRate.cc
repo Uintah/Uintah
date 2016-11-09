@@ -117,8 +117,8 @@ void ConstantRate::computeFlux(const Patch* patch,
 }
 
 void ConstantRate::scheduleComputeDivergence(Task* task, 
-                                                    const MPMMaterial* matl, 
-                                                    const PatchSet* patch) const
+                                             const MPMMaterial* matl,
+                                             const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::NewDW, d_lb->gMassLabel, Ghost::None);
@@ -167,12 +167,14 @@ void ConstantRate::computeDivergence_CFI(const PatchSubset* finePatches,
 
 void ConstantRate::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
 {
+  ProblemSpecP rdm_ps = ps;
+
   if (output_rdm_tag) {
-    ps = ps->appendChild("diffusion_model");
-    ps->setAttribute("type","constant_rate");
+    rdm_ps = ps->appendChild("diffusion_model");
+    rdm_ps->setAttribute("type","constant_rate");
   }
-  ps->appendElement("diffusivity",diffusivity);
-  ps->appendElement("max_concentration",max_concentration);
-  ps->appendElement("constant_rate", d_constant_rate);
+  rdm_ps->appendElement("diffusivity",diffusivity);
+  rdm_ps->appendElement("max_concentration",max_concentration);
+  rdm_ps->appendElement("constant_rate", d_constant_rate);
 }
 

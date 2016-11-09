@@ -25,11 +25,14 @@
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Labels/MPMLabel.h>
 
 using namespace Uintah;
 
-SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag){
+SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS,
+                                   MPMFlags* Mflag, MPMLabel* mpm_lb)
+{
+  d_mpm_lb = mpm_lb;
+  d_shared_state = sS;
 }
 
 SDInterfaceModel::~SDInterfaceModel(){

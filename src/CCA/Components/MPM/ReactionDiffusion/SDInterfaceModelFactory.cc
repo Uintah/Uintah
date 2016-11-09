@@ -36,7 +36,8 @@ using namespace Uintah;
 
 SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
                                                   SimulationStateP& ss,
-                                                  MPMFlags* flags)
+                                                  MPMFlags* flags,
+                                                  MPMLabel* mpm_lb)
 {
   ProblemSpecP mpm_ps = 
      ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
@@ -64,9 +65,9 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   }
 
   if (diff_interface_type == "common"){
-    return(scinew CommonIFConcDiff(mpm_ps, ss, flags));
+    return(scinew CommonIFConcDiff(child, ss, flags, mpm_lb));
   }else if (diff_interface_type == "null"){
-    return(scinew SDInterfaceModel(mpm_ps, ss, flags));
+    return(scinew SDInterfaceModel(child, ss, flags, mpm_lb));
   }else{
     throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }
