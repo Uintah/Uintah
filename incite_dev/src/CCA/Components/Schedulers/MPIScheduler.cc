@@ -54,7 +54,7 @@
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
 // tasks to modify data that may have a pending send.
-#define USE_PACKING
+//#define USE_PACKING
 
 using namespace Uintah;
 
