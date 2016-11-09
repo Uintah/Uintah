@@ -169,7 +169,7 @@
   <calc_frequency>    1          </calc_frequency>
     
   <RMCRT type = "double">
-    <randomSeed>         true     </randomSeed>
+    <randomSeed>         false     </randomSeed>
     <nDivQRays>          10          </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
