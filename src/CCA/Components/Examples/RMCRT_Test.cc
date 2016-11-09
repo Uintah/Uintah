@@ -388,7 +388,10 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
       d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, d_radCalc_freq );
-      d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, d_radCalc_freq, backoutTemp );
+      
+      if( d_RMCRT->d_coarsenExtraCells == false ) {
+        d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, d_radCalc_freq, backoutTemp );
+      }
     }
 
     //__________________________________
@@ -430,7 +433,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         const bool modifies_divQ  = false;
         const bool backoutTemp    = true;
 
-        d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
+        if( d_RMCRT->d_coarsenExtraCells == false ) {
+          d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
+        }
    
         if (radiometer ){
           radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );

@@ -161,7 +161,9 @@ namespace Uintah{
         return d_radiometer;
       }
 
-
+    //__________________________________
+    //  public variables
+    bool d_coarsenExtraCells;               // instead of setting BC on the coarse level, coarsen fine level extra cells
 
     //______________________________________________________________________
     private:
@@ -178,6 +180,8 @@ namespace Uintah{
       bool d_solveDivQ;                     // switch for enabling computation of divQ
       bool d_CCRays;
       bool d_onOff_SetBCs;                  // switch for setting boundary conditions
+      
+      
       bool d_isDbgOn;
       bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
       int  d_rayDirSampleAlgo;              // Ray sampling algorithm

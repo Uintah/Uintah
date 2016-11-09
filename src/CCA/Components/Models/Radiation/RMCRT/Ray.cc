@@ -51,7 +51,7 @@
 
 Critical:
   - Fix getRegion() for L-shaped domains.
-  
+
 
 Optimizations:
   - Spatial scheduling, used by radiometer.  Only need to execute & communicate
@@ -95,15 +95,17 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
     d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<float>::getTypeDescription() );
   }
 
-  d_matlSet       = 0;
-  d_isDbgOn       = dbg2.active();
 
-  d_gac           = Ghost::AroundCells;
-  d_gn            = Ghost::None;
-  d_orderOfInterpolation = -9;
-  d_onOff_SetBCs   = true;
-  d_radiometer     = nullptr;
+  d_isDbgOn       = dbg2.active();
   d_dbgCells.push_back( IntVector(0,0,0));
+
+  d_matlSet              = 0;
+  d_gac                  = Ghost::AroundCells;
+  d_gn                   = Ghost::None;
+  d_orderOfInterpolation = -9;
+  d_onOff_SetBCs         = true;
+  d_radiometer           = nullptr;
+  d_coarsenExtraCells    = false;
 
   d_haloCells            = IntVector(-9,-9,-9);
   d_haloLength           = -9;
@@ -250,7 +252,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     //__________________________________
     //  single level
     if (type == "singleLevel" ) {
-           
+
       ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
       ROI_ps->getAttribute( "type", type);
       ROI_ps->get( "length", d_maxRayLength );
@@ -263,8 +265,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
       isMultilevel = true;
       algorithm    = dataOnion;
+
       alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
-      alg_ps->get( "haloLength",  d_haloLength );
+      alg_ps->get( "haloLength",         d_haloLength );
+      alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
 
       //  Method for deteriming the extents of the ROI
       ProblemSpecP ROI_ps = alg_ps->findBlock( "ROI_extents" );
@@ -279,8 +283,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       } else if ( type == "dynamic" ) {
 
         d_ROI_algo = dynamic;
-        ROI_ps->getWithDefault( "abskgd_threshold",   d_abskg_thld,   DBL_MAX);
-        ROI_ps->getWithDefault( "sigmaT4d_threshold", d_sigmaT4_thld, DBL_MAX);
+        ROI_ps->getWithDefault( "abskgd_threshold",   d_abskg_thld,   DBL_MAX );
+        ROI_ps->getWithDefault( "sigmaT4d_threshold", d_sigmaT4_thld, DBL_MAX );
 
       } else if ( type == "patch_based" ){
         d_ROI_algo = patch_based;
@@ -291,7 +295,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     } else if ( type == "RMCRT_coarseLevel" ) {
       isMultilevel = true;
       algorithm    = coarseLevel;
-      alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
+      alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation );
+      alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
     }
   }
 
@@ -451,37 +456,37 @@ Ray::sched_rayTrace( const LevelP& level,
   // The taskgraph recompilation is controlled with RMCRTCommon:doRecompileTaskgraph()
   if ( !doCarryForward( radCalc_freq) ) {
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    
+
     int n_ghostCells = SHRT_MAX;
-    
+
 /*`==========TESTING==========*/
     //__________________________________
     // logic for determining number of ghostCells/d_haloCells
     if( d_ROI_algo == boundedRayLength ){
-      
+
       Vector Dx     = level->dCell();
       Vector nCells = Vector( d_maxRayLength )/Dx;
       double length = nCells.length();
       n_ghostCells  = RoundUp( length );
-      
+
       // ghost cell can't exceed number of cells on a level
       IntVector lo, hi;
       level->findCellIndexRange(lo,hi);
       IntVector diff = hi-lo;
       int nCellsLevel = Max( diff.x(), diff.y(), diff.z() );
-      
-      if (n_ghostCells > SHRT_MAX || 
+
+      if (n_ghostCells > SHRT_MAX ||
           n_ghostCells > nCellsLevel ){
-        proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells 
+        proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells
                   << ") max cells in any direction on a Levels: " << nCellsLevel << "\n\n";
         n_ghostCells    = SHRT_MAX;
         d_ROI_algo = entireDomain;
       }
       d_haloCells = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
     }
-     
+
 /*===========TESTING==========`*/
-    
+
     dbg << "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")\n";
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
     tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
@@ -1121,23 +1126,23 @@ Ray::rayTrace( const ProcessorGroup* pg,
         boundFlux[c].initialize(0.0);
       }
     }
-    
+
     IntVector ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
     IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
     //__________________________________
     //  If ray length distance is used
     if ( d_ROI_algo == boundedRayLength ){
 
-      patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0), 
-                                                     Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);    
+      patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
+                                                     Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
       dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
     }
-  
+
     //__________________________________
-    //  BULLETPROOFING  
+    //  BULLETPROOFING
     if ( level->isNonCubic() ){
 
       IntVector l = abskg.getLowIndex();
@@ -1426,7 +1431,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   // finest level:
   if ( d_ROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
-  
+
     //__________________________________
     // logic for determining number d_haloCells
     if( d_haloLength > 0 ){
@@ -1436,7 +1441,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
       int n_Cells   = RoundUp( length );
       d_haloCells   = IntVector( n_Cells, n_Cells, n_Cells );
     }
-     
+
     int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
     tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
     tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
@@ -2426,7 +2431,7 @@ void Ray::refine_Q(const ProcessorGroup*,
 
     divQ_fine.initialize( 0.0 );
     radVolQ_fine.initialize( 0.0 );
-    
+
     for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       boundFlux_fine[c].initialize( 0.0 );
@@ -2453,8 +2458,8 @@ void Ray::refine_Q(const ProcessorGroup*,
 
     selectInterpolator(divQ_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
                        refineRatio, fl, fh, divQ_fine);
-    
-    //__________________________________raditionVolQ                   
+
+    //__________________________________raditionVolQ
     constCCVariable<double> radVolQ_coarse;
     new_dw->getRegion( radVolQ_coarse, d_radiationVolqLabel, d_matl, coarseLevel, cl, ch );
 
@@ -2671,13 +2676,46 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
       }
       Q_coarse.initialize(0.0);
 
-      // coarsen
       bool computesAve = true;
+
+      // coarsen the coarse patch interior cells
       fineToCoarseOperator(Q_coarse,   computesAve,
                            variable,   matl, new_dw,
                            coarsePatch, coarseLevel, fineLevel);
-    }
+
+      //__________________________________
+      //
+      if( d_coarsenExtraCells && coarsePatch->hasBoundaryFaces() ){
+
+        for(int i=0;i<finePatches.size();i++){
+          const Patch* finePatch = finePatches[i];
+
+          if( finePatch->hasBoundaryFaces() ){
+
+cout << " AAA " << coarsePatch->getID() << endl;
+
+            vector<Patch::FaceType> bf;
+            finePatch->getBoundaryFaces( bf );
+            IntVector refineRatio = fineLevel->getRefinementRatio();
+
+            IntVector finePatchLo = finePatch->getExtraCellLowIndex();
+            IntVector finePatchHi = finePatch->getExtraCellHighIndex();
+
+cout << "    finePatchLo: " << finePatchLo << " finePatchHi: " << finePatchHi << " finePatch ID: " << finePatch->getID() << endl;
+            constCCVariable<T> fine_q_CC;
+//          new_dw->getRegion(fine_q_CC,  variable, matl, fineLevel, finePatchLo, finePatchHi, includeExtraCells);
+
+            new_dw->get(fine_q_CC, variable,   matl, finePatch, d_gn, 0);
+
+          }  // has boundaryFace
+        }  // fine patches
+      }  // coarsen ExtraCells
+
+    }  // matl loop
   }  // course patch loop
+
+
+
 }
 
 //______________________________________________________________________
