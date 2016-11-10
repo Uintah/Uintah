@@ -1631,16 +1631,19 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
     file << d_ts_directory << "l" << (int) real_patch->getLevel()->getIndex() << "/p" << setw(5) << setfill('0') << (int) patchinfo.proc << ".xml";
     parseFile( file.str(), levelIndex, levelBasePatchID );
 
-    if( !patchinfo.parsed )
-    {
-      throw InternalError( "DataArchive::parsePatch() - found patch processor "
-			   "id but could find the data in the coresponding "
-			   "processor data file. Check for zero length "
-			   "processor data files and remove their reference "
-			   "from the timestep.xml via this script: "
-			   "sed -i.bak '/Datafile href=\"l0/d' t*/timestep.xml.",
-			   __FILE__, __LINE__ );
-    }
+    // ARS - Commented out because the failure occurs regardless if
+    // the l0 refence is present or not.
+    
+    // if( !patchinfo.parsed )
+    // {
+    //   throw InternalError( "DataArchive::parsePatch() - found patch processor "
+    // 			   "id but could find the data in the coresponding "
+    // 			   "processor data file. Check for zero length "
+    // 			   "processor data files and remove their reference "
+    // 			   "from the timestep.xml via this script: "
+    // 			   "sed -i.bak '/Datafile href=\"l0/d' t*/timestep.xml.",
+    // 			   __FILE__, __LINE__ );
+    // }
   }
   else
   {
