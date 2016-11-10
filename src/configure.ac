@@ -3284,11 +3284,12 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         test_libs[[3]]="mpi"
         test_libs[[4]]="mpich_threadm mpl"               # Try mpich with mpich_threadm and mpl library.
         test_libs[[5]]="mpich_threadm"                   # Same as above, but wihtout mpl
-        test_libs[[6]]="mpich mpl"                       
-        test_libs[[7]]="mpich"
+        test_libs[[6]]="mpich mpl pmpich"
+        test_libs[[7]]="mpich mpl"
         test_libs[[8]]="mpich pmpich"
-        test_libs[[9]]="mpi_mt"
-	test_libs[[10]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt pthread stdc++" # Vulcan@LLNL
+        test_libs[[9]]="mpich"
+        test_libs[[10]]="mpi_mt"
+	test_libs[[11]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt pthread stdc++" # Vulcan@LLNL
 
         unset other
         other[[0]]=""
@@ -3302,6 +3303,7 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
         other[[8]]=""
         other[[9]]=""
         other[[10]]=""
+        other[[11]]=""
 
         num_libs=${#test_libs[*]}
 
