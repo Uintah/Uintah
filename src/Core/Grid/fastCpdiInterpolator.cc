@@ -34,14 +34,14 @@ using namespace std;
 
 fastCpdiInterpolator::fastCpdiInterpolator()
 {
-  d_size = 27;
+  d_size = 64;
   d_patch = 0;
   d_lcrit = 1.e10;
 }
 
 fastCpdiInterpolator::fastCpdiInterpolator(const Patch* patch)
 {
-  d_size = 27;
+  d_size = 64;
   d_patch = patch;
   d_lcrit = 1.e10;
 }
@@ -63,7 +63,7 @@ fastCpdiInterpolator* fastCpdiInterpolator::clone(const Patch* patch)
   return scinew fastCpdiInterpolator(patch, d_lcrit);
 }
     
-void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
+int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
                                             const Matrix3& size,
@@ -180,6 +180,7 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
   int xM,yM,zM;
   int ix[8],iy[8],iz[8];
   int hash;
+  int hashMax=0;
 
   Vector current_corner_pos;
   
@@ -216,7 +217,7 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
   
   // Initialize Values
   IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 27; i++) {
+  for(int i = 0; i < 64; i++) {
     S[i]         = 0.0;
     ni[i]        = niVec;  // this must be set after minimum indicies are found
                            //  or index out of bound error will occur
@@ -271,15 +272,12 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
 
           // Create hash to map to unique value between [0,26]
           hash = xMjx + yMjy + 9*((zM)+jz);
-          if( hash < 0 || hash > 26 ) {
-             cerr << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
-                       << "\nThis is due to the large deformation nature of your problem."
-                       << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations"
-                       << "of fastCpdiInterpolator." << std::endl;
-
-             // send an exit to the program
-             exit(1);
-          }
+          hashMax=max(hash, hashMax);
+//          if( hash < 0 || hash > 26 ) {
+//             cerr << "hash = " << hash << endl;
+//             // send an exit to the program
+//             // exit(1);
+//          }
           phi  = phiX * phiY * phiZ;
           
           ni[hash]        = IntVector(curX,curY,iz[i]+jz);
@@ -288,10 +286,10 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
       } // y for
     } // x for
   } // node for
-
+  return hashMax+1;
 }
  
-void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
+int fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
                                                      const Matrix3& size,
@@ -398,6 +396,7 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   int xM,yM,zM;
   int ix[8],iy[8],iz[8];
   int hash;
+  int hashMax=0;
   
   Vector current_corner_pos;
 
@@ -475,7 +474,7 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     
   // Initialize Values
   IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 27; i++) {
+  for(int i = 0; i < 64; i++) {
     d_S[i]       = zero;   // this must be set after minimum indicies are found
     ni[i]        = niVec;  //  or index out of bound error will occur
   }
@@ -530,15 +529,12 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
           
           // Create hash to map to unique value between [0,26]
           hash = xMjx + yMjy + 9*((zM)+jz);
-          if( hash < 0 || hash > 26 ) {
-             cerr << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
-                       << "\nThis is due to the large deformation nature of your problem." 
-                       << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations" 
-                       << "of fastCpdiInterpolator." << std::endl;
-
-             // send an exit to the program
-             exit(1);
-          }
+          hashMax=max(hash, hashMax);
+//          if( hash < 0 || hash > 26 ) {
+//             cerr << "hash = " << hash << endl;
+//             // send an exit to the program
+//             // exit(1);
+//          }
           phi = phiX * phiY * phiZ;
           
           ni[hash]        = IntVector(curX,curY,iz[i]+jz);
@@ -549,14 +545,16 @@ void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
       } // y for
     } // x for
   } // node for
+  return hashMax+1;
 }
 
-void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                          vector<IntVector>& ni,
-                                                          vector<double>& S,
-                                                          vector<Vector>& d_S,
-                                                          const Matrix3& size,
-                                                          const Matrix3& defgrad)
+int
+fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
+                                                         vector<IntVector>& ni,
+                                                         vector<double>& S,
+                                                         vector<Vector>& d_S,
+                                                         const Matrix3& size,
+                                                         const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
@@ -658,6 +656,7 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
   int xM,yM,zM;
   int ix[8],iy[8],iz[8];
   int hash;
+  int hashMax=0;
   
   Vector current_corner_pos;
   
@@ -735,7 +734,7 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
   
   // Initialize Values
   IntVector niVec = IntVector(minX,minY,minZ);
-  for(int i = 0; i < 27; i++) {
+  for(int i = 0; i < 64; i++) {
     S[i]         = 0.0;    // this must be set after minimum indicies are found
     d_S[i]       = zero;   // or index out of bound error will occur
     ni[i]        = niVec;
@@ -790,15 +789,11 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
           
           // Create hash to map to unique value between [0,26]
           hash = xMjx + yMjy + 9*((zM)+jz);
-          if( hash < 0 || hash > 26 ) {
-             cerr << "\n\nHash function was out of bounds.  Particle corners span an entire cell."
-                       << "\nThis is due to the large deformation nature of your problem."
-                       << "\nUse fastCpdiInterpolator/axiCpdiInterpolator to circumvent the limitations"
-                       << "of fastCpdiInterpolator." << std::endl;
-
-             // send an exit to the program
-             exit(1);
-          }
+          hashMax=max(hash,hashMax);
+//          if( hash < 0 || hash > 26 ) {
+//             // send an exit to the program
+//              exit(1);
+//          }
 
           phi  = phiX * phiY * phiZ;          
 
@@ -811,6 +806,7 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
       } // y for
     } // x for
   } // node for
+  return hashMax+1;
 }
 
 int fastCpdiInterpolator::size()

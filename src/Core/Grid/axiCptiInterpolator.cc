@@ -53,7 +53,7 @@ axiCptiInterpolator* axiCptiInterpolator::clone(const Patch* patch)
   return scinew axiCptiInterpolator(patch);
 }
     
-void axiCptiInterpolator::findCellAndWeights(const Point& pos,
+int axiCptiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
                                             const Matrix3& size,
@@ -126,9 +126,10 @@ void axiCptiInterpolator::findCellAndWeights(const Point& pos,
     S[i86] = S[i82];
     S[i87] = S[i83];
   }
+  return 32;
 }
  
-void axiCptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
+int axiCptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                    vector<IntVector>& ni,
                                                    vector<Vector>& d_S,
                                                    const Matrix3& size,
@@ -240,9 +241,10 @@ void axiCptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     d_S[i86] = d_S[i82];
     d_S[i87] = d_S[i83];
   }
+  return 32;
 }
 
-void axiCptiInterpolator::findCellAndWeightsAndShapeDerivatives(
+int axiCptiInterpolator::findCellAndWeightsAndShapeDerivatives(
                                                          const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
@@ -362,6 +364,7 @@ void axiCptiInterpolator::findCellAndWeightsAndShapeDerivatives(
     d_S[i86] = d_S[i82];
     d_S[i87] = d_S[i83];
   }
+  return 32;
 }
 
 int axiCptiInterpolator::size()

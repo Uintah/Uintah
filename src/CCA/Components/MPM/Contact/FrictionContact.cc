@@ -162,15 +162,16 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       if(!d_matls.requested(m)) continue;
 
       // Compute the normals for all of the interior nodes
+      int NN = flag->d_8or27;
       if(flag->d_axisymmetric){
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          interpolator->findCellAndWeightsAndShapeDerivatives(
+          NN = interpolator->findCellAndWeightsAndShapeDerivatives(
                           px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
           double rho = pmass[idx]/pvolume[idx];
 
-           for(int k = 0; k < flag->d_8or27; k++) {
+           for(int k = 0; k < NN; k++) {
              if (patch->containsNode(ni[k])){
                Vector G(d_S[k].x(),d_S[k].y(),0.0);
                gsurfnorm[m][ni[k]] += rho * G;
@@ -182,9 +183,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
-          interpolator->findCellAndWeightsAndShapeDerivatives(
+          NN = interpolator->findCellAndWeightsAndShapeDerivatives(
                           px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
-           for(int k = 0; k < flag->d_8or27; k++) {
+           for(int k = 0; k < NN; k++) {
              if (patch->containsNode(ni[k])){
                Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                            d_S[k].z()*oodx[2]);
@@ -257,12 +258,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx],
-                                         deformationGradient[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx], ni, S, psize[idx],
+                                                   deformationGradient[idx]);
 
         // Add each particles contribution to the local mass & velocity
         // Must use the node indices
-        for(int k = 0; k < flag->d_8or27; k++) {
+        for(int k = 0; k < NN; k++) {
           if (patch->containsNode(ni[k]))
             gstress[m][ni[k]] += pstress[idx] * S[k];
         }

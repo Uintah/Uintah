@@ -522,9 +522,10 @@ private:
                                     std::vector<IntVector>& ni,
                                     std::vector<Vector>& d_S,
                                     const double* oodx,
-                                    constNCVariable<Vector>& gVelocity)
+                                    constNCVariable<Vector>& gVelocity,
+                                    const int NN)
   {
-    for(int k = 0; k < flags->d_8or27; k++) {
+    for(int k = 0; k < NN; k++) {
       const Vector& gvel = gVelocity[ni[k]];
       for (int j = 0; j<3; j++){
         double d_SXoodx = d_S[k][j]*oodx[j];

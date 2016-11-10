@@ -496,7 +496,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
     }//end loop over particles
 
 
-    int n8or27 = flag->d_8or27;
+    int NN = flag->d_8or27;
     //first interpolate the initial guess for plastic multipliers to the grid
     //loop over plastic particles
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
@@ -505,13 +505,15 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       //interpolate plastic multiplier to the grid
       if(!flag->d_axisymmetric){
 	// Get the node indices that surround the cell
-	interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],deformationGradient[idx]);
+	NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+                                                deformationGradient[idx]);
       } else {  // axi-symmetric kinematics
 	// Get the node indices that surround the cell
-	interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],deformationGradient[idx]);
+	NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+                                                deformationGradient[idx]);
       }
       IntVector node;
-      for(int k=0; k< n8or27; k++){
+      for(int k=0; k< NN; k++){
 	node = ni[k];
 	if(patch->containsNode(node)){
 	  gmat[node]    += S[k];
@@ -539,7 +541,9 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       double V_alpha=0.0;
 
       //loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
+      int NN = flag->d_8or27;
+      for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();
+                                                        iter++){
 	particleIndex idx = *iter;
 	if (f_trial[idx]>0.0 || softened[idx]==1){
 	  dlambda_nl=0.0;
@@ -570,16 +574,11 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	    double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
 	    pdlambda[idx] = (f_trial_min )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp );
 
-
-	    
 	  }else{
 	    eta_new[idx] = eta_old[idx] + h_local*pdlambda[idx];
 
 	    eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
-
-	  
 	  }
-										     
 
 	  //compute the return derection based upon the trial stress
 	  Matrix3 S_trial;
@@ -616,15 +615,17 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  // get the interpolation data
 	  if(!flag->d_axisymmetric){
 	    // Get the node indices that surround the cell
-	    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],deformationGradient[idx]);
+	    NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+                                                deformationGradient[idx]);
 	  } else {  // axi-symmetric kinematics
 	    // Get the node indices that surround the cell
-	    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],deformationGradient[idx]);
+	    NN =interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+                                               deformationGradient[idx]);
 	  }
 
 	  //replace the old value of gdlambda with the interpolated values of the new estimate
 	  //this results in a Gauss-Seidell iteration rather than a Jacobi
-	  for(int k=0; k< n8or27; k++){
+	  for(int k=0; k< NN; k++){
 	    IntVector node;
 	    node = ni[k];
 	    if(patch->containsNode(node)){

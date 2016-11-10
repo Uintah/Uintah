@@ -41,16 +41,16 @@ namespace Uintah {
     
     virtual BSplineInterpolator* clone(const Patch*);
     
-    virtual void findCellAndWeights(const Point& p,std::vector<IntVector>& ni,
+    virtual int findCellAndWeights(const Point& p,std::vector<IntVector>& ni,
                                     std::vector<double>& S, const Matrix3& size,
                                     const Matrix3& defgrad);
 
-    virtual void findCellAndShapeDerivatives(const Point& pos,
+    virtual int findCellAndShapeDerivatives(const Point& pos,
                                              std::vector<IntVector>& ni,
                                              std::vector<Vector>& d_S,
                                              const Matrix3& size,
                                              const Matrix3& defgrad);
-    virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
+    virtual int findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                        std::vector<IntVector>& ni,
                                                        std::vector<double>& S,
                                                        std::vector<Vector>& d_S,

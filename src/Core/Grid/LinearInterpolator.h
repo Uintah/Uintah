@@ -50,7 +50,7 @@ namespace Uintah {
 //__________________________________
 //  This version of findCellAndWeights is only used
 //  by MPM/HeatConduction/ImplicitHeatConduction.cc
-    inline void findCellAndWeights(const Point& pos,
+    inline int findCellAndWeights(const Point& pos,
                                    std::vector<IntVector>& ni,
                                    std::vector<double>& S)
       {
@@ -80,10 +80,11 @@ namespace Uintah {
         S[5] = fx * fy1 * fz;
         S[6] = fx * fy * fz1;
         S[7] = fx * fy * fz;
+        return 8;
       };
     //__________________________________
 
-    virtual void findCellAndWeights(const Point& p,
+    virtual int findCellAndWeights(const Point& p,
                                     std::vector<IntVector>& ni,
                                     std::vector<double>& S,
                                     const Matrix3& size,
@@ -106,7 +107,7 @@ namespace Uintah {
     //__________________________________ 
     
     
-    inline void findCellAndShapeDerivatives(const Point& pos,
+    inline int findCellAndShapeDerivatives(const Point& pos,
                                             std::vector<IntVector>& ni,
                                             std::vector<Vector>& d_S)
       {
@@ -136,18 +137,20 @@ namespace Uintah {
         d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
         d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
         d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
+
+        return 8;
       };
-    virtual void findCellAndShapeDerivatives(const Point& pos,
-					          std::vector<IntVector>& ni,
-					          std::vector<Vector>& d_S,
-					          const Matrix3& size, 
-                                             const Matrix3& defgrad);
+    virtual int findCellAndShapeDerivatives(const Point& pos,
+                                            std::vector<IntVector>& ni,
+                                            std::vector<Vector>& d_S,
+                                            const Matrix3& size, 
+                                            const Matrix3& defgrad);
                                         
 
-    inline void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                      std::vector<IntVector>& ni,
-                                                      std::vector<double>& S,
-                                                      std::vector<Vector>& d_S)
+    inline int findCellAndWeightsAndShapeDerivatives(const Point& pos,
+                                                     std::vector<IntVector>& ni,
+                                                     std::vector<double>& S,
+                                                     std::vector<Vector>& d_S)
       {
         Point cellpos = d_patch->getLevel()->positionToIndex(pos);
         int ix = Floor(cellpos.x());
@@ -183,6 +186,7 @@ namespace Uintah {
         d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
         d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
         d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
+        return 8;
       };
 
     inline void findNodes(const Point& pos,
@@ -204,12 +208,12 @@ namespace Uintah {
         cur[7] = IntVector(ix+1, iy+1, iz+1);
       };
 
-    virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                       std::vector<IntVector>& ni,
-                                                       std::vector<double>& S,
-                                                       std::vector<Vector>& d_S,
-                                                       const Matrix3& size,
-                                                       const Matrix3& defgrad);
+    virtual int findCellAndWeightsAndShapeDerivatives(const Point& pos,
+                                                     std::vector<IntVector>& ni,
+                                                     std::vector<double>& S,
+                                                     std::vector<Vector>& d_S,
+                                                     const Matrix3& size,
+                                                     const Matrix3& defgrad);
     virtual int size();
 
   private:

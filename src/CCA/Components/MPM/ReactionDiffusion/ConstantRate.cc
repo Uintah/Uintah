@@ -91,16 +91,15 @@ void ConstantRate::computeFlux(const Patch* patch,
                                  DataWarehouse* new_dw)
 {
 
-  Ghost::GhostType gac   = Ghost::AroundCells;
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
   std::vector<IntVector> ni(interpolator->size());
   std::vector<double> S(interpolator->size());
 
-  double current_time1 = d_sharedState->getElapsedTime();
+//  double current_time1 = d_sharedState->getElapsedTime();
 
   int dwi = matl->getDWIndex();
-  Vector dx = patch->dCell();
-  double comp_diffusivity;
+//  Vector dx = patch->dCell();
+//  double comp_diffusivity;
 
   ParticleVariable<Vector>       pFlux;
 

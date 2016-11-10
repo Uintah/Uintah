@@ -311,7 +311,8 @@ TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx],deformationGradient[idx]);
+        int NN = interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, 
+                                       psize[idx],deformationGradient[idx]);
         int dof[24];
         loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 

@@ -1170,8 +1170,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
     pFailureVariable_new.copyData(pFailureVariable);
 
 
-//     Standard case for deformable materials
-//     Loop thru particles
+//  Standard case for deformable materials Loop thru particles
     ParticleSubset::iterator iter = pset->begin(); 
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
@@ -1180,13 +1179,12 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
 //       Calculate the displacement gradient
-//       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S);
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformGrad[idx]);
+      int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+                                                   psize[idx],pDeformGrad[idx]);
       computeGrad(DispGrad, ni, d_S, oodx, gDisp);
 
 //       Compute the deformation gradient increment
       incDefGrad = DispGrad + One;
-//       double Jinc = incDefGrad.Determinant();
 
 //       Update the deformation gradient
       DefGrad = incDefGrad*pDeformGrad[idx];
@@ -1556,11 +1554,9 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      //CSTir << " patch = " << patch << " particle = " << idx << endl;
-
       // Calculate the displacement gradient
-//       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S);
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformGrad[idx]);      
+      int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+                                                   psize[idx],pDeformGrad[idx]);
       computeGradAndBmats(DispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 
       // Compute the deformation gradient increment

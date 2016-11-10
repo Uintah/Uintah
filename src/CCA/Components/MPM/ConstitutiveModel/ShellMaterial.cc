@@ -424,13 +424,14 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
-      interpolator->findCellAndWeights(pX[idx], ni, S,pSize[idx],deformationGradient[idx]);
+      int NN = interpolator->findCellAndWeights(pX[idx], ni, S,pSize[idx],
+                                            deformationGradient[idx]);
 
       // Calculate momentum
       pMom = pRotRate[idx]*pMass[idx];
 
       // Add each particles contribution to the grid rotation rate
-      for(int k = 0; k < flag->d_8or27; k++) {
+      for(int k = 0; k < NN; k++) {
         if(patch->containsNode(ni[k])) 
           gRotRate[ni[k]] += pMom * S[k];
       }
@@ -612,12 +613,13 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 
       // Find the surrounding nodes, interpolation functions and derivatives
 
-      interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S, pSize[idx],pDefGrad[idx]);
+      int NN = interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S,
+                                              pSize[idx],pDefGrad[idx]);
 
       // Calculate the spatial gradient of the velocity and the 
       // normal rotation rate
       Matrix3 velGrad(0.0), rotGrad(0.0);
-      for(int k = 0; k < flag->d_8or27; k++) {
+      for(int k = 0; k < NN; k++) {
         Vector gvel = gVelocity[ni[k]];
         Vector grot = gRotRate[ni[k]];
         for (int j = 0; j<3; j++){
@@ -878,11 +880,11 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
   
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
-      interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
-                                                          pSize[idx],pDefGrad[idx]);
+      int NN = interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,
+                                                  d_S,pSize[idx],pDefGrad[idx]);
 
       // Loop thru nodes
-      for (int k = 0; k < flag->d_8or27; k++){
+      for (int k = 0; k < NN; k++){
         if(patch->containsNode(ni[k])){
           Vector gradS(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                        d_S[k].z()*oodx[2]);
@@ -973,8 +975,8 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
       
-      interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
-                                                          pSize[idx],pDefGrad[idx]);
+      int NN = interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,
+                                                  d_S,pSize[idx],pDefGrad[idx]);
       // Calculate the in-surface identity tensor
       Matrix3 nn(pNormal[idx], pNormal[idx]);
       Matrix3 Is = One - nn;

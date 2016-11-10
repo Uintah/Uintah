@@ -50,7 +50,7 @@ AxiLinearInterpolator* AxiLinearInterpolator::clone(const Patch* patch)
  }
     
 //__________________________________
-void AxiLinearInterpolator::findCellAndWeights(const Point& pos,
+int AxiLinearInterpolator::findCellAndWeights(const Point& pos,
                                            vector<IntVector>& ni, 
                                            vector<double>& S,
                                            const Matrix3& size,
@@ -79,11 +79,12 @@ void AxiLinearInterpolator::findCellAndWeights(const Point& pos,
   S[5] = S[4];
   S[6] = fx  * fy  * 0.5;
   S[7] = S[6];
+  return 8;
 }
 
 //______________________________________________________________________
 // 
-void AxiLinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
+int AxiLinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                         vector<IntVector>& ni,
                                                         vector<Vector>& d_S,
                                                         const Matrix3& size,
@@ -112,9 +113,10 @@ void AxiLinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
   d_S[5] = d_S[4];
   d_S[6] = Vector( fy  * 0.5,  fx  * 0.5, 0.);
   d_S[7] = d_S[6];
+  return 8;
 }
 
-void 
+int 
 AxiLinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
@@ -154,6 +156,7 @@ AxiLinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   d_S[5] = d_S[4];
   d_S[6] = Vector( fy  *0.5,  fx  *0.5, S[6]/r);
   d_S[7] = d_S[6];
+  return 8;
 }
 
 int AxiLinearInterpolator::size()

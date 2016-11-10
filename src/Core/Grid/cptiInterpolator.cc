@@ -62,7 +62,7 @@ cptiInterpolator* cptiInterpolator::clone(const Patch* patch)
   return scinew cptiInterpolator(patch, d_lcrit);
 }
     
-void cptiInterpolator::findCellAndWeights(const Point& pos,          // input: physical coordinates of a particle
+int cptiInterpolator::findCellAndWeights(const Point& pos,          // input: physical coordinates of a particle
                                             vector<IntVector>& ni,   // output: logic locations of corners
                                             vector<double>& S,       // output: weighted node shape function value at corners (where weight = 1/ num particle corners)
                                             const Matrix3& size,     // input: reference size r-vectors of the particle
@@ -193,9 +193,10 @@ void cptiInterpolator::findCellAndWeights(const Point& pos,          // input: p
     S[i86] = one_fourth*phi[6];
     S[i87] = one_fourth*phi[7];
   }
+  return 32;
 }
  
-void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
+int cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                    vector<IntVector>& ni,
                                                    vector<Vector>& d_S,
                                                    const Matrix3& size,
@@ -371,14 +372,15 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     d_S[i87][1] = alpha[i][1]*phi[7];
     d_S[i87][2] = alpha[i][2]*phi[7];
   }
+  return 32;
 }
 
-void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, 
-                                                          vector<IntVector>& ni,
-                                                          vector<double>& S,
-                                                          vector<Vector>& d_S,
-                                                          const Matrix3& size,
-                                                          const Matrix3& defgrad)
+int cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, 
+                                                         vector<IntVector>& ni,
+                                                         vector<double>& S,
+                                                         vector<Vector>& d_S,
+                                                         const Matrix3& size,
+                                                         const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
@@ -387,8 +389,8 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   Vector relative_node_location[4];  
 
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                    -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
+                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
   relative_node_location[1]=relative_node_location[0]+Vector(dsize(0,0),dsize(1,0),dsize(2,0));
   relative_node_location[2]=relative_node_location[0]+Vector(dsize(0,1),dsize(1,1),dsize(2,1));
   relative_node_location[3]=relative_node_location[0]+Vector(dsize(0,2),dsize(1,2),dsize(2,2));
@@ -557,6 +559,7 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     d_S[i87][1] = alpha[i][1]*phi[7];
     d_S[i87][2] = alpha[i][2]*phi[7];
   }
+  return 32;
 }
 
 int cptiInterpolator::size()

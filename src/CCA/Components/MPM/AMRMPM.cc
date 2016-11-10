@@ -374,7 +374,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flags->d_8or27==27 || flags->d_8or27==64){
+  } else{
     NGP=2;
     NGN=2;
   }
@@ -1883,7 +1883,7 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    const Matrix3 notUsed;
+    const Matrix3 nU;
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1903,8 +1903,6 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
       new_dw->allocateAndPut(psizenew,       lb->pSizeLabel_preReloc,     pset);
       new_dw->allocateAndPut(plastlevelnew,  lb->pLastLevelLabel_preReloc,pset);
       new_dw->allocateAndPut(partitionUnity, lb->pPartitionUnityLabel,    pset);
-
-      int n8or27=flags->d_8or27;
 
       for (ParticleSubset::iterator iter = pset->begin();
                                     iter != pset->end(); iter++){
@@ -1928,9 +1926,9 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
 
         partitionUnity[idx] = 0;
 
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],notUsed);
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],nU);
 
-        for(int k = 0; k < n8or27; k++) {
+        for(int k = 0; k < NN; k++) {
           partitionUnity[idx] += S[k];
         }
       }
@@ -1960,8 +1958,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 #ifdef CBDI_FLUXBCS
     LinearInterpolator* LPI;
     LPI = scinew LinearInterpolator(patch);
-    vector<IntVector> ni_LPI(LPI->size());
-    vector<double> S_LPI(LPI->size());
+    vector<IntVector> ni_LPI(8);
+    vector<double> S_LPI(8);
 #endif
 
     for(int m = 0; m < numMatls; m++){
@@ -2045,21 +2043,19 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
       
       Vector pmom;
-      int n8or27=flags->d_8or27;
-
       for (ParticleSubset::iterator iter  = pset->begin();
                                     iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
                                          pDeformationMeasure[idx]);
 
         pmom = pvelocity[idx]*pmass[idx];
 
         // Add each particles contribution to the local mass & velocity 
         IntVector node;
-        for(int k = 0; k < n8or27; k++) {
+        for(int k = 0; k < NN; k++) {
           node = ni[k];
           if(patch->containsNode(node)) {
             if (flags->d_GEVelProj){
@@ -2078,7 +2074,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         if(flags->d_doScalarDiffusion){
           double one_third = 1./3.;
           double phydrostress = one_third*pStress[idx].Trace();
-          for(int k = 0; k < n8or27; k++) {
+          for(int k = 0; k < NN; k++) {
             node = ni[k];
             if(patch->containsNode(node)) {
               ghydrostaticstress[node] += phydrostress        * pmass[idx]*S[k];
@@ -2116,7 +2112,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
         LPI->findCellAndWeights(flux_pos,ni_LPI,S_LPI,psize[idx],
                                        pDeformationMeasure[idx]);
-        for(int k = 0; k < (int) ni_LPI.size(); k++) {
+        for(int k = 0; k < 8; k++) {
           if(patch->containsNode(ni_LPI[k])) {
             gextscalarflux[ni_LPI[k]]  += pExternalScalarFlux[idx] * S_LPI[k];
           }
@@ -2922,7 +2918,6 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
 
       Matrix3 stressvol;
       Matrix3 stresspress;
-      int n8or27 = flags->d_8or27;
       vector<IntVector> ni(interpolator->size());
       vector<double> S(interpolator->size());
       vector<Vector> d_S(interpolator->size());
@@ -2933,12 +2928,12 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S,
-                                                            psize[idx],pDeformationMeasure[idx]);
+        int NN = interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,
+                                   S, d_S, psize[idx],pDeformationMeasure[idx]);
 
         stresspress = pstress[idx] + Id*(/*p_pressure*/-p_q[idx]);
 
-        for (int k = 0; k < n8or27; k++){
+        for (int k = 0; k < NN; k++){
           
           if(patch->containsNode(ni[k])){ 
             Vector div(d_S[k].x()*oodx[0],
@@ -3553,25 +3548,27 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+        int NN=flags->d_8or27;
+
         Matrix3 tensorL(0.0);
         if(!flags->d_axisymmetric){
          // Get the node indices that surround the cell
-         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                   pFOld[idx]);
+         NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+                                                        psize[idx],pFOld[idx]);
 
-         computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity_star);
+         computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity_star,NN);
         } else {  // axi-symmetric kinematics
          // Get the node indices that surround the cell
-         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                          psize[idx],pFOld[idx]);
+         NN = interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
+                                                     d_S,psize[idx],pFOld[idx]);
          // x -> r, y -> z, z -> theta
          computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity_star,
-                                                                   px[idx]);
+                                                                   px[idx],NN);
         }
         pVelGrad[idx]=tensorL;
         if(flags->d_doScalarDiffusion){
           pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
-          for(int k = 0; k < flags->d_8or27; k++) {
+          for(int k = 0; k < NN; k++) {
             IntVector node = ni[k];
             for(int j = 0; j < 3; j++){
               pConcGradNew[idx][j] += gConcStar[ni[k]] * d_S[k][j] * oodx[j];
@@ -3808,7 +3805,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+                                                               pFOld[idx]);
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
@@ -3817,7 +3815,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double concRate = 0.0;
 
         // Accumulate the contribution from vertices on this level
-        for(int k = 0; k < flags->d_8or27; k++) {
+        for(int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
@@ -3839,7 +3837,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pmassNew[idx]        = pmass[idx];
 
         if(flags->d_doScalarDiffusion){
-          for(int k = 0; k < flags->d_8or27; k++) {
+          for(int k = 0; k < NN; k++) {
             IntVector node = ni[k];
             concRate += gConcentrationRate[node]   * S[k];
           }
@@ -4914,9 +4912,10 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
       particleIndex idx = *iter;
       pColor[idx] = 0;
       
-      interpolatorCoarse->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);
+      int NN = interpolatorCoarse->findCellAndWeights(px[idx],ni,S,psize[idx],
+                                                     pDeformationMeasure[idx]);
       
-      for(int k = 0; k < (int)ni.size(); k++) {
+      for(int k = 0; k < NN; k++) {
         pColor[idx] += S[k];
       }
     }  

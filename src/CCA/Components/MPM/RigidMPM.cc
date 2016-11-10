@@ -408,7 +408,8 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+        int NN = 
+           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                          psize[idx],pFOld[idx]);
 
         double tempRate = 0.0;
@@ -418,7 +419,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Accumulate the contribution from each surrounding vertex
         // All we care about is the temperature field, everything else
         // should be zero.
-        for (int k = 0; k < flags->d_8or27; k++) {
+        for (int k = 0; k < NN; k++) {
           tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])   * S[k];
           acc      += gacceleration[ni[k]]   * S[k];
         }

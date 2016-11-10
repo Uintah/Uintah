@@ -404,11 +404,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->p_qLabel);
   }
 
-  // artificial damping coeff initialized to 0.0
-  if (cout_dbg.active())
-    cout_dbg << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff
-             << " 8 or 27 = " << flags->d_8or27 << endl;
-
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -2242,14 +2237,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
 
       Vector total_mom(0.0,0.0,0.0);
-      int n8or27=flags->d_8or27;
       double pSp_vol = 1./mpm_matl->getInitialDensity();
       //loop over all particles in the patch:
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end();
            iter++){
         particleIndex idx = *iter;
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+        int NN =
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
         Vector pmom = pvelocity[idx]*pmass[idx];
         double ptemp_ext = pTemperature[idx];
         total_mom += pmom;
@@ -2258,7 +2253,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         // Must use the node indices
         IntVector node;
         // Iterate through the nodes that receive data from the current particle
-        for(int k = 0; k < n8or27; k++) {
+        for(int k = 0; k < NN; k++) {
           node = ni[k];
           if(patch->containsNode(node)) {
             if (flags->d_GEVelProj){
@@ -2413,13 +2408,13 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
         defgrad.Identity();
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
+        int NN = interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
 
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
 
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < flags->d_8or27; k++) {
+        for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           if(patch->containsNode(node)) {
             gext_force[BotMat][node] = gext_force[BotMat][node]
@@ -2777,7 +2772,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
       Matrix3 stressvol;
       Matrix3 stresspress;
-      int n8or27 = flags->d_8or27;
 
       // for the non axisymmetric case:
       if(!flags->d_axisymmetric){
@@ -2787,12 +2781,13 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                         psize[idx],pFOld[idx]);
+          int NN =
+            interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
+                                                     d_S,psize[idx],pFOld[idx]);
           stressvol  = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
 
-          for (int k = 0; k < n8or27; k++){
+          for (int k = 0; k < NN; k++){
             if(patch->containsNode(ni[k])){
               Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                          d_S[k].z()*oodx[2]);
@@ -2810,15 +2805,16 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
              iter++){
           particleIndex idx = *iter;
 
-          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                         psize[idx],pFOld[idx]);
+          int NN =
+            interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
+                                                   d_S,psize[idx],pFOld[idx]);
 
           stressvol   = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
 
           // r is the x direction, z (axial) is the y direction
           double IFr=0.,IFz=0.;
-          for (int k = 0; k < n8or27; k++){
+          for (int k = 0; k < NN; k++){
             if(patch->containsNode(ni[k])){
               IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
                     d_S[k].y()*oodx[1]*stresspress(0,1) +
@@ -3506,7 +3502,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+                                                  psize[idx], pFOld[idx]);
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
@@ -3515,7 +3512,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double burnFraction = 0.0;
 
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < flags->d_8or27; k++) {
+        for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
@@ -3560,20 +3557,20 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+        int NN=flags->d_8or27;
         Matrix3 tensorL(0.0);
         if(!flags->d_axisymmetric){
          // Get the node indices that surround the cell
-         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                   pFOld[idx]);
-
-         computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity_star);
+         NN =interpolator->findCellAndShapeDerivatives(px[idx],ni,
+                                                     d_S,psize[idx],pFOld[idx]);
+         computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity_star,NN);
         } else {  // axi-symmetric kinematics
          // Get the node indices that surround the cell
-         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                          psize[idx],pFOld[idx]);
+         NN =interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,
+                                                   S,d_S,psize[idx],pFOld[idx]);
          // x -> r, y -> z, z -> theta
          computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity_star,
-                                                                   px[idx]);
+                                                                   px[idx],NN);
         }
         pVelGrad[idx]=tensorL;
         pTempGrad[idx] = Vector(0.0,0.0,0.0);
@@ -3582,7 +3579,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
            cout << "Fix the pTempGradient calc for axisymmetry" << endl;
          }
          // Get the node indices that surround the cell
-          for (int k = 0; k < flags->d_8or27; k++){
+          for (int k = 0; k < NN; k++){
             for (int j = 0; j<3; j++) {
               pTempGrad[idx][j] += gTempStar[ni[k]] * d_S[k][j]*oodx[j];
             }
@@ -3867,13 +3864,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+        int NN = 
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
 
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < flags->d_8or27; k++) {
+        for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
@@ -4050,7 +4048,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFNew[idx]);
+        int NN = 
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFNew[idx]);
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
@@ -4059,7 +4058,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
         double burnFraction = 0.0;
 
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < flags->d_8or27; k++) {
+        for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
 
           fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
@@ -4274,7 +4273,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         defgrad.Identity();
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
+        int NN = interpolator->findCellAndWeights(czx[idx],ni,S,size,defgrad);
 
         Vector velTop(0.0,0.0,0.0);
         Vector velBot(0.0,0.0,0.0);
@@ -4296,7 +4295,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
         //double density_ratio = denseTop/denseBot;
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < flags->d_8or27; k++) {
+        for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           velTop      += gvelocity[TopMat][node] * S[k];
           velBot      += gvelocity[BotMat][node] * S[k];
@@ -4956,20 +4955,20 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity_star, lb->gVelocityStarLabel,  dwi,patch);
       gvelocity_star.initialize(Vector(0,0,0));
 
-      int n8or27=flags->d_8or27;
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end();
            iter++){
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+        int NN = 
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
 
         Vector pmom = pvelocity[idx]*pmass[idx];
 
         // Add each particles contribution to the local mass & velocity
         // Must use the node indices
-        for(int k = 0; k < n8or27; k++) {
+        for(int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           if(patch->containsNode(node)) {
             gvelocity_star[node]      += pmom   * S[k];

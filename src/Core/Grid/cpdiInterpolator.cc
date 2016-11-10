@@ -62,7 +62,7 @@ cpdiInterpolator* cpdiInterpolator::clone(const Patch* patch)
   return scinew cpdiInterpolator(patch, d_lcrit);
 }
     
-void cpdiInterpolator::findCellAndWeights(const Point& pos,
+int cpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
                                             const Matrix3& size,
@@ -236,9 +236,10 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     S[i86] = one_over_8*phi[6];
     S[i87] = one_over_8*phi[7];
   }
+  return 64;
 }
  
-void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
+int cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                    vector<IntVector>& ni,
                                                    vector<Vector>& d_S,
                                                    const Matrix3& size,
@@ -464,9 +465,10 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     d_S[i87][1] = alpha[i][1]*phi[7];
     d_S[i87][2] = alpha[i][2]*phi[7];
   }
+  return 64;
 }
 
-void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
+int cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          vector<IntVector>& ni,
                                                          vector<double>& S,
                                                          vector<Vector>& d_S,
@@ -699,6 +701,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     d_S[i87][1] = alpha[i][1]*phi[7];
     d_S[i87][2] = alpha[i][2]*phi[7];
   }
+  return 64;
 }
 
 int cpdiInterpolator::size()

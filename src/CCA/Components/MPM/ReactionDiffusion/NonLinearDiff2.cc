@@ -196,7 +196,7 @@ void NonLinearDiff2::computeFlux(const Patch* patch,
                                                       iter++){
     particleIndex idx = *iter;
 
-    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+    int NN=interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
 
 #if defined USE_PARTICLE_VALUES
     double neg_one_third = -1.0/3.0;
@@ -205,7 +205,7 @@ void NonLinearDiff2::computeFlux(const Patch* patch,
 #else
     concentration = 0.0;
     pressure      = 0.0;
-    for(int k = 0; k < d_Mflag->d_8or27; k++) {
+    for(int k = 0; k < NN; k++) {
       IntVector node = ni[k];
       concentration += gConcentration[node] * S[k];
       pressure      -= gHydroStress[node]   * S[k];

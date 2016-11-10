@@ -222,8 +222,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                  deformationGradient[idx]);
+        int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+                                          psize[idx], deformationGradient[idx]);
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
@@ -233,7 +233,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
         // TODO:  get this division by mass OUT OF HERE!  This is
         // creating a lot more divisions than are necessary
-        for (int k = 0; k < d_flag->d_8or27; k++){
+        for (int k = 0; k < NN; k++){
           node = ni[k];
           if(patch->containsNode(node)){
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
@@ -333,10 +333,10 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
         pdTdx[idx] = Vector(0,0,0);
         
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                  deformationGradient[idx]);
+        int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+                                           psize[idx],deformationGradient[idx]);
 
-        for (int k = 0; k < d_flag->d_8or27; k++){
+        for (int k = 0; k < NN; k++){
           for (int j = 0; j<3; j++) {
             pdTdx[idx][j] += gTemperature[ni[k]] * d_S[k][j] * oodx[j];
           } 
@@ -349,12 +349,12 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+        int NN = interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
                                          deformationGradient[idx]);
                                                             
         Vector pdTdx_massWt = pdTdx[idx] * pMass[idx];
         
-        for (int k = 0; k < d_flag->d_8or27; k++){
+        for (int k = 0; k < NN; k++){
           if(patch->containsNode(ni[k])){
             gpdTdx[ni[k]] +=  (pdTdx_massWt*S[k]);        
           } 

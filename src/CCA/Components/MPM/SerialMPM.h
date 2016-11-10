@@ -554,9 +554,10 @@ protected:
                                     std::vector<IntVector>& ni,
                                     std::vector<Vector>& d_S,
                                     const double* oodx,
-                                    constNCVariable<Vector>& gVelocity)
+                                    constNCVariable<Vector>& gVelocity,
+                                    const int NN)
   {
-    for(int k = 0; k < flags->d_8or27; k++) {
+    for(int k = 0; k < NN; k++) {
       const Vector& gvel = gVelocity[ni[k]];
       for (int j = 0; j<3; j++){
         double d_SXoodx = d_S[k][j]*oodx[j];
@@ -574,10 +575,10 @@ protected:
                                            std::vector<double>& S,
                                            const double* oodx,
                                            constNCVariable<Vector>& gVelocity,
-                                           const Point& px)
+                                           const Point& px, const int NN)
   {
     // x -> r, y -> z, z -> theta
-    for(int k = 0; k < flags->d_8or27; k++) {
+    for(int k = 0; k < NN; k++) {
       Vector gvel = gVelocity[ni[k]];
       for (int j = 0; j<2; j++){
         for (int i = 0; i<2; i++) {
