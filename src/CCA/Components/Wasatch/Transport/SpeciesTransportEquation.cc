@@ -110,8 +110,8 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
 
   // the last species mass fraction
   typedef pokitt::SpeciesN<FieldT>::Builder SpecN;
-  factory  .register_expression( scinew SpecN( yiTags[nspec-1], yiTags, 0 /* no ghost cells for RHS calculation */ ) );
-  icFactory.register_expression( scinew SpecN( yiTags[nspec-1], yiTags, 0 /* no ghost cells for RHS calculation */ ) );
+  factory  .register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, 0 /* no ghost cells for RHS calculation */ ) );
+  icFactory.register_expression( scinew SpecN( yiTags[nspec-1], yiTags, pokitt::ERRORSPECN, 0 /* no ghost cells for RHS calculation */ ) );
 
   return specEqns;
 }
