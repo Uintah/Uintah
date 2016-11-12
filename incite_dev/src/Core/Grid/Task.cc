@@ -112,8 +112,10 @@ Task::initialize()
   m_phase        = -1;
   m_comm         = -1;
 
-  m_max_ghost_cells      = 0;
+  //at least set up the 0th level to have a max ghost cell of zero
+  m_max_ghost_cells[0] = 0;
   m_max_level_offset     = 0;
+
 }
 
 //______________________________________________________________________
@@ -217,9 +219,9 @@ void Task::requires(WhichDW dw,
   Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls, patches_dom,
                                       matls_dom, gtype, numGhostCells, level_offset);
 
-  if (numGhostCells > m_max_ghost_cells) {
-    m_max_ghost_cells = numGhostCells;
-  }
+  //if (numGhostCells > m_max_ghost_cells) {
+  //  m_max_ghost_cells = numGhostCells;
+  //}
 
   if (level_offset > m_max_level_offset) {
     m_max_level_offset = level_offset;

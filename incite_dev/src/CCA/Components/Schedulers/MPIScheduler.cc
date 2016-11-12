@@ -694,6 +694,9 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   CommRequestPool::iterator comm_iter;
 
+  g_recv_mutex.lock();
+  {
+
   switch (test_type) {
 
     case TEST :
@@ -729,6 +732,9 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
   CurrentWaitTime += Time::currentSeconds() - start;
+
+  }
+  g_recv_mutex.unlock();
 
 }  // end processMPIRecvs()
 

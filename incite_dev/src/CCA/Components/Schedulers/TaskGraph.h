@@ -406,7 +406,22 @@ class TaskGraph {
 
     DetailedReductionTasksMap m_reduction_tasks;
 
-    std::map<std::string, int> max_ghost_for_varlabelmap;
+    struct LabelLevel {
+      LabelLevel(const std::string& key, const int level) : key(key), level(level) {}
+      std::string key;
+      int level;
+      bool operator<(const LabelLevel& rhs) const {
+        if (this->level < rhs.level) {
+          return true;
+        } else if ((this->level == rhs.level) && (this->key < rhs.key)) {
+          return true;
+        }
+        return false;
+      }
+    };
+    std::map<LabelLevel, int> max_ghost_for_varlabelmap;
+
+
 }; // class TaskGraph
 
 }  // namespace Uintah

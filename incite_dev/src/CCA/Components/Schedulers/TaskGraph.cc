@@ -767,52 +767,74 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
   const int number_of_tasks = static_cast<int>(sorted_tasks.size());
   for (int i = 0; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
-    DOUT(neighbor_location, "Looking at task: " << task->getName());
     //Assuming that variables on patches get the same amount of ghost cells on any patch
     //in the simulation.  This goes for multimaterial vars as well.
-    //const Patch* origPatch = task->patches->get(0);
-    // change the ghost cells to reflect coarse level
+
+    //Get the tasks's level.  (Task's aren't explicitly assigned a level, but they are assigned a set of patches
+    //corresponding to that level.  So grab the task's 0th patch and get the level it is on.)
+
+    //TODO: Once per proc tasks are assigned multiple levels.  How does that affect this?  Brad P. 11/6/2016
+    int levelID = 0;
+    const PatchSet    * ps = task->getPatchSet();
+     if (ps && ps->size()) {  //Reduction tasks don't have patches, filter them out.
+       const PatchSubset* pss = ps->getSubset(0);
+       if (pss && pss->size()) {
+         const Level * level = pss->get(0)->getLevel();
+         levelID = level->getID();
+       }
+     }
+
     for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
-      DOUT(neighbor_location, "Checking for max ghost cell for requirements var " << req->m_var->getName() << " which has: " << req->m_num_ghost_cells << " ghost cells.");
-
-      int ngc = req->m_num_ghost_cells;
-      /*
-      if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
-        LevelP nextLevel = origPatch->getLevelP();
-        int levelOffset = req->m_level_offset;
-        IntVector ratio = origPatch->getLevel()->getRefinementRatio();
-        while (--levelOffset) {
-          nextLevel = nextLevel->getCoarserLevel();
-          ratio = ratio * nextLevel->getRefinementRatio();
-        }
-        //Just assume the max ghost cell is our ghost cell number
-        ngc = req->m_num_ghost_cells * Max(Max(ratio.x(), ratio.y()), ratio.z());
-        DOUT(neighbor_location, "For task " << task << " the max_ghost_cell relative to the coarsest layer has been updated to: " << ngc << " ghost cells");
-      }*/
-
       std::string key = req->m_var->getName();
-      auto it = max_ghost_for_varlabelmap.find(key);
+
+      //This offset is not fully helpful by itself. It only indicates how much its off from the level
+      //that the patches are assigned to.  It does *not* indicate if the offset is positive or negative,
+      //as it can be either positive or negative.
+      //If a task's patches are on the coarse level and the offset is 1, then the offset is positive.
+      //If a task's patches are on the fine level and the offset is 1, then the offset is negative.
+      int levelOffset = req->m_level_offset;
+      int trueLevel = levelID;
+      if (req->m_patches_dom == Task::CoarseLevel) {
+        trueLevel -= levelOffset;
+      } else if (req->m_patches_dom == Task::FineLevel) {
+        trueLevel += levelOffset;
+      }
+      int ngc = req->m_num_ghost_cells;
+      DOUT(neighbor_location, "In task: " << task->getName() << "Checking for max ghost cell for requirements var " << key
+           << " which has: " << ngc << " ghost cells."
+           << " and is on level: " << trueLevel << ".");
+      LabelLevel labelLevel(key, trueLevel);
+      auto it = max_ghost_for_varlabelmap.find(labelLevel);
       if (it != max_ghost_for_varlabelmap.end()) {
         if (it->second < ngc) {
           it->second = ngc;
         }
       } else {
-        max_ghost_for_varlabelmap.emplace(key, ngc);
+        max_ghost_for_varlabelmap.emplace(labelLevel, ngc);
       }
     }
     //Can modifies have ghost cells?
     for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
       std::string key = modifies->m_var->getName();
-      DOUT(neighbor_location,
-          "Checking for max ghost cell for modifies var " << key << " which has: " << modifies->m_num_ghost_cells << " ghost cells.");
-      auto it = max_ghost_for_varlabelmap.find(key);
-      if (it != max_ghost_for_varlabelmap.end()) {
-        if (it->second < modifies->m_num_ghost_cells) {
-          it->second = modifies->m_num_ghost_cells;
-        }
+      int levelOffset = modifies->m_level_offset;
+      int trueLevel = levelID;
+      if (modifies->m_patches_dom == Task::CoarseLevel) {
+        trueLevel -= levelOffset;
+      } else if (modifies->m_patches_dom == Task::FineLevel) {
+        trueLevel += levelOffset;
       }
-      else {
-        max_ghost_for_varlabelmap.emplace(key, modifies->m_num_ghost_cells);
+      int ngc = modifies->m_num_ghost_cells;
+      DOUT(neighbor_location, "In task: " << task->getName() << "Checking for max ghost cell for modifies var " << key
+           << " which has: " << ngc << " ghost cells."
+           << " and is on level: " << trueLevel << ".");
+      LabelLevel labelLevel(key, trueLevel);
+      auto it = max_ghost_for_varlabelmap.find(labelLevel);
+      if (it != max_ghost_for_varlabelmap.end()) {
+        if (it->second < ngc) {
+          it->second = ngc;
+        }
+      } else {
+        max_ghost_for_varlabelmap.emplace(labelLevel, ngc);
       }
     }
     //We don't care about computes ghost cells
@@ -820,51 +842,115 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
 
   if (neighbor_location) {
     for (auto kv : max_ghost_for_varlabelmap) {
-    	DOUT(neighbor_location, "For varlabel " << kv.first << " the max ghost cell is: " << kv.second);
+      DOUT(neighbor_location, "For varlabel " << kv.first.key << " on level: " << kv.first.level << " the max ghost cell is: " << kv.second);
     }
   }
 
   //Now loop again, setting the task's max ghost cells to the max ghost cell for a given varLabel  
   for (int i = 0; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
+    int levelID = 0;
+    const PatchSet    * ps = task->getPatchSet();
+    if (ps && ps->size()) {
+      const PatchSubset* pss = ps->getSubset(0);
+      if (pss && pss->size()) {
+        const Level * level = pss->get(0)->getLevel();
+        levelID = level->getID();
+      }
+    }
     //Again assuming all vars for a label get the same amount of ghost cells,
     for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
       std::string key = req->m_var->getName();
-      if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
-        task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+      int levelOffset = req->m_level_offset;
+      int trueLevel = levelID;
+      if (req->m_patches_dom == Task::CoarseLevel) {
+        trueLevel -= levelOffset;
+      } else if (req->m_patches_dom == Task::FineLevel) {
+        trueLevel += levelOffset;
+      }
+      DOUT(neighbor_location, "For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID << " and levelOffset: " << levelOffset << " checking out requires var: " << key);
+
+      LabelLevel labelLevel(key, trueLevel);
+      auto it = task->m_max_ghost_cells.find(trueLevel);
+      if (it != task->m_max_ghost_cells.end()) {
+        if (task->m_max_ghost_cells[trueLevel] < max_ghost_for_varlabelmap[labelLevel]) {
+          task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
+        }
+      } else {
+        task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
       }
     }
     for (Task::Dependency* modifies = task->getModifies(); modifies != nullptr; modifies = modifies->m_next) {
       std::string key = modifies->m_var->getName();
-      if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
-        task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+      int levelOffset = modifies->m_level_offset;
+      int trueLevel = levelID;
+      if (modifies->m_patches_dom == Task::CoarseLevel) {
+        trueLevel -= levelOffset;
+      } else if (modifies->m_patches_dom == Task::FineLevel) {
+        trueLevel += levelOffset;
+      }
+      DOUT(neighbor_location, "For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID << " and levelOffset: " << levelOffset << " checking out modifies var: " << key);
+
+      LabelLevel labelLevel(key, trueLevel);
+      auto it = task->m_max_ghost_cells.find(trueLevel);
+      if (it != task->m_max_ghost_cells.end()) {
+        if (task->m_max_ghost_cells[trueLevel] < max_ghost_for_varlabelmap[labelLevel]) {
+          task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
+        }
+      } else {
+        task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
       }
     }
     for (Task::Dependency* comps = task->getComputes(); comps != nullptr; comps = comps->m_next) {
       std::string key = comps->m_var->getName();
-      if (task->m_max_ghost_cells < max_ghost_for_varlabelmap[key]) {
-        task->m_max_ghost_cells = max_ghost_for_varlabelmap[key];
+      int levelOffset = comps->m_level_offset;
+      int trueLevel = levelID;
+      if (comps->m_patches_dom == Task::CoarseLevel) {
+        trueLevel -= levelOffset;
+      } else if (comps->m_patches_dom == Task::FineLevel) {
+        trueLevel += levelOffset;
+      }
+      DOUT(neighbor_location, "For task: " << task->getName() << " on level " << trueLevel << " from levelID: " << levelID << " and levelOffset: " << levelOffset << " checking out computes var: " << key);
+      LabelLevel labelLevel(key, trueLevel);
+      auto it = task->m_max_ghost_cells.find(trueLevel);
+      if (it != task->m_max_ghost_cells.end()) {
+        if (task->m_max_ghost_cells[trueLevel] < max_ghost_for_varlabelmap[labelLevel]) {
+          task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
+        }
+      } else {
+        task->m_max_ghost_cells[trueLevel] = max_ghost_for_varlabelmap[labelLevel];
       }
     }
-    DOUT(neighbor_location, "For task: " << task->getName() << " the max ghost cells is: " << task->m_max_ghost_cells);
+    for (auto& kv: task->m_max_ghost_cells) {
+      DOUT(neighbor_location, "For task: " << task->getName() << " on level " << kv.first << " the largest found max ghost cells so far is: " << kv.second);
+    }
   }
 
   //Now proceed looking within the neighborhood defined by the max ghost cells a
   //task needs to know about.
   size_t num_normal_tasks = 0;
   for (int i = 0; i < number_of_tasks; i++) {
-
     Task* task = sorted_tasks[i];
+    DOUT(neighbor_location, "Looking for max ghost vars for task: " << task->getName());
 
     const PatchSet    * ps = task->getPatchSet();
     const MaterialSet * ms = task->getMaterialSet();
+
+    int levelID = 0;
+    if (ps && ps->size()) {
+      const PatchSubset* pss = ps->getSubset(0);
+      if (pss && pss->size()) {
+        const Level * level = pss->get(0)->getLevel();
+        levelID = level->getID();
+      }
+    }
 
     // OncePerProc tasks
     if (ps && ms) {
       // only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc) {
         // only schedule this task on processors in the neighborhood
-        const std::set<int> neighborhood_procs = (task->m_max_ghost_cells >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
+        const std::set<int> neighborhood_procs = (task->m_max_ghost_cells.at(levelID) >= MAX_HALO_DEPTH) ? distal_procs : local_procs;
         for (std::set<int>::iterator p = neighborhood_procs.begin(); p != neighborhood_procs.end(); p++) {
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {
@@ -898,23 +984,39 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
         for (int ps_index = 0; ps_index < ps_size; ps_index++) {
           const PatchSubset* pss = ps->getSubset(ps_index);
            
-          //Go through every patch in the patch subset
-          //go through every computes and modifies in the task.  Find the max ghost cell
-          //associated with each label/matl.  Set the task's max ghost cell to that?    
-          //G
-          // don't make tasks that are not in our neighborhood or tasks that do not have patches
-          const bool search_distal_requires = (task->m_max_ghost_cells >= MAX_HALO_DEPTH);
-
-          if (m_load_balancer->inNeighborhood(pss, search_distal_requires) && pss->size() > 0) {
-            for (int m = 0; m < ms->size(); m++) {
-              const MaterialSubset* mss = ms->getSubset(m);
-              createDetailedTask(task, pss, mss);
-              ++num_dts;
-              ++num_normal_tasks;
+          //Make tasks in our neighborhood.  If there are multiple levels involves in the reqs in
+          //a task, then the levelID should be the fine level
+          DOUT(neighbor_location, "For task: " << task->getName() << " looking for max ghost cells for level: " << levelID);
+          //Still make sure we have an entry for this task on this level.  Some tasks can
+          //go into the taskgraph without any requires, modifies, or computes.
+          bool search_distal_requires = false;
+          for (auto kv : task->m_max_ghost_cells) {
+          //auto it = task->m_max_ghost_cells.find(levelID);
+          //if (it != task->m_max_ghost_cells.end()) {
+            int levelIDTemp = kv.first;
+            search_distal_requires = (task->m_max_ghost_cells.at(levelIDTemp) >= MAX_HALO_DEPTH);
+            DOUT(neighbor_location, "Rank-" << m_proc_group->myrank()
+                                    << " for: " << task->getName() << " on level: " << levelIDTemp
+                                    << " with task max ghost cells: " << task->m_max_ghost_cells.at(levelIDTemp)
+                                    << " Seeing if patch subset: " << *pss
+                                    << " is in neighborhood with search_distal_requires: " << search_distal_requires );
+            if (search_distal_requires) {
+              break;
             }
           }
+            if (pss->size() > 0 && m_load_balancer->inNeighborhood(pss, search_distal_requires)) {
+              DOUT(neighbor_location, "Yes, it was in the neighborhood");
+              for (int m = 0; m < ms->size(); m++) {
+                const MaterialSubset* mss = ms->getSubset(m);
+                createDetailedTask(task, pss, mss);
+                ++num_dts;
+                ++num_normal_tasks;
+              }
+            }
+          //}
         }
-        DOUT(neighbor_location, "Rank-" << m_proc_group->myrank() << " created: " << num_dts << " tasks for " << task->getName());
+        DOUT(neighbor_location, "Rank-" << m_proc_group->myrank() << " created: " << num_dts << " tasks for: "
+                                << task->getName() << " on level: " << levelID);
       }
     }
 
@@ -1166,7 +1268,23 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
     // level's data.  Otherwise, we have to use the entire set of patches (and ghost patches if 
     // applicable) that lay above/beneath this patch.
 
+
+    int levelID = 0;
     const Patch* origPatch = nullptr;
+    const Level* origLevel = nullptr;
+    if (task->patches) {
+      origPatch = task->patches->get(0);
+      origLevel = origPatch->getLevel();
+      levelID = origLevel->getID();
+    }
+    int levelOffset = req->m_level_offset;  //The level offset indicates how many levels up or down from the
+                                            //patches assigned to the task.
+    int trueLevel = levelID;
+    if (req->m_patches_dom == Task::CoarseLevel) {
+      trueLevel -= levelOffset;
+    } else if (req->m_patches_dom == Task::FineLevel) {
+      trueLevel += levelOffset;
+    }
     IntVector otherLevelLow, otherLevelHigh;
     if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
       // the requires should have been done with Task::CoarseLevel or FineLevel, with null patches
@@ -1175,11 +1293,10 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
       ASSERT(req->m_patches == nullptr);
       ASSERT(task->patches->size() == 1);
       ASSERT(req->m_level_offset > 0);
-      const Level* origLevel = origPatch->getLevel();
+
       if (req->m_patches_dom == Task::CoarseLevel) {
         // change the ghost cells to reflect coarse level
         LevelP nextLevel = origPatch->getLevelP();
-        int levelOffset = req->m_level_offset;
         IntVector ratio = origPatch->getLevel()->getRefinementRatio();
         while (--levelOffset) {
           nextLevel = nextLevel->getCoarserLevel();
@@ -1198,9 +1315,10 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
       }
       else { //This covers when req->m_patches_dom == Task::ThisLevel (single level problems)
              //or when req->m_patches_dom == Task::OtherGridDomain. (AMR problems)
+        //TODO: Change this to req->m_num_ghost_cells >= MAX_HALO_DEPTH Brad P. 11/5/2016
         if (uses_SHRT_MAX) {  
           //Finer patches probably shouldn't be using SHRT_MAX ghost cells, but just in case they do, at least compute the low and high correctly...
-          origPatch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
+          origLevel->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
         } else {
           origPatch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(),
                                                              req->m_var->getBoundaryLayer(), req->m_gtype,
@@ -1276,11 +1394,13 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
           const Patch* neighbor = neighbors[i];
 
           // if neighbor is not in my neighborhood just continue as its dependencies are not important to this processor
-          const bool search_distal_reqs = (task->getTask()->m_max_ghost_cells >= MAX_HALO_DEPTH);
+          DOUT(neighbor_location, "    In detailed task: " << task->getName() << " checking if " << *req << " is in neighborhood on level: " << trueLevel);
+          const bool search_distal_reqs = (task->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
           if (!m_load_balancer->inNeighborhood(neighbor->getRealPatch(), search_distal_reqs)) {
+            DOUT(neighbor_location, "    No");
             continue;
           }
-
+          DOUT(neighbor_location, "    Yes");
           static Patch::selectType fromNeighbors;
           fromNeighbors.resize(0);
 
@@ -1307,7 +1427,7 @@ TaskGraph::createDetailedDependencies(       DetailedTask     * task
             const Patch* fromNeighbor = fromNeighbors[j];
 
             // only add the requirements if fromNeighbor is in my neighborhood
-            const bool search_distal_requires = (task->getTask()->m_max_ghost_cells >= MAX_HALO_DEPTH);
+            const bool search_distal_requires = (task->getTask()->m_max_ghost_cells.at(trueLevel) >= MAX_HALO_DEPTH);
             if (!m_load_balancer->inNeighborhood(fromNeighbor, search_distal_requires)) {
               continue;
             }

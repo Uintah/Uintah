@@ -705,12 +705,19 @@ SchedulerCommon::addTask(       Task        * task
   }
 
   // separate out the standard from the distal ghost cell requirements - for loadbalancer
-  if (task->m_max_ghost_cells > MAX_HALO_DEPTH) {
-    this->m_max_distal_ghost_cells = task->m_max_ghost_cells;
-  }
-  else {
-    if (task->m_max_ghost_cells > this->m_max_ghost_cells) {
-      this->m_max_ghost_cells = task->m_max_ghost_cells;
+  // This isn't anything fancy, and could be expanded/modified down the road.
+  // It just gets a max ghost cell extent for anything less than MAX_HALO_DEPTH, and
+  // another max ghost cell extent for anything >= MAX_HALO_DEPTH.  The idea is that later
+  // we will create two neighborhoods with max extents for each as determined here.
+  for (const Task::Dependency* dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
+    if (dep->m_num_ghost_cells >= MAX_HALO_DEPTH) {
+      if (dep->m_num_ghost_cells >  this->m_max_distal_ghost_cells) {
+        this->m_max_distal_ghost_cells = dep->m_num_ghost_cells;
+      }
+    } else {
+      if (dep->m_num_ghost_cells > this->m_max_ghost_cells) {
+        this->m_max_ghost_cells = dep->m_num_ghost_cells;
+      }
     }
   }
 

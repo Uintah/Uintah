@@ -246,6 +246,11 @@ private:
   LoadBalancerCommon( LoadBalancerCommon && )                 = delete;
   LoadBalancerCommon& operator=( LoadBalancerCommon && )      = delete;
 
+  void addPatchesAndProcsToNeighborhood( const Level * const level,
+                                         const IntVector& low,
+                                         const IntVector& high,
+                                         std::set<const Patch*>& neighbors,
+                                         std::set<int>& processors);
 };
 
 } // namespace Uintah
