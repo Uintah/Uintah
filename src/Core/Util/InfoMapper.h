@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_INFOMAPPER_H
-#define UINTAH_HOMEBREW_INFOMAPPER_H
+#ifndef CORE_UTIL_INFOMAPPER_H
+#define CORE_UTIL_INFOMAPPER_H
 
 /*
  * The MIT License
@@ -325,4 +325,4 @@ protected:
 
 } // End namespace Uintah
 
-#endif // UINTAH_HOMEBREW_INFOMAPPER_H
+#endif // CORE_UTIL_INFOMAPPER_H
