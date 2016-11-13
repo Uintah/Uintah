@@ -1086,9 +1086,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
           // also limit to current patch, as patches already loops over all patches
           IntVector origlow = low, orighigh = high;
           if (req->m_patches_dom == Task::FineLevel) {
-            // don't coarsen the extra cells
-            low = patch->getLowIndex(basis);
-            high = patch->getHighIndex(basis);
+            // Grab enough so that even the extra cells could be coarsened if needed.
+            low = patch->getExtraLowIndex(basis, req->m_var->getBoundaryLayer());
+            high = patch->getExtraHighIndex(basis, req->m_var->getBoundaryLayer());
           }
           else {
             low = Max(low, otherLevelLow);
