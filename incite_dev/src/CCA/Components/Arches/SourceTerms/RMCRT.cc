@@ -308,8 +308,11 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_abskg = false;
       const bool modifies_sigmaT4 = false;
 
-      _RMCRT->sched_CoarsenAll(level, sched, modifies_abskg, modifies_sigmaT4);
-      sched_setBoundaryConditions(level, sched, notUsed, backoutTemp);
+      _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
+
+      if( _RMCRT->d_coarsenExtraCells == false ) {
+        sched_setBoundaryConditions( level, sched, notUsed, backoutTemp ); 
+      }
     }
 
     //__________________________________
@@ -354,10 +357,12 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       if (level->hasFinerLevel()) {
         Task::WhichDW sigmaT4_dw = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
-
-        sched_setBoundaryConditions(level, sched, temp_dw, backoutTemp);
-
-        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
+        
+        if( _RMCRT->d_coarsenExtraCells == false ) {
+          sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp);
+        }
+        
+        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ );
       }
     }
 

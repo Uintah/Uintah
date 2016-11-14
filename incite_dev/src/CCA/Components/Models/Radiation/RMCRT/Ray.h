@@ -156,7 +156,9 @@ namespace Uintah{
         return d_radiometer;
       }
 
-
+    //__________________________________
+    //  public variables
+    bool d_coarsenExtraCells;               // instead of setting BC on the coarse level, coarsen fine level extra cells
 
     //______________________________________________________________________
     private:
