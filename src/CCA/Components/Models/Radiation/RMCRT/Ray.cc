@@ -57,11 +57,13 @@ Optimizations:
   - Spatial scheduling, used by radiometer.  Only need to execute & communicate
     variables on a subset of patches.
   - Temporal scheduling:  To reduce task graph recompilations create two task graphs
-    that can be swapped while runninng.
+    that can be swapped while runninng.  This is in incite_dev.  Needs to be pushed to trunk
   - Create a LevelDB.  Push an pull the communicated variables
   - DO: Reconstruct the fine level using interpolation and coarse level values
   - Investigate why floats are slow.
-  -
+  - Temperatures af ints?
+  - 2L flux coarsening on the boundaries
+  - 
 ______________________________________________________________________*/
 
 
@@ -2684,7 +2686,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                            coarsePatch, coarseLevel, fineLevel);
 
       //__________________________________
-      //
+      //  Coarsen along the edge of the compuational domain
       if( d_coarsenExtraCells && coarsePatch->hasBoundaryFaces() ){
 
         for(int i=0;i<finePatches.size();i++){
@@ -2692,30 +2694,96 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
           if( finePatch->hasBoundaryFaces() ){
 
-cout << " AAA " << coarsePatch->getID() << endl;
 
-            vector<Patch::FaceType> bf;
-            finePatch->getBoundaryFaces( bf );
             IntVector refineRatio = fineLevel->getRefinementRatio();
 
+            // used for extents tests
             IntVector finePatchLo = finePatch->getExtraCellLowIndex();
             IntVector finePatchHi = finePatch->getExtraCellHighIndex();
+            
+            IntVector crl, crh;
+            coarseLevel->findCellIndexRange(crl,crh);
 
-cout << "    finePatchLo: " << finePatchLo << " finePatchHi: " << finePatchHi << " finePatch ID: " << finePatch->getID() << endl;
             constCCVariable<T> fine_q_CC;
-//          new_dw->getRegion(fine_q_CC,  variable, matl, fineLevel, finePatchLo, finePatchHi, includeExtraCells);
-
             new_dw->get(fine_q_CC, variable,   matl, finePatch, d_gn, 0);
+            
+            //__________________________________
+            //  loop over boundary faces for the fine patch
+            
+            vector<Patch::FaceType> bf;
+            finePatch->getBoundaryFaces( bf );
+            
+            for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+              Patch::FaceType face = *iter;
 
+              IntVector faceRefineRatio = refineRatio;
+              int P_dir = coarsePatch->getFaceAxes(face)[0];  //principal dir.
+              faceRefineRatio[P_dir]=1;
+
+              double inv_RR = 1.0;
+              if(computesAve){
+                inv_RR = 1.0/( (double)(faceRefineRatio.x() * faceRefineRatio.y() * faceRefineRatio.z()) );
+              }
+
+              // for this  fine patch find the extents of the boundary face
+              CellIterator iter_tmp = finePatch->getFaceIterator(face, Patch::ExtraMinusEdgeCells);
+              IntVector fl = iter_tmp.begin();
+              IntVector fh = iter_tmp.end();
+
+              IntVector cl  = fineLevel->mapCellToCoarser(fl);
+              IntVector ch  = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
+
+              // don't exceed the coarse level
+              cl = Max(cl, crl);
+              ch = Min(ch, crh); 
+
+              //__________________________________
+              //  iterate over coarse patch cells that overlapp this fine patch
+              T zero(0.0);
+
+              for(CellIterator iter(cl, ch); !iter.done(); iter++){
+                IntVector c = *iter;
+                T q_CC_tmp(zero);
+                IntVector fineStart = coarseLevel->mapCellToFiner(c);
+
+                // don't exceed fine patch boundaries
+                fineStart = Max(finePatchLo, fineStart);
+                fineStart = Min(finePatchHi, fineStart);
+
+                double count = 0;
+
+                // for each coarse level cell iterate over the fine level cells
+                for(CellIterator inside(IntVector(0,0,0),faceRefineRatio );
+                    !inside.done(); inside++){
+                  IntVector fc = fineStart + *inside;
+
+                  if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
+                      fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
+                    q_CC_tmp += fine_q_CC[fc];
+                    count +=1.0;
+                  }
+                }
+                Q_coarse[c] =q_CC_tmp*inv_RR;
+
+                //__________________________________
+                //  bulletproofing
+    //          #if SCI_ASSERTION_LEVEL > 0     enable this when you're 100% confident it's working correctly for different domains. -Todd
+                if ( (fabs(inv_RR - 1.0/count) > 2 * DBL_EPSILON) && inv_RR != 1 ) {
+                  std::ostringstream msg;
+                  msg << " ERROR:  coarsen_Q: coarse cell " << c << "\n" 
+                      <<  "Only (" << count << ") fine level cells were used to compute the coarse cell value."
+                      << " There should have been ("<< 1/inv_RR << ") cells used";
+
+                  throw InternalError(msg.str(),__FILE__,__LINE__);
+                } 
+    //          #endif          
+              }  // boundary face iterator
+            }  // boundary face loop 
           }  // has boundaryFace
         }  // fine patches
       }  // coarsen ExtraCells
-
     }  // matl loop
   }  // course patch loop
-
-
-
 }
 
 //______________________________________________________________________
