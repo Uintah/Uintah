@@ -57,11 +57,13 @@ Optimizations:
   - Spatial scheduling, used by radiometer.  Only need to execute & communicate
     variables on a subset of patches.
   - Temporal scheduling:  To reduce task graph recompilations create two task graphs
-    that can be swapped while runninng.
+    that can be swapped while runninng.  This is in incite_dev.  Needs to be pushed to trunk
   - Create a LevelDB.  Push an pull the communicated variables
   - DO: Reconstruct the fine level using interpolation and coarse level values
   - Investigate why floats are slow.
-  -
+  - Temperatures af ints?
+  - 2L flux coarsening on the boundaries
+  - 
 ______________________________________________________________________*/
 
 
@@ -96,15 +98,17 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
     d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<float>::getTypeDescription() );
   }
 
-  d_matlSet       = 0;
-  d_isDbgOn       = dbg2.active();
 
-  d_gac           = Ghost::AroundCells;
-  d_gn            = Ghost::None;
-  d_orderOfInterpolation = -9;
-  d_onOff_SetBCs   = true;
-  d_radiometer     = nullptr;
+  d_isDbgOn       = dbg2.active();
   d_dbgCells.push_back( IntVector(0,0,0));
+
+  d_matlSet              = 0;
+  d_gac                  = Ghost::AroundCells;
+  d_gn                   = Ghost::None;
+  d_orderOfInterpolation = -9;
+  d_onOff_SetBCs         = true;
+  d_radiometer           = nullptr;
+  d_coarsenExtraCells    = false;
 
   d_haloCells            = IntVector(-9,-9,-9);
   d_haloLength           = -9;
@@ -265,7 +269,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       isMultilevel = true;
       algorithm    = dataOnion;
       alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
-      alg_ps->get( "haloLength",  d_haloLength );
+      alg_ps->get( "haloLength",         d_haloLength );
+      alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
 
       //  Method for deteriming the extents of the ROI
       ProblemSpecP ROI_ps = alg_ps->findBlock( "ROI_extents" );
@@ -280,8 +285,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       } else if ( type == "dynamic" ) {
 
         d_ROI_algo = dynamic;
-        ROI_ps->getWithDefault( "abskgd_threshold",   d_abskg_thld,   DBL_MAX);
-        ROI_ps->getWithDefault( "sigmaT4d_threshold", d_sigmaT4_thld, DBL_MAX);
+        ROI_ps->getWithDefault( "abskgd_threshold",   d_abskg_thld,   DBL_MAX );
+        ROI_ps->getWithDefault( "sigmaT4d_threshold", d_sigmaT4_thld, DBL_MAX );
 
       } else if ( type == "patch_based" ){
         d_ROI_algo = patch_based;
@@ -292,7 +297,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     } else if ( type == "RMCRT_coarseLevel" ) {
       isMultilevel = true;
       algorithm    = coarseLevel;
-      alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
+      alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation );
+      alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
     }
   }
 
@@ -1098,23 +1104,23 @@ Ray::rayTrace( const ProcessorGroup* pg,
         boundFlux[c].initialize(0.0);
       }
     }
-    
+
     IntVector ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
     IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
     //__________________________________
     //  If ray length distance is used
     if ( d_ROI_algo == boundedRayLength ){
 
-      patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0), 
-                                                     Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);    
+      patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
+                                                     Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
       dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
     }
-  
+
     //__________________________________
-    //  BULLETPROOFING  
+    //  BULLETPROOFING
     if ( level->isNonCubic() ){
 
       IntVector l = abskg.getLowIndex();
@@ -1396,7 +1402,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   // finest level:
   if ( d_ROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
-  
+
     //__________________________________
     // logic for determining number d_haloCells
     if( d_haloLength > 0 ){
@@ -1406,7 +1412,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
       int n_Cells   = RoundUp( length );
       d_haloCells   = IntVector( n_Cells, n_Cells, n_Cells );
     }
-     
+
     int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
     tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
     tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
@@ -2363,7 +2369,7 @@ void Ray::refine_Q( const ProcessorGroup*,
 
     divQ_fine.initialize( 0.0 );
     radVolQ_fine.initialize( 0.0 );
-    
+
     for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       boundFlux_fine[c].initialize( 0.0 );
@@ -2390,8 +2396,8 @@ void Ray::refine_Q( const ProcessorGroup*,
 
     selectInterpolator(divQ_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
                        refineRatio, fl, fh, divQ_fine);
-    
-    //__________________________________raditionVolQ                   
+
+    //__________________________________raditionVolQ
     constCCVariable<double> radVolQ_coarse;
     new_dw->getRegion( radVolQ_coarse, d_radiationVolqLabel, d_matl, coarseLevel, cl, ch );
 
@@ -2598,12 +2604,111 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
       }
       Q_coarse.initialize(0.0);
 
-      // coarsen
       bool computesAve = true;
+
+      // coarsen the coarse patch interior cells
       fineToCoarseOperator(Q_coarse,   computesAve,
                            variable,   matl, new_dw,
                            coarsePatch, coarseLevel, fineLevel);
-    }
+
+      //__________________________________
+      //  Coarsen along the edge of the compuational domain
+      if( d_coarsenExtraCells && coarsePatch->hasBoundaryFaces() ){
+
+        for(int i=0;i<finePatches.size();i++){
+          const Patch* finePatch = finePatches[i];
+
+          if( finePatch->hasBoundaryFaces() ){
+
+
+            IntVector refineRatio = fineLevel->getRefinementRatio();
+
+            // used for extents tests
+            IntVector finePatchLo = finePatch->getExtraCellLowIndex();
+            IntVector finePatchHi = finePatch->getExtraCellHighIndex();
+            
+            IntVector crl, crh;
+            coarseLevel->findCellIndexRange(crl,crh);
+
+            constCCVariable<T> fine_q_CC;
+            new_dw->get(fine_q_CC, variable,   matl, finePatch, d_gn, 0);
+            
+            //__________________________________
+            //  loop over boundary faces for the fine patch
+            
+            vector<Patch::FaceType> bf;
+            finePatch->getBoundaryFaces( bf );
+            
+            for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+              Patch::FaceType face = *iter;
+
+              IntVector faceRefineRatio = refineRatio;
+              int P_dir = coarsePatch->getFaceAxes(face)[0];  //principal dir.
+              faceRefineRatio[P_dir]=1;
+
+              double inv_RR = 1.0;
+              if(computesAve){
+                inv_RR = 1.0/( (double)(faceRefineRatio.x() * faceRefineRatio.y() * faceRefineRatio.z()) );
+              }
+
+              // for this  fine patch find the extents of the boundary face
+              CellIterator iter_tmp = finePatch->getFaceIterator(face, Patch::ExtraMinusEdgeCells);
+              IntVector fl = iter_tmp.begin();
+              IntVector fh = iter_tmp.end();
+
+              IntVector cl  = fineLevel->mapCellToCoarser(fl);
+              IntVector ch  = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
+
+              // don't exceed the coarse level
+              cl = Max(cl, crl);
+              ch = Min(ch, crh); 
+              
+              //__________________________________
+              //  iterate over coarse patch cells that overlapp this fine patch
+              T zero(0.0);
+
+              for(CellIterator iter(cl, ch); !iter.done(); iter++){
+                IntVector c = *iter;
+                T q_CC_tmp(zero);
+                IntVector fineStart = coarseLevel->mapCellToFiner(c);
+
+                // don't exceed fine patch boundaries
+                fineStart = Max(finePatchLo, fineStart);
+                fineStart = Min(finePatchHi, fineStart);
+
+                double count = 0;
+
+                // for each coarse level cell iterate over the fine level cells
+                for(CellIterator inside(IntVector(0,0,0),faceRefineRatio );
+                    !inside.done(); inside++){
+                  IntVector fc = fineStart + *inside;
+
+                  if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
+                      fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
+                    q_CC_tmp += fine_q_CC[fc];
+                    count +=1.0;
+                  }
+                }
+                Q_coarse[c] =q_CC_tmp*inv_RR;
+
+                //__________________________________
+                //  bulletproofing
+    //          #if SCI_ASSERTION_LEVEL > 0     enable this when you're 100% confident it's working correctly for different domains. -Todd
+                if ( (fabs(inv_RR - 1.0/count) > 2 * DBL_EPSILON) && inv_RR != 1 ) {
+                  std::ostringstream msg;
+                  msg << " ERROR:  coarsen_Q: coarse cell " << c << "\n" 
+                      <<  "Only (" << count << ") fine level cells were used to compute the coarse cell value."
+                      << " There should have been ("<< 1/inv_RR << ") cells used";
+
+                  throw InternalError(msg.str(),__FILE__,__LINE__);
+                } 
+    //          #endif          
+              }  // boundary face iterator
+            }  // boundary face loop 
+          }  // has boundaryFace
+        }  // fine patches
+      }  // coarsen ExtraCells
+    }  // matl loop
   }  // course patch loop
 }
 
