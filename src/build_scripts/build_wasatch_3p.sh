@@ -88,10 +88,10 @@ fi
 ###########################################################################
 # GIT Hash Tags for the various libraries
 
-SPATIAL_OPS_TAG=b2197579447241ead961aeb2906e542816a5b126
+SPATIAL_OPS_TAG=94da0f8782d7c171a2a3483f268ae957f4bfaad9
 TAB_PROPS_TAG=0a671fcdaf53cb517666ba760513a7ce141ecb6e
 RAD_PROPS_TAG=a2626cdccfbb97ccb7d68d43bfe085194cccf4d5
-EXPR_LIB_TAG=8bc66f83eb3b2ca8035e4ee0d66f768628f4775d
+EXPR_LIB_TAG=2190c6cdbed648eb485e09c6516734945844aa14
 NSCBC_TAG=5b880c9c39befcaa22d2165104e5d7d7f6df0edc
 
 ############################################################################
