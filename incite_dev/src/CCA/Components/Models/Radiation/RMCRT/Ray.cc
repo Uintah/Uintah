@@ -51,7 +51,7 @@
 
 Critical:
   - Fix getRegion() for L-shaped domains.
-  
+
 
 Optimizations:
   - Spatial scheduling, used by radiometer.  Only need to execute & communicate
@@ -63,7 +63,7 @@ Optimizations:
   - Investigate why floats are slow.
   - Temperatures af ints?
   - 2L flux coarsening on the boundaries
-  - 
+  -
 ______________________________________________________________________*/
 
 
@@ -255,7 +255,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     //__________________________________
     //  single level
     if (type == "singleLevel" ) {
-           
+
       ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
       ROI_ps->getAttribute( "type", type);
       ROI_ps->get( "length", d_maxRayLength );
@@ -451,34 +451,34 @@ Ray::sched_rayTrace( const LevelP& level,
   // Require an infinite number of ghost cells so you can access the entire domain.
   Ghost::GhostType  gac  = Ghost::AroundCells;
   int n_ghostCells = SHRT_MAX;
-    
+
 /*`==========TESTING==========*/
     //__________________________________
     // logic for determining number of ghostCells/d_halo
     if( d_ROI_algo == boundedRayLength ){
-      
+
       Vector Dx     = level->dCell();
       Vector nCells = Vector( d_maxRayLength )/Dx;
       double length = nCells.length();
       n_ghostCells  = std::ceil( length );
-      
+
       // ghost cell can't exceed number of cells on a level
       IntVector lo, hi;
       level->findCellIndexRange(lo,hi);
       IntVector diff = hi-lo;
       int nCellsLevel = Max( diff.x(), diff.y(), diff.z() );
-      
+
       if (n_ghostCells > SHRT_MAX || n_ghostCells > nCellsLevel ) {
-        proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells 
+        proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells
                   << ") max cells in any direction on a Levels: " << nCellsLevel << "\n\n";
         n_ghostCells    = SHRT_MAX;
         d_ROI_algo = entireDomain;
       }
       d_haloCells = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
     }
-     
+
 /*===========TESTING==========`*/
-    
+
     dbg << "    sched_rayTrace: number of ghost cells for all-to-all variables: (" << n_ghostCells << ")\n";
 
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
@@ -2626,19 +2626,19 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
             // used for extents tests
             IntVector finePatchLo = finePatch->getExtraCellLowIndex();
             IntVector finePatchHi = finePatch->getExtraCellHighIndex();
-            
-            IntVector crl, crh;
-            coarseLevel->findCellIndexRange(crl,crh);
+
+            IntVector coarsePatchLo = coarsePatch->getExtraCellLowIndex();
+            IntVector coarsePatchHi = coarsePatch->getExtraCellHighIndex();
 
             constCCVariable<T> fine_q_CC;
             new_dw->get(fine_q_CC, variable,   matl, finePatch, d_gn, 0);
-            
+
             //__________________________________
             //  loop over boundary faces for the fine patch
-            
+
             vector<Patch::FaceType> bf;
             finePatch->getBoundaryFaces( bf );
-            
+
             for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
               Patch::FaceType face = *iter;
 
@@ -2659,10 +2659,13 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
               IntVector cl  = fineLevel->mapCellToCoarser(fl);
               IntVector ch  = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
 
-              // don't exceed the coarse level
-              cl = Max(cl, crl);
-              ch = Min(ch, crh); 
-              
+              // don't exceed the coarse patch
+              cl = Max(cl, coarsePatchLo);
+              ch = Min(ch, coarsePatchHi);
+
+              //std::cout << "    " << finePatch->getFaceName(face) << std::endl;
+              //std::cout << "    fl: " << fl << " fh: " << fh;
+              //std::cout << "   " <<  " cl: " << cl << " ch: " << ch << std::endl;
               //__________________________________
               //  iterate over coarse patch cells that overlapp this fine patch
               T zero(0.0);
@@ -2696,15 +2699,15 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
     //          #if SCI_ASSERTION_LEVEL > 0     enable this when you're 100% confident it's working correctly for different domains. -Todd
                 if ( (fabs(inv_RR - 1.0/count) > 2 * DBL_EPSILON) && inv_RR != 1 ) {
                   std::ostringstream msg;
-                  msg << " ERROR:  coarsen_Q: coarse cell " << c << "\n" 
+                  msg << " ERROR:  coarsen_Q: coarse cell " << c << "\n"
                       <<  "Only (" << count << ") fine level cells were used to compute the coarse cell value."
                       << " There should have been ("<< 1/inv_RR << ") cells used";
 
                   throw InternalError(msg.str(),__FILE__,__LINE__);
-                } 
-    //          #endif          
+                }
+    //          #endif
               }  // boundary face iterator
-            }  // boundary face loop 
+            }  // boundary face loop
           }  // has boundaryFace
         }  // fine patches
       }  // coarsen ExtraCells
