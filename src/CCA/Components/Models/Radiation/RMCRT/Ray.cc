@@ -2700,19 +2700,19 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
             // used for extents tests
             IntVector finePatchLo = finePatch->getExtraCellLowIndex();
             IntVector finePatchHi = finePatch->getExtraCellHighIndex();
-            
-            IntVector crl, crh;
-            coarseLevel->findCellIndexRange(crl,crh);
+
+            IntVector coarsePatchLo = coarsePatch->getExtraCellLowIndex();
+            IntVector coarsePatchHi = coarsePatch->getExtraCellHighIndex();
 
             constCCVariable<T> fine_q_CC;
             new_dw->get(fine_q_CC, variable,   matl, finePatch, d_gn, 0);
-            
+
             //__________________________________
             //  loop over boundary faces for the fine patch
-            
+
             vector<Patch::FaceType> bf;
             finePatch->getBoundaryFaces( bf );
-            
+
             for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
               Patch::FaceType face = *iter;
 
@@ -2733,10 +2733,13 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
               IntVector cl  = fineLevel->mapCellToCoarser(fl);
               IntVector ch  = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
 
-              // don't exceed the coarse level
-              cl = Max(cl, crl);
-              ch = Min(ch, crh); 
+              // don't exceed the coarse patch
+              cl = Max(cl, coarsePatchLo);
+              ch = Min(ch, coarsePatchHi);
 
+              //std::cout << "    " << finePatch->getFaceName(face) << std::endl;
+              //std::cout << "    fl: " << fl << " fh: " << fh;
+              //std::cout << "   " <<  " cl: " << cl << " ch: " << ch << std::endl;
               //__________________________________
               //  iterate over coarse patch cells that overlapp this fine patch
               T zero(0.0);
@@ -2770,15 +2773,15 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
     //          #if SCI_ASSERTION_LEVEL > 0     enable this when you're 100% confident it's working correctly for different domains. -Todd
                 if ( (fabs(inv_RR - 1.0/count) > 2 * DBL_EPSILON) && inv_RR != 1 ) {
                   std::ostringstream msg;
-                  msg << " ERROR:  coarsen_Q: coarse cell " << c << "\n" 
+                  msg << " ERROR:  coarsen_Q: coarse cell " << c << "\n"
                       <<  "Only (" << count << ") fine level cells were used to compute the coarse cell value."
                       << " There should have been ("<< 1/inv_RR << ") cells used";
 
                   throw InternalError(msg.str(),__FILE__,__LINE__);
-                } 
-    //          #endif          
+                }
+    //          #endif
               }  // boundary face iterator
-            }  // boundary face loop 
+            }  // boundary face loop
           }  // has boundaryFace
         }  // fine patches
       }  // coarsen ExtraCells
