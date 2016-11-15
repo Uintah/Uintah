@@ -490,7 +490,7 @@
     <!--__________________________________-->
     <BoundaryConditions     spec="OPTIONAL NO_DATA">
       
-      <DefaultMaterial spec="OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,all'"/>
+      <DefaultMaterial spec="OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"/>
 
       <!-- Specify interior boundary conditions. A minus interior face will return an iterator
       with the cells on the minus side of the boundary. A plus interior face will return an 
