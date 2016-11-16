@@ -184,9 +184,9 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
       for ( int i = 0; i < grid->numLevels(); i++ ){
         _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION )));
         ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
-        if (i == (grid->numLevels() - 1)){  //  Only create intrusions on the finest level.  
+        if (i == (grid->numLevels() - 1)){  //  Only create intrusions on the finest level.
                                             //  In the future, we may want to create intrusions on all levels,
-                                            //  if so, we will need to resolve problems with redundant intrusion  
+                                            //  if so, we will need to resolve problems with redundant intrusion
                                             //  names in the infrastructure.
           _intrusionBC[i]->problemSetup( db_new_intrusion, i );
         }
@@ -2283,7 +2283,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
                 MassParticleDensity+=weight*M_PI*diameter*diameter*diameter/6.0*density;  // (kg/ m^3)
 
               }
-                my_info.partDensity = MassParticleDensity;
+              my_info.partDensity = MassParticleDensity;
               // note that the mass flow rate is in the BCstruct value
               break; // exit bcType spec  loop
             }
@@ -2824,9 +2824,8 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
               if ( bc_iter->second.partDensity < 1e-200 &&  bc_iter->second.partMassFlow_rate > 1e-300 ) {
                 throw ProblemSetupException("Arches was unable to satisfy the specified mass flow inlet of particles.  Did you specify reasonable particle density and weights? ", __FILE__, __LINE__);
               }
-              if(bc_iter->second.partMassFlow_rate <= 1e-300){
-                bc_iter->second.partVelocity[norm]=0.0;
-              }else{
+              bc_iter->second.partVelocity[norm] = 0.0;
+              if ( bc_iter->second.partMassFlow_rate > 1.e-300 ){
                 bc_iter->second.partVelocity[norm] = pm*bc_iter->second.partMassFlow_rate /
                   (area * bc_iter->second.partDensity);
               }
@@ -2901,10 +2900,14 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
       }
 
       proc0cout << "  ----> BC Label: " << bc_iter->second.name << std::endl;
-      proc0cout << "            area: " << area << std::endl;
-      proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
-      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
-      proc0cout << "   Particle_vel : " << bc_iter->second.partVelocity[0]<< ", " <<bc_iter->second.partVelocity[1]<< ", " <<bc_iter->second.partVelocity[2]<< std::endl;
+      if ( area < 1.e-16 ){
+        proc0cout << "            area: Area not computed because this BC type did not require it. Please use <force_area_calc> in <Arches><BoundaryCondition> to see the value." << std::endl;
+      } else {
+        proc0cout << "            area: " << area << std::endl;
+      }
+      // proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
+      // proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
+      // proc0cout << "   Particle_vel : " << bc_iter->second.partVelocity[0]<< ", " <<bc_iter->second.partVelocity[1]<< ", " <<bc_iter->second.partVelocity[2]<< std::endl;
 
     }
     proc0cout << std::endl;
