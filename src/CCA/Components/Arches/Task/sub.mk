@@ -32,7 +32,8 @@ SRCS += \
         $(SRCDIR)/SampleTask.cc          \
         $(SRCDIR)/TaskFactoryBase.cc     \
         $(SRCDIR)/TaskInterface.cc       \
-        $(SRCDIR)/TemplatedSampleTask.cc 
+        $(SRCDIR)/AtomicTaskInterface.cc \
+        $(SRCDIR)/TemplatedSampleTask.cc
 
 ########################################################################
 #

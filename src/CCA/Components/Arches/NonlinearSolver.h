@@ -114,7 +114,7 @@ protected:
    typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
    BCHelperMapT _bcHelperMap;
 
-   ProblemSpecP _arches_spec;
+   ProblemSpecP m_arches_spec;
 
 private:
 

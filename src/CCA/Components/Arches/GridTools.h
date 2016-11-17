@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <CCA/Components/Arches/UPSHelper.h>
 
 /** @class GridTools
     @author J. Thornock
@@ -42,7 +43,7 @@
 
 namespace Uintah{ namespace ArchesCore{
 
-  enum DIR {XDIR, YDIR, ZDIR};
+  enum DIR {XDIR, YDIR, ZDIR, NODIR};
 
 #define STENCIL3_1D( dir ) \
   const int ip  = dir == 0 ? i+1 : i; \
@@ -165,8 +166,11 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::constSFCXVariable<double> ConstXFaceType;
     typedef Uintah::constSFCYVariable<double> ConstYFaceType;
     typedef Uintah::constSFCZVariable<double> ConstZFaceType;
-    int dir;
-    VariableHelper():dir(999){}
+    DIR dir;
+    const int ioff;
+    const int joff;
+    const int koff;
+    VariableHelper():dir(NODIR), ioff(0), joff(0), koff(0){}
   };
 
   template <>
@@ -241,9 +245,84 @@ namespace Uintah{ namespace ArchesCore{
     idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
   };
 
-  //discretization
+  /// @brief Map specific ARCHES variables based on type
+  template <typename T>
+  struct GridVarMap {
+    std::string vol_frac_name = "NOT_AVAILABLE";
+  };
+  template <>
+  struct GridVarMap<CCVariable<double> >{
+    void problemSetup( ProblemSpecP db ){
+      uvel_name = parse_ups_for_role( UVELOCITY, db, "NotSet" );
+      vvel_name = parse_ups_for_role( VVELOCITY, db, "NotSet" );
+      wvel_name = parse_ups_for_role( WVELOCITY, db, "NotSet" );
+    }
+    std::string vol_frac_name = "cc_volume_fraction";
+    std::string uvel_name;
+    std::string vvel_name;
+    std::string wvel_name;
+  };
+  template <>
+  struct GridVarMap<SFCXVariable<double> >{
+    void problemSetup( ProblemSpecP db ){
+    }
+    std::string vol_frac_name = "fx_volume_fraction";
+    std::string uvel_name = "ucell_xvel";
+    std::string vvel_name = "ucell_yvel";
+    std::string wvel_name = "ucell_zvel";
+  };
+  template <>
+  struct GridVarMap<SFCYVariable<double> >{
+    void problemSetup( ProblemSpecP db ){
+    }
+    std::string vol_frac_name = "fy_volume_fraction";
+    std::string uvel_name = "vcell_xvel";
+    std::string vvel_name = "vcell_yvel";
+    std::string wvel_name = "vcell_zvel";
+  };
+  template <>
+  struct GridVarMap<SFCZVariable<double> >{
+    void problemSetup( ProblemSpecP db ){
+    }
+    std::string vol_frac_name = "fz_volume_fraction";
+    std::string uvel_name = "wcell_xvel";
+    std::string vvel_name = "wcell_yvel";
+    std::string wvel_name = "wcell_zvel";
+  };
+
+  /// @brief Returns a weight for interpolation
+  /// @TODO This doesn't cover all cases correctly. Fix it.
+  ///       For example, consider SFCX, SFCY
+  template <typename DT, typename IT>
+  struct oneDInterp {
+    double get_central_weight(){ return 0; }
+    int dir=99;
+  };
+
+  template <>
+  struct oneDInterp<SFCXVariable<double>, constCCVariable<double> >{
+    double get_central_weight(){ return 0.5; }
+    int dir=0;
+  };
+
+  template <>
+  struct oneDInterp<SFCYVariable<double>, constCCVariable<double> >{
+    double get_central_weight(){ return 0.5; }
+    int dir=1;
+  };
+
+  template <>
+  struct oneDInterp<SFCZVariable<double>, constCCVariable<double> >{
+    double get_central_weight(){ return 0.5; }
+    int dir=2;
+  };
+
   class GridTools{
+
   public:
+
+    GridTools(){}
+    ~GridTools(){}
 
   private:
 

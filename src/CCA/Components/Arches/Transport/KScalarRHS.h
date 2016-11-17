@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/BoundaryFunctors.h>
+#include <CCA/Components/Arches/UPSHelper.h>
 
 #ifdef DO_TIMINGS
 #  include <spatialops/util/TimeLogger.h>
@@ -99,9 +100,10 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
     std::string _D_name;
-    std::string _x_velocity_name;
-    std::string _y_velocity_name;
-    std::string _z_velocity_name;
+    std::string m_x_velocity_name;
+    std::string m_y_velocity_name;
+    std::string m_z_velocity_name;
+    std::string m_eps_name;
 
     std::vector<std::string> _eqn_names;
     std::vector<bool> _do_diff;
@@ -123,114 +125,135 @@ private:
 
     std::vector<LIMITER> _conv_scheme;
 
+    ArchesCore::BCFunctors<T>* m_boundary_functors;
+
   };
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
   KScalarRHS<T>::KScalarRHS( std::string task_name, int matl_index ) :
-  TaskInterface( task_name, matl_index ) {}
+  TaskInterface( task_name, matl_index ) {
+
+    m_boundary_functors = scinew ArchesCore::BCFunctors<T>();
+
+  }
 
   template <typename T>
-  KScalarRHS<T>::~KScalarRHS(){}
+  KScalarRHS<T>::~KScalarRHS(){
+
+    delete m_boundary_functors;
+
+  }
 
   template <typename T> void
   KScalarRHS<T>::problemSetup( ProblemSpecP& input_db ){
 
-    _total_eqns = 0;
+  _total_eqns = 0;
 
-    ConvectionHelper* conv_helper = scinew ConvectionHelper();
-    for (ProblemSpecP db = input_db->findBlock("eqn"); db != 0;
-         db = db->findNextBlock("eqn")){
+  ConvectionHelper* conv_helper = scinew ConvectionHelper();
+  for (ProblemSpecP db = input_db->findBlock("eqn"); db != 0;
+       db = db->findNextBlock("eqn")){
 
-      //Equation name
-      std::string eqn_name;
-      db->getAttribute("label", eqn_name);
-      _eqn_names.push_back(eqn_name);
+    //Equation name
+    std::string eqn_name;
+    db->getAttribute("label", eqn_name);
+    _eqn_names.push_back(eqn_name);
 
-      //Convection
-      if ( db->findBlock("convection")){
-        std::string conv_scheme;
-        db->findBlock("convection")->getAttribute("scheme", conv_scheme);
-        _conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
-      } else {
-        _conv_scheme.push_back(NOCONV);
+    //Convection
+    if ( db->findBlock("convection")){
+      std::string conv_scheme;
+      db->findBlock("convection")->getAttribute("scheme", conv_scheme);
+      _conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
+    } else {
+      _conv_scheme.push_back(NOCONV);
+    }
+
+    //Diffusion
+    if ( db->findBlock("diffusion")){
+      _do_diff.push_back(true);
+    } else {
+      _do_diff.push_back(false);
+    }
+
+    //Clipping
+    if ( db->findBlock("clip")){
+      _do_clip.push_back(true);
+      double low; double high;
+      db->findBlock("clip")->getAttribute("low", low);
+      db->findBlock("clip")->getAttribute("high", high);
+      _low_clip.push_back(low);
+      _high_clip.push_back(high);
+    } else {
+      _do_clip.push_back(false);
+      _low_clip.push_back(-999.9);
+      _high_clip.push_back(999.9);
+    }
+
+    //Initial Value
+    if ( db->findBlock("initialize") ){
+      double value;
+      db->findBlock("initialize")->getAttribute("value",value);
+      _init_value.push_back(value);
+    } else {
+      _init_value.push_back(0.0);
+    }
+
+    std::vector<SourceInfo> eqn_srcs;
+    for ( ProblemSpecP src_db = db->findBlock("src"); src_db != 0;
+          src_db = src_db->findNextBlock("src") ){
+
+      std::string src_label;
+      double weight = 1.0;
+
+      src_db->getAttribute("label",src_label);
+
+      if ( src_db->findBlock("weight")){
+        src_db->findBlock("weight")->getAttribute("value",weight);
       }
 
-      //Diffusion
-      if ( db->findBlock("diffusion")){
-        _do_diff.push_back(true);
-      } else {
-        _do_diff.push_back(false);
-      }
+      SourceInfo info;
+      info.name = src_label;
+      info.weight = weight;
 
-      //Clipping
-      if ( db->findBlock("clip")){
-        _do_clip.push_back(true);
-        double low; double high;
-        db->findBlock("clip")->getAttribute("low", low);
-        db->findBlock("clip")->getAttribute("high", high);
-        _low_clip.push_back(low);
-        _high_clip.push_back(high);
-      } else {
-        _do_clip.push_back(false);
-        _low_clip.push_back(-999.9);
-        _high_clip.push_back(999.9);
-      }
-
-      //Initial Value
-      if ( db->findBlock("initialize") ){
-        double value;
-        db->findBlock("initialize")->getAttribute("value",value);
-        _init_value.push_back(value);
-      } else {
-        _init_value.push_back(0.0);
-      }
-
-      std::vector<SourceInfo> eqn_srcs;
-      for ( ProblemSpecP src_db = db->findBlock("src"); src_db != 0;
-            src_db = src_db->findNextBlock("src") ){
-
-        std::string src_label;
-        double weight = 1.0;
-
-        src_db->getAttribute("label",src_label);
-
-        if ( src_db->findBlock("weight")){
-          src_db->findBlock("weight")->getAttribute("value",weight);
-        }
-
-        SourceInfo info;
-        info.name = src_label;
-        info.weight = weight;
-
-        eqn_srcs.push_back(info);
-
-      }
-
-      _source_info.push_back(eqn_srcs);
+      eqn_srcs.push_back(info);
 
     }
 
-    delete conv_helper;
+    _source_info.push_back(eqn_srcs);
 
-    // Default velocity names:
-    _x_velocity_name = "uVelocitySPBC";
-    _y_velocity_name = "vVelocitySPBC";
-    _z_velocity_name = "wVelocitySPBC";
-    if ( input_db->findBlock("velocity") ){
-      input_db->findBlock("velocity")->getAttribute("xlabel",_x_velocity_name);
-      input_db->findBlock("velocity")->getAttribute("ylabel",_y_velocity_name);
-      input_db->findBlock("velocity")->getAttribute("zlabel",_z_velocity_name);
-    }
+    // setup the boundary conditions for this eqn set
+    m_boundary_functors->create_bcs( db, _eqn_names );
 
-    // Diffusion coeff -- assuming the same one across all eqns.
-    _D_name = "NA";
-    _has_D = false;
+  }
 
-    if ( input_db->findBlock("diffusion_coef") ) {
-      input_db->findBlock("diffusion_coef")->getAttribute("label",_D_name);
-      _has_D = true;
-    }
+  delete conv_helper;
+
+  using namespace ArchesCore;
+
+  ArchesCore::GridVarMap<T> var_map;
+  var_map.problemSetup( input_db );
+  m_eps_name = var_map.vol_frac_name;
+  m_x_velocity_name = var_map.uvel_name;
+  m_y_velocity_name = var_map.vvel_name;
+  m_z_velocity_name = var_map.wvel_name;
+
+  bool found_local_vel_names = false;
+  if ( input_db->findBlock("velocity") ){
+    // can overide the global velocity space with this:
+    input_db->findBlock("velocity")->getAttribute("xlabel",m_x_velocity_name);
+    input_db->findBlock("velocity")->getAttribute("ylabel",m_y_velocity_name);
+    input_db->findBlock("velocity")->getAttribute("zlabel",m_z_velocity_name);
+    found_local_vel_names = true;
+  }
+
+  // Diffusion coeff -- assuming the same one across all eqns.
+  _D_name = "NA";
+  _has_D = false;
+
+  if ( input_db->findBlock("diffusion_coef") ) {
+    input_db->findBlock("diffusion_coef")->getAttribute("label",_D_name);
+    _has_D = true;
+  }
 
   }
 
@@ -335,14 +358,14 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
       register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
       register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
       register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
       if ( _conv_scheme[ieqn] != NOCONV ){
-        register_variable( _eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-        register_variable( _eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-        register_variable( _eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( _eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( _eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( _eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       }
 
       typedef std::vector<SourceInfo> VS;
@@ -353,14 +376,13 @@ private:
     }
 
     //globally common variables
-    if ( _has_D )
+    if ( _has_D ){
       register_variable( _D_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-    register_variable( _x_velocity_name, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( _y_velocity_name, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( _z_velocity_name, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable( "areaFractionX", ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-    register_variable( "areaFractionY", ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
-    register_variable( "areaFractionZ", ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+    }
+    register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
 
   }
 
@@ -373,12 +395,10 @@ private:
     double az = Dx.x() * Dx.y();
     double V = Dx.x()*Dx.y()*Dx.z();
 
-    CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(_x_velocity_name));
-    CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(_y_velocity_name));
-    CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(_z_velocity_name));
-    CFXT& af_x  = *(tsk_info->get_const_uintah_field<CFXT>("areaFractionX"));
-    CFYT& af_y  = *(tsk_info->get_const_uintah_field<CFYT>("areaFractionY"));
-    CFZT& af_z  = *(tsk_info->get_const_uintah_field<CFZT>("areaFractionZ"));
+    CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
+    CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
+    CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
+    CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
     Uintah::BlockRange range_cl_to_ech(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
 
 
@@ -415,8 +435,9 @@ private:
         CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(_eqn_names[ieqn]+"_z_psi"));
 
         Uintah::ComputeConvectiveFlux get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
-                                                x_flux, y_flux, z_flux, af_x, af_y, af_z );
+                                                x_flux, y_flux, z_flux, eps );
         Uintah::parallel_for( range_cl_to_ech, get_flux );
+        
       }
 
       //Diffusion:
@@ -431,12 +452,19 @@ private:
 
         Uintah::parallel_for( range_diff, [&](int i, int j, int k){
 
-          rhs(i,j,k) += ax/(2.*Dx.x()) * ( af_x(i+1,j,k) * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k) - phi(i,j,k))
-                                         - af_x(i,j,k)   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)   - phi(i-1,j,k)) ) +
-                        ay/(2.*Dx.y()) * ( af_y(i,j+1,k) * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k) - phi(i,j,k))
-                                         - af_y(i,j,k)   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)   - phi(i,j-1,k)) ) +
-                        az/(2.*Dx.z()) * ( af_z(i,j,k+1) * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1) - phi(i,j,k))
-                                         - af_z(i,j,k)   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)   - phi(i,j,k-1)) );
+          const double afx  = ( eps(i,j,k) + eps(i-1,j,k) ) / 2. < 0.51 ? 0.0 : 1.0;
+          const double afxp = ( eps(i,j,k) + eps(i+1,j,k) ) / 2. < 0.51 ? 0.0 : 1.0;
+          const double afy  = ( eps(i,j,k) + eps(i,j-1,k) ) / 2. < 0.51 ? 0.0 : 1.0;
+          const double afyp = ( eps(i,j,k) + eps(i,j+1,k) ) / 2. < 0.51 ? 0.0 : 1.0;
+          const double afz  = ( eps(i,j,k) + eps(i,j,k-1) ) / 2. < 0.51 ? 0.0 : 1.0;
+          const double afzp = ( eps(i,j,k) + eps(i,j,k+1) ) / 2. < 0.51 ? 0.0 : 1.0;
+
+          rhs(i,j,k) += ax/(2.*Dx.x()) * ( afxp  * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k) - phi(i,j,k))
+                                         - afx   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)   - phi(i-1,j,k)) ) +
+                        ay/(2.*Dx.y()) * ( afyp  * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k) - phi(i,j,k))
+                                         - afy   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)   - phi(i,j-1,k)) ) +
+                        az/(2.*Dx.z()) * ( afzp  * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1) - phi(i,j,k))
+                                         - afz   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)   - phi(i,j,k-1)) );
 
         });
       }
@@ -464,10 +492,18 @@ private:
 
   template <typename T> void
   KScalarRHS<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+
+    for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++ ){
+      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
+    }
+
   }
 
   template <typename T> void
-  KScalarRHS<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){ }
+  KScalarRHS<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
+    m_boundary_functors->apply_bc( _eqn_names, m_bc_helper, tsk_info, patch );
+
+  }
 }
 #endif

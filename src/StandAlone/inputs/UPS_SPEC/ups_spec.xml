@@ -541,7 +541,7 @@
                               attribute13="minor_radius OPTIONAL DOUBLE 'positive'"
                               attribute14="angle        OPTIONAL DOUBLE"                                                                                          
                               attribute15="name         OPTIONAL STRING"
-                              attribute16="type         OPTIONAL STRING 'Wall, Velocity, MassFlow, Outflow, Open, Pressure, User'"
+                              attribute16="type         OPTIONAL STRING 'Wall, Velocity, MassFlow, Inlet, Outflow, Open, Pressure, User'"
                               attribute17="inner_lower  OPTIONAL MULTIPLE_DOUBLES"
                               attribute18="outer_lower  OPTIONAL MULTIPLE_DOUBLES"
                               attribute19="inner_upper  OPTIONAL MULTIPLE_DOUBLES"
@@ -563,8 +563,9 @@
 
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
-                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
-                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet , Swirl, FromFile, ForcedDirichlet,
+                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip, Custom, 
+                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, 
+                                                                     MassFlowInlet, PartMassFlowInlet , Swirl, FromFile, ForcedDirichlet,
                                                                      TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
                               attribute4="type      OPTIONAL STRING 'int'" 
@@ -595,6 +596,10 @@
           <roughness        spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- roughness height for the ground [m]--> 
           <freestream_h     spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- height of the free stream velocity --> 
           <k                spec="OPTIONAL DOUBLE" need_applies_to="var StABL"/> <!-- von Karman constant, default=0.41 --> 
+
+          <!-- mass flow rate -->
+          <mdot             spec="OPTIONAL DOUBLE"/> <!-- [kg/s] mass flow rate -->
+
         </BCType>
       </Face>
       

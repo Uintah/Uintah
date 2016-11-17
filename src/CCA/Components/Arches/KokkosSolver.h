@@ -80,11 +80,6 @@ namespace Uintah{
   int nonlinearSolve( const LevelP& level,
                       SchedulerP& sched );
 
-  /** @brief Sets the initial guess for several bles **/
-  void sched_setInitialGuess(SchedulerP&,
-                             const PatchSet* patches,
-                             const MaterialSet* matls);
-
   /** @brief Schedule compute of a stable timestep **/
   void computeTimestep(const LevelP& level, SchedulerP& sched);
 
@@ -94,6 +89,12 @@ namespace Uintah{
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw );
 
+  void setTimeStep( const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw );
+
   double recomputeTimestep(double current_dt){return current_dt/2.;};
 
   inline bool restartableTimesteps() {
@@ -102,24 +103,24 @@ namespace Uintah{
 
   void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart );
 
-  void sched_checkBCs( SchedulerP& sched, const LevelP& level );
-  void checkBCs(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset*,
-                        DataWarehouse*,
-                        DataWarehouse* new_dw);
-
   private:
 
     SimulationStateP& m_sharedState;
 
     std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
 
-    WBCHelper* m_bcHelper;
+    std::map<int,WBCHelper*> m_bcHelper;
 
     int _rk_order;
 
-    ProblemSpecP m_arches_spec; 
+    // Store these labels to compute a stable dt
+    const VarLabel* m_uLabel;
+    const VarLabel* m_vLabel;
+    const VarLabel* m_wLabel;
+    const VarLabel* m_rhoLabel;
+    const VarLabel* m_tot_muLabel;
+
+    double m_dt_init;
 
 };
 }

@@ -2537,163 +2537,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   }
 }
 
-//-------------------------------------------------------------
-// Compute BC Areas
-//
-void
-BoundaryCondition::sched_computeBCArea( SchedulerP& sched,
-                                        const LevelP& level,
-                                        const MaterialSet* matls)
-{
-  // IntVector lo, hi;
-  // level->findInteriorCellIndexRange(lo,hi);
-  //
-  // // cell type initialization
-  // Task* tsk = scinew Task("BoundaryCondition::computeBCArea",
-  //                         this, &BoundaryCondition::computeBCArea, lo, hi);
-  //
-  // const int ilvl = level->getID();
-  //
-  // for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
-  //       bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
-  //
-  //   BCInfo the_info = bc_iter->second;
-  //   tsk->computes( the_info.total_area_label );
-  //
-  // }
-  //
-  // sched->addTask(tsk, level->eachPatch(), matls);
-}
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void
-BoundaryCondition::computeBCArea( const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset*,
-                                  DataWarehouse*,
-                                  DataWarehouse* new_dw,
-                                  const IntVector lo,
-                                  const IntVector hi )
-{
-  //
-  // for (int p = 0; p < patches->size(); p++) {
-  //
-  //   const Patch* patch = patches->get(p);
-  //   const LevelP level = patch->getLevelP();
-  //
-  //   const int ilvl = level->getID();
-  //
-  //   int archIndex = 0;
-  //   int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-  //
-  //   vector<Patch::FaceType>::const_iterator bf_iter;
-  //   vector<Patch::FaceType> bf;
-  //   patch->getBoundaryFaces(bf);
-  //   Vector Dx = patch->dCell();
-  //
-  //   for ( BCInfoMap::iterator bc_iter = d_bc_information[ilvl].begin();
-  //         bc_iter != d_bc_information[ilvl].end(); bc_iter++) {
-  //
-  //     double area = 0;
-  //
-  //     for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++) {
-  //
-  //       //get the face
-  //       Patch::FaceType face = *bf_iter;
-  //
-  //       //get the number of children
-  //       int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
-  //
-  //       for (int child = 0; child < numChildren; child++) {
-  //
-  //         double bc_value = 0;
-  //         Vector bc_v_value(0,0,0);
-  //         std::string bc_s_value = "NA";
-  //
-  //         string bc_kind = "NotSet";
-  //         Iterator bound_ptr;
-  //         bool foundIterator = false;
-  //
-  //         if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ) {
-  //           foundIterator =
-  //                   getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
-  //         } else if ( bc_iter->second.type == VELOCITY_FILE ) {
-  //           foundIterator =
-  //                   getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr);
-  //         } else {
-  //           foundIterator =
-  //                   getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
-  //         }
-  //
-  //         double dx_1 = 0.0;
-  //         double dx_2 = 0.0;
-  //         IntVector shift;
-  //         shift = IntVector(0,0,0);
-  //
-  //         if ( foundIterator ) {
-  //
-  //           switch (face) {
-  //           case Patch::xminus:
-  //             dx_1 = Dx.y();
-  //             dx_2 = Dx.z();
-  //             shift = IntVector( 1, 0, 0);
-  //             break;
-  //           case Patch::xplus:
-  //             dx_1 = Dx.y();
-  //             dx_2 = Dx.z();
-  //             shift = IntVector( 1, 0, 0);
-  //             break;
-  //           case Patch::yminus:
-  //             dx_1 = Dx.x();
-  //             dx_2 = Dx.z();
-  //             shift = IntVector( 0, 1, 0);
-  //             break;
-  //           case Patch::yplus:
-  //             dx_1 = Dx.x();
-  //             dx_2 = Dx.z();
-  //             shift = IntVector( 0, 1, 0);
-  //             break;
-  //           case Patch::zminus:
-  //             dx_1 = Dx.y();
-  //             dx_2 = Dx.x();
-  //             shift = IntVector( 0, 0, 1);
-  //             break;
-  //           case Patch::zplus:
-  //             dx_1 = Dx.y();
-  //             dx_2 = Dx.x();
-  //             shift = IntVector( 0, 0, 1);
-  //             break;
-  //           default:
-  //             break;
-  //           }
-  //
-  //           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-  //
-  //             IntVector c = *bound_ptr;
-  //
-  //             // "if" needed to ensure that extra cell contributions aren't added
-  //             if ( c.x() >= lo.x() - shift.x() && c.x() < hi.x() + shift.x() ) {
-  //               if ( c.y() >= lo.y() - shift.y() && c.y() < hi.y() + shift.y() ) {
-  //                 if ( c.z() >= lo.z() - shift.z() && c.z() < hi.z() + shift.z() ) {
-  //
-  //                   area += dx_1*dx_2;
-  //                 }
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //
-  //     new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
-  //
-  //     const BndMapT& my_map = (*m_bcHelper)[level->getID()]->get_boundary_information();
-  //     auto iter = my_map.begin();
-  //     BndSpec a_spec = iter->second;
-  //
-  //   }
-  // }
-}
-
 //--------------------------------------------------------------------------------
 // Compute velocities from mass flow rates for bc's
 //
@@ -3998,22 +3841,22 @@ BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
 
             case Patch::yminus:
 
-              neutralOutleMinus( insideCellDir, bound_ptr, uvel, old_uvel );
+              neutralOutleMinus( insideCellDir, bound_ptr, vvel, old_vvel );
               break;
 
             case Patch::yplus:
 
-              neutralOutletPlus( insideCellDir, bound_ptr, uvel, old_uvel );
+              neutralOutletPlus( insideCellDir, bound_ptr, vvel, old_vvel );
               break;
 
             case Patch::zminus:
 
-              neutralOutleMinus( insideCellDir, bound_ptr, uvel, old_uvel );
+              neutralOutleMinus( insideCellDir, bound_ptr, wvel, old_wvel );
               break;
 
             case Patch::zplus:
 
-              neutralOutletPlus( insideCellDir, bound_ptr, uvel, old_uvel );
+              neutralOutletPlus( insideCellDir, bound_ptr, wvel, old_wvel );
               break;
 
             default:

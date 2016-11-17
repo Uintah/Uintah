@@ -102,6 +102,8 @@ private:
     std::vector<double> _beta;
     std::vector<double> _time_factor;
 
+    int m_dir;
+
   };
 
   //Function definitions:
@@ -178,6 +180,10 @@ private:
       _eqn_names.push_back(scalar_name);
 
     }
+
+    ArchesCore::VariableHelper<T> varhelp;
+    m_dir = varhelp.dir;
+
   }
 
   template <typename T>
@@ -226,7 +232,6 @@ private:
       CFYT& y_flux = *(tsk_info->get_const_uintah_field<CFYT>(*i+"_y_flux"));
       CFZT& z_flux = *(tsk_info->get_const_uintah_field<CFZT>(*i+"_z_flux"));
 
-      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
       Vector Dx = patch->dCell();
       double ax = Dx.y() * Dx.z();
       double ay = Dx.z() * Dx.x();
@@ -237,12 +242,39 @@ private:
       timer.start("work");
 #endif
 
-      //time update w/ssp average:
-      if ( time_substep > 0 ){
-        Uintah::parallel_for( range, [&](int i, int j, int k){
+      if ( time_substep == 0 ){
+        auto fe_update = [&](int i, int j, int k){
 
-          //note: the source term should already be in RHS (if any) which is why we have a +=
-          //add in the convective term
+          rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
+                                      ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
+                                      az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
+
+          phi(i,j,k) = current_phi(i,j,k) + dt/V * rhs(i,j,k);
+
+        };
+
+        if ( m_dir == 0 ){
+          GET_FX_BUFFERED_PATCH_RANGE(1,0);
+          Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
+          Uintah::parallel_for( range, fe_update );
+        } else if ( m_dir == 1 ){
+          GET_FY_BUFFERED_PATCH_RANGE(1,0);
+          Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
+          Uintah::parallel_for( range, fe_update );
+        } else if ( m_dir == 2 ){
+          GET_FZ_BUFFERED_PATCH_RANGE(1,0);
+          Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
+          Uintah::parallel_for( range, fe_update );
+        } else {
+          GET_BUFFERED_PATCH_RANGE(0,0);
+          Uintah::BlockRange range(low_patch_range, high_patch_range);
+          Uintah::parallel_for( range, fe_update );
+        }
+
+      } else {
+
+        auto fe_update = [&](int i, int j, int k){
+
           rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
@@ -250,26 +282,31 @@ private:
           phi(i,j,k) = current_phi(i,j,k) + dt/V * rhs(i,j,k);
 
           phi(i,j,k) = _alpha[time_substep] * old_phi(i,j,k) + _beta[time_substep] * phi(i,j,k);
-          std::cout << "alpha = " << _alpha[time_substep] << " and beta = " << _beta[time_substep] << std::endl;
 
-        });
-      } else {
-        Uintah::parallel_for( range, [&](int i, int j, int k){
+        };
 
-          //note: the source term should already be in RHS (if any) which is why we have a +=
-          //add in the convective term
-          rhs(i,j,k) = rhs(i,j,k) - ( ax * ( x_flux(i+1,j,k) - x_flux(i,j,k) ) +
-                                      ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
-                                      az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
-
-          phi(i,j,k) = current_phi(i,j,k) + dt/V * rhs(i,j,k);
-
-        });
+        if ( m_dir == 0 ){
+          GET_FX_BUFFERED_PATCH_RANGE(1,-1);
+          Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
+          Uintah::parallel_for( range, fe_update );
+        } else if ( m_dir == 1 ){
+          GET_FY_BUFFERED_PATCH_RANGE(1,-1);
+          Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
+          Uintah::parallel_for( range, fe_update );
+        } else if ( m_dir == 2 ){
+          GET_FZ_BUFFERED_PATCH_RANGE(1,-1);
+          Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
+          Uintah::parallel_for( range, fe_update );
+        } else {
+          GET_BUFFERED_PATCH_RANGE(0,0);
+          Uintah::BlockRange range(low_patch_range, high_patch_range);
+          Uintah::parallel_for( range, fe_update );
+        }
       }
+
 #ifdef DO_TIMINGS
       timer.stop("work");
 #endif
-
     }
   }
 }

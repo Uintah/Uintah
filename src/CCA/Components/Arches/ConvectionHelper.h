@@ -110,11 +110,9 @@ namespace Uintah {
                            const Array3<double>& i_psi_z,
                            Array3<double>& i_flux_x, Array3<double>& i_flux_y,
                            Array3<double>& i_flux_z,
-                           const Array3<double>& i_af_x, const Array3<double>& i_af_y,
-                           const Array3<double>& i_af_z ) :
+                           const Array3<double>& i_eps ) :
       phi(i_phi), u(i_u), v(i_v), w(i_w), psi_x(i_psi_x), psi_y(i_psi_y), psi_z(i_psi_z),
-      flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z),
-      af_x(i_af_x), af_y(i_af_y), af_z(i_af_z)
+      flux_x(i_flux_x), flux_y(i_flux_y), flux_z(i_flux_z), eps(i_eps)
       {}
 
     void
@@ -123,23 +121,30 @@ namespace Uintah {
       //X-dir
       {
         STENCIL3_1D(0);
-        double Sup = u(C_) > 0 ? phi(CM_) : phi(C_);
-        double Sdn = u(C_) > 0 ? phi(C_) : phi(CM_);
-        flux_x(C_) = af_x(C_) * u(C_) * ( Sup + 0.5 * psi_x(i,j,k) * ( Sdn - Sup )) ;
+        const double Sup = u(C_) > 0 ? phi(CM_) : phi(C_);
+        const double Sdn = u(C_) > 0 ? phi(C_) : phi(CM_);
+        const double afc = ( eps(C_) + eps(CM_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        //if ( i == 0 ){
+        //  flux_x(C_) = afc * u(C_) * ( Sup + 0.5 * 1. * ( Sdn - Sup )) ;
+        //} else {
+          flux_x(C_) = afc * u(C_) * ( Sup + 0.5 * psi_x(C_) * ( Sdn - Sup )) ;
+        //}
       }
       //Y-dir
       {
         STENCIL3_1D(1);
-        double Sup = v(C_) > 0 ? phi(CM_) : phi(C_);
-        double Sdn = v(C_) > 0 ? phi(C_) : phi(CM_);
-        flux_y(C_) = af_y(C_) * v(C_) * ( Sup + 0.5 * psi_y(i,j,k) * ( Sdn - Sup )) ;
+        const double Sup = v(C_) > 0 ? phi(CM_) : phi(C_);
+        const double Sdn = v(C_) > 0 ? phi(C_) : phi(CM_);
+        const double afc = ( eps(C_) + eps(CM_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_y(C_) = afc * v(C_) * ( Sup + 0.5 * psi_y(C_) * ( Sdn - Sup )) ;
       }
       //Z-dir
       {
         STENCIL3_1D(2);
-        double Sup = w(C_) > 0 ? phi(CM_) : phi(C_);
-        double Sdn = w(C_) > 0 ? phi(C_) : phi(CM_);
-        flux_z(C_) = af_z(C_) * w(C_) * ( Sup + 0.5 * psi_z(i,j,k) * ( Sdn - Sup )) ;
+        const double Sup = w(C_) > 0 ? phi(CM_) : phi(C_);
+        const double Sdn = w(C_) > 0 ? phi(C_) : phi(CM_);
+        const double afc = ( eps(C_) + eps(CM_) ) / 2. < 0.51 ? 0.0 : 1.0;
+        flux_z(C_) = afc * w(C_) * ( Sup + 0.5 * psi_z(C_) * ( Sdn - Sup )) ;
       }
     }
 
@@ -155,9 +160,7 @@ namespace Uintah {
     Array3<double>& flux_x;
     Array3<double>& flux_y;
     Array3<double>& flux_z;
-    const Array3<double>& af_x;
-    const Array3<double>& af_y;
-    const Array3<double>& af_z;
+    const Array3<double>& eps;
 
   };
 
@@ -175,9 +178,9 @@ namespace Uintah {
 
   struct GetPsi{
     GetPsi( const Array3<double>& i_phi, Array3<double>& i_psi, const Array3<double>& i_u,
-              const Array3<double>& i_af, const int& i_dir ) :
-             phi(i_phi), u(i_u), af(i_af), psi(i_psi), dir(i_dir),
-             huge(1.e10), tiny(1.e-16)
+            const Array3<double>& i_eps, const int i_dir ) :
+            phi(i_phi), u(i_u), eps(i_eps), psi(i_psi), dir(i_dir),
+            huge(1.e10), tiny(1.e-32)
     {}
 
     void operator()(int i, int j, int k) const {
@@ -203,8 +206,11 @@ namespace Uintah {
       r = u(C_) > 0 ?
         ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
         ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+      r = std::abs(r);
       SUPERBEEMACRO(r);
-      psi(C_) = my_psi * af(C_) * af(CM_);
+      const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
+      const double afcm = (( eps(CM_) + eps(CMM_) )/2.) < 0.51 ? 0. : 1.;
+      psi(C_) = my_psi * afc * afcm;
 
     }
 
@@ -226,8 +232,11 @@ namespace Uintah {
       r = u(C_) > 0 ?
         ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
         ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+      r = std::abs(r);
       ROEMACRO(r);
-      psi(C_) = my_psi * af(C_) * af(CM_);
+      const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
+      const double afcm = (( eps(CM_) + eps(CMM_) )/2.) < 0.51 ? 0. : 1.;
+      psi(C_) = my_psi * afc * afcm;
 
     }
 
@@ -249,8 +258,11 @@ namespace Uintah {
       r = u(C_) > 0 ?
         ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
         ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+      r = std::abs(r);
       VANLEERMACRO(r);
-      psi(C_) = my_psi * af(C_) * af(CM_);
+      const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
+      const double afcm = (( eps(CM_) + eps(CMM_) )/2.) < 0.51 ? 0. : 1.;
+      psi(C_) = my_psi * afc * afcm;
 
     }
 
@@ -287,9 +299,9 @@ namespace Uintah {
   private:
 
     const Array3<double>& phi;
-    const Array3<double>& u, af;
+    const Array3<double>& u, eps;
     Array3<double>& psi;
-    const int& dir;
+    const int dir;
     const double huge;
     const double tiny;
 

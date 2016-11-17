@@ -12,7 +12,9 @@
         <var                            spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction,
-                                                                          co2, h2o, soot, specific_heat'"/>
+                                                                          co2, h2o, soot, specific_heat, 
+                                                                          uvelocity, vvelocity, wvelocity, 
+                                                                          total_viscosity'"/>
       </VarID>
 
       <!-- Utility functions -->
@@ -879,6 +881,10 @@
 
       <KokkosSolver                     spec="OPTIONAL NO_DATA">
 
+        <BoundaryConditions             spec="OPTIONAL NO_DATA">
+          <force_area_calc              spec="OPTIONAL NO_DATA"/> <!-- forces all BCs to compute an area and not just those that require them -->
+        </BoundaryConditions>
+
       </KokkosSolver>
 
       <ExplicitSolver                   spec="OPTIONAL NO_DATA" >
@@ -1038,7 +1044,7 @@
             <!-- If this tag is present, convection is computed.
              The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
             <convection                   spec="OPTIONAL NO_DATA"
-                                          attribute1="scheme REQUIRED STRING"/>
+                                          attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
             <!-- Clip the scalar to maintain specified low and high bounds -->
             <clip                         spec="OPTIONAL NO_DATA"
                                           attribute1="low  REQUIRED DOUBLE"
@@ -1047,13 +1053,22 @@
             <src                          spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING"/>
           </eqn>
-          <!-- The code is currently assuming that these variables are the same across the group -->
+
+          <!--
+            The eqn group needs a velocity vector and diffusion coefficient for construction. This specficies which labels are being used. 
+              * Note that this spec is potentially different than the velocity role as specified in the <ARCHES><VarID>
+                section. It is to allow for flexibility, although we might want to reevaluate. 
+              * Note that the same velocity spec and diffusion_coef is used across all scalars in this eqn group. 
+              * Note that the default velocity spec names are currently uVelocitySPBC, v* and w*
+           -->
           <velocity                     spec="OPTIONAL NO_DATA"
                                         attribute1="xlabel REQUIRED STRING"
                                         attribute2="ylabel REQUIRED STRING"
-                                        attribute3="zlabel REQUIRED STRING"/>
-          <diffusion_coef               spec="REQUIRED NO_DATA"
+                                        attribute3="zlabel REQUIRED STRING"/>A
+
+          <diffusion_coef               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
+
         </eqn_group>
       </KScalarTransport>
 
@@ -1073,11 +1088,11 @@
                                         attribute1="type REQUIRED STRING 'sine,square'">
 
             <grid                       spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"/>
-
+                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"/> <!-- This is the grid type of the variable you are trying to initialize -->
 
             <independent_variable       spec="REQUIRED NO_DATA"
-                                        attribute1="label REQUIRED STRING"/>
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type  REQUIRED STRING 'CC,FX,FY,FZ'"/>
 
             <sine                       spec="REQUIRED NO_DATA"
                                         attribute1="A REQUIRED DOUBLE"

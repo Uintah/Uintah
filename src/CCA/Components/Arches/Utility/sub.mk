@@ -35,6 +35,7 @@ SRCS += \
           $(SRCDIR)/RandParticleLoc.cc                \
           $(SRCDIR)/SurfaceNormals.cc                 \
           $(SRCDIR)/TaskAlgebra.cc                    \
+          $(SRCDIR)/SurfaceVolumeFractionCalc.cc      \
           $(SRCDIR)/UtilityFactory.cc                 \
           $(SRCDIR)/WaveFormInit.cc                   
 

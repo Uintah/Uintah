@@ -23,6 +23,7 @@
  */
 
 //----- ExplicitSolver.cc ----------------------------------------------
+#include <CCA/Components/Arches/BoundaryFunctors.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
@@ -240,7 +241,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   ProblemSpecP db_es = params->findBlock("ExplicitSolver");
   ProblemSpecP db = params;
-  _arches_spec = db;
 
   commonProblemSetup( db_es );
 
@@ -1041,7 +1041,7 @@ ExplicitSolver::initialize( const LevelP& level,
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, _arches_spec )));
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
 
   //computes the area for each inlet through the use of a reduction variables
   m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
@@ -1051,6 +1051,8 @@ ExplicitSolver::initialize( const LevelP& level,
 
   //delete non-patch-local information on the old BC object
   d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+
+  //setupBoundaryConditions( level, patch, false );
 
   if ( level->getIndex() == d_archesLevelIndex ){
 
@@ -1067,6 +1069,9 @@ ExplicitSolver::initialize( const LevelP& level,
     d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
 
     // setup intrusion cell type
+    // computes area and volume fractions for those cells that are intrusions
+    // also sets a cell type in the same cell
+    // also is computing an iterator(s) that is stored in the intrusion
     d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
 
     //AF must be called again to account for intrusions (can this be the ONLY call?)
@@ -1081,6 +1086,8 @@ ExplicitSolver::initialize( const LevelP& level,
     BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
     BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
     BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+
+    i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
 
     bool is_restart = false;
     //utility factory
@@ -1164,9 +1171,6 @@ ExplicitSolver::initialize( const LevelP& level,
       if ( prop_model->initType()=="physical" )
         prop_model->sched_computeProp( level, sched, 1 );
     }
-
-    //Setup BC areas
-    d_boundaryCondition->sched_computeBCArea( sched, level, matls );
 
     //For debugging
     //d_boundaryCondition->printBCInfo();
@@ -1253,8 +1257,6 @@ ExplicitSolver::initialize( const LevelP& level,
 
   }
 
-  //d_boundaryCondition->sched_setBCInfo( sched, level, matls, m_bcHelper[level->getID()] );
-
 }
 
 void
@@ -1317,7 +1319,7 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, _arches_spec )));
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
 
   //computes the area for each inlet through the use of a reduction variables
   m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
@@ -1330,8 +1332,6 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
 
   //Arches only currently solves on the finest level
   if ( !level->hasFinerLevel() ){
-
-    d_boundaryCondition->sched_computeBCArea( sched, level, matls );
 
     d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart ,false);
 
@@ -1388,7 +1388,7 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
   d_boundaryCondition->set_bc_information(level);
 
   //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, _arches_spec )));
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
 
   //computes the area for each inlet through the use of a reduction variables
   m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
@@ -1398,8 +1398,6 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
 
   //delete non-patch-local information on the old BC object
   d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
-
-  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
 
   d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, false, doingRegrid);
 
@@ -1436,6 +1434,7 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    const Level* level = patch->getLevel();
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
@@ -1449,15 +1448,21 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 
     //---------------------------------------------------------------------------------------------
     //test the bc stuff:
-    //const BndMapT& my_map = m_bcHelper->get_boundary_information();
-    //auto iter = my_map.begin();
-    //BndSpec a_spec = iter->second;
-    //Uintah::Iterator my_iter = m_bcHelper->get_uintah_extra_bnd_mask(a_spec, patch->getID());
-    ////this is how you would retrieve a specific variable
-    //const BndCondSpec* test_var_find = a_spec.find("mixture_fraction");
-    //this is how you would loop over the iterator
-    // for (my_iter.reset(); !my_iter.done(); my_iter++ ){
-    //   std::cout << " iter = " << *my_iter << std::endl;
+    // const BndMapT& my_map = m_bcHelper[level->getID()]->get_boundary_information();
+    //
+    // for ( auto i_map = my_map.begin(); i_map != my_map.end(); i_map++ ){
+    //
+    //   std::cout << "Getting an iterator for bc: " << i_map->first << std::endl;
+    //   BndSpec a_spec = i_map->second;
+    //   std::cout << "    the type  =  " << a_spec.type << std::endl;
+    //   Uintah::Iterator my_iter = m_bcHelper[level->getID()]->get_uintah_extra_bnd_mask(a_spec, patch->getID());
+    //   ////this is how you would retrieve a specific variable
+    //   //const BndCondSpec* test_var_find = a_spec.find("mixture_fraction");
+    //   //this is how you would loop over the iterator
+    //   for (my_iter.reset(); !my_iter.done(); my_iter++ ){
+    //     std::cout << " iter = " << *my_iter << std::endl;
+    //   }
+    //
     // }
     //---------------------------------------------------------------------------------------------
 
@@ -2120,7 +2125,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
-  }
+  } // END OF RK LOOP
 
   if ( d_wall_ht_models != 0 ){
     d_wall_ht_models->sched_copyWallTintoT( level, sched );
@@ -4449,4 +4454,39 @@ void ExplicitSolver::registerCQMOMEqns(ProblemSpecP& db)
 
     //register internal coordinate names in a way to know which are velocities
   }
+}
+
+void
+ExplicitSolver::setupBoundaryConditions( const Level* level,
+                                         const Patch* patch,
+                                         const bool doingRestart ){
+
+  // //calls setupBCs which is setting up d_bcinformation in BoundaryCondition.cc
+  // // as parsed from the input file
+  // d_boundaryCondition->set_bc_information(level);
+  //
+  // //set a reference to BChelper map
+  // d_boundaryCondition->setBCHelper( &m_bcHelper );
+  //
+  // const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  //
+  // //this is creating a WBCHelper for this specific Level (need one/level)
+  // m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+  //
+  // //computes the area for each inlet using reduction variables
+  // m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+  //
+  // //copies the reduction area variable information on area to a double in the BndCond spec
+  // m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+  //
+  // //delete non-patch-local information on the old BC object
+  // d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+  //
+  // if ( level->getIndex() == d_archesLevelIndex ){
+  //
+  //   //for RMCRT (why not on all levels?) compute cellType
+  //   // using the BCInfoMap
+  //   d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
+  //
+  // }
 }

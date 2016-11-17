@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/Utility/GridInfo.h>
 #include <CCA/Components/Arches/Utility/TaskAlgebra.h>
 #include <CCA/Components/Arches/Utility/SurfaceNormals.h>
+#include <CCA/Components/Arches/Utility/SurfaceVolumeFractionCalc.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 using namespace Uintah;
@@ -23,6 +24,10 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
 
   tname = "surface_normals";
   tsk = scinew SurfaceNormals::Builder( tname, 0 );
+  register_task( tname, tsk );
+
+  tname = "vol_fraction_calc";
+  tsk = scinew SurfaceVolumeFractionCalc::Builder( tname, 0 );
   register_task( tname, tsk );
 
   ProblemSpecP db_all_util = db->findBlock("Utilities");
@@ -131,7 +136,13 @@ UtilityFactory::build_all_tasks( ProblemSpecP& db )
   tsk->problemSetup(db);
   tsk->create_local_labels();
 
+  // computes the surface normals
   tsk = retrieve_task("surface_normals");
+  tsk->problemSetup(db);
+  tsk->create_local_labels();
+
+  // computes a volume fraction for each cell type
+  tsk = retrieve_task("vol_fraction_calc");
   tsk->problemSetup(db);
   tsk->create_local_labels();
 

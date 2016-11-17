@@ -16,30 +16,6 @@ void
 TransportFactory::register_all_tasks( ProblemSpecP& db )
 {
 
-  /*
-
-     <ScalarTransport>
-
-      <eqn label="my_eqn">
-        <diffusion/>
-        <convection type="super_bee"/>
-        <stage value="1"/> ???
-        <clip high="1.0" low="0.0"/>
-        <initialization  type="constant">...</intialization>
-      </eqn>
-
-      <eqn label=....>
-      .... and so on....
-
-     </ScalarTransport>
-
-     <Momentum>
-      <convection type="..."/>
-     </Momentum>
-
-
-  */
-
   if ( db->findBlock("KScalarTransport") ){
 
     ProblemSpecP db_st = db->findBlock("KScalarTransport");

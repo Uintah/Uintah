@@ -48,20 +48,22 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
       if ( type == "wave" ){
 
         std::string variable_type;
+        std::string indep_variable_type;
 
         db_task->findBlock("wave")->findBlock("grid")->getAttribute("type",variable_type);
+        db_task->findBlock("wave")->findBlock("independent_variable")->getAttribute("type",indep_variable_type);
 
-        if ( variable_type == "CC"){
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<CCVariable<double> >::Builder(task_name, 0, eqn_name);
+        if ( variable_type == "CC" && indep_variable_type == "CC"){
+          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<CCVariable<double>, constCCVariable<double> >::Builder(task_name, 0, eqn_name);
           register_task( task_name, tsk );
-        } else if ( variable_type == "FX" ){
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCXVariable<double> >::Builder(task_name, 0, eqn_name);
+        } else if ( variable_type == "FX" &&  indep_variable_type == "CC" ){
+          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCXVariable<double>, constCCVariable<double> >::Builder(task_name, 0, eqn_name);
           register_task( task_name, tsk );
-        } else if ( variable_type == "FY" ){
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCYVariable<double> >::Builder(task_name, 0, eqn_name);
+        } else if ( variable_type == "FY" &&  indep_variable_type == "CC" ){
+          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCYVariable<double>, constCCVariable<double> >::Builder(task_name, 0, eqn_name);
           register_task( task_name, tsk );
-        } else if ( variable_type == "FZ" ){
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCZVariable<double> >::Builder(task_name, 0, eqn_name);
+        } else if ( variable_type == "FZ" && indep_variable_type == "CC" ){
+          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SFCZVariable<double>, constCCVariable<double> >::Builder(task_name, 0, eqn_name);
           register_task( task_name, tsk );
         } else {
           throw InvalidValue("Error: Grid type not valid for WaveForm initializer: "+variable_type, __FILE__, __LINE__);

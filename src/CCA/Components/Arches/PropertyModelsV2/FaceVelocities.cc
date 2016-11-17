@@ -1,14 +1,11 @@
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
+#include <CCA/Components/Arches/UPSHelper.h>
 
 using namespace Uintah;
+using namespace ArchesCore;
 
 FaceVelocities::FaceVelocities( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ){
-
-  //hard coded velocity names:
-  m_u_vel_name = "uVelocitySPBC";
-  m_v_vel_name = "vVelocitySPBC";
-  m_w_vel_name = "wVelocitySPBC";
 
   m_vel_names.resize(9);
   m_vel_names[0] = "ucell_xvel";
@@ -26,6 +23,13 @@ TaskInterface( task_name, matl_index ){
 FaceVelocities::~FaceVelocities(){}
 
 void FaceVelocities::problemSetup( ProblemSpecP& db ){
+
+  using namespace Uintah::ArchesCore;
+
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+
 }
 
 void FaceVelocities::create_local_labels(){
@@ -47,12 +51,11 @@ void FaceVelocities::create_local_labels(){
 
 void FaceVelocities::register_initialize( AVarInfo& variable_registry ){
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
-    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
   }
 }
 
 void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
-
 
   CCVariable<double>&   ucell_xvel = *(tsk_info->get_uintah_field<CCVariable<double> >("ucell_xvel"));
   SFCXVariable<double>& ucell_yvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_yvel"));
@@ -74,17 +77,18 @@ void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info )
   wcell_xvel.initialize(0.0);
   wcell_yvel.initialize(0.0);
   wcell_zvel.initialize(0.0);
+
 }
 
 //--------------------------------------------------------------------------------------------------
 
 void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int time_substep ){
   for (auto iter = m_vel_names.begin(); iter != m_vel_names.end(); iter++ ){
-    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
   }
-  register_variable(m_u_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry);
-  register_variable(m_v_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry);
-  register_variable(m_w_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry);
+  register_variable( m_u_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, _task_name );
+  register_variable( m_v_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, _task_name );
+  register_variable( m_w_vel_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, _task_name );
 }
 
 void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
@@ -104,6 +108,17 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   SFCZVariable<double>& wcell_xvel = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_xvel"));
   SFCZVariable<double>& wcell_yvel = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_yvel"));
   CCVariable<double>&   wcell_zvel = *(tsk_info->get_uintah_field<CCVariable<double> >("wcell_zvel"));
+
+  // initialize all velocities
+  ucell_xvel.initialize(0.0);
+  ucell_yvel.initialize(0.0);
+  ucell_zvel.initialize(0.0);
+  vcell_xvel.initialize(0.0);
+  vcell_yvel.initialize(0.0);
+  vcell_zvel.initialize(0.0);
+  wcell_xvel.initialize(0.0);
+  wcell_yvel.initialize(0.0);
+  wcell_zvel.initialize(0.0);
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){

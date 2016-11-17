@@ -398,6 +398,10 @@ public:
                                     const int index,
                                     const Patch* patch, const double C );
 
+  void setupBoundaryConditions( const Level* level,
+                                const Patch* patch,
+                                const bool doing_restart );
+
   void registerModels( ProblemSpecP& db );
   void registerTransportEqns( ProblemSpecP& db );
   void registerPropertyModels( ProblemSpecP& db );
@@ -496,7 +500,7 @@ public:
   const VarLabel* d_celltype_label;
   int d_archesLevelIndex;
 
-  std::map<int,WBCHelper*> m_bcHelper; 
+  std::map<int,WBCHelper*> m_bcHelper;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

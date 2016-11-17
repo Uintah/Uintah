@@ -202,18 +202,6 @@ void cellTypeInit( const ProcessorGroup*,
                    DataWarehouse* new_dw,
                    IntVector lo, IntVector hi);
 
-void sched_computeBCArea( SchedulerP& sched,
-                          const LevelP& level,
-                          const MaterialSet* matls);
-
-void computeBCArea( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw,
-                    const IntVector lo,
-                    const IntVector hi);
-
 void sched_setupBCInletVelocities( SchedulerP& sched,
                                    const LevelP& level,
                                    const MaterialSet* matls,

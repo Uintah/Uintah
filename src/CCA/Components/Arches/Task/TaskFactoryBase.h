@@ -3,6 +3,7 @@
 
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/WBCHelper.h>
 #include <string>
 
 namespace Uintah{
@@ -90,12 +91,24 @@ namespace Uintah{
       throw InvalidValue("Error: This factory currently cannot add tasks on the fly.", __FILE__,__LINE__);
     }
 
+    void set_bcHelper( WBCHelper* helper ){
+      m_bc_helper = helper;
+
+      //assign all tasks a copy of the bcHelper
+      for ( auto i = _tasks.begin(); i != _tasks.end(); i++ ){
+        i->second->set_bcHelper( helper ); 
+      }
+
+    }
+
   protected:
 
     BuildMap  _builders;                          ///< Builder map
     std::vector<std::string> _active_tasks;       ///< Task which are active
     TypeToTaskMap _type_to_tasks;                 ///< Collects all tasks of a common type
     SimulationStateP _shared_state;               ///< Uintah SharedState
+
+    WBCHelper* m_bc_helper;
 
   private:
 

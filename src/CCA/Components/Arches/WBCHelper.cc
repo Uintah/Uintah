@@ -71,7 +71,7 @@ BndTypeEnum select_bnd_type_enum( const std::string& bndTypeStr )
 {
   if      ( bndTypeStr == "Wall"     )  return WALL;
   else if ( bndTypeStr == "Inlet" )     return INLET;
-  else if ( bndTypeStr == "Outlet" )    return OUTLET;
+  else if ( bndTypeStr == "Outflow" )   return OUTLET;
   else if ( bndTypeStr == "Pressure" )  return PRESSURE;
   else if ( bndTypeStr == "None"
             || bndTypeStr == "User"  )  return USER;
@@ -107,7 +107,7 @@ const std::string bnd_type_enum_to_string( const BndTypeEnum bndTypeEnum )
       return "Inlet";
       break;
     case OUTLET:
-      return "Outlet";
+      return "Outflow";
       break;
     case PRESSURE:
       return "Pressure";
@@ -300,7 +300,7 @@ bool BndSpec::has_field(const std::string& varName) const
 void BndSpec::print() const
 {
   using namespace std;
-  cout << "Boundary: " << name << " face: " << face << " BndType: " << type << endl;
+  cout << "Boundary: " << name << " face: " << face << " BndType: " << type << " area: " << area << endl;
   for (vector<BndCondSpec>::const_iterator it=bcSpecVec.begin(); it != bcSpecVec.end(); ++it) {
     (*it).print();
   }
@@ -367,8 +367,8 @@ void WBCHelper::add_boundary_condition( const std::string& bndName,
 void WBCHelper::add_boundary_condition( const BndCondSpec& bcSpec )
 {
   using namespace std;
-  BOOST_FOREACH( BndMapT::value_type& bndPair, bndNameBndSpecMap_){
-    add_boundary_condition(bndPair.first, bcSpec);
+  for ( auto bndPair = bndNameBndSpecMap_.begin(); bndPair != bndNameBndSpecMap_.end(); bndPair++ ){
+    add_boundary_condition((*bndPair).first, bcSpec);
   }
 }
 
@@ -418,8 +418,9 @@ void WBCHelper::add_auxiliary_boundary_condition( const std::string& srcVarName,
 void WBCHelper::add_auxiliary_boundary_condition(const std::string& srcVarName,
                                                 BndCondSpec bcSpec)
 {
-  BOOST_FOREACH( BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ ){
-    BndSpec& myBndSpec = bndSpecPair.second;
+  for ( auto bndSpecPair = bndNameBndSpecMap_.begin(); bndSpecPair != bndNameBndSpecMap_.end();
+        bndSpecPair++ ){
+    BndSpec& myBndSpec = (*bndSpecPair).second;
     const BndCondSpec* myBndCondSpec = myBndSpec.find(srcVarName);
     if (myBndCondSpec) {
       add_boundary_condition(myBndSpec.name, bcSpec);
@@ -444,9 +445,9 @@ WBCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
   }
 
   std::ostringstream msg;
-  msg << "ERROR: It looks like you were trying to grab a boundary iterator that doesn't exist! "
+  msg << "ERROR: It looks like you were trying to grab a Uintah boundary iterator that doesn't exist! "
   << "This could be caused by requesting an iterator for a boundary/patch combination that is inconsistent with your input. "
-  << "Otherwise, this is likely a major bug that needs to be addressed by a core Wasatch developer." << std::endl;
+  << "Otherwise, this is likely a major bug that needs to be addressed by a core Arches developer." << std::endl;
   throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
 }
 
@@ -454,8 +455,9 @@ WBCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
 
 void WBCHelper::print() const
 {
-  BOOST_FOREACH( const BndMapT::value_type& bndNameBCSpecPair, bndNameBndSpecMap_ ){
-    bndNameBCSpecPair.second.print();
+  for ( auto bndNameBCSpecPair = bndNameBndSpecMap_.begin();
+        bndNameBCSpecPair != bndNameBndSpecMap_.end(); bndNameBCSpecPair++ ){
+    (*bndNameBCSpecPair).second.print();
   }
 }
 
@@ -486,9 +488,15 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions");
   ProblemSpecP db_bc_arches = m_arches_spec->findBlock("BoundaryConditions");
   bool force_area_calc = false;
-  if ( db_bc_arches->findBlock("force_area_calc") ){
-    force_area_calc = true;
+  if ( db_bc_arches ){
+    if ( db_bc_arches->findBlock("force_area_calc") ){
+      force_area_calc = true;
+    }
   }
+
+  //This will contain all the bc's everywhere. We will cherry pick from it below to only
+  // store information here per patch.
+
   if ( db_bc ) {
     for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
           db_face = db_face->findNextBlock("Face") ) {
@@ -519,7 +527,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
   BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
 
     // loop over materials
-    for( int im=0; im<matSubSet->size(); ++im ) {
+    for( int im=0; im < matSubSet->size(); ++im ) {
 
       const int materialID = matSubSet->get(im);
 
@@ -535,17 +543,6 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
           std::vector<Uintah::Patch::FaceType> bndFaces;
           patch->getBoundaryFaces(bndFaces);
 
-          //BCFunctorStorage bc_functor_storage;
-          //std::vector<BCFunctor<SwirlType> > swirl;
-          //std::vector<BCFunctor<TableLookupType> > table_lookup;
-          //BCFunctorStorageType local_bc_functor_storage( swirl, table_lookup );
-          //std::vector<BCFunctor<SwirlType> > test = std::get<std::vector<BCFunctor<SwirlType> > >(local_bc_functor_storage);
-          //std::tuple<double, int, std::vector<double> > testme(2.,1,std::vector<double>(1.,2.));
-          //(std::get<SWIRL>(testme))=3.;
-
-          //std::tuple<Args...> test;
-          // loop over the physical boundaries of this patch. These are the LOGICAL boundaries
-          // and do NOT include intrusions
           BOOST_FOREACH(const Uintah::Patch::FaceType face, bndFaces) {
 
             // Get the number of "boundaries" (children) specified on this boundary face.
@@ -562,6 +559,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
 
             // now go over every child-boundary (sub-boundary) specified on this domain boundary face
             for( int chid = 0; chid<numChildren; ++chid ) {
+
               DBGBC << " child ID = " << chid << std::endl;
 
               // here is where the fun starts. Now we can get information about this boundary condition.
@@ -614,6 +612,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 double doubleVal=0.0;
                 std::string functorName="none";
                 BCValueTypeEnum bcValType=INVALID_TYPE;
+                ArchesCore::BC_FUNCTOR_ENUM bcFunctorType=ArchesCore::INVALID_TYPE;
 
                 switch ( bndCondBase->getValueType() ) {
 
@@ -625,23 +624,46 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   }
 
                   case Uintah::BoundCondBase::STRING_TYPE: {
+
                     const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
                     functorName = new_bc->getValue();
                     bcValType = FUNCTOR_TYPE;
+
                     DBGBC << " functor name = " << functorName << std::endl;
 
-                    //Populate the functor and stuff it into the local storage container.
-                    //At the end of the patch loop, the functor storage is put into a map of
-                    //patchID->list of functors
-                    //std::shared_ptr<BaseBCFunctor> funk = get_bc_functor( functorName, patchID );
-                    //const std::string functor_key = get_key_for_functor(bndName, varName, functorName);
-                    //DBGBC << " key for functor storage = " << functor_key << std::endl;
-                    //bc_functor_storage.insert(std::make_pair(functor_key,funk));
+                    ProblemSpecP db_spec = ArchesCore::get_uintah_bc_problem_spec(
+                      m_arches_spec, varName, bndName );
+
+                    ArchesCore::BFI bc_info;
+                    if ( functorName == "massflow" ){
+
+                      double mdot = 0.0;
+                      db_spec->require("mdot", mdot);
+                      bc_info.mdot = mdot;
+                      bcFunctorType = ArchesCore::MASSFLOW;
+
+                    } else {
+
+                      Uintah::InvalidValue("Error: Functor not recognized.",__FILE__,__LINE__);
+
+                    }
+
+                    //Insert BC into local storage. This would need to be regenerated in the case
+                    // of a regrid and/or patch redistribution.
+                    insert_bc_information( varName, bndName, bc_info);
 
                     break;
                   }
                   case Uintah::BoundCondBase::VECTOR_TYPE: {
-                    // do nothing here... this is added for WARCHES support
+
+                    const Uintah::BoundCond<Vector>* const new_bc = dynamic_cast<const Uintah::BoundCond<Vector>*>(bndCondBase);
+                    Vector val = new_bc->getValue();
+                    bcValType = VECTOR_TYPE;
+
+                    ArchesCore::BFI bc_info;
+                    bc_info.velocity = val;
+
+                    insert_bc_information( varName, bndName, bc_info );
                     break;
                   }
                   case Uintah::BoundCondBase::INT_TYPE: {
@@ -657,12 +679,15 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   }
                     break;
                 }
-                const BndCondSpec bndCondSpec = {varName, functorName, doubleVal, atomBCTypeEnum, bcValType};
+
+                const BndCondSpec bndCondSpec = { varName, functorName, doubleVal, atomBCTypeEnum,
+                                                  bcValType, bcFunctorType };
+
                 add_boundary_condition(bndName, bndCondSpec);
+
               }
             } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
           } // boundary faces loop
-
 
 
           // INTERIOR BOUNDARY CONDITIONS
@@ -731,6 +756,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   double doubleVal=0.0;
                   std::string functorName="none";
                   BCValueTypeEnum bcValType=INVALID_TYPE;
+                  ArchesCore::BC_FUNCTOR_ENUM bcFunctorType=ArchesCore::INVALID_TYPE;
 
                   switch ( bndCondBase->getValueType() ) {
 
@@ -742,11 +768,37 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                     }
 
                     case Uintah::BoundCondBase::STRING_TYPE: {
-                      const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
+
+                      const Uintah::BoundCond<std::string>* const new_bc =
+                        dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
                       functorName = new_bc->getValue();
                       bcValType = FUNCTOR_TYPE;
+
                       DBGBC << " functor name = " << functorName << std::endl;
+
+                      ProblemSpecP db_spec = ArchesCore::get_uintah_bc_problem_spec(
+                        m_arches_spec, varName, bndName );
+
+                      ArchesCore::BFI bc_info;
+                      if ( functorName == "massflow" ){
+
+                        double mdot = 0.0;
+                        db_spec->require("mdot", mdot);
+                        bc_info.mdot = mdot;
+                        bcFunctorType = ArchesCore::MASSFLOW;
+
+                      } else {
+
+                        Uintah::InvalidValue("Error: Functor not recognized.",__FILE__,__LINE__);
+
+                      }
+
+                      //Insert BC into local storage. This would need to be regenerated in the case
+                      // of a regrid and/or patch redistribution.
+                      insert_bc_information( varName, bndName, bc_info);
+
                       break;
+
                     }
                     case Uintah::BoundCondBase::VECTOR_TYPE: {
                       // do nothing here... this is added for WARCHES support
@@ -765,8 +817,12 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                     }
                       break;
                   }
-                  const BndCondSpec bndCondSpec = {varName, functorName, doubleVal, atomBCTypeEnum, bcValType};
+
+                  const BndCondSpec bndCondSpec = { varName, functorName, doubleVal,
+                                                    atomBCTypeEnum, bcValType, bcFunctorType };
+
                   add_boundary_condition(bndName, bndCondSpec);
+
                 }
               } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
             }
@@ -920,7 +976,6 @@ void WBCHelper::sched_bindBCAreaHelper( SchedulerP& sched,
     sched->addTask( tsk, level->eachPatch(), matls );
 
 }
-
 
 void WBCHelper::bindBCAreaHelper( const ProcessorGroup*,
                                   const PatchSubset* patches,

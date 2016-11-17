@@ -34,8 +34,9 @@
 #ifndef WBC_HELPER
 #define WBC_HELPER
 
-//-- Arches Includers --//
-#include <CCA/Components/Arches/BoundaryFunctors.h>
+//-- Arches Includes --//
+#include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/BoundaryFunctorHelper.h>
 
 //-- C++ Includes --//
 #include <map>
@@ -84,6 +85,7 @@
  We support Dirichlet and Neumnann conditions on the boundary.
  */
 //****************************************************************************
+
 enum BndCondTypeEnum
 {
   DIRICHLET,
@@ -119,18 +121,12 @@ OST& operator<<( OST& os, const BndCondTypeEnum bcTypeEnum );
 //****************************************************************************
 enum BndTypeEnum
 {
-  WALL,     ///< Stationary wall BC. Zero velocity (and momentum).
-  INLET,    ///< Inlet boundary condition
-  OUTLET,   ///< Outlet boundary condition
-  PRESSURE, ///< Pressure boundary condition
-  USER,     ///< User specified
+  WALL,      ///< Stationary wall BC. Zero velocity (and momentum).
+  INLET,     ///< Inlet boundary condition
+  OUTLET,    ///< Outlet boundary condition
+  PRESSURE,  ///< Pressure boundary condition
+  USER,      ///< User specified
   INVALID
-  // VELOCITY, ///< Velocity specification: can be used for inlets or moving walls.
-  // MASSFLOW, ///< Mass flow inlet
-  // PRESSURE,     ///< Pressue BC (atmospheric)
-  // OUTFLOW,  ///< OUTFLOW boundary condition. encourages the flow to exit and reduces reflections.
-  // USER,     ///< User specified bc. The user can specify BCs on any quantity they desire, as long as Wasatch calls apply_boundary_condition on that quantity.
-  // INVALID
 };
 
 BndTypeEnum       select_bnd_type_enum( const std::string& bcTypeStr );
@@ -152,6 +148,7 @@ enum BCValueTypeEnum
 {
   DOUBLE_TYPE,
   FUNCTOR_TYPE, // string
+  VECTOR_TYPE,
   INVALID_TYPE
 };
 
@@ -171,6 +168,7 @@ struct BndCondSpec
   double           value;       // boundary value for this variable
   BndCondTypeEnum  bcType;      // bc type: DIRICHLET, NEUMANN
   BCValueTypeEnum  bcValType;   // value type: DOUBLE, FUNCTOR
+  Uintah::ArchesCore::BC_FUNCTOR_ENUM bcFunctorType; // MASSFLOW, SWIRL, ...
 
   // compare based on ALL the members of this struct
   bool operator==(const BndCondSpec& l) const;
@@ -283,11 +281,13 @@ struct BoundaryIterators
  *  the boundaries specified by the user.
  */
 //****************************************************************************
-namespace Uintah{
+
+namespace Uintah {
 
 class WBCHelper {
 
 protected:
+
   typedef std::map <int, BoundaryIterators            > PatchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
   typedef std::map <std::string, PatchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
 
@@ -302,6 +302,10 @@ protected:
   // bndNameBndSpecMap_ stores BndSpec information for each of the specified boundaries. This
   // map is indexed by the (unique) boundary name.
   BndMapT                    bndNameBndSpecMap_;
+
+  // The generic functor information
+  // MAP< VAR_NAME, MAP< FACE_NAME, BC_INFORMATION> >
+  std::map<std::string, ArchesCore::BoundaryFunctorInformation > m_boundary_functor_info_map;
 
   // Add a new boundary to the list of boundaries specified for this problem. If the boundary
   // already exists, this means that this boundary is shared by several patches. In that case,
@@ -481,12 +485,26 @@ public:
   //   }
   // }
 
+  /** @brief Get the facename, variable key combination for lookup in the bc_functor_info_map **/
   inline const std::string get_key_for_functor(std::string bndName, std::string varName,
                                                std::string functorName){
     return bndName+"_"+varName+"_"+functorName;
   }
 
+  /**
+    * @brief Insert a BoundaryFunctorInformation into the bc_functor_info_map given the variable name and face name
+    *        This assumes that the variable names + boundary name is unique.
+  **/
+  void insert_bc_information( std::string varname, std::string facename, ArchesCore::BFI info ){
+    std::string comb_name = facename+"_"+varname;
+    auto iter = m_boundary_functor_info_map.find(comb_name);
+    if ( iter == m_boundary_functor_info_map.end() ){
+      m_boundary_functor_info_map.insert(std::make_pair(comb_name, info));
+      return;
+    }
+    throw Uintah::InvalidValue("Error: Trying to insert a boundary information struct where one already exists.",__FILE__,__LINE__);
+  }
+
 }; // class WBCHelper
 } //namespace Uintah
-
 #endif /* defined(WBC_HELPER) */

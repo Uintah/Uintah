@@ -47,6 +47,6 @@ NonlinearSolver::commonProblemSetup( ProblemSpecP db ){
 
   db->getWithDefault("initial_dt",d_initial_dt,1.0);
 
-  _arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
+  m_arches_spec = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
 
 }
