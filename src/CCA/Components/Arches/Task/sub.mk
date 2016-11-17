@@ -33,6 +33,7 @@ SRCS += \
         $(SRCDIR)/TaskFactoryBase.cc     \
         $(SRCDIR)/TaskInterface.cc       \
         $(SRCDIR)/AtomicTaskInterface.cc \
+        $(SRCDIR)/TaskVariableTools.cc   \
         $(SRCDIR)/TemplatedSampleTask.cc
 
 ########################################################################

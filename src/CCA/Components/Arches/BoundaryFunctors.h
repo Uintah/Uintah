@@ -69,6 +69,7 @@ namespace Uintah { namespace ArchesCore{
     public:
 
       BaseFunctor(){}
+      virtual ~BaseFunctor(){}
 
       virtual void add_dep( std::vector<std::string>& master_dep ) = 0;
       virtual void eval_bc(
@@ -81,7 +82,8 @@ namespace Uintah { namespace ArchesCore{
 
     struct Dirichlet : BaseFunctor{
     public:
-      Dirichlet(){};
+      Dirichlet(){}
+      ~Dirichlet(){}
 
       void add_dep( std::vector<std::string>& master_dep ){}
 
@@ -131,7 +133,8 @@ namespace Uintah { namespace ArchesCore{
 
     struct Neumann: BaseFunctor{
     public:
-      Neumann(){};
+      Neumann(){}
+      ~Neumann(){}
 
       void add_dep( std::vector<std::string>& master_dep ){}
 
@@ -194,8 +197,9 @@ namespace Uintah { namespace ArchesCore{
 
     public:
 
-      MassFlow( const double mdot, std::string density_name ) : m_density_name(density_name),
-        m_mdot(mdot), BaseFunctor(){}
+      MassFlow( const double mdot, std::string density_name ) : BaseFunctor(), m_mdot(mdot),
+        m_density_name(density_name) {}
+      ~MassFlow(){}
 
       void add_dep( std::vector<std::string>& master_dep ){
 
@@ -235,10 +239,11 @@ namespace Uintah { namespace ArchesCore{
 
     private:
 
+      const double m_mdot;
       std::string m_density_name;
+
       std::vector<std::string> m_dep;
 
-      const double m_mdot;
 
     };
 
@@ -249,6 +254,7 @@ namespace Uintah { namespace ArchesCore{
     public:
 
       SecondaryVariableBC( std::string sec_var_name ) : m_sec_var_name(sec_var_name){}
+      ~SecondaryVariableBC(){}
 
       void add_dep( std::vector<std::string>& master_dep ){
 

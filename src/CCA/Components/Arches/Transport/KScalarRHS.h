@@ -237,13 +237,11 @@ private:
   m_y_velocity_name = var_map.vvel_name;
   m_z_velocity_name = var_map.wvel_name;
 
-  bool found_local_vel_names = false;
   if ( input_db->findBlock("velocity") ){
     // can overide the global velocity space with this:
     input_db->findBlock("velocity")->getAttribute("xlabel",m_x_velocity_name);
     input_db->findBlock("velocity")->getAttribute("ylabel",m_y_velocity_name);
     input_db->findBlock("velocity")->getAttribute("zlabel",m_z_velocity_name);
-    found_local_vel_names = true;
   }
 
   // Diffusion coeff -- assuming the same one across all eqns.
@@ -437,7 +435,7 @@ private:
         Uintah::ComputeConvectiveFlux get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
                                                 x_flux, y_flux, z_flux, eps );
         Uintah::parallel_for( range_cl_to_ech, get_flux );
-        
+
       }
 
       //Diffusion:

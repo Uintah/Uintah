@@ -1434,7 +1434,7 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
-    const Level* level = patch->getLevel();
+    //const Level* level = patch->getLevel();
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
