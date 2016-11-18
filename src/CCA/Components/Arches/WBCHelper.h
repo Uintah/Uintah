@@ -168,7 +168,6 @@ struct BndCondSpec
   double           value;       // boundary value for this variable
   BndCondTypeEnum  bcType;      // bc type: DIRICHLET, NEUMANN
   BCValueTypeEnum  bcValType;   // value type: DOUBLE, FUNCTOR
-  Uintah::ArchesCore::BC_FUNCTOR_ENUM bcFunctorType; // MASSFLOW, SWIRL, ...
 
   // compare based on ALL the members of this struct
   bool operator==(const BndCondSpec& l) const;
