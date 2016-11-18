@@ -103,8 +103,9 @@ public:
              _sharedState(sharedState),
              _MAlb(MAlb),
              _physConst(physConst),
+             _myworld(myworld), 
              _particle_helper(particle_helper),
-             _myworld(myworld), _hypreSolver(hypreSolver)
+             _hypreSolver(hypreSolver)
     { }
 
     ~Builder(){}
@@ -121,7 +122,6 @@ public:
   private:
 
     SimulationStateP& _sharedState;
-    ArchesLabel* _label;
     const MPMArchesLabel* _MAlb;
     PhysicalConstants* _physConst;
     const ProcessorGroup* _myworld;
