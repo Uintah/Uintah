@@ -481,6 +481,8 @@ public:
   CQMOM_Convection* d_cqmomConvect;
   CQMOMSourceWrapper* d_cqmomSource;
 
+  ArchesParticlesHelper* _particlesHelper;
+
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
@@ -501,7 +503,6 @@ public:
   int d_archesLevelIndex;
 
   std::map<int,WBCHelper*> m_bcHelper;
-  ArchesParticlesHelper* _particlesHelper;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
