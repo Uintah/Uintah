@@ -97,7 +97,7 @@ public:
              const MPMArchesLabel* MAlb,
              PhysicalConstants* physConst,
              std::map<std::string,
-             boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
+             std::shared_ptr<TaskFactoryBase> >& task_factory_map,
              const ProcessorGroup* myworld,
              SolverInterface* hypreSolver ) :
              _sharedState(sharedState),
@@ -125,7 +125,7 @@ public:
     ArchesLabel* _label;
     const MPMArchesLabel* _MAlb;
     PhysicalConstants* _physConst;
-    std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
+    std::map<std::string,std::shared_ptr<TaskFactoryBase> >& _task_factory_map;
     const ProcessorGroup* _myworld;
     SolverInterface* _hypreSolver;
 
@@ -134,7 +134,7 @@ public:
   ExplicitSolver( SimulationStateP& sharedState,
                   const MPMArchesLabel* MAlb,
                   PhysicalConstants* physConst,
-                  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
+                  std::map<std::string, std::shared_ptr<TaskFactoryBase> >& task_factory_map,
                   const ProcessorGroup* myworld,
                   SolverInterface* hypreSolver );
 
@@ -399,7 +399,7 @@ public:
                                  const Patch* patch, const double C );
 
   void setupBoundaryConditions( const LevelP& level,
-                                SchedulerP& sched, 
+                                SchedulerP& sched,
                                 const bool doing_restart );
 
   void registerModels( ProblemSpecP& db );
@@ -433,7 +433,7 @@ public:
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
 
   //NEW TASK INTERFACE STUFF:
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
+  std::map<std::string, std::shared_ptr<TaskFactoryBase> >& _task_factory_map;
 
   std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
   TimeIntegratorLabel* nosolve_timelabels;

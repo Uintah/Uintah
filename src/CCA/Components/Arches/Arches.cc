@@ -155,12 +155,12 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   //==============NEW TASK STUFF
   //build the factories
-  boost::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
-  boost::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
-  boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
-  boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
-  boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
+  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
+  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
+  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
+  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
+  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
+  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
 
   _task_factory_map.clear();
   _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -170,7 +170,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   _task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
   _task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
 
-  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
   for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
 
@@ -315,7 +315,7 @@ Arches::scheduleRestartInitialize( const LevelP& level,
   bool is_restart = true;
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
   TaskFactoryBase::TaskMap all_tasks = i_property_models_fac->second->retrieve_all_tasks();
 
@@ -380,7 +380,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if ( _doLagrangianParticles ) {
 
-    typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+    typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
     BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
     TaskFactoryBase::TaskMap all_tasks = i_lag_fac->second->retrieve_all_tasks();
 

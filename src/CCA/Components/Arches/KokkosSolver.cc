@@ -30,13 +30,13 @@
 
 using namespace Uintah;
 
-typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
 typedef std::vector<std::string> SVec;
 
 KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
   const ProcessorGroup* myworld,
   std::map<std::string,
-  boost::shared_ptr<TaskFactoryBase> >& task_factory_map)
+  std::shared_ptr<TaskFactoryBase> >& task_factory_map)
   : NonlinearSolver( myworld ), m_sharedState(shared_state), _task_factory_map(task_factory_map)
 {}
 

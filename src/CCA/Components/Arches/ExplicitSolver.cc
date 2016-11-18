@@ -145,7 +145,7 @@ ExplicitSolver::
 ExplicitSolver(SimulationStateP& sharedState,
                const MPMArchesLabel* MAlb,
                PhysicalConstants* physConst,
-               std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
+               std::map<std::string, std::shared_ptr<TaskFactoryBase> >& task_factory_map,
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
@@ -1043,7 +1043,7 @@ ExplicitSolver::initialize( const LevelP& level,
     //formerly known as paramInit
     sched_initializeVariables( level, sched );
 
-    typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+    typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
     BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
     BFM::iterator i_trans_fac = _task_factory_map.find("transport_factory");
     BFM::iterator i_init_fac = _task_factory_map.find("initialize_factory");
@@ -1542,7 +1542,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //========NEW STUFF =================================
   //TIMESTEP INIT:
   //UtilityFactory
-  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_util = _task_factory_map.find("utility_factory");
   TaskFactoryBase::TaskMap init_all_tasks = i_util->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){

@@ -183,7 +183,7 @@ private:
   std::map<std::string, TaskFactoryBase*> _factory_map;
   Uintah::ProblemSpecP _arches_spec;
   ArchesParticlesHelper* _particlesHelper;
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _task_factory_map;
+  std::map<std::string, std::shared_ptr<TaskFactoryBase> > _task_factory_map;
 
   bool d_doingRestart;
   bool d_with_mpmarches;

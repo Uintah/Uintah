@@ -340,7 +340,7 @@ namespace Uintah { namespace ArchesCore{
                 std::string value;
                 db_bc_type->require("value", value);
 
-// ---------  ----- HERE IS WHERE WE INSERT CUSTOMIZABLE BC FUNCTORS --------------------------------
+// --------------- HERE IS WHERE WE INSERT CUSTOMIZABLE BC FUNCTORS --------------------------------
 
                 if ( value == "massflow" ){
 
