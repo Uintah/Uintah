@@ -29,7 +29,7 @@
 #    appropriately.
 #______________________________________________________________________
 
-set ups = "methane_fire_8patch__NEW.ups"
+set ups = "methane_fire_8patch.ups"
 set patches = "[1,1,1]"
 set uda     = "regridTestArches.uda"
 set SUS     = "mpirun -np 1 ./sus $ups"

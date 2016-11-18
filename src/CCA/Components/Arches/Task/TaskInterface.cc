@@ -17,8 +17,8 @@ TaskInterface::TaskInterface( std::string task_name, int matl_index ) :
 TaskInterface::~TaskInterface()
 {
   //destroy local labels
-  BOOST_FOREACH( const VarLabel* &ilab, _local_labels ){
-    VarLabel::destroy(ilab);
+  for ( auto ilab = _local_labels.begin(); ilab != _local_labels.end(); ilab++ ){
+    VarLabel::destroy(*ilab);
   }
 }
 
@@ -45,9 +45,11 @@ void TaskInterface::schedule_task( const LevelP& level,
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
 
   int counter = 0;
-  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
+  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
     counter++;
+
+    ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
     switch(ivar.depend) {
     case ArchesFieldContainer::COMPUTES:
@@ -105,9 +107,11 @@ void TaskInterface::schedule_init( const LevelP& level,
 
   int counter = 0;
 
-  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
+  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
     counter++;
+
+    ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
     switch(ivar.depend) {
 
@@ -149,9 +153,11 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
 
   int counter = 0;
 
-  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
+  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
     counter++;
+    
+    ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
     switch(ivar.depend) {
 

@@ -524,7 +524,10 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
 
   using namespace std;
   // loop over the material set
-  BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
+  for ( auto i_matSubSet = (materials_->getVector()).begin();
+        i_matSubSet != (materials_->getVector()).end(); i_matSubSet++ ){
+
+    const Uintah::MaterialSubset* matSubSet = *i_matSubSet;
 
     // loop over materials
     for( int im=0; im < matSubSet->size(); ++im ) {
@@ -532,10 +535,16 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
       const int materialID = matSubSet->get(im);
 
       // loop over local patches
-      BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
+      for ( auto i_patches = (localPatches_->getVector()).begin();
+            i_patches != (localPatches_->getVector()).end(); i_patches++ ){
+
+        const Uintah::PatchSubset* patches = *i_patches;
 
         // loop over every patch in the patch subset
-        BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
+        for ( auto i_patch = (patches->getVector()).begin();
+              i_patch != (patches->getVector()).end(); i_patch++ ){
+
+          const Patch* patch = *i_patch;
 
           const int patchID = patch->getID();
           DBGBC << "Patch ID = " << patchID << std::endl;
@@ -543,7 +552,9 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
           std::vector<Uintah::Patch::FaceType> bndFaces;
           patch->getBoundaryFaces(bndFaces);
 
-          BOOST_FOREACH(const Uintah::Patch::FaceType face, bndFaces) {
+          for ( auto i_face = bndFaces.begin(); i_face != bndFaces.end(); i_face++ ){
+
+            const Uintah::Patch::FaceType face = *i_face;
 
             // Get the number of "boundaries" (children) specified on this boundary face.
             // example: x- boundary face has a circle specified as inlet while the rest of the
@@ -601,7 +612,10 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
               Uintah::BCData bcData;
               thisGeom->getBCData(bcData);
 
-              BOOST_FOREACH( Uintah::BoundCondBase* bndCondBase, bcData.getBCData() ) {
+              for ( auto i_bndCondBase = (bcData.getBCData()).begin(); i_bndCondBase !=
+                    (bcData.getBCData()).end(); i_bndCondBase++ ){
+
+                Uintah::BoundCondBase* bndCondBase = *i_bndCondBase;
 
                 const std::string varName     = bndCondBase->getBCVariable();
                 const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
@@ -717,7 +731,11 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 Uintah::BCData bcData;
                 thisGeom->getBCData(bcData);
 
-                BOOST_FOREACH( Uintah::BoundCondBase* bndCondBase, bcData.getBCData() ) {
+                for ( auto i_bndCondBase = (bcData.getBCData()).begin(); i_bndCondBase !=
+                      (bcData.getBCData()).end(); i_bndCondBase++ ){
+
+                  Uintah::BoundCondBase* bndCondBase = *i_bndCondBase;
+
                   const std::string varName     = bndCondBase->getBCVariable();
                   const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
 

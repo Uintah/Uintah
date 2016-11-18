@@ -41,8 +41,9 @@ void AtomicTaskInterface::schedule_task( const LevelP& level,
   }
 
   int counter = 0;
-  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
+  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
+    ArchesFieldContainer::VariableInformation& ivar = *pivar;
     counter++;
 
     switch(ivar.depend) {
