@@ -612,7 +612,6 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 double doubleVal=0.0;
                 std::string functorName="none";
                 BCValueTypeEnum bcValType=INVALID_TYPE;
-                ArchesCore::BC_FUNCTOR_ENUM bcFunctorType=ArchesCore::INVALID_TYPE;
 
                 switch ( bndCondBase->getValueType() ) {
 
@@ -631,39 +630,11 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
 
                     DBGBC << " functor name = " << functorName << std::endl;
 
-                    ProblemSpecP db_spec = ArchesCore::get_uintah_bc_problem_spec(
-                      m_arches_spec, varName, bndName );
-
-                    ArchesCore::BFI bc_info;
-                    if ( functorName == "massflow" ){
-
-                      double mdot = 0.0;
-                      db_spec->require("mdot", mdot);
-                      bc_info.mdot = mdot;
-                      bcFunctorType = ArchesCore::MASSFLOW;
-
-                    } else {
-
-                      Uintah::InvalidValue("Error: Functor not recognized.",__FILE__,__LINE__);
-
-                    }
-
-                    //Insert BC into local storage. This would need to be regenerated in the case
-                    // of a regrid and/or patch redistribution.
-                    insert_bc_information( varName, bndName, bc_info);
-
                     break;
                   }
                   case Uintah::BoundCondBase::VECTOR_TYPE: {
 
-                    const Uintah::BoundCond<Vector>* const new_bc = dynamic_cast<const Uintah::BoundCond<Vector>*>(bndCondBase);
-                    Vector val = new_bc->getValue();
-                    bcValType = VECTOR_TYPE;
-
-                    ArchesCore::BFI bc_info;
-                    bc_info.velocity = val;
-
-                    insert_bc_information( varName, bndName, bc_info );
+                    //do nothing
                     break;
                   }
                   case Uintah::BoundCondBase::INT_TYPE: {
@@ -681,7 +652,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 }
 
                 const BndCondSpec bndCondSpec = { varName, functorName, doubleVal, atomBCTypeEnum,
-                                                  bcValType, bcFunctorType };
+                                                  bcValType };
 
                 add_boundary_condition(bndName, bndCondSpec);
 
@@ -756,7 +727,6 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   double doubleVal=0.0;
                   std::string functorName="none";
                   BCValueTypeEnum bcValType=INVALID_TYPE;
-                  ArchesCore::BC_FUNCTOR_ENUM bcFunctorType=ArchesCore::INVALID_TYPE;
 
                   switch ( bndCondBase->getValueType() ) {
 
@@ -775,27 +745,6 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                       bcValType = FUNCTOR_TYPE;
 
                       DBGBC << " functor name = " << functorName << std::endl;
-
-                      ProblemSpecP db_spec = ArchesCore::get_uintah_bc_problem_spec(
-                        m_arches_spec, varName, bndName );
-
-                      ArchesCore::BFI bc_info;
-                      if ( functorName == "massflow" ){
-
-                        double mdot = 0.0;
-                        db_spec->require("mdot", mdot);
-                        bc_info.mdot = mdot;
-                        bcFunctorType = ArchesCore::MASSFLOW;
-
-                      } else {
-
-                        Uintah::InvalidValue("Error: Functor not recognized.",__FILE__,__LINE__);
-
-                      }
-
-                      //Insert BC into local storage. This would need to be regenerated in the case
-                      // of a regrid and/or patch redistribution.
-                      insert_bc_information( varName, bndName, bc_info);
 
                       break;
 
@@ -819,7 +768,7 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                   }
 
                   const BndCondSpec bndCondSpec = { varName, functorName, doubleVal,
-                                                    atomBCTypeEnum, bcValType, bcFunctorType };
+                                                    atomBCTypeEnum, bcValType };
 
                   add_boundary_condition(bndName, bndCondSpec);
 

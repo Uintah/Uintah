@@ -2552,7 +2552,7 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
 // This Task helps the infrastructure to find variables in the NEWDW on a restart.
     Task* tskh = scinew Task("BoundaryCondition::setupBCInletVelocitiesHack",
         this, &BoundaryCondition::setupBCInletVelocitiesHack );
-    tskh->computes(  d_lab->d_volFractionLabel );
+    //tskh->computes(  d_lab->d_volFractionLabel );
     tskh->computes(  d_lab->d_densityCPLabel );
     sched->addTask(tskh, level->eachPatch(), matls);
   }

@@ -1034,50 +1034,14 @@ ExplicitSolver::initialize( const LevelP& level,
                             const bool doing_restart )
 {
 
-  d_boundaryCondition->set_bc_information(level);
-
-  d_boundaryCondition->setBCHelper( &m_bcHelper );
-
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
-
-  //computes the area for each inlet through the use of a reduction variables
-  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
-
-  //copies the reduction area variable information on area to a double in the BndCond spec
-  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
-
-  //delete non-patch-local information on the old BC object
-  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
-
-  //setupBoundaryConditions( level, patch, false );
+  setupBoundaryConditions( level, sched, false );
 
   if ( level->getIndex() == d_archesLevelIndex ){
 
     //formerly known as paramInit
     sched_initializeVariables( level, sched );
-
-    //check the sanity of the momentum BCs
-    d_boundaryCondition->sched_checkMomBCs( sched, level, matls );
-
-    //initialize cell type
-    d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
-
-    // compute the cell area fraction
-    d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
-
-    // setup intrusion cell type
-    // computes area and volume fractions for those cells that are intrusions
-    // also sets a cell type in the same cell
-    // also is computing an iterator(s) that is stored in the intrusion
-    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
-
-    //AF must be called again to account for intrusions (can this be the ONLY call?)
-    d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
-
-    d_turbModel->sched_computeFilterVol( sched, level, matls );
 
     typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
     BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
@@ -1309,26 +1273,11 @@ void
 ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 {
 
-
-  d_boundaryCondition->set_bc_information(level);
-
-  d_boundaryCondition->setBCHelper( &m_bcHelper );
-
   bool doingRestart = true;
 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
-
-  //computes the area for each inlet through the use of a reduction variables
-  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
-
-  //copies the reduction area variable information on area to a double in the BndCond spec
-  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
-
-  //delete non-patch-local information on the old BC object
-  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+  setupBoundaryConditions( level, sched, doingRestart );
 
   //Arches only currently solves on the finest level
   if ( !level->hasFinerLevel() ){
@@ -1375,29 +1324,14 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
   }
 
-  //d_boundaryCondition->sched_setBCInfo( sched, level, matls, m_bcHelper[level->getID()] );
-
 }
 
 void
 ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
 {
+
   bool doingRegrid  = true;
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
-
-  d_boundaryCondition->set_bc_information(level);
-
-  //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
-
-  //computes the area for each inlet through the use of a reduction variables
-  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
-
-  //copies the reduction area variable information on area to a double in the BndCond spec
-  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
-
-  //delete non-patch-local information on the old BC object
-  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
 
   d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, false, doingRegrid);
 
@@ -1417,6 +1351,7 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
   }
 
   checkMomBCs( sched, level, matls );
+
 }
 
 
@@ -4457,36 +4392,53 @@ void ExplicitSolver::registerCQMOMEqns(ProblemSpecP& db)
 }
 
 void
-ExplicitSolver::setupBoundaryConditions( const Level* level,
-                                         const Patch* patch,
+ExplicitSolver::setupBoundaryConditions( const LevelP& level,
+                                         SchedulerP& sched,
                                          const bool doingRestart ){
 
-  // //calls setupBCs which is setting up d_bcinformation in BoundaryCondition.cc
-  // // as parsed from the input file
-  // d_boundaryCondition->set_bc_information(level);
-  //
-  // //set a reference to BChelper map
-  // d_boundaryCondition->setBCHelper( &m_bcHelper );
-  //
-  // const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
-  //
-  // //this is creating a WBCHelper for this specific Level (need one/level)
-  // m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
-  //
-  // //computes the area for each inlet using reduction variables
-  // m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
-  //
-  // //copies the reduction area variable information on area to a double in the BndCond spec
-  // m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
-  //
-  // //delete non-patch-local information on the old BC object
-  // d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
-  //
-  // if ( level->getIndex() == d_archesLevelIndex ){
-  //
-  //   //for RMCRT (why not on all levels?) compute cellType
-  //   // using the BCInfoMap
-  //   d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
-  //
-  // }
+  //calls setupBCs which is setting up d_bcinformation in BoundaryCondition.cc
+  // as parsed from the input file
+  d_boundaryCondition->set_bc_information(level);
+
+  //set a reference to BChelper map
+  d_boundaryCondition->setBCHelper( &m_bcHelper );
+
+  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+  //this is creating a WBCHelper for this specific Level (need one/level)
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+
+  //computes the area for each inlet using reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+
+  //delete non-patch-local information on the old BC object
+  d_boundaryCondition->prune_per_patch_bcinfo( sched, level, m_bcHelper[level->getID()] );
+
+  if ( level->getIndex() == d_archesLevelIndex ){
+
+     //check the sanity of the momentum BCs
+    d_boundaryCondition->sched_checkMomBCs( sched, level, matls );
+
+    //for RMCRT (why not on all levels?) compute cellType
+    // using the BCInfoMap
+    d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
+
+    // compute the cell area fraction
+    d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
+
+    // setup intrusion cell type
+    // computes area and volume fractions for those cells that are intrusions
+    // also sets a cell type in the same cell
+    // also is computing an iterator(s) that is stored in the intrusion
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
+
+    //AF must be called again to account for intrusions (can this be the ONLY call?)
+    d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
+
+    d_turbModel->sched_computeFilterVol( sched, level, matls );
+
+  }
 }

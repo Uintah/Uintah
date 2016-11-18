@@ -210,16 +210,6 @@ LOCALTESTS = [
    ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
 ]
 
-NEWTESTS = [
-   ("constantMMS__NEW"            , "mms/constantMMS__NEW.ups"                    , 1.1 , "All"  , ["exactComparison"]) , 
-   ("almgrenMMS__NEW"             , "mms/almgrenMMS__NEW.ups"                     , 1.1 , "All"  , ["exactComparison"]) , 
-   ("isotropic-turbulence-decay__NEW"  , "periodicTurb/isotropic-turbulence-decay__NEW.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
-   ("helium_1m__NEW"              , "helium_1m__NEW.ups"                          , 1.1 , "All"  , ["exactComparison"]) , 
-   ("methane_fire__NEW"           , "methane_fire__NEW.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
-   ("methane_fire_8patch__NEW"    , "methane_fire_8patch__NEW.ups"                , 8   , "All"  , ["exactComparison"]) , 
-   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups" , 8   , "All"  , ["exactComparison"]) ,
-]
-
 DEBUG = [
    ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "Linux" , ["exactComparison"])   , 
 ]
@@ -321,10 +311,6 @@ NORMCRT = [
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
 ]
 
-DEBUG = [
-   ("methane_fire_8patch__NEW"          , "methane_fire_8patch__NEW.ups"                            , 8   , "All"  , ["exactComparison"]) , 
-]
-
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
@@ -336,8 +322,6 @@ DEBUG = [
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
-  elif me == "NEWTESTS":
-    TESTS = NEWTESTS
   elif me == "RMCRTTESTS":
     TESTS = RMCRTTESTS
   elif me == "SCALARTESTS":

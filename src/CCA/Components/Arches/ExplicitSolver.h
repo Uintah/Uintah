@@ -357,12 +357,12 @@ public:
                       const TimeIntegratorLabel* timelabels);
 
   void computeDensityLag(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels,
-                      bool after_average);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         const TimeIntegratorLabel* timelabels,
+                         bool after_average);
 
   void getDensityGuess(const ProcessorGroup*,
                       const PatchSubset* patches,
@@ -372,34 +372,34 @@ public:
                       const TimeIntegratorLabel* timelabels);
 
   void checkDensityGuess(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         const TimeIntegratorLabel* timelabels);
 
   void checkDensityLag(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels,
-                      bool after_average);
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw,
+                       const TimeIntegratorLabel* timelabels,
+                       bool after_average);
 
   void updateDensityGuess(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels);
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const TimeIntegratorLabel* timelabels);
 
   void allocateAndInitializeToC( const VarLabel* label,
-                                    DataWarehouse* dw,
-                                    const int index,
-                                    const Patch* patch, const double C );
+                                 DataWarehouse* dw,
+                                 const int index,
+                                 const Patch* patch, const double C );
 
-  void setupBoundaryConditions( const Level* level,
-                                const Patch* patch,
+  void setupBoundaryConditions( const LevelP& level,
+                                SchedulerP& sched, 
                                 const bool doing_restart );
 
   void registerModels( ProblemSpecP& db );
