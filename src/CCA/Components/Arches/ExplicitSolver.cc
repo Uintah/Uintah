@@ -23,6 +23,8 @@
  */
 
 //----- ExplicitSolver.cc ----------------------------------------------
+#include <CCA/Components/Arches/ArchesParticlesHelper.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Arches/BoundaryFunctors.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
@@ -50,6 +52,18 @@
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/WBCHelper.h>
+//NEW TASK INTERFACE STUFF
+//factories
+#include <CCA/Components/Arches/Utility/UtilityFactory.h>
+#include <CCA/Components/Arches/Utility/InitializeFactory.h>
+#include <CCA/Components/Arches/Transport/TransportFactory.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
+#include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
+#include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
+#include <CCA/Components/Arches/Task/TaskInterface.h>
+//#include <CCA/Components/Arches/Task/SampleFactory.h>
+//END NEW TASK INTERFACE STUFF
 
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/ConstantModel.h>
@@ -89,13 +103,6 @@
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
-
-//NEW TASK STUFF
-#include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Task/SampleTask.h>
-#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
-#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
-//END NEW TASK STUFF
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
@@ -145,14 +152,14 @@ ExplicitSolver::
 ExplicitSolver(SimulationStateP& sharedState,
                const MPMArchesLabel* MAlb,
                PhysicalConstants* physConst,
-               std::map<std::string, std::shared_ptr<TaskFactoryBase> >& task_factory_map,
                const ProcessorGroup* myworld,
+               ArchesParticlesHelper* particle_helper,
                SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
                d_sharedState(sharedState),
                d_MAlab(MAlb),
                d_physicalConsts(physConst),
-               _task_factory_map(task_factory_map),
+               _particlesHelper( particle_helper ),
                d_hypreSolver(hypreSolver)
 {
 
@@ -245,6 +252,61 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   commonProblemSetup( db_es );
 
   d_archesLevelIndex = grid->numLevels()-1; // this is the finest level
+
+  //------------------------------------------------------------------------------------------------
+  //Look for coal information
+  if( db->findBlock("ParticleProperties") ) {
+    string particle_type;
+    db->findBlock("ParticleProperties")->getAttribute("type", particle_type);
+    if ( particle_type == "coal" ) {
+      CoalHelper& coal_helper = CoalHelper::self();
+      coal_helper.parse_for_coal_info( db );
+    } else {
+      throw InvalidValue("Error: Particle type not recognized. Current types supported: coal",__FILE__,__LINE__);
+    }
+  }
+
+  //------------------------------------------------------------------------------------------------
+  //NEW TASK STUFF
+  //build the factories
+  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
+  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
+  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
+  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
+  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
+  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
+
+  _task_factory_map.clear();
+  _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
+  _task_factory_map.insert(std::make_pair("transport_factory",TransF));
+  _task_factory_map.insert(std::make_pair("initialize_factory",InitF));
+  _task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
+  _task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
+  _task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
+
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+  proc0cout << "\n Registering Tasks For: " << std::endl;
+  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
+
+    proc0cout << "   " << i->first << std::endl;
+    i->second->set_shared_state(d_sharedState);
+    i->second->register_all_tasks(db);
+
+  }
+
+  proc0cout << "\n Building Tasks For: " << std::endl;
+
+  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
+
+    proc0cout << "   " << i->first << std::endl;
+    i->second->build_all_tasks(db);
+
+  }
+
+  proc0cout << endl;
+
+  //Checking for lagrangian particles:
+  _doLagrangianParticles = m_arches_spec->findBlock("LagrangianParticles");
 
   //------------------------------------------------------------------------------------------------
   //create a time integrator.
@@ -1277,6 +1339,14 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+  TaskFactoryBase::TaskMap all_tasks = i_property_models_fac->second->retrieve_all_tasks();
+
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+    i->second->schedule_init(level, sched, matls, doingRestart );
+  }
+
   setupBoundaryConditions( level, sched, doingRestart );
 
   //Arches only currently solves on the finest level
@@ -2105,6 +2175,31 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
    sched_computeKE( sched, patches, matls );
    sched_printTotalKE( sched, patches, matls );
   }
+
+  if ( _doLagrangianParticles ) {
+
+    typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+    BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
+    TaskFactoryBase::TaskMap all_tasks = i_lag_fac->second->retrieve_all_tasks();
+
+    TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");
+    TaskFactoryBase::TaskMap::iterator i_part_pos_update = all_tasks.find("update_particle_position");
+    TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");
+
+    //UPDATE SIZE
+    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
+    //UPDATE POSITION
+    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
+    //UPDATE VELOCITY
+    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
+
+    _particlesHelper->schedule_sync_particle_position(level,sched);
+    _particlesHelper->schedule_transfer_particle_ids(level,sched);
+    _particlesHelper->schedule_relocate_particles(level,sched);
+    _particlesHelper->schedule_add_particles(level, sched);
+
+  }
+
 
   return(0);
 

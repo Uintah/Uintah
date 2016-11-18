@@ -27,6 +27,17 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <CCA/Components/Arches/UPSHelper.h>
+//NEW TASK INTERFACE STUFF
+//factories
+#include <CCA/Components/Arches/Utility/UtilityFactory.h>
+#include <CCA/Components/Arches/Utility/InitializeFactory.h>
+#include <CCA/Components/Arches/Transport/TransportFactory.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
+#include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
+#include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
+//#include <CCA/Components/Arches/Task/SampleFactory.h>
+//END NEW TASK INTERFACE STUFF
 
 using namespace Uintah;
 
@@ -34,10 +45,8 @@ typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
 typedef std::vector<std::string> SVec;
 
 KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
-  const ProcessorGroup* myworld,
-  std::map<std::string,
-  std::shared_ptr<TaskFactoryBase> >& task_factory_map)
-  : NonlinearSolver( myworld ), m_sharedState(shared_state), _task_factory_map(task_factory_map)
+                            const ProcessorGroup* myworld )
+  : NonlinearSolver( myworld ), m_sharedState(shared_state)
 {}
 
 KokkosSolver::~KokkosSolver(){
@@ -69,6 +78,45 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   proc0cout << " Time integrator: RK of order " << _rk_order << "\n \n";
 
   commonProblemSetup( db_ks );
+
+  //------------------------------------------------------------------------------------------------
+  //NEW TASK STUFF
+  //build the factories
+  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
+  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
+  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
+  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
+  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
+  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
+
+  _task_factory_map.clear();
+  _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
+  _task_factory_map.insert(std::make_pair("transport_factory",TransF));
+  _task_factory_map.insert(std::make_pair("initialize_factory",InitF));
+  _task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
+  _task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
+  _task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
+
+  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
+  proc0cout << "\n Registering Tasks For: " << std::endl;
+  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
+
+    proc0cout << "   " << i->first << std::endl;
+    i->second->set_shared_state(m_sharedState);
+    i->second->register_all_tasks(db);
+
+  }
+
+  proc0cout << "\n Building Tasks For: " << std::endl;
+
+  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
+
+    proc0cout << "   " << i->first << std::endl;
+    i->second->build_all_tasks(db);
+
+  }
+
+  proc0cout << std::endl;
 
 }
 

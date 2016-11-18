@@ -84,6 +84,7 @@ class WallModelDriver;
 class RadPropertyCalculator;
 class ExplicitTimeInt;
 class WBCHelper;
+class ArchesParticlesHelper;
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -96,14 +97,13 @@ public:
     Builder( SimulationStateP& sharedState,
              const MPMArchesLabel* MAlb,
              PhysicalConstants* physConst,
-             std::map<std::string,
-             std::shared_ptr<TaskFactoryBase> >& task_factory_map,
              const ProcessorGroup* myworld,
+             ArchesParticlesHelper* particle_helper,
              SolverInterface* hypreSolver ) :
              _sharedState(sharedState),
              _MAlb(MAlb),
              _physConst(physConst),
-             _task_factory_map(task_factory_map),
+             _particle_helper(particle_helper),
              _myworld(myworld), _hypreSolver(hypreSolver)
     { }
 
@@ -113,10 +113,9 @@ public:
       return scinew ExplicitSolver( _sharedState,
                                     _MAlb,
                                     _physConst,
-                                    _task_factory_map,
                                     _myworld,
-                                    _hypreSolver
-                                  );
+                                    _particle_helper,
+                                    _hypreSolver);
     }
 
   private:
@@ -125,8 +124,8 @@ public:
     ArchesLabel* _label;
     const MPMArchesLabel* _MAlb;
     PhysicalConstants* _physConst;
-    std::map<std::string,std::shared_ptr<TaskFactoryBase> >& _task_factory_map;
     const ProcessorGroup* _myworld;
+    ArchesParticlesHelper* _particle_helper;
     SolverInterface* _hypreSolver;
 
   };
@@ -134,8 +133,8 @@ public:
   ExplicitSolver( SimulationStateP& sharedState,
                   const MPMArchesLabel* MAlb,
                   PhysicalConstants* physConst,
-                  std::map<std::string, std::shared_ptr<TaskFactoryBase> >& task_factory_map,
                   const ProcessorGroup* myworld,
+                  ArchesParticlesHelper* particle_helper,
                   SolverInterface* hypreSolver );
 
   virtual ~ExplicitSolver();
@@ -433,7 +432,8 @@ public:
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
 
   //NEW TASK INTERFACE STUFF:
-  std::map<std::string, std::shared_ptr<TaskFactoryBase> >& _task_factory_map;
+  std::map<std::string, std::shared_ptr<TaskFactoryBase> > _task_factory_map;
+  bool _doLagrangianParticles;
 
   std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
   TimeIntegratorLabel* nosolve_timelabels;
@@ -501,6 +501,7 @@ public:
   int d_archesLevelIndex;
 
   std::map<int,WBCHelper*> m_bcHelper;
+  ArchesParticlesHelper* _particlesHelper;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

@@ -42,28 +42,23 @@ namespace Uintah{
 
   public:
     Builder( SimulationStateP& sharedState,
-             std::map<std::string,
-             std::shared_ptr<TaskFactoryBase> >& task_factory_map,
              const ProcessorGroup* myworld ) :
              _sharedState(sharedState),
-             _task_factory_map(task_factory_map),
              _myworld(myworld)
     { }
      ~Builder(){}
 
      KokkosSolver* build(){
-       return scinew KokkosSolver( _sharedState, _myworld, _task_factory_map );
+       return scinew KokkosSolver( _sharedState, _myworld );
      }
 
   private:
     SimulationStateP& _sharedState;
-    std::map<std::string,std::shared_ptr<TaskFactoryBase> >& _task_factory_map;
     const ProcessorGroup* _myworld;
   };
 
   KokkosSolver( SimulationStateP& sharedState,
-                       const ProcessorGroup* myworld,
-                       std::map<std::string, std::shared_ptr<TaskFactoryBase> >& task_factory_map);
+                const ProcessorGroup* myworld );
 
   virtual ~KokkosSolver();
 
@@ -107,7 +102,7 @@ namespace Uintah{
 
     SimulationStateP& m_sharedState;
 
-    std::map<std::string,std::shared_ptr<TaskFactoryBase> >& _task_factory_map;
+    std::map<std::string,std::shared_ptr<TaskFactoryBase> > _task_factory_map;
 
     std::map<int,WBCHelper*> m_bcHelper;
 

@@ -24,19 +24,7 @@
 
 //----- Arches.cc ----------------------------------------------
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
-#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <Core/IO/UintahZlibUtil.h>
-//NEW TASK INTERFACE STUFF
-//factories
-#include <CCA/Components/Arches/Utility/UtilityFactory.h>
-#include <CCA/Components/Arches/Utility/InitializeFactory.h>
-#include <CCA/Components/Arches/Transport/TransportFactory.h>
-#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
-#include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
-#include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
-//#include <CCA/Components/Arches/Task/SampleFactory.h>
-//END NEW TASK INTERFACE STUFF
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -129,23 +117,16 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   _arches_spec = db;
 
+  // Check for lagrangian particles
+  _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles");
+  if ( _doLagrangianParticles ) {
+    _particlesHelper->problem_setup(params,_arches_spec->findBlock("LagrangianParticles"), sharedState);
+  }
+
   //__________________________________
   //  Multi-level related
   d_archesLevelIndex = grid->numLevels()-1; // this is the finest level
   proc0cout << "ARCHES CFD level: " << d_archesLevelIndex << endl;
-
-  //Look for coal information
-  // Not very generic here...needs a rework
-  if( db->findBlock("ParticleProperties") ) {
-    string particle_type;
-    db->findBlock("ParticleProperties")->getAttribute("type", particle_type);
-    if ( particle_type == "coal" ) {
-      CoalHelper& coal_helper = CoalHelper::self();
-      coal_helper.parse_for_coal_info( db );
-    } else {
-      throw InvalidValue("Error: Particle type not recognized. Current types supported: coal",__FILE__,__LINE__);
-    }
-  }
 
   // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
   if( db->getRootNode()->findBlock("Grid") ) {
@@ -153,50 +134,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     assign_unique_boundary_names( bcProbSpec );
   }
 
-  //==============NEW TASK STUFF
-  //build the factories
-  std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
-  std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
-  std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
-  std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
-  std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
-
-  _task_factory_map.clear();
-  _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
-  _task_factory_map.insert(std::make_pair("transport_factory",TransF));
-  _task_factory_map.insert(std::make_pair("initialize_factory",InitF));
-  _task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
-  _task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
-  _task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
-
-  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-  proc0cout << "\n Registering Tasks For: " << std::endl;
-  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
-
-    proc0cout << "   " << i->first << std::endl;
-    i->second->set_shared_state(d_sharedState);
-    i->second->register_all_tasks(db);
-
-  }
-
-  proc0cout << "\n Building Tasks For: " << std::endl;
-
-  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
-
-    proc0cout << "   " << i->first << std::endl;
-    i->second->build_all_tasks(db);
-
-  }
-
-  proc0cout << endl;
-
-  //Checking for lagrangian particles:
-  _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles");
-  if ( _doLagrangianParticles ) {
-    _particlesHelper->problem_setup(params,_arches_spec->findBlock("LagrangianParticles"), sharedState);
-  }
-  //==================== NEW STUFF ===============================
 
   db->getWithDefault("recompileTaskgraph",  d_recompile_taskgraph,false);
 
@@ -214,18 +151,18 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   //--- Create the solver/algorithm ---
   NonlinearSolver::NLSolverBuilder* builder;
-  if ( db->findBlock("ExplicitSolver") ) {
+  if (   db->findBlock("ExplicitSolver") ) {
 
     builder = scinew ExplicitSolver::Builder( d_sharedState,
                                               d_MAlab,
                                               d_physicalConsts,
-                                              _task_factory_map,
                                               d_myworld,
+                                              _particlesHelper,
                                               hypreSolver );
 
   } else if ( db->findBlock("KokkosSolver")) {
 
-    builder = scinew KokkosSolver::Builder( d_sharedState, _task_factory_map, d_myworld );
+    builder = scinew KokkosSolver::Builder( d_sharedState, d_myworld );
 
   } else {
 
@@ -312,17 +249,6 @@ Arches::scheduleRestartInitialize( const LevelP& level,
                                    SchedulerP& sched )
 {
 
-  bool is_restart = true;
-  const MaterialSet* matls = d_sharedState->allArchesMaterials();
-
-  typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
-  TaskFactoryBase::TaskMap all_tasks = i_property_models_fac->second->retrieve_all_tasks();
-
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-
   d_nlSolver->sched_restartInitialize( level, sched );
 
 }
@@ -377,30 +303,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   }}
 
   d_nlSolver->nonlinearSolve(level, sched);
-
-  if ( _doLagrangianParticles ) {
-
-    typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-    BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
-    TaskFactoryBase::TaskMap all_tasks = i_lag_fac->second->retrieve_all_tasks();
-
-    TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");
-    TaskFactoryBase::TaskMap::iterator i_part_pos_update = all_tasks.find("update_particle_position");
-    TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");
-
-    //UPDATE SIZE
-    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
-    //UPDATE POSITION
-    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
-    //UPDATE VELOCITY
-    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0);
-
-    _particlesHelper->schedule_sync_particle_position(level,sched);
-    _particlesHelper->schedule_transfer_particle_ids(level,sched);
-    _particlesHelper->schedule_relocate_particles(level,sched);
-    _particlesHelper->schedule_add_particles(level, sched);
-
-  }
 
   //__________________________________
   //  on the fly analysis
