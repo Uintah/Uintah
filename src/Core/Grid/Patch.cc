@@ -1482,6 +1482,71 @@ void Patch::getOtherLevelPatches(int levelOffset,
   }
 }
 
+// This is being put in until the other getOtherLevelPatches can be
+// made to work with both AMRMPM and Arches
+void Patch::getOtherLevelPatches55902(int levelOffset,
+                                 Patch::selectType& selected_patches,
+                                 int nPaddingCells /*=0*/) const
+{
+  ASSERT(levelOffset !=0);
+
+  // include the padding cells in the final low/high indices
+  IntVector pc(nPaddingCells, nPaddingCells, nPaddingCells);
+  
+  Point lowPt = getLevel()->getCellPosition(getExtraCellLowIndex());
+  Point hiPt  = getLevel()->getCellPosition(getExtraCellHighIndex());
+
+  const LevelP& otherLevel = getLevel()->getRelativeLevel(levelOffset);
+  Level::selectType patches;
+  IntVector low(-9,-9,-9);
+  IntVector high(-9,-9,-9);
+
+  if (levelOffset < 0) {
+    Point lowPt = getLevel()->getCellPosition(getExtraCellLowIndex());
+    Point hiPt  = getLevel()->getCellPosition(getExtraCellHighIndex());
+    low  = otherLevel->getCellIndex(lowPt);
+    high = otherLevel->getCellIndex(hiPt);
+
+    // we don't grab enough in the high direction if the fine extra cell
+    // is on the other side of a coarse boundary
+
+    // refinement ratio between the two levels
+    IntVector crr = IntVector(1,1,1);
+    for (int i=1;i<=(-levelOffset);i++){
+      crr = crr * otherLevel->getRelativeLevel(i)->getRefinementRatio();
+    }
+    IntVector highIndex = getExtraCellHighIndex();
+    IntVector offset((highIndex.x() % crr.x()) == 0 ? 0 : 1,
+                     (highIndex.y() % crr.y()) == 0 ? 0 : 1,
+                     (highIndex.z() % crr.z()) == 0 ? 0 : 1);
+    high += offset;
+  }else if (levelOffset > 0) {
+    //Going from coarse to fine.
+    Point lowPt = getLevel()->getNodePosition(getExtraCellLowIndex()); //getNodePosition is a way to get us the bottom/left/close corner coordinate.
+    Point hiPt = getLevel()->getNodePosition(getExtraCellHighIndex()); //Need to add (1,1,1) to get the upper/right/far corner coordinate.
+    low  = otherLevel->getCellIndex(lowPt);
+    high = otherLevel->getCellIndex(hiPt);
+    //Note, if extra cells were used, then the computed low and high will go too far.
+    //For example, a coarse to fine refinement ratio of 2 means that if the coarse had 1 layer of extra cells,
+    //then trying to find the low from the coarses (-1, -1, -1) will result in the answer (-2,-2,-2).
+    //That's fine, it's a perfect projection of what it would be.
+  }
+
+  //std::cout << "  Patch:Golp: " << low-pc << " " << high+pc << std::endl;
+  otherLevel->selectPatches(low-pc, high+pc, patches); 
+  
+  // based on the expanded range above to search for extra cells, we might
+  // have grabbed more patches than we wanted, so refine them here
+  for (int i = 0; i < patches.size(); i++) {
+    IntVector lo = patches[i]->getExtraCellLowIndex();
+    IntVector hi = patches[i]->getExtraCellHighIndex();
+    bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
+    if (levelOffset < 0 || intersect) {
+      selected_patches.push_back(patches[i]);
+    }
+  }
+}
+
 void Patch::getOtherLevelPatchesNB(int levelOffset,
                                    Patch::selectType& selected_patches,
                                    int nPaddingCells /*=0*/) const

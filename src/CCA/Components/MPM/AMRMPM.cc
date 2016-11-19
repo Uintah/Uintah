@@ -2178,7 +2178,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     // You must add a single layer of padding cells.
     int padding = 1;
     Level::selectType coarsePatches;
-    finePatch->getOtherLevelPatches(-1, coarsePatches, padding);
+    finePatch->getOtherLevelPatches55902(-1, coarsePatches, padding);
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2342,7 +2342,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI_GIMP(const ProcessorGroup*,
     // You must add a single layer of padding cells.
     int padding = 1;
     Level::selectType coarsePatches;
-    finePatch->getOtherLevelPatches(-1, coarsePatches, padding);
+    finePatch->getOtherLevelPatches55902(-1, coarsePatches, padding);
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -3014,7 +3014,7 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
       // You must add a single layer of padding cells.
       int padding = 1;
       Level::selectType coarsePatches;
-      finePatch->getOtherLevelPatches(-1, coarsePatches, padding);
+      finePatch->getOtherLevelPatches55902(-1, coarsePatches, padding);
         
       Matrix3 Id;
       Id.Identity();
@@ -4927,7 +4927,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
       // find the fine patches over the coarse patch.  Add a single layer of cells
       // so you will get the required patches when coarse patch and fine patch boundaries coincide.
       Level::selectType finePatches;
-      patch->getOtherLevelPatches(1, finePatches, 1);
+      patch->getOtherLevelPatches55902(1, finePatches, 1);
 
       const Level* fineLevel = level->getFinerLevel().get_rep();
       IntVector refineRatio(fineLevel->getRefinementRatio());
