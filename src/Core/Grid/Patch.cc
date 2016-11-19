@@ -1497,16 +1497,10 @@ void Patch::getOtherLevelPatches55902(int levelOffset,
   Point hiPt  = getLevel()->getCellPosition(getExtraCellHighIndex());
 
   const LevelP& otherLevel = getLevel()->getRelativeLevel(levelOffset);
-  Level::selectType patches;
-  IntVector low(-9,-9,-9);
-  IntVector high(-9,-9,-9);
+  IntVector low  = otherLevel->getCellIndex(lowPt);
+  IntVector high = otherLevel->getCellIndex(hiPt);
 
   if (levelOffset < 0) {
-    Point lowPt = getLevel()->getCellPosition(getExtraCellLowIndex());
-    Point hiPt  = getLevel()->getCellPosition(getExtraCellHighIndex());
-    low  = otherLevel->getCellIndex(lowPt);
-    high = otherLevel->getCellIndex(hiPt);
-
     // we don't grab enough in the high direction if the fine extra cell
     // is on the other side of a coarse boundary
 
@@ -1520,19 +1514,21 @@ void Patch::getOtherLevelPatches55902(int levelOffset,
                      (highIndex.y() % crr.y()) == 0 ? 0 : 1,
                      (highIndex.z() % crr.z()) == 0 ? 0 : 1);
     high += offset;
-  }else if (levelOffset > 0) {
-    //Going from coarse to fine.
-    Point lowPt = getLevel()->getNodePosition(getExtraCellLowIndex()); //getNodePosition is a way to get us the bottom/left/close corner coordinate.
-    Point hiPt = getLevel()->getNodePosition(getExtraCellHighIndex()); //Need to add (1,1,1) to get the upper/right/far corner coordinate.
-    low  = otherLevel->getCellIndex(lowPt);
-    high = otherLevel->getCellIndex(hiPt);
-    //Note, if extra cells were used, then the computed low and high will go too far.
-    //For example, a coarse to fine refinement ratio of 2 means that if the coarse had 1 layer of extra cells,
-    //then trying to find the low from the coarses (-1, -1, -1) will result in the answer (-2,-2,-2).
-    //That's fine, it's a perfect projection of what it would be.
+  }
+  
+  if (levelOffset > 0) {
+    // the getCellPosition->getCellIndex seems to always add one...
+    // maybe we should just separate this back to coarser/finer patches
+    // and use mapCellToFiner...
+    
+    // also subtract more from low and keep high where it is to get extra 
+    // cells, since selectPatches doesn't 
+    // use extra cells. 
+    low = low - IntVector(2,2,2);
   }
 
-  //std::cout << "  Patch:Golp: " << low-pc << " " << high+pc << std::endl;
+  //cout << "  Patch:Golp: " << low-pc << " " << high+pc << endl;
+  Level::selectType patches;
   otherLevel->selectPatches(low-pc, high+pc, patches); 
   
   // based on the expanded range above to search for extra cells, we might
@@ -1541,6 +1537,7 @@ void Patch::getOtherLevelPatches55902(int levelOffset,
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
+    
     if (levelOffset < 0 || intersect) {
       selected_patches.push_back(patches[i]);
     }
