@@ -73,6 +73,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_refineParticles = false;
 
   d_artificialDampCoeff = 0.0;
+  d_PICalpha = 0.0;
   d_forceIncrementFactor = 1.0;
   d_interpolator = scinew LinearInterpolator(); 
   d_do_contact_friction = false;
@@ -192,6 +193,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("axisymmetric", d_axisymmetric);
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
+  mpm_flag_ps->get("PICalpha", d_PICalpha);
   mpm_flag_ps->get("artificial_viscosity",     d_artificial_viscosity);
   mpm_flag_ps->get("refine_particles",         d_refineParticles);
   if(d_artificial_viscosity){
@@ -387,6 +389,7 @@ else{
     dbg << " Interpolation type          = " << d_interpolator_type << endl;
     dbg << " With Color                  = " << d_with_color << endl;
     dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;
+    dbg << " PIC alpha                   = " << d_PICalpha << endl;
     dbg << " Artificial Viscosity On     = " << d_artificial_viscosity<< endl;
     dbg << " Artificial Viscosity Htng   = " << d_artificial_viscosity_heating<< endl;
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
@@ -416,6 +419,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("axisymmetric", d_axisymmetric);
   ps->appendElement("withColor",  d_with_color);
   ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff);
+  ps->appendElement("PICalpha", d_PICalpha);
   ps->appendElement("artificial_viscosity",     d_artificial_viscosity);
   ps->appendElement("artificial_viscosity_heating",d_artificial_viscosity_heating);
   ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1);
