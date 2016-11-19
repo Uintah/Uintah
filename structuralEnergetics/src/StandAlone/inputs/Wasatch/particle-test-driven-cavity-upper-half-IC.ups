@@ -1,0 +1,298 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Particle initialization in the upper half of a 2D driven cavity</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+      <TimeIntegrator> FE </TimeIntegrator>
+
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="xvelcc"/>
+      <InterpolateExpression type="XVOL">
+          <NameTag name="u"/>
+      </InterpolateExpression>
+    </PostProcessingExpression>
+    
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="yvelcc"/>
+      <InterpolateExpression type="YVOL">
+          <NameTag name="v"/>
+      </InterpolateExpression>
+    </PostProcessingExpression>
+        
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="xvelcc"/>
+      <NameTag name="yvelcc"/>
+    </ForceOnGraph>
+
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="vorticity_z"/>
+      <Vorticity>
+      <Component>Z</Component>
+      <Vel1>
+        <NameTag name="v"/>
+      </Vel1>
+      <Vel2>
+        <NameTag name="u"/>
+      </Vel2>
+      </Vorticity>
+    </PostProcessingExpression>
+
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="vel_magnitude"/>
+      <VelocityMagnitude>
+      <XVelocity>
+        <NameTag name="u"/>
+      </XVelocity>
+      <YVelocity>
+        <NameTag name="v"/>
+      </YVelocity>
+      </VelocityMagnitude>
+    </PostProcessingExpression>
+
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="vel_magnitude"/>
+      <NameTag name="vorticity_z"/>                      
+    </ForceOnGraph>
+    
+    <ParticleTransportEquations>
+      <ParticlesPerCell>1</ParticlesPerCell>
+      <ParticleDensity name="p.rho"/>            
+      <ParticleMass name="p.m" state="STATE_DYNAMIC">
+      	<SourceTerm name="nothing"/>	
+      </ParticleMass>      
+      <ParticleSize name="p.size" state="STATE_DYNAMIC">      
+      	<SourceTerm name="nothing"/>
+      </ParticleSize>
+			<ParticlePosition x="p.xw" y="p.yw" z="p.zw">
+				<Velocity>
+					<XVel name="p.u" state="STATE_DYNAMIC"/>
+					<YVel name="p.v" state="STATE_DYNAMIC"/>
+					<ZVel name="p.w" state="STATE_DYNAMIC"/>	
+				</Velocity>
+			</ParticlePosition>
+			<ParticleMomentum x="p.u" y="p.v" z="p.w">
+<!-- 				<DisableDragForce/> -->
+<!-- 				<Gravity direction="Z"/> -->
+				<GasProperties>
+					<GasViscosity name="viscosity"/>
+					<GasDensity name="density"/>					
+					<GasVelocity>
+						<XVel name="u"/>
+						<YVel name="v"/>
+						<ZVel name="w"/>		
+					</GasVelocity>				
+				</GasProperties>
+			</ParticleMomentum>
+    </ParticleTransportEquations>
+    
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.size"/>
+       <Constant>0.0001</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.rho"/>
+       <Constant>1000</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="PARTICLE">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="p.w" state="STATE_DYNAMIC"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.xw"/>
+       <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
+       		<Random seed="1"/>
+       </ParticlePositionIC>
+    </BasicExpression>
+
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.yw"/>
+       <ParticlePositionIC coordinate="Y" bounds="SPECIFIED">
+       		<Bounds low="0.55" high="0.95"/>
+       		<Random seed="2"/>
+       </ParticlePositionIC>
+    </BasicExpression>
+
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.zw"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.u"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.v"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.w"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="v"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="w"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="w"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.001</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+ 	
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <ReferencePressure value="0.0">
+            <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure>
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+ 	 	 	 	 	 	 <skip>1</skip>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-10  </tolerance>
+            <maxiterations>  1000    </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>60</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 10</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>particle-test-driven-cavity-upper-half-IC.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.001"/>
+<!--     <compression>gzip</compression> -->
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="u"/>
+    <save label="v"/>
+    <save label="p.x"/>
+    <save label="p.m"/>    
+    <save label="p.xw_rhs"/>    
+    <save label="p.yw_rhs"/>    
+    <save label="p.zw_rhs"/>            
+
+    <save label="p.u_rhs"/>    
+    <save label="p.v_rhs"/>    
+    <save label="p.w_rhs"/>            
+
+    <save label="p.drag_x"/>    
+    <save label="p.drag_y"/>    
+    <save label="p.drag_z"/>            
+    
+    <save label="p.u"/>    
+    <save label="p.v"/>        
+    <save label="p.w"/>        
+    <save label="p.zw_rhs"/>        
+    <save label="p.w_rhs"/>        
+    <save label="p.size"/>    
+    <save label="p.xw"/>        
+    <save label="p.yw"/>
+    <save label="p.zw"/>    
+    <save label="vel_magnitude"/>
+    <save label="vorticity_z"/>    
+    <save label="xvelcc"/>
+    <save label="yvelcc"/>    
+
+    <save label="p.particleID"/>        
+    <save label="pressure"/>
+    <save label="dilatation"/>
+  </DataArchiver> 
+
+	<Grid>
+		<BoundaryConditions>
+			<DefaultMaterial>all</DefaultMaterial>
+			<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+			<Face side="x-" type="Wall"/>
+			<Face side="x+" type="Wall"/>
+			<Face side="y-" type="Wall"/>
+			<Face side="y+" type="Velocity">
+				<BCType var="Dirichlet" label="u" value="1.0"/>
+				</Face>
+		</BoundaryConditions>
+		<Level>
+			<Box label="1">
+				<lower>[0,0,-1]</lower>
+				<upper>[1,1,1]</upper>
+				<resolution>[64,64,2]</resolution>
+				<!--extraCells>[1,1,0]</extraCells-->
+				<patches>[2,2,1]</patches>
+			</Box>
+			<periodic>[0,0,0]</periodic>
+		</Level>
+	</Grid>
+
+</Uintah_specification>

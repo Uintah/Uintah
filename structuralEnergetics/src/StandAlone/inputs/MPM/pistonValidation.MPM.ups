@@ -1,0 +1,249 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Piston compressing gas adiabatically</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            1.0e-2   </maxTime>
+       <initTime>           0.0      </initTime>
+       <delt_min>           0.0      </delt_min>
+       <delt_max>           0.006    </delt_max>
+       <delt_init>          1e-6     </delt_init>
+       <timestep_multiplier>.5       </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+       <Level>
+           <Box label = "1">
+              <lower>         [ 0.0,   0.0,   0.0]    </lower>
+              <upper>         [ 1.0e-2,2.5e-1,1.0e-2] </upper>
+              <extraCells>    [1,1,1]                 </extraCells>
+              <patches>       [1,1,1]                 </patches>
+              <resolution>    [1,100,1]               </resolution>
+           </Box>
+       </Level>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" var = "symmetry" label = "Symmetric">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" var = "symmetry" label = "Symmetric">
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0" var = "Neumann"    label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann"  label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann"  label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0" var = "Neumann"    label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann"  label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann"  label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann"  label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" var = "symmetry" label = "Symmetric">
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" var = "symmetry" label = "Symmetric">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    </Grid>
+
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <DataArchiver>
+      <filebase>PistonVal.MPM.uda</filebase>
+      <outputInterval> 1.0e-4 </outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.volume"/>
+      <save label = "p.temperature"/>
+      <save label = "p.dTdt+"/>
+      <save label = "p.velocity"/>
+      <save label = "p.stress"/>
+      <save label = "p.particleID"/>
+      <save label = "g.dTdt"/>
+      <checkpoint cycle = "2" timestepInterval = "500"/>
+<!--
+      <save label = "press_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "rho_CC"/>
+      <save label = "sp_vol_CC"/>
+      <save label = "delP_Dilatate"/>
+      <save label = "speedSound_CC"/>
+      <save label = "intE_source_CC"/>  
+      <save label = "eng_L_ME_CC"/>
+      <save label = "mom_L_ME_CC"/>
+      <save label = "vel_CC"/>  
+      <save label = "temp_CC"/>
+      <save label = "mom_source_CC"/>    
+      <save label = "mom_L_CC"/>
+      <save label = "p.mass"/>
+      <save label = "g.mass"/>
+      <save label = "g.stressFS"/>
+-->
+    </DataArchiver>
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.4</cfl>
+       <ICE>
+        <advection type = "SecondOrder"/>
+     <!--   
+        <TimeStepControl>
+          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.001            </knob_for_speedSound>
+        </TimeStepControl>
+     -->   
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable = "implicitPressure">
+
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           
+            </Parameters>
+        </ImplicitSolver>
+        
+      </ICE>        
+    </CFD>
+    <MPM>
+       <time_integrator> explicit </time_integrator>
+       <interpolator>gimp</interpolator>
+    </MPM>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+      <gravity>                         [0,0,0]         </gravity>
+      <reference_pressure>              101325.         </reference_pressure>
+    </PhysicalConstants>
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name = " Piston">
+                <density>                890000.        </density>
+                <constitutive_model type = "comp_neo_hook">
+                  <bulk_modulus>          117.0e9       </bulk_modulus>
+                  <shear_modulus>          43.8e9       </shear_modulus>
+                </constitutive_model>
+                <thermal_conductivity>     400.0        </thermal_conductivity>
+                <specific_heat>            386.0        </specific_heat>
+              <geom_object>
+                  <box label = "Piston">
+                     <min>   [ 0.0, 0.10,0.0]     </min>
+                     <max>   [ 0.1, 0.15,0.1]     </max>
+                  </box>
+                  <res>                [1,2,1]           </res>
+                  <velocity>           [0.0,-1.0e1,0.0] </velocity>
+                  <temperature>        300               </temperature>
+              </geom_object>
+         </material>
+
+         <material>
+              <density>   1.1768292682926831   </density>
+              <constitutive_model type="ideal_gas">
+                  <specific_heat>  717.5        </specific_heat>
+                  <UseArtificialViscosity>false</UseArtificialViscosity>
+              </constitutive_model>
+              <thermal_conductivity> 1000.0           </thermal_conductivity>
+              <specific_heat>         717.5           </specific_heat>
+              <geom_object>
+                <box label = "gas">                       
+                 <min>   [-0.1, -0.5, -0.1]        </min>      
+                 <max>   [ 0.1,  0.10, 0.1]      </max>    
+                </box>                                          
+                <res>               [1,2,1]         </res>
+                <velocity>          [0.0,0.0,0.0]   </velocity>
+                <temperature>       300             </temperature>
+              </geom_object>
+         </material>
+           <contact>
+             <type>        rigid           </type>
+             <stop_time>   0.8e-2          </stop_time>
+             <direction>   [1, 1, 1]       </direction>
+             <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
+          </contact>
+      </MPM>
+      <!--__________________________________ -->   
+       <ICE>
+         <material name = "Air Above piston">
+            <EOS type = "ideal_gas">                    </EOS>
+           <dynamic_viscosity>          0.0             </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+                    <box label = "air_above_piston">
+                     <min>   [-0.1, 0.15, -0.1]     </min>
+                     <max>   [ 0.1, 0.30,  0.1]     </max>
+                    </box>
+               <res>                  [2,2,2]           </res>
+               <velocity>             [0.0,-1.0e1,0.0] </velocity>
+               <temperature>          300.0             </temperature>
+              <density>               1.179294693       </density>
+               <pressure>              101325.          </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+
+       <exchange_properties>
+         <exchange_coefficients>
+                          <!--  [0-1,  0-2, 1-2]  -->
+              <momentum>       [1e15, 1e15, 1e15]     </momentum>
+              <heat>           [   1,    1,    1]     </heat>
+          </exchange_coefficients>
+       </exchange_properties>
+    </MaterialProperties>
+       
+
+
+    
+</Uintah_specification>

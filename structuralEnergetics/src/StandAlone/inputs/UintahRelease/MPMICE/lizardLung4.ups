@@ -1,0 +1,346 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>cylinder in a crossflow</title>
+   </Meta>
+   <SimulationComponent type="mpmice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            10          </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           0.003        </delt_max>
+       <delt_init>          1.0e-7      </delt_init>
+       <max_delt_increase>    1.0       </max_delt_increase>
+       <timestep_multiplier>0.4 </timestep_multiplier>
+       <!--<max_Timesteps>         16 </max_Timesteps> -->
+   </Time>
+
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "0" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "1" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "2" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "0" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "1" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "2" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [-0.3, -0.075,  0.00]      </lower>
+              <upper>        [ 0.3,  0.225,  0.002]     </upper>
+              <extraCells>   [1,1,1]                    </extraCells>
+              <patches>      [8,4,1]                    </patches>
+              <resolution>   [300,150,1]                 </resolution>
+            </Box>
+       </Level>
+    </Grid>
+
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>LizardLung4.uda</filebase>
+<!--
+      <outputTimestepInterval>1</outputTimestepInterval>
+-->
+      <outputInterval>0.05</outputInterval>
+      <outputInitTimestep/>
+      <save label = "press_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "vel_CC"/>
+      <save label = "rho_CC"/>
+<!--
+      <save label = "temp_CC"/>
+-->
+      <save label = "p.x"             levels = "-1"/>
+      <save label = "p.color"         levels = "-1"/>
+      <save label = "p.volume"        levels = "-1"/>
+      <save label = "p.displacement"  levels = "-1"/>
+      <checkpoint cycle = "2" timestepInterval = "1000"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.3</cfl>
+       <ICE>
+        <advection type = "SecondOrder"/> 
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        </TimeStepControl>
+
+        <ImplicitSolver>
+           <max_outer_iterations>      10    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-7  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 3 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+            <norm>     LInfinity  </norm>
+            <criteria> Absolute   </criteria>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+<!--
+-->
+       </ICE>        
+    </CFD>
+    
+    <MPM>
+      <time_integrator>     explicit  </time_integrator>
+      <testForNegTemps_mpm> false     </testForNegTemps_mpm>
+      <interpolator>        gimp      </interpolator>
+      <withColor>           true      </withColor>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________--> 
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+      
+       <MPM>
+         <material name="piston">
+           <density>             2000.0         </density>
+           <constitutive_model type = "comp_neo_hook">
+              <useModifiedEOS>     true          </useModifiedEOS>
+              <bulk_modulus>      60000.0          </bulk_modulus>
+              <shear_modulus>     30000.0          </shear_modulus>
+           </constitutive_model>
+           <thermal_conductivity>  400.0         </thermal_conductivity>
+           <specific_heat>         386.0         </specific_heat>
+           <geom_object>
+               <box label = "piston">
+                  <min>           [0.15, -.075, 0.0]    </min>
+                  <max>           [0.154,0.225, 0.1]   </max>
+               </box>
+             <res>              [2,2,1]       </res>
+             <velocity>         [0.0,0.,0.]   </velocity>
+             <temperature>      300.          </temperature>
+             <color>            0.            </color>
+           </geom_object>
+         </material>
+         <material name="lung">
+           <density>   1.1792946927374306000e+03   </density>
+           <constitutive_model type="comp_neo_hook">
+               <useModifiedEOS>     true          </useModifiedEOS>
+               <bulk_modulus>      60000.0          </bulk_modulus>
+               <shear_modulus>     30000.0          </shear_modulus>
+           </constitutive_model>
+           <thermal_conductivity>  400.0           </thermal_conductivity>
+           <specific_heat>         716.0           </specific_heat>
+           <geom_object>
+             <difference label="blockage1"> <!--bottom-->
+               <union>
+                 <difference>
+                   <cylinder label = "top_cylinder">
+                     <bottom>    [0.0,0.075,0.0]      </bottom>
+                     <top>       [0.0,0.075,0.1]      </top>
+                     <radius>        0.07           </radius>
+                   </cylinder>
+                   <box label = "fixedblock1">
+                      <min>   [-.05, 0.05,  0.0]    </min>
+                      <max>   [-.025,0.075, 0.1]   </max>
+                   </box>
+                 </difference>
+                 <difference>
+                   <cylinder label = "bot_cylinder">
+                     <bottom>    [0.0,-.075,0.0]      </bottom>
+                     <top>       [0.0,-.075,0.1]      </top>
+                     <radius>        0.07           </radius>
+                   </cylinder>
+                   <cylinder label = "hollow1">
+                     <bottom>    [0.0,-.075,0.0]      </bottom>
+                     <top>       [0.0,-.075,0.1]      </top>
+                     <radius>        0.055           </radius>
+                   </cylinder>
+                 </difference>
+               </union>
+               <union>
+                 <box label = "flatten_back1">
+                    <min>           [0.0,  -.075, 0.0]    </min>
+                    <max>           [0.075,0.225, 0.1]   </max>
+                 </box>
+                 <box label = "flatten_top1">
+                    <min>           [-.2,0.075, 0.0]    </min>
+                    <max>           [0.2,0.225, 0.1]   </max>
+                 </box>
+               </union>
+             </difference>
+             <res>              [2,2,1]       </res>
+             <velocity>         [0.,0.,0.]    </velocity>
+             <temperature>      300.          </temperature>
+             <color>            0.            </color>
+           </geom_object>
+           <geom_object>
+             <difference label="blockage2"> <!-- top -->
+               <union>
+                 <difference>
+                   <cylinder label = "top_cylinder2">
+                     <bottom>    [-.0715,0.225,0.0]      </bottom>
+                     <top>       [-.0715,0.225,0.1]      </top>
+                     <radius>        0.07           </radius>
+                   </cylinder>
+                   <cylinder label = "hollow2">
+                     <bottom>    [-.0715,0.225,0.0]      </bottom>
+                     <top>       [-.0715,0.225,0.1]      </top>
+                     <radius>        0.055           </radius>
+                   </cylinder>
+                 </difference>
+                 <difference>
+                   <cylinder label = "bot_cylinder2">
+                      <bottom>    [-.0715,0.075,0.0]      </bottom>
+                      <top>       [-.0715,0.075,0.1]      </top>
+                      <radius>        0.07           </radius>
+                   </cylinder>
+                   <box label = "fixedblock2">
+                      <min>   [-.05, 0.075, 0.0]    </min>
+                      <max>   [-.025,0.1,   0.1]   </max>
+                   </box>
+                 </difference>
+               </union>
+               <union>
+                 <box label = "flatten_front2">
+                    <min>           [-.15,-.075, 0.0]    </min>
+                    <max>           [-.0715, 0.225, 0.1]   </max>
+                 </box>
+                 <box label = "flatten_bot2">
+                    <min>           [-.2,-.075, 0.0]    </min>
+                    <max>           [0.2,0.075, 0.1]   </max>
+                 </box>
+               </union>
+             </difference>
+             <res>              [2,2,1]       </res>
+             <velocity>         [0.,0.,0.]    </velocity>
+             <temperature>      300.          </temperature>
+             <color>            0.            </color>
+           </geom_object>
+           <geom_object>
+             <union>
+               <box label = "fixedblock1"/>
+               <box label = "fixedblock2"/>
+             </union>
+             <res>              [2,2,1]       </res>
+             <velocity>         [0.,0.,0.]    </velocity>
+             <temperature>      300.          </temperature>
+             <color>            2.            </color>
+           </geom_object>
+         </material>
+
+         <contact>
+           <type>specified</type>
+           <filename>breathe.txt</filename>
+           <direction>[1,1,1]</direction>
+         </contact>
+      </MPM>
+       <ICE>
+         <material name="atmosphere">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>          1e-6            </dynamic_viscosity>
+           <thermal_conductivity>       26.3e-3         </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+              <difference>
+                <box label = "the whole computational domain">
+                    <min>           [-10,-10,-10]       </min>
+                    <max>           [10,10,10]          </max>
+                </box>
+                <union>
+                  <box label = "piston"/>
+                  <difference label = "blockage1"/>
+                  <difference label = "blockage2"/>
+                  <box        label = "fixedblock1"/>
+                  <box        label = "fixedblock2"/>
+                </union>
+              </difference>
+               <res>                [2,2,2]             </res>
+               <velocity>           [0.0,0.0,0.0]      </velocity>
+               <temperature>        300.0               </temperature>
+               <density>    1.1792946927374306000e+00   </density>
+               <pressure>           101325.0            </pressure>
+           </geom_object>
+         </material>
+      </ICE> 
+      <exchange_properties> 
+         <exchange_coefficients>
+              <momentum>               [0, 1e15, 1e15]         </momentum>
+              <heat>                   [0, 1e15, 1e15]         </heat>
+        </exchange_coefficients>
+     </exchange_properties> 
+    </MaterialProperties>
+</Uintah_specification>

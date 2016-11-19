@@ -1,0 +1,262 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>MMS for verifying the Pressure projection method in wasatch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>    
+
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+    
+    <!-- Setup the parameters for variable density MMS -->
+    <VariableDensityMMS>
+       <Scalar>f</Scalar>    
+       <ConservedScalar>rhof</ConservedScalar>           
+    </VariableDensityMMS>
+
+    <!-- Set the initial condition expression for mixture fraction -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f"/>
+      <GaussianFunction amplitude="1.0" deviation="1.0" mean="0.0" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+        
+    <!-- Set up a tabular property evaluation to extract density for initialization-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/NonReacting_PP_MMS</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      
+      <IndependentVariable>
+        <NameTag name="f"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractVariable>
+        <NameInTable>Density</NameInTable>
+        <NameTag name="density"/>
+      </ExtractVariable>
+    </TabProps>
+    
+    <!-- Set up a tabular property evaluation to extract density within the advance_solution-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/NonReacting_PP_MMS</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      
+      <IndependentVariable>
+        <NameTag name="f"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractDensity>
+        <NameTag name="density"/>
+        <ModelBasedOnMixtureFraction>
+          <DensityWeightedMixtureFraction>
+            <NameTag name="rhof" state="STATE_DYNAMIC"/>
+          </DensityWeightedMixtureFraction>       
+          <MixtureFraction>
+            <NameTag name="f"/>
+          </MixtureFraction>                 
+        </ModelBasedOnMixtureFraction>
+      </ExtractDensity>
+      
+    </TabProps>  
+
+            
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-right-vel"/>
+      <VarDenMMSVelocity side="PLUS">
+      </VarDenMMSVelocity>
+    </BCExpression>
+
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-left-vel"/>
+      <VarDenMMSVelocity side="MINUS">
+      </VarDenMMSVelocity>
+    </BCExpression>
+                
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-right-mom"/>
+      <VarDenMMSMomentum side="PLUS">
+      </VarDenMMSMomentum>
+    </BCExpression>
+
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-left-mom"/>
+      <VarDenMMSMomentum side="MINUS">
+      </VarDenMMSMomentum>
+    </BCExpression>
+        
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-rhof_plus"/>
+      <VarDenMMSSolnVar/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-rhof_minus"/>
+      <VarDenMMSSolnVar/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-f_plus"/>
+      <VarDenMMSMixtureFraction/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-f_minus"/>
+      <VarDenMMSMixtureFraction/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-rho_minus"/>
+      <VarDenMMSDensity/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-rho_plus"/>
+      <VarDenMMSDensity/>
+    </BCExpression>
+                
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="mixturefraction">
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+      <ConvectiveFlux direction="X" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DiffusiveFlux direction="X" coefficient="0.0658"/>
+    </TransportEquation>
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+        
+      
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.0179</Constant>
+    </BasicExpression>
+        
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+         
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <Use3DLaplacian>   false</Use3DLaplacian>
+
+        <Parameters>
+ 	 	 	 	 	 	 <skip>1</skip>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-12  </tolerance>
+            <maxiterations>  50   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 100 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-projection-mms.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.001"/>
+    <save label="density"/>    
+    <save label="density*"/>    
+    <save label="x-mom"/>
+    <save label="x-mom_rhs_partial"/>
+    <save label="u"/>
+    <save label="mms_mixture_fraction_src"/>
+    <save label="f"/>
+    <save label="rhof"/>
+    <save label="pressure"/>
+    <save label="pressure_src"/>
+  </DataArchiver> 
+
+  <Grid>
+
+      <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+
+      <Face side="x-">
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Dirichlet" value="mms-left-mom"/>
+        <BCType label="u" var="Dirichlet" value="mms-left-vel"/>
+        <BCType label="rhof" var="Dirichlet" value="mms-bc-rhof_minus"/>
+        <BCType label="rhof_rhs" var="Dirichlet" value="0.0"/>        
+        <BCType label="f" var="Dirichlet" value="mms-bc-f_minus"/>
+        <BCType label="density" var="Dirichlet" value="mms-bc-rho_minus"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>        
+      </Face>
+      <Face side="x+">
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Dirichlet" value="mms-right-mom"/>
+        <BCType label="u" var="Dirichlet" value="mms-right-vel"/>
+        <BCType label="rhof" var="Dirichlet" value="mms-bc-rhof_plus"/>
+        <BCType label="rhof_rhs" var="Dirichlet" value="0.0"/>        
+        <BCType label="f" var="Dirichlet" value="mms-bc-f_plus"/>
+        <BCType label="density" var="Dirichlet" value="mms-bc-rho_plus"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>        
+      </Face>
+      </BoundaryConditions>  
+
+      <Level>
+      <Box label="1">
+        <lower>[-15,0,0]</lower>
+        <upper>[15,1,1]</upper>
+        <resolution>[256,1,1]</resolution>
+        <patches>[9,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

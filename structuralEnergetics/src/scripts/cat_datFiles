@@ -1,0 +1,80 @@
+#!/bin/csh -f
+#______________________________________________________________________
+# cat_OnTheFly:
+#   This script concatenates a series of "dat" file to a masterUda
+#
+#   Usage:
+#       cat_OnTheFly  < list of uda files > 
+#  
+#   Notes:
+#   - Each dat file is sorted using the first column
+#   - It assumes that the directory "masterUda" has been created
+#______________________________________________________________________
+
+if( $#argv < 1 ) then
+  echo " ERROR: "
+  echo " usage:  cat_datFiles  < list of uda files > "
+  echo " This script concatenates the <uda>/*.dat files to a masterUda" 
+  exit
+endif
+
+set udas       = ($argv[*])
+set master_uda = "masterUda" 
+set here       = `pwd`
+
+if( ! -e $master_uda ) then
+  echo " usage:  cat_datFiles  < list of uda files >"
+  echo " The directory ($master_uda) does not exist, now exiting"
+  exit
+endif
+
+echo ""
+echo "__________________________________"
+foreach uda ($udas[*])
+  echo "Passing $uda through bulletproofing section"
+  
+  # does each uda exist
+  if (! -e $uda ) then
+    echo "  ERROR: cat_OnTheFly: can't find the uda $uda"
+    echo "  Now exiting..."
+    exit
+  endif
+
+  echo "working on $uda"
+
+  #__________________________________
+  # find all *.dat files in the uda
+  cd $uda
+  set these = (`find . -maxdepth 1 -name "*.dat"` )
+  cd $here
+
+  #__________________________________
+  # concatenate each of the $uda/dat files to $master_uda/dat
+  foreach Y ( $these[*]:q )
+
+    if( -e "$uda/$Y" ) then
+
+      echo " Now concatenating $uda/$Y"
+
+      if (-e "$master_uda/$Y" ) then
+        cp -fp "$master_uda/$Y" "$master_uda/$Y.tmp"
+      endif
+
+      cat "$uda/$Y" >> "$master_uda/$Y.tmp"
+
+      # remove the header from the temporary file  If one exists
+      sed -i /'[:digit:]'/d "$master_uda/$Y.tmp"
+
+      # now reconstruct the file and remove duplicate lines
+      # sort the file by time 
+      grep -v '[[:digit:]]' "$uda/$Y" > "$master_uda/$Y"
+
+
+      sort -k1 -g "$master_uda/$Y.tmp"|uniq >> "$master_uda/$Y"
+
+      /bin/rm "$master_uda/$Y.tmp"
+    endif
+  end
+end
+
+exit
