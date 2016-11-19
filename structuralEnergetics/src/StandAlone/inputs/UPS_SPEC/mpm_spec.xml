@@ -4,6 +4,7 @@
   <Uintah_specification> 
     <MPM                                  spec="OPTIONAL NO_DATA" >
       <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
+      <PICalpha                           spec="OPTIONAL DOUBLE 'positive'"/>
       <artificial_viscosity               spec="OPTIONAL BOOLEAN" />
       <artificial_viscosity_heating       spec="OPTIONAL BOOLEAN" />
       <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />

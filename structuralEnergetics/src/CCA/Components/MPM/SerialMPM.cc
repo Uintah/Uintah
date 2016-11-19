@@ -3382,10 +3382,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     if(reactant != 0){
     }
 #endif
-    double move_particles=1.;
-    if(!flags->d_doGridReset){
-      move_particles=0.;
-    }
 
     //Carry forward NC_CCweight (put outside of matl loop, only need for matl 0)
     constNCVariable<double> NC_CCweight;
@@ -3524,9 +3520,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
 
         // Update the particle's position and velocity
-        pxnew[idx]           = px[idx]    + vel*delT*move_particles;
+//        pxnew[idx]           = px[idx]    + vel*delT;
+//        pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
+        double alpha = flags->d_PICalpha;
+
+        pxnew[idx] = px[idx] + (vel-acc*delT*(1.-0.5*alpha)
+                             + 0.5*(1.-alpha)*(vel-pvelocity[idx]))*delT;
+        pvelocitynew[idx] = (1.0-alpha)*vel + alpha*(pvelocity[idx]+acc*delT);
+
         pdispnew[idx]        = pdisp[idx] + vel*delT;
-        pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
         pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
@@ -3817,10 +3819,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
-    double move_particles=1.;
-    if(!flags->d_doGridReset){
-      move_particles=0.;
-    }
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -3878,7 +3876,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
         }
 
         // Update the particle's position and velocity
-        pxnew[idx]           = px[idx]    + vel*delT*move_particles;
+        pxnew[idx]           = px[idx]    + vel*delT;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
         pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
