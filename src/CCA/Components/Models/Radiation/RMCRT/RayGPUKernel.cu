@@ -395,7 +395,11 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   // coarse level data for the entire level
   for (int l = 0; l < maxLevels; ++l) {
     if (d_levels[l].hasFinerLevel) {
-      abskg_gdw->getLevel( abskg[l],           "abskg",    matl, l);
+      if(RT_flags.usingFloats){
+        abskg_gdw->getLevel( abskg[l],           "abskgRMCRT",    matl, l);
+      } else {
+        abskg_gdw->getLevel( abskg[l],           "abskg",    matl, l);
+      }
       sigmaT4_gdw->getLevel( sigmaT4OverPi[l], "sigmaT4",  matl, l);
       cellType_gdw->getLevel( cellType[l],     "cellType", matl, l);
 
@@ -410,7 +414,11 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   //  so the halo can be > 0
   if ( RT_flags.whichROI_algo == patch_based ) {
 
-    abskg_gdw->get(abskg[fineL],           "abskg",    finePatch.ID, matl, fineL);
+    if(RT_flags.usingFloats){
+      abskg_gdw->get(abskg[fineL],           "abskgRMCRT",    finePatch.ID, matl, fineL);
+    } else {
+      abskg_gdw->get(abskg[fineL],           "abskg",    finePatch.ID, matl, fineL);
+    }
     sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4",  finePatch.ID, matl, fineL);
     cellType_gdw->get(cellType[fineL],     "cellType", finePatch.ID, matl, fineL);
 
