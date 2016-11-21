@@ -28,7 +28,6 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
 #include <Core/Util/DOUT.hpp>
-#include <Core/Util/Timers/Timers.hpp>
 
 #include <mutex>
 
