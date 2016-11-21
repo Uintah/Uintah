@@ -104,26 +104,32 @@ struct Simple
   // disable copy, assignment
   Simple( const Simple & ) = delete;
   Simple( Simple && ) = delete;
-  Simple & operator=( const Simple & ) = delete;
+  Simple & operator=( const Simple &timer ) {
+    m_offset = timer.m_offset;
+    return *this; };
   Simple & operator=( Simple && ) = delete;
+  Simple & operator=( const nanoseconds &offset ) {
+    m_offset = offset;
+    return *this; };
 
-
-  /// reset the timer
-  void reset()
+  // reset the timer
+  void reset( bool running = true )
   {
     m_start = m_finish = clock_type::now();
     m_offset = 0;
     m_excluded = 0;
+    m_running = running;
   }
 
   // stop the timer
   bool stop()
   {
-    if (m_finish <= m_start) {
+    if (m_running) {
       m_finish = clock_type::now();
       const int64_t t = std::chrono::duration_cast<std::chrono::nanoseconds>(m_finish-m_start).count();
       m_offset += t;
       exclude( t );
+      m_running = false;
       return true;
     }
     return false;
@@ -133,6 +139,7 @@ struct Simple
   void start()
   {
     m_start = m_finish = clock_type::now();
+    m_running = true;
   }
 
   // lap the timer
@@ -145,14 +152,12 @@ struct Simple
     return m_offset - tmp;
   }
 
-
   // number of nanoseconds since construction, start, or reset
   nanoseconds operator()() const
   {
-    return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>( (m_start < m_finish) ?
-             (m_finish - m_start) : (clock_type::now() - m_start) ).count())
-           + m_offset
-           - m_excluded;
+    return (m_running ? static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>( clock_type::now()-m_start).count()) : 0)
+      + m_offset
+      - m_excluded;
   }
 
 private:
@@ -186,6 +191,7 @@ private:
   int64_t                    m_offset   {0};
   int64_t                    m_excluded {0};
   std::unique_ptr<Simple*[]> m_excludes {};
+  bool                       m_running  {false};
 };
 
 
