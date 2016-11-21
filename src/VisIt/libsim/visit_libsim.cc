@@ -331,35 +331,33 @@ bool visit_CheckState( visit_simulation_data *sim )
     /* If running do not block */
     int blocking = (sim->runMode == VISIT_SIMMODE_RUNNING) ? 0 : 1;
 
+    // State change so update
     if( sim->blocking != blocking )
     {
       sim->blocking = blocking;
-        
-      if( VisItIsConnected() )
-      {
-        if( blocking )
-        {
-          // If blocking the run mode is not running so the
-          // simulation will not be running so change the state to
-          // allow asyncronious commands like saving a timestep or a
-          // checkpoint to happen.
-          if( sim->simMode != VISIT_SIMMODE_FINISHED )
-          {
-            sim->simMode = VISIT_SIMMODE_STOPPED;
 
-            if(sim->isProc0)
-            {
-              VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+      if( blocking )
+      {
+	// If blocking the run mode is not running so the simulation
+	// will not be running so change the state to allow
+	// asyncronious commands like saving a timestep or a
+	// checkpoint to happen.
+	if( sim->simMode != VISIT_SIMMODE_FINISHED )
+        {
+	  sim->simMode = VISIT_SIMMODE_STOPPED;
+	  
+	  if(sim->isProc0)
+          {
+	    VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
               
-              std::stringstream msg;
-              msg << "Visit libsim - Stopped the simulation at "
-                  << "timestep " << sim->cycle << ",  "
-                  << "Time = " << sim->time;
+	    std::stringstream msg;
+	    msg << "Visit libsim - Stopped the simulation at "
+		<< "timestep " << sim->cycle << ",  "
+		<< "Time = " << sim->time;
             
-              visitdbg << msg.str().c_str() << std::endl;
-              visitdbg.flush();
-              VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-            }
+	    visitdbg << msg.str().c_str() << std::endl;
+	    visitdbg.flush();
+	    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
           }
         }
       }
@@ -500,10 +498,7 @@ bool visit_CheckState( visit_simulation_data *sim )
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
                           double time, double delt, double delt_next,
-                          double totalWallTime,
-			  double execWallTime,     double totalExecWallTime,
-			  double expMovingAverage, double inSituWallTime,
-			  bool last )
+			  bool first, bool last )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
@@ -514,13 +509,9 @@ void visit_UpdateSimData( visit_simulation_data *sim,
   sim->delt          = delt;
   sim->delt_next     = delt_next;
   
-  sim->totalWallTime     = totalWallTime;
-  sim->totalExecWallTime = totalExecWallTime;
-  sim->execWallTime      = execWallTime;
-  sim->expMovingAverage  = expMovingAverage;
-  sim->inSituWallTime    = inSituWallTime;
+  sim->first         = first;
 
-  sim->cycle             = simStateP->getCurrentTopLevelTimeStep();
+  sim->cycle         = simStateP->getCurrentTopLevelTimeStep();
 
   // Check to see if at the last iteration. If so stop so the
   // user can have once last chance see the data.

@@ -87,15 +87,6 @@ typedef struct
   double delt;
   double delt_next;
 
-  // Note these variables are part of the simulaiton controller but
-  // can not be accessed directly because doing so creates a circular
-  // dependency.
-  double totalWallTime;
-  double totalExecWallTime;
-  double execWallTime;
-  double expMovingAverage;
-  double inSituWallTime;
-
   // UDA archieve variables.
   bool useExtraCells;
   bool nodeCentered;
@@ -110,6 +101,8 @@ typedef struct
   int  rank;
   bool isProc0;
 
+  bool first;
+  
   bool timeRange;
   int timeStart;
   int timeStep;
@@ -140,10 +133,7 @@ bool visit_CheckState(visit_simulation_data *sim);
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
                           double time, double delt, double delt_next,
-			  double totalWallTime, double totalExecWallTime,
-			  double execWallTime, double expMovingAve,
-                          double inSituWallTime,
-			  bool last );
+			  bool first, bool last );
 
 void visit_Initialize( visit_simulation_data *sim );
   

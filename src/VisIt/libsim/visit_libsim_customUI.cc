@@ -97,39 +97,37 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetWallTimes( visit_simulation_data *sim )
 {
+  WallTimers* walltimers  = sim->simController->getWallTimers();
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
+  int row = 0;
+  
   VisItUI_setTableValueS("WallTimesVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
-  VisItUI_setTableValueS("WallTimesVariableTable", 0, 0, "InSitu",  0);
-  VisItUI_setTableValueD("WallTimesVariableTable", 0, 1,
-			 sim->inSituWallTime, 0);
-
-  VisItUI_setTableValueS("WallTimesVariableTable", 1, 0, "ExpMovingAve",  0);
-  VisItUI_setTableValueD("WallTimesVariableTable", 1, 1,
-			 sim->expMovingAverage, 0);
-
-  VisItUI_setTableValueS("WallTimesVariableTable", 2, 0, "Execution",  0);
-  VisItUI_setTableValueD("WallTimesVariableTable", 2, 1,
-			 sim->execWallTime, 0);
-
-  VisItUI_setTableValueS("WallTimesVariableTable", 3, 0, "TotalExecuction",  0);
-  VisItUI_setTableValueD("WallTimesVariableTable", 3, 1,
-			 sim->totalExecWallTime, 0);
-
-  VisItUI_setTableValueS("WallTimesVariableTable", 4, 0, "Total",  0);
-  VisItUI_setTableValueD("WallTimesVariableTable", 4, 1,
-			 sim->totalWallTime, 0);
-
-  VisItUI_setTableValueS("WallTimesVariableTable", 5, 0, "Maximum",  0);
-  VisItUI_setTableValueD("WallTimesVariableTable", 5, 1,
+  VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "ExpMovingAve",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
+			 walltimers->ExpMovingAverage().seconds(), 0);
+  ++row;
+  VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "TimeStep",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
+			 walltimers->TimeStep().seconds(), 0);
+  ++row;
+  VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "InSitu",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
+			 walltimers->InSitu().seconds(), 0);
+  ++row;
+  VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "Total",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
+			 walltimers->Total().seconds(), 0);
+  ++row;
+  VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "Maximum",  0);
+  VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
 			 simTime->max_wall_time, 1);
-
-  visit_SetStripChartValue( sim, "InSituWallTime",    sim->inSituWallTime );
-  visit_SetStripChartValue( sim, "ExpMovingAve",      sim->expMovingAverage );
-  visit_SetStripChartValue( sim, "ExecWallTime",      sim->execWallTime );
-  visit_SetStripChartValue( sim, "TotalExecWallTime", sim->totalExecWallTime );
-  visit_SetStripChartValue( sim, "TotalWallTime",     sim->totalWallTime );
+  ++row;
+  visit_SetStripChartValue( sim, "TimeStep",     walltimers->TimeStep().seconds() );
+  visit_SetStripChartValue( sim, "ExpMovingAve", walltimers->ExpMovingAverage().seconds() );
+  visit_SetStripChartValue( sim, "InSitu",       walltimers->InSitu().seconds() );
+  visit_SetStripChartValue( sim, "Total",        walltimers->Total().seconds() );
 }
 
 
@@ -204,6 +202,15 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetAnalysisVars( visit_simulation_data *sim )
 {
+  // For some reason when starting a new simulation accessing the
+  // on-the-fly for the first time step causes a crash in both Uintah
+  // and Visit. It is not clear where the crash 
+  
+  if( sim->cycle < 2 )
+    return;
+  
+  const char table[] = "AnalysisVariableTable";
+    
   GridP           gridP      = sim->gridP;
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
@@ -216,8 +223,6 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 
   if( analysisVars.size() )
   {
-    const char table[] = "AnalysisVariableTable";
-    
     int numLevels = gridP->numLevels();
     
     VisItUI_setValueS( "AnalysisVariableGroupBox", "SHOW_WIDGET", 1);
@@ -274,12 +279,12 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 		double varMin = 0;
         
 		VisItUI_setTableValueS(table, row, 3+j*2, "Min", 0);
-		
+
 		// Doubles
 	  	if( label->typeDescription()->getSubType()->getType() ==
 	  	    TypeDescription::double_type )
 	  	{
-	  	  min_vartype var_min;            
+	  	  min_vartype var_min;
 	  	  dw->get(var_min, label, level );
 	  	  varMin = var_min;
             
@@ -298,6 +303,8 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 	  				 ((Vector) var_min).y(),
 	  				 ((Vector) var_min).z(), 0);    
 	  	}
+		else
+		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);		
 
 	  	visit_SetStripChartValue( sim, analysisVar.name+"_Min", varMin );
 	      }
@@ -331,10 +338,12 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 	  				 ((Vector) var_max).y(),
 	  				 ((Vector) var_max).z(), 0);    
 	  	}
+		else
+		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
 
 	  	visit_SetStripChartValue( sim, analysisVar.name+"_Max", varMax );
 	      }
-	      // Summ values
+	      // Sum values
 	      else if( sendop == MPI_SUM )
 	      {
 		double varSum = 0;
@@ -364,8 +373,15 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
 	  				 ((Vector) var_sum).y(),
 	  				 ((Vector) var_sum).z(), 0);    
 	  	}
+		else
+		  VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
 
 	  	visit_SetStripChartValue( sim, analysisVar.name+"_Sum", varSum );
+	      }
+	      else
+	      {
+		VisItUI_setTableValueS(table, row, 3+j*2, "TBD", 0);
+		VisItUI_setTableValueS(table, row, 4+j*2, "NA", 0);
 	      }
 	    }
 	  }
@@ -376,7 +392,7 @@ void visit_SetAnalysisVars( visit_simulation_data *sim )
     }
   }
   else
-    VisItUI_setValueS( "MinMaxVariableGroupBox", "HIDE_WIDGET", 0);
+    VisItUI_setValueS( "AnalysisVariableGroupBox", "HIDE_WIDGET", 0);
 }
 
 
@@ -776,6 +792,5 @@ void visit_SetDebugStreams( visit_simulation_data *sim )
   else
     VisItUI_setValueS( "DebugStreamGroupBox", "HIDE_WIDGET", 0);
 }
-
 
 } // End namespace Uintah

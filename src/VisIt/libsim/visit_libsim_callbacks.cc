@@ -343,10 +343,11 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else
   {
-    std::stringstream msg;
-    msg << "Visit libsim - ignoring command " << cmd << "  args " << args;
-    VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+    // These messages are really only helpful when debugging. 
+    // std::stringstream msg;
+    // msg << "Visit libsim - ignoring command " << cmd << "  args " << args;
+    // VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+    // VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
   }
   
   if( sim->runMode == VISIT_SIMMODE_RUNNING &&

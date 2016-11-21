@@ -652,11 +652,12 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       bool enabled;
 
       if(strcmp( "Save", cmd_names[i] ) == 0 )
-        enabled = !sim->simController->getOutput()->isOutputTimestep();
+        enabled = (!sim->first &&
+		   !sim->simController->getOutput()->isOutputTimestep());
 
       else if(strcmp( "Checkpoint", cmd_names[i] ) == 0 )
-        enabled = !sim->simController->getOutput()->isCheckpointTimestep();
-
+        enabled = (!sim->first &&
+		   !sim->simController->getOutput()->isCheckpointTimestep());
       else
         enabled = true;
 
