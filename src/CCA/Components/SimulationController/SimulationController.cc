@@ -40,7 +40,6 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/Time.h>
 
 #include <CCA/Ports/LoadBalancerPort.h>
 #include <CCA/Ports/Output.h>
@@ -48,6 +47,8 @@
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
+
+#include <CCA/Components/Schedulers/MPIScheduler.h>
 
 #include <sci_defs/visit_defs.h>
 
@@ -67,12 +68,10 @@
 #define SECONDS_PER_WEEK      604800.0
 #define SECONDS_PER_YEAR    31536000.0
 
-#define AVERAGE_WINDOW 10
-
 using namespace std;
 
 static Uintah::DebugStream dbg(     "SimulationStats",            true  );
-static Uintah::DebugStream dbgTime( "SimulationTimeStats",        false );
+static Uintah::DebugStream dbgTime( "SimulationTimeStats",        true );
 static Uintah::DebugStream simdbg(  "SimulationController",       false );
 static Uintah::DebugStream stats(   "ComponentTimings",           false );
 static Uintah::DebugStream istats(  "IndividualComponentTimings", false );
@@ -95,20 +94,18 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   }
 
   d_nSamples               = 0;
-  d_startWallTime          = 0;
-  d_totalWallTime          = 0;
-  d_totalExecWallTime      = 0;
-  d_execWallTime           = 0;
-  d_inSituWallTime         = 0;
-  d_expMovingAverage       = 0;
 
+  d_delt                   = 0;
+  d_prev_delt              = 0;
+
+  d_simTime                = 0;
+  d_startSimTime           = 0;
+  
   d_restarting             = false;
   d_reduceUda              = false;
   d_doMultiTaskgraphing    = false;
   d_archive                = nullptr;
   d_sim                    = 0;
-
-  d_prev_delt              = 0;
 
   d_grid_ps                = d_ups->findBlock( "Grid" );
 
@@ -293,6 +290,19 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 //______________________________________________________________________
 //
 
+bool
+SimulationController::isLast( void )
+{
+  return ( ( d_simTime >= d_timeinfo->maxTime ) ||
+	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
+	     d_timeinfo->maxTimestep ) ||
+	   ( d_timeinfo->max_wall_time != 0 &&
+	     walltimers.Total().seconds() >= d_timeinfo->max_wall_time ) );
+}
+
+//______________________________________________________________________
+//
+
 void
 SimulationController::preGridSetup( void )
 {
@@ -312,6 +322,10 @@ SimulationController::preGridSetup( void )
     amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
   }
 
+  d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
+  if( !d_sim ) {
+    throw InternalError( "No simulation component", __FILE__, __LINE__ );
+  }
 #ifdef HAVE_VISIT
   if( d_sharedState->getVisIt() )
   {
@@ -322,16 +336,14 @@ SimulationController::preGridSetup( void )
     d_sharedState->d_debugStreams.push_back( &istats );
   }
 #endif
-}
+} // end preGridSetup()
 
 //______________________________________________________________________
 //
 
-GridP
+void
 SimulationController::gridSetup( void )
 {
-  GridP grid;
-
   if( d_restarting ) {
     // Create the DataArchive here, and store it, as we use it a few times...
     // We need to read the grid before ProblemSetup, and we can't load all
@@ -398,92 +410,82 @@ SimulationController::gridSetup( void )
     // conditions. Once that is done, a legitimate load balancer will
     // be created later on - after which we use said balancer and
     // assign BCs to the grid.  NOTE the "false" argument below.
-    grid = d_archive->queryGrid( d_restartIndex, d_ups, false );
+    d_currentGridP = d_archive->queryGrid( d_restartIndex, d_ups, false );
   }
-  else {
-    grid = scinew Grid();
+  else /* if( !d_restarting ) */ {
+    d_currentGridP = scinew Grid();
+        
+    d_sim->preGridProblemSetup( d_ups, d_currentGridP, d_sharedState );
     
-    d_sim = dynamic_cast<SimulationInterface*>( getPort( "sim" ) );
-    if( !d_sim ) {
-      throw InternalError( "No simulation component", __FILE__, __LINE__ );
-    }
-    
-    d_sim->preGridProblemSetup( d_ups, grid, d_sharedState );
-    
-    grid->problemSetup( d_ups, d_myworld, d_doAMR );
+    d_currentGridP->problemSetup( d_ups, d_myworld, d_doAMR );
   }
 
-  if( grid->numLevels() == 0 ) {
+  if( d_currentGridP->numLevels() == 0 ) {
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }
    
   // Print out meta data
   if ( d_myworld->myrank() == 0 ) {
-    grid->printStatistics();
-    amrout << "Restart grid\n" << *grid.get_rep() << "\n";
+    d_currentGridP->printStatistics();
+    amrout << "Restart grid\n" << *d_currentGridP.get_rep() << "\n";
   }
 
   // set the dimensionality of the problem.
   IntVector low, high, size;
-  grid->getLevel(0)->findCellIndexRange(low, high);
-  size = high-low - grid->getLevel(0)->getExtraCells()*IntVector(2,2,2);
+  d_currentGridP->getLevel(0)->findCellIndexRange(low, high);
+  size = high-low - d_currentGridP->getLevel(0)->getExtraCells()*IntVector(2,2,2);
   d_sharedState->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
-
-  return grid;
-}
+} // end gridSetup()
 
 //______________________________________________________________________
 //
 
 void
-SimulationController::postGridSetup( GridP & grid, double & time )
+SimulationController::postGridSetup()
 {
   // Set up regridder with initial information about grid.  Do before
   // sim - so that Switcher (being a sim) can reset the state of the
   // regridder
   d_regridder = dynamic_cast<Regridder*>( getPort("regridder") );
+
   if ( d_regridder ) {
-    d_regridder->problemSetup( d_ups, grid, d_sharedState );
+    d_regridder->problemSetup( d_ups, d_currentGridP, d_sharedState );
   }
     
-  // Initialize load balancer.  Do here since we have the
-  // dimensionality in the shared state, and we want that at
-  // initialization time. In addition do it after regridding since we
-  // need to know the minimum patch size that the regridder will
-  // create
+  // Initialize load balancer.  Do the initialization here because the
+  // dimensionality in the shared state is known, and that
+  // initialization time is needed. In addition, do this step after
+  // regridding as the minimum patch size that the regridder will
+  // create will be known.
   d_lb = d_scheduler->getLoadBalancer();
-  d_lb->problemSetup( d_ups, grid, d_sharedState );
-
-  // Initialize the CFD and/or MPM components
-  d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
-  if( !d_sim ) {
-    throw InternalError("No simulation component", __FILE__, __LINE__);
-  }
+  d_lb->problemSetup( d_ups, d_currentGridP, d_sharedState );
 
   ProblemSpecP restart_prob_spec_for_component = 0;
 
   if( d_restarting ) {
-    // Do these before calling archive->restartInitialize, since
+    // Do these before calling archive->restartInitialize, becasue
     // problemSetup creates VarLabels the DA needs.
     restart_prob_spec_for_component =
       d_archive->getTimestepDocForComponent( d_restartIndex );
   }
 
-  // Pass the restart_prob_spec_for_component to the Component's
+  // Pass the restart_prob_spec_for_component to the component's
   // problemSetup.  For restarting, pull the <MaterialProperties> from
   // the restart_prob_spec.  If it is not available, then we will pull
   // the properties from the d_ups instead.  Needs to be done before
-  // DataArchive::restartInitialize
-  d_sim->problemSetup(d_ups, restart_prob_spec_for_component, grid, d_sharedState);
+  // DataArchive::restartInitialize.
+  d_sim->problemSetup(d_ups, restart_prob_spec_for_component, d_currentGridP,
+		      d_sharedState);
 
   if( d_restarting ) {
     simdbg << "Restarting... loading data\n";    
-    d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &time );
+    d_archive->restartInitialize( d_restartIndex, d_currentGridP, d_scheduler->get_dw(1),
+				  d_lb, &d_startSimTime );
       
-    // Set prevDelt to what it was in the last simulation.  If in the last 
+    // Set the delt to what it was in the last simulation.  If in the last 
     // sim we were clamping delt based on the values of prevDelt, then
     // delt will be off if it doesn't match.
-    d_prev_delt = d_archive->getOldDelt( d_restartIndex );
+    d_delt = d_archive->getOldDelt( d_restartIndex );
 
     // Set the time step to the restart time step.
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
@@ -497,16 +499,24 @@ SimulationController::postGridSetup( GridP & grid, double & time )
     if (d_timeinfo->override_restart_delt != 0) {
       double delt = d_timeinfo->override_restart_delt;
       proc0cout << "Overriding restart delt with " << delt << "\n";
-      d_scheduler->get_dw(1)->override( delt_vartype(delt), d_sharedState->get_delt_label() );
+      d_scheduler->get_dw(1)->override( delt_vartype(delt),
+					d_sharedState->get_delt_label() );
     }
-    
+
     // This delete is an enigma... I think if it is called then memory
     // is not leaked, but sometimes if it it is called, then
     // everything segfaults...
     //
     // delete d_archive;
   }
-
+  else /* if( !d_restarting ) */ {
+    d_startSimTime = 0;
+    
+    d_delt = 0;
+    
+    d_sharedState->setCurrentTopLevelTimeStep( 0 );
+  }
+    
   // Finalize the shared state/materials
   d_sharedState->finalizeMaterials();
     
@@ -516,7 +526,8 @@ SimulationController::postGridSetup( GridP & grid, double & time )
 
   if( d_restarting ) {
     Dir dir( d_fromDir );
-    d_output->restartSetup( dir, 0, d_restartTimestep, time, d_restartFromScratch, d_restartRemoveOldDir );
+    d_output->restartSetup( dir, 0, d_restartTimestep, d_startSimTime,
+			    d_restartFromScratch, d_restartRemoveOldDir );
   }
 } // end postGridSetup()
 
@@ -524,226 +535,160 @@ SimulationController::postGridSetup( GridP & grid, double & time )
 //
 
 void
-SimulationController::adjustDelT( double& delt, double prev_delt, double time )
+SimulationController::getNextDeltaT( void )
 {
-#if 0
-  proc0cout << "maxTime = " << d_timeinfo->maxTime << "\n";
-  proc0cout << "initTime = " << d_timeinfo->initTime << "\n";
-  proc0cout << "delt_min = " << d_timeinfo->delt_min << "\n";
-  proc0cout << "delt_max = " << d_timeinfo->delt_max << "\n";
-  proc0cout << "timestep_multiplier = " << d_timeinfo->delt_factor << "\n";
-  proc0cout << "delt_init = " << d_timeinfo->max_initial_delt << "\n";
-  proc0cout << "initial_delt_range = " << d_timeinfo->initial_delt_range << "\n";
-  proc0cout << "max_delt_increase = " << d_timeinfo->max_delt_increase << "\n";
-  proc0cout << "delt = " << delt << "\n";
-  proc0cout << "prev_delt = " << prev_delt << "\n";
-#endif
+  d_prev_delt = d_delt;
 
-  delt *= d_timeinfo->delt_factor;
+  // Retrieve the next delta T and adjust it based on timeinfo
+  // parameters.
+  DataWarehouse* newDW = d_scheduler->getLastDW();
+  delt_vartype delt_var;
+  newDW->get( delt_var, d_sharedState->get_delt_label() );
+  d_delt = delt_var;
+
+  // Adjust the delt
+  d_delt *= d_timeinfo->delt_factor;
       
-  // Check to see if delt is below the delt_min
-  if( delt < d_timeinfo->delt_min ) {
-    proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << d_timeinfo->delt_min << '\n';
-    delt = d_timeinfo->delt_min;
+  // Check to see if the new delt is below the delt_min
+  if( d_delt < d_timeinfo->delt_min ) {
+    proc0cout << "WARNING: raising delt from " << d_delt;
+    
+    d_delt = d_timeinfo->delt_min;
+    
+    proc0cout << " to minimum: " << d_delt << '\n';
   }
 
-  // Check to see if delt was increased too much over the previous delt
-  if( prev_delt > 0.0 &&
+  // Check to see if the new delt was increased too much over the
+  // previous delt
+  double delt_tmp = (1.0+d_timeinfo->max_delt_increase) * d_prev_delt;
+  
+  if( d_prev_delt > 0.0 &&
       d_timeinfo->max_delt_increase < 1.e90 &&
-      delt > (1.0+d_timeinfo->max_delt_increase)*prev_delt) {
-    proc0cout << "WARNING (a): lowering delt from " << delt 
-              << " to maxmimum: " << (1.0+d_timeinfo->max_delt_increase)*prev_delt
+      d_delt > delt_tmp ) {
+    proc0cout << "WARNING (a): lowering delt from " << d_delt;
+    
+    d_delt = delt_tmp;
+    
+    proc0cout << " to maxmimum: " << d_delt
               << " (maximum increase of " << d_timeinfo->max_delt_increase
               << ")\n";
-    delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
   }
 
-  // Check to see if delt exceeds the max_initial_delt
-  if( time <= d_timeinfo->initial_delt_range &&
-      delt > d_timeinfo->max_initial_delt ) {
-    proc0cout << "WARNING (b): lowering delt from " << delt 
-              << " to maximum: " << d_timeinfo->max_initial_delt
-              << " (for initial timesteps)\n";
-    delt = d_timeinfo->max_initial_delt;
+  // Check to see if the new delt exceeds the max_initial_delt
+  if( d_simTime <= d_timeinfo->initial_delt_range &&
+      d_delt > d_timeinfo->max_initial_delt ) {
+    proc0cout << "WARNING (b): lowering delt from " << d_delt ;
+
+    d_delt = d_timeinfo->max_initial_delt;
+
+    proc0cout<< " to maximum: " << d_delt
+	     << " (for initial timesteps)\n";
   }
 
-  // Check to see if delt exceeds the delt_max
-  if( delt > d_timeinfo->delt_max ) {
-    proc0cout << "WARNING (c): lowering delt from " << delt
-	      << " to maximum: " << d_timeinfo->delt_max << '\n';
-    delt = d_timeinfo->delt_max;
+  // Check to see if the new delt exceeds the delt_max
+  if( d_delt > d_timeinfo->delt_max ) {
+    proc0cout << "WARNING (c): lowering delt from " << d_delt;
+
+    d_delt = d_timeinfo->delt_max;
+    
+    proc0cout << " to maximum: " << d_delt << '\n';
   }
 
   // Clamp delt to match the requested output and/or checkpoint times
   if( d_timeinfo->timestep_clamping && d_output ) {
-    double orig_delt = delt;
-    double nextOutput     = d_output->getNextOutputTime();
-    double nextCheckpoint = d_output->getNextCheckpointTime();
 
     // Clamp to the output time
-    if (nextOutput != 0 && time + delt > nextOutput) {
-      delt = nextOutput - time;
+    double nextOutput     = d_output->getNextOutputTime();
+    if (nextOutput != 0 && d_simTime + d_delt > nextOutput) {
+      proc0cout << "WARNING (d): lowering delt from " << d_delt;
+
+      d_delt = nextOutput - d_simTime;
+
+      proc0cout << " to " << d_delt
+                << " to line up with output time\n";
     }
 
     // Clamp to the checkpoint time
-    if (nextCheckpoint != 0 && time + delt > nextCheckpoint) {
-      delt = nextCheckpoint - time;
-    }
+    double nextCheckpoint = d_output->getNextCheckpointTime();
+    if (nextCheckpoint != 0 && d_simTime + d_delt > nextCheckpoint) {
+      proc0cout << "WARNING (d): lowering delt from " << d_delt;
 
-    // Report if delt was changed.
-    if (delt != orig_delt) {
-      proc0cout << "WARNING (d): lowering delt from " << orig_delt 
-                << " to " << delt
-                << " to line up with output/checkpoint time\n";
+      d_delt = nextCheckpoint - d_simTime;
+
+      proc0cout << " to " << d_delt
+                << " to line up with checkpoint time\n";
     }
   }
   
   // Clamp delt to the max end time,
-  if (d_timeinfo->end_on_max_time && time + delt > d_timeinfo->maxTime) {
-    delt = d_timeinfo->maxTime - time;
+  if (d_timeinfo->end_on_max_time &&
+      d_simTime + d_delt > d_timeinfo->maxTime) {
+    d_delt = d_timeinfo->maxTime - d_simTime;
   }
+
+  // Write the new delt to the data warehouse
+  newDW->override( delt_vartype(d_delt), d_sharedState->get_delt_label() );
 }
 
 //______________________________________________________________________
 //
-void
-SimulationController::initWallTimes( void )
-{
-  d_nSamples = 0;
-
-  // vars used to calculate standard deviation
-  d_startWallTime = Time::currentSeconds();
-  d_totalWallTime = 0;
-  d_totalExecWallTime = 0;
-  d_execWallTime = 0;
-  d_inSituWallTime = 0;
-
-  d_expMovingAverage = 0;
-}
 
 void
-SimulationController::calcTotalWallTime ( void )
+SimulationController::ReportStats( bool header /* = false */ )
 {
-  // Calulate the total wall time.
-  d_totalWallTime += Time::currentSeconds() - d_startWallTime;
+  // Get and reduce the performace run time stats
+  getMemoryStats();
+  getPAPIStats();
 
-  // Reset the start time for relative clocking.
-  d_startWallTime = Time::currentSeconds();
-}
-
-void
-SimulationController::calcExecWallTime ( void )
-{
-  // Calculate the execution wall times and update total wall time.
-  d_execWallTime = Time::currentSeconds() - d_startWallTime;
-  d_totalExecWallTime += d_execWallTime;
-  d_totalWallTime     += d_execWallTime;
+  d_sharedState->d_runTimeStats.reduce(d_regridder &&
+				       d_regridder->useDynamicDilation(),
+				       d_myworld );
+  // Reduce the mpi run time stats.
+  MPIScheduler * mpiScheduler =
+    dynamic_cast<MPIScheduler*>( d_scheduler.get_rep() );
   
-  // Reset the start time for relative clocking.
-  d_startWallTime = Time::currentSeconds();
-
-  // Calulate the exponential moving average for this time step.
-  // Multiplier: (2 / (Time periods + 1) )
-  // EMA: {Close - EMA(previous day)} x multiplier + EMA(previous day).
-  
-  // Ignore the first sample as that is for initalization.
-  if( d_nSamples )
-  {
-    double mult = 2.0 / (min(d_nSamples,AVERAGE_WINDOW)+1);  
-    d_expMovingAverage =
-      mult * d_execWallTime + (1.0-mult) * d_expMovingAverage;
+  if( mpiScheduler ) {
+    mpiScheduler->mpi_info_.reduce( d_regridder &&
+				    d_regridder->useDynamicDilation(),
+				    d_myworld );
   }
-  else
-    d_expMovingAverage = d_execWallTime;  
-}
 
-void
-SimulationController::calcInSituWallTime ( void )
-{
-  // Calculate the in-situ wall times and update total wall time.
-  d_inSituWallTime = Time::currentSeconds() - d_startWallTime;
-  d_totalWallTime     += d_inSituWallTime;
+  // Print MPI statistics
+  d_scheduler->printMPIStats();
   
-  // Reset the start time for relative clocking.
-  d_startWallTime = Time::currentSeconds();
-}
-
-double
-SimulationController::getTotalWallTime( void )
-{
-  return d_totalWallTime;
-}
-
-double
-SimulationController::getTotalExecWallTime( void )
-{
-  return d_totalExecWallTime;
-}
-
-double
-SimulationController::getExecWallTime( void )
-{
-  return d_execWallTime;
-}
-
-double
-SimulationController::getInSituWallTime( void )
-{
-  return d_inSituWallTime;
-}
-
-double
-SimulationController::getExpMovingAverage( void )
-{
-  return d_expMovingAverage;
-}
-
-void
-SimulationController::setStartSimTime ( double t )
-{
-  d_startSimTime = t;
-}
-
-bool
-SimulationController::isLast( double time )
-{
-  return ( ( time >= d_timeinfo->maxTime ) ||
-	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
-	     d_timeinfo->maxTimestep ) ||
-	   ( d_timeinfo->max_wall_time != 0 &&
-	     d_totalWallTime >= d_timeinfo->max_wall_time ) );
-}
-
-//______________________________________________________________________
-//
-void
-SimulationController::printSimulationStats( int timestep,
-					    double next_delt,
-					    double prev_delt,
-					    double time,
-					    bool header )
-{
+  // Print the stats for this time step
   if( d_myworld->myrank() == 0 && header ) {
     dbg << std::endl;
-    dbg << "Simulation and run time stats are reported at the end of each time step" << std::endl;
-    dbg << "Wall Time == Total wall time, including execution, stats, and in-situ" << std::endl;
-    dbg << "EMA == Execution wall time as an exponential moving average using a window of " << AVERAGE_WINDOW << " time steps" << std::endl;
+    dbg << "Simulation and run time stats are reported "
+	<< "at the end of each time step" << std::endl;
+    dbg << "Wall Time == Wall time for all time steps, "
+	<< "excluding in-situ." << std::endl;
+    dbg << "EMA == Wall time as an exponential moving average "
+	<< "using a window of " << walltimers.getWindow()
+	<< " time steps" << std::endl;
 
     dbg.flush();
     cout.flush();
   }
   
-  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats = d_sharedState->d_runTimeStats;
+  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
+    d_sharedState->d_runTimeStats;
 
   // With the sum reduces, use double, since with memory it is possible that
   // it will overflow
-  double        avg_memused = runTimeStats.getAverage( SimulationState::SCIMemoryUsed );
-  unsigned long max_memused = runTimeStats.getMaximum( SimulationState::SCIMemoryUsed );
-  int           max_memused_rank = runTimeStats.getRank( SimulationState::SCIMemoryUsed );
+  double        avg_memused =
+    runTimeStats.getAverage( SimulationState::SCIMemoryUsed );
+  unsigned long max_memused =
+    runTimeStats.getMaximum( SimulationState::SCIMemoryUsed );
+  int           max_memused_rank =
+    runTimeStats.getRank( SimulationState::SCIMemoryUsed );
 
-  double        avg_highwater = runTimeStats.getAverage( SimulationState::SCIMemoryHighwater );
-  unsigned long max_highwater = runTimeStats.getMaximum( SimulationState::SCIMemoryHighwater );
-  int           max_highwater_rank = runTimeStats.getRank( SimulationState::SCIMemoryHighwater );
+  double        avg_highwater =
+    runTimeStats.getAverage( SimulationState::SCIMemoryHighwater );
+  unsigned long max_highwater =
+    runTimeStats.getMaximum( SimulationState::SCIMemoryHighwater );
+  int           max_highwater_rank =
+    runTimeStats.getRank( SimulationState::SCIMemoryHighwater );
     
   // Sum up the average time for overhead related components. These
   // same values are used in SimulationState::getOverheadTime.
@@ -810,20 +755,23 @@ SimulationController::printSimulationStats( int timestep,
     }
   } 
 
+  // Update the moving average and get the wall time for this time step.
+  Timers::nanoseconds timeStep = walltimers.updateExpMovingAverage();
+
   if( d_myworld->myrank() == 0 )
   {
     ostringstream message;
     message << left
-	    << "Timestep "  << setw(6) << timestep 
-	    << "Time="      << setw(12) << time     
-//	    << "delT="      << setw(12) << prev_delt
-	    << "Next delT=" << setw(12) << next_delt
-      
-	    << "Wall Time= "      << setw(10) << d_totalWallTime
-	    // << "Total Exec Wall Time=" << setw(10) << d_totalExecWallTime
-	    // << "Exec Wall Time="       << setw(10) << d_execWallTime <<
-	    // << "In-situ Wall Time="    << setw(10) << d_inSituWallTime
-	    << "EMA="                   << setw(10) << d_expMovingAverage;
+	    << "Timestep "   << setw(6)
+	    << d_sharedState->getCurrentTopLevelTimeStep()
+	    << "Time="       << setw(12) << d_simTime
+//	    << "delT="       << setw(12) << d_prev_delt
+	    << "Next delT="  << setw(12) << d_delt
+
+	    << "Wall Time= " << setw(12) << walltimers.TimeStep().seconds()
+//	    << "Time Step= " << setw(12) << timeStep.seconds()
+	    << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds();
+//  message << "Total Wall Time = " << setw(10) << walltimers.Total().seconds();
 
     // Report on the memory used.
     if (avg_memused == max_memused && avg_highwater == max_highwater) {
@@ -889,11 +837,13 @@ SimulationController::printSimulationStats( int timestep,
               << d_sharedState->getOverheadAvg()*100.0 <<  "\n";
       }
     }
-
+  
     // Ignore the first sample as that is for initalization.
     if (dbgTime.active() && d_nSamples ) {
-      double realSecondsNow = d_execWallTime / prev_delt;
-      double realSecondsAvg = d_totalExecWallTime / (time-d_startSimTime);
+      double realSecondsNow =
+	timeStep.seconds() / d_delt;
+      double realSecondsAvg =
+	walltimers.TimeStep().seconds() / (d_simTime-d_startSimTime);
 
       dbgTime << "1 simulation second takes ";
 
@@ -947,11 +897,11 @@ SimulationController::printSimulationStats( int timestep,
 
 } // end printSimulationStats()
 
-
 //______________________________________________________________________
 //
+
 void
-SimulationController::getMemoryStats( int timestep, bool create /* = false */ )
+SimulationController::getMemoryStats( bool create /* = false */ )
 {
   unsigned long memUsed, highwater, maxMemUsed;
   d_scheduler->checkMemoryUse(memUsed, highwater, maxMemUsed);
@@ -994,7 +944,8 @@ SimulationController::getMemoryStats( int timestep, bool create /* = false */ )
     }
 
     *mallocPerProcStream << "Proc " << d_myworld->myrank() << "   ";
-    *mallocPerProcStream << "Timestep " << timestep << "   ";
+    *mallocPerProcStream << "Timestep "
+			 << d_sharedState->getCurrentTopLevelTimeStep() << "   ";
 
     if (ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) {
       *mallocPerProcStream << "Size " << ProcessInfo::getMemoryUsed() << "   ";
@@ -1020,6 +971,7 @@ SimulationController::getMemoryStats( int timestep, bool create /* = false */ )
 
 //______________________________________________________________________
 //
+  
 void
 SimulationController::getPAPIStats( )
 {
@@ -1057,4 +1009,64 @@ SimulationController::getPAPIStats( )
 #endif
 }
   
+
+//______________________________________________________________________
+//
+  
+#ifdef HAVE_VISIT
+bool
+SimulationController::CheckInSitu( visit_simulation_data *visitSimData,
+				   bool first )
+{
+    // If VisIt has been included into the build, check the lib sim
+    // state to see if there is a connection and if so check to see if
+    // anything needs to be done.
+    if( d_sharedState->getVisIt() )
+    {
+      walltimers.InSitu.start();
+  
+      // Update all of the simulation grid and time dependent variables.
+      visit_UpdateSimData( visitSimData, d_currentGridP,
+			   d_simTime, d_prev_delt, d_delt,
+			   first, isLast() );
+      
+      // Check the state - if the return value is true the user issued
+      // a termination.
+      if( visit_CheckState( visitSimData ) )
+	return true;
+
+      // This function is no longer used as last is now used in the
+      // check state. 
+      // Check to see if at the last iteration. If so stop so the
+      // user can have once last chance see the data.
+      // if( visitSimData->stopAtLastTimeStep && last )
+      // visit_EndLibSim( visitSimData );
+
+      // The user may have adjusted delt so get it from the data
+      // warehouse. If not then this call is a no-op.
+      DataWarehouse* newDW = d_scheduler->getLastDW();
+      delt_vartype delt_var;
+      newDW->get( delt_var, d_sharedState->get_delt_label() );
+      d_delt = delt_var;
+
+      // Report on the modiied variables. 
+      for (std::map<std::string,std::string>::iterator
+	     it = visitSimData->modifiedVars.begin();
+	   it != visitSimData->modifiedVars.end();
+	   ++it)
+	proc0cout << "Visit libsim - At time step "
+		  << d_sharedState->getCurrentTopLevelTimeStep() << " "
+		  << "the user modified the variable " << it->first << " "
+		  << "to be " << it->second << ". "
+		  << std::endl;
+
+      // TODO - Put this information into the NEXT time step xml.
+
+      walltimers.InSitu.stop();
+    }
+
+    return false;
+}
+#endif
+
 } // namespace Uintah

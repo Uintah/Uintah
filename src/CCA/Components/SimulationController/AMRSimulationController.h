@@ -25,22 +25,10 @@
 #ifndef UINTAH_HOMEBREW_AMRSIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_AMRSIMULATIONCONTROLLER_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/DataWarehouseP.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/SimulationController/SimulationController.h>
-#include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
 
-class SimulationInterface;
-class Output;
-class LoadBalancer;  
-class Regridder;
 /**************************************
       
   CLASS
@@ -72,47 +60,58 @@ class Regridder;
    //! Controls the execution of an AMR Simulation
    class AMRSimulationController : public SimulationController {
    public:
-      AMRSimulationController(const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec);
-      virtual ~AMRSimulationController();
+     AMRSimulationController(const ProcessorGroup* myworld, bool doAMR,
+                             ProblemSpecP pspec);
+     virtual ~AMRSimulationController();
+     
+     virtual void run();
 
-      virtual void run();
+   protected:
+     AMRSimulationController( const AMRSimulationController& );
+     AMRSimulationController& operator=( const AMRSimulationController& );
+     
+     //! Set up, compile, and execute initial timestep
+     void doInitialTimestep( );
 
-   private:
-      //! Set up, compile, and execute initial timestep
-      void doInitialTimestep(GridP& grid, double& t);
-   public:
-      bool doRegridding(GridP& grid, bool initialTimestep);
-   private:
+     //! Execute a timestep
+     void executeTimestep( int totalFine );
 
-      void recompile( double time, double delt, GridP& currentGrid, int totalFine );
+     //! If doing AMR do the regridding
+     bool doRegridding( bool initialTimestep );
 
-      void executeTimestep( double time, double & delt, GridP & currentGrid, int totalFine );
+     //! Asks a variety of components if one of them needs the
+     //! taskgraph to recompile.
+     bool needRecompile();
+     
+     void recompile( int totalFine );
 
-      //! Asks a variety of components if one of them needs the taskgraph
-      //! to recompile.
-      bool needRecompile( double time, double delt, const GridP & level );
-      AMRSimulationController( const AMRSimulationController& );
-      AMRSimulationController& operator=( const AMRSimulationController& );
-
-      //! recursively schedule refinement, coarsening, and time advances for
-      //! finer levels - compensating for time refinement.  Builds one taskgraph
-      void subCycleCompile( GridP & grid, int startDW, int dwStride, int step, int numLevel );
-
-      //! recursively executes taskgraphs, as several were executed.  Similar to subCycleCompile,
-      //! except that this executes the recursive taskgraphs, and compile builds one taskgraph
-      //! (to exsecute once) recursively.
-      void subCycleExecute( GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle );
-
-      void scheduleComputeStableTimestep( const GridP      & grid,
-                                                SchedulerP & );
-      void reduceSysVar( const ProcessorGroup *,
-                         const PatchSubset    * patches,
-                         const MaterialSubset * /*matls*/,
-                               DataWarehouse  * /*old_dw*/,
-                               DataWarehouse  * new_dw );
+     //! recursively schedule refinement, coarsening, and time
+     //! advances for finer levels - compensating for time refinement.
+     //! Builds one taskgraph
+     void subCycleCompile( int startDW, int dwStride,
+                           int numLevel, int step );
+     
+     //! recursively executes taskgraphs, as several were executed.
+     //! Similar to subCycleCompile, except that this executes the
+     //! recursive taskgraphs, and compile builds one taskgraph (to
+     //! exsecute once) recursively.
+     void subCycleExecute( int startDW, int dwStride,
+                           int numLevel, bool rootCycle );
+     
+     void scheduleComputeStableTimestep();
+     
+     void reduceSysVar( const ProcessorGroup *,
+                        const PatchSubset    * patches,
+                        const MaterialSubset * /*matls*/,
+                        DataWarehouse  * /*old_dw*/,
+                        DataWarehouse  * new_dw );
 
      // Optional flag for scrubbing, defaulted to true.
-     bool scrubDataWarehouse;
+     bool d_scrubDataWarehouse;
+
+     // Barrier timers used when running and regridding.
+     Timers::Simple barrierTimer;
+     double barrier_times[5];
    };
 
 } // End namespace Uintah

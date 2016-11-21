@@ -34,13 +34,23 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
-// Increase overhead size if needed.
+#include <sci_defs/visit_defs.h>
+
+#ifdef HAVE_VISIT
+#  include <VisIt/libsim/visit_libsim.h>
+#endif
+
+// Window size for the overhead calculation
 #define OVERHEAD_WINDOW 40
+
+// Window size for the exponential moving average
+#define AVERAGE_WINDOW 10
 
 namespace Uintah {
 
@@ -50,6 +60,62 @@ class  Output;
 class  Regridder;
 class  SimulationInterface;
 class  SimulationTime;
+
+/**************************************
+
+ CLASS
+ WallTimer
+
+ KEYWORDS
+ Util, Wall Timers
+
+ DESCRIPTION
+ Utility class to manage the Wall Time.
+
+ ****************************************/
+
+class WallTimers {
+
+public:
+  WallTimers() { d_nSamples = 0; };
+
+  Timers::Simple TimeStep;           // Total time for all time steps
+  Timers::Simple ExpMovingAverage;   // Execution exponential moving average
+                                     // for N time steps.
+  Timers::Simple InSitu;             // In-situ time for previous time step
+  Timers::Simple Total;              // Total wall time
+
+  int    getWindow( void ) { return AVERAGE_WINDOW; };
+  void resetWindow( void ) { d_nSamples = 0; };
+  
+  Timers::nanoseconds updateExpMovingAverage( void )
+  {
+    Timers::nanoseconds laptime = TimeStep.lap();
+    
+    // Ignore the first sample as that is for initalization.
+    if( d_nSamples )
+    {
+      // Calulate the exponential moving average for this time step.
+      // Multiplier: (2 / (Time periods + 1) )
+      // EMA: {current - EMA(previous)} x multiplier + EMA(previous).
+      
+      double mult =
+	2.0 / ((double) std::min(d_nSamples, AVERAGE_WINDOW) + 1.0);  
+      
+      ExpMovingAverage = mult * laptime + (1.0-mult) * ExpMovingAverage();
+    }
+    else
+      ExpMovingAverage = laptime;
+      
+    ++d_nSamples;
+
+    return laptime;
+  }
+
+private:
+  int d_nSamples;        // Number of samples for the moving average
+};
+
 
 /**************************************
       
@@ -115,35 +181,21 @@ public:
 
   bool                 doAMR() { return d_doAMR; }
 
-  bool                 isLast( double time );
-    
-  void   initWallTimes      ( void );
-  void   calcTotalWallTime ( void );
-  void   calcExecWallTime  ( void );
-  void   calcInSituWallTime( void );
-
-  double getTotalWallTime    ( void );
-  double getTotalExecWallTime( void );
-  double getExecWallTime     ( void );
-  double getExpMovingAverage ( void );
-  double getInSituWallTime   ( void );
+  WallTimers*          getWallTimers() { return &walltimers; }
 
 protected:
 
-  void   setStartSimTime ( double t );
-
+  bool isLast( void );
+    
   void preGridSetup();
-  GridP gridSetup();
-  void postGridSetup( GridP& grid, double& t);
+  void gridSetup();
+  void postGridSetup();
 
-  //! adjust delt based on timeinfo and other parameters
-  //    'first' is whether this is the first time adjustDelT is called.
-  void adjustDelT( double& delt, double prev_delt, double time );
-  void printSimulationStats( int timestep,
-			     double next_delt, double prev_delt, double time,
-			     bool header = false );
+  // Get the next delta T
+  void getNextDeltaT( void );
 
-  void getMemoryStats( int timestep, bool create = false );
+  void ReportStats( bool first );     
+  void getMemoryStats( bool create = false );
   void getPAPIStats  ( );
   
   ProblemSpecP         d_ups;
@@ -157,11 +209,19 @@ protected:
   Regridder*           d_regridder;
   DataArchive*         d_archive;
 
+  GridP                d_currentGridP;
+
   bool d_doAMR;
   bool d_doMultiTaskgraphing;
 
+  double d_delt;
   double d_prev_delt;
   
+  double d_simTime;               // current sim time
+  double d_startSimTime;          // starting sim time
+  
+  WallTimers walltimers;
+
   /* For restarting */
   bool        d_restarting;
   std::string d_fromDir;
@@ -202,24 +262,16 @@ protected:
   std::map<int, std::string> d_papiErrorCodes;
 #endif
 
-private:
+#ifdef HAVE_VISIT
+  bool CheckInSitu( visit_simulation_data *visitSimData, bool first );
+#endif     
+
 // Percent time in overhead samples
   double overheadValues[OVERHEAD_WINDOW];
   double overheadWeights[OVERHEAD_WINDOW];
   int    overheadIndex; // Next sample for writing
 
   int    d_nSamples;
-
-  double d_startWallTime;      // starting wall time
-  double d_totalWallTime;      // total wall time
-  double d_totalExecWallTime;  // total execution wall time for all time steps
-  double d_execWallTime;       // execution wall time for last time step
-  double d_inSituWallTime;     // in-situ wall time
-
-  // For calculating an exponential moving average of the execution wall time
-  double d_expMovingAverage;
-
-  double d_startSimTime;          // starting sim time
 
   // void problemSetup( const ProblemSpecP&, GridP& ) = 0;
   // bool needRecompile( double t, double delt, const LevelP& level,
