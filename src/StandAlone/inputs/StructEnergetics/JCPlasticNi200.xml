@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Nickel 200 -->
+<Uintah_Include>
+  <flow_model type="johnson_cook">
+    <A>163.4</A>
+    <B>648.1</B>
+    <C>0.006</C>
+    <n>0.33</n>
+    <m>1.44</m>
+  </flow_model>
+</Uintah_Include>
