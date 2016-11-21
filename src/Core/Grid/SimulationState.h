@@ -270,21 +270,20 @@ public:
   // timing statistics to test load balance
   enum RunTimeStat
   {
-    CompilationTime = 0,       // Note: do not change the order 
-    RegriddingTime,            // of these five enumberators.
-    RegriddingCompilationTime, // They are use in
-    RegriddingCopyDataTime,    // SimulationState::getOverheadTime
-    LoadBalancerTime,          // to determine the overhead time.
+    CompilationTime = 0,       // These five enumerators
+    RegriddingTime,            // are use in
+    RegriddingCompilationTime, // SimulationController::printSimulationStats
+    RegriddingCopyDataTime,    // to determine the overhead time.
+    LoadBalancerTime,
     
-    TaskExecTime,              // Note: do not change the order
-    TaskLocalCommTime,         // of these five enumerators.
-    TaskGlobalCommTime,        // They are used in
-    TaskWaitCommTime,          // SimulationController::printSimulationStats
-    TaskWaitThreadTime,        // and SimulationState::getTotalTime.
+    TaskExecTime,              // These five enumerators
+    TaskLocalCommTime,         // are use in
+    TaskGlobalCommTime,        // SimulationController::printSimulationStats
+    TaskWaitCommTime,          // to determine the total time. 
+    TaskWaitThreadTime,
 
-    OutputFileIOTime,          // These two enumerators are not used in
-    OutputFileIORate,	       // SimulationState::getTotalTime.
-
+    OutputFileIOTime,
+    OutputFileIORate,
 
     SCIMemoryUsed,
     SCIMemoryMaxUsed,
