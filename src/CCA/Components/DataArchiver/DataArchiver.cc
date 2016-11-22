@@ -1485,6 +1485,7 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
 void
 DataArchiver::writeto_xml_files( std::map< std::string, std::pair<std::string, std::string> > &modifiedVars )
 {
+#ifdef HAVE_VISIT  
   if( d_sharedState->getVisIt() && modifiedVars.size() )
   {
     dbg << "  writeto_xml_files() begin\n";
@@ -1534,6 +1535,7 @@ DataArchiver::writeto_xml_files( std::map< std::string, std::pair<std::string, s
     
     modifiedVars.clear();
   }
+#endif  
 }
 
 void
