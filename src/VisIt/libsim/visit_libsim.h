@@ -119,10 +119,13 @@ typedef struct
 
   // The first row is the strip chart name.
   std::string stripChartNames[5][5];
-
-  // Container for storing modiied vairables
-  std::map< std::string, std::string> modifiedVars;
   
+  // Container for storing modiied variables - gets passed to the
+  // DataArchiver so they are stored in the index.xml file.  
+
+  //   map< VarName           pair<oldValue,    newValue> >
+  std::map< std::string, std::pair<std::string, std::string> > modifiedVars;
+
 } visit_simulation_data;
 
 void visit_LibSimArguments(int argc, char **argv);

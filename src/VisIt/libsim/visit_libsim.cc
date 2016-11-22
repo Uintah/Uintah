@@ -531,9 +531,6 @@ void visit_UpdateSimData( visit_simulation_data *sim,
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
   }
-
-  // Clear the modified var list
-  sim->modifiedVars.clear();
 }
 
 //---------------------------------------------------------------------

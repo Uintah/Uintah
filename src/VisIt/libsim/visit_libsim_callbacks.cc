@@ -55,7 +55,7 @@ static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 template< class varType >
 void visit_VarModifiedMessage( visit_simulation_data *sim,
                                std::string name,
-                               varType value )
+                               varType oldValue, varType newValue )
 {
   // Depending on the GUI widget the reporting might be on a key
   // stroke key stroke basis or after a return is sent.
@@ -64,7 +64,7 @@ void visit_VarModifiedMessage( visit_simulation_data *sim,
     std::stringstream msg;
     msg << "Visit libsim - At time step " << sim->cycle << " "
         << "the user modified the variable " << name << " "
-        << "to be " << value << ". ";
+        << "from " << oldValue << " " << "to " << newValue << ". ";
       
     VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
@@ -74,10 +74,25 @@ void visit_VarModifiedMessage( visit_simulation_data *sim,
   }
 
   // Using a map - update the value so it can be recorded by Uintah.
-  std::stringstream tmpstr;
-  tmpstr << value;
+  std::stringstream oldStr, newStr;
+
+  // See if the value haas been recorded previously. 
+  std::map< std::string, std::pair<std::string, std::string> >::iterator it =
+    sim->modifiedVars.find( name);
+
+  // If receorded previouosly get the original oldValue so to preserve
+  // it.
+  if (it != sim->modifiedVars.end())
+    oldStr << it->second.first;
+  // Otherwise use the current oldValue
+  else
+    oldStr << oldValue;
   
-  sim->modifiedVars[ name ] = tmpstr.str();
+  newStr << newValue;
+
+  // Store the old and new values.
+  sim->modifiedVars[ name ] =
+    std::pair<std::string, std::string>(oldStr.str(), newStr.str());
 }
 
 
@@ -232,17 +247,13 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      ((DataArchiver *)output)->outputTimestep( sim->time,
-                                                sim->delt,
-                                                sim->gridP,
-                                                schedulerP );
+      output->outputTimestep( sim->time, sim->delt, sim->gridP, schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
                         "Can not save a timestep unless the simulation has "
 			"run for at least one time step and is stopped.", 0);
   }
-
   else if(strcmp(cmd, "Checkpoint") == 0)
   {
     // Do not call unless the simulation is stopped or finished as it
@@ -255,10 +266,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
-      ((DataArchiver *)output)->checkpointTimestep( sim->time,
-                                                    sim->delt,
-                                                    sim->gridP,
-                                                    schedulerP );
+      output->checkpointTimestep( sim->time, sim->delt, sim->gridP, schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -430,9 +438,12 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->simController->getSimulationTime()->maxTimestep = atoi(val);
+  int oldVal = sim->simController->getSimulationTime()->maxTimestep;
+  int newVal = atoi(val);
+  
+  sim->simController->getSimulationTime()->maxTimestep = newVal;
 
-  visit_VarModifiedMessage( sim, "MaxTimeStep", val);
+  visit_VarModifiedMessage( sim, "MaxTimeStep", oldVal, newVal);
 }
 
 
@@ -444,9 +455,12 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->simController->getSimulationTime()->maxTime = atof(val);
+  float oldVal = sim->simController->getSimulationTime()->maxTime;
+  float newVal = atof(val);
 
-  visit_VarModifiedMessage( sim, "MaxTime", val);
+  sim->simController->getSimulationTime()->maxTime = newVal;
+
+  visit_VarModifiedMessage( sim, "MaxTime", oldVal, newVal);
 }
 
 
@@ -461,27 +475,31 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   DataWarehouse          *dw = sim->simController->getSchedulerP()->getLastDW();
 
   unsigned int row, column;
-  double value;
+  double oldValue, newValue;
   
-  getTableCMD( val, row, column, value);
+  getTableCMD( val, row, column, newValue);
 
   switch( row )
   {
   case 1:
-    dw->override(delt_vartype(value), simStateP->get_delt_label());
-    visit_VarModifiedMessage( sim, "DeltaTNext", value );
+    oldValue = sim->delt_next;
+    dw->override(delt_vartype(newValue), simStateP->get_delt_label());
+    visit_VarModifiedMessage( sim, "DeltaTNext", oldValue, newValue );
     break;
   case 2:
-    sim->simController->getSimulationTime()->delt_factor = value;
-    visit_VarModifiedMessage( sim, "DeltaTFactor", value );
+    oldValue = sim->simController->getSimulationTime()->delt_factor;
+    sim->simController->getSimulationTime()->delt_factor = newValue;
+    visit_VarModifiedMessage( sim, "DeltaTFactor", oldValue, newValue );
     break;
   case 3:
-    sim->simController->getSimulationTime()->delt_min = value;
-    visit_VarModifiedMessage( sim, "DeltaTMin", value );
+    oldValue = sim->simController->getSimulationTime()->delt_min;
+    sim->simController->getSimulationTime()->delt_min = newValue;
+    visit_VarModifiedMessage( sim, "DeltaTMin", oldValue, newValue );
     break;
   case 4:
-    sim->simController->getSimulationTime()->delt_max = value;
-    visit_VarModifiedMessage( sim, "DeltaTMax", value );
+    oldValue = sim->simController->getSimulationTime()->delt_max;
+    sim->simController->getSimulationTime()->delt_max = newValue;
+    visit_VarModifiedMessage( sim, "DeltaTMax", oldValue, newValue );
     break;
   }
 }
@@ -495,14 +513,15 @@ void visit_WallTimesVariableCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   unsigned int row, column;
-  double value;
+  double oldValue, newValue;
 
-  getTableCMD( val, row, column, value);
+  getTableCMD( val, row, column, newValue);
 
   if( row == 5 )
   {
-    sim->simController->getSimulationTime()->max_wall_time = value;
-    visit_VarModifiedMessage( sim, "MaxWallTime", value );
+    oldValue = sim->simController->getSimulationTime()->max_wall_time;
+    sim->simController->getSimulationTime()->max_wall_time = newValue;
+    visit_VarModifiedMessage( sim, "MaxWallTime", oldValue, newValue );
   }
 }
 
@@ -530,21 +549,33 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
     case Uintah::TypeDescription::bool_type:
     {
       bool *val = (bool*) var.value;
-      *val = atoi( str );
+      bool oldValue = *val;
+      bool newValue = atoi( str );
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
       break;
     }
     
     case Uintah::TypeDescription::int_type:
     {
       int *val = (int*) var.value;
-      *val = atoi( str );
+      int oldValue = *val;
+      int newValue = atoi( str );
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
       break;
     }
     
     case Uintah::TypeDescription::double_type:
     {
       double *val = (double*) var.value;
-      *val = atof( str );
+      double oldValue = *val;
+      double newValue = atof( str );
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
       break;
     }
     
@@ -554,7 +585,11 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
       sscanf(str, "%lf,%lf,%lf", &x, &y, &z);
 
       Vector *val = (Vector*) var.value;
-      *val = Vector(x, y, z);
+      Vector oldValue = *val;
+      Vector newValue = Vector(x, y, z);
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
       break;
     }
     default:
@@ -568,23 +603,6 @@ void visit_UPSVariableCallback(char *val, void *cbdata)
   // Changing this variable may require recompiling the task graph.
   if( var.recompile )
     simStateP->setRecompileTaskGraph( true );
-
-  if( sim->isProc0 )
-  {
-    std::stringstream msg;
-    msg << "Visit libsim - At time step " << sim->cycle << " "
-        << "the user modified the variable " << var.name << " "
-        << "to be " << str << ". ";
-
-    if( var.recompile )
-      msg << "The task graph will be recompiled.";
-      
-    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
-    
-    visitdbg << msg.str().c_str() << std::endl;
-    visitdbg.flush();
-  }
 }
 
 //---------------------------------------------------------------------
@@ -727,21 +745,33 @@ void visit_StateVariableCallback(char *val, void *cbdata)
     case Uintah::TypeDescription::bool_type:
     {
       bool *val = (bool*) var.value;
-      *val = atoi( str );
+      bool oldValue = *val;
+      bool newValue = atoi( str );
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
       break;
     }
     
     case Uintah::TypeDescription::int_type:
     {
       int *val = (int*) var.value;
-      *val = atoi( str );
+      int oldValue = *val;
+      int newValue = atoi( str );
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
       break;
     }
     
     case Uintah::TypeDescription::double_type:
     {
       double *val = (double*) var.value;
-      *val = atof( str );
+      double oldValue = *val;
+      double newValue = atof( str );
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
       break;
     }
     
@@ -751,7 +781,11 @@ void visit_StateVariableCallback(char *val, void *cbdata)
       sscanf(str, "%lf,%lf,%lf", &x, &y, &z);
 
       Vector *val = (Vector*) var.value;
-      *val = Vector(x, y, z);
+      Vector oldValue = *val;
+      Vector newValue = Vector(x, y, z);
+      *val = newValue;
+
+      visit_VarModifiedMessage( sim, var.name, oldValue, newValue );
       break;
     }
     default:
@@ -765,23 +799,6 @@ void visit_StateVariableCallback(char *val, void *cbdata)
   // Changing this variable may require recompiling the task graph.
   if( var.recompile )
     simStateP->setRecompileTaskGraph( true );
-
-  if( sim->isProc0 )
-  {
-    std::stringstream msg;
-    msg << "Visit libsim - At time step " << sim->cycle << " "
-        << "the user modified the variable " << var.name << " "
-        << "to be " << str << ". ";
-
-    if( var.recompile )
-      msg << "The task graph will be recompiled.";
-      
-    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
-    
-    visitdbg << msg.str().c_str() << std::endl;
-    visitdbg.flush();
-  }
 }
 
 //---------------------------------------------------------------------
