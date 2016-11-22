@@ -71,7 +71,7 @@
 using namespace std;
 
 static Uintah::DebugStream dbg(     "SimulationStats",            true  );
-static Uintah::DebugStream dbgTime( "SimulationTimeStats",        true );
+static Uintah::DebugStream dbgTime( "SimulationTimeStats",        false );
 static Uintah::DebugStream simdbg(  "SimulationController",       false );
 static Uintah::DebugStream stats(   "ComponentTimings",           false );
 static Uintah::DebugStream istats(  "IndividualComponentTimings", false );
@@ -1049,18 +1049,8 @@ SimulationController::CheckInSitu( visit_simulation_data *visitSimData,
       newDW->get( delt_var, d_sharedState->get_delt_label() );
       d_delt = delt_var;
 
-      // Report on the modiied variables. 
-      for (std::map<std::string,std::string>::iterator
-	     it = visitSimData->modifiedVars.begin();
-	   it != visitSimData->modifiedVars.end();
-	   ++it)
-	proc0cout << "Visit libsim - At time step "
-		  << d_sharedState->getCurrentTopLevelTimeStep() << " "
-		  << "the user modified the variable " << it->first << " "
-		  << "to be " << it->second << ". "
-		  << std::endl;
-
-      // TODO - Put this information into the NEXT time step xml.
+      // Add the modified variable information into index.xml file.
+      getOutput()->writeto_xml_files(visitSimData->modifiedVars);
 
       walltimers.InSitu.stop();
     }
