@@ -867,7 +867,7 @@ DataArchiver::createIndexXML(Dir& dir)
    metaElem->appendElement("date", time_string.c_str());
    metaElem->appendElement("endianness", endianness().c_str());
    metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
-   
+
    string iname = dir.getName() + "/index.xml";
    rootElem->output( iname.c_str() );
    //rootElem->releaseDocument();
@@ -1281,9 +1281,6 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
     
     // Reference this timestep in index.xml
     if(d_writeMeta) {
-      string iname = baseDirs[i]->getName()+"/index.xml";
-
-      ProblemSpecP indexDoc;
       bool hasGlobals = false;
 
       if ( baseDirs[i] == &d_dir ) {
@@ -1297,7 +1294,9 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
       else {
         throw "DataArchiver::writeto_xml_files(): Unknown directory!";
       }
-      indexDoc = loadDocument(iname);
+
+      string iname = baseDirs[i]->getName()+"/index.xml";
+      ProblemSpecP indexDoc = loadDocument(iname);
 
       // if this timestep isn't already in index.xml, add it in
       if (indexDoc == 0) {
@@ -1341,7 +1340,7 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
           }
         }
       }
-      
+
       //__________________________________
       // Check if it's the first checkpoint timestep by checking if the "timesteps" field is in 
       // checkpoints/index.xml.  If it is then there exists a timestep.xml file already.
@@ -1479,6 +1478,62 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
     }
   }  // loop over baseDirs
   dbg << "  end\n";
+}
+
+//______________________________________________________________________
+//  update the xml file index.xml with any modified variables.
+void
+DataArchiver::writeto_xml_files( std::map< std::string, std::pair<std::string, std::string> > &modifiedVars )
+{
+  if( d_sharedState->getVisIt() && modifiedVars.size() )
+  {
+    dbg << "  writeto_xml_files() begin\n";
+
+    //__________________________________
+    //  Writeto XML files
+    // to check for output nth proc
+    int dir_timestep = getTimestepTopLevel(); // could be modified by reduceUda
+  
+    string iname = d_dir.getName()+"/index.xml";
+
+    ProblemSpecP indexDoc = loadDocument(iname);
+    
+    string inSituSection("InSitu");
+	  
+    ProblemSpecP iss = indexDoc->findBlock(inSituSection);
+	  
+    if(iss == 0) {
+      iss = indexDoc->appendChild(inSituSection.c_str());
+    }
+	  
+    std::stringstream timestep;
+    timestep << d_sharedState->getCurrentTopLevelTimeStep()+1;
+      
+    // Report on the modiied variables. 
+    for (std::map<std::string,std::pair<std::string, std::string> >::iterator
+	   it = modifiedVars.begin();
+	 it != modifiedVars.end();
+	 ++it)
+    {
+      proc0cout << "Visit libsim - For time step " << timestep.str() << " "
+		<< "the variable "         << it->first << " "
+		<< "will be changed from " << it->second.first << " "
+		<< "to "                   << it->second.second << ". "
+		<< std::endl;
+
+      ProblemSpecP newElem = iss->appendChild("modifiedVariable");
+
+      newElem->setAttribute("timestep", timestep.str());
+      newElem->setAttribute("name",     it->first);
+      newElem->setAttribute("oldValue", it->second.first);
+      newElem->setAttribute("newValue", it->second.second);
+    }
+
+    indexDoc->output(iname.c_str());
+    // indexDoc->releaseDocument();
+    
+    modifiedVars.clear();
+  }
 }
 
 void

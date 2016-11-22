@@ -139,6 +139,7 @@ class DataWarehouse;
        //! write meta data to xml files 
        //! Call after timestep has completed.
        virtual void writeto_xml_files( double delt, const GridP & grid );
+       virtual void writeto_xml_files( std::map< std::string, std::pair<std::string, std::string> > &modifiedVars );
 
        //! Returns as a string the name of the top of the output directory.
        virtual const std::string getOutputLocation() const;

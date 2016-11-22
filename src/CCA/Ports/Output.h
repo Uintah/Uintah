@@ -35,6 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <string>
+#include <map>
 
 namespace Uintah {
 
@@ -118,6 +119,7 @@ class SimulationState;
     //////////
     // update or write to the xml files
     virtual void writeto_xml_files(double delt, const GridP& grid) = 0;
+    virtual void writeto_xml_files( std::map< std::string, std::pair<std::string, std::string> > &modifiedVars ) = 0;
      
       //////////
       // Insert Documentation Here:
@@ -168,6 +170,12 @@ class SimulationState;
     virtual void   setSaveAsUDA() = 0;
     virtual void   setSaveAsPIDX() = 0;
 
+    //! Called by In-situ VisIt to force the dump of a time step's data.
+    virtual void outputTimestep( double time, double delt,
+				 const GridP& grid, SchedulerP& sched ) = 0;
+
+    virtual void checkpointTimestep( double time, double delt,
+				     const GridP& grid, SchedulerP& sched ) = 0;
     //////////
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimestepOutputLocation() const = 0;
