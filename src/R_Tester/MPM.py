@@ -100,7 +100,7 @@ AMRTESTS = [
                   ("advect_2L_3D_slabs",                  "advect_2L_3D_slabs.ups",     3,  "Linux", [ "no_restart","no_dbg"] ),
                   ("advect_2L_3D_edges",                  "advect_2L_3D_edges.ups",     1,  "Linux", ["exactComparison", "no_restart"] ),
                   ("riemannMPM_ML",                       "riemannMPM_ML.ups",          1,  "Linux", ["exactComparison"] ),
-                  ("Collide_AMR_3L",                      "Collide_AMR_3L.ups",         1,  "Linux", ["exactComparison"] ),
+#                  ("Collide_AMR_3L",                      "Collide_AMR_3L.ups",         1,  "Linux", ["exactComparison"] ),
             ]
 
 ARENATESTS = [
