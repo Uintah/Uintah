@@ -754,6 +754,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pMass;
     constParticleVariable<double> pVolume;
     constParticleVariable<double> pTemperature;
+    constParticleVariable<double> pPreviousTemperature;
     constParticleVariable<Vector> pVelocity;
     constParticleVariable<Matrix3> pDeformGrad;
     constParticleVariable<Matrix3> pStress;
@@ -761,6 +762,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pMass,        lb->pMassLabel,               pset);
     old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
+    old_dw->get(pPreviousTemperature, lb->pTempPreviousLabel, pset);
     old_dw->get(pVelocity,    lb->pVelocityLabel,           pset);
     old_dw->get(pStress,      lb->pStressLabel,             pset);
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
@@ -1322,7 +1324,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       }else{
         pEnergy_new[idx] = pEnergy[idx];
       }
-
+      // JBH - Add thermal contribution to internal energy of system for
+      // proper calculation of Mie-Gruneisen EOS
+      pEnergy_new[idx] += matl->getSpecificHeat() * state->initialDensity *
+          (pTemperature[idx] - pPreviousTemperature[idx]);
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
