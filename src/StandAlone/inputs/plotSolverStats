@@ -58,11 +58,12 @@ sed  -i s/","//g data    # eliminate any ","
 
 echo "Done extracting data"
 
-set procs   = `grep "MPI processes" tmp | awk '{print $2}'`
-set threads = `grep "threads per MPI process" tmp | awk '{print $2}'`
+@ procs     = `grep "MPI processes" tmp | awk '{print $2}'`
+@ threads   = `grep "threads per MPI process" tmp | awk '{print $2}'`
+
 set machine = `grep Machine    tmp | cut -d":" -f 2`
 set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
-
+set uda     = `grep "DataArchiver created" tmp | awk '{print $3}'`
 echo "Done extracting data"
 
 #______________________________________________________________________
@@ -103,7 +104,7 @@ set autoscale
 set origin 0.0, 0.5
 set grid xtics ytics
 
-set title "$date : $machine : $procs Processors : ($threads) Threads"
+set title "$date, $machine, $procs MPI ranks, $threads Threads, uda: $uda"
 set xlabel 'Timesteps'
 set y2tics
 set ylabel  'Time [s]'        textcolor lt 1

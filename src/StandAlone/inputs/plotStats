@@ -60,10 +60,11 @@ echo "?" >> timePerTimestep
 paste -d "  " elapsedTime meanTime timePerTimestep physicalTime delT memAve memMax>& data
 sed  -i s/","//g data    # eliminate any ","
 
-set procs   = `grep "MPI processes" tmp | awk '{print $2}'`
-set threads = `grep "threads per MPI process" tmp | awk '{print $2}'`
+@ procs     = `grep "MPI processes" tmp | awk '{print $2}'`
+@ threads   = `grep "threads per MPI process" tmp | awk '{print $2}'`
 set machine = `grep Machine    tmp | cut -d":" -f 2`
 set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
+set uda     = `grep "DataArchiver created" tmp | awk '{print $3}'`
 
 echo "Done extracting data"
 
@@ -109,7 +110,7 @@ set grid xtics ytics
 #__________________________________ TOP
 set size   1.0, 0.33
 set origin 0.0, 0.66
-set title "$date : $machine : $procs Processors: ($threads) Threads"
+set title "$date, $machine, $procs MPI ranks, $threads Threads, uda: $uda"
 set xlabel "Elaspsed Time [s]" offset 0,+0.5
 set ylabel 'Delt'           textcolor lt 1
 set y2label 'Physical Time' textcolor lt 2
