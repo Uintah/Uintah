@@ -125,8 +125,8 @@ GPUTESTS      = [
                    ("RMCRT_DO_perf_GPU",      RMCRT_DO_perf_GPU_ups,      1.1, "Linux", ["gpu",  "do_performance_test", "sus_options=-nthreads 2 -gpu"])
                ]
                
-DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL", ["exactComparison"]),              
-                   ("RMCRT_+Domain_ML",      "RMCRT_+Domain_ML.ups",     8, "ALL", ["exactComparison"])               
+DOMAINTESTS   =[   ("RMCRT_+Domain",         "RMCRT_+Domain.ups",        8, "ALL", ["exactComparison", "no_restart"]),              
+                   ("RMCRT_+Domain_ML",      "RMCRT_+Domain_ML.ups",     8, "ALL", ["exactComparison", "no_restart"])               
               ]
 
 DEBUGTESTS   =[]
