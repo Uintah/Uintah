@@ -1209,7 +1209,7 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  for (int index = 1; index <= Arches::NDIM; ++index) {
+  for (int index = 1; index <= 3; ++index) {
     if (xminus) {
       int colX = idxLo.x();
       int maxY = idxHi.y();

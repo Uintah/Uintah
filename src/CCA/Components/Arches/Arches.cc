@@ -62,24 +62,21 @@ static DebugStream dbg("ARCHES", false);
 // Used to sync std::cout when output by multiple threads
 extern std::mutex coutLock;
 
-const int Arches::NDIM = 3;
-
 //--------------------------------------------------------------------------------------------------
 Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   UintahParallelComponent(myworld)
 {
-  d_MAlab               = 0;
-  d_nlSolver            = 0;
-  d_physicalConsts      = 0;
-  d_doingRestart        = false;
-  nofTimeSteps          = 0;
-  d_with_mpmarches      = false;
-  d_doAMR               = doAMR;
-  d_recompile_taskgraph = false;
+  m_MAlab               = 0;
+  m_nlSolver            = 0;
+  m_physicalConsts      = 0;
+  m_doing_restart        = false;
+  m_with_mpmarches      = false;
+  m_do_AMR               = doAMR;
+  m_recompile_taskgraph = false;
 
   //lagrangian particles:
-  _particlesHelper = scinew ArchesParticlesHelper();
-  _particlesHelper->sync_with_arches(this);
+  m_particlesHelper = scinew ArchesParticlesHelper();
+  m_particlesHelper->sync_with_arches(this);
 
 }
 
@@ -87,14 +84,14 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
 Arches::~Arches()
 {
 
-  delete d_nlSolver;
-  delete d_physicalConsts;
-  delete _particlesHelper;
+  delete m_nlSolver;
+  delete m_physicalConsts;
+  delete m_particlesHelper;
 
-  if(d_analysisModules.size() != 0) {
+  if(m_analysis_modules.size() != 0) {
     std::vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++) {
+    for( iter  = m_analysis_modules.begin();
+         iter != m_analysis_modules.end(); iter++) {
       delete *iter;
     }
   }
@@ -111,22 +108,21 @@ Arches::problemSetup(const ProblemSpecP& params,
                      SimulationStateP& sharedState)
 {
 
-  d_sharedState= sharedState;
+  m_sharedState= sharedState;
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
-  _arches_spec = db;
+  m_arches_spec = db;
 
   // Check for lagrangian particles
-  _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles");
-  if ( _doLagrangianParticles ) {
-    _particlesHelper->problem_setup(params,_arches_spec->findBlock("LagrangianParticles"), sharedState);
+  m_do_lagrangian_particles = m_arches_spec->findBlock("LagrangianParticles");
+  if ( m_do_lagrangian_particles ) {
+    m_particlesHelper->problem_setup(params,m_arches_spec->findBlock("LagrangianParticles"), sharedState);
   }
 
-  //__________________________________
   //  Multi-level related
-  d_archesLevelIndex = grid->numLevels()-1; // this is the finest level
-  proc0cout << "ARCHES CFD level: " << d_archesLevelIndex << endl;
+  m_arches_level_index = grid->numLevels()-1; // this is the finest level
+  proc0cout << "ARCHES CFD level: " << m_arches_level_index << endl;
 
   // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
   if( db->getRootNode()->findBlock("Grid") ) {
@@ -135,14 +131,13 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
 
-  db->getWithDefault("recompileTaskgraph",  d_recompile_taskgraph,false);
+  db->getWithDefault("recompileTaskgraph",  m_recompile_taskgraph,false);
 
   // physical constant
-  d_physicalConsts = scinew PhysicalConstants();
+  m_physicalConsts = scinew PhysicalConstants();
   const ProblemSpecP db_root = db->getRootNode();
-  d_physicalConsts->problemSetup(db_root);
+  m_physicalConsts->problemSetup(db_root);
 
-  //__________________________________
   SolverInterface* hypreSolver = dynamic_cast<SolverInterface*>(getPort("solver"));
 
   if(!hypreSolver) {
@@ -153,16 +148,16 @@ Arches::problemSetup(const ProblemSpecP& params,
   NonlinearSolver::NLSolverBuilder* builder;
   if (   db->findBlock("ExplicitSolver") ) {
 
-    builder = scinew ExplicitSolver::Builder( d_sharedState,
-                                              d_MAlab,
-                                              d_physicalConsts,
+    builder = scinew ExplicitSolver::Builder( m_sharedState,
+                                              m_MAlab,
+                                              m_physicalConsts,
                                               d_myworld,
-                                              _particlesHelper,
+                                              m_particlesHelper,
                                               hypreSolver );
 
   } else if ( db->findBlock("KokkosSolver")) {
 
-    builder = scinew KokkosSolver::Builder( d_sharedState, d_myworld );
+    builder = scinew KokkosSolver::Builder( m_sharedState, d_myworld );
 
   } else {
 
@@ -171,27 +166,27 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   //User the builder to build the solver, delete the builder when done.
-  d_nlSolver = builder->build();
+  m_nlSolver = builder->build();
   delete builder;
 
-  d_nlSolver->problemSetup( db, d_sharedState, grid );
+  m_nlSolver->problemSetup( db, m_sharedState, grid );
 
 
   //__________________________________
   // On the Fly Analysis. The belongs at bottom
   // of task after all of the problemSetups have been called.
-  if(!d_with_mpmarches) {
+  if(!m_with_mpmarches) {
     Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
     if(!dataArchiver) {
       throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
     }
 
-    d_analysisModules = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
+    m_analysis_modules = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
 
-    if(d_analysisModules.size() != 0) {
+    if(m_analysis_modules.size() != 0) {
       vector<AnalysisModule*>::iterator iter;
-      for( iter  = d_analysisModules.begin();
-           iter != d_analysisModules.end(); iter++) {
+      for( iter  = m_analysis_modules.begin();
+           iter != m_analysis_modules.end(); iter++) {
         AnalysisModule* am = *iter;
         am->problemSetup(params, materials_ps, grid, sharedState);
       }
@@ -199,7 +194,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   //__________________________________
   // Bulletproofing needed for multi-level RMCRT
-  if(d_doAMR && !sharedState->isLockstepAMR()) {
+  if(m_do_AMR && !sharedState->isLockstepAMR()) {
     ostringstream msg;
     msg << "\n ERROR: You must add \n"
         << " <useLockStep> true </useLockStep> \n"
@@ -216,30 +211,30 @@ Arches::scheduleInitialize(const LevelP& level,
 {
 
   //=========== NEW TASK INTERFACE ==============================
-  if ( _doLagrangianParticles ) {
-    _particlesHelper->set_materials(d_sharedState->allArchesMaterials());
-    _particlesHelper->schedule_initialize(level, sched);
+  if ( m_do_lagrangian_particles ) {
+    m_particlesHelper->set_materials(m_sharedState->allArchesMaterials());
+    m_particlesHelper->schedule_initialize(level, sched);
   }
 
   //=========== END NEW TASK INTERFACE ==============================
-  d_nlSolver->initialize( level, sched, d_doingRestart );
+  m_nlSolver->initialize( level, sched, m_doing_restart );
 
-  if( level->getIndex() != d_archesLevelIndex )
+  if( level->getIndex() != m_arches_level_index )
     return;
 
   //______________________
   //Data Analysis
-  if(d_analysisModules.size() != 0) {
+  if(m_analysis_modules.size() != 0) {
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++) {
+    for( iter  = m_analysis_modules.begin();
+         iter != m_analysis_modules.end(); iter++) {
       AnalysisModule* am = *iter;
       am->scheduleInitialize( sched, level);
     }
   }
 
-  if ( _doLagrangianParticles ) {
-    _particlesHelper->schedule_sync_particle_position(level,sched,true);
+  if ( m_do_lagrangian_particles ) {
+    m_particlesHelper->schedule_sync_particle_position(level,sched,true);
   }
 }
 
@@ -249,7 +244,7 @@ Arches::scheduleRestartInitialize( const LevelP& level,
                                    SchedulerP& sched )
 {
 
-  d_nlSolver->sched_restartInitialize( level, sched );
+  m_nlSolver->sched_restartInitialize( level, sched );
 
 }
 
@@ -257,7 +252,7 @@ Arches::scheduleRestartInitialize( const LevelP& level,
 void
 Arches::restartInitialize()
 {
-  d_doingRestart = true;
+  m_doing_restart = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -265,7 +260,7 @@ void
 Arches::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
-  d_nlSolver->computeTimestep(level, sched );
+  m_nlSolver->computeTimestep(level, sched );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -284,39 +279,37 @@ Arches::scheduleTimeAdvance( const LevelP& level,
                              SchedulerP& sched)
 {
   // Only schedule
-  if(level->getIndex() != d_archesLevelIndex)
+  if(level->getIndex() != m_arches_level_index)
     return;
 
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
-  nofTimeSteps++;
-
-  if( d_sharedState->isRegridTimestep() ) { // needed for single level regridding on restarts
-    d_doingRestart = true;                  // this task is called twice on a regrid.
-    d_recompile_taskgraph =true;
-    d_sharedState->setRegridTimestep(false);
+  if( m_sharedState->isRegridTimestep() ) { // needed for single level regridding on restarts
+    m_doing_restart = true;                  // this task is called twice on a regrid.
+    m_recompile_taskgraph =true;
+    m_sharedState->setRegridTimestep(false);
   }
 
-  if (d_doingRestart  ) {
-    if(d_recompile_taskgraph) {
-      d_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
+  if (m_doing_restart  ) {
+    if(m_recompile_taskgraph) {
+      m_nlSolver->sched_restartInitializeTimeAdvance(level,sched);
   }}
 
-  d_nlSolver->nonlinearSolve(level, sched);
+  m_nlSolver->nonlinearSolve(level, sched);
 
   //__________________________________
   //  on the fly analysis
-  if(d_analysisModules.size() != 0) {
+  if(m_analysis_modules.size() != 0) {
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++) {
+    for( iter  = m_analysis_modules.begin();
+         iter != m_analysis_modules.end(); iter++) {
       AnalysisModule* am = *iter;
       am->scheduleDoAnalysis( sched, level);
     }
   }
 
-  if (d_doingRestart) {
-    d_doingRestart = false;
+  if (m_doing_restart) {
+    m_doing_restart = false;
 
   }
 }
@@ -326,25 +319,25 @@ bool Arches::needRecompile(double time, double dt,
                            const GridP& grid)
 {
   bool temp;
-  if ( d_recompile_taskgraph ) {
+  if ( m_recompile_taskgraph ) {
     //Currently turning off recompile after.
-    temp = d_recompile_taskgraph;
+    temp = m_recompile_taskgraph;
     proc0cout << "\n NOTICE: Recompiling task graph. \n \n";
-    d_recompile_taskgraph = false;
+    m_recompile_taskgraph = false;
     return temp;
   }
   else
-    return d_recompile_taskgraph;
+    return m_recompile_taskgraph;
 }
 
 //--------------------------------------------------------------------------------------------------
 double Arches::recomputeTimestep(double current_dt) {
-  return d_nlSolver->recomputeTimestep(current_dt);
+  return m_nlSolver->recomputeTimestep(current_dt);
 }
 
 //--------------------------------------------------------------------------------------------------
 bool Arches::restartableTimesteps() {
-  return d_nlSolver->restartableTimesteps();
+  return m_nlSolver->restartableTimesteps();
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -32,6 +32,7 @@
 namespace Uintah{
 
   class WBCHelper;
+  class TaskFactoryBase; 
 
   class KokkosSolver : NonlinearSolver {
 

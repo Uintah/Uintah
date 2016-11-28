@@ -63,7 +63,6 @@
 
 namespace Uintah {
 
-  class TaskFactoryBase;
   class VarLabel;
   class PhysicalConstants;
   class NonlinearSolver;
@@ -109,7 +108,7 @@ public:
                              const GridP& grid);
 
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
-    d_MAlab = MAlb;
+    m_MAlab = MAlb;
   }
 
   virtual double recomputeTimestep(double current_dt);
@@ -117,13 +116,8 @@ public:
   virtual bool restartableTimesteps();
 
   void setWithMPMARCHES() {
-    d_with_mpmarches = true;
+    m_with_mpmarches = true;
   };
-
-  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched );
-
-  int nofTimeSteps;
-  static const int NDIM;
 
   //________________________________________________________________________________________________
   //  Multi-level/AMR
@@ -150,15 +144,6 @@ private:
 
   Arches& operator=(const Arches&);
 
-  void create_patch_operators( const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
-
-  const Uintah::ProblemSpecP get_arches_spec(){ return _arches_spec; }
-
   /** @brief Assign a unique name to each BC where name is not specified in the UPS.
              Note that this functionality was taken from Wasatch. (credit: Tony Saad) **/
   void assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec );
@@ -172,35 +157,22 @@ private:
     return ss.str();
   }
 
+  PhysicalConstants* m_physicalConsts;
+  NonlinearSolver* m_nlSolver;
+  SimulationStateP m_sharedState;
+  const MPMArchesLabel* m_MAlab;
+  Uintah::ProblemSpecP m_arches_spec;
+  ArchesParticlesHelper* m_particlesHelper;
 
+  std::vector<AnalysisModule*> m_analysis_modules;
 
-  PhysicalConstants* d_physicalConsts;
-  NonlinearSolver* d_nlSolver;
-  SimulationStateP d_sharedState;
-  const MPMArchesLabel* d_MAlab;
-  std::vector<AnalysisModule*> d_analysisModules;
-  //NEW TASK INTERFACE STUFF:
-  std::map<std::string, TaskFactoryBase*> _factory_map;
-  Uintah::ProblemSpecP _arches_spec;
-  ArchesParticlesHelper* _particlesHelper;
-  std::map<std::string, std::shared_ptr<TaskFactoryBase> > _task_factory_map;
+  bool m_doing_restart;
+  bool m_with_mpmarches;
+  bool m_do_AMR;
+  bool m_do_lagrangian_particles;
+  bool m_recompile_taskgraph;
 
-  bool d_doingRestart;
-  bool d_with_mpmarches;
-  bool d_doAMR;             //<<< Multilevel related
-  bool _doLagrangianParticles;
-  bool d_recompile_taskgraph;
-
-  int d_archesLevelIndex;   //<<< Multilevel related
-
-  double d_initial_dt;
-
-  const VarLabel* d_x_vel_label;
-  const VarLabel* d_y_vel_label;
-  const VarLabel* d_z_vel_label;
-  const VarLabel* d_viscos_label;
-  const VarLabel* d_rho_label;
-  const VarLabel* d_celltype_label;
+  int m_arches_level_index;
 
 }; // end class Arches
 
