@@ -383,7 +383,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
   int maxLevels = gridP.maxLevels;
   int fineL = maxLevels - 1;
-
+  levelParams fineLevel = d_levels[fineL];
   //__________________________________
   //
   const GPUGridVariable<T>    abskg[d_MAXLEVELS];
@@ -397,9 +397,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   for (int l = 0; l < maxLevels; ++l) {
     if (d_levels[l].hasFinerLevel) {
       if(RT_flags.usingFloats){
-        abskg_gdw->getLevel( abskg[l],           "abskgRMCRT",    matl, l);
+        abskg_gdw->getLevel( abskg[l],  "abskgRMCRT", matl, l);
       } else {
-        abskg_gdw->getLevel( abskg[l],           "abskg",    matl, l);
+        abskg_gdw->getLevel( abskg[l],  "abskg",      matl, l);
       }
       sigmaT4_gdw->getLevel( sigmaT4OverPi[l], "sigmaT4",  matl, l);
       cellType_gdw->getLevel( cellType[l],     "cellType", matl, l);
@@ -426,20 +426,20 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     GPUVariableSanityCK(sigmaT4OverPi[fineL],fineLevel_ROI_Lo,fineLevel_ROI_Hi);
   }
 
-  GPUGridVariable<double> divQ;
-  GPUGridVariable<GPUStencil7> boundFlux;
-  GPUGridVariable<double> radiationVolQ;
+  GPUGridVariable<double> divQ_fine;
+  GPUGridVariable<GPUStencil7> boundFlux_fine;
+  GPUGridVariable<double> radiationVolQ_fine;
 
   //__________________________________
   //  fine level data for this patch
   if( RT_flags.modifies_divQ ){
-    new_gdw->getModifiable( divQ,         "divQ",          finePatch.ID, matl, fineL );
-    new_gdw->getModifiable( boundFlux,    "boundFlux",     finePatch.ID, matl, fineL );
-    new_gdw->getModifiable( radiationVolQ,"radiationVolq", finePatch.ID, matl, fineL );
+    new_gdw->getModifiable( divQ_fine,         "divQ",           finePatch.ID, matl, fineL );
+    new_gdw->getModifiable( boundFlux_fine,    "RMCRTboundFlux", finePatch.ID, matl, fineL );
+    new_gdw->getModifiable( radiationVolQ_fine,"radiationVolq",  finePatch.ID, matl, fineL );
   }else{
-    new_gdw->get( divQ,         "divQ",           finePatch.ID, matl, fineL );         // these should be allocateAntPut() calls
-    new_gdw->get( boundFlux,    "RMCRTboundFlux", finePatch.ID, matl, fineL );
-    new_gdw->get( radiationVolQ,"radiationVolq",  finePatch.ID, matl, fineL );
+    new_gdw->get( divQ_fine,         "divQ",           finePatch.ID, matl, fineL );         // these should be allocateAntPut() calls
+    new_gdw->get( boundFlux_fine,    "RMCRTboundFlux", finePatch.ID, matl, fineL );
+    new_gdw->get( radiationVolQ_fine,"radiationVolq",  finePatch.ID, matl, fineL );
 
 
     //__________________________________
@@ -448,10 +448,31 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       #pragma unroll
       for (int z = finePatch.loEC.z; z < finePatch.hiEC.z; z++) { // loop through z slices
         GPUIntVector c = make_int3(tidX, tidY, z);
-        divQ[c]          = 0.0;
-        radiationVolQ[c] = 0.0;
+        divQ_fine[c]          = 0.0;
+        radiationVolQ_fine[c] = 0.0;
+        boundFlux_fine[c].initialize(0.0);
       }
     }
+  }
+  
+  //__________________________________
+  //
+  bool doLatinHyperCube = (RT_flags.rayDirSampleAlgo == LATIN_HYPER_CUBE);
+
+  const int nFluxRays = RT_flags.nFluxRays;               // for readability
+
+  // This rand_i array is only needed for LATIN_HYPER_CUBE scheme
+  const int size = 1000;
+  int rand_i[ size ];       //Give it a buffer room of 1000.  But we should only use nFluxRays items in it.
+                            //Hopefully this 1000 will always be greater than nFluxRays.
+  if (nFluxRays > size) {
+    printf("\n\n\nERROR!  rayTraceKernel() - Cannot have more rays than the rand_i array size.  nFluxRays is %d, size of the array is.%d\n\n\n",
+        nFluxRays, size);
+    //We have to return, otherwise the upcoming math in rayDirectionHyperCube_cellFaceDevice will generate nan values.
+    return;
+  }
+  if (doLatinHyperCube){
+    randVectorDevice(rand_i, nFluxRays, randNumStates);
   }
 
   //______________________________________________________________________
@@ -465,7 +486,108 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   //          B O U N D A R Y F L U X
   //______________________________________________________________________
   if( RT_flags.solveBoundaryFlux ){
-    // TO BE FILLED IN
+    __shared__ int3 dirIndexOrder[6];
+    __shared__ int3 dirSignSwap[6];
+
+    //_____________________________________________
+    //   Ordering for Surface Method
+    // This block of code is used to properly place ray origins, and orient ray directions
+    // onto the correct face.  This is necessary, because by default, the rays are placed
+    // and oriented onto a default face, then require adjustment onto the proper face.
+    dirIndexOrder[EAST]   = make_int3(2, 1, 0);
+    dirIndexOrder[WEST]   = make_int3(2, 1, 0);
+    dirIndexOrder[NORTH]  = make_int3(0, 2, 1);
+    dirIndexOrder[SOUTH]  = make_int3(0, 2, 1);
+    dirIndexOrder[TOP]    = make_int3(0, 1, 2);
+    dirIndexOrder[BOT]    = make_int3(0, 1, 2);
+
+    // Ordering is slightly different from 6Flux since here, rays pass through origin cell from the inside faces.
+    dirSignSwap[EAST]     = make_int3(-1, 1,  1);
+    dirSignSwap[WEST]     = make_int3( 1, 1,  1);
+    dirSignSwap[NORTH]    = make_int3( 1, -1, 1);
+    dirSignSwap[SOUTH]    = make_int3( 1, 1,  1);
+    dirSignSwap[TOP]      = make_int3( 1, 1, -1);
+    dirSignSwap[BOT]      = make_int3( 1, 1,  1);
+
+    if ( (tidX >= finePatch.lo.x) && (tidY >= finePatch.lo.y) && (tidX < finePatch.hi.x) && (tidY < finePatch.hi.y) ) { // finePatch boundary check
+      #pragma unroll
+      for (int z = finePatch.lo.z; z < finePatch.hi.z; z++) { // loop through z slices
+
+        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+
+        boundFlux_fine[origin].initialize(0.0);
+
+        BoundaryFaces boundaryFaces;
+
+         // which surrounding cells are boundaries
+        boundFlux_fine[origin].p = has_a_boundaryDevice(origin, cellType[fineL], boundaryFaces);
+
+        GPUPoint CC_pos = fineLevel.getCellPosition(origin);
+
+        //__________________________________
+        // Loop over boundary faces of the cell and compute incident radiative flux
+        #pragma unroll
+        for( int i = 0; i<boundaryFaces.size(); i++) {
+
+          int RayFace = boundaryFaces.faceArray[i];
+          int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
+
+          double sumI         = 0;
+          double sumProjI     = 0;
+          double sumI_prev    = 0;
+          double sumCosTheta  = 0;    // used to force sumCosTheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
+
+          //__________________________________
+          // Flux ray loop
+          #pragma unroll
+          for (int iRay=0; iRay < nFluxRays; iRay++){
+
+            GPUVector direction_vector;
+            GPUVector rayOrigin;
+            double cosTheta;
+
+            if ( doLatinHyperCube ){        // Latin-Hyper-Cube sampling
+              rayDirectionHyperCube_cellFaceDevice( randNumStates, origin,dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
+                                                    direction_vector, cosTheta, rand_i[iRay], iRay, nFluxRays);
+            } else{                                               // Naive Monte-Carlo sampling
+              rayDirection_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
+                                           direction_vector, cosTheta );
+            }
+
+            rayLocation_cellFaceDevice( randNumStates, RayFace, finePatch.dx, CC_pos, rayOrigin);
+
+            updateSumI_MLDevice<T>( direction_vector, rayOrigin, origin, gridP,
+                                    fineLevel_ROI_Lo, fineLevel_ROI_Hi,
+                                    regionLo, regionHi,
+                                    sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
+
+            sumProjI    += cosTheta * (sumI - sumI_prev);              // must subtract sumI_prev, since sumI accumulates intensity
+
+            sumCosTheta += cosTheta;
+
+            sumI_prev    = sumI;
+
+          } // end of flux ray loop
+
+          sumProjI = sumProjI * (double) RT_flags.nFluxRays/sumCosTheta/2.0; // This operation corrects for error in the first moment over a half range of the solid angle (Modest Radiative Heat Transfer page 545 1rst edition)
+
+          //__________________________________
+          //  Compute Net Flux to the boundary
+          int face = UintahFace[RayFace];
+          boundFlux_fine[origin][ face ] = sumProjI * 2 *M_PI/ (double) RT_flags.nFluxRays;
+
+/*`==========TESTING==========*/
+#if (DEBUG == 2)
+          if( isDbgCell(origin) ) {
+            printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BoundaryFlux: %g\n",
+                  origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
+          }
+#endif
+/*===========TESTING==========`*/
+
+        } // boundary faces loop
+      }  // z slices loop
+    }  // X-Y Thread loop
   }
 
   //______________________________________________________________________
@@ -506,15 +628,15 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         //__________________________________
         //  Compute divQ
-        divQ[origin] = -4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
+        divQ_fine[origin] = -4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
 
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-        radiationVolQ[origin] = 4.0 * M_PI * (sumI/RT_flags.nDivQRays);
+        radiationVolQ_fine[origin] = 4.0 * M_PI * (sumI/RT_flags.nDivQRays);
 
 #if (DEBUG == 1)
         if( isDbgCellDevice(origin) ){
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
-                    origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[fineL][origin], sigmaT4OverPi[fineL][origin]);
+                    origin.x, origin.y, origin.z, sumI,divQ_fine[origin], radiationVolQ_fine[origin],abskg[fineL][origin], sigmaT4OverPi[fineL][origin]);
         }
 #endif
 
