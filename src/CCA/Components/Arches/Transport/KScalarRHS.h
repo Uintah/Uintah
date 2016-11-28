@@ -500,7 +500,7 @@ private:
   template <typename T> void
   KScalarRHS<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    m_boundary_functors->apply_bc( _eqn_names, m_bc_helper, tsk_info, patch );
+    m_boundary_functors->apply_bc( _eqn_names, m_bcHelper, tsk_info, patch );
 
   }
 }

@@ -109,6 +109,11 @@ NIGHTLYTESTS = [
    ("cloudBM80GLC"                      , "cloudBM80GLC.ups"                                        , 8 , "All"  , ["exactComparison", "no_restart"]) ,
    ("cloudBM80LS"                       , "cloudBM80LS.ups"                                         , 8 , "All"  , ["exactComparison", "no_restart"]) ,
 #__________________________________
+# Kokkos tests
+   ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
+   ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
+   ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
+#__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD   "corrupted double-linked list: 0x00000000024b8120 ***"
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"     , "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
@@ -194,6 +199,11 @@ LOCALTESTS = [
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
    ("multi-patch-intrusion-test"        , "multi-patch-intrusion-test.ups"                          , 8   , "All"  , ["exactComparison"]) , 
 #__________________________________
+# Kokkos tests
+   ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
+   ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
+   ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
+#__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD, "corrupted double-linked list: 0x00000000024b8120 ***"
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
@@ -243,6 +253,12 @@ RMCRTTESTS = [
    ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
    ("rmcrt_bm1_ML_thread"                , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
    ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
+]
+
+KOKKOSTESTS = [
+   ("kokkos-x-scalar"                   , "kokkos_solver_tests/kokkos-x-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
+   ("kokkos-y-scalar"                   , "kokkos_solver_tests/kokkos-y-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
+   ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
 ]
 
 CQMOMTESTS = [
@@ -314,7 +330,7 @@ NORMCRT = [
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS NORMCRT DEBUG
+#LIST: LOCALTESTS KOKKOSTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS NORMCRT DEBUG
 #__________________________________
 
   
@@ -322,6 +338,8 @@ NORMCRT = [
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
+  elif me == "KOKKOSTESTS": 
+    TESTS = KOKKOSTESTS
   elif me == "RMCRTTESTS":
     TESTS = RMCRTTESTS
   elif me == "SCALARTESTS":

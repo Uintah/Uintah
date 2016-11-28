@@ -92,11 +92,11 @@ namespace Uintah{
     }
 
     void set_bcHelper( WBCHelper* helper ){
-      m_bc_helper = helper;
+      m_bcHelper = helper;
 
       //assign all tasks a copy of the bcHelper
       for ( auto i = _tasks.begin(); i != _tasks.end(); i++ ){
-        i->second->set_bcHelper( helper ); 
+        i->second->set_bcHelper( helper );
       }
 
     }
@@ -108,7 +108,7 @@ namespace Uintah{
     TypeToTaskMap _type_to_tasks;                 ///< Collects all tasks of a common type
     SimulationStateP _shared_state;               ///< Uintah SharedState
 
-    WBCHelper* m_bc_helper;
+    WBCHelper* m_bcHelper;
 
   private:
 

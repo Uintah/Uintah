@@ -32,7 +32,7 @@
 namespace Uintah{
 
   class WBCHelper;
-  class TaskFactoryBase; 
+  class TaskFactoryBase;
 
   class KokkosSolver : NonlinearSolver {
 
@@ -43,19 +43,19 @@ namespace Uintah{
 
   public:
     Builder( SimulationStateP& sharedState,
-             const ProcessorGroup* myworld ) :
-             _sharedState(sharedState),
-             _myworld(myworld)
+             const ProcessorGroup* myWorld ) :
+             m_sharedState(sharedState),
+             m_myWorld(myWorld)
     { }
      ~Builder(){}
 
      KokkosSolver* build(){
-       return scinew KokkosSolver( _sharedState, _myworld );
+       return scinew KokkosSolver( m_sharedState, m_myWorld );
      }
 
   private:
-    SimulationStateP& _sharedState;
-    const ProcessorGroup* _myworld;
+    SimulationStateP& m_sharedState;
+    const ProcessorGroup* m_myWorld;
   };
 
   KokkosSolver( SimulationStateP& sharedState,
@@ -101,9 +101,11 @@ namespace Uintah{
 
   private:
 
+    void setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls );
+
     SimulationStateP& m_sharedState;
 
-    std::map<std::string,std::shared_ptr<TaskFactoryBase> > _task_factory_map;
+    std::map<std::string,std::shared_ptr<TaskFactoryBase> > m_task_factory_map;
 
     std::map<int,WBCHelper*> m_bcHelper;
 

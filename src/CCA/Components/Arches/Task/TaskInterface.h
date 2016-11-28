@@ -32,7 +32,7 @@ namespace Uintah{
   class Task;
   class VarLabel;
   class Level;
-  class WBCHelper; 
+  class WBCHelper;
   class TaskInterface{
 
 public:
@@ -158,7 +158,7 @@ public:
     };
 
     void set_bcHelper( Uintah::WBCHelper* helper ){
-      m_bc_helper = helper;
+      m_bcHelper = helper;
     }
 
 protected:
@@ -166,7 +166,7 @@ protected:
     typedef std::map<std::string, GridVariableBase* > UintahVarMap;
     typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap;
 
-    WBCHelper* m_bc_helper;
+    WBCHelper* m_bcHelper;
 
     /** @brief The actual work done within the derived class **/
     virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;

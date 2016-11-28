@@ -22,8 +22,8 @@
 
   <DataArchiver>
     <filebase>x-scalar-kokkos-test.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>4</outputTimestepInterval>
+    <outputInitTimestep/>
     <save label="cc_phi_upwind"/>
     <save label="cc_phi_vanleer"/>
     <save label="cc_phi_superbee"/>
@@ -32,7 +32,7 @@
     <save label="fc_phi_vanleer"/>
     <save label="fc_phi_superbee"/>
     <save label="fc_phi_central"/>
-    <checkpoint cycle="2" interval="0.05"/>
+    <checkpoint cycle="2" interval="0.13"/>
     <compression>gzip</compression>
   </DataArchiver>
 

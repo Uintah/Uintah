@@ -58,7 +58,18 @@ KokkosSolver::~KokkosSolver(){
 
 void
 KokkosSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
-{}
+{
+
+  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+
+  // Setup BCs -------------------------------------------------------------------------------------
+  setupBCs( level, sched, matls );
+
+  //transport factory
+  BFM::iterator i_trans_fac = m_task_factory_map.find("transport_factory");
+  i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
+
+}
 
 void
 KokkosSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
@@ -89,17 +100,17 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
   std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
 
-  _task_factory_map.clear();
-  _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
-  _task_factory_map.insert(std::make_pair("transport_factory",TransF));
-  _task_factory_map.insert(std::make_pair("initialize_factory",InitF));
-  _task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
-  _task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
-  _task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
+  m_task_factory_map.clear();
+  m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
+  m_task_factory_map.insert(std::make_pair("transport_factory",TransF));
+  m_task_factory_map.insert(std::make_pair("initialize_factory",InitF));
+  m_task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
+  m_task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
+  m_task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
-  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
+  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
     i->second->set_shared_state(m_sharedState);
@@ -109,7 +120,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
 
   proc0cout << "\n Building Tasks For: " << std::endl;
 
-  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
+  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
     i->second->build_all_tasks(db);
@@ -272,17 +283,12 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
   bool is_restart = false;
 
-  //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+  // Setup BCs -------------------------------------------------------------------------------------
+  setupBCs( level, sched, matls );
 
-  //computes the area for each inlet through the use of a reduction variables
-  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
-
-  //copies the reduction area variable information on area to a double in the BndCond spec
-  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
-
+  // Task Initialize -------------------------------------------------------------------------------
   //utility factory
-  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   // build the x,y,z location scalars
   TaskInterface* tsk = i_util_fac->second->retrieve_task("grid_info");
   tsk->schedule_init( level, sched, matls, is_restart );
@@ -291,29 +297,30 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   tsk->schedule_init( level, sched, matls, is_restart );
 
   //property factory
-  BFM::iterator i_prop_fac = _task_factory_map.find("property_models_factory");
+  BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   TaskFactoryBase::TaskMap all_prop_tasks = i_prop_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
+  for ( auto i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, doing_restart);
   }
 
   //transport factory
-  BFM::iterator i_trans_fac = _task_factory_map.find("transport_factory");
+  BFM::iterator i_trans_fac = m_task_factory_map.find("transport_factory");
   i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
   TaskFactoryBase::TaskMap all_trans_tasks = i_trans_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
+  for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, doing_restart);
   }
 
   // generic field initializer
-  BFM::iterator i_init_fac = _task_factory_map.find("initialize_factory");
+  BFM::iterator i_init_fac = m_task_factory_map.find("initialize_factory");
   TaskFactoryBase::TaskMap all_init_tasks = i_init_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_init_tasks.begin(); i != all_init_tasks.end(); i++) {
+  for ( auto i = all_init_tasks.begin(); i != all_init_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, doing_restart);
   }
 
+  // Apply BCs -------------------------------------------------------------------------------------
   //Need to apply BC's after everything is initialized
-  for ( TaskFactoryBase::TaskMap::iterator i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
+  for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
     i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
   }
 
@@ -325,7 +332,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
 {
 
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
-  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
 
   // carry forward the grid x,y,z
   TaskInterface* tsk = i_util_fac->second->retrieve_task("grid_info");
@@ -335,13 +342,13 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
   tsk = i_util_fac->second->retrieve_task("vol_fraction_calc");
   tsk->schedule_timestep_init( level, sched, matls );
 
-  BFM::iterator i_transport = _task_factory_map.find("transport_factory");
+  BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
   TaskFactoryBase::TaskMap all_trans_tasks = i_transport->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++){
     i->second->schedule_timestep_init(level, sched, matls);
   }
 
-  BFM::iterator i_prop_fac = _task_factory_map.find("property_models_factory");
+  BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   TaskFactoryBase::TaskMap all_prop_tasks = i_prop_fac->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
     i->second->schedule_timestep_init(level, sched, matls);
@@ -416,4 +423,16 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
 
   return 0;
 
+}
+
+void
+KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls ){
+  //boundary condition helper
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+
+  //computes the area for each inlet through the use of a reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
 }

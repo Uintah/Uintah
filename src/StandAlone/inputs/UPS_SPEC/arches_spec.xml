@@ -881,6 +881,9 @@
 
       <KokkosSolver                     spec="OPTIONAL NO_DATA">
 
+        <initial_dt                     spec="OPTIONAL DOUBLE 'positive'"/>  <!-- Sets the initial timestep of the simulation.  Note that this value will
+                                                                                  be superceded if the CFL condition determines a smaller timestep as determined
+                                                                                  from the BC's and initial condition.  -->
         <BoundaryConditions             spec="OPTIONAL NO_DATA">
           <force_area_calc              spec="OPTIONAL NO_DATA"/> <!-- forces all BCs to compute an area and not just those that require them -->
         </BoundaryConditions>
