@@ -509,7 +509,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         divQ[origin] = -4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
 
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-        radiationVolQ[origin] = 4.0 * M_PI * abskg[fineL][origin] * (sumI/RT_flags.nDivQRays);
+        radiationVolQ[origin] = 4.0 * M_PI * (sumI/RT_flags.nDivQRays);
 
 #if (DEBUG == 1)
         if( isDbgCellDevice(origin) ){
