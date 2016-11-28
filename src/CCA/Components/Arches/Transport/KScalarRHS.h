@@ -76,16 +76,16 @@ public:
       public:
 
       Builder( std::string task_name, int matl_index )
-      : _task_name(task_name), _matl_index(matl_index){}
+      : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
       KScalarRHS* build()
-      { return scinew KScalarRHS<T>( _task_name, _matl_index ); }
+      { return scinew KScalarRHS<T>( m_task_name, m_matl_index ); }
 
       private:
 
-      std::string _task_name;
-      int _matl_index;
+      std::string m_task_name;
+      int m_matl_index;
 
     };
 
@@ -99,31 +99,31 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
     typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
-    std::string _D_name;
+    std::string m_D_name;
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
     std::string m_eps_name;
 
     std::vector<std::string> _eqn_names;
-    std::vector<bool> _do_diff;
-    std::vector<bool> _do_clip;
-    std::vector<double> _low_clip;
-    std::vector<double> _high_clip;
-    std::vector<double> _init_value;
+    std::vector<bool> m_do_diff;
+    std::vector<bool> m_do_clip;
+    std::vector<double> m_low_clip;
+    std::vector<double> m_high_clip;
+    std::vector<double> m_init_value;
 
-    bool _has_D;
+    bool m_has_D;
 
-    int _total_eqns;
+    int m_total_eqns;
 
     struct SourceInfo{
       std::string name;
       double weight;
     };
 
-    std::vector<std::vector<SourceInfo> > _source_info;
+    std::vector<std::vector<SourceInfo> > m_source_info;
 
-    std::vector<LIMITER> _conv_scheme;
+    std::vector<LIMITER> m_conv_scheme;
 
     ArchesCore::BCFunctors<T>* m_boundary_functors;
 
@@ -148,7 +148,7 @@ private:
   template <typename T> void
   KScalarRHS<T>::problemSetup( ProblemSpecP& input_db ){
 
-  _total_eqns = 0;
+  m_total_eqns = 0;
 
   ConvectionHelper* conv_helper = scinew ConvectionHelper();
   for (ProblemSpecP db = input_db->findBlock("eqn"); db != 0;
@@ -163,39 +163,39 @@ private:
     if ( db->findBlock("convection")){
       std::string conv_scheme;
       db->findBlock("convection")->getAttribute("scheme", conv_scheme);
-      _conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
+      m_conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
     } else {
-      _conv_scheme.push_back(NOCONV);
+      m_conv_scheme.push_back(NOCONV);
     }
 
     //Diffusion
     if ( db->findBlock("diffusion")){
-      _do_diff.push_back(true);
+      m_do_diff.push_back(true);
     } else {
-      _do_diff.push_back(false);
+      m_do_diff.push_back(false);
     }
 
     //Clipping
     if ( db->findBlock("clip")){
-      _do_clip.push_back(true);
+      m_do_clip.push_back(true);
       double low; double high;
       db->findBlock("clip")->getAttribute("low", low);
       db->findBlock("clip")->getAttribute("high", high);
-      _low_clip.push_back(low);
-      _high_clip.push_back(high);
+      m_low_clip.push_back(low);
+      m_high_clip.push_back(high);
     } else {
-      _do_clip.push_back(false);
-      _low_clip.push_back(-999.9);
-      _high_clip.push_back(999.9);
+      m_do_clip.push_back(false);
+      m_low_clip.push_back(-999.9);
+      m_high_clip.push_back(999.9);
     }
 
     //Initial Value
     if ( db->findBlock("initialize") ){
       double value;
       db->findBlock("initialize")->getAttribute("value",value);
-      _init_value.push_back(value);
+      m_init_value.push_back(value);
     } else {
-      _init_value.push_back(0.0);
+      m_init_value.push_back(0.0);
     }
 
     std::vector<SourceInfo> eqn_srcs;
@@ -219,7 +219,7 @@ private:
 
     }
 
-    _source_info.push_back(eqn_srcs);
+    m_source_info.push_back(eqn_srcs);
 
     // setup the boundary conditions for this eqn set
     m_boundary_functors->create_bcs( db, _eqn_names );
@@ -245,12 +245,12 @@ private:
   }
 
   // Diffusion coeff -- assuming the same one across all eqns.
-  _D_name = "NA";
-  _has_D = false;
+  m_D_name = "NA";
+  m_has_D = false;
 
   if ( input_db->findBlock("diffusion_coef") ) {
-    input_db->findBlock("diffusion_coef")->getAttribute("label",_D_name);
-    _has_D = true;
+    input_db->findBlock("diffusion_coef")->getAttribute("label",m_D_name);
+    m_has_D = true;
   }
 
   }
@@ -279,7 +279,7 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       register_variable(  _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable(  _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
-      //if ( _conv_scheme[ieqn] != NOCONV ){
+      //if ( m_conv_scheme[ieqn] != NOCONV ){
         register_variable(  _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry );
         register_variable(  _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry );
         register_variable(  _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry );
@@ -294,7 +294,7 @@ private:
     const int iend = _eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      double scalar_init_value = _init_value[ieqn];
+      double scalar_init_value = m_init_value[ieqn];
 
       T& phi    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
       T& rhs    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]));
@@ -360,22 +360,22 @@ private:
       register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
       register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
       register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-      if ( _conv_scheme[ieqn] != NOCONV ){
+      if ( m_conv_scheme[ieqn] != NOCONV ){
         register_variable( _eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
         register_variable( _eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
         register_variable( _eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       }
 
       typedef std::vector<SourceInfo> VS;
-      for (typename VS::iterator i = _source_info[ieqn].begin(); i != _source_info[ieqn].end(); i++){
+      for (typename VS::iterator i = m_source_info[ieqn].begin(); i != m_source_info[ieqn].end(); i++){
         register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
       }
 
     }
 
     //globally common variables
-    if ( _has_D ){
-      register_variable( _D_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+    if ( m_has_D ){
+      register_variable( m_D_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
     }
     register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
@@ -426,7 +426,7 @@ private:
 
       });
 
-      if ( _conv_scheme[ieqn] != NOCONV ){
+      if ( m_conv_scheme[ieqn] != NOCONV ){
 
         CFXT& x_psi = *(tsk_info->get_const_uintah_field<CFXT>(_eqn_names[ieqn]+"_x_psi"));
         CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(_eqn_names[ieqn]+"_y_psi"));
@@ -439,9 +439,9 @@ private:
       }
 
       //Diffusion:
-      if ( _do_diff[ieqn] ) {
+      if ( m_do_diff[ieqn] ) {
 
-        CT& D = *(tsk_info->get_const_uintah_field<CT>(_D_name));
+        CT& D = *(tsk_info->get_const_uintah_field<CT>(m_D_name));
 
         //NOTE: No diffusion allowed on boundaries.
         GET_BUFFERED_PATCH_RANGE(1,-1);
@@ -469,7 +469,7 @@ private:
 
       //Sources:
       typedef std::vector<SourceInfo> VS;
-      for (typename VS::iterator isrc = _source_info[ieqn].begin(); isrc != _source_info[ieqn].end(); isrc++){
+      for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
 
         CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
         double weight = (*isrc).weight;
