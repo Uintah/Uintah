@@ -1324,10 +1324,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       }else{
         pEnergy_new[idx] = pEnergy[idx];
       }
-      // JBH - Add thermal contribution to internal energy of system for
-      // proper calculation of Mie-Gruneisen EOS
-      pEnergy_new[idx] += matl->getSpecificHeat() * state->initialDensity *
-          (pTemperature[idx] - pPreviousTemperature[idx]);
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
