@@ -21,7 +21,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>x-scalar-kokkos-test.uda</filebase>
+    <filebase>y-scalar-kokkos-test.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>4</outputTimestepInterval>
     <save label="cc_phi_upwind"/>
@@ -49,7 +49,7 @@
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
-      <Face side="x-">
+      <Face side="y-">
         <BCType var="Dirichlet" label="cc_phi_upwind">
           <value>2</value>
         </BCType>
@@ -75,59 +75,59 @@
           <value>0</value>
         </BCType>
       </Face>
-      <Face side="x+">
-        <BCType var="Neumann" label="cc_phi_upwind">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="cc_phi_vanleer">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="cc_phi_superbee">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="cc_phi_central">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="fc_phi_upwind">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="fc_phi_vanleer">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="fc_phi_superbee">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="fc_phi_central">
-          <value>0.</value>
-        </BCType>
-      </Face>
-      <Face side="y-">
-        <BCType var="Neumann" label="cc_phi_upwind">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="cc_phi_vanleer">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="cc_phi_superbee">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="cc_phi_central">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="fc_phi_upwind">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="fc_phi_vanleer">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="fc_phi_superbee">
-          <value>0.</value>
-        </BCType>
-        <BCType var="Neumann" label="fc_phi_central">
-          <value>0.</value>
-        </BCType>
-      </Face>
       <Face side="y+">
+        <BCType var="Neumann" label="cc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_central">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_central">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="x-">
+        <BCType var="Neumann" label="cc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="cc_phi_central">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_upwind">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_vanleer">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_superbee">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="fc_phi_central">
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="x+">
         <BCType var="Neumann" label="cc_phi_upwind">
           <value>0.</value>
         </BCType>
@@ -247,11 +247,11 @@
         </model>
         <model label="uVel" type="constant_property">
           <grid type="FX"/>
-          <value>0.9</value>
+          <value>0.</value>
         </model>
         <model label="vVel" type="constant_property">
           <grid type="FY"/>
-          <value>0.</value>
+          <value>0.9</value>
         </model>
         <model label="wVel" type="constant_property">
           <grid type="FZ"/>
@@ -279,8 +279,8 @@
 
         </eqn_group>
 
-        <eqn_group label="FXFields"
-                   type="FX">
+        <eqn_group label="FYFields"
+                   type="FY">
 
           <eqn label="fc_phi_upwind">
             <convection scheme="upwind"/>
@@ -305,7 +305,7 @@
               type="wave">
               <wave type="square">
                 <grid type="CC"/>
-                <independent_variable label="gridX" type="CC"/>
+                <independent_variable label="gridY" type="CC"/>
                 <square min="0.0"
                         max="1.0"
                         f="1.0"
@@ -317,7 +317,7 @@
               type="wave">
               <wave type="square">
                 <grid type="CC"/>
-                <independent_variable label="gridX" type="CC"/>
+                <independent_variable label="gridY" type="CC"/>
                 <square min="0.0"
                         max="1.0"
                         f="1.0"
@@ -329,7 +329,7 @@
               type="wave">
               <wave type="square">
                 <grid type="CC"/>
-                <independent_variable label="gridX" type="CC"/>
+                <independent_variable label="gridY" type="CC"/>
                 <square min="0.0"
                         max="1.0"
                         f="1.0"
@@ -341,7 +341,7 @@
               type="wave">
               <wave type="sine">
                 <grid type="CC"/>
-                <independent_variable label="gridX" type="CC"/>
+                <independent_variable label="gridY" type="CC"/>
                 <sine A="1.0"
                       f="1.0"
                       offset="0."/>
@@ -351,8 +351,8 @@
               variable_label="fc_phi_upwind"
               type="wave">
               <wave type="square">
-                <grid type="FX"/>
-                <independent_variable label="gridX" type="CC"/>
+                <grid type="FY"/>
+                <independent_variable label="gridY" type="CC"/>
                 <square min="0.0"
                         max="1.0"
                         f="1.0"
@@ -363,8 +363,8 @@
               variable_label="fc_phi_vanleer"
               type="wave">
               <wave type="square">
-                <grid type="FX"/>
-                <independent_variable label="gridX" type="CC"/>
+                <grid type="FY"/>
+                <independent_variable label="gridY" type="CC"/>
                 <square min="0.0"
                         max="1.0"
                         f="1.0"
@@ -375,8 +375,8 @@
               variable_label="fc_phi_superbee"
               type="wave">
               <wave type="square">
-                <grid type="FX"/>
-                <independent_variable label="gridX" type="CC"/>
+                <grid type="FY"/>
+                <independent_variable label="gridY" type="CC"/>
                 <square min="0.0"
                         max="1.0"
                         f="1.0"
@@ -387,8 +387,8 @@
               variable_label="fc_phi_central"
               type="wave">
               <wave type="sine">
-                <grid type="FX"/>
-                <independent_variable label="gridX" type="CC"/>
+                <grid type="FY"/>
+                <independent_variable label="gridY" type="CC"/>
                 <sine   A="1.0"
                         f="1.0"
                         offset="0."/>
