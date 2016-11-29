@@ -51,12 +51,7 @@ namespace Uintah { namespace ArchesCore{
 
     BCFunctors(){}
 
-    ~BCFunctors(){
-      //clean up
-      for ( auto i = m_bcFunStorage.begin(); i != m_bcFunStorage.end(); i++ ){
-        delete i->second;
-      }
-    }
+    ~BCFunctors(){}
 
     std::string pair_face_var_names( std::string face_name, std::string var_name ){
       return face_name + "_" + var_name;
@@ -327,12 +322,12 @@ namespace Uintah { namespace ArchesCore{
             if ( matched_var ){
               if ( type == "Dirichlet" ){
 
-                BaseFunctor* fun = scinew Dirichlet();
+                std::shared_ptr<BaseFunctor> fun(scinew Dirichlet());
                 insert_functor(func_enum_str(DIRICHLET_FUN), fun);
 
               } else if ( type == "Neumann" ){
 
-                BaseFunctor* fun = scinew Neumann();
+                std::shared_ptr<BaseFunctor> fun(scinew Neumann());
                 insert_functor(func_enum_str(NEUMANN_FUN), fun);
 
               } else if ( type == "Custom" ){
@@ -352,7 +347,7 @@ namespace Uintah { namespace ArchesCore{
                     db_bc_type->findBlock("density")->getAttribute("label", density_label);
                   }
 
-                  BaseFunctor* fun = scinew MassFlow(mdot, density_label);
+                  std::shared_ptr<BaseFunctor> fun(scinew MassFlow(mdot, density_label));
                   insert_functor( varname, face_name, fun);
 
                 } else if ( value == "table_value" ) {
@@ -360,7 +355,7 @@ namespace Uintah { namespace ArchesCore{
                   std::string tabulated_var_name = "NA";
                   db_bc_type->findBlock("variable")->getAttribute("label", tabulated_var_name );
 
-                  BaseFunctor* fun = scinew SecondaryVariableBC(tabulated_var_name);
+                  std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(tabulated_var_name));
                   insert_functor( varname, face_name, fun );
 
                 } else {
@@ -379,7 +374,7 @@ namespace Uintah { namespace ArchesCore{
       }
     }
 
-    BaseFunctor* get_functor( BndCondTypeEnum bnd_type ){
+    std::shared_ptr<BaseFunctor> get_functor( BndCondTypeEnum bnd_type ){
 
       // This naming isn't great. Would be better to map these with a static function??
       std::string name;
@@ -420,7 +415,7 @@ namespace Uintah { namespace ArchesCore{
             throw InvalidValue(msg.str(), __FILE__, __LINE__);
           }
 
-          BaseFunctor* bc_fun = NULL;
+          std::shared_ptr<BaseFunctor> bc_fun = NULL;
           if ( spec->bcType == DIRICHLET ){
             bc_fun = m_bcFunStorage[func_enum_str(DIRICHLET_FUN)];
           } else if ( spec->bcType == NEUMANN ){
@@ -448,7 +443,7 @@ namespace Uintah { namespace ArchesCore{
 
   private:
 
-    void insert_functor( std::string name, BaseFunctor* fun ){
+    void insert_functor( std::string name, std::shared_ptr<BaseFunctor> fun ){
 
       auto iter = m_bcFunStorage.find(name);
       if ( iter == m_bcFunStorage.end() ){
@@ -457,7 +452,8 @@ namespace Uintah { namespace ArchesCore{
 
     }
 
-    void insert_functor( std::string face_name, std::string var_name, BaseFunctor* fun ){
+    void insert_functor( std::string face_name, std::string var_name,
+                         std::shared_ptr<BaseFunctor> fun ){
 
       std::string name = pair_face_var_names( face_name, var_name );
       auto iter = m_bcFunStorage.find(name);
@@ -467,7 +463,7 @@ namespace Uintah { namespace ArchesCore{
 
     }
 
-    std::map<std::string, BaseFunctor*> m_bcFunStorage;
+    std::map<std::string, std::shared_ptr<BaseFunctor> > m_bcFunStorage;
 
 };
 
