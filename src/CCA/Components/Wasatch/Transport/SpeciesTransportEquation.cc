@@ -105,8 +105,8 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
   }
 
   // mixture molecular weight
-  factory  .register_expression( scinew pokitt::MixtureMolWeight<FieldT>::Builder( tagNames.mixMW, yiTags ) );
-  icFactory.register_expression( scinew pokitt::MixtureMolWeight<FieldT>::Builder( tagNames.mixMW, yiTags ) );
+  factory  .register_expression( scinew pokitt::MixtureMolWeight<FieldT>::Builder( tagNames.mixMW, yiTags, pokitt::MASS ) );
+  icFactory.register_expression( scinew pokitt::MixtureMolWeight<FieldT>::Builder( tagNames.mixMW, yiTags, pokitt::MASS ) );
 
   // the last species mass fraction
   typedef pokitt::SpeciesN<FieldT>::Builder SpecN;
