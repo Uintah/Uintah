@@ -111,7 +111,7 @@ THREADEDTESTS = [  ("RMCRT_test_1L_thread",           "RMCRT_bm1_1L.ups",       
                    ("RMCRT_bm1_DO_thread_2proc",      "RMCRT_bm1_DO.ups",          2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_ML_thread",                "RMCRT_ML.ups",              1.1, "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
                    ("RMCRT_ML_thread_2proc",          "RMCRT_ML.ups",              2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_+Domain_thread_2proc",     "RMCRT_+Domain.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_+Domain_thread_2proc",     "RMCRT_+Domain.ups",         2,   "ALL", ["exactComparison", "sus_options=-nthreads 4", "no_restart"]),
                    ("RMCRT_+Domain_ML_thread_2proc",  "RMCRT_+Domain_ML.ups",      2,   "ALL", ["exactComparison", "sus_options=-nthreads 4"])
                    
                  ]
