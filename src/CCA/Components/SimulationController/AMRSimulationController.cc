@@ -314,7 +314,7 @@ AMRSimulationController::run()
       if( ( d_output->getCheckpointTimestepInterval() > 0 &&
 	    currentTimeStep == d_output->getNextCheckpointTimestep() ) ||
           ( d_output->getCheckpointInterval() > 0         &&
-	    ( time + delt ) >= d_output->getNextCheckpointTime() ) ||
+	    ( d_simTime + d_delt ) >= d_output->getNextCheckpointTime() ) ||
           ( d_output->getCheckpointWalltimeInterval() > 0 &&
 	    ( currsecs >= d_output->getNextCheckpointWalltime() ) ) ) {
 
@@ -335,7 +335,7 @@ AMRSimulationController::run()
       if( ( d_output->getOutputTimestepInterval() > 0 &&
 	    currentTimeStep == d_output->getNextOutputTimestep() ) ||
           ( d_output->getOutputInterval() > 0         &&
-	    ( time + delt ) >= d_output->getNextOutputTime() ) ) {
+	    ( d_simTime + d_delt ) >= d_output->getNextOutputTime() ) ) {
 
         proc0cout << "This is an output timestep: " << currentTimeStep << "\n";
 
@@ -559,7 +559,7 @@ AMRSimulationController::run()
 	// time step dumps (using PIDX) do not need to write the xml
 	// information.
         if( checkpointing ) {
-          d_output->writeto_xml_files( delt, d_currentGridP );
+          d_output->writeto_xml_files( d_delt, d_currentGridP );
         }
       }
       else
@@ -724,8 +724,7 @@ AMRSimulationController::doInitialTimestep()
       scheduleComputeStableTimestep();
 
       if( d_output ) {
-        double delT      = 0;
-        bool   recompile = true;
+        const bool recompile = true;
         d_output->finalizeTimestep( d_simTime, d_delt, d_currentGridP, d_scheduler, recompile );
         d_output->sched_allOutputTasks(        d_delt, d_currentGridP, d_scheduler, recompile );
       }
