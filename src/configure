@@ -3149,7 +3149,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-atlas --without-atlas"
-  if test -n "$with_atlas"; then
+  if test "$with_atlas" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3210,7 +3210,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-math --without-math"
-  if test -n "$with_math"; then
+  if test "$with_math" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "FILE" != "DIR" -a "FILE" != "FILE" -a "FILE" != "FILES" ; then
@@ -3272,7 +3272,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mkl --without-mkl"
-  if test -n "$with_mkl"; then
+  if test "$with_mkl" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3334,7 +3334,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-essl --without-essl"
-  if test -n "$with_essl"; then
+  if test "$with_essl" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3396,7 +3396,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-acml --without-acml"
-  if test -n "$with_acml"; then
+  if test "$with_acml" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3458,7 +3458,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-blas --without-blas"
-  if test -n "$with_blas"; then
+  if test "$with_blas" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3520,7 +3520,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-lapack --without-lapack"
-  if test -n "$with_lapack"; then
+  if test "$with_lapack" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3582,7 +3582,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-fortran --without-fortran"
-  if test -n "$with_fortran"; then
+  if test "$with_fortran" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3644,7 +3644,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-ofed --without-ofed"
-  if test -n "$with_ofed"; then
+  if test "$with_ofed" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3706,7 +3706,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mx --without-mx"
-  if test -n "$with_mx"; then
+  if test "$with_mx" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3768,7 +3768,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-pokitt --without-pokitt"
-  if test -n "$with_pokitt"; then
+  if test "$with_pokitt" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3829,7 +3829,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mpi --without-mpi"
-  if test -n "$with_mpi"; then
+  if test "$with_mpi" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3891,7 +3891,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mpi_lib --without-mpi_lib"
-  if test -n "$with_mpi_lib"; then
+  if test "$with_mpi_lib" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -3953,7 +3953,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mpi_include --without-mpi_include"
-  if test -n "$with_mpi_include"; then
+  if test "$with_mpi_include" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4014,7 +4014,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-mpi_extra_libs --without-mpi_extra_libs"
-  if test -n "$with_mpi_extra_libs"; then
+  if test "$with_mpi_extra_libs" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "FILES" != "DIR" -a "FILES" != "FILE" -a "FILES" != "FILES" ; then
@@ -4077,7 +4077,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-cuda --without-cuda"
-  if test -n "$with_cuda"; then
+  if test "$with_cuda" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4139,7 +4139,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-hypre --without-hypre"
-  if test -n "$with_hypre"; then
+  if test "$with_hypre" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4201,7 +4201,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-petsc --without-petsc"
-  if test -n "$with_petsc"; then
+  if test "$with_petsc" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4263,7 +4263,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-boost --without-boost"
-  if test -n "$with_boost"; then
+  if test "$with_boost" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4325,7 +4325,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-boost_library --without-boost_library"
-  if test -n "$with_boost_library"; then
+  if test "$with_boost_library" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4387,7 +4387,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-boost_include --without-boost_include"
-  if test -n "$with_boost_include"; then
+  if test "$with_boost_include" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4448,7 +4448,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-spatialops --without-spatialops"
-  if test -n "$with_spatialops"; then
+  if test "$with_spatialops" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4509,7 +4509,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-exprlib --without-exprlib"
-  if test -n "$with_exprlib"; then
+  if test "$with_exprlib" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4570,7 +4570,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-tabprops --without-tabprops"
-  if test -n "$with_tabprops"; then
+  if test "$with_tabprops" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4631,7 +4631,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-radprops --without-radprops"
-  if test -n "$with_radprops"; then
+  if test "$with_radprops" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4692,7 +4692,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-nscbc --without-nscbc"
-  if test -n "$with_nscbc"; then
+  if test "$with_nscbc" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4755,7 +4755,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-wasatch3p --without-wasatch3p"
-  if test -n "$with_wasatch3p"; then
+  if test "$with_wasatch3p" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4817,7 +4817,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-zoltan --without-zoltan"
-  if test -n "$with_zoltan"; then
+  if test "$with_zoltan" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4878,7 +4878,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-papi --without-papi"
-  if test -n "$with_papi"; then
+  if test "$with_papi" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -4939,7 +4939,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-gperftools --without-gperftools"
-  if test -n "$with_gperftools"; then
+  if test "$with_gperftools" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5000,7 +5000,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-ipm --without-ipm"
-  if test -n "$with_ipm"; then
+  if test "$with_ipm" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5062,7 +5062,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-magma --without-magma"
-  if test -n "$with_magma"; then
+  if test "$with_magma" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5124,7 +5124,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-zlib --without-zlib"
-  if test -n "$with_zlib"; then
+  if test "$with_zlib" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5186,7 +5186,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-jpeg --without-jpeg"
-  if test -n "$with_jpeg"; then
+  if test "$with_jpeg" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5248,7 +5248,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-tiff --without-tiff"
-  if test -n "$with_tiff"; then
+  if test "$with_tiff" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5310,7 +5310,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-xalan --without-xalan"
-  if test -n "$with_xalan"; then
+  if test "$with_xalan" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5372,7 +5372,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-libxml2 --without-libxml2"
-  if test -n "$with_libxml2"; then
+  if test "$with_libxml2" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5434,7 +5434,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-visit --without-visit"
-  if test -n "$with_visit"; then
+  if test "$with_visit" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5495,7 +5495,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-visus --without-visus"
-  if test -n "$with_visus"; then
+  if test "$with_visus" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5556,7 +5556,7 @@ else
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-pidx --without-pidx"
-  if test -n "$with_pidx"; then
+  if test "$with_pidx" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5611,13 +5611,13 @@ $as_echo "$as_me: WARNING: the files are $the_files " >&2;}
 
 # Check whether --with-MallocTrace was given.
 if test "${with_MallocTrace+set}" = set; then :
-  withval=$with_MallocTrace; with_malloc_trace="$withval"
+  withval=$with_MallocTrace; with_MallocTrace="$withval"
 else
-  with_malloc_trace=NOT_SET
+  with_MallocTrace=NOT_SET
 fi
 
   sci_arg_with_list="$sci_arg_with_list --with-MallocTrace --without-MallocTrace"
-  if test -n "$with_MallocTrace"; then
+  if test "$with_MallocTrace" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "DIR" != "DIR" -a "DIR" != "FILE" -a "DIR" != "FILES" ; then
@@ -5983,7 +5983,7 @@ if test "$BUILD_ICE" = "yes" -a "$BUILD_MPM" = "no"; then
    as_fn_error $? "If you enable ICE, you must enable MPM too. " "$LINENO" 5
 fi
 
-if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" != NOT_SET ; then
+if test "$enable_sci_malloc" = "yes" -a "$with_MallocTrace" != NOT_SET ; then
    as_fn_error $? "You cannot use both --with-MallocTrace and --enable-sci-malloc! " "$LINENO" 5
 fi
 
@@ -7843,7 +7843,7 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
-if test "$with_malloc_trace" != NOT_SET ; then
+if test "$with_MallocTrace" != NOT_SET ; then
   if test "$IS_OSX" = "yes"; then
       as_fn_error $? "Malloc trace is not supported on Mac OSX..." "$LINENO" 5
   fi
@@ -7925,6 +7925,11 @@ fi
 
 # Check to see if assertions are off but optimize is on... and warn user if so...
 if test "$optimize" != "no"; then
+
+  if test "$USING_ICC" = yes; then
+    extra_cflags="-fp-model precise ${extra_cflags}"
+    add_important_warning "FYI: Configure added '-fp-model precise' to the optimization flags."
+  fi
 
   ASSERTION_LEVEL="$enable_assertion_level"
   if test "$ASSERTION_LEVEL" = ""; then
@@ -8349,29 +8354,29 @@ fi
 
 ##  --  search for MallocTrace ------------------------
 
-if test "$with_malloc_trace" != NOT_SET; then
+if test "$with_MallocTrace" != NOT_SET; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for MallocTrace files (For now we are just verifying the existence of lib and .h files)" >&5
 $as_echo_n "checking for MallocTrace files (For now we are just verifying the existence of lib and .h files)... " >&6; }
   if test "$IS_STATIC_BUILD" = "yes"; then
-     if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
-     	  as_fn_error $? "'$with_malloc_trace/lib/libMallocTrace.a' does not exist. " "$LINENO" 5
+     if test ! -f $with_MallocTrace/lib/libMallocTrace.a; then
+     	  as_fn_error $? "'$with_MallocTrace/lib/libMallocTrace.a' does not exist. " "$LINENO" 5
      fi
   else
-      if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-    	   as_fn_error $? "'$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. " "$LINENO" 5
+      if test ! -f $with_MallocTrace/lib/shared/libMallocTrace.so; then
+    	   as_fn_error $? "'$with_MallocTrace/lib/shared/libMallocTrace.so' does not exist. " "$LINENO" 5
   	fi
   fi
-  if test ! -f $with_malloc_trace/include/MallocTrace.h; then
-    as_fn_error $? "'$with_malloc_trace/include/MallocTrace.h' does not exist. " "$LINENO" 5
+  if test ! -f $with_MallocTrace/include/MallocTrace.h; then
+    as_fn_error $? "'$with_MallocTrace/include/MallocTrace.h' does not exist. " "$LINENO" 5
   fi
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
   DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
-  INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
+  INC_MALLOC_TRACE_H="-I$with_MallocTrace/include"
   if test "$IS_STATIC_BUILD" = "yes"; then
-     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
+     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_MallocTrace/lib -L$with_MallocTrace/lib"
   else
-     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_MallocTrace/lib/shared -L$with_MallocTrace/lib/shared"
   fi
   MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
   MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
@@ -42713,6 +42718,14 @@ $as_echo "$as_me: WARNING: $file has changed." >&2;}
     if test -d StandAlone -a "$file" = "include/sci_defs/hypre_defs.h"; then
        echo "WARNING: hypre dependent .o files are probably out of date... removing..."
        $path_to_src/build_scripts/repair.sh -quiet hypre
+    fi
+
+    if test -d StandAlone -a "$file" = "include/sci_defs/wasatch_defs.h"; then
+       echo "WARNING: Wasatch 3P dependent .o files are probably out of date... removing..."
+       $path_to_src/build_scripts/repair.sh -quiet SpatialOps
+       $path_to_src/build_scripts/repair.sh -quiet ExprLib
+       $path_to_src/build_scripts/repair.sh -quiet TabProps
+       $path_to_src/build_scripts/repair.sh -quiet RadProps
     fi
 
   fi

@@ -1246,7 +1246,7 @@ AC_DEFUN(SCI_CHECK_OS_VERSION,
 AC_DEFUN([SCI_ARG_WITH], [
   AC_ARG_WITH($1, $2, $3, $4)
   sci_arg_with_list="$sci_arg_with_list --with-$1 --without-$1"
-  if test -n "$with_$1"; then
+  if test "$with_$1" != NOT_SET; then
 
     # Check that params 5 and 6 have valid values
     if test "$5" != "DIR" -a "$5" != "FILE" -a "$5" != "FILES" ; then

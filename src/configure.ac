@@ -591,8 +591,8 @@ SCI_ARG_WITH(pidx,
 SCI_ARG_WITH(MallocTrace,
   AC_HELP_STRING(--with-MallocTrace=DIR,
                  Use MallocTrace library.  Note: you cannot use sci-malloc at the same time.),
-  [with_malloc_trace="$withval"],
-  [with_malloc_trace=NOT_SET],
+  [with_MallocTrace="$withval"],
+  [with_MallocTrace=NOT_SET],
   DIR,
   WITHOUT-IS-NOT-VALID)
 
@@ -792,7 +792,7 @@ if test "$BUILD_ICE" = "yes" -a "$BUILD_MPM" = "no"; then
    AC_MSG_ERROR( [If you enable ICE, you must enable MPM too.] )
 fi
 
-if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" != NOT_SET ; then
+if test "$enable_sci_malloc" = "yes" -a "$with_MallocTrace" != NOT_SET ; then
    AC_MSG_ERROR( You cannot use both --with-MallocTrace and --enable-sci-malloc! )
 fi
 
@@ -1171,7 +1171,7 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
-if test "$with_malloc_trace" != NOT_SET ; then
+if test "$with_MallocTrace" != NOT_SET ; then
   if test "$IS_OSX" = "yes"; then
       AC_MSG_ERROR(Malloc trace is not supported on Mac OSX...)
   fi
@@ -1244,6 +1244,11 @@ fi
 
 # Check to see if assertions are off but optimize is on... and warn user if so...
 if test "$optimize" != "no"; then
+
+  if test "$USING_ICC" = yes; then
+    extra_cflags="-fp-model precise ${extra_cflags}"
+    add_important_warning "FYI: Configure added '-fp-model precise' to the optimization flags."
+  fi
 
   ASSERTION_LEVEL="$enable_assertion_level"
   if test "$ASSERTION_LEVEL" = ""; then
@@ -1372,27 +1377,27 @@ AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 
 ##  --  search for MallocTrace ------------------------
 
-if test "$with_malloc_trace" != NOT_SET; then
+if test "$with_MallocTrace" != NOT_SET; then
   AC_MSG_CHECKING(for MallocTrace files (For now we are just verifying the existence of lib and .h files)) 
   if test "$IS_STATIC_BUILD" = "yes"; then
-     if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
-     	  AC_MSG_ERROR( '$with_malloc_trace/lib/libMallocTrace.a' does not exist. )
+     if test ! -f $with_MallocTrace/lib/libMallocTrace.a; then
+     	  AC_MSG_ERROR( '$with_MallocTrace/lib/libMallocTrace.a' does not exist. )
      fi
   else
-      if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-    	   AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+      if test ! -f $with_MallocTrace/lib/shared/libMallocTrace.so; then
+    	   AC_MSG_ERROR( '$with_MallocTrace/lib/shared/libMallocTrace.so' does not exist. )
   	fi
   fi
-  if test ! -f $with_malloc_trace/include/MallocTrace.h; then
-    AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
+  if test ! -f $with_MallocTrace/include/MallocTrace.h; then
+    AC_MSG_ERROR( '$with_MallocTrace/include/MallocTrace.h' does not exist. )
   fi
   AC_MSG_RESULT(yes)
   DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
-  INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
+  INC_MALLOC_TRACE_H="-I$with_MallocTrace/include"
   if test "$IS_STATIC_BUILD" = "yes"; then
-     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
+     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_MallocTrace/lib -L$with_MallocTrace/lib"
   else								     
-     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_MallocTrace/lib/shared -L$with_MallocTrace/lib/shared"
   fi
   MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
   MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
