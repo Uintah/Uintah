@@ -762,7 +762,7 @@ SimulationController::ReportStats( bool header /* = false */ )
   {
     ostringstream message;
     message << left
-	    << "Timestep "   << setw(6)
+	    << "Timestep "   << setw(8)
 	    << d_sharedState->getCurrentTopLevelTimeStep()
 	    << "Time="       << setw(12) << d_simTime
 //	    << "delT="       << setw(12) << d_prev_delt
@@ -783,16 +783,16 @@ SimulationController::ReportStats( bool header /* = false */ )
 		<< ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
     }
     else {
-      message << "Memory Used=" << setw(8)
+      message << "Memory Used=" << setw(10)
 	      << ProcessInfo::toHumanUnits((unsigned long) avg_memused)
 	      << " (avg) " << setw(10)
 	      << ProcessInfo::toHumanUnits(max_memused)
 	      << " (max on rank:" << setw(6) << max_memused_rank << ")";
 
       if(avg_highwater)
-	message << "    Highwater Memory Used=" << setw(8)
+	message << "    Highwater Memory Used=" << setw(10)
 		<< ProcessInfo::toHumanUnits((unsigned long)avg_highwater)
-		<< " (avg) " << setw(8)
+		<< " (avg) " << setw(10)
 		<< ProcessInfo::toHumanUnits(max_highwater)
 		<< " (max on rank:" << setw(6) << max_highwater_rank << ")";
     }
