@@ -373,6 +373,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   sched_initProperties( finestLevel, sched );
 
   Radiometer* radiometer = d_RMCRT->getRadiometer();
+  bool includeExtraCells = true;  // domain for sigmaT4 computation
 
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
@@ -385,7 +386,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( fineLevel,sched, abskg_dw );
 
-    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
+    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, includeExtraCells );
 
     d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
 
@@ -440,7 +441,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( fineLevel,sched, abskg_dw );
 
-    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
+    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, includeExtraCells );
 
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
@@ -490,7 +491,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( level,sched, abskg_dw );
 
-    d_RMCRT->sched_sigmaT4( level,  sched, temp_dw, false );
+    d_RMCRT->sched_sigmaT4( level,  sched, temp_dw, includeExtraCells );
 
     Task::WhichDW sigmaT4_dw  = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
@@ -515,13 +516,12 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW abskg_dw    = Task::NewDW;
     Task::WhichDW sigmaT4_dw  = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
-    const bool includeEC = true;
     const bool backoutTemp = true;
 
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat(level, sched, abskg_dw);
 
-    radiometer->sched_sigmaT4(level, sched, temp_dw, includeEC);
+    radiometer->sched_sigmaT4(level, sched, temp_dw, includeExtraCells);
 
     d_RMCRT->sched_setBoundaryConditions(level, sched, temp_dw, backoutTemp);
 
