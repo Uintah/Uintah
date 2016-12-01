@@ -90,7 +90,7 @@ enum BndCondTypeEnum
 {
   DIRICHLET,
   NEUMANN,
-  UNSUPPORTED
+  CUSTOM
 };
 
 BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr );

@@ -74,7 +74,7 @@ private:
 
   };
 
-  //Function definitions:
+  //Function definitions ---------------------------------------------------------------------------
 
   template <typename T, typename CT>
   WaveFormInit<T,CT>::WaveFormInit( std::string task_name, int matl_index, const std::string var_name ) :

@@ -580,6 +580,9 @@
 
           <relative_xyz     spec="REQUIRED VECTOR" need_applies_to="var VelocityFileInput FromFile"/>
 
+          <variable         spec="OPTIONAL NO_DATA" 
+                            attribute1="label REQUIRED STRING"/> 
+
           <!-- When using the FromFile or VelocityFileInput interface, one must supply a default in the 
           event that the handoff file does not contain an iterator for the specified geometry --> 
           <default          spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'Neumann, Dirichlet" 

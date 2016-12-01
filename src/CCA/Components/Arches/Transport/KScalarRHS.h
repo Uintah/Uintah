@@ -495,6 +495,13 @@ private:
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
+    std::vector<std::string> bc_dep;
+    m_boundary_functors->get_bc_dependencies( _eqn_names, m_bcHelper, bc_dep );
+    for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
+      register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
+                         variable_registry );
+    }
+
   }
 
   template <typename T> void

@@ -62,7 +62,7 @@ BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr )
 {
   if      ( bcTypeStr == "Dirichlet" )     return DIRICHLET;
   else if ( bcTypeStr == "Neumann" )       return NEUMANN;
-  else                                     return UNSUPPORTED;
+  else                                     return CUSTOM;
 }
 
 // Given a string boundary type (Wall, Velocity, Outflow,...), this function returns a BndTypeEnum

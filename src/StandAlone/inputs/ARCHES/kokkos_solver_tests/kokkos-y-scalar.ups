@@ -396,10 +396,11 @@
         </task>
       </Initialization>
 
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+
       <KokkosSolver>
-        <BoundaryConditions>
-          <force_area_calc/>
-        </BoundaryConditions>
       </KokkosSolver>
 
     </ARCHES>

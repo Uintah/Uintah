@@ -725,6 +725,24 @@
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" >
 
+        <bc                             spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'handoff'">
+
+          <!-- HANDOFF -->
+          <filename                     spec="REQUIRED STRING"
+                                        need_applies_to="type handoff"/>
+          <relative_xyz                 spec="REQUIRED VECTOR"
+                                        need_applies_to="type handoff"/>
+          <default                      spec="REQUIRED NO_DATA"
+                                        attribute1="value REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'dirichlet, neumann'"
+                                        attribute3="label REQUIRED STRING"/> <!-- if info isn't found in the handoff file, this condition is applied 
+                                                                                  Note that in the case of the nuemann condition, it used the variable 
+                                                                                  specified in the "label" attribute to set the condition. -->
+        </bc>
+
+
         <force_area_calc                spec="OPTIONAL NO_DATA"/> <!-- Force the code to compute areas on ALL boundaries. By default, areas are not computed
                                                                        (except in the case of MassFlowInlet and Swirl) to reduce the amount of reduction 
                                                                        information needed during setup. --> 
@@ -884,10 +902,6 @@
         <initial_dt                     spec="OPTIONAL DOUBLE 'positive'"/>  <!-- Sets the initial timestep of the simulation.  Note that this value will
                                                                                   be superceded if the CFL condition determines a smaller timestep as determined
                                                                                   from the BC's and initial condition.  -->
-        <BoundaryConditions             spec="OPTIONAL NO_DATA">
-          <force_area_calc              spec="OPTIONAL NO_DATA"/> <!-- forces all BCs to compute an area and not just those that require them -->
-        </BoundaryConditions>
-
       </KokkosSolver>
 
       <ExplicitSolver                   spec="OPTIONAL NO_DATA" >

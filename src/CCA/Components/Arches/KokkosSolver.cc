@@ -36,6 +36,7 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryConditionFactory.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 //END NEW TASK INTERFACE STUFF
 
@@ -99,6 +100,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   std::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
   std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
   std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
+  std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory());
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -107,6 +109,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   m_task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
   m_task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
   m_task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
+  m_task_factory_map.insert(std::make_pair("boundary_condition_factory", BC));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -185,13 +188,13 @@ KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
   } else {
 
     // Just set the dt to the init_dt because the CFD variables weren't found
-    std::cout << "\n ****************** WARNING ***************** " << std::endl;
-    std::cout << "  The CFD variable mapping was not complete   " << std::endl;
-    std::cout << "  because I could not find the appropriate    " << std::endl;
-    std::cout << "  variable mapping from <VarID>. As a result  " << std::endl;
-    std::cout << "  I am going to set dt to the delt_init as    " << std::endl;
-    std::cout << "  specified in the input file.                " << std::endl;
-    std::cout << " **************** END WARNING ***************\n " << std::endl;
+    proc0cout << "\n ****************** WARNING ***************** " << std::endl;
+    proc0cout << "  The CFD variable mapping was not complete   " << std::endl;
+    proc0cout << "  because I could not find the appropriate    " << std::endl;
+    proc0cout << "  variable mapping from <VarID>. As a result  " << std::endl;
+    proc0cout << "  I am going to set dt to the delt_init as    " << std::endl;
+    proc0cout << "  specified in the input file.                " << std::endl;
+    proc0cout << " **************** END WARNING ***************\n " << std::endl;
 
     if ( !m_arches_spec->getRootNode()->findBlock("Time")->findBlock( "delt_init") ){
       throw ProblemSetupException("\n Error: Oops... please specify a delt_init in your input file.\n", __FILE__, __LINE__ );
@@ -305,7 +308,6 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
 
   //transport factory
   BFM::iterator i_trans_fac = m_task_factory_map.find("transport_factory");
-  i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
   TaskFactoryBase::TaskMap all_trans_tasks = i_trans_fac->second->retrieve_all_tasks();
   for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, doing_restart);
@@ -318,11 +320,22 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
     i->second->schedule_init(level, sched, matls, doing_restart);
   }
 
+  // boundary condition factory
+  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
+  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
+  for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
+    i->second->schedule_init(level, sched, matls, doing_restart);
+  }
+
   // Apply BCs -------------------------------------------------------------------------------------
   //Need to apply BC's after everything is initialized
   for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
     i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
   }
+  for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
+    i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
+  }
+
 
 }
 
@@ -351,6 +364,12 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   TaskFactoryBase::TaskMap all_prop_tasks = i_prop_fac->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
+    i->second->schedule_timestep_init(level, sched, matls);
+  }
+
+  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
+  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
     i->second->schedule_timestep_init(level, sched, matls);
   }
 
@@ -418,6 +437,9 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
       tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
     }
+    for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
+      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+    }
 
   }
 
@@ -435,4 +457,10 @@ KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSe
 
   //copies the reduction area variable information on area to a double in the BndCond spec
   m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+
+  proc0cout << "\n Setting BCHelper for all Factories: " << std::endl;
+  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
+    i->second->set_bcHelper( m_bcHelper[level->getID()]);
+  }
+
 }

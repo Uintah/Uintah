@@ -217,7 +217,7 @@ namespace Uintah{ namespace ArchesCore{
     const int jdt2;
     const int kdt1;
     const int kdt2;
-    VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0),
+    VariableHelper():dir(YDIR), ioff(1), joff(0), koff(0),
     idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
   };
 
@@ -241,7 +241,7 @@ namespace Uintah{ namespace ArchesCore{
     const int jdt2;
     const int kdt1;
     const int kdt2;
-    VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0),
+    VariableHelper():dir(ZDIR), ioff(1), joff(0), koff(0),
     idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
   };
 

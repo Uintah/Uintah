@@ -253,7 +253,10 @@ namespace Uintah { namespace ArchesCore{
 
       void add_dep( std::vector<std::string>& master_dep ){
 
+        // Pushing all dependencies onto the local list
         m_dep.push_back( m_sec_var_name );
+        // Now adding dependencies to the master list.
+        // This checks for repeats to ensure a variable isn't added twice.
         check_master_list( m_dep, master_dep );
 
       }
@@ -271,6 +274,7 @@ namespace Uintah { namespace ArchesCore{
           double interp_sec_var = (sec_var[*bndIter] + sec_var[*bndIter - iDir])/2.;
           var[*bndIter] = 2. * interp_sec_var - var[*bndIter - iDir];
         }
+
       }
 
     private:
@@ -348,15 +352,37 @@ namespace Uintah { namespace ArchesCore{
                   }
 
                   std::shared_ptr<BaseFunctor> fun(scinew MassFlow(mdot, density_label));
-                  insert_functor( varname, face_name, fun);
+                  insert_functor( face_name, varname, fun);
 
                 } else if ( value == "table_value" ) {
 
                   std::string tabulated_var_name = "NA";
+
+                  if ( !db_bc_type->findBlock("variable") ){
+                    std::stringstream msg;
+                    msg << "Error: For Boundary Condition: " << value << " for variable: " << varname <<  " you are missing the <variable label=\"...\"> section." << std::endl;
+                    throw ProblemSetupException(msg.str(),__FILE__,__LINE__);
+                  }
+
                   db_bc_type->findBlock("variable")->getAttribute("label", tabulated_var_name );
 
                   std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(tabulated_var_name));
-                  insert_functor( varname, face_name, fun );
+                  insert_functor( face_name, varname, fun );
+
+                } else if ( value == "handoff" ) {
+
+                  std::string handoff_var_name = "NA";
+
+                  if ( !db_bc_type->findBlock("variable") ){
+                    std::stringstream msg;
+                    msg << "Error: For Boundary Condition: " << value << " for variable: " << varname <<  " you are missing the <variable label=\"...\"> section." << std::endl;
+                    throw ProblemSetupException(msg.str(),__FILE__,__LINE__);
+                  }
+
+                  db_bc_type->findBlock("variable")->getAttribute("label", handoff_var_name );
+
+                  std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(handoff_var_name));
+                  insert_functor( face_name, varname, fun );
 
                 } else {
 
@@ -368,7 +394,6 @@ namespace Uintah { namespace ArchesCore{
                 throw InvalidValue("Error: BC var type not recognized: "+type, __FILE__, __LINE__);
               }
             }
-
           }
         }
       }
@@ -392,6 +417,38 @@ namespace Uintah { namespace ArchesCore{
 
        throw InvalidValue("Error: Cannot locate BC functor with name: "+name, __FILE__, __LINE__);
 
+    }
+
+    void get_bc_dependencies( std::vector<std::string> varnames, WBCHelper* bc_helper,
+                              std::vector<std::string>& dep ){
+
+      const BndMapT& bc_info = bc_helper->get_boundary_information();
+      for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+        std::string facename = i_bc->second.name;
+
+        for ( auto i_eqn = varnames.begin(); i_eqn != varnames.end(); i_eqn++ ){
+
+          const BndCondSpec* spec = i_bc->second.find(*i_eqn);
+
+          if ( spec == NULL ){
+            std::stringstream msg;
+            msg << "Error: Cannot find a boundary condition for variable: " << *i_eqn << " on face: " << facename << std::endl;
+            throw InvalidValue(msg.str(), __FILE__, __LINE__);
+          }
+
+          std::shared_ptr<BaseFunctor> bc_fun = NULL;
+          if ( spec->bcType == CUSTOM ){
+            //CUSTOM BCS
+            std::string key_name = pair_face_var_names( facename, *i_eqn );
+            bc_fun = m_bcFunStorage[key_name];
+          }
+
+          if ( bc_fun != NULL ){
+            bc_fun->add_dep( dep );
+          }
+        }
+      }
     }
 
     void apply_bc( std::vector<std::string> varnames, WBCHelper* bc_helper,
