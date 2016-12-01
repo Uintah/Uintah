@@ -253,7 +253,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
   // common flags
   bool modifies_divQ     = false;
-  bool includeExtraCells = false;  // domain for sigmaT4 computation
+  bool includeExtraCells = true;  // domain for sigmaT4 computation
 
   if (timeSubStep == 0) {
     modifies_divQ = false;
