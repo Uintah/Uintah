@@ -19,6 +19,7 @@ if test "$MACHINE" = ""; then
    echo "  At LLNL: Vulcan, Cab, Surface, or Syrah"
    echo "  At LANL: Mustang, Mapache, or Wolf"
    echo "  At ORNL: Titan"
+   echo "  At Argonne: Mira"
    echo ""
    exit
 fi
@@ -250,6 +251,28 @@ if test "$MACHINE" = "Titan"; then
   INSTALL_BASE=/ccs/proj/csc188/utah/thirdparty-install/titan/Wasatch3P
   BOOST_LOC=$BOOST_ROOT
 else
+if test "$MACHINE" = "Mira"; then
+  
+  if [[ $host != mira* ]]; then
+     echo "Error: hostname did not return mira*... Goodbye."
+     exit
+  fi
+ CC=`which mpicc`
+ CXX=`which mpic++`
+# COMP=bgclang3.9
+# BOOST_LOC=/soft/libraries/boost/1.61.0/cnk-bgclang++11/current
+
+#  CC=/soft/compilers/wrappers/gcc/mpicc
+#  CXX=/soft/compilers/wrappers/gcc/mpic++
+#  COMP=xlc-12.1
+#  BOOST_LOC=/soft/libraries/boost/1.55.0/cnk-xl/current
+
+  BOOST_LOC=/soft/libraries/boost/1.61.0/cnk-gcc-4.7.2/current
+  COMP=gcc-4.8.4
+
+  NAME2="Mira"
+  INSTALL_BASE=/gpfs/mira-fs1/projects/SoPE_2/utah/pkgs/gcc/Wasatch3P
+else
 if test "$MACHINE" = "Albion"; then
   
   if [[ $host != albion* ]]; then
@@ -279,6 +302,7 @@ else
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 fi
