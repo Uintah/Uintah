@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 6061 T6 Aluminum Alloy -->
+<Uintah_Include>
+  <flow_model type="johnson_cook">
+    <A>324.0</A>
+    <B>114.0</B>
+    <C>0.002</C>
+    <n>0.42</n>
+    <m>1.34</m>
+    <T_r>300.0</T_r>
+    <T_m>925.0</T_m>
+  </flow_model>
+</Uintah_Include>
