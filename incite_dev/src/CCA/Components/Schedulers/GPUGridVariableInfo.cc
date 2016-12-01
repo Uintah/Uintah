@@ -515,7 +515,6 @@ DeviceGridVariables::addVarToBeGhostReady( const std::string      & taskName
   }
 }
 
-
 //______________________________________________________________________
 //
 DeviceGridVariableInfo
@@ -596,7 +595,6 @@ DeviceGridVariables::getTotalLevels( const unsigned int whichGPU, const int DWIn
   }
   return 0;
 }
-
 
 //-----------------------------------------------------------------------------__________________________________________________________________________
 //GpuUtilities methods

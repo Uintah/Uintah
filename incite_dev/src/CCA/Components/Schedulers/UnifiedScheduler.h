@@ -147,6 +147,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
     using DeviceVarDest = GpuUtilities::DeviceVarDestination;
 
+    void assignStatusFlagsToPrepareACpuTask( DetailedTask * dtask );
+
     void assignDevicesAndStreams( DetailedTask* dtask );
 
     void assignDevicesAndStreamsFromGhostVars( DetailedTask* dtask );

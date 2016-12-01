@@ -1741,12 +1741,10 @@ GPUDataWarehouse::init(int id, std::string internalName)
 __host__ void
 GPUDataWarehouse::cleanup()
 {
-
   delete allocateLock;
   delete varLock;
   delete varPointers;
   delete contiguousArrays;
-
 }
 
 //______________________________________________________________________
@@ -1760,7 +1758,7 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
   void* temp = nullptr;
   //CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
   temp = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, objectSizeInBytes);
-  //if (gpu_stats.active()) {
+  if (gpu_stats.active()) {
     cerrLock.lock();
     {
      gpu_stats << UnifiedScheduler::myRankThread()
@@ -1772,7 +1770,7 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
          << std::endl;
     }
     cerrLock.unlock();
-  //}
+  }
   d_device_copy = (GPUDataWarehouse*)temp;
   //cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
 

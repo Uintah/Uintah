@@ -310,6 +310,7 @@ UnifiedScheduler::~UnifiedScheduler()
       Impl::g_threads[i].detach();
     }
   }
+
 }
 
 
@@ -1227,6 +1228,7 @@ UnifiedScheduler::runTasks( int thread_id )
           //which use the GPU in a way that the data warehouse or the scheduler never needs to know about it (e.g. transferFrom()).
           //So because we aren't sure which CPU tasks could use the GPU, just go ahead and assign each task
           //a GPU stream.
+          //assignStatusFlagsToPrepareACpuTask(readyTask);
           assignDevicesAndStreams(readyTask);
 
           // Run initiateD2H on all tasks in case the data we need is in GPU memory but not in host memory.
@@ -1398,6 +1400,7 @@ UnifiedScheduler::prepareGpuDependencies( DetailedTask          * dtask
 
 
             // TODO: This host var really should be created last minute only if it's copying data to host.  Not here.
+            //TODO: Verify this cleans up.  If so change the comment.
             GridVariableBase* tempGhostVar = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
             tempGhostVar->allocate(dep->m_low, dep->m_high);
 
@@ -2583,6 +2586,8 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                     // getGridVar a foreign var, it doesn't work, it wasn't designed for that).  Fortunately
                     // we would have already seen it in whatever function called this. So use that instead.
 
+                    GridVariableBase* tempGridVarToPersistUntilCopyComplete = nullptr;
+
                     // Note: Unhandled scenario:  If the adjacent patch is only in the GPU, this code doesn't gather it.
                     if (uses_SHRT_MAX) {
                       g_GridVarSuperPatch_mutex.lock();
@@ -2621,7 +2626,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
                         //let go of our reference, allowing a single reference to remain and keep the variable alive in leveDB.
                         //delete gridVar;
-
+                        //TODO: Verify this cleans up.  If so change the comment.
                       }
                       g_GridVarSuperPatch_mutex.unlock();
                     } else {
@@ -2631,12 +2636,27 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                         host_ptr = gridVar->getBasePointer();
                         //Since we didn't do a getGridVar() call, no reference to clean up
                       } else {
-                        //We need the full patch, and we need to inflate the variable to get it.
+                        //I'm commenting carefully because this section has bit me several times.  If it's not done right, the bugs
+                        //are a major headache to track down.  -- Brad P. Nov 30, 2016
+                        //We need all the data in the patch.  Perform a getGridVar(), which will return a var with the same window/data as the
+                        //OnDemand DW variable, or it will create a new window/data sized to hold the room of the ghost cells and copy it into
+                        //the gridVar variable.  Internally it keeps track of refcounts for the window object and the data object.
+                        //In any scenario treat the gridVar as a temporary copy of the actual var in the OnDemand DW,
+                        //and as such that temporary variable needs to be reclaimed so there are no memory leaks.  The problem is that
+                        //we need this temporary variable to live long enough to perform a device-to-host copy.
+                        //* In one scenario with no ghost cells, you get back the same window/data just with refcounts incremented by 1.
+                        //* In another scenario with ghost cells, the ref counts are at least 2, so deleting the gridVar won't automatically deallocate it
+                        //* In another scenario with ghost cells, you get back a gridvar holding different window/data, their refcounts are 1
+                        //  and so so deleting the gridVar will invoke deallocation.  That would be bad if an async device-to-host copy is needed.
+                        //In all scenarios, the correct approach is just to delay deleting the gridVar object, and letting it persist until the
+                        //all variable copies complete, then delete the object, which in turn decrements the refcounter, which then allows it to clean
+                        //up later where needed (either immediately if the temp's refcounts hit 0, or later when the it does the scrub checks).
+
                         GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(type_description->createInstance());
                         dw->getGridVar(*gridVar, label, matlIndx, patch, ghosttype, numGhostCells);
                         host_ptr = gridVar->getBasePointer();
-                        //let go of our reference
-                        delete gridVar;
+                        it->second.m_tempVarToReclaim = gridVar;  //This will be held onto so it persists, and then cleaned up after the device-to-host copy
+
                       }
                     }
                     break;
@@ -3065,6 +3085,20 @@ UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
   }
 
   // if we got there, then everything must be ready to go.
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    {
+      gpu_stats
+          << myRankThread()
+          << " UnifiedScheduler::allHostVarsProcessingReady() - Task: "
+          << dtask->getName()
+          << " CPU Task: "
+          << dtask->getName() << " is ready to execute, all required vars are found in in host memory."
+          << std::endl;
+    }
+    cerrLock.unlock();
+  }
+
   return true;
 }
 
@@ -3130,12 +3164,44 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
         // it has ghost cells.
         if (!(gpudw->isValidWithGhostsOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
           return false;
+        } else {
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats
+                  << myRankThread()
+                  << " UnifiedScheduler::allGPUVarsProcessingReady() - Task: "
+                  << dtask->getName()
+                  << " GPU Task: "
+                  << dtask->getName() << " verified that var " << curDependency->m_var->getName()
+                  << " on patch " << patchID
+                  << " is valid with ghost cells."
+                  << std::endl;
+            }
+            cerrLock.unlock();
+          }
         }
       } else {
         // If it's a gridvar, then we just don't have the ghost cells processed yet by another thread
         // If it's another type of variable, something went wrong, it should have been marked as valid previously.
         if (!(gpudw->isValidOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
           return false;
+        } else {
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats
+                  << myRankThread()
+                  << " UnifiedScheduler::allGPUVarsProcessingReady() - Task: "
+                  << dtask->getName()
+                  << " GPU Task: "
+                  << dtask->getName() << " verified that var " << curDependency->m_var->getName()
+                  << " on patch " << patchID
+                  << " is valid."
+                  << std::endl;
+            }
+            cerrLock.unlock();
+          }
         }
       }
     }
@@ -3197,6 +3263,11 @@ UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
         gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
                                     make_int3(it->second.m_offset.x(),it->second.m_offset.y(),it->second.m_offset.z()),
                                     make_int3(it->second.m_sizeVector.x(), it->second.m_sizeVector.y(), it->second.m_sizeVector.z()));
+      }
+
+      if (it->second.m_tempVarToReclaim) {
+        //Release our reference to the variable data that getGridVar returned
+        delete it->second.m_tempVarToReclaim;
       }
     }
   }
@@ -3277,7 +3348,7 @@ void
 UnifiedScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
 {
   // Data has been copied from the device to the host.  The stream has completed.
-  // Go through all variables that this CPU task depends on and mark them as valid on the CPU
+  // Go through all variables that this CPU task was respnosible for copying mark them as valid on the CPU
 
   // The only thing we need to process is the requires.
   std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap = dtask->getVarsBeingCopiedByTask().getMap();
@@ -3639,7 +3710,10 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
     const std::string varName = dependantVar->m_var->getName();
-
+    //TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
+    if (varName == "abskg" && varName == "abskgRMCRT" ) {
+      continue;
+    }
     if (gpudw != nullptr) {
       // It's not valid on the CPU but it is on the GPU.  Copy it on over.
       if (!gpudw->isValidOnCPU( varName.c_str(), patchID, matlID, levelID) &&
@@ -4114,7 +4188,6 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
 
 //______________________________________________________________________
 //
-
 void
 UnifiedScheduler::assignDevicesAndStreamsFromGhostVars( DetailedTask * dtask )
 {
@@ -4127,6 +4200,35 @@ UnifiedScheduler::assignDevicesAndStreamsFromGhostVars( DetailedTask * dtask )
       dtask->setCudaStreamForThisTask(*iter, GPUMemoryPool::getCudaStreamFromPool(*iter));
     }
   }
+}
+
+//______________________________________________________________________
+//
+void
+UnifiedScheduler::assignStatusFlagsToPrepareACpuTask( DetailedTask * dtask )
+{
+  //Keep track of all variables created or modified by a CPU task.  It also keeps track of ghost cells for a task.
+  //This method seems more like fitting a square peg into a round hole.  It tries to temporarily bridge a gap between
+  //the OnDemand Data Warehouse and the GPU Data Warehouse.  The OnDemand DW allocates variables on the fly during task execution
+  //and also inflates vars to gather ghost cells on task execution.  The GPU DW prepares all variables and manages ghost cell copies
+  //prior to task execution.
+  //This method was designed to solve a use case where a CPU task created a var, then another CPU task modified it, then a GPU
+  //task required it, then a CPU output task needed it.  Because the CPU variable didn't get status flags attached to it due to
+  //it being in the OnDemand Data Warehouse, the Unified Scheduler assumed the only copy of the variable existed in GPU memory
+  //so it copied it out of GPU memory into host memory right in the middle of when the CPU output task was executing, causing
+  //a concurrency race condition because that variable was already in host memory.  By trying to track the host memory statuses
+  //for variables, this should hopefully prevent those race conditions.
+
+  //This probably isn't perfect, but should get us through the next few months, and hopefully gets replaced
+  //when we can remove the "OnDemand" part of the OnDemand Data Warehouse with a Unified DataWarehouse.
+
+  //Loop through all computes.  Create status flags of "allocating" for them.  Do not track ghost cells, as ghost cells
+  //are created by copying a
+
+  //Loop through all modifies.  Create status flags of "allocated", undoing any "valid" flags.
+
+  //Loop through all requires.  If they have a ghost cell requirement, we can't do much about it.
+
 }
 
 
