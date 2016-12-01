@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Nickel           -->
+<Uintah_Include>
+  <shear_modulus_model type="scg_shear">
+    <mu_0> 85.5E+3 </mu_0> 
+    <A> 16.0E-6  </A>
+    <B> 0.33E-3 </B>
+  </shear_modulus_model>
+</Uintah_Include>
