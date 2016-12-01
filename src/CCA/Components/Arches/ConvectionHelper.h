@@ -205,7 +205,7 @@ namespace Uintah {
       STENCIL5_1D(dir);
       r = u(C_) > 0 ?
         ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+        ( phi(C_) - phi(CP_) ) / ( phi(CM_) - phi(C_) + tiny );
       r = std::abs(r);
       SUPERBEEMACRO(r);
       const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
@@ -231,7 +231,7 @@ namespace Uintah {
       STENCIL5_1D(dir);
       r = u(C_) > 0 ?
         ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+        ( phi(C_) - phi(CP_) ) / ( phi(CM_) - phi(C_) + tiny );
       r = std::abs(r);
       ROEMACRO(r);
       const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
@@ -257,7 +257,7 @@ namespace Uintah {
       STENCIL5_1D(dir);
       r = u(C_) > 0 ?
         ( phi(CM_) - phi(CMM_) ) / ( phi(C_) - phi(CM_) + tiny ) :
-        ( phi(C_) - phi(CM_) ) / ( phi(CP_) - phi(C_) + tiny );
+        ( phi(C_) - phi(CP_) ) / ( phi(CM_) - phi(C_) + tiny );
       r = std::abs(r);
       VANLEERMACRO(r);
       const double afc  = (( eps(C_) + eps(CM_) )/2.) < 0.51 ? 0. : 1.;
