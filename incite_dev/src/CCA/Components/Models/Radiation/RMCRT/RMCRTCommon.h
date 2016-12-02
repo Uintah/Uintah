@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef RMCRTCOMMON_H
-#define RMCRTCOMMON_H
+#ifndef CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RMCRTCOMMON_H
+#define CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RMCRTCOMMON_H
 
 #include <CCA/Ports/Scheduler.h>
 
@@ -234,9 +234,9 @@ namespace Uintah{
       };
       
       double d_sigma_over_pi{0.0};                  // Stefan Boltzmann divided by pi (W* m-2* K-4)
-      int d_flowCell;                               // HARDWIRED 
-      Ghost::GhostType d_gn;
-      Ghost::GhostType d_gac;
+      int d_flowCell{-1};                               // HARDWIRED
+      Ghost::GhostType d_gn{Ghost::None};
+      Ghost::GhostType d_gac{Ghost::AroundCells};
 
       SimulationStateP d_sharedState;
       TypeDescription::Type d_FLT_DBL;              // Is algorithm based on doubles or floats
@@ -253,9 +253,9 @@ namespace Uintah{
       static bool d_allowReflect;                   // specify as false when doing DOM comparisons 
            
       // These are initialized once in registerVarLabels().
-      static int d_matl;      
-      static MaterialSet* d_matlSet;
-      static std::string d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
+      static int           d_matl;
+      static MaterialSet * d_matlSet;
+      static std::string   d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
       
       // Varlabels local to RMCRT
       static const VarLabel* d_sigmaT4Label;
@@ -276,4 +276,4 @@ namespace Uintah{
 
 } // namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RMCRTCOMMON_H

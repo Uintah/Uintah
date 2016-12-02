@@ -33,14 +33,13 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Math/MersenneTwister.h>
 
 #include <time.h>
 #include <fstream>
-
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
@@ -78,7 +77,7 @@ ______________________________________________________________________*/
 //______________________________________________________________________
 //
 using namespace Uintah;
-using namespace std;
+
 static Uintah::DebugStream dbg("RAY",       false);
 static Uintah::DebugStream dbg2("RAY_DEBUG",false);
 static Uintah::DebugStream dbg_BC("RAY_BC", false);
@@ -97,7 +96,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
   d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
 
-  if( d_FLT_DBL == TypeDescription::double_type ){
+  if ( d_FLT_DBL == TypeDescription::double_type ) {
     d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
     d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
   } else {
@@ -105,23 +104,11 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
     d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<float>::getTypeDescription() );
   }
 
-
   d_isDbgOn       = dbg2.active();
+
   d_dbgCells.push_back( IntVector(0,0,0));
 
-  d_matlSet              = 0;
-  d_gac                  = Ghost::AroundCells;
-  d_gn                   = Ghost::None;
-  d_orderOfInterpolation = -9;
-  d_onOff_SetBCs         = true;
-  d_radiometer           = nullptr;
-  d_coarsenExtraCells    = false;
 
-  d_haloCells            = IntVector(-9,-9,-9);
-  d_haloLength           = -9;
-  d_rayDirSampleAlgo     = NAIVE;
-  d_cellTypeCoarsenLogic = ROUNDUP;
-  d_ROI_algo             = entireDomain;
   //_____________________________________________
   //   Ordering for Surface Method
   // This block of code is used to properly place ray origins, and orient ray directions
@@ -153,6 +140,7 @@ Ray::~Ray()
   VarLabel::destroy( d_flaggedCellsLabel );
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
+
 //  VarLabel::destroy( d_divQFiltLabel );
 //  VarLabel::destroy( d_boundFluxFiltLabel );
 
@@ -175,7 +163,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
-  string rayDirSampleAlgo;
+  std::string rayDirSampleAlgo;
 
   rmcrt_ps->getWithDefault( "nDivQRays" ,       d_nDivQRays ,        10 );             // Number of rays per cell used to compute divQ
   rmcrt_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );             // When to terminate a ray
@@ -190,7 +178,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );           // Allow filtering of boundFlux and divQ.
   rmcrt_ps->getWithDefault( "rayDirSampleAlgo", rayDirSampleAlgo,   "naive" );         // Change Monte-Carlo Sampling technique for RayDirection.
 
-  proc0cout << "__________________________________ " << endl;
+  proc0cout << "__________________________________ " << std::endl;
 
 #ifdef UINTAH_ENABLE_KOKKOS
   proc0cout << "  RMCRT:  Using the Kokkos-based implementation of RMCRT." << endl;
@@ -215,33 +203,33 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //__________________________________
   //  Warnings and bulletproofing
 #ifndef RAY_SCATTER
-  proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
+  proc0cout<< "sigmaScat: " << d_sigmaScat << std::endl;
   if(d_sigmaScat>0){
     ostringstream warn;
-    warn << " ERROR:  To run a scattering case, you must use the following in your configure line..." << endl;
+    warn << " ERROR:  To run a scattering case, you must use the following in your configure line..." << std::endl;
     warn << "                 --enable-ray-scatter" << endl;
-    warn << "         To run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << endl;
+    warn << "         To run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 #endif
 
 #ifdef RAY_SCATTER
-  proc0cout<< endl << "  RMCRT:  Ray scattering is enabled." << endl;
+  proc0cout<< std::endl << "  RMCRT:  Ray scattering is enabled." << std::endl;
   if(d_sigmaScat<1e-99){
-    proc0cout << "  WARNING:  You are running a non-scattering case, and you have the following in your configure line..." << endl;
-    proc0cout << "                    --enable-ray-scatter" << endl;
-    proc0cout << "            This will run slower than necessary." << endl;
-    proc0cout << "            You can remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+    proc0cout << "  WARNING:  You are running a non-scattering case, and you have the following in your configure line..." << std::endl;
+    proc0cout << "                    --enable-ray-scatter" << std::endl;
+    proc0cout << "            This will run slower than necessary." << std::endl;
+    proc0cout << "            You can remove --enable-ray-scatter from your configure line and re-configure and re-compile" << std::endl;
   }
 #endif
 
   if( d_nDivQRays == 1 ){
-    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
-    proc0cout << "                  For better accuracy and stability, specify nDivQRays greater than 2." << endl;
+    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute the radiative flux divergence." << std::endl;
+    proc0cout << "                  For better accuracy and stability, specify nDivQRays greater than 2." << std::endl;
   }
 
   if( d_nFluxRays == 1 ){
-    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
+    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes." << std::endl;
   }
 
 
@@ -254,7 +242,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   if (alg_ps){
 
-    string type="nullptr";
+    std::string type="nullptr";
 
     if( !alg_ps->getAttribute("type", type) ){
       throw ProblemSetupException("RMCRT: No type specified for algorithm.  Please choose singleLevel, dataOnion or RMCRT_coarseLevel", __FILE__, __LINE__);
@@ -279,7 +267,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       alg_ps->get( "haloLength",         d_haloLength );
       alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
 
-      //  Method for deteriming the extents of the ROI
+      //  Method for determining the extents of the ROI
       ProblemSpecP ROI_ps = alg_ps->findBlock( "ROI_extents" );
       ROI_ps->getAttribute( "type", type );
 
@@ -314,45 +302,46 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //__________________________________
   //  Logic for coarsening of cellType
   if (isMultilevel){
-    string tmp = "nullptr";
+    std::string tmp = "nullptr";
     rmcrt_ps->get("cellTypeCoarsenLogic", tmp );
     if (tmp == "ROUNDDOWN"){
       d_cellTypeCoarsenLogic = ROUNDDOWN;
-      proc0cout << "  RMCRT: When coarsening cellType any partial cell is ROUNDEDDOWN to a FLOW cell" << endl;
+      proc0cout << "  RMCRT: When coarsening cellType any partial cell is ROUNDEDDOWN to a FLOW cell" << std::endl;
     }
 
     if (tmp == "ROUNDUP") {
       d_cellTypeCoarsenLogic = ROUNDUP;
-      proc0cout << "  RMCRT: When coarsening cellType any partial cell is rounded UP to a INTRUSION cell" << endl;
+      proc0cout << "  RMCRT: When coarsening cellType any partial cell is rounded UP to a INTRUSION cell" << std::endl;
     }
   }
 
   //__________________________________
   //  bulletproofing
 
-  if( Parallel::usingDevice() ){              // GPU
-    if( (algorithm == dataOnion && d_ROI_algo != patch_based ) ){
-      ostringstream warn;
+  if ( Parallel::usingDevice() ) {              // GPU
+    if( (algorithm == dataOnion && d_ROI_algo != patch_based ) ) {
+      std::ostringstream warn;
       warn << "GPU:RMCRT:ERROR: ";
       warn << "At this time only ROI_extents type=\"patch_based\" work on the GPU";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 
-  // special conditions when using floats and multi-level
-  //if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
+//  // special conditions when using floats and multi-level
+//  if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
+//
+//    string abskgName = d_compAbskgLabel->getName();
+//    if ( rmcrt_ps->isLabelSaved( abskgName ) ){
+//      ostringstream warn;
+//      warn << "  RMCRT:ERROR: You're saving a variable ("<< abskgName << ") that doesn't exist on all levels."<< endl;
+//      warn << "  Use either: " << endl;
+//      warn << "    <save label = 'abskgRMCRT' />             (FLOAT version of abskg, local to RMCRT)" << endl;
+//      warn << "             or " << endl;
+//      warn << "    <save label = 'abskg'  levels = -1 />     ( only saved on the finest level )" << endl;
+//      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+//    }
+//  }
 
-    //string abskgName = d_compAbskgLabel->getName();
-    //if ( rmcrt_ps->isLabelSaved( abskgName ) ){
-      //ostringstream warn;
-      //warn << "  RMCRT:ERROR: You're saving a variable ("<< abskgName << ") that doesn't exist on all levels."<< endl;
-      //warn << "  Use either: " << endl;
-      //warn << "    <save label = 'abskgRMCRT' />             (FLOAT version of abskg, local to RMCRT)" << endl;
-      //warn << "             or " << endl;
-      //warn << "    <save label = 'abskg'  levels = -1 />     ( only saved on the finest level )" << endl;
-      //throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    //}
-  //}
   d_sigma_over_pi = d_sigma/M_PI;
 
 
@@ -368,7 +357,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   }
   #endif
 #endif
-  proc0cout << "__________________________________ " << endl;
+  proc0cout << "__________________________________ " << std::endl;
 
 }
 
@@ -394,10 +383,10 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
   const MaterialSubset* mss = d_matlSet->getUnion();
 
   if( ignore_BC_bulletproofing == true ) {
-    proc0cout << "\n\n______________________________________________________________________" << endl;
+    proc0cout << "\n\n______________________________________________________________________" << std::endl;
     proc0cout << "  WARNING: bulletproofing of the boundary conditions specs is off!";
-    proc0cout << "   You're free to set any BC you'd like " << endl;
-    proc0cout << "______________________________________________________________________\n\n" << endl;
+    proc0cout << "   You're free to set any BC you'd like " << std::endl;
+    proc0cout << "______________________________________________________________________\n\n" << std::endl;
 
   } else {
     is_BC_specified(root_ps, d_compTempLabel->getName(), mss);
@@ -408,7 +397,7 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
     ProblemSpecP level_ps = grid_ps->findBlock("Level");
     level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
 
-    if (periodic.length() != 0 ){
+    if (periodic.length() != 0 ) {
       throw ProblemSetupException("\nERROR RMCRT:\nPeriodic boundary conditions are not allowed with Reverse Monte-Carlo Ray Tracing.", __FILE__, __LINE__);
     }
   }
@@ -435,22 +424,17 @@ Ray::sched_rayTrace( const LevelP& level,
   if (Parallel::usingDevice()) {          // G P U
 
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
-                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,  modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,
-                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
-
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,  modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     }
     tsk->usesDevice(true);
   } else {                                // C P U
 
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTrace<double>,
-                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+      tsk = scinew Task( taskname, this, &Ray::rayTrace<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTrace<float>,
-                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+      tsk = scinew Task( taskname, this, &Ray::rayTrace<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
     }
   }
 
@@ -480,7 +464,7 @@ Ray::sched_rayTrace( const LevelP& level,
       if (n_ghostCells > SHRT_MAX || n_ghostCells > nCellsLevel ) {
         proc0cout << "\n  WARNING  RMCRT:sched_rayTrace Clamping the number of ghostCells to SHRT_MAX, (n_ghostCells: " << n_ghostCells
                   << ") max cells in any direction on a Levels: " << nCellsLevel << "\n\n";
-        n_ghostCells    = SHRT_MAX;
+        n_ghostCells = SHRT_MAX;
         d_ROI_algo = entireDomain;
       }
       d_haloCells = IntVector(n_ghostCells, n_ghostCells, n_ghostCells);
@@ -1122,7 +1106,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
                                                      Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
-      dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << endl;
+      dbg << "  ROI: " << ROI_Lo << " "<< ROI_Hi << std::endl;
       abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
       celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
@@ -1144,14 +1128,14 @@ Ray::rayTrace( const ProcessorGroup* pg,
           if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
                std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ||
                std::isinf( celltype[c] )      || std::isnan( celltype[c] ) ){
-            ostringstream warn;
+            std::ostringstream warn;
             warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 or cellType is non-physical \n"
                 << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
                 << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
                 << "          " << *patch << "\n"
                 << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ", celltype[c]: " << celltype[c] << ")\n";
 
-            cout << warn.str() << endl;
+            std::cout << warn.str() << std::endl;
             //throw InternalError( warn.str(), __FILE__, __LINE__ );
 
           }
@@ -1177,7 +1161,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       //__________________________________
       //
-      vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nFluxRays : 0);  // only needed for LHC scheme
+      std::vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nFluxRays : 0);  // only needed for LHC scheme
 
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
@@ -1187,7 +1171,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
-        vector<int> boundaryFaces;
+          std::vector<int> boundaryFaces;
         boundaryFaces.clear();
 
         // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
@@ -1196,7 +1180,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
         Point CC_pos = level->getCellPosition(origin);
         //__________________________________
         // Loop over boundary faces of the cell and compute incident radiative flux
-        for (vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){
+        for (std::vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){
 
           int RayFace = *it;
           int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
@@ -1300,7 +1284,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
 #else // else UINTAH_ENABLE_KOKKOS
 
-    vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nDivQRays : 0);  // only needed for LHC scheme
+    std::vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nDivQRays : 0);  // only needed for LHC scheme
 
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector origin = *iter;
@@ -1349,16 +1333,18 @@ Ray::rayTrace( const ProcessorGroup* pg,
   }  // end of if(_solveDivQ)
 
 
-    double end =clock();
+    double end = clock();
     double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
     if (patch->getGridIndex() == 0) {
-      cout<< endl;
-      cout << " RMCRT REPORT: Patch 0" << endl;
-      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
-      cout << " Size: " << size << endl;
-      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-      cout << endl;
+      std::cout << std::endl;
+      std::cout << " RMCRT REPORT: Patch 0" << std::endl;
+      std::cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << std::endl;// Convert time to ms
+      std::cout << " Size: " << size << std::endl;
+      std::cout << " Efficiency: " << efficiency << " steps per sec" << std::endl;
+      std::cout << std::endl;
     }
+
+
   }  //end patch loop
 }  // end ray trace method
 
@@ -1390,76 +1376,51 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     taskname = "Ray::rayTraceDataOnionGPU";
 
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
-    } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
+    }
+    else {
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     }
     tsk->usesDevice(true);
-  } else {                                // CPU
+  }
+  else {                                // CPU
     taskname = "Ray::rayTrace_dataOnion";
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
-    } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
+    }
+    else {
+      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     }
   }
-    if ( d_ROI_algo == coneGeometry_based) {          // patch_based we know the number of ghostCells
-      // max levels is one less than the total number of levels 
-      _maxLength =  vector <double>   (maxLevels+1,1e10);
-      _maxLengthFlux =  vector <double>   (maxLevels+1,1e100);
-      _maxCells  =  vector< int >  (maxLevels+1, 1234567);
+  if (d_ROI_algo == coneGeometry_based) {          // patch_based we know the number of ghostCells
+    // max levels is one less than the total number of levels
+    _maxLength     = std::vector<double>(maxLevels + 1, 1e10);
+    _maxLengthFlux = std::vector<double>(maxLevels + 1, 1e100);
+    _maxCells      = std::vector<int>(   maxLevels + 1, 1234567);
 
-      for (int i=0; i<maxLevels; i++){
-      LevelP levelFine = level->getGrid()->getLevel(maxLevels-i);
-      Vector dxyzFine =  levelFine->dCell();
-        LevelP levelCoarse = level->getGrid()->getLevel(maxLevels-i-1);
-        Vector dxyzCoarse = levelCoarse->dCell();
+    for (int i = 0; i < maxLevels; i++) {
+      LevelP levelFine = level->getGrid()->getLevel(maxLevels - i);
+      Vector dxyzFine = levelFine->dCell();
+      LevelP levelCoarse = level->getGrid()->getLevel(maxLevels - i - 1);
+      Vector dxyzCoarse = levelCoarse->dCell();
 
-            _maxLength[maxLevels -i]=0.0;
-            _maxLengthFlux[maxLevels -i]=0.0;
-            _maxCells[maxLevels -i]=0;
-          for (int j=0; j<3; j++){
+      _maxLength[maxLevels - i] = 0.0;
+      _maxLengthFlux[maxLevels - i] = 0.0;
+      _maxCells[maxLevels - i] = 0;
+      for (int j = 0; j < 3; j++) {
 
-            //int RR= round(dxyzCoarse[j]/dxyzFine[j]);
-               
+        //int RR= round(dxyzCoarse[j]/dxyzFine[j]);
 
-            //double fudge =4.0;
-            double fudge =1.0;
-            _maxLength[maxLevels-i] =std::max(fudge*dxyzCoarse[j]*((double) d_nDivQRays-2.0)/sqrt((double) d_nDivQRays-1.0)/4.0,_maxLength[maxLevels-i]); // hard coded for Refinement
-            _maxLengthFlux[maxLevels-i] = std::max(fudge*dxyzCoarse[j]*( (double) d_nFluxRays*2.0 - 2.0)/sqrt((double) d_nFluxRays*2.0 - 1.0)/4.0,_maxLengthFlux[maxLevels-i]); //
-            _maxCells[maxLevels-i] =(int) std::max((int) (ceil(max(_maxLength[maxLevels-i],_maxLengthFlux[maxLevels-i])/dxyzFine[j]) +0.5) + 4 ,_maxCells[maxLevels-i]); // 
-               
-          // SINCE GET REGION ISN'T WORKING, get 4 ghost cells, only access up to 3
-             //int FineLevelGhost=5;
-            //_maxCells[maxLevels-i] = FineLevelGhost; // 
-            //_maxLength[maxLevels-i] = min(((double) FineLevelGhost)*dxyzFine[j],_maxLength[maxLevels-i] ); // hard coded for Refinement
-            //_maxLengthFlux[maxLevels-i] =min(((double) FineLevelGhost)*dxyzFine[j],_maxLength[maxLevels-i])  ; //
-
-
-            //_maxCells[maxLevels-i] = 0; // 
-            //_maxLength[maxLevels-i] = 0.0; // hard coded for Refinement
-            //_maxLengthFlux[maxLevels-i] =0.0 ; //
-            
-            //_maxCells[maxLevels-i] = 2000; // 
-            //_maxLength[maxLevels-i] = 0.0; // hard coded for Refinement
-            //_maxLengthFlux[maxLevels-i] =0.0 ; //
-
-          }
+        double fudge = 1.0;
+        _maxLength[maxLevels - i] = std::max(fudge * dxyzCoarse[j] * ((double)d_nDivQRays - 2.0) / sqrt((double)d_nDivQRays - 1.0) / 4.0, _maxLength[maxLevels - i]);  // hard coded for Refinement
+        _maxLengthFlux[maxLevels - i] = std::max(fudge * dxyzCoarse[j] * ((double)d_nFluxRays * 2.0 - 2.0) / sqrt((double)d_nFluxRays * 2.0 - 1.0) / 4.0, _maxLengthFlux[maxLevels - i]);  //
+        _maxCells[maxLevels - i] = (int)std::max((int)(std::ceil(std::max(_maxLength[maxLevels - i], _maxLengthFlux[maxLevels - i]) / dxyzFine[j]) + 0.5) + 4, _maxCells[maxLevels - i]);  //
   
-          //proc0cout << _maxCells[maxLevels-i] << " " << _maxLength[maxLevels-i] <<  " " << i << " " <<dxyzFine  << " " <<dxyzCoarse  <<"\n";
       }
-          //proc0cout << _maxCells[0] << " " << _maxLength[0] <<  " " << "\n";
+//      proc0cout << _maxCells[maxLevels - i] << " " << _maxLength[maxLevels - i] << " " << i << " " << dxyzFine << " " << dxyzCoarse << "\n";
     }
-
-
-          //proc0cout << d_ROI_algo <<  " dereky" << "\n";
-
-
-
+//    proc0cout << _maxCells[0] << " " << _maxLength[0] << " " << "\n";
+  }
 
   printSchedule(level, dbg, taskname);
 
@@ -1571,7 +1532,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
-  vector<Vector> Dx(maxLevels);
+  std::vector<Vector> Dx(maxLevels);
 
   for(int L = 0; L<maxLevels; L++) {
     LevelP level = new_dw->getGrid()->getLevel(L);
@@ -1581,7 +1542,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
       celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-      dbg << " getting coarse level data L-" << L << endl;
+      dbg << " getting coarse level data L-" << L << std::endl;
     }
     Vector dx = level->dCell();
     Dx[L] = dx;
@@ -1589,53 +1550,50 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
   IntVector fineLevel_ROI_Lo = IntVector( -9,-9,-9 );
   IntVector fineLevel_ROI_Hi = IntVector( -9,-9,-9 );
-  vector<IntVector> regionLo( maxLevels );
-  vector<IntVector> regionHi( maxLevels );
+  std::vector<IntVector> regionLo( maxLevels );
+  std::vector<IntVector> regionHi( maxLevels );
 
   //__________________________________
   //  retrieve fine level data & compute the extents (dynamic and fixed )
   if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
+
     int L = maxLevels - 1;
 
-    const Patch* notUsed=0;
+    const Patch* notUsed = 0;
     computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
-                   fineLevel_ROI_Lo, fineLevel_ROI_Hi,
-                   regionLo,  regionHi);
+                   fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
 
-    dbg << " getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi << endl;
+    dbg << " getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi << std::endl;
     abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-
-
-
   }
 
   abskg_fine         = abskg[maxLevels-1];
   sigmaT4OverPi_fine = sigmaT4OverPi[maxLevels-1];
 
-  double start=clock();
+  double start = clock();
 
   // Determine the size of the domain.
   BBox domain_BB;
   level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
 
   //  patch loop
-  for (int p=0; p < finePatches->size(); p++) {
+  for (int p = 0; p < finePatches->size(); p++) {
 
     const Patch* finePatch = finePatches->get(p);
     printTask(finePatches, finePatch,dbg,"Doing Ray::rayTrace_dataOnion");
 
      //__________________________________
     //  retrieve fine level data ( patch_based )
-    if ( d_ROI_algo == patch_based ){
+    if ( d_ROI_algo == patch_based ) {
 
       computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,
                      fineLevel_ROI_Lo, fineLevel_ROI_Hi,
                      regionLo,  regionHi);
 
       int L = maxLevels - 1;
-      dbg << " getting fine level data across L-" << L << endl;
+      dbg << " getting fine level data across L-" << L << std::endl;
 
       abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -1646,36 +1604,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     if ( d_ROI_algo == coneGeometry_based) {          
       int L = maxLevels - 1;
-      dbg << " getting fine level data across L-" << L << endl;
+      dbg << " getting fine level data across L-" << L << std::endl;
 
 
       abskg_dw->get(abskg[L],d_abskgLabel, d_matl , finePatch, d_gac, _maxCells[L]);
       sigmaT4_dw->get(sigmaT4OverPi[L],d_sigmaT4Label, d_matl , finePatch,d_gac,_maxCells[L]);
       celltype_dw->get(cellType[L],d_cellTypeLabel, d_matl , finePatch,d_gac, _maxCells[L]);
-
-
-
-// copy bounded-RMCRT   - still doesn't work
-      //fineLevel_ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
-      //fineLevel_ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
-
-      //finePatch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0), 
-                                                     //Ghost::AroundCells, _maxCells[L], fineLevel_ROI_Lo, fineLevel_ROI_Hi);    
-
-      //abskg_dw->getRegion(   abskg[L],          d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //sigmaT4_dw->getRegion( sigmaT4OverPi[L],  d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //celltype_dw->getRegion( cellType[L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-
-
- //Not Working, it appears probably infrastructure bug, could be ROI set by component are wrong
-      //computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,
-                     //fineLevel_ROI_Lo, fineLevel_ROI_Hi,
-                     //regionLo,  regionHi);
-      //abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      //celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl ,fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-
-      //cout <<*finePatch<< " " << fineLevel_ROI_Lo <<  " " << fineLevel_ROI_Hi  << " " << regionLo[0]  <<" " << regionLo[1] << " " << regionHi[0] <<" " << regionHi[1] <<  " \n";
 
       abskg_fine         = abskg[L];
       sigmaT4OverPi_fine = sigmaT4OverPi[L];
@@ -1701,7 +1635,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         boundFlux_fine[c].initialize(0.0);
       }
     }
-    unsigned long int size = 0;                   // current size of PathInde
 
     //______________________________________________________________________
     //          B O U N D A R Y F L U X
@@ -1712,7 +1645,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
       //__________________________________
       //
-      vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nFluxRays : 0);  // only needed for LHC scheme
+      std::vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nFluxRays : 0);  // only needed for LHC scheme
 
       for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
@@ -1722,7 +1655,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
-        vector<int> boundaryFaces;
+        std::vector<int> boundaryFaces;
         boundaryFaces.clear();
 
         int my_L = maxLevels - 1;
@@ -1733,7 +1666,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         Point CC_pos = fineLevel->getCellPosition(origin);
         //__________________________________
         // Loop over boundary faces of the cell and compute incident radiative flux
-        for (vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){
+        for (std::vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){
 
           int RayFace = *it;
           int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
@@ -1803,9 +1736,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     //______________________________________________________________________
     //         S O L V E   D I V Q
     //______________________________________________________________________
-    if( d_solveDivQ){
+    if (d_solveDivQ) {
 
-      vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE  ? d_nDivQRays : 0);  // only needed for LHC scheme
+      std::vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE  ? d_nDivQRays : 0);  // only needed for LHC scheme
 
       for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
@@ -1880,12 +1813,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     double end =clock();
     double efficiency = nRaySteps/((end-start)/ CLOCKS_PER_SEC);
     if (finePatch->getGridIndex() == levelPatchID) {
-      cout<< endl;
-      cout << " RMCRT REPORT: Patch " << levelPatchID <<endl;
-      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
-      cout << " nRaySteps: " << nRaySteps << " nFluxRaySteps: " << nFluxRaySteps << endl;
-      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-      cout << endl;
+      std::cout<< std::endl;
+      std::cout << " RMCRT REPORT: Patch " << levelPatchID << std::endl;
+      std::cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << std::endl;// Convert time to ms
+      std::cout << " nRaySteps: " << nRaySteps << " nFluxRaySteps: " << nFluxRaySteps << std::endl;
+      std::cout << " Efficiency: " << efficiency << " steps per sec" << std::endl;
+      std::cout << std::endl;
     }
   }  // end finePatch loop
 }  // end ray trace method
@@ -1901,8 +1834,8 @@ Ray::computeExtents(LevelP level_0,
                     DataWarehouse* new_dw,
                     IntVector& fineLevel_ROI_Lo,
                     IntVector& fineLevel_ROI_Hi,
-                    vector<IntVector>& regionLo,
-                    vector<IntVector>& regionHi)
+                    std::vector<IntVector>& regionLo,
+                    std::vector<IntVector>& regionHi)
 {
   //__________________________________
   //   fine level region of interest ROI
@@ -1922,8 +1855,8 @@ Ray::computeExtents(LevelP level_0,
 
     if( !fineLevel->containsCell( fineLevel_ROI_Lo ) ||
         !fineLevel->containsCell( fineLevel_ROI_Hi ) ){
-      ostringstream warn;
-      warn << "ERROR:  the fixed ROI extents " << d_ROI_minPt << " " << d_ROI_maxPt << " are not contained on the fine level."<< endl;
+      std::ostringstream warn;
+      warn << "ERROR:  the fixed ROI extents " << d_ROI_minPt << " " << d_ROI_maxPt << " are not contained on the fine level."<< std::endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   } else if ( d_ROI_algo == patch_based ){
@@ -1934,7 +1867,7 @@ Ray::computeExtents(LevelP level_0,
 
     fineLevel_ROI_Lo = patchLo - d_haloCells;
     fineLevel_ROI_Hi = patchHi + d_haloCells;
-    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells << endl;
+    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells << std::endl;
 
   } else if ( d_ROI_algo == coneGeometry_based) {          
 
@@ -1942,7 +1875,7 @@ Ray::computeExtents(LevelP level_0,
     IntVector patchHi = patch->getExtraCellHighIndex();
     fineLevel_ROI_Lo = patchLo - IntVector(_maxCells[maxLevels-1],_maxCells[maxLevels-1],_maxCells[maxLevels-1]);
     fineLevel_ROI_Hi = patchHi + IntVector(_maxCells[maxLevels-1],_maxCells[maxLevels-1],_maxCells[maxLevels-1]);
-    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << endl;
+    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << std::endl;
 
   }
 
@@ -1952,7 +1885,7 @@ Ray::computeExtents(LevelP level_0,
 
   fineLevel_ROI_Lo = Max(fineLevel_ROI_Lo, levelLo);
   fineLevel_ROI_Hi = Min(fineLevel_ROI_Hi, levelHi);
-  dbg << "  fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi << endl;
+  dbg << "  fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi << std::endl;
 
   //__________________________________
   // Determine the extents of the regions below the fineLevel
@@ -2153,9 +2086,12 @@ void Ray::rayLocation_cellFace( MTRand& mTwister,
 
 //______________________________________________________________________
 //
-bool Ray::has_a_boundary(const IntVector &c,
-                         constCCVariable<int> &celltype,
-                         vector<int> &boundaryFaces){
+bool
+Ray::has_a_boundary( const IntVector            & c
+                   ,       constCCVariable<int> & celltype
+                   ,       std::vector<int>     & boundaryFaces
+                   )
+{
 
   IntVector adjacentCell = c;
   bool hasBoundary = false;
@@ -2272,7 +2208,7 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
 
-    vector<Patch::FaceType> bf;
+    std::vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
 
     if( bf.size() > 0){
@@ -2293,12 +2229,12 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
       // one cell from the boundary.  Note that the temperature
       // is not available on all levels but sigmaT4 is.
       if (backoutTemp){
-        for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+        for ( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ) {
           Patch::FaceType face = *itr;
 
           Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
 
-          for(CellIterator iter=patch->getFaceIterator(face, IFC); !iter.done();iter++) {
+          for (CellIterator iter=patch->getFaceIterator(face, IFC); !iter.done();iter++) {
             const IntVector& c = *iter;
             double T4 =  sigmaT4OverPi[c]/sigma_over_pi;
             temp[c]   =  pow( T4, 1./4.);
@@ -2322,7 +2258,7 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
-      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+      for ( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ) {
         Patch::FaceType face = *itr;
 
         Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
@@ -2346,7 +2282,7 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
 //______________________________________________________________________
 template<class T, class V>
 void Ray::setBC(CCVariable< T >& Q_CC,
-                const string& desc,
+                const std::string& desc,
                 const Patch* patch,
                 const int mat_id)
 {
@@ -2357,17 +2293,17 @@ void Ray::setBC(CCVariable< T >& Q_CC,
   if( dbg_BC.active() ){
     const Level* level = patch->getLevel();
     dbg_BC << "setBC \t"<< desc <<" "
-           << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getID()<< endl;
+           << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getID()<< std::endl;
   }
 
   // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType> bf;
+  std::vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+  for( std::vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     int nCells = 0;
-    string bc_kind = "NotSet";
+    std::string bc_kind = "NotSet";
 
     IntVector dir= patch->getFaceAxes(face);
     Vector cell_dx = patch->dCell();
@@ -2416,7 +2352,7 @@ void Ray::setBC(CCVariable< T >& Q_CC,
 
     if( dbg_BC.active() ){
       dbg_BC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
-             << " nCellsTouched: " << nCells << endl;
+             << " nCellsTouched: " << nCells << std::endl;
     }
     //__________________________________
     //  bulletproofing
@@ -2518,7 +2454,7 @@ void Ray::refine_Q( const ProcessorGroup*,
 
     dbg <<" refineQ: "
         <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
-        <<" coarseRegion " << cl << " " << ch <<endl;
+        <<" coarseRegion " << cl << " " << ch << std::endl;
 
     //__________________________________DivQ
     constCCVariable<double> divQ_coarse;
@@ -2671,7 +2607,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                             const bool modifies,
                             const VarLabel* variable )
 {
-  string taskname = "        Coarsen_Q_" + variable->getName();
+  std::string taskname = "        Coarsen_Q_" + variable->getName();
   printSchedule(coarseLevel,dbg,taskname);
 
   const Uintah::TypeDescription* td = variable->typeDescription();
@@ -2770,10 +2706,10 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
             //__________________________________
             //  loop over boundary faces for the fine patch
 
-            vector<Patch::FaceType> bf;
+            std::vector<Patch::FaceType> bf;
             finePatch->getBoundaryFaces( bf );
 
-            for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+            for ( std::vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ) {
               Patch::FaceType face = *iter;
 
               IntVector faceRefineRatio = refineRatio;
@@ -2950,14 +2886,14 @@ void Ray::computeCellType( const ProcessorGroup*,
  void Ray::updateSumI_ML ( Vector& ray_direction,
                            Vector& ray_origin,
                            const IntVector& origin,
-                           const vector<Vector>& Dx,
+                           const std::vector<Vector>& Dx,
                            const BBox& domain_BB,
                            const int maxLevels,
                            const Level* fineLevel,
                            const IntVector& fineLevel_ROI_Lo,
                            const IntVector& fineLevel_ROI_Hi,
-                           vector<IntVector>& regionLo,
-                           vector<IntVector>& regionHi,
+                           std::vector<IntVector>& regionLo,
+                           std::vector<IntVector>& regionHi,
                            StaticArray< constCCVariable< T > >& sigmaT4OverPi,
                            StaticArray< constCCVariable< T > >& abskg,
                            StaticArray< constCCVariable< int > >& cellType,
@@ -2988,7 +2924,7 @@ void Ray::computeCellType( const ProcessorGroup*,
 
   //__________________________________
   // define tMax & tDelta on all levels
-  // go from finest to coarset level so you can compare
+  // go from finest to coarsest level so you can compare
   // with 1L rayTrace results.
 
   Point CC_posOrigin = fineLevel->getCellPosition(origin);
@@ -3005,7 +2941,7 @@ void Ray::computeCellType( const ProcessorGroup*,
   tMaxV[1] = (sign[1] * Dx[L][1] - rayDx[1]) * inv_direction.y();
   tMaxV[2] = (sign[2] * Dx[L][2] - rayDx[2]) * inv_direction.z();
 
-  vector<Vector> tDelta(maxLevels);
+  std::vector<Vector> tDelta(maxLevels);
   for(int Lev = maxLevels-1; Lev>-1; Lev--){
     //Length of t to traverse one cell
     tDelta[Lev].x( std::fabs(inv_direction[0]) * Dx[Lev][0]);
@@ -3039,7 +2975,7 @@ void Ray::computeCellType( const ProcessorGroup*,
       prevLev  = L;
 
       //__________________________________
-      //  Determine the princple direction the ray is traveling
+      //  Determine the principal direction the ray is traveling
       //
       dir = NONE;
       if ( tMaxV[0] < tMaxV[1] ){    // X < Y
@@ -3070,10 +3006,11 @@ void Ray::computeCellType( const ProcessorGroup*,
       //bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
       //bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
 
+      //bool ray_outside_ROI    = (false); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
+      //bool ray_outside_Region = (false);
+
       bool ray_outside_ROI    = (_maxLength[L]<tMaxV[dir]); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
       bool ray_outside_Region = (_maxLength[L]<tMaxV[dir]); 
-      //bool ray_outside_ROI    = (false); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
-      //bool ray_outside_Region = (false); 
 
       bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
       bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
@@ -3099,7 +3036,7 @@ void Ray::computeCellType( const ProcessorGroup*,
           printf( "        ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x(), cur.y(), cur.z());
         }
 #endif
-      } else if ( jumpCoarsetoCoarserLevel ){
+      } else if ( jumpCoarsetoCoarserLevel ) {
 
         IntVector c_old = cur;                          // needed for debugging
         cur   = level->mapCellToCoarser(cur);
@@ -3113,6 +3050,7 @@ void Ray::computeCellType( const ProcessorGroup*,
       }
 
       in_domain = in_domain && cellType[L][cur] == d_flowCell; // best place, in case ray moved to coarser grid and isn't a wall (rare scenario?)
+
       //__________________________________
       //  update marching variables
       double distanceTraveled = (tMaxV[dir] - old_length);
@@ -3126,7 +3064,7 @@ void Ray::computeCellType( const ProcessorGroup*,
 
       //__________________________________
       // when moving to a coarse level tmax will change only in the direction the ray is moving
-      if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ){
+      if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ) {
         double rayDx_Level = ray_location[dir] - ( CC_pos(dir) - 0.5*Dx[L][dir] );
         double tMax_tmp    = ( sign[dir] * Dx[L][dir] - rayDx_Level ) * inv_direction[dir];
         tMaxV        = tMaxV_prev;
@@ -3307,9 +3245,9 @@ Ray::filter( const ProcessorGroup*,
 
 //______________________________________________________________________
 // Explicit template instantiations:
-template void Ray::setBC<int, int>(       CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
-template void Ray::setBC<double,double>(  CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
-template void Ray::setBC<float, double>(  CCVariable<float>&  Q_CC, const string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<int, int>(       CCVariable<int>&    Q_CC, const std::string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<double,double>(  CCVariable<double>& Q_CC, const std::string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<float, double>(  CCVariable<float>&  Q_CC, const std::string& desc, const Patch* patch, const int mat_id);
 
 template void Ray::setBoundaryConditions< double >( const ProcessorGroup*,
                                                     const PatchSubset* ,
@@ -3330,14 +3268,14 @@ template void Ray::setBoundaryConditions< float >( const ProcessorGroup*,
 template void  Ray::updateSumI_ML< double> ( Vector&,
                                              Vector&,
                                              const IntVector&,
-                                             const vector<Vector>&,
+                                             const std::vector<Vector>&,
                                              const BBox&,
                                              const int,
                                              const Level* ,
                                              const IntVector&,
                                              const IntVector&,
-                                             vector<IntVector>&,
-                                             vector<IntVector>&,
+                                             std::vector<IntVector>&,
+                                             std::vector<IntVector>&,
                                              StaticArray< constCCVariable< double > >& sigmaT4OverPi,
                                              StaticArray< constCCVariable<double> >& abskg,
                                              StaticArray< constCCVariable< int > >& cellType,
@@ -3579,7 +3517,7 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
             cellTypeCoarse[c]=-1;
 
           }else{ // assume cell is a wall cell on coarse grid
-            CharacteristicLengthFlow=CharacteristicLengthFlow;  // since we don't have a way to move temperature information to embedded fields we need to lessen the effects of the wall.
+//            CharacteristicLengthFlow = CharacteristicLengthFlow;  // since we don't have a way to move temperature information to embedded fields we need to lessen the effects of the wall.
             abskgCoarse[c]=kWall/(double) countWall;
             sigmaT4Coarse[c]= T (tempWall/(kWall+1e-16)*exp(-CharacteristicLengthFlow*kFlow/((double) countFlow+1e-16)) +
                 tempFlow / (kFlow+1e-16)*(1.0 - exp(-CharacteristicLengthFlow*kFlow/((double) countFlow+1e-16)))); // returns Temp^4 wieghted on absorption coefficient
@@ -3599,11 +3537,11 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
 
 
       // Now Set boundary Conditions
-      vector<Patch::FaceType> bf;
+      std::vector<Patch::FaceType> bf;
       finePatch->getBoundaryFaces(bf);
       if( bf.size() > 0) {
 
-        for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+        for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
           Patch::FaceType face = *itr;
 
           IntVector xbadjust(0,0,0);
@@ -3641,11 +3579,11 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
           }
         }
       }
- /// finish setting boundaries on coarse level, divide by weight (emissivity)
-    vector<Patch::FaceType> bf;
+    // finish setting boundaries on coarse level, divide by weight (emissivity)
+    std::vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
-    if( bf.size() > 0) {
-      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    if ( bf.size() > 0) {
+      for ( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ) {
         Patch::FaceType face = *itr;
         Patch::FaceIteratorType PEC = Patch::ExtraMinusEdgeCells;
 
@@ -3696,14 +3634,14 @@ void Ray::CoarsenModelAlpha<double>( const ProcessorGroup*,
 template void  Ray::updateSumI_ML< float> ( Vector&,
                                             Vector&,
                                             const IntVector&,
-                                            const vector<Vector>&,
+                                            const std::vector<Vector>&,
                                             const BBox&,
                                             const int,
                                             const Level* ,
                                             const IntVector&,
                                             const IntVector&,
-                                            vector<IntVector>&,
-                                            vector<IntVector>&,
+                                            std::vector<IntVector>&,
+                                            std::vector<IntVector>&,
                                             StaticArray< constCCVariable< float > >& sigmaT4OverPi,
                                             StaticArray< constCCVariable< float > >& abskg,
                                             StaticArray< constCCVariable< int > >& cellType,

@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef RAY_H
-#define RAY_H
+#ifndef CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAY_H
+#define CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAY_H
 
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
@@ -75,7 +75,7 @@ namespace Uintah{
 
       //__________________________________
       //  public variables
-      bool d_solveBoundaryFlux;              //
+      bool d_solveBoundaryFlux{false};
 
       enum modifiesComputes{ modifiesVar,
                              computesVar};
@@ -158,32 +158,31 @@ namespace Uintah{
 
     //__________________________________
     //  public variables
-    bool d_coarsenExtraCells;               // instead of setting BC on the coarse level, coarsen fine level extra cells
+    bool d_coarsenExtraCells{false};               // instead of setting BC on the coarse level, coarsen fine level extra cells
 
     //______________________________________________________________________
     private:
 
-      double d_sigmaT4_thld;                // threshold values for determining the extents of ROI
-      double d_abskg_thld;
-      int    d_nDivQRays;                   // number of rays per cell used to compute divQ
-      int    d_nFluxRays;                   // number of rays per cell used to compute radiative flux
-      int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
-      IntVector d_haloCells;                // Number of cells a ray will traverse after it exceeds a fine patch boundary before
+      double d_sigmaT4_thld{DBL_MAX};                // threshold values for determining the extents of ROI
+      double d_abskg_thld{DBL_MAX};
+      int    d_nDivQRays{10};                   // number of rays per cell used to compute divQ
+      int    d_nFluxRays{1};                   // number of rays per cell used to compute radiative flux
+      int    d_orderOfInterpolation{-9};        // Order of interpolation for interior fine patch
+      IntVector d_haloCells{IntVector(-9,-9,-9)};                // Number of cells a ray will traverse after it exceeds a fine patch boundary before
                                             // it moves to a coarser level
-      double  d_haloLength;                 // Physical length a ray will traverse after it exceeds a fine patch boundary before
+      double  d_haloLength{-9};                 // Physical length a ray will traverse after it exceeds a fine patch boundary before
                                             // it moves to a coarser level. 
-
 
       std::vector <double>  _maxLengthFlux;
       std::vector <double>  _maxLength;
-      std::vector< int > _maxCells;
+      std::vector< int >    _maxCells;
 
-      bool d_solveDivQ;                     // switch for enabling computation of divQ
-      bool d_CCRays;
-      bool d_onOff_SetBCs;                  // switch for setting boundary conditions
-      bool d_isDbgOn;
-      bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
-      int  d_rayDirSampleAlgo;              // Ray sampling algorithm
+      bool d_solveDivQ{true};                     // switch for enabling computation of divQ
+      bool d_CCRays{false};
+      bool d_onOff_SetBCs{true};                  // switch for setting boundary conditions
+      bool d_isDbgOn{false};
+      bool d_applyFilter{false};                   // Allow for filtering of boundFlux and divQ results
+      int  d_rayDirSampleAlgo{NAIVE};              // Ray sampling algorithm
 
       enum rayDirSampleAlgorithm{ NAIVE,            // random sampled ray direction
                                   LATIN_HYPER_CUBE
@@ -202,15 +201,16 @@ namespace Uintah{
                       entireDomain          // The ROI is the entire computatonal Domain
                     };
 
-      int d_cellTypeCoarsenLogic;           // how to coarsen a cell type
+      int d_cellTypeCoarsenLogic{ROUNDUP};           // how to coarsen a cell type
+
       enum cellTypeCoarsenLogic{ ROUNDUP, ROUNDDOWN};
 
-      ROI_algo  d_ROI_algo;
+      ROI_algo  d_ROI_algo{entireDomain};
       Point d_ROI_minPt;
       Point d_ROI_maxPt;
 
       // Radiometer parameters
-      Radiometer* d_radiometer;
+      Radiometer* d_radiometer{nullptr};
 
       // Boundary flux constant variables  (consider using array container when C++ 11 is used)
       std::map <int,IntVector> d_dirIndexOrder;
@@ -459,4 +459,4 @@ namespace Uintah{
 
 } // namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAY_H
