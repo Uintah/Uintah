@@ -68,7 +68,7 @@ std::string RMCRTCommon::d_abskgBC_tag;
 
 std::vector<IntVector> RMCRTCommon::d_dbgCells;
 
-MaterialSet* RMCRTCommon::d_matlSet = 0;
+MaterialSet* RMCRTCommon::d_matlSet = nullptr;
 
 const VarLabel* RMCRTCommon::d_sigmaT4Label;
 const VarLabel* RMCRTCommon::d_abskgLabel;

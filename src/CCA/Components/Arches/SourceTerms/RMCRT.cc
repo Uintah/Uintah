@@ -413,11 +413,10 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     // coarsen data to the coarser levels. do it in reverse order
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
-      const bool modifies_abskg = false;
+      const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
 
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
-//      sched_setBoundaryConditions( level, sched, Task::OldDW, true );
     }
 
     //__________________________________
