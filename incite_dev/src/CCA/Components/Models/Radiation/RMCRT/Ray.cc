@@ -2651,13 +2651,15 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
                             const bool modifies_abskg,
                             const bool modifies_sigmaT4 )
 {
-  if(coarseLevel->hasFinerLevel()){
-    if (0){  // This turns on an ARCHES-SPECIFIC coarsening algorithm
+  if(coarseLevel->hasFinerLevel()) {
+    if (0) {  // This turns on an ARCHES-SPECIFIC coarsening algorithm
       printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
       sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg  ,  d_abskgLabel);
       sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4,  d_sigmaT4Label);
-    }else{
-      sched_CoarsenModelAlpha(coarseLevel, sched, Task::NewDW, modifies_abskg  , d_abskgLabel);
+    } else {
+      sched_CoarsenModelAlpha(coarseLevel, sched, Task::NewDW, modifies_abskg , d_abskgLabel);
+      sched_CarryForward_Var (coarseLevel, sched, d_abskgLabel  , RMCRTCommon::TG_CARRY_FORWARD);
+      sched_CarryForward_Var (coarseLevel, sched, d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
     }
   }
 }
@@ -3386,26 +3388,18 @@ Ray::sched_CoarsenModelAlpha( const LevelP& coarseLevel,
   tsk->requires(Task::NewDW,  d_sigmaT4Label,   nullptr, Task::FineLevel,levelShift , nullptr,Task::NormalDomain ,d_gn,0 );
   tsk->requires(Task::NewDW,  d_cellTypeLabel, nullptr, Task::FineLevel,levelShift , nullptr,Task::NormalDomain ,d_gn,0 );
 
-  if(modifies_abskg){
+  if (modifies_abskg) {
     tsk->modifies(d_cellTypeLabel);
     tsk->modifies(d_sigmaT4Label );
     tsk->modifies(d_abskgLabel  );
-    //tsk->requires(this_dw,d_cellTypeLabel , 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-    //tsk->requires(this_dw,d_sigmaT4Label  , 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-    //tsk->requires(this_dw,d_abskgLabel    , 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-  }else{
-//    tsk->requires(Task::OldDW,d_cellTypeLabel , d_gn, 0);  // needed for carryForward
-//    tsk->requires(Task::OldDW,d_sigmaT4Label , d_gn, 0);  // needed for carryForward
-//    tsk->requires(Task::OldDW,d_abskgLabel  , d_gn, 0);  // needed for carryForward
-//    tsk->computes(d_cellTypeLabel);
+  } else {
     tsk->computes(d_sigmaT4Label);
     tsk->computes(d_abskgLabel);
   }
 
-
-  sched->addTask(tsk, coarseLevel->eachPatch(), d_matlSet);
-
+  sched->addTask(tsk, coarseLevel->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT);
 }
+
 
 template< class T>
 void
@@ -3417,20 +3411,6 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
                         const bool modifies,
                         Task::WhichDW which_dw )
 {
-
-//  if ( doCarryForward( radCalc_freq ) ) {
-//    bool replaceVar = true;
-//    new_dw->transferFrom( old_dw,d_cellTypeLabel ,patches  , matls, replaceVar );
-//    new_dw->transferFrom( old_dw,d_sigmaT4Label ,patches  , matls, replaceVar );
-//    new_dw->transferFrom( old_dw,d_abskgLabel  ,patches  , matls, replaceVar );
-//
-//    //new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, replaceVar );
-//    //new_dw->transferFrom( old_dw, d_boundFluxLabel,     finePatches, matls, replaceVar );
-//    //new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, replaceVar );
-//
-//    return;
-//  }
-
   const Level* coarseLevel = getLevel(patches);
 
   int iLevel = coarseLevel->getIndex();
