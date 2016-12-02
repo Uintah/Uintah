@@ -2657,7 +2657,7 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
       sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg  ,  d_abskgLabel);
       sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4,  d_sigmaT4Label);
     } else {
-      sched_CoarsenModelAlpha(coarseLevel, sched, Task::NewDW, modifies_abskg , d_abskgLabel);
+      sched_CoarsenModelAlpha(coarseLevel, sched, Task::NewDW, modifies_abskg);
       sched_CarryForward_Var (coarseLevel, sched, d_abskgLabel  , RMCRTCommon::TG_CARRY_FORWARD);
       sched_CarryForward_Var (coarseLevel, sched, d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
     }
@@ -3354,8 +3354,7 @@ void
 Ray::sched_CoarsenModelAlpha( const LevelP& coarseLevel,
                               SchedulerP& sched,
                               Task::WhichDW this_dw,
-                              const bool modifies_abskg,
-                              const VarLabel* variable )
+                              const bool modifies_abskg )
 {
   std::string taskname = "Ray::CoarsenModelAlpha";
 
@@ -3366,11 +3365,11 @@ Ray::sched_CoarsenModelAlpha( const LevelP& coarseLevel,
   switch( subtype ) {
 
     case TypeDescription::double_type:
-    tsk = scinew Task( taskname, this, &Ray::CoarsenModelAlpha< double >, modifies_abskg, this_dw);
+    tsk = scinew Task( taskname, this, &Ray::CoarsenModelAlpha< double >, this_dw);
     break;
 
     case TypeDescription::float_type:
-    tsk = scinew Task( taskname, this, &Ray::CoarsenModelAlpha< float >, modifies_abskg, this_dw);
+    tsk = scinew Task( taskname, this, &Ray::CoarsenModelAlpha< float >, this_dw);
     break;
 
     default:
@@ -3408,7 +3407,6 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw,
-                        const bool modifies,
                         Task::WhichDW which_dw )
 {
   const Level* coarseLevel = getLevel(patches);
@@ -3666,7 +3664,6 @@ void Ray::CoarsenModelAlpha<float>( const ProcessorGroup*,
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
-                                    const bool modifies,
                                     Task::WhichDW which_dw );
 
 
@@ -3676,7 +3673,6 @@ void Ray::CoarsenModelAlpha<double>( const ProcessorGroup*,
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw,
-                                     const bool modifies,
                                      Task::WhichDW which_dw );
 
 
