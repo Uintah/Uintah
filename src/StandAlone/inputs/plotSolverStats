@@ -46,16 +46,11 @@ grep Time= tmp |grep Mem >& rawData.clean
 # Parse the output file.  This is gross
 echo "Now extracting the data"
 
-echo "?">&meanTime
-echo "?">>meanTime  # mean time data isn't collect the first 4 timestps
-echo "?">>meanTime
-echo "?">>meanTime
-
 grep "solve only" tmp   |  cut -d: -f2 | awk '{print $1}' >& solverTime
 grep "solve only" tmp   |  awk '{ match ($0, "solve only"); print substr($0, RSTART) }' | awk '{print $(NF -4)}' >& solverIters
 
-grep elap rawData.clean | cut -d"=" -f4 | awk '{print $1}'>& elapsedTime
-grep mean rawData.clean | cut -d":" -f2 | cut -d")" -f1 >> meanTime
+grep "Wall Time" rawData.clean | cut -d"=" -f4 | awk '{print $1}' >& elapsedTime
+grep EMA  rawData.clean        | cut -d"=" -f5 | awk '{print $1}' >& meanTime
 
 paste -d "  " elapsedTime meanTime solverTime solverIters >& data
 sed  -i s/","//g data    # eliminate any "," 
@@ -63,11 +58,12 @@ sed  -i s/","//g data    # eliminate any ","
 
 echo "Done extracting data"
 
-set procs   = `grep "MPI processes" tmp | awk '{print $2}'`
-set threads = `grep "threads per MPI process" tmp | awk '{print $2}'`
+@ procs     = `grep "MPI processes" tmp | awk '{print $2}'`
+@ threads   = `grep "threads per MPI process" tmp | awk '{print $2}'`
+
 set machine = `grep Machine    tmp | cut -d":" -f 2`
 set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
-
+set uda     = `grep "DataArchiver created" tmp | awk '{print $3}'`
 echo "Done extracting data"
 
 #______________________________________________________________________
@@ -108,8 +104,8 @@ set autoscale
 set origin 0.0, 0.5
 set grid xtics ytics
 
-set title "$date : $machine : $procs Processors : ($threads) Threads"
-set xlabel ' Elapsed Time[s]'
+set title "$date, $machine, $procs MPI ranks, $threads Threads, uda: $uda"
+set xlabel 'Timesteps'
 set y2tics
 set ylabel  'Time [s]'        textcolor lt 1
 set y2label 'Solver Time [s]' textcolor lt 2
@@ -118,8 +114,8 @@ set yrange[A_mean - 2*A_stddev:A_mean + 2*A_stddev]
 set y2range[B_mean - 2*B_stddev:B_mean + 2*B_stddev]
 
 
-plot 'data' using 1:2            t 'meanTime/timestep' with lines,\
-     'data' using 1:3  axes x1y2 t 'solver Time ' with lines
+plot 'data' using 2            t 'meanTime/timestep' with lines,\
+     'data' using 3  axes x1y2 t 'solver Time ' with lines
 #__________________________________
 set size 1.0,0.5
 set origin 0.0,0.0
@@ -131,7 +127,7 @@ set autoscale
 
 
 set yrange[C_min - .01*C_min:C_max + .01*C_max]
-plot 'data' using 1:4 t 'solver iterations' with lines
+plot 'data' using 4 t 'solver iterations' with lines
 
 set nomultiplot
 fin

@@ -45,18 +45,13 @@ grep Time= tmp |grep Mem >& rawData.clean
 echo "Now extracting the data"
 
 
-echo "?">&meanTime
-echo "?">>meanTime  # mean time data isn't collect the first 4 timestps
-echo "?">>meanTime
-echo "?">>meanTime
+grep "Wall Time" rawData.clean | cut -d"=" -f4 | awk '{print $1}' >& elapsedTime
+grep EMA  rawData.clean        | cut -d"=" -f5 | awk '{print $1}' >& meanTime
+grep Time rawData.clean        | cut -d"=" -f2 | awk '{print $1}' >& physicalTime
+grep delT rawData.clean        | cut -d"=" -f3 | awk '{print $1}' >& delT
 
-grep elap rawData.clean | cut -d"=" -f4 | awk '{print $1}'>& elapsedTime
-grep mean rawData.clean | cut -d":" -f2 | cut -d")" -f1 >> meanTime
-grep elap rawData.clean | cut -d"=" -f2 | cut -d" " -f1 >& physicalTime
-grep delT rawData.clean | cut -d"=" -f3 | cut -d"," -f1 >& delT
-
-grep delT rawData.clean | cut -d"=" -f5 | cut -d" " -f2  > memAve
-grep delT rawData.clean | cut -d"=" -f5 | cut -d" " -f5  > memMax
+grep Memory rawData.clean      | cut -d"=" -f6 | awk '{print $1}'  > memAve
+grep Memory rawData.clean      | cut -d"=" -f6 | awk '{print $4}'  > memMax
 
 awk 'NR>1{print $1-p} {p=$1}' elapsedTime >& timePerTimestep
 echo "?" >> timePerTimestep
@@ -65,10 +60,11 @@ echo "?" >> timePerTimestep
 paste -d "  " elapsedTime meanTime timePerTimestep physicalTime delT memAve memMax>& data
 sed  -i s/","//g data    # eliminate any ","
 
-set procs   = `grep "MPI processes" tmp | awk '{print $2}'`
-set threads = `grep "threads per MPI process" tmp | awk '{print $2}'`
+@ procs     = `grep "MPI processes" tmp | awk '{print $2}'`
+@ threads   = `grep "threads per MPI process" tmp | awk '{print $2}'`
 set machine = `grep Machine    tmp | cut -d":" -f 2`
 set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
+set uda     = `grep "DataArchiver created" tmp | awk '{print $3}'`
 
 echo "Done extracting data"
 
@@ -114,7 +110,7 @@ set grid xtics ytics
 #__________________________________ TOP
 set size   1.0, 0.33
 set origin 0.0, 0.66
-set title "$date : $machine : $procs Processors: ($threads) Threads"
+set title "$date, $machine, $procs MPI ranks, $threads Threads, uda: $uda"
 set xlabel "Elaspsed Time [s]" offset 0,+0.5
 set ylabel 'Delt'           textcolor lt 1
 set y2label 'Physical Time' textcolor lt 2
@@ -133,7 +129,7 @@ set ylabel 'Mean Time/timestep' textcolor lt 1
 set y2label 'Time per timestep [sec]'     textcolor lt 2
 set y2tics
 set autoscale
-set yrange[B_mean - 2*B_stddev:B_mean + 2*B_stddev]
+set yrange[0:B_mean + B_stddev]
 
 plot 'data' using 2           t 'meanTime/timestep' with lines, \
      'data' using 3 axes x1y2 t 'time/timestep' with lines
