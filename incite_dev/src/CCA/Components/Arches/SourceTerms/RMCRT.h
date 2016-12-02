@@ -107,7 +107,7 @@ public:
                    DataWarehouse* new_dw );
 
   enum GRAPH_TYPE {
-      TG_CARRY_FORWARD = 0              // carry forward task graph
+      TG_CARRY_FORWARD = 0              // carry forward taskgraph
     , TG_RMCRT         = 1              // RMCRT radiation taskgraph
     , NUM_GRAPHS
   };
@@ -221,10 +221,12 @@ private:
   SimulationStateP       _sharedState;
   ProblemSpecP           _ps;              // needed for extraSetup()
 
-  std::string   _abskg_label_name;
-  std::string   _T_label_name;
+  std::string  _abskg_label_name;
+  std::string  _abskt_label_name;
+  std::string  _T_label_name;
 
   const VarLabel * _abskgLabel{nullptr};
+  const VarLabel * _absktLabel{nullptr};
   const VarLabel * _tempLabel{nullptr};
   const VarLabel * _radFluxE_Label{nullptr};
   const VarLabel * _radFluxW_Label{nullptr};
@@ -233,9 +235,19 @@ private:
   const VarLabel * _radFluxT_Label{nullptr};
   const VarLabel * _radFluxB_Label{nullptr};
 
+
+  // variables needed for particles
+  //
+  bool _radiateAtGasTemp; // this flag is arbitrary for no particles
+  std::vector<std::string> _temperature_name_vector;
+  std::vector<std::string> _absk_name_vector;
+  std::vector< const VarLabel*> _absk_label_vector;
+  std::vector< const VarLabel*> _temperature_label_vector;
+  int _nQn_part{0} ;                                // number of quadrature nodes in DQMOM
+
   Ghost::GhostType _gn{Ghost::None};
   Ghost::GhostType _gac{Ghost::AroundCells};
-
+  
   TypeDescription::Type _FLT_DBL{TypeDescription::double_type};        // Is RMCRT algorithm using doubles or floats for communicated variables
 
 }; // end RMCRT

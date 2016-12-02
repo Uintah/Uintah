@@ -29,6 +29,8 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
+#include <Core/Containers/StaticArray.h>
+
 
 #include <fstream>
 
@@ -246,7 +248,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
   std::string taskname = "RMCRTCommon::sigmaT4";
 
   Task* tsk = nullptr;
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
     tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, includeEC );
   } else {
     tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, includeEC );
@@ -275,18 +277,77 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
+
+
+//void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
+                            //SchedulerP& sched,
+                            //Task::WhichDW this_dw,
+                            //const bool modifies,
+                            //const int radCalc_freq)
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+void
+RMCRTCommon::sched_sigmaT4Arches( const LevelP& level,
+                                  SchedulerP& sched,
+                                  Task::WhichDW cellType_dw,
+                                  std::vector<const VarLabel* > vTemp,
+                                  std::vector<const VarLabel* > vAbsk,
+                                  const bool includeEC )
+{
+  std::string taskname = "RMCRTCommon::sigmaT4";
+
+  Task* tsk = nullptr;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4Arches<double>, cellType_dw, vTemp,vAbsk,includeEC );
+  } else {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4Arches<float>, cellType_dw, vTemp,vAbsk, includeEC );
+  }
+
+  printSchedule(level,dbg,"RMCRTCommon::sched_sigmaT4");
+
+  //__________________________________
+  // Be careful if you modify this.  This additional logic
+  // is needed when restarting from an uda that
+  // was previously run without RMCRT.  It's further
+  // complicated when the calc_frequency >1  If you change
+  // it then test by restarting from an uda that was
+  // previously run with Arches + DO with calc_frequency > 1.
+  bool old_dwExists = false;
+  if( sched->get_dw(0) ){
+    old_dwExists = true;
+  }
+
+  if(old_dwExists){
+    tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
+  }
+
+  tsk->requires(cellType_dw,d_cellTypeLabel ,    d_gn, 0 );
+  //d_compTempLabel
+
+  for (unsigned int i=0; i< vTemp.size() ; i++){
+      tsk->requires( Task::OldDW, vAbsk[i],    d_gn, 0 ); // should be new, but arches doesn't have them, live with lag
+      tsk->requires( Task::NewDW, vTemp[i],    d_gn, 0 ); 
+  }
+
+  tsk->computes(d_sigmaT4Label);
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
+}
+
 //______________________________________________________________________
 // Compute total intensity over all wave lengths (sigma * Temperature^4/pi)
 //______________________________________________________________________
 template< class T>
 void
 RMCRTCommon::sigmaT4( const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     Task::WhichDW which_temp_dw,
-                     const bool includeEC )
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      Task::WhichDW which_temp_dw,
+                      const bool includeEC )
 {
   //__________________________________
   //  do the work
@@ -317,6 +378,93 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
     }
   }
 }
+
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+template< class T>
+void
+RMCRTCommon::sigmaT4Arches( const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            Task::WhichDW which_celltype_dw,
+                            std::vector<const VarLabel* > vTemp,
+                            std::vector<const VarLabel* > vAbsk,
+                            const bool includeEC )
+{
+//  //__________________________________
+//  //  Carry Forward
+//  if ( doCarryForward( radCalc_freq ) ) {
+//    printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::sigmaT4 carryForward (sigmaT4)" );
+//
+//    new_dw->transferFrom( old_dw, d_sigmaT4Label, patches, matls, true );
+//    return;
+//  }
+
+  //__________________________________
+  //  do the work
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"Doing RMCRTCommon::sigmaT4");
+
+    double sigma_over_pi = d_sigma/M_PI;
+
+    constCCVariable<int> cellType;
+    CCVariable< T > sigmaT4;             // sigma T ^4/pi
+
+    DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
+    celltype_dw->get(cellType,  d_cellTypeLabel  ,  d_matl, patch, Ghost::None, 0);
+    new_dw->allocateAndPut(sigmaT4, d_sigmaT4Label,   d_matl, patch);
+
+    int n = vAbsk.size(); 
+    StaticArray< constCCVariable<double> > saAbsk(n);
+    StaticArray< constCCVariable<double> > saTemp(n);
+    for (int ix=0;  ix< n; ix++){
+       old_dw->get(saAbsk[ix],vAbsk[ix], d_matl , patch,Ghost::None, 0  );   
+       new_dw->get(saTemp[ix],vTemp[ix], d_matl , patch,Ghost::None, 0  );
+    } 
+
+    // set the cell iterator
+    CellIterator iter = patch->getCellIterator();
+    if(includeEC){
+      iter = patch->getExtraCellIterator();
+    }
+
+    //for (;!iter.done();iter++){
+    //const IntVector& c = *iter;
+    //double T_sqrd = temp[c] * temp[c];
+    //sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
+    //}
+      
+      
+    for (;!iter.done();iter++){
+      const IntVector& c = *iter;
+      if ( cellType[c] == -1){
+        double T_sqrd = saTemp[0][c] * saTemp[0][c];
+        sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
+      }else{
+
+        double sumT=0;
+        double sumk=0;
+        for (int ix=0; ix<n; ix++){  // weighted average on K
+          double T_sqrd = saTemp[ix][c] * saTemp[ix][c];
+          sumT+=T_sqrd*T_sqrd*saAbsk[ix][c];
+          sumk+=saAbsk[ix][c];
+        }
+        if (sumk>1e-16){
+          sigmaT4[c] = sigma_over_pi * sumT/sumk;
+        }else{
+          sigmaT4[c]=0.0;
+        }
+      }
+    }
+  }
+}
+
 
 
 //______________________________________________________________________
@@ -699,7 +847,7 @@ RMCRTCommon::updateSumI (const Level* level,
     sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
 
     intensity = intensity * fs;
-
+    break;
 //    //__________________________________
 //    //  BULLETPROOFING
 //    if ( std::isinf(sumI) || std::isnan(sumI) ){

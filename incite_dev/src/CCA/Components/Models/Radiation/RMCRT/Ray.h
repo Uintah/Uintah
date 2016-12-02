@@ -57,7 +57,7 @@
  * @author Isaac Hunsaker
  * @date July 8, 2011
  *
- * @brief This file traces N (usually 1000+) rays per cell until the intensity reaches a predetermined threshold
+ * @brief This file traces N rays per cell until the intensity reaches a predetermined threshold
  *
  *
  */
@@ -173,12 +173,18 @@ namespace Uintah{
       double  d_haloLength;                 // Physical length a ray will traverse after it exceeds a fine patch boundary before
                                             // it moves to a coarser level. 
 
+
+      std::vector <double>  _maxLengthFlux;
+      std::vector <double>  _maxLength;
+      std::vector< int > _maxCells;
+
       bool d_solveDivQ;                     // switch for enabling computation of divQ
       bool d_CCRays;
       bool d_onOff_SetBCs;                  // switch for setting boundary conditions
       bool d_isDbgOn;
       bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
       int  d_rayDirSampleAlgo;              // Ray sampling algorithm
+
       enum rayDirSampleAlgorithm{ NAIVE,            // random sampled ray direction
                                   LATIN_HYPER_CUBE
                                 };
@@ -191,6 +197,7 @@ namespace Uintah{
       enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box
                       dynamic,              // user specifies thresholds that are used to dynamically determine ROI
                       patch_based,          // The patch extents + halo are the ROI
+                      coneGeometry_based,   // The halo values are computed on a per level basis, determined by ray count and grid resolution
                       boundedRayLength,     // the patch extents + boundedRayLength/Dx are the ROI
                       entireDomain          // The ROI is the entire computatonal Domain
                     };
@@ -296,6 +303,7 @@ namespace Uintah{
                            unsigned long int& size,
                            double& sumI,
                            MTRand& mTwister);
+
      //__________________________________
      void computeExtents( LevelP level_0,
                           const Level* fineLevel,
@@ -318,6 +326,7 @@ namespace Uintah{
                     bool modifies_divQFilt);
 
       //__________________________________
+      /** @brief  */
       inline bool containsCell( const IntVector &low,
                                 const IntVector &high,
                                 const IntVector &cell,
@@ -360,10 +369,12 @@ namespace Uintah{
                                         const int bin_i = 0,
                                         const int bin_j = 0);
 
+
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,
                           constCCVariable<int> &celltype,
                           std::vector<int> &boundaryFaces);
+
       //______________________________________________________________________
       //   Boundary Conditions
       template< class T >
@@ -375,9 +386,11 @@ namespace Uintah{
                                   Task::WhichDW temp_dw,
                                   const bool backoutTemp );
 
-    int numFaceCells( const Patch* patch,
-                      const Patch::FaceIteratorType type,
-                      const Patch::FaceType face );
+      //__________________________________
+      /** @brief  */
+      int numFaceCells( const Patch* patch,
+                        const Patch::FaceIteratorType type,
+                        const Patch::FaceType face );
 
     //_____________________________________________________________________
     //    Multiple Level tasks
@@ -417,6 +430,21 @@ namespace Uintah{
                        const MaterialSubset* matls,
                        DataWarehouse*,
                        DataWarehouse* new_dw );
+
+   void sched_CoarsenModelAlpha( const LevelP& coarseLevel,
+                                 SchedulerP& sched,
+                                 Task::WhichDW this_dw,
+                                 const bool modifies_abskg,
+                                 const VarLabel* variable );
+
+   template< class T >
+   void CoarsenModelAlpha( const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const bool modifies,
+                           Task::WhichDW which_dw );
 
     //______________________________________________________________________
     //  Helpers

@@ -300,14 +300,14 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           }
         }
 
-        if ( (*volFraction)[c] < SMALLNUM ) {
+        //if ( (*volFraction)[c] < SMALLNUM ) {
           if ( (*volFraction)[cxp] > 0.0 ) {
             (*flux)[c] = (*flux)[c] + (*F)[cxp];
             Q_in   += (*F)[cxp]*a;
             Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a;
             darea  += a;
           }
-        }
+        //}
 
         (*total)[c] = Q_in / (darea+SMALLNUM);
         (*area)[c]  = darea;

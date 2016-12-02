@@ -38,7 +38,14 @@
 #include <time.h>
 #include <fstream>
 
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+
 #include <include/sci_defs/uintah_testdefs.h.in>
+
+
+#define FUZZ 1e-12          // numerical fuzz
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 #define DEBUG -9     // 1: divQ, 2: boundFlux, 3: scattering
@@ -290,6 +297,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
       } else if ( type == "patch_based" ){
         d_ROI_algo = patch_based;
+      } else if ( type == "coneGeometry_based" ){
+        d_ROI_algo = coneGeometry_based;
       }
 
     //__________________________________
@@ -331,19 +340,19 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   }
 
   // special conditions when using floats and multi-level
-  if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
+  //if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
 
-    string abskgName = d_compAbskgLabel->getName();
-    if ( rmcrt_ps->isLabelSaved( abskgName ) ){
-      ostringstream warn;
-      warn << "  RMCRT:ERROR: You're saving a variable ("<< abskgName << ") that doesn't exist on all levels."<< endl;
-      warn << "  Use either: " << endl;
-      warn << "    <save label = 'abskgRMCRT' />             (FLOAT version of abskg, local to RMCRT)" << endl;
-      warn << "             or " << endl;
-      warn << "    <save label = 'abskg'  levels = -1 />     ( only saved on the finest level )" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
+    //string abskgName = d_compAbskgLabel->getName();
+    //if ( rmcrt_ps->isLabelSaved( abskgName ) ){
+      //ostringstream warn;
+      //warn << "  RMCRT:ERROR: You're saving a variable ("<< abskgName << ") that doesn't exist on all levels."<< endl;
+      //warn << "  Use either: " << endl;
+      //warn << "    <save label = 'abskgRMCRT' />             (FLOAT version of abskg, local to RMCRT)" << endl;
+      //warn << "             or " << endl;
+      //warn << "    <save label = 'abskg'  levels = -1 />     ( only saved on the finest level )" << endl;
+      //throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    //}
+  //}
   d_sigma_over_pi = d_sigma/M_PI;
 
 
@@ -493,7 +502,7 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
   }
 
-  if( modifies_divQ ){
+  if( modifies_divQ ) {
     tsk->modifies( d_divQLabel );
     tsk->modifies( d_boundFluxLabel );
     tsk->modifies( d_radiationVolqLabel );
@@ -1029,9 +1038,9 @@ struct solveDivQFunctor {
       //divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
       m_divQ( i, j, k ) = -4.0 * M_PI * m_abskg( i, j, k ) * ( m_sigmaT4OverPi( i, j, k ) - (sumI / m_d_nDivQRays) );
 
-      // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+      //radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
       m_radiationVolq( i, j, k ) = 4.0 * M_PI * (sumI / m_d_nDivQRays);
-
 
     }  // end operator()
 };  // end solveDivQFunctor
@@ -1172,6 +1181,9 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
+
+          if (celltype[origin] != -1)
+              continue;
 
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
@@ -1320,8 +1332,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
       //  Compute divQ
       divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
 
-      // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-      radiationVolq[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
+      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+      radiationVolq[origin] = 4.0 * M_PI *  (sumI/d_nDivQRays) ;
 /*`==========TESTING==========*/
 #if DEBUG == 1
     if( isDbgCell(origin) ) {
@@ -1363,6 +1375,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                                Task::WhichDW celltype_dw,
                                bool modifies_divQ )
 {
+
   int maxLevels = level->getGrid()->numLevels() - 1;
   int L_indx = level->getIndex();
 
@@ -1394,6 +1407,59 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     }
   }
+    if ( d_ROI_algo == coneGeometry_based) {          // patch_based we know the number of ghostCells
+      // max levels is one less than the total number of levels 
+      _maxLength =  vector <double>   (maxLevels+1,1e10);
+      _maxLengthFlux =  vector <double>   (maxLevels+1,1e100);
+      _maxCells  =  vector< int >  (maxLevels+1, 1234567);
+
+      for (int i=0; i<maxLevels; i++){
+      LevelP levelFine = level->getGrid()->getLevel(maxLevels-i);
+      Vector dxyzFine =  levelFine->dCell();
+        LevelP levelCoarse = level->getGrid()->getLevel(maxLevels-i-1);
+        Vector dxyzCoarse = levelCoarse->dCell();
+
+            _maxLength[maxLevels -i]=0.0;
+            _maxLengthFlux[maxLevels -i]=0.0;
+            _maxCells[maxLevels -i]=0;
+          for (int j=0; j<3; j++){
+
+            //int RR= round(dxyzCoarse[j]/dxyzFine[j]);
+               
+
+            //double fudge =4.0;
+            double fudge =1.0;
+            _maxLength[maxLevels-i] =std::max(fudge*dxyzCoarse[j]*((double) d_nDivQRays-2.0)/sqrt((double) d_nDivQRays-1.0)/4.0,_maxLength[maxLevels-i]); // hard coded for Refinement
+            _maxLengthFlux[maxLevels-i] = std::max(fudge*dxyzCoarse[j]*( (double) d_nFluxRays*2.0 - 2.0)/sqrt((double) d_nFluxRays*2.0 - 1.0)/4.0,_maxLengthFlux[maxLevels-i]); //
+            _maxCells[maxLevels-i] =(int) std::max((int) (ceil(max(_maxLength[maxLevels-i],_maxLengthFlux[maxLevels-i])/dxyzFine[j]) +0.5) + 4 ,_maxCells[maxLevels-i]); // 
+               
+          // SINCE GET REGION ISN'T WORKING, get 4 ghost cells, only access up to 3
+             //int FineLevelGhost=5;
+            //_maxCells[maxLevels-i] = FineLevelGhost; // 
+            //_maxLength[maxLevels-i] = min(((double) FineLevelGhost)*dxyzFine[j],_maxLength[maxLevels-i] ); // hard coded for Refinement
+            //_maxLengthFlux[maxLevels-i] =min(((double) FineLevelGhost)*dxyzFine[j],_maxLength[maxLevels-i])  ; //
+
+
+            //_maxCells[maxLevels-i] = 0; // 
+            //_maxLength[maxLevels-i] = 0.0; // hard coded for Refinement
+            //_maxLengthFlux[maxLevels-i] =0.0 ; //
+            
+            //_maxCells[maxLevels-i] = 2000; // 
+            //_maxLength[maxLevels-i] = 0.0; // hard coded for Refinement
+            //_maxLengthFlux[maxLevels-i] =0.0 ; //
+
+          }
+  
+          //proc0cout << _maxCells[maxLevels-i] << " " << _maxLength[maxLevels-i] <<  " " << i << " " <<dxyzFine  << " " <<dxyzCoarse  <<"\n";
+      }
+          //proc0cout << _maxCells[0] << " " << _maxLength[0] <<  " " << "\n";
+    }
+
+
+          //proc0cout << d_ROI_algo <<  " dereky" << "\n";
+
+
+
 
   printSchedule(level, dbg, taskname);
 
@@ -1402,7 +1468,6 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   // finest level:
   if ( d_ROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
-
     //__________________________________
     // logic for determining number d_haloCells
     if( d_haloLength > 0 ){
@@ -1417,6 +1482,10 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem );
     tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem );
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, maxElem );
+  } else if(d_ROI_algo == coneGeometry_based){
+    tsk->requires( abskg_dw,     d_abskgLabel,     d_gac, _maxCells[maxLevels] );
+    tsk->requires( sigma_dw,     d_sigmaT4Label,   d_gac, _maxCells[maxLevels] );
+    tsk->requires( celltype_dw , d_cellTypeLabel , d_gac, _maxCells[maxLevels] );
   } else {                                        // we don't know the number of ghostCells so get everything
     tsk->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX );
     tsk->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX );
@@ -1537,6 +1606,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+
+
+
   }
 
   abskg_fine         = abskg[maxLevels-1];
@@ -1572,6 +1644,43 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       sigmaT4OverPi_fine = sigmaT4OverPi[L];
     }
 
+    if ( d_ROI_algo == coneGeometry_based) {          
+      int L = maxLevels - 1;
+      dbg << " getting fine level data across L-" << L << endl;
+
+
+      abskg_dw->get(abskg[L],d_abskgLabel, d_matl , finePatch, d_gac, _maxCells[L]);
+      sigmaT4_dw->get(sigmaT4OverPi[L],d_sigmaT4Label, d_matl , finePatch,d_gac,_maxCells[L]);
+      celltype_dw->get(cellType[L],d_cellTypeLabel, d_matl , finePatch,d_gac, _maxCells[L]);
+
+
+
+// copy bounded-RMCRT   - still doesn't work
+      //fineLevel_ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
+      //fineLevel_ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
+
+      //finePatch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0), 
+                                                     //Ghost::AroundCells, _maxCells[L], fineLevel_ROI_Lo, fineLevel_ROI_Hi);    
+
+      //abskg_dw->getRegion(   abskg[L],          d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      //sigmaT4_dw->getRegion( sigmaT4OverPi[L],  d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      //celltype_dw->getRegion( cellType[L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+
+
+ //Not Working, it appears probably infrastructure bug, could be ROI set by component are wrong
+      //computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,
+                     //fineLevel_ROI_Lo, fineLevel_ROI_Hi,
+                     //regionLo,  regionHi);
+      //abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      //sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      //celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl ,fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+
+      //cout <<*finePatch<< " " << fineLevel_ROI_Lo <<  " " << fineLevel_ROI_Hi  << " " << regionLo[0]  <<" " << regionLo[1] << " " << regionHi[0] <<" " << regionHi[1] <<  " \n";
+
+      abskg_fine         = abskg[L];
+      sigmaT4OverPi_fine = sigmaT4OverPi[L];
+    }
+
     CCVariable<double> divQ_fine;
     CCVariable<Stencil7> boundFlux_fine;
     CCVariable<double> radiationVolq_fine;
@@ -1592,6 +1701,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         boundFlux_fine[c].initialize(0.0);
       }
     }
+    unsigned long int size = 0;                   // current size of PathInde
 
     //______________________________________________________________________
     //          B O U N D A R Y F L U X
@@ -1606,6 +1716,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
       for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
+
+        if (cellType[maxLevels-1][origin]!=-1) // don't solve for fluxes in intrusions
+          continue;
 
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
@@ -1697,6 +1810,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
         IntVector origin = *iter;
+
+        if (cellType[maxLevels-1][origin]!=-1) // don't solve for fluxes in intrusions
+          continue;
+
         Point CC_pos = fineLevel->getCellPosition(origin);
 
         if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
@@ -1744,8 +1861,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         //  Compute divQ
         divQ_fine[origin] = -4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/d_nDivQRays) );
 
-        // radiationVolq is the incident energy per cell (W/m^2) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-        radiationVolq_fine[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
+        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+        radiationVolq_fine[origin] = 4.0 * M_PI *  (sumI/d_nDivQRays) ;
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
@@ -1819,6 +1936,14 @@ Ray::computeExtents(LevelP level_0,
     fineLevel_ROI_Hi = patchHi + d_haloCells;
     dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi <<  " d_haloCells" << d_haloCells << endl;
 
+  } else if ( d_ROI_algo == coneGeometry_based) {          
+
+    IntVector patchLo = patch->getExtraCellLowIndex();
+    IntVector patchHi = patch->getExtraCellHighIndex();
+    fineLevel_ROI_Lo = patchLo - IntVector(_maxCells[maxLevels-1],_maxCells[maxLevels-1],_maxCells[maxLevels-1]);
+    fineLevel_ROI_Hi = patchHi + IntVector(_maxCells[maxLevels-1],_maxCells[maxLevels-1],_maxCells[maxLevels-1]);
+    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << endl;
+
   }
 
   // region must be within a finest Level including extraCells.
@@ -1846,8 +1971,13 @@ Ray::computeExtents(LevelP level_0,
 
     if( level->hasCoarserLevel() ){
 
-      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - d_haloCells;
-      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + d_haloCells;
+      if ( d_ROI_algo == coneGeometry_based ){
+        regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - IntVector(_maxCells[L],_maxCells[L],_maxCells[L]);
+        regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + IntVector(_maxCells[L],_maxCells[L],_maxCells[L]);
+      }else{
+        regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - d_haloCells;
+        regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + d_haloCells;
+      }
 
       // region must be within a level
       IntVector levelLo, levelHi;
@@ -2519,14 +2649,16 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
                             SchedulerP& sched,
                             const bool modifies_abskg,
-                            const bool modifiesd_sigmaT4 )
+                            const bool modifies_sigmaT4 )
 {
   if(coarseLevel->hasFinerLevel()){
-    printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel );
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4,  d_sigmaT4Label );
-    sched_CarryForward_Var(coarseLevel, sched, d_abskgLabel, RMCRTCommon::TG_CARRY_FORWARD);
-    sched_CarryForward_Var(coarseLevel, sched, d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
+    if (0){  // This turns on an ARCHES-SPECIFIC coarsening algorithm
+      printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
+      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg  ,  d_abskgLabel);
+      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4,  d_sigmaT4Label);
+    }else{
+      sched_CoarsenModelAlpha(coarseLevel, sched, Task::NewDW, modifies_abskg  , d_abskgLabel);
+    }
   }
 }
 
@@ -2612,7 +2744,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                            coarsePatch, coarseLevel, fineLevel);
 
       //__________________________________
-      //  Coarsen along the edge of the compuational domain
+      //  Coarsen along the edge of the computational domain
       if( d_coarsenExtraCells && coarsePatch->hasBoundaryFaces() ){
 
         for(int i=0;i<finePatches.size();i++){
@@ -2933,8 +3065,13 @@ void Ray::computeCellType( const ProcessorGroup*,
       CC_pos = level->getCellPosition(cur);           // position could be outside of domain
       in_domain = domain_BB.inside(CC_pos);
 
-      bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
-      bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
+      //bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
+      //bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
+
+      bool ray_outside_ROI    = (_maxLength[L]<tMaxV[dir]); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
+      bool ray_outside_Region = (_maxLength[L]<tMaxV[dir]); 
+      //bool ray_outside_ROI    = (false); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
+      //bool ray_outside_Region = (false); 
 
       bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
       bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
@@ -2973,12 +3110,12 @@ void Ray::computeCellType( const ProcessorGroup*,
 #endif
       }
 
+      in_domain = in_domain && cellType[L][cur] == d_flowCell; // best place, in case ray moved to coarser grid and isn't a wall (rare scenario?)
       //__________________________________
       //  update marching variables
       double distanceTraveled = (tMaxV[dir] - old_length);
       old_length     = tMaxV[dir];
       tMaxV_prev     = tMaxV;
-
       tMaxV[dir]     = tMaxV[dir] + tDelta[L][dir];
 
       ray_location[0] = ray_location[0] + ( distanceTraveled  * ray_direction[0] );
@@ -2988,16 +3125,13 @@ void Ray::computeCellType( const ProcessorGroup*,
       //__________________________________
       // when moving to a coarse level tmax will change only in the direction the ray is moving
       if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ){
-
         double rayDx_Level = ray_location[dir] - ( CC_pos(dir) - 0.5*Dx[L][dir] );
         double tMax_tmp    = ( sign[dir] * Dx[L][dir] - rayDx_Level ) * inv_direction[dir];
-
         tMaxV        = tMaxV_prev;
         tMaxV[dir]  += tMax_tmp;
       }
 
-      rayLength    += distanceTraveled;
-
+      rayLength         += distanceTraveled;
       optical_thickness += abskg[prevLev][prevCell]*distanceTraveled;
       nRaySteps++;
 
@@ -3208,6 +3342,363 @@ template void  Ray::updateSumI_ML< double> ( Vector&,
                                              unsigned long int& ,
                                              double& ,
                                              MTRand&);
+
+
+
+// This is an ARCHES-SPECIFIC Coarsening algorithm that attempts to maintain a constant emissive power between fine and coarse grids.
+//
+//
+void
+Ray::sched_CoarsenModelAlpha( const LevelP& coarseLevel,
+                              SchedulerP& sched,
+                              Task::WhichDW this_dw,
+                              const bool modifies_abskg,
+                              const VarLabel* variable )
+{
+  std::string taskname = "Ray::CoarsenModelAlpha";
+
+
+  const Uintah::TypeDescription* td = d_abskgLabel->typeDescription();
+  const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
+  Task* tsk = nullptr;
+  switch( subtype ) {
+
+    case TypeDescription::double_type:
+    tsk = scinew Task( taskname, this, &Ray::CoarsenModelAlpha< double >, modifies_abskg, this_dw);
+    break;
+
+    case TypeDescription::float_type:
+    tsk = scinew Task( taskname, this, &Ray::CoarsenModelAlpha< float >, modifies_abskg, this_dw);
+    break;
+
+    default:
+    throw InternalError("Ray::couldn't identify coarsening type (float or double?)", __FILE__, __LINE__);
+  }
+
+  // require finest level ONLY
+  int levelShift= coarseLevel->getGrid()->numLevels() - 1 - coarseLevel->getIndex();
+
+  tsk->requires(Task::NewDW,VarLabel::find("surf_out_normX"),0,Task::FineLevel,levelShift,0,Task::NormalDomain,d_gac,1);
+  tsk->requires(Task::NewDW,VarLabel::find("surf_out_normY"),0,Task::FineLevel,levelShift,0,Task::NormalDomain,d_gac,1);
+  tsk->requires(Task::NewDW,VarLabel::find("surf_out_normZ"),0,Task::FineLevel,levelShift,0,Task::NormalDomain,d_gac,1);
+    
+  tsk->requires(Task::NewDW,  d_abskgLabel,    nullptr, Task::FineLevel,levelShift , nullptr,Task::NormalDomain ,d_gn,0 );
+  tsk->requires(Task::NewDW,  d_sigmaT4Label,   nullptr, Task::FineLevel,levelShift , nullptr,Task::NormalDomain ,d_gn,0 );
+  tsk->requires(Task::NewDW,  d_cellTypeLabel, nullptr, Task::FineLevel,levelShift , nullptr,Task::NormalDomain ,d_gn,0 );
+
+  if(modifies_abskg){
+    tsk->modifies(d_cellTypeLabel);
+    tsk->modifies(d_sigmaT4Label );
+    tsk->modifies(d_abskgLabel  );
+    //tsk->requires(this_dw,d_cellTypeLabel , 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    //tsk->requires(this_dw,d_sigmaT4Label  , 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    //tsk->requires(this_dw,d_abskgLabel    , 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+  }else{
+//    tsk->requires(Task::OldDW,d_cellTypeLabel , d_gn, 0);  // needed for carryForward
+//    tsk->requires(Task::OldDW,d_sigmaT4Label , d_gn, 0);  // needed for carryForward
+//    tsk->requires(Task::OldDW,d_abskgLabel  , d_gn, 0);  // needed for carryForward
+//    tsk->computes(d_cellTypeLabel);
+    tsk->computes(d_sigmaT4Label);
+    tsk->computes(d_abskgLabel);
+  }
+
+
+  sched->addTask(tsk, coarseLevel->eachPatch(), d_matlSet);
+
+}
+
+template< class T>
+void
+Ray::CoarsenModelAlpha( const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw,
+                        const bool modifies,
+                        Task::WhichDW which_dw )
+{
+
+//  if ( doCarryForward( radCalc_freq ) ) {
+//    bool replaceVar = true;
+//    new_dw->transferFrom( old_dw,d_cellTypeLabel ,patches  , matls, replaceVar );
+//    new_dw->transferFrom( old_dw,d_sigmaT4Label ,patches  , matls, replaceVar );
+//    new_dw->transferFrom( old_dw,d_abskgLabel  ,patches  , matls, replaceVar );
+//
+//    //new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, replaceVar );
+//    //new_dw->transferFrom( old_dw, d_boundFluxLabel,     finePatches, matls, replaceVar );
+//    //new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, replaceVar );
+//
+//    return;
+//  }
+
+  const Level* coarseLevel = getLevel(patches);
+
+  int iLevel = coarseLevel->getIndex();
+  int maxLevels = coarseLevel->getGrid()->numLevels() - 1;
+  int levelOffSet = maxLevels - iLevel;
+
+  const Level* fineLevel = new_dw->getGrid()->getLevel(maxLevels).get_rep();
+  IntVector r_Ratio=IntVector(1,1,1);
+
+  for (int i= iLevel; i< maxLevels; i++){
+    const Level* IntermediateLevel = new_dw->getGrid()->getLevel(i+1).get_rep();
+    r_Ratio = r_Ratio* IntermediateLevel->getRefinementRatio();
+  }
+  double overallRefinementRatio =( (double) r_Ratio.x()*(double) r_Ratio.y()*(double) r_Ratio.z());
+
+  IntVector xadjust(1,0,0);
+  IntVector yadjust(0,1,0);
+  IntVector zadjust(0,0,1);
+
+  for (int p=0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+
+    Level::selectType finePatches;
+    patch->getFineLevelPatches(finePatches,levelOffSet);
+
+    CCVariable<int> cellTypeCoarse;
+    new_dw->allocateAndPut(cellTypeCoarse, d_cellTypeLabel, d_matl, patch);
+    cellTypeCoarse.initialize(-1);
+
+    CCVariable<T> sigmaT4Coarse;
+    CCVariable<T> abskgCoarse;
+    new_dw->allocateAndPut(sigmaT4Coarse, d_sigmaT4Label, d_matl, patch);
+    new_dw->allocateAndPut(abskgCoarse, d_abskgLabel, d_matl, patch);
+    sigmaT4Coarse.initialize(1000.0);
+    abskgCoarse.initialize(1.0);
+    cellTypeCoarse.initialize(8);
+    IntVector cl, ch, fl, fh;
+    IntVector cl2, ch2;
+    Vector DxyzCoarse = patch->dCell();                   
+
+    double CharacteristicAreaCoarse = (DxyzCoarse.x()* DxyzCoarse.y() + DxyzCoarse.z()* DxyzCoarse.x() + DxyzCoarse.z()* DxyzCoarse.y()) / 3.0;
+
+    for (int i=0; i < finePatches.size(); i++){  // This abstraction will not scale I think, because we are looping over ALL patches which for the production case is 128,000 patches.
+
+      constSFCXVariable<double> xNormal;
+      constSFCYVariable<double> yNormal;
+      constSFCZVariable<double> zNormal;
+
+      constCCVariable<int> cellType;
+
+      constCCVariable<T> sigmaT4;
+      constCCVariable<T> abskg;
+
+      const Patch* finePatch = finePatches[i];
+      Vector Dxyz = finePatch->dCell();                   
+      double CharacteristicArea =   (Dxyz.x()* Dxyz.y() + Dxyz.z()* Dxyz.x() + Dxyz.z()* Dxyz.y()) / 3.0;
+
+      // FIND INTERSECTION OF COARSE AND FINE LEVELS!
+      fl = finePatch->getExtraCellLowIndex();  
+      fh = finePatch->getExtraCellHighIndex();
+      cl = patch->getExtraCellLowIndex();
+      ch = patch->getExtraCellHighIndex(); // Bug, extra cells aren't available to coarse patches!!? We can't set boundary conditions.
+
+      // only iterate over interior cells 
+      cl2 = patch->getCellLowIndex();
+      ch2 = patch->getCellHighIndex();
+
+      fl = Max(fl, patch->getLevel()->mapCellToFiner(cl2));
+      fh = Min(fh, patch->getLevel()->mapCellToFiner(ch2));
+      cl2 = finePatch->getLevel()->mapCellToCoarser(fl,levelOffSet);
+      ch2 = finePatch->getLevel()->mapCellToCoarser(fh,levelOffSet);
+
+      fl = finePatch->getExtraCellLowIndex();  
+      fh = finePatch->getExtraCellHighIndex();
+      fl = Max(fl, patch->getLevel()->mapCellToFinest(cl));
+      fh = Min(fh, patch->getLevel()->mapCellToFinest(ch));
+      cl = finePatch->getLevel()->mapCellToCoarser(fl,levelOffSet);
+      ch = finePatch->getLevel()->mapCellToCoarser(fh,levelOffSet);
+
+      // if fine patch doesn't have the relevant on the current processor then continue
+      if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) { // This won't scale well  =( 
+        continue;
+      }
+
+      finePatch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0), 
+                                                         Ghost::AroundCells, 1, fl, fh);
+
+      new_dw->getRegion(xNormal , VarLabel::find("surf_out_normX") ,d_matl , fineLevel, fl, fh +xadjust, true);
+      new_dw->getRegion(yNormal , VarLabel::find("surf_out_normY") ,d_matl , fineLevel, fl, fh +yadjust, true);
+      new_dw->getRegion(zNormal , VarLabel::find("surf_out_normZ") ,d_matl , fineLevel, fl, fh +zadjust, true);
+
+      new_dw->getRegion(cellType , d_cellTypeLabel ,d_matl, fineLevel, fl, fh, true);
+      new_dw->getRegion(sigmaT4  , d_sigmaT4Label ,d_matl , fineLevel, fl, fh, true);
+      new_dw->getRegion(abskg    , d_abskgLabel ,  d_matl , fineLevel, fl, fh, true);
+
+      // iterate over fine patch cells and sum 
+      for(CellIterator iter(cl2, ch2); !iter.done(); iter++){
+        double tempWall=0.0;
+        double tempFlow=0.0;
+        double kWall=0.0;
+        double kFlow=0.0;
+        int countWall=0;
+        int countFlow=0;
+
+        IntVector c = *iter;
+
+        //IntVector fineStart = coarseLevel->mapCellToFiner(c);
+        IntVector fineStart = coarseLevel->mapCellToFinest(c);
+
+        for(CellIterator inside(IntVector(0,0,0),r_Ratio); !inside.done(); inside++){
+
+          IntVector fc = fineStart + *inside;
+
+          //  sum up face normals to see check for wall direction
+          if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&   
+              fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
+            if (cellType[fc] !=-1){
+
+              if ( abs(xNormal[fc])  >0.5 || abs(yNormal[fc]) > 0.5 || abs(zNormal[fc] ) > 0.5 ||
+                  (xNormal[fc+xadjust])  >0.5 || abs(yNormal[fc+yadjust]) > 0.5 || abs(zNormal[fc+zadjust] ) > 0.5 ){
+                tempWall+= sigmaT4[fc]*abskg[fc]; // only weight intrusion outer-cells
+                kWall+= abskg[fc];
+                countWall++;
+
+              } else{
+                // this is an interior intrusion cell, and has no relevant data.
+              }
+            } else {
+              tempFlow+= sigmaT4[fc]*abskg[fc];
+              kFlow+= abskg[fc];
+              countFlow++;
+            }  // check if wall or flow
+          } // fine level cell iterator
+        } 
+
+        if(countWall) {
+          //double CharacteristicLengthFlow =pow((double) countFlow *Dxyz.x()* Dxyz.y()* Dxyz.z(),1.0/3.0) ;
+          double CharacteristicLengthFlow = pow((double) countFlow *Dxyz.x()* Dxyz.y()* Dxyz.z(),1.0/3.0)*2;
+          //double CharacteristicLengthFlow =pow((double) countFlow *Dxyz.x()* Dxyz.y()* Dxyz.z(),1.0/3.0);
+          double flowFraction =(double) countFlow /overallRefinementRatio;
+          if (flowFraction  > 0.99000 ){  //assume cell is a flow cell on coarse grid
+            //CharacteristicLengthFlow=CharacteristicLengthFlow;
+            double wallFraction =CharacteristicArea*countWall / CharacteristicAreaCoarse ;
+            //wallFraction= ((1.0-flowFraction)+wallFraction)/2.0;
+            double wallEmissivity=kWall/(double) countWall+1e-16;  // no divide by zero risk as long inside if(countWall) statement
+            //double kFromWall =-log(flowFraction* wallEmissivity)/CharacteristicLengthFlow;
+            double kFromWall =-log((1.0 - sqrt(wallFraction)*wallEmissivity))/CharacteristicLengthFlow;
+            //double kFromWall = M_PI/4.0*0.8*countWall*pow((Dxyz.x()+Dxyz.y()+Dxyz.z()/3.0),2.0)/(DxyzCoarse.x()* DxyzCoarse.y()* DxyzCoarse.z()) ;
+
+            abskgCoarse[c]=kFlow/((double) countFlow+1e-16) + kFromWall;
+            sigmaT4Coarse[c]= T (  (tempFlow + tempWall/wallEmissivity*kFromWall)/(kFlow + kFromWall*countWall + 1e-16));
+            cellTypeCoarse[c]=-1;
+
+          }else{ // assume cell is a wall cell on coarse grid
+            CharacteristicLengthFlow=CharacteristicLengthFlow;  // since we don't have a way to move temperature information to embedded fields we need to lessen the effects of the wall.
+            abskgCoarse[c]=kWall/(double) countWall;
+            sigmaT4Coarse[c]= T (tempWall/(kWall+1e-16)*exp(-CharacteristicLengthFlow*kFlow/((double) countFlow+1e-16)) +
+                tempFlow / (kFlow+1e-16)*(1.0 - exp(-CharacteristicLengthFlow*kFlow/((double) countFlow+1e-16)))); // returns Temp^4 wieghted on absorption coefficient
+            cellTypeCoarse[c]=10;
+          }
+        } else if (countFlow) {
+          abskgCoarse[c]=kFlow/(double) countFlow;
+          sigmaT4Coarse[c]=T (tempFlow/(double) countFlow/(abskgCoarse[c]+1e-16))  ; // returns Temp^4 wieghted on absorption coefficient
+          cellTypeCoarse[c]=-1;
+
+        } else{  // no pertinent data is in this wall cell (how to fix?)
+          abskgCoarse[c]=1.0;     // embedded intrusions are set to -1.0
+          sigmaT4Coarse[c]=0.0;    // this should take on the properties of ghost cells
+          cellTypeCoarse[c]=8;
+        }
+      }
+
+      vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
+      if( bf.size() > 0) {
+
+        for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+          Patch::FaceType face = *itr;
+
+          IntVector xbadjust(0,0,0);
+          IntVector ybadjust(0,0,0);
+          IntVector zbadjust(0,0,0);
+
+          Patch::FaceIteratorType PEC = Patch::ExtraMinusEdgeCells;
+
+          if (*itr==Patch::xminus){ // shift surface normals depending on the face
+            xbadjust=IntVector(1,0,0);
+          }
+          if (*itr==Patch::yminus){
+            ybadjust=IntVector(0,1,0);
+          }
+          if (*itr==Patch::zminus){
+            zbadjust=IntVector(0,0,1);
+          }
+
+          IntVector FineRange = IntVector(r_Ratio.x(),r_Ratio.y(),r_Ratio.z());
+
+          for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
+            double tempWall=0.0;
+            double kWall=0.0;
+            int countWall=0;
+
+            bool intersectionFound=false;
+
+            IntVector cc = *iter;
+
+            IntVector fineStart = coarseLevel->mapCellToFinestNoAdjustments(cc);
+            for(CellIterator inside(IntVector(0,0,0),FineRange); !inside.done(); inside++) {
+              IntVector fc = fineStart + *inside;
+
+              if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&   
+                  fc.x() < fh.x() && fc.y() < fh.y() && fc.z() < fh.z() ) {  
+                intersectionFound=true;
+                bool includeInAverage= (abs(xNormal[fc+xbadjust])  >0.5 || abs(yNormal[fc+ybadjust]) > 0.5 || abs(zNormal[fc+zbadjust] ) > 0.5 || cellType[fc]!=8); // celltype of 8 is wall, override, xyz normals if its an inlet or outlet
+
+                if (includeInAverage){
+                  tempWall+= sigmaT4[fc]*abskg[fc]; // only weight intrusion outer-cells
+                  kWall+= abskg[fc];
+                  countWall++;
+                }
+              }
+            }   
+
+            if (intersectionFound) {
+              if (countWall == 0) {  // intrusions are embedded, not used in an arches computation
+                abskgCoarse[cc] = 1;
+                sigmaT4Coarse[cc] = 999;
+                cellTypeCoarse[cc] = 1;
+              }
+              else {
+                abskgCoarse[cc] = kWall / (double)countWall;
+                sigmaT4Coarse[cc] = T(tempWall / (kWall + 1e-16));  // returns Temp^4 weighted on absorption coefficient
+                cellTypeCoarse[cc] = 10;
+              }
+          }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+ //___________________________________________________
+
+
+
+
+template
+void Ray::CoarsenModelAlpha<float>( const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    const bool modifies,
+                                    Task::WhichDW which_dw );
+
+
+template
+void Ray::CoarsenModelAlpha<double>( const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw,
+                                     const bool modifies,
+                                     Task::WhichDW which_dw );
+
 
 template void  Ray::updateSumI_ML< float> ( Vector&,
                                             Vector&,
