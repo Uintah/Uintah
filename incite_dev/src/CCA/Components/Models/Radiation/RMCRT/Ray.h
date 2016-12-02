@@ -434,8 +434,7 @@ namespace Uintah{
    void sched_CoarsenModelAlpha( const LevelP& coarseLevel,
                                  SchedulerP& sched,
                                  Task::WhichDW this_dw,
-                                 const bool modifies_abskg,
-                                 const VarLabel* variable );
+                                 const bool modifies_abskg );
 
    template< class T >
    void CoarsenModelAlpha( const ProcessorGroup*,
@@ -443,7 +442,6 @@ namespace Uintah{
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
-                           const bool modifies,
                            Task::WhichDW which_dw );
 
     //______________________________________________________________________
