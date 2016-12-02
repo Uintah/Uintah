@@ -11,6 +11,7 @@
 export OS
 mode=$1 # dbg or opt
 MACHINE=`hostname`
+MODIFY_SRC="false"
 
 #__________________________________
 # construct the configure_command file
@@ -60,9 +61,17 @@ if [ "$OS" = "Linux" ]; then
     ENV="       CC=gcc-4.8 \\
        CXX=g++-4.8 \\
        F77=gfortran-4.8"
+       
+    MODIFY_SRC="true"
   fi
 fi
 
+#__________________________________
+#  If requested modify the src code.  
+if [ "$MODIFY_SRC" = "true"  ]; then
+  echo "Executing modifySrc script"
+  "${BUILDROOT}"/"src"/"R_Tester"/"modifySrc"
+fi
 
 #__________________________________
 echo "#!/bin/csh" > configure_command
