@@ -89,10 +89,11 @@ namespace Uintah{
 
       //__________________________________
       /** @brief Schedule compute of blackbody intensity */ 
-      void sched_sigmaT4( const LevelP& level, 
+      void sched_sigmaT4( const LevelP& level,
                           SchedulerP& sched,
                           Task::WhichDW temp_dw,
                           const bool includeEC = true );
+
       //__________________________________
       //
       template< class T>
@@ -103,7 +104,30 @@ namespace Uintah{
                     DataWarehouse* new_dw,
                     Task::WhichDW which_temp_dw,
                     const bool includeEC );
-      
+
+      //__________________________________
+      //
+      void sched_sigmaT4Arches( const LevelP& level,
+                                SchedulerP& sched,
+                                Task::WhichDW temp_dw,
+                                std::vector<const VarLabel*> temp,
+                                std::vector<const VarLabel*> absk,
+                                const bool includeEC = true );
+
+      //__________________________________
+      //
+      template<class T>
+      void sigmaT4Arches( const ProcessorGroup* pg,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          Task::WhichDW which_temp_dw,
+                          std::vector<const VarLabel*> temp,
+                          std::vector<const VarLabel*> absk,
+                          const bool includeEC );
+
+
       //__________________________________
       //
       void reflect(double& fs,

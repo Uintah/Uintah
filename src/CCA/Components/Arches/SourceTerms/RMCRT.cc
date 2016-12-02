@@ -31,6 +31,7 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 
 using namespace Uintah;
@@ -105,9 +106,9 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   _T_label_name = "radiation_temperature";                        // HARDWIRED
 
   if ( _ps->findBlock("abskg")){
-    _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name);
+    _ps->findBlock("abskg")->getAttribute("label", _abskt_label_name);
   } else {
-    throw ProblemSetupException("Error: RMCRT - The absorption coefficient is not defined.",__FILE__,__LINE__);
+    throw ProblemSetupException("Error: RMCRT - The total absorption coefficient is not defined.",__FILE__,__LINE__);
   }
 
   //__________________________________
@@ -168,6 +169,86 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
     }
   }
+
+
+  std::string baseNameAbskp;
+  std::string modelName;
+  std::string baseNameTemperature;
+  _radiateAtGasTemp=true; // this flag is arbitrary for no particles
+
+  ProblemSpecP db_prop = _ps->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
+  if  (db_prop){
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0;
+        db_model = db_model->findNextBlock("model")){
+      db_model->getAttribute("type", modelName);
+      if (modelName=="radiation_properties"){
+        if  (db_model->findBlock("calculator") == 0){
+          throw ProblemSetupException("Error: <calculator> for DO-radiation node not found.", __FILE__, __LINE__);
+          break;
+        }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
+          _nQn_part = 0;
+          break;
+        }else{
+          //        db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part );
+          bool doing_dqmom = ParticleTools::check_for_particle_method(_ps,ParticleTools::DQMOM);
+          bool doing_cqmom = ParticleTools::check_for_particle_method(_ps,ParticleTools::CQMOM);
+
+          if ( doing_dqmom ){
+            _nQn_part = ParticleTools::get_num_env( _ps, ParticleTools::DQMOM );
+          } else if ( doing_cqmom ){
+            _nQn_part = ParticleTools::get_num_env( _ps, ParticleTools::CQMOM );
+          } else {
+            throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
+          }
+
+          db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", baseNameTemperature, "heat_pT" );
+          db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true );
+          db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
+          //  db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
+          break;
+        }
+      }
+      if  (db_model== 0){
+        throw ProblemSetupException("Error: <radiation_properties> for DO-radiation node not found.", __FILE__, __LINE__);
+        break;
+      }
+    }
+  } else{
+    _nQn_part =0; // No property model found, so particles do not interact radiatively
+  }
+
+
+    for (int qn=0; qn < _nQn_part; qn++){
+      std::stringstream absorp;
+      std::stringstream temper;
+      absorp <<baseNameAbskp <<"_"<< qn;
+      temper <<baseNameTemperature <<"_"<< qn;
+      _absk_name_vector.push_back( absorp.str());
+      _temperature_name_vector.push_back( temper.str());
+    }
+
+// get gas-only absorption coefficient
+  
+  std::string modelName2;
+  ProblemSpecP db_prop2 = _ps->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
+  if  (db_prop2){
+    for ( ProblemSpecP db_model = db_prop2->findBlock("model"); db_model != 0;
+        db_model = db_model->findNextBlock("model")){
+      db_model->getAttribute("type", modelName2);
+      if (modelName2=="radiation_properties"){
+        db_model->getAttribute("label",_abskg_label_name);
+        db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
+      }
+    }
+  }else{
+    proc0cout << " **WARNING**: Couldn't find property model (old interface), using user specified absorption coefficient.    \n";
+      _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name);
+     _abskg_label_name=_abskg_label_name;
+  }
+ 
+  
+
+
 }
 
 //______________________________________________________________________
@@ -188,13 +269,16 @@ RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* pro
     throw ProblemSetupException("Error: No temperature label found.", __FILE__, __LINE__);
   }
 
-  _abskgLabel = VarLabel::find(_abskg_label_name);
-  if (_abskgLabel == nullptr) {
-    throw InvalidValue("Error: For RMCRT Radiation source term -- Could not find the abskg label.", __FILE__, __LINE__);
+  _absktLabel = VarLabel::find(_abskt_label_name);
+  if ( _absktLabel == nullptr ){
+    throw InvalidValue("Error: For RMCRT Radiation source term -- Could not find the abskt label.", __FILE__, __LINE__);
   }
-
   // create RMCRT and register the labels
-  _RMCRT->registerVarLabels(_matl, _abskgLabel, _tempLabel, _labels->d_cellTypeLabel, _src_label);
+  _RMCRT->registerVarLabels(_matl,
+                            _absktLabel,
+                            _tempLabel,
+                            _labels->d_cellTypeLabel,
+                            _src_label);
 
   // read in RMCRT problem spec
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
@@ -239,6 +323,34 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
                                       SchedulerP& sched,
                                       int timeSubStep )
 {
+//----------------gas-only stuff-----------//
+  _abskgLabel = VarLabel::find(_abskg_label_name);
+  if (_abskgLabel == nullptr ){
+    throw InvalidValue("Error: For DO Radiation source term -- Could not find the abskg label.", __FILE__, __LINE__);
+  }
+//-----------------------------------------//
+ // particle stuff 
+    _absk_label_vector.push_back(_abskgLabel);
+    _temperature_label_vector.push_back(VarLabel::find(_T_label_name));
+
+  //_tempLabel = VarLabel::find(_T_label_name);
+  //_abskgLabel = VarLabel::find(_abskg_label_name);
+
+  for (int qn=0; qn < _nQn_part; qn++){
+    _absk_label_vector.push_back(VarLabel::find(_absk_name_vector[qn]));
+    if (_absk_label_vector[qn]==0){
+      throw ProblemSetupException("Error: particle absorption coefficient node not found."+_absk_name_vector[qn], __FILE__, __LINE__);
+    }
+
+    _temperature_label_vector.push_back(VarLabel::find(_temperature_name_vector[qn]));
+
+    if (_temperature_label_vector[qn]==0) {
+      throw ProblemSetupException("Error: particle temperature node not found! "+_temperature_name_vector[qn], __FILE__, __LINE__);
+    }
+  }
+//----------------end particle stuff-----------//
+
+
   GridP grid = level->getGrid();
 
   // only sched on RK step 0 and on arches level
@@ -266,8 +378,8 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   //  carryForward cellType on NON arches level
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
-    if (level->getIndex() != _archesLevelIndex) {
-      _RMCRT->sched_CarryForward_Var(level, sched, _labels->d_cellTypeLabel);
+    if( level->getIndex() != _archesLevelIndex ) {
+      _RMCRT->sched_CarryForward_Var ( level,  sched, _labels->d_cellTypeLabel );
     }
   }
 
@@ -284,35 +396,34 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   if (_whichAlgo == dataOnion) {
 
     const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
-    Task::WhichDW temp_dw = Task::OldDW;
+
+    Task::WhichDW cellType_dw  = Task::OldDW;
     Task::WhichDW abskg_dw = Task::NewDW;
 
     // modify Radiative properties on the finest level
     // convert abskg:dbl -> abskg:flt if needed
     _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw);
 
-    // compute sigmaT4 on the finest level
-    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, includeExtraCells);
+//    // compute sigmaT4 on the finest level
+//    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, includeExtraCells);
 
-    sched_setBoundaryConditions(fineLevel, sched, temp_dw);
+    includeExtraCells = true;
+    _RMCRT->sched_sigmaT4Arches( fineLevel,  sched, cellType_dw, _temperature_label_vector,_absk_label_vector,  includeExtraCells );
 
+    //sched_setBoundaryConditions( fineLevel, sched, temp_dw, _radiation_calc_freq );
     _RMCRT->sched_CarryForward_AllLabels ( fineLevel, sched );
 
-    // coarsen data to the coarser levels.
-    // do it in reverse order
-    Task::WhichDW notUsed = Task::OldDW;
-    const bool backoutTemp = true;
+//    Task::WhichDW notUsed = Task::OldDW;
+//    const bool backoutTemp = false;
 
+    // coarsen data to the coarser levels. do it in reverse order
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg = false;
       const bool modifies_sigmaT4 = false;
 
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
-
-      if( _RMCRT->d_coarsenExtraCells == false ) {
-        sched_setBoundaryConditions( level, sched, notUsed, backoutTemp ); 
-      }
+      sched_setBoundaryConditions( level, sched, Task::OldDW, true );
     }
 
     //__________________________________
@@ -396,7 +507,8 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     _RMCRT->sched_DoubleToFloat(level, sched, abskg_dw);
 
     // compute sigmaT4 on the CFD level
-    _RMCRT->sched_sigmaT4(level, sched, temp_dw, includeExtraCells);
+    _RMCRT->sched_sigmaT4Arches( level,  sched, temp_dw, _temperature_label_vector,_absk_label_vector,  includeExtraCells );
+    //_RMCRT->sched_sigmaT4( level,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
 
     Task::WhichDW sigmaT4_dw = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
@@ -443,7 +555,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
       tsk->computes(_src_label);
       tsk->computes(VarLabel::find("radiationVolq"));
     } else {
-      tsk->computes( _abskgLabel );
+      tsk->computes( _absktLabel );
     }
     sched->addTask( tsk, myLevel->eachPatch(), _sharedState->allArchesMaterials() );
   }
@@ -491,7 +603,8 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     }
     else {
       CCVariable<double> abskg;
-      new_dw->allocateAndPut(abskg, _abskgLabel, _matl, patch);
+      new_dw->allocateAndPut( abskg, _absktLabel, _matl, patch );
+//      new_dw->allocateAndPut(abskg, _abskgLabel, _matl, patch);
       abskg.initialize(0.0);
     }
   }
@@ -609,7 +722,10 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
   tsk->modifies( _RMCRT->d_sigmaT4Label );
   tsk->modifies( _RMCRT->d_abskgLabel );         // this label changes name if using floats
   
-  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRT_Radiation::TG_RMCRT );
+//  tsk->modifies( _absktLabel );
+
+  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+//  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRT_Radiation::TG_RMCRT );
 }
 //______________________________________________________________________
 
@@ -674,11 +790,11 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
 //      setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
 //      setBC<double,double>(temp,     d_compTempLabel->getName(),  patch, d_matl);
 
-      std::string comp_abskg = _RMCRT->d_abskgLabel->getName();
-      std::string comp_Temp =  _tempLabel->getName();
+      std::string comp_abskt = _RMCRT->d_abskgLabel->getName();
+      std::string comp_Temp  = _tempLabel->getName();
 
       BoundaryCondition_new* new_BC = _boundaryCondition->getNewBoundaryCondition();
-      new_BC->setExtraCellScalarValueBC< T >(      pc, patch, abskg, comp_abskg );
+      new_BC->setExtraCellScalarValueBC< T >(      pc, patch, abskg, comp_abskt );
       new_BC->setExtraCellScalarValueBC< double >( pc, patch, temp,  comp_Temp );
 
       //__________________________________
