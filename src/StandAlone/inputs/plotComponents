@@ -129,7 +129,7 @@ set autoscale
 set pointsize 0.9
 
 set grid xtics ytics
-set title "$date, $machine, $procs MPI ranks, $threads Threads \n Summed over all MPI ranks"
+set title "$date, $machine, $procs MPI ranks, $threads Threads \n Average"
 set xlabel 'Timestep'
 set ylabel 'Time [s]'
 
@@ -141,7 +141,7 @@ plot 'data' using 2 t 'Task Execution'       with linespoints,\
      
 set origin 0.0,0.0
 set yrange[0:B_mean + 2*B_stddev]
-set title 'Maximum over all processors'
+set title 'Maximum'
 plot 'data' using 3 t 'Task Execution'       with linespoints,\
      'data' using 5 t 'Global Comm'          with linespoints,\
      'data' using 7 t 'Local Comm'           with linespoints,\
