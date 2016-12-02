@@ -3443,6 +3443,22 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
     CCVariable<T> abskgCoarse;
     new_dw->allocateAndPut(sigmaT4Coarse, d_sigmaT4Label, d_matl, patch);
     new_dw->allocateAndPut(abskgCoarse, d_abskgLabel, d_matl, patch);
+
+    IntVector domLo = patch->getExtraCellLowIndex();
+    IntVector domHi = patch->getExtraCellHighIndex();
+    CCVariable<T> sigmaT4temp;
+    CCVariable<T> abskgtemp;
+    CCVariable<int> countWall;
+
+
+    sigmaT4temp.allocate(domLo,domHi);
+    abskgtemp.allocate(domLo,domHi);
+    countWall.allocate(domLo,domHi);
+
+    sigmaT4temp.initialize(0.0);     
+    abskgtemp.initialize(0.0);     
+    countWall.initialize(0.0);     
+
     sigmaT4Coarse.initialize(1000.0);
     abskgCoarse.initialize(1.0);
     cellTypeCoarse.initialize(8);
@@ -3533,7 +3549,6 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
                 tempWall+= sigmaT4[fc]*abskg[fc]; // only weight intrusion outer-cells
                 kWall+= abskg[fc];
                 countWall++;
-
               } else{
                 // this is an interior intrusion cell, and has no relevant data.
               }
@@ -3578,12 +3593,14 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
         } else{  // no pertinent data is in this wall cell (how to fix?)
           abskgCoarse[c]=1.0;     // embedded intrusions are set to -1.0
           sigmaT4Coarse[c]=0.0;    // this should take on the properties of ghost cells
-          cellTypeCoarse[c]=8;
+          cellTypeCoarse[c]=1;
         }
       }
 
+
+      // Now Set boundary Conditions
       vector<Patch::FaceType> bf;
-      patch->getBoundaryFaces(bf);
+      finePatch->getBoundaryFaces(bf);
       if( bf.size() > 0) {
 
         for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
@@ -3605,48 +3622,48 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
             zbadjust=IntVector(0,0,1);
           }
 
-          IntVector FineRange = IntVector(r_Ratio.x(),r_Ratio.y(),r_Ratio.z());
+          for(CellIterator iter=finePatch->getFaceIterator(face, PEC); !iter.done();iter++) {
 
-          for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
-            double tempWall=0.0;
-            double kWall=0.0;
-            int countWall=0;
+            IntVector fc = *iter;
 
-            bool intersectionFound=false;
+            IntVector cc = fineLevel->mapCellToCoarser(fc,levelOffSet);
 
-            IntVector cc = *iter;
-
-            IntVector fineStart = coarseLevel->mapCellToFinestNoAdjustments(cc);
-            for(CellIterator inside(IntVector(0,0,0),FineRange); !inside.done(); inside++) {
-              IntVector fc = fineStart + *inside;
-
-              if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&   
-                  fc.x() < fh.x() && fc.y() < fh.y() && fc.z() < fh.z() ) {  
-                intersectionFound=true;
+              if( cc.x() >= cl.x() && cc.y() >= cl.y() && cc.z() >= cl.z() &&   
+                  cc.x() <= ch.x() && cc.y() <= ch.y() && cc.z() <= ch.z() ) {  
                 bool includeInAverage= (abs(xNormal[fc+xbadjust])  >0.5 || abs(yNormal[fc+ybadjust]) > 0.5 || abs(zNormal[fc+zbadjust] ) > 0.5 || cellType[fc]!=8); // celltype of 8 is wall, override, xyz normals if its an inlet or outlet
-
                 if (includeInAverage){
-                  tempWall+= sigmaT4[fc]*abskg[fc]; // only weight intrusion outer-cells
-                  kWall+= abskg[fc];
-                  countWall++;
+                  sigmaT4temp[cc]+=sigmaT4[fc]*abskg[fc];     
+                  abskgtemp[cc]+=abskg[fc];     
+                  countWall[cc]++;     
                 }
               }
             }   
-
-            if (intersectionFound) {
-              if (countWall == 0) {  // intrusions are embedded, not used in an arches computation
-                abskgCoarse[cc] = 1;
-                sigmaT4Coarse[cc] = 999;
-                cellTypeCoarse[cc] = 1;
-              }
-              else {
-                abskgCoarse[cc] = kWall / (double)countWall;
-                sigmaT4Coarse[cc] = T(tempWall / (kWall + 1e-16));  // returns Temp^4 weighted on absorption coefficient
-                cellTypeCoarse[cc] = 10;
-              }
-          }
           }
         }
+      }
+ /// finish setting boundaries on coarse level, divide by weight (emissivity)
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    if( bf.size() > 0) {
+      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+        Patch::FaceType face = *itr;
+        Patch::FaceIteratorType PEC = Patch::ExtraMinusEdgeCells;
+
+        for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
+
+          IntVector cc = *iter;
+
+          if (countWall[cc] == 0) {  // intrusions are embedded, not used in an arches computation
+            abskgCoarse[cc] = 1;
+            sigmaT4Coarse[cc] = 999;
+            cellTypeCoarse[cc] = 1;
+          }
+          else{
+            abskgCoarse[cc] = abskgtemp[cc] / (T) countWall[cc];
+            sigmaT4Coarse[cc] = T(sigmaT4temp[cc] / (abskgtemp[cc] + 1e-16));  // returns Temp^4 weighted on absorption coefficient
+            cellTypeCoarse[cc] = 10;
+          }
+        }   
       }
     }
   }
