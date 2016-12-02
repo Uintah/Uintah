@@ -404,17 +404,11 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     // convert abskg:dbl -> abskg:flt if needed
     _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw);
 
-//    // compute sigmaT4 on the finest level
-//    _RMCRT->sched_sigmaT4(fineLevel, sched, temp_dw, includeExtraCells);
-
     includeExtraCells = true;
     _RMCRT->sched_sigmaT4Arches( fineLevel,  sched, cellType_dw, _temperature_label_vector,_absk_label_vector,  includeExtraCells );
 
     //sched_setBoundaryConditions( fineLevel, sched, temp_dw, _radiation_calc_freq );
     _RMCRT->sched_CarryForward_AllLabels ( fineLevel, sched );
-
-//    Task::WhichDW notUsed = Task::OldDW;
-//    const bool backoutTemp = false;
 
     // coarsen data to the coarser levels. do it in reverse order
     for (int l = maxLevels - 2; l >= 0; l--) {
@@ -423,7 +417,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_sigmaT4 = false;
 
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
-      sched_setBoundaryConditions( level, sched, Task::OldDW, true );
+//      sched_setBoundaryConditions( level, sched, Task::OldDW, true );
     }
 
     //__________________________________

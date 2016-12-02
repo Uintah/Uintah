@@ -1161,8 +1161,6 @@ SchedulerCommon::compile()
       const bool has_distal_reqs = ( (m_task_graphs[i]->getIndex() > 0) && (m_max_distal_ghost_cells != 0) );
       m_task_graphs[i]->createDetailedTasks( useInternalDeps(), first, grid, oldGrid, has_distal_reqs );
 
-//      Uintah::MPI::Barrier(d_myworld->getComm());
-
       // TODO: not going to use shared scrubTable when using multiple regular task graphs
       //   Commenting this out disables the entire "first" mechanism without modifying existing code.
       //   Will use this for now (PSAAP INCITE runs), but may want to turn back on later.

@@ -668,8 +668,8 @@ TaskGraph::addTask(       Task        * task
 
     // debugging Code
     if (tgdbg.active()) {
-      tgdbg << m_proc_group->myrank() << " Adding task: ";
-      task->displayAll(tgdbg);
+      tgdbg << "Rank-" << m_proc_group->myrank() << " TG[" << m_index << "] adding task: " << task->getName() << std::endl;
+//      task->displayAll(tgdbg);
     }
     
 #if 0
