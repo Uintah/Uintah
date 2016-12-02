@@ -204,10 +204,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  Warnings and bulletproofing
 #ifndef RAY_SCATTER
   proc0cout<< "sigmaScat: " << d_sigmaScat << std::endl;
-  if(d_sigmaScat>0){
-    ostringstream warn;
+  if (d_sigmaScat>0) {
+    std::ostringstream warn;
     warn << " ERROR:  To run a scattering case, you must use the following in your configure line..." << std::endl;
-    warn << "                 --enable-ray-scatter" << endl;
+    warn << "                 --enable-ray-scatter" << std::endl;
     warn << "         To run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
