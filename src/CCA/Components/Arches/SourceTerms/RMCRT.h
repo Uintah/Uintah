@@ -26,11 +26,11 @@
 #define CCA_COMPONENTS_ARCHES_SOURCETERMS_RMCRT_H
 
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -52,66 +52,76 @@
 *
 *  <RMCRT>
 *    <randomSeed>        false      </randomSeed>
-*    <NoOfRays>          25         </NoOfRays>
+*    <nDivQRays>         25         </nDivQRays>
 *    <Threshold>         0.05       </Threshold>
-*    <Slice>             20         </Slice>
+*    <rayDirSampleAlgo>  Naive      </rayDirSampleAlgo>
 *    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
 * </RMCRT>
 *
 *
 */
+
+
 //______________________________________________________________________
 //
-namespace Uintah{
+namespace Uintah {
 
   class ArchesLabel;
   class BoundaryCondition;
 
 class RMCRT_Radiation: public SourceTermBase {
 
+
 public:
 
-  RMCRT_Radiation( std::string srcName,
-                   ArchesLabel* labels,
-                   MPMArchesLabel* MAlab,
-                   std::vector<std::string> reqLabelNames,
-                   const ProcessorGroup* my_world,
-                   std::string type );
+  using string_vector = std::vector<std::string>;
+
+  RMCRT_Radiation(       std::string      srcName
+                 ,       ArchesLabel    * labels
+                 ,       MPMArchesLabel * MAlab
+                 ,       string_vector    reqLabelNames
+                 , const ProcessorGroup * my_world
+                 ,       std::string      type
+                 );
+
 
   ~RMCRT_Radiation();
 
-  void problemSetup(const ProblemSpecP& db );
+  void problemSetup( const ProblemSpecP& db );
 
   void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop );
 
-  void sched_computeSource( const LevelP& level,
-                            SchedulerP& sched,
-                            int timeSubStep );
+  void sched_computeSource( const LevelP     & level
+                          ,       SchedulerP & sched
+                          ,       int          timeSubStep
+                          );
 
-  void computeSource( const ProcessorGroup*,
-                      const PatchSubset* ,
-                      const MaterialSubset* ,
-                      DataWarehouse* ,
-                      DataWarehouse* ,
-                      int timeSubStep );
+  void computeSource( const ProcessorGroup * pg
+                    , const PatchSubset    * patches
+                    , const MaterialSubset * matls
+                    ,       DataWarehouse  * old_dw
+                    ,       DataWarehouse  * new_dw
+                    ,       int              timeSubStep
+                    );
 
-  void sched_initialize( const LevelP& level,
-                         SchedulerP& sched );
+  void sched_initialize( const LevelP& level, SchedulerP& sched );
 
-  void sched_restartInitialize( const LevelP& level,
-                                SchedulerP& sched );
+  void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
 
-  void initialize( const ProcessorGroup* pc,
-                   const PatchSubset* patches,
-                   const MaterialSubset* matls,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw );
+  void initialize( const ProcessorGroup * pg
+                 , const PatchSubset    * patches
+                 , const MaterialSubset * matls
+                 , DataWarehouse        * old_dw
+                 , DataWarehouse        * new_dw
+                 );
+
 
   enum GRAPH_TYPE {
       TG_CARRY_FORWARD = 0              // carry forward taskgraph
     , TG_RMCRT         = 1              // RMCRT radiation taskgraph
     , NUM_GRAPHS
   };
+
 
   //______________________________________________________________________
   class Builder : public SourceTermBase::Builder {
@@ -135,14 +145,16 @@ public:
         return scinew RMCRT_Radiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type );
       }
 
+
+
     private:
 
-      std::string         _name;
-      std::string         _type{"rmcrt_radiation"};
-      ArchesLabel*        _labels{nullptr};
-      MPMArchesLabel*     _MAlab{nullptr};
-      const ProcessorGroup* _my_world;
-      std::vector<std::string> _required_label_names;
+      std::string               _name;
+      std::string                _type{"rmcrt_radiation"};
+      ArchesLabel              * _labels{nullptr};
+      MPMArchesLabel           * _MAlab{nullptr};
+      const ProcessorGroup     * _my_world;
+      std::vector<std::string>   _required_label_names;
 
   }; // class Builder
 
@@ -151,67 +163,90 @@ public:
   //
 private:
 
-    //
-    void restartInitializeHack( const ProcessorGroup* , const PatchSubset* ,
-                                   const MaterialSubset* , DataWarehouse*, DataWarehouse*);
-
-
-
-     //______________________________________________________________________
-     //   Boundary Conditions
-    void  sched_setBoundaryConditions( const LevelP& level,
-                                       SchedulerP& sched,
-                                       Task::WhichDW temp_dw,
-                                       const bool backoutTemp = false);
-
-    template< class T >
-    void setBoundaryConditions( const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw,
-                                Task::WhichDW temp_dw,
-                                const bool backoutTemp );
-
-     //__________________________________
-     //  move CCVariable<stencil7> -> 6 CCVariable<double>
-    void sched_stencilToDBLs( const LevelP& level,
-                              SchedulerP& sched );
-
-    void stencilToDBLs( const ProcessorGroup* pc,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw );
-
-    void sched_fluxInit( const LevelP& level,
-                         SchedulerP& sched );
-
-    void fluxInit( const ProcessorGroup* pc,
-                   const PatchSubset* patches,
-                   const MaterialSubset* matls,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw );
-
-    //__________________________________
-    //  move  6 CCVariable<double> -> CCVariable<stencil7>
-    void sched_DBLsToStencil( const LevelP& level,
-                              SchedulerP& sched );
-
-    void DBLsToStencil( const ProcessorGroup* pc,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw );
-
-  //__________________________________
   //
+  void restartInitializeHack( const ProcessorGroup *
+                            , const PatchSubset    *
+                            , const MaterialSubset *
+                            ,       DataWarehouse  *
+                            ,       DataWarehouse  *
+                            );
+
+
+  //______________________________________________________________________
+  //   Boundary Conditions
+  void  sched_setBoundaryConditions( const LevelP        & level
+                                   ,       SchedulerP    & sched
+                                   ,       Task::WhichDW   temp_dw
+                                   , const bool            backoutTemp = false
+                                   );
+
+  //______________________________________________________________________
+  //
+  template< class T >
+  void setBoundaryConditions( const ProcessorGroup * pg
+                            , const PatchSubset    * patches
+                            , const MaterialSubset *
+                            ,       DataWarehouse  *
+                            ,       DataWarehouse  * new_dw
+                            ,       Task::WhichDW    temp_dw
+                            , const bool             backoutTemp
+                            );
+
+  ///______________________________________________________________________
+  //  move CCVariable<stencil7> -> 6 CCVariable<double>
+  void sched_stencilToDBLs( const LevelP& level, SchedulerP& sched );
+
+  //______________________________________________________________________
+  //
+  void stencilToDBLs( const ProcessorGroup * pg
+                    , const PatchSubset    * patches
+                    , const MaterialSubset * matls
+                    , DataWarehouse        * old_dw
+                    , DataWarehouse        * new_dw
+                    );
+
+  //______________________________________________________________________
+  //
+  void sched_fluxInit( const LevelP& level, SchedulerP& sched );
+
+
+  //______________________________________________________________________
+  //
+  void fluxInit( const ProcessorGroup * pg
+               , const PatchSubset    * patches
+               , const MaterialSubset * matls
+               , DataWarehouse        * old_dw
+               , DataWarehouse        * new_dw
+               );
+
+  //______________________________________________________________________
+  //  move  6  CCVariable<double> -> CCVariable<stencil7>
+  void sched_DBLsToStencil( const LevelP& level, SchedulerP& sched );
+
+
+  //______________________________________________________________________
+  //
+  void DBLsToStencil( const ProcessorGroup * pg
+                    , const PatchSubset    * patches
+                    , const MaterialSubset * matls
+                    , DataWarehouse        * old_dw
+                    , DataWarehouse        * new_dw
+                    );
+
+
+  //______________________________________________________________________
+  //
+  enum Algorithm {
+      dataOnion
+    , coarseLevel
+    , singleLevel
+  };
+
   int  _matl;
   int  _archesLevelIndex{-9};
   bool _all_rk{false};
 
   int  _whichAlgo{singleLevel};
-  enum Algorithm{ dataOnion, coarseLevel, singleLevel};
 
   Ray                  * _RMCRT{nullptr};
   ArchesLabel          * _labels{nullptr};
@@ -238,13 +273,14 @@ private:
 
 
   // variables needed for particles
-  //
-  bool _radiateAtGasTemp; // this flag is arbitrary for no particles
-  std::vector<std::string> _temperature_name_vector;
-  std::vector<std::string> _absk_name_vector;
-  std::vector< const VarLabel*> _absk_label_vector;
-  std::vector< const VarLabel*> _temperature_label_vector;
-  int _nQn_part{0} ;                                // number of quadrature nodes in DQMOM
+  bool _radiateAtGasTemp{true};  // this flag is arbitrary for no particles
+
+  std::vector<std::string>       _temperature_name_vector;
+  std::vector<std::string>       _absk_name_vector;
+  std::vector< const VarLabel*>  _absk_label_vector;
+  std::vector< const VarLabel*>  _temperature_label_vector;
+
+  int _nQn_part{0} ;  // number of quadrature nodes in DQMOM
 
   Ghost::GhostType _gn{Ghost::None};
   Ghost::GhostType _gac{Ghost::AroundCells};

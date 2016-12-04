@@ -397,17 +397,22 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
     const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
 
-    Task::WhichDW cellType_dw  = Task::OldDW;
-    Task::WhichDW abskg_dw = Task::NewDW;
+    Task::WhichDW cellType_dw = Task::OldDW;
+    Task::WhichDW abskg_dw    = Task::NewDW;
+
+    const bool use_coarsen_model_alpha = false;
 
     // modify Radiative properties on the finest level
     // convert abskg:dbl -> abskg:flt if needed
     _RMCRT->sched_DoubleToFloat(fineLevel, sched, abskg_dw);
 
     includeExtraCells = true;
-    _RMCRT->sched_sigmaT4Arches( fineLevel,  sched, cellType_dw, _temperature_label_vector,_absk_label_vector,  includeExtraCells );
+    _RMCRT->sched_sigmaT4Arches( fineLevel,  sched, cellType_dw, _temperature_label_vector, _absk_label_vector, includeExtraCells );
 
-    //sched_setBoundaryConditions( fineLevel, sched, temp_dw, _radiation_calc_freq );
+    if (!use_coarsen_model_alpha) {
+      sched_setBoundaryConditions( fineLevel, sched, cellType_dw );
+    }
+
     _RMCRT->sched_CarryForward_AllLabels ( fineLevel, sched );
 
     // coarsen data to the coarser levels. do it in reverse order
@@ -417,21 +422,29 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_sigmaT4 = false;
 
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
+
+      if (!use_coarsen_model_alpha) {
+        if( _RMCRT->d_coarsenExtraCells == false ) {
+          const bool backoutTemp = true;
+          sched_setBoundaryConditions( level, sched, Task::OldDW, backoutTemp );
+        }
+      }
     }
 
     //__________________________________
-    //  compute the extents of the rmcrt region of interest
-    //  on the finest level
+    //  compute the extents of the RMCRT region of interest on the finest level
     _RMCRT->sched_ROI_Extents(fineLevel, sched);
 
-    Task::WhichDW sigmaT4_dw = Task::NewDW;
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;
     Task::WhichDW celltype_dw = Task::NewDW;
+
     bool modifies_divQ = false;
     _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
 
     // convert boundaryFlux<Stencil7> -> 6 doubles
     sched_stencilToDBLs(fineLevel, sched);
   }
+
 
   //______________________________________________________________________
   //   2 - L E V E L   A P P R O A C H
@@ -693,13 +706,13 @@ void
 RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
                                               SchedulerP& sched,
                                               Task::WhichDW temp_dw,
-                                              const bool backoutTemp )
+                                              const bool backoutTemp /* = false */ )
 {
 
   std::string taskname = "RMCRT_radiation::setBoundaryConditions";
-
   Task* tsk = nullptr;
-  if( _FLT_DBL == TypeDescription::double_type ){
+
+  if ( _FLT_DBL == TypeDescription::double_type ) {
 
     tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >, temp_dw, backoutTemp );
   } else {
@@ -708,17 +721,14 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
 
   printSchedule(level, dbg, "RMCRT_radiation::sched_setBoundaryConditions");
 
-  if(!backoutTemp){
+  if (!backoutTemp) {
     tsk->requires( temp_dw, _tempLabel, Ghost::None, 0 );
   }
 
   tsk->modifies( _RMCRT->d_sigmaT4Label );
   tsk->modifies( _RMCRT->d_abskgLabel );         // this label changes name if using floats
   
-//  tsk->modifies( _absktLabel );
-
-  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
-//  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRT_Radiation::TG_RMCRT );
+  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials(), RMCRT_Radiation::TG_RMCRT );
 }
 //______________________________________________________________________
 
@@ -732,7 +742,7 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
                                              const bool backoutTemp )
 {
 
-  for (int p=0; p < patches->size(); p++){
+  for (int p=0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
 

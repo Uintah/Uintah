@@ -2587,16 +2587,20 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
                             const bool modifies_abskg,
                             const bool modifies_sigmaT4 )
 {
-  if(coarseLevel->hasFinerLevel()) {
-    if (0) {  // This turns on an ARCHES-SPECIFIC coarsening algorithm
-      printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
-      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg  ,  d_abskgLabel);
-      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4,  d_sigmaT4Label);
-    } else {
-      sched_CoarsenModelAlpha(coarseLevel, sched, Task::NewDW, modifies_abskg);
-      sched_CarryForward_Var (coarseLevel, sched, d_abskgLabel  , RMCRTCommon::TG_CARRY_FORWARD);
-      sched_CarryForward_Var (coarseLevel, sched, d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
+  const bool use_coarsen_model_alpha = false;
+  if (coarseLevel->hasFinerLevel()) {
+    if (!use_coarsen_model_alpha) {
+      printSchedule(coarseLevel, dbg, "Ray::sched_CoarsenAll");
+      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg, d_abskgLabel);
+      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4, d_sigmaT4Label);
     }
+    // This turns on an ARCHES-SPECIFIC coarsening algorithm
+    else {
+      sched_CoarsenModelAlpha(coarseLevel, sched, Task::NewDW, modifies_abskg);
+    }
+    // either way, do carryForward of sigmaT4 and abskg on coarse level(s)
+    sched_CarryForward_Var(coarseLevel, sched, d_abskgLabel  , RMCRTCommon::TG_CARRY_FORWARD);
+    sched_CarryForward_Var(coarseLevel, sched, d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
   }
 }
 
@@ -3579,6 +3583,7 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
           }
         }
       }
+
     // finish setting boundaries on coarse level, divide by weight (emissivity)
     std::vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);

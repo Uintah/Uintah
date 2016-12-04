@@ -323,8 +323,7 @@ RMCRTCommon::sched_sigmaT4Arches( const LevelP& level,
     tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
   }
 
-  tsk->requires(cellType_dw,d_cellTypeLabel ,    d_gn, 0 );
-  //d_compTempLabel
+  tsk->requires(cellType_dw, d_cellTypeLabel, d_gn, 0 );
 
   for (unsigned int i=0; i< vTemp.size() ; i++){
       tsk->requires( Task::OldDW, vAbsk[i],    d_gn, 0 ); // should be new, but arches doesn't have them, live with lag
