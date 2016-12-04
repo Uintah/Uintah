@@ -394,15 +394,6 @@ RMCRTCommon::sigmaT4Arches( const ProcessorGroup*,
                             std::vector<const VarLabel* > vAbsk,
                             const bool includeEC )
 {
-//  //__________________________________
-//  //  Carry Forward
-//  if ( doCarryForward( radCalc_freq ) ) {
-//    printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::sigmaT4 carryForward (sigmaT4)" );
-//
-//    new_dw->transferFrom( old_dw, d_sigmaT4Label, patches, matls, true );
-//    return;
-//  }
-
   //__________________________________
   //  do the work
   for (int p=0; p < patches->size(); p++){
@@ -438,7 +429,6 @@ RMCRTCommon::sigmaT4Arches( const ProcessorGroup*,
     //double T_sqrd = temp[c] * temp[c];
     //sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
     //}
-      
       
     for (;!iter.done();iter++){
       const IntVector& c = *iter;

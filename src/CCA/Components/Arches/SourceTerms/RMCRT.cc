@@ -421,7 +421,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
 
-      _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4 );
+      _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, use_coarsen_model_alpha );
 
       if (!use_coarsen_model_alpha) {
         if( _RMCRT->d_coarsenExtraCells == false ) {
