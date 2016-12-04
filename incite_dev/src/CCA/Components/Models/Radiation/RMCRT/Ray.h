@@ -143,7 +143,8 @@ namespace Uintah{
       void sched_CoarsenAll( const LevelP& coarseLevel,
                              SchedulerP& sched,
                              const bool modifies_abskg,
-                             const bool modifiesd_sigmaT4 );
+                             const bool modifiesd_sigmaT4,
+                             const bool use_coarsen_model_alpha = false );
 
       void sched_computeCellType ( const LevelP& coarseLevel,
                                    SchedulerP& sched,

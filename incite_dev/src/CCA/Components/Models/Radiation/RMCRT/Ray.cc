@@ -2585,22 +2585,26 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
                             SchedulerP& sched,
                             const bool modifies_abskg,
-                            const bool modifies_sigmaT4 )
+                            const bool modifies_sigmaT4,
+                            const bool use_coarsen_model_alpha /* == false */ )
 {
-  const bool use_coarsen_model_alpha = false;
+  printSchedule(coarseLevel, dbg, "Ray::sched_CoarsenAll");
+
   if (coarseLevel->hasFinerLevel()) {
-    if (!use_coarsen_model_alpha) {
-      printSchedule(coarseLevel, dbg, "Ray::sched_CoarsenAll");
-      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg, d_abskgLabel);
-      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4, d_sigmaT4Label);
-    }
+
     // This turns on an ARCHES-SPECIFIC coarsening algorithm
-    else {
+    if (use_coarsen_model_alpha) {
       sched_CoarsenModelAlpha(coarseLevel, sched, Task::NewDW, modifies_abskg);
     }
+    else {
+      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg  , d_abskgLabel);
+      sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4, d_sigmaT4Label);
+    }
+
     // either way, do carryForward of sigmaT4 and abskg on coarse level(s)
     sched_CarryForward_Var(coarseLevel, sched, d_abskgLabel  , RMCRTCommon::TG_CARRY_FORWARD);
     sched_CarryForward_Var(coarseLevel, sched, d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD);
+
   }
 }
 
