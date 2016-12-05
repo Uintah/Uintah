@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Iron -->
+<!-- From: Marsh, S.P. LASL Shock Hugoniot Data. Berkeley: University of California Press, 1980. -->
+<Uintah_Include>
+  <equation_of_state type="mie_gruneisen">
+    <C_0>3574</C_0>
+    <Gamma_0>1.69</Gamma_0>
+    <S_alpha>1.920</S_alpha>
+  </equation_of_state>
+</Uintah_Include>

@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- HMX -->
+<!-- From: Benson, D.J. and Conley, P. Eulerian finite-element simulations
+           of experimentally acquired HMX microstructures. Modelling Simul.
+           Mater. Sci. Eng. 7 (1999), pp 333-354.
+-->
+<Uintah_Include>
+  <density>              1900.0   </density>
+  <thermal_conductivity>    0.396 </thermal_conductivity> <!-- Average from different sources found in: Long, Y., Chen, J., Liu, Y.G., Nie, 
+                                                                   F.D. and Sun, J.S. A direct method to calculate thermal conductivity and 
+                                                                   its application in solid HMX. J. Phys. Condens. Matter 22 (2010). -->
+  <specific_heat>        1280.0   </specific_heat>
+  <room_temp>             294.0   </room_temp>
+  <melt_temp>             520.0   </melt_temp>
+</Uintah_Include>

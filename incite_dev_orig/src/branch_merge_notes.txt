@@ -1,0 +1,205 @@
+-------------------------------------------------------------------------------
+October 27, 2016
+-------------------------
+
+commit #: 55938
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55925:55937)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+October 27, 2016
+-------------------------
+
+commit #: 55926
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55919:55925)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+October 26, 2016
+-------------------------
+
+commit #: 55920
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55887:55919)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+October 14, 2016
+-------------------------
+
+commit #: 55888
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55843:55887)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+October 6, 2016
+-------------------------
+
+commit #: 55847
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55836:55843)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+October 4, 2016
+-------------------------
+
+commit #: 55837
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55825:55836)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+October 3, 2016
+-------------------------
+
+commit #: 557826
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55803:55825)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+September 27, 2016
+-------------------------
+
+commit #: 557806
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55786:55803)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+September 23, 2016
+-------------------------
+
+commit #: 55788
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55755:55786)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+September 17, 2016
+-------------------------
+
+commit #: 55756
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55749:55755)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+September 15, 2016
+-------------------------
+
+commit #: 55750
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55722:55749)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+September 08, 2016
+-------------------------
+
+commit #: 55723
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55710:55722)
+    
+* Generate new configure script
+
+
+
+-------------------------------------------------------------------------------
+September 07, 2016
+-------------------------
+
+commit #: 55711
+
+* Merge of trunk with /branches/incite_dev
+    (svn merge -r55676:55710)
+    
+* Generate new configure script
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
