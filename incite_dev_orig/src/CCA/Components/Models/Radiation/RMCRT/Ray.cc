@@ -1294,6 +1294,12 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector origin = *iter;
+      
+      
+      // don't compute in intrusions and walls
+      if( celltype[origin] != d_flowCell ){
+        continue;
+      }
 
       if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
         randVector(rand_i, mTwister, origin);
@@ -1595,6 +1601,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       }
     }
 
+
+    int my_L = maxLevels - 1;
     //______________________________________________________________________
     //          B O U N D A R Y F L U X
     //______________________________________________________________________
@@ -1613,8 +1621,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
         vector<int> boundaryFaces;
         boundaryFaces.clear();
-
-        int my_L = maxLevels - 1;
 
         // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
         boundFlux_fine[origin].p = has_a_boundary(origin, cellType[my_L], boundaryFaces);
@@ -1699,6 +1705,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
         IntVector origin = *iter;
+        
+        // don't compute in intrusions and walls
+        if(cellType[my_L][origin] != d_flowCell ){
+          continue;
+        }
+        
         Point CC_pos = fineLevel->getCellPosition(origin);
 
         if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
