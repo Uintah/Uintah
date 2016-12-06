@@ -1112,7 +1112,7 @@ __device__ void updateSumIDevice ( levelParams level,
       ray_location.y = ray_location.y + (disMin  * ray_direction.y);
       ray_location.z = ray_location.z + (disMin  * ray_direction.z);
 
-      in_domain = (celltype[cur]==-1);  //cellType of -1 is flow         HARDWIRED WARNING
+      in_domain = (celltype[cur] == d_flowCell);  //cellType of -1 is flow         HARDWIRED WARNING
 
       optical_thickness += abskg[prevCell]*disMin;
 
@@ -1425,6 +1425,9 @@ __device__ void updateSumIDevice ( levelParams level,
         
       }
 
+      // if the cell isn't a flow cell then terminate the ray
+      in_domain = in_domain && (cellType[L][cur] == d_flowCell) ;
+      
       rayLength    += distanceTraveled;
 
       optical_thickness += abskg[prevLev][prevCell] * distanceTraveled;

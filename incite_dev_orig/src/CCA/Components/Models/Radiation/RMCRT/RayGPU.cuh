@@ -46,6 +46,7 @@ typedef Uintah::gpuPoint     GPUPoint;
 //______________________________________________________________________
 //
 const int d_MAXLEVELS = 5;               // FIX ME!
+const int d_flowCell = -1;               // HARDWIRED!
 
 //__________________________________
 //  returns gpuVector * scalar
