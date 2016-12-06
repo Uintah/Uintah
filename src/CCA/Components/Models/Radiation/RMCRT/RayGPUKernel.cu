@@ -295,7 +295,10 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         double sumI = 0;
         GPUPoint CC_pos = level.getCellPosition(origin);
 
-
+        // don't compute in intrusions and walls
+        if( cellType[origin] != d_flowCell ){
+          continue;
+        }
 
         //__________________________________
         // ray loop
@@ -602,6 +605,11 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         GPUPoint CC_pos = d_levels[fineL].getCellPosition(origin);
+
+        // don't compute in intrusions and walls
+        if(cellType[fineL][origin] != d_flowCell ){
+          continue;
+        }
 
 #if( DEBUG == 1 )
         if( isDbgCellDevice( origin ) ){
