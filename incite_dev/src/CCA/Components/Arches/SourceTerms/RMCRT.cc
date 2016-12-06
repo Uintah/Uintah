@@ -374,12 +374,17 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     modifies_divQ = true;
   }
 
+    const bool use_coarsen_model_alpha = true;
   //__________________________________
   //  carryForward cellType on NON arches level
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     if( level->getIndex() != _archesLevelIndex ) {
-      _RMCRT->sched_CarryForward_Var ( level,  sched, _labels->d_cellTypeLabel );
+      if(use_coarsen_model_alpha){
+        _RMCRT->sched_CarryForward_Var ( level,  sched, _labels->d_cellTypeLabel, RMCRT_Radiation::TG_CARRY_FORWARD); // coarsen model alpha computes cellType
+      }else{
+        _RMCRT->sched_CarryForward_Var ( level,  sched, _labels->d_cellTypeLabel);
+      }
     }
   }
 
@@ -400,7 +405,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW cellType_dw = Task::OldDW;
     Task::WhichDW abskg_dw    = Task::NewDW;
 
-    const bool use_coarsen_model_alpha = false;
 
     // modify Radiative properties on the finest level
     // convert abskg:dbl -> abskg:flt if needed

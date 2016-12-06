@@ -3338,6 +3338,7 @@ Ray::sched_CoarsenModelAlpha( const LevelP& coarseLevel,
     tsk->modifies(d_sigmaT4Label );
     tsk->modifies(d_abskgLabel  );
   } else {
+    tsk->computes(d_cellTypeLabel  );
     tsk->computes(d_sigmaT4Label);
     tsk->computes(d_abskgLabel);
   }
@@ -3490,8 +3491,8 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
               fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
             if (cellType[fc] !=-1){
 
-              if ( abs(xNormal[fc])  >0.5 || abs(yNormal[fc]) > 0.5 || abs(zNormal[fc] ) > 0.5 ||
-                  (xNormal[fc+xadjust])  >0.5 || abs(yNormal[fc+yadjust]) > 0.5 || abs(zNormal[fc+zadjust] ) > 0.5 ){
+              if ( std::abs(xNormal[fc])  >0.5 || std::abs(yNormal[fc]) > 0.5 || std::abs(zNormal[fc] ) > 0.5 ||
+                  std::abs(xNormal[fc+xadjust])  >0.5 || std::abs(yNormal[fc+yadjust]) > 0.5 || std::abs(zNormal[fc+zadjust] ) > 0.5 ){
                 tempWall+= sigmaT4[fc]*abskg[fc]; // only weight intrusion outer-cells
                 kWall+= abskg[fc];
                 countWall++;
@@ -3573,10 +3574,11 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
             IntVector fc = *iter;
 
             IntVector cc = fineLevel->mapCellToCoarser(fc,levelOffSet);
-
+                    
               if( cc.x() >= cl.x() && cc.y() >= cl.y() && cc.z() >= cl.z() &&   
                   cc.x() <= ch.x() && cc.y() <= ch.y() && cc.z() <= ch.z() ) {  
-                bool includeInAverage= (abs(xNormal[fc+xbadjust])  >0.5 || abs(yNormal[fc+ybadjust]) > 0.5 || abs(zNormal[fc+zbadjust] ) > 0.5 || cellType[fc]!=8); // celltype of 8 is wall, override, xyz normals if its an inlet or outlet
+
+                bool includeInAverage= (std::abs(xNormal[fc+xbadjust])  >0.5 || std::abs(yNormal[fc+ybadjust]) > 0.5 || std::abs(zNormal[fc+zbadjust] ) > 0.5 || cellType[fc]!=8); // celltype of 8 is wall, override, xyz normals if its an inlet or outlet
                 if (includeInAverage){
                   sigmaT4temp[cc]+=sigmaT4[fc]*abskg[fc];     
                   abskgtemp[cc]+=abskg[fc];     
