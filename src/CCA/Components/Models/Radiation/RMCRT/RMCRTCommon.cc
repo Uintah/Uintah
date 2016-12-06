@@ -580,14 +580,15 @@ RMCRTCommon::updateSumI (const Level* level,
       if( isDbgCell( origin )){
          printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
          printf( " dir %d ", dir );
+         printf( " cellType: %i ", celltype[cur] );
          printf( "tMax [%g,%g,%g] ",tMax[0],tMax[1], tMax[2]);
          printf( "rayLoc [%g,%g,%g] ",ray_location.x(),ray_location.y(), ray_location.z());
          printf( "distanceTraveled %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, Dx[dir]);
-         printf( "            tDelta [%g,%g,%g] \n",tDelta.x(),tDelta.y(), tDelta.z());
+         printf( "                tDelta [%g,%g,%g] \n",tDelta.x(),tDelta.y(), tDelta.z());
 
 //         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
 //         printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur]);
-         printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
+         printf( "                optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
       }
 #endif
 /*===========TESTING==========`*/     
@@ -729,13 +730,12 @@ RMCRTCommon::updateSumI (const Level* level,
 
 /*`==========TESTING==========*/
 #if DEBUG  >= 0
-if( isDbgCell( origin)  ){
-   printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
-          cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
-
-}
+    if( isDbgCell( origin)  ){
+      printf( "        intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, d_allowReflect );
+    }
 #endif
 /*===========TESTING==========`*/
+
     //__________________________________
     //  Reflections
     if ( intensity > d_threshold && d_allowReflect ){
@@ -853,11 +853,6 @@ RMCRTCommon::doCarryForward( const int radCalc_freq )
 bool
 RMCRTCommon::isDbgCell( const IntVector me)
 {
-
-  if(me == IntVector(0,0,0) ){
-    return true;
-  }
-
   for( unsigned int i = 0; i<d_dbgCells.size(); i++) {
     if( me == d_dbgCells[i]) {
       return true;
