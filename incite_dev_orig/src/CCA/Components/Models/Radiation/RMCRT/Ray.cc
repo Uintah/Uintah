@@ -3003,7 +3003,7 @@ void Ray::computeCellType( const ProcessorGroup*,
 
 
       // if the cell isn't a flow cell then terminate the ray
-      in_domain = (cellType[L][cur] == d_flowCell);
+      in_domain = in_domain && (cellType[L][cur] == d_flowCell);
       
       rayLength += distanceTraveled;
 
