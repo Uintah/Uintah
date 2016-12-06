@@ -2586,8 +2586,6 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                     // getGridVar a foreign var, it doesn't work, it wasn't designed for that).  Fortunately
                     // we would have already seen it in whatever function called this. So use that instead.
 
-                    GridVariableBase* tempGridVarToPersistUntilCopyComplete = nullptr;
-
                     // Note: Unhandled scenario:  If the adjacent patch is only in the GPU, this code doesn't gather it.
                     if (uses_SHRT_MAX) {
                       g_GridVarSuperPatch_mutex.lock();
@@ -3348,7 +3346,7 @@ void
 UnifiedScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
 {
   // Data has been copied from the device to the host.  The stream has completed.
-  // Go through all variables that this CPU task was respnosible for copying mark them as valid on the CPU
+  // Go through all variables that this CPU task was responsible for copying mark them as valid on the CPU
 
   // The only thing we need to process is the requires.
   std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap = dtask->getVarsBeingCopiedByTask().getMap();
@@ -3368,6 +3366,10 @@ UnifiedScheduler::markHostRequiresDataAsValid( DetailedTask * dtask )
           cerrLock.unlock();
         }
         gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+      }
+      if (it->second.m_var) {
+        //Release our reference to the variable data that getGridVar returned
+        delete it->second.m_var;
       }
     }
   }
@@ -3899,6 +3901,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
                 host_ptr = gridVar->getBasePointer();
                 host_bytes = gridVar->getDataSize();
+
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
@@ -3947,7 +3950,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                   CUDA_RT_SAFE_CALL(retVal);
                 }
               }
-              delete gridVar;
+              //delete gridVar;
             }
             break;
           }
@@ -3999,7 +4002,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                 printf("ERROR: InitiateD2H - PerPatch variable memory sizes didn't match\n");
                 SCI_THROW(InternalError("InitiateD2H - PerPatch variable memory sizes didn't match", __FILE__, __LINE__));
               }
-              delete hostPerPatchVar;
+              //delete hostPerPatchVar;
             }
 
             break;
@@ -4050,7 +4053,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                 printf("ERROR: InitiateD2H - Reduction variable memory sizes didn't match\n");
                 SCI_THROW(InternalError("InitiateD2H - Reduction variable memory sizes didn't match", __FILE__, __LINE__));
               }
-              delete hostReductionVar;
+              //delete hostReductionVar;
             }
             break;
           }
