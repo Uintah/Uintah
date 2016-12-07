@@ -129,10 +129,10 @@ namespace WasatchCore{
 
     Uintah::ProblemSpecP params_, psParams_;
     const std::string solnVarName_, pseudoSpecName_;
-    const Expr::Tag densityTag_;
-    Expr::Tag primVarTag_, turbDiffTag_;
+    const Expr::Tag densityTag_, primVarTag_;
     const bool enableTurbulence_;
     bool isStrong_, isConstDensity_;
+    Expr::Tag turbDiffTag_;
     FieldTagInfo infoStar_;  // needed to form predicted scalar quantities
   };
 

@@ -62,23 +62,37 @@ class ParticleTemperatureRHS
 public:
   class Builder : public Expr::ExpressionBuilder
   {
+    const Expr::Tag partmast_,  partCpt_ , moistrhst_, oxidationt_, co2gasift_,
+                    h2ogasift_, co2coratiot_, inttempGt_, tempPt_;
   public:
     Builder( const Expr::Tag& ptrhs,
              const Expr::Tag& partmast,
              const Expr::Tag& partCpt,
              const Expr::Tag& moistrhst,
-             const Expr::Tag& oxidaiont,
+             const Expr::Tag& oxidaitont,
              const Expr::Tag& co2gasift,
              const Expr::Tag& h2ogasift,
              const Expr::Tag& co2coratiot,
              const Expr::Tag& tempPt,
-             const Expr::Tag& inttempGt );
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
+             const Expr::Tag& inttempGt )
+    : Expr::ExpressionBuilder(ptrhs),
+      partmast_   ( partmast   ),
+      partCpt_    ( partCpt    ),
+      moistrhst_  ( moistrhst  ),
+      oxidationt_ ( oxidaitont ),
+      co2gasift_  ( co2gasift  ),
+      h2ogasift_  ( h2ogasift  ),
+      co2coratiot_( co2coratiot),
+      inttempGt_  ( inttempGt  ),
+      tempPt_     ( tempPt     )
+    {}
 
-  private:
-    const Expr::Tag partmast_,  partCpt_ , moistrhst_, oxidationt_, co2gasift_,
-                    h2ogasift_, co2coratiot_, inttempGt_, tempPt_;
+    ~Builder(){}
+
+    Expr::ExpressionBase* build() const{
+      return new ParticleTemperatureRHS<FieldT>( partmast_, partCpt_, moistrhst_, oxidationt_, co2gasift_,
+                                                 h2ogasift_, co2coratiot_, tempPt_, inttempGt_ );
+    }
   };
 
   void evaluate();
@@ -161,40 +175,6 @@ evaluate()
 }
 
 //--------------------------------------------------------------------
-
-template< typename FieldT >
-ParticleTemperatureRHS<FieldT>::
-Builder::Builder( const Expr::Tag& ptrhs,
-                  const Expr::Tag& partmast,
-                  const Expr::Tag& partCpt,
-                  const Expr::Tag& moistrhst,
-                  const Expr::Tag& oxidationt,
-                  const Expr::Tag& co2gasift,
-                  const Expr::Tag& h2ogasift,
-                  const Expr::Tag& co2coratiot,
-                  const Expr::Tag& tempPt,
-                  const Expr::Tag& inttempGt )
-: ExpressionBuilder(ptrhs),
-  partmast_   ( partmast   ),
-  partCpt_    ( partCpt    ),
-  moistrhst_  ( moistrhst  ),
-  oxidationt_ ( oxidationt ),
-  co2gasift_  ( co2gasift  ),
-  h2ogasift_  ( h2ogasift  ),
-  co2coratiot_( co2coratiot),
-  tempPt_     ( tempPt     ),
-  inttempGt_  ( inttempGt  )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-Expr::ExpressionBase*
-ParticleTemperatureRHS<FieldT>::Builder::build() const
-{
-  return new ParticleTemperatureRHS<FieldT>( partmast_, partCpt_, moistrhst_, oxidationt_, co2gasift_,
-                                             h2ogasift_, co2coratiot_, tempPt_, inttempGt_ );
-}
 
 } // namespace coal
 /*

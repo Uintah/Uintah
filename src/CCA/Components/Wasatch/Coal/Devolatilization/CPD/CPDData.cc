@@ -15,14 +15,14 @@ namespace CPD{
   //------------------------------------------------------------------
 
   CPDInformation::CPDInformation( const Coal::CoalType sel )
-    : nspec_( 15 ),
-      coalType_( sel ),
-      coalComp_( sel ),
-      speciesData_(),
+    : nspec_   ( 15    ),
+      coalType_( sel   ),
+      coalComp_( sel   ),
       l0_      ( 0.094 ),  // wt fraction
-      Ml0_     ( 28 ),
-      coordNo_ ( 3.6    ),  // coordination number of coal lattice         [3]
-      lbPop0_  (0.59    )   // initial normalized labile bridge population [3]
+      Ml0_     ( 28    ),
+      coordNo_ ( 3.6   ),  // coordination number of coal lattice         [3]
+      lbPop0_  (0.59   ),  // initial normalized labile bridge population [3]
+      speciesData_()
  
   {
     /*  For more information on the data here:
@@ -64,9 +64,9 @@ namespace CPD{
       fg_.push_back( 0.090 ); // Y17 CO extra tight
 
       tarMassFrac0_ = 0.095;
-        Mw_ = 41.12;
-        coordNo_ = 3.5;  // [3]
-        lbPop0_  = 0.61; // [3]
+      Mw_           = 41.12;
+      coordNo_      = 3.5;  // [3]
+      lbPop0_       = 0.61; // [3]
       break;
 			
     case Coal::Gillette_Subbituminous:

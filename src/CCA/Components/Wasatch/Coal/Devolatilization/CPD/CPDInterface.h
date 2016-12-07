@@ -36,8 +36,9 @@ using Coal::CoalType;
     const CPD::CPDInformation cpdInfo_;
     const Coal::CoalComposition& coalComp_;
     const double c0_, vMassFrac0_, tar0_;
-    const Expr::Tag pTempTag_, coalType_, pMassTag_, pMass0Tag_,
-                    lbPopulation_rhsTag_, kbTag_;
+    const Expr::Tag pTempTag_, pMassTag_, pMass0Tag_, kbTag_;
+    const Coal::StringNames& sNames_;
+    GraphCategories& gc_;
 
     Expr::Tag tarTag_, lbTag_, lb_rhsTag_, lbpTag_, lbp_rhsTag_;
 
@@ -50,9 +51,6 @@ using Coal::CoalType;
     Coal::CoalEquation *lbEqn_, *lbPopulationEqn_, *tarEqn_;
     Coal::CoalEqVec deltaEqns_, gEqns_, yEqns_;
 
-    const Coal::StringNames& sNames_;
-
-    GraphCategories& gc_;
 
     bool haveRegisteredExprs_;
     bool eqnsParsed_;

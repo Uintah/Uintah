@@ -86,14 +86,14 @@ typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     const Expr::Tag get_c2p_tag( std::string specName );
     const Expr::Tag get_p2c_src_tag( std::string specName );
 
-    bool equationsSet_;
-    EquationAdaptors adaptors_;
     GraphCategories& gc_;
     Uintah::ProblemSpecP& wasatchSpec_, particleSpec_, coalSpec_;
+    Expr::ExpressionFactory& factory_;
     const TagNames& tagNames_;
     const Expr::Tag pMassTag_, pSizeTag_, pDensTag_, pTempTag_, gDensTag_;
+    bool equationsSet_;
+    EquationAdaptors adaptors_;
     Expr::TagList pPosTags_, yiTags_;
-    Expr::ExpressionFactory& factory_;
 
     Coal::CoalInterface<ParticleField>* coalInterface_;
   };

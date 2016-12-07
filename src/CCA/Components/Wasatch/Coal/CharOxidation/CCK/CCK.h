@@ -77,9 +77,9 @@ class CCKModel
   DECLARE_VECTOR_OF_FIELDS( FieldT, gasProps_   )
   DECLARE_VECTOR_OF_FIELDS( FieldT, prtProps_   )
 
+  const CCKData&  cckData_;
   const double epsilon_, tau_f_, gasConst_, shNo_;
   CHAR::Vec mwVec_;
-  const CCKData&  cckData_;
 
   std::vector<typename FieldT::const_iterator> yIVec_;
   std::vector<typename FieldT::const_iterator> resultIVec_;
@@ -227,6 +227,7 @@ evaluate()
 
     // set parameters that are constant within this for-loop
     const double initCharMass   = charMassFrac0 * *ipMass0;
+    // jcs it appears that charConversion isn't used.  That implies that charMass and initCharMass are also unused...
     const double charConversion = 1.0 - *icharMass/initCharMass;
     const double mTemp = 0.5*( *iprtTemp + *igasTemp );
 
@@ -273,6 +274,7 @@ evaluate()
      * partial pressure at the particle surface and the bulk.
      */
     const double xSum    = std::accumulate( xInf.begin(), xInf.end(), 0.0 );
+    // jcs it appears that ppInert is unused, which means that xSum is also unused.
     const double ppInert = *ipressure * fmin(1.0, fmax(0.0, 1.0 - xSum ) );
     double       CO2_CO_ratio;
 
@@ -292,10 +294,6 @@ evaluate()
 
      pSurf1.resize(n);
      for(size_t i = 0; i<n; ++i){ pSurf1[i] = pBulk[i];}
-
-     double ppSum1, ppSum2;
-
-
 
      //Variables that will be set by cckData_.charConsumptionRates
      CHAR::Vec error1;  error1.assign(n, 0.0);

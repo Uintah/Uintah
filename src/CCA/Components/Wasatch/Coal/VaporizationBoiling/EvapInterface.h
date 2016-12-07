@@ -33,16 +33,16 @@ namespace EVAP{
   template< typename FieldT >
   class EvapInterface
   {
+    WasatchCore::GraphCategories& gc_;
 
     const Coal::CoalComposition coalComp_;
     const Coal::CoalType ct_;
-    const Expr::Tag tempGTag_, tempPTag_, diamPTag_, rePTag_, scGTag_, dgTag_, waterMasFracTag_,
+    const Expr::Tag tempGTag_, tempPTag_, diamPTag_, rePTag_, scGTag_, waterMasFracTag_,
                     totalMWTag_, gasPressureTag_, pMassTag_;
 
-    WasatchCore::GraphCategories& gc_;
-    Coal::CoalEquation*           evapEqn_;
-    Coal::CoalEqVec               eqns_;
-    bool                          eqnsParsed_;
+    Coal::CoalEquation* evapEqn_;
+    Coal::CoalEqVec     eqns_;
+    bool                eqnsParsed_;
 
     EvapInterface(); // no copying
     EvapInterface& operator=( const EvapInterface& );  // no assignment

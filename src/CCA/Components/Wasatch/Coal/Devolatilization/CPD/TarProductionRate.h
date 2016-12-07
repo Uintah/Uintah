@@ -136,8 +136,8 @@ TarProductionRate( const Expr::Tag& lbPopTag,
                    const double    tar0,
                    const CPDInfo&   cpdInfo )
   : Expr::Expression<FieldT>(),
-    vmFrac0_( vmFrac0 ),
     tar0_   ( tar0    ),
+    vmFrac0_( vmFrac0 ),
     cpdInfo_( cpdInfo )
 {
   this->set_gpu_runnable(true);
@@ -156,10 +156,8 @@ evaluate()
 {
   using namespace SpatialOps;
 
-  const double s     = cpdInfo_.get_coordNo() - 1;  // (coordination number) -1 of coal lattice
-  const double l0    = cpdInfo_.get_l0_mass();
-  const double sumfg = cpdInfo_.get_sumfg();
-  const double tau   = s + 1;
+  const double s   = cpdInfo_.get_coordNo() - 1;  // (coordination number) -1 of coal lattice
+  const double tau = s + 1;
 
   FieldT& result = this->value();
 

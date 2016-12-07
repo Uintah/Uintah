@@ -48,29 +48,25 @@ namespace CCK{
                 const Coal::CoalType coalType,
                 const DEV::DevModel devModel )
     : gc_                  ( gc                ),
-      pTempTag_            ( pTempTag          ),
-      gTempTag_            ( gTempTag          ),
-      o2MassFracTag_       ( o2MassFracTag     ),
-      co2MassFracTag_      ( co2MassFracTag    ),
-      coMassFracTag_       ( coMassFracTag     ),
-      h2MassFracTag_       ( h2MassFracTag     ),
-      ch4MassFracTag_      ( ch4MassFracTag    ),
-      h2oMassFracTag_      ( h2oMassFracTag    ),
-      mixMWTag_            ( mixMWTag          ),
-      gPressTag_           ( gPressTag    ),
-      pDiamTag_            ( pDiamTag     ),
-      pMassTag_            ( pMassTag     ),
-      pMass0Tag_           ( pMass0Tag    ),
-      pDens0Tag_           ( pDens0Tag    ),
-      pDiam0Tag_           ( pDiam0Tag    ),
-      volatilesTag_        (volatilesTag       ),
-      sNames_              ( Coal::StringNames::self() ),
-      o2_rhsTag_           ( Coal::StringNames::self().char_o2_rhs,             STATE_NONE ),
+
+      gTempTag_            ( gTempTag  ),
+      mixMWTag_            ( mixMWTag  ),
+      gPressTag_           ( gPressTag ),
+
+      o2MassFracTag_       ( o2MassFracTag  ),
+      h2oMassFracTag_      ( h2oMassFracTag ),
+      h2MassFracTag_       ( h2MassFracTag  ),
+      ch4MassFracTag_      ( ch4MassFracTag ),
+      co2MassFracTag_      ( co2MassFracTag ),
+      coMassFracTag_       ( coMassFracTag  ),
       co2_rhsTag_          ( Coal::StringNames::self().char_co2_rhs,            STATE_NONE ),
       co_rhsTag_           ( Coal::StringNames::self().char_co_rhs,             STATE_NONE ),
-      h2_rhsTag_           ( Coal::StringNames::self().char_h2_rhs,             STATE_NONE ),
+      o2_rhsTag_           ( Coal::StringNames::self().char_o2_rhs,             STATE_NONE ),
       h2o_rhsTag_          ( Coal::StringNames::self().char_h2o_rhs,            STATE_NONE ),
+      h2_rhsTag_           ( Coal::StringNames::self().char_h2_rhs,             STATE_NONE ),
       ch4_rhsTag_          ( Coal::StringNames::self().char_ch4_rhs,            STATE_NONE ),
+
+      pDiam0Tag_           ( pDiam0Tag    ),
       ashPorosityTag_      ( Coal::StringNames::self().ash_porosity,            STATE_NONE ),
       ashThicknessTag_     ( Coal::StringNames::self().ash_thickness,           STATE_NONE ),
       coreDiamTag_         ( Coal::StringNames::self().core_diameter,           STATE_NONE ),
@@ -83,9 +79,16 @@ namespace CCK{
       devolDensityTag_     ( "p_DevolatilizedDensity",                          STATE_NONE ),
       pDiamModTag_         ( "cck_p_size",                                      STATE_NONE ),
       devolDens0Tag_       ( "Initial_p_DevolatilizedDensity",                  STATE_NONE ),
+      coreDens0Tag_        ( "Initial_"+Coal::StringNames::self().core_density, STATE_NONE ),
+      pTempTag_            ( pTempTag     ),
+      pDens0Tag_           ( pDens0Tag    ),
+      pDiamTag_            ( pDiamTag     ),
+      pMassTag_            ( pMassTag     ),
+      pMass0Tag_           ( pMass0Tag    ),
+      volatilesTag_        (volatilesTag       ),
       devolAshMassFracTag_ ( Coal::StringNames::self().ash_mass_frac +"_d",     STATE_NONE ),
       devolCharMassFracTag_( Coal::StringNames::self().char_mass_frac+"_d",     STATE_NONE ),
-      coreDens0Tag_        ( "Initial_"+Coal::StringNames::self().core_density, STATE_NONE ),
+      sNames_              ( Coal::StringNames::self() ),
       initDevChar_         ( devModel == DEV::CPDM ),
       cckData_             ( coalType             )
   {
@@ -151,9 +154,9 @@ namespace CCK{
   {
     charMassTag_      = charEqn_->solution_variable_tag();
     charMass_rhsTag_  = charEqn_->rhs_tag();
-    oxidation_rhsTag_ = Tag( sNames_.char_oxid_rhs,   STATE_NONE );
     heteroCo2Tag_     = Tag( sNames_.char_gasifco2,   STATE_NONE );
     heteroH2oTag_     = Tag( sNames_.char_gasifh2o,   STATE_NONE );
+    oxidation_rhsTag_ = Tag( sNames_.char_oxid_rhs,   STATE_NONE );
     co2CoRatioTag_    = Tag( sNames_.char_coco2ratio, STATE_NONE );
 
     speciesSrcTags_.clear();

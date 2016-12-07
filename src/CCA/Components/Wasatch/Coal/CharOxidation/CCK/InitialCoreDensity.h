@@ -105,7 +105,7 @@ public:
     FieldT& result = this->value();
 
     const FieldT& rhoP0_d = initPrtDensity_d_->field_ref();
-    const FieldT& dP0     = initPrtDiameter_ ->field_ref();
+//    const FieldT& dP0     = initPrtDiameter_ ->field_ref(); // jcs it appears that this is unused.
 
     const double dm       = cckData_.get_min_ash_thickness();
     const double rhoA     = cckData_.get_nonporous_ash_density()

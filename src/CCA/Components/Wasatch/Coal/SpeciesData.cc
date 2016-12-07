@@ -99,11 +99,11 @@ namespace GasSpec{
       msg << __FILE__ << " : " << __LINE__ << std::endl
           << "Invalid gas species name passed to SpeciesData::species_name_to_enum." << std::endl
           << "Below is a list of considered gas-phase species:"<<std::endl;
-     for(int i = 0; i<specNames_.size(); ++i ){
-       msg << specNames_[i]<<std::endl;
-     }
-      throw std::runtime_error( msg.str() );
-        }
+      for( size_t i = 0; i<specNames_.size(); ++i ){
+        msg << specNames_[i]<<std::endl;
+      }
+     throw std::runtime_error( msg.str() );
+    }
   }
 
   //------------------------------------------------------------------

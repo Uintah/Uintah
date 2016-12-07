@@ -48,12 +48,12 @@ namespace WasatchCore{
                                Uintah::ProblemSpecP particleTempSpec,
                                GraphCategories&     gc )
   : ParticleEquationBase( solnVarName, NODIR, particlePositionTags, particleSizeTag, gc ),
+    implementCoalModels_( WasatchSpec->findBlock("Coal") ),
     pSrcTag_( parse_nametag(particleTempSpec->findBlock("SourceTerm")) ),
     pMassTag_( particleMassTag ),
     pSizeTag_( particleSizeTag ),
     gViscTag_( gasViscosityTag ),
-    pPosTags_( particlePositionTags ),
-    implementCoalModels_( WasatchSpec->findBlock("Coal") )
+    pPosTags_( particlePositionTags )
   {
 #   ifndef HAVE_POKITT
     if( implementCoalModels_ ){

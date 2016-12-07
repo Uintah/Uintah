@@ -80,8 +80,8 @@ class HeatReleasedtoGas
 
   bool haveRegSpecies_, haveCpdSpecies_;
   int iCO2_, iCO_, iH2O_, iO2_, iH2_, iHCN_, iNH3_, iCH4_, iH_;
-  const double alpha_;
   const DEV::DevModel dvmodel_;
+  const double alpha_;
 
   HeatReleasedtoGas( const Expr::Tag&     o2rhst,
                      const Expr::TagList& devspecrhst,
@@ -388,10 +388,10 @@ Builder::Builder( const Expr::Tag&     heatRelTag,
                   const Expr::Tag&     tempPt,
                   const Expr::Tag&     tempGt,
                   const Expr::Tag&     gaspresst,
-                                  const DEV::DevModel dvmodel)
+                  const DEV::DevModel dvmodel )
   : ExpressionBuilder(heatRelTag),
-    o2rhst_     ( o2rhst      ),
     devspecrhst_( devspecrhst ),
+    o2rhst_     ( o2rhst      ),
     evaprhst_   ( evaprhst    ),
     oxidationt_ ( oxidationt  ),
     co2coratiot_( co2coratiot ),
@@ -400,7 +400,7 @@ Builder::Builder( const Expr::Tag&     heatRelTag,
     tempPt_     ( tempPt      ),
     tempGt_     ( tempGt      ),
     gaspresst_  ( gaspresst   ),
-      dvmodel_    ( dvmodel     )
+    dvmodel_    ( dvmodel     )
 {
 }
 

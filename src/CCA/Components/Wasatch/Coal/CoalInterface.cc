@@ -121,13 +121,18 @@ namespace Coal{
       pDiamTag_   ( pDiamTag  ),
       rePTag_     ( rePtag    ),
       scGTag_     ( scGTag    ),
-      devModel_   ( devModel   ),
       pCpTag_     ( WasatchCore::TagNames::self().pHeatCapacity ),
       pTemp_rhsTag_( Coal::StringNames::self().coal_temprhs, Expr::STATE_NONE ),
-
       heatReleasedToGasTag_( Coal::StringNames::self().char_heattogas, Expr::STATE_NONE ),
 
+      mvTag_      ( dev_ ->volatiles_tag()              ),
+      charTag_    ( char_->char_mass_tag()              ),
+      moistureTag_( evap_->retrieve_moisture_mass_tag() ),
+
       specTagMap_( specTagMap ),
+
+      devModel_   ( devModel   ),
+
 
       dev_( new DEV::DevolatilizationInterface<FieldT>( gc, coalType, devModel, pTempTag, pMassTag, pMass0Tag) ),
 
@@ -141,11 +146,8 @@ namespace Coal{
 
       evap_( new EVAP::EvapInterface<FieldT>( gc, gTempTag, pTempTag, pDiamTag, rePtag,
                                               scGTag, get_species_tag(H2O), mixMWTag,
-                                              gPressTag, pMassTag, coalType) ),
+                                              gPressTag, pMassTag, coalType) )
 
-      mvTag_      ( dev_ ->volatiles_tag()               ),
-      charTag_    ( char_->char_mass_tag()              ),
-      moistureTag_( evap_->retrieve_moisture_mass_tag() )
   {
     // assemble the collection of tags corresponding to gas phase
     // source terms from the CPD and Char oxidation models,

@@ -70,7 +70,7 @@ namespace Coal{
 
   void CoalEquation::setup()
   {
-    Expr::ExpressionFactory& factory = *gc_[WasatchCore::ADVANCE_SOLUTION]->exprFactory;
+    //Expr::ExpressionFactory& factory = *gc_[WasatchCore::ADVANCE_SOLUTION]->exprFactory;
   }
 
 

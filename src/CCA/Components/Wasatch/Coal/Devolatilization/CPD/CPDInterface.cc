@@ -69,20 +69,18 @@ CPDInterface<FieldT>::CPDInterface( GraphCategories& gc,
                                     const Expr::Tag  pMassTag,
                                     const Expr::Tag  pMass0Tag )
   : DEV::DevolatilizationBase(),
-    gc_         ( gc        ),
-    pTempTag_   ( pTempTag  ),
-    pMassTag_   ( pMassTag  ),
-    pMass0Tag_  ( pMass0Tag ),
-    sNames_     ( Coal::StringNames::self() ),
-    cpdInfo_    ( coalType ),
-    coalComp_   ( cpdInfo_.get_coal_composition() ),
+    cpdInfo_   ( coalType ),
+    coalComp_  ( cpdInfo_.get_coal_composition() ),
     c0_        ( c0_fun( coalComp_.get_C(), coalComp_.get_O() )),
-    tar0_      ( tar_0(cpdInfo_, c0_) ),
     vMassFrac0_( coalComp_.get_vm() ),
-    kbTag_( Coal::StringNames::self().cpd_kb, Expr::STATE_NONE )
+    tar0_      ( tar_0(cpdInfo_, c0_) ),
+    pTempTag_  ( pTempTag  ),
+    pMassTag_  ( pMassTag  ),
+    pMass0Tag_ ( pMass0Tag ),
+    kbTag_     ( Coal::StringNames::self().cpd_kb, Expr::STATE_NONE ),
+    sNames_    ( Coal::StringNames::self() ),
+    gc_        ( gc )
 {
-//	this->tarProdRTag_ = Expr::Tag( Coal::StringNames::self().cpd_tarProdR, Expr::STATE_N );
-
   if( pTempTag == Expr::Tag() ){
     ostringstream msg;
     msg << __FILE__ << " : " << __LINE__ << endl
@@ -134,7 +132,6 @@ parse_equations()
     delta_rhsTags_.push_back( deltaEqns_[i]->rhs_tag() );
   }
 
-
   /*
    * Parse equations for volatiles, tar, labile bridge, and labile bridge population.
    */
@@ -154,8 +151,6 @@ parse_equations()
   eqns_.push_back( tarEqn_          );
   eqns_.push_back( lbEqn_           );
   eqns_.push_back( lbPopulationEqn_ );
-
-
 }
 //----------------------------------------------------------------------
 template< typename FieldT >
@@ -189,8 +184,8 @@ set_tags()
   lbTag_           = lbEqn_           ->solution_variable_tag();
   lb_rhsTag_       = lbEqn_           ->rhs_tag();
 
-  lbpTag_           = lbPopulationEqn_->solution_variable_tag();
-  lbp_rhsTag_       = lbPopulationEqn_->rhs_tag();
+  lbpTag_          = lbPopulationEqn_->solution_variable_tag();
+  lbp_rhsTag_      = lbPopulationEqn_->rhs_tag();
 
   tarTag_          = tarEqn_          ->solution_variable_tag();
   tarSrcTag_       = tarEqn_          ->rhs_tag();

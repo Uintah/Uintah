@@ -372,7 +372,7 @@ namespace CCK{
     assert(rC[1] == 0.0);
 
     // total rate of char consumption
-    const double r_tot = std::accumulate( rC.begin(), rC.end(), 0.0 );
+//    const double r_tot = std::accumulate( rC.begin(), rC.end(), 0.0 );
 
 
 //============================================================================//
@@ -383,7 +383,7 @@ namespace CCK{
 
 
 /*=======================   CO2, CO, H2, H2O, CH4    =========================*/
-    for(size_t i = 0; i < nu.size(); ++i){
+    for( size_t i = 0; i < nu.size(); ++i ){
 
       if( i == 2 ) continue;
 
@@ -393,8 +393,8 @@ namespace CCK{
 
       const double ppCalc = pInf[i] - q[i]/mtc;
 
-      if( i == 5){ pError[i] = 0;                   }
-      else{        pError[i] = (pSurf[i] - ppCalc);}
+      if( i == 5){ pError[i] = 0;                  }
+      else       { pError[i] = (pSurf[i] - ppCalc);}
 
     }
 /*=======================             O2             =========================*/

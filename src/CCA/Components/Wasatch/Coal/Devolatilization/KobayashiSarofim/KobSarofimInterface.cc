@@ -21,15 +21,15 @@ namespace SAROFIM{
 //------------------------------------------------------------------	
   
 KobSarofimSpecies gas_dev2sarrofim( const DEV::DEVSpecies cspec )
-  {
-KobSarofimSpecies s;
-switch( cspec ){
-  case DEV::CO:   s=CO;             break;
-  case DEV::H2:   s=H2;             break;
-  default:   s=INVALID_SPECIES;break;
-}
-return s;
+{
+  KobSarofimSpecies s;
+  switch( cspec ){
+    case DEV::CO:   s=CO;             break;
+    case DEV::H2:   s=H2;             break;
+    default:   s=INVALID_SPECIES;break;
   }
+  return s;
+}
 	
 //------------------------------------------------------------------
 template< typename FieldT >

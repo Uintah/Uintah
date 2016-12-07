@@ -48,19 +48,19 @@ namespace WasatchCore{
                    Uintah::ProblemSpecP& coalSpec,
                    GraphCategories&      gc,
                    std::set<std::string> persistentFields )
-    : equationsSet_( false ),
-      particleSpec_( particleSpec ),
+    : gc_          ( gc           ),
       wasatchSpec_ ( wasatchSpec  ),
+      particleSpec_( particleSpec ),
       coalSpec_    ( coalSpec     ),
-      gc_          ( gc           ),
       factory_     ( *(gc[ADVANCE_SOLUTION]->exprFactory) ),
       tagNames_    ( TagNames::self() ),
-      pSizeTag_    ( parse_nametag(particleSpec->findBlock("ParticleSize")) ),
       pMassTag_    ( parse_nametag(particleSpec->findBlock("ParticleMass")) ),
+      pSizeTag_    ( parse_nametag(particleSpec->findBlock("ParticleSize")) ),
       pDensTag_    ( parse_nametag(particleSpec->findBlock("ParticleDensity")) ),
       pTempTag_    ( parse_nametag(particleSpec->findBlock("ParticleTemperature")) ),
       gDensTag_    ( parse_nametag(particleSpec->findBlock("ParticleMomentum")->findBlock("GasProperties")->findBlock("GasDensity"  )) )
   {
+    equationsSet_ = false;
     adaptors_.clear();
     Expr::ExpressionFactory& iFactory = *(gc[INITIALIZATION]->exprFactory);
 
@@ -192,24 +192,24 @@ namespace WasatchCore{
     for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
       EqnTimestepAdaptorBase* const adaptor = *ia;
       EquationBase* eqn = adaptor->equation();
-        try{
-          proc0cout << "Setting initial conditions for coal equation: "
-          << eqn->solution_variable_name()
-          << std::endl;
-          GraphHelper* const icGraphHelper = gc_[INITIALIZATION];
-          icGraphHelper->rootIDs.insert( eqn->initial_condition( *icGraphHelper->exprFactory ) );
-        }
-        catch( std::runtime_error& e ){
-          std::ostringstream msg;
-          msg << e.what()
-          << std::endl
-          << "ERROR while setting initial conditions on coal equation "
-          << eqn->solution_variable_name()
-          << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
+      try{
+        proc0cout << "Setting initial conditions for coal equation: "
+            << eqn->solution_variable_name()
+            << std::endl;
+        GraphHelper* const icGraphHelper = gc_[INITIALIZATION];
+        icGraphHelper->rootIDs.insert( eqn->initial_condition( *icGraphHelper->exprFactory ) );
       }
-      equationsSet_ = true;
+      catch( std::runtime_error& e ){
+        std::ostringstream msg;
+        msg << e.what()
+              << std::endl
+              << "ERROR while setting initial conditions on coal equation "
+              << eqn->solution_variable_name()
+              << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+    equationsSet_ = true;
   }
 
   void

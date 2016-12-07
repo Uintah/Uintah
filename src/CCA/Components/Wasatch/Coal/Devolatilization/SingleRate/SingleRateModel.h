@@ -41,6 +41,10 @@ class SingleRateModel
 public:
   class Builder : public Expr::ExpressionBuilder
   {
+    const Expr::Tag tempPt_, mvt_, initprtmast_;
+    const SingleRateInformation data_;
+    const bool isDAE_;
+    const double volatilefrac_;
   public:
     /**
      *  brief Build a SingleRateModel expression
@@ -53,15 +57,20 @@ public:
              const Expr::Tag& initprtmast,
              const double volatilefrac,
              const SingleRateInformation& data,
-             const bool isDAE);
+             const bool isDAE )
+    : Expr::ExpressionBuilder( resultTag ),
+      tempPt_      (tempPtag    ),
+      mvt_         (mvtag       ),
+      initprtmast_ (initprtmast ),
+      data_        (data        ),
+      isDAE_       (isDAE       ),
+      volatilefrac_(volatilefrac)
+    {}
 
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new SingleRateModel<FieldT>( tempPt_, mvt_, initprtmast_, volatilefrac_, data_, isDAE_);
+    }
 
-  private:
-    const Expr::Tag tempPt_, mvt_, initprtmast_;
-    const SingleRateInformation data_;
-    const bool isDAE_;
-    const double volatilefrac_;
   };
 
   ~SingleRateModel(){}
@@ -159,33 +168,6 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-template <typename FieldT>
-SingleRateModel<FieldT>::
-Builder::Builder( const Expr::TagList& resultTag,
-                  const Expr::Tag& tempPtag,
-                  const Expr::Tag& mvtag,
-                  const Expr::Tag& initprtmast,
-                  const double volatilefrac,
-                  const SingleRateInformation& data,
-                  const bool isDAE )
-: ExpressionBuilder( resultTag ),
-  tempPt_(tempPtag),
-  mvt_   (mvtag   ),
-  initprtmast_ (initprtmast),
-  volatilefrac_(volatilefrac),
-  data_  (data    ),
-  isDAE_(isDAE)
-{}
-
-//--------------------------------------------------------------------
-
-template <typename FieldT>
-Expr::ExpressionBase*
-SingleRateModel<FieldT>::
-Builder::build() const
-{
-  return new SingleRateModel<FieldT>( tempPt_, mvt_, initprtmast_, volatilefrac_, data_, isDAE_);
-}
 } // end of namespace SNGRATE
 
 #endif // Dev_SingleRateModel_h

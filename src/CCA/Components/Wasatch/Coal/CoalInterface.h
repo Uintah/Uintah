@@ -32,23 +32,23 @@ using WasatchCore::GraphCategories;
   template< typename FieldT >
   class CoalInterface
   {
+    GraphCategories& gc_;
     const Expr::Tag pTempTag_,  gTempTag_, mixMWTag_, pDensTag_, gPressTag_, pMassTag_,
                     pDiamTag_,rePTag_,   scGTag_,   pCpTag_,   pTemp_rhsTag_,
                     heatReleasedToGasTag_;
 
+    const Expr::Tag mvTag_, charTag_, moistureTag_;
+
     const SpeciesTagMap specTagMap_;
+
+    const DEV::DevModel devModel_;
 
     DEV::DevolatilizationInterface<FieldT>*  const dev_;
     CHAR::CharInterface           <FieldT>*  const char_;
     EVAP::EvapInterface           <FieldT>*  const evap_;
 
-    const Expr::Tag mvTag_, charTag_, moistureTag_;
-
     Expr::TagList gasSpeciesSourceTags_, productionRateTags_;
 
-    const DEV::DevModel devModel_;
-
-    GraphCategories& gc_;
 
     /**
      *  \brief Obtain the Expr::Tag for the given species.

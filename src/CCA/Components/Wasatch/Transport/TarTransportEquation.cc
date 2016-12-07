@@ -51,7 +51,6 @@ setup_tar_equation( Uintah::ProblemSpecP params,
                     GraphCategories& gc )
 {
   const TagNames& tagNames = TagNames::self();
-  Expr::ExpressionFactory&   factory = *gc[ADVANCE_SOLUTION]->exprFactory;
   Expr::ExpressionFactory& icFactory = *gc[INITIALIZATION  ]->exprFactory;
 
   proc0cout << "Setting up transport equation for tar" << std::endl;

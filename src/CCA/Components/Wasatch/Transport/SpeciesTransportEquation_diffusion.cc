@@ -87,7 +87,7 @@ SpeciesTransportEquation::setup_diffusive_flux( FieldTagInfo& info )
 
       // Turbulent diffusive flux
       if( turbParams_.turbModelName != TurbulenceParameters::NOTURBULENCE ){
-        const Expr::Tag turbFluxTag( "turb_diff_flux_"+primVarTag_.field_name(), Expr::STATE_NONE );
+        const Expr::Tag turbFluxTag( "turb_diff_flux_"+primVarName, Expr::STATE_NONE );
         if( direction == "X" ){
           typedef TurbDiffFlux<XFaceT>::Builder TurbFlux;
           factory.register_expression( scinew TurbFlux( turbFluxTag, tagNames.turbulentviscosity, turbParams_.turbSchmidt, primVarTag_ ) );

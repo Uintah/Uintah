@@ -111,7 +111,6 @@ namespace WasatchCore {
     void evaluate()
     {
       SVolField& result = this->value();
-      const SVolField& p = p_->field_ref();
       const double fac = 1.0-1.0/(alpha_*alpha_);
       result <<= fac * ( *grad_ )( p_->field_ref() );
     }

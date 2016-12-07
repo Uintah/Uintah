@@ -41,14 +41,15 @@ namespace SAROFIM{
   template< typename FieldT >
   class KobSarofimInterface: public DEV::DevolatilizationBase
   {
+    WasatchCore::GraphCategories& gc_;
+
     const Coal::CoalComposition coalComp_;
     const Expr::Tag pTempTag_, pMassTag_, pMass0Tag_;
     Expr::TagList dElementTags_, elementTags_, mvCharTags_;
+    const Coal::StringNames& sNames_;
 
-    WasatchCore::GraphCategories& gc_;
     KobSarofimInformation sarofimData_;
     Coal::CoalEquation  *hydrogenEqn_, *oxygenEqn_;
-    const Coal::StringNames& sNames_;
 
     bool haveRegisteredExprs_;
     bool eqnsParsed_;

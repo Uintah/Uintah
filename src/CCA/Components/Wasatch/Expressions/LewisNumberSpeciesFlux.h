@@ -69,7 +69,7 @@ class LewisNumberDiffFluxes
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,FluxT>::type  GradOp;
 
   const std::vector<double>& lewisNum_;
-  const int nspec_;
+  const size_t nspec_;
 
   DECLARE_VECTOR_OF_FIELDS( ScalarT, yi_ )
   DECLARE_FIELDS( ScalarT, thermCond_, cp_ )

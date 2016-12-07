@@ -25,6 +25,7 @@ namespace CCK{
   template< typename FieldT >
   class CCKInterface: public CHAR::CharBase
   {
+    WasatchCore::GraphCategories& gc_;
 
     //particle and gas property tags;
     const Tag gTempTag_, mixMWTag_, gPressTag_;
@@ -40,18 +41,16 @@ namespace CCK{
               pDens0Tag_,       pDiamTag_,          pMassTag_,         pMass0Tag_,       volatilesTag_,
               devolAshMassFracTag_, devolCharMassFracTag_;
 
+    const Coal::StringNames& sNames_;
+
+    const bool initDevChar_;  ///< Initial char in volatile matter (Only with CPD Model)
+    const CCKData cckData_;
+
     TagList massFracTags_, particleTags_, gasTags_, charDepletionTags_,
             char_rhsTags_,  logFreqDistTags_, logFreqDistRHSTags_;
 
     CCKInterface(); // no copying
     CCKInterface& operator=( const CCKInterface& );  // no assignment
-
-    const bool initDevChar_;  ///< Initial char in volatile matter (Only with CPD Model)
-    const CCKData cckData_;
-
-    WasatchCore::GraphCategories& gc_;
-
-    const Coal::StringNames& sNames_;
 
     Coal::CoalEqVec logFrequencyEqns_;
 

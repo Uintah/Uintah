@@ -75,6 +75,7 @@ class SootFormationRate
 public:
   class Builder : public Expr::ExpressionBuilder
   {
+    const Expr::Tag yTarTag_, tempTag_, densityTag_;
   public:
     /**
      *  @brief Build a SootFormationRate expression
@@ -86,16 +87,13 @@ public:
              const Expr::Tag& tempTag )
     : Expr::ExpressionBuilder( resultTag ),
       yTarTag_   ( yTarTag    ),
-      densityTag_( densityTag ),
-      tempTag_   ( tempTag    )
+      tempTag_   ( tempTag    ),
+      densityTag_( densityTag )
     {}
 
     Expr::ExpressionBase* build() const{
       return new SootFormationRate<ScalarT>( yTarTag_, densityTag_, tempTag_ );
     }
-
-  private:
-    const Expr::Tag yTarTag_, tempTag_, densityTag_;
   };
 
   ~SootFormationRate(){}

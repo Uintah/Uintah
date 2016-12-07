@@ -72,11 +72,10 @@ evaluate()
   const SpecContributeVec& spSum = specSum_.get_vec_comp();
   for( size_t i=0; i<dyi.size(); ++i ){
 
-    const double mw = spSum[i].first; // g/s
+    //const double mw = spSum[i].first; // g/s
     const VecI& contributingIndices = spSum[i].second;
 
     FieldT& dy = *dyi[i];
-
     dy <<= 0.0;
     for( size_t j=0; j<contributingIndices.size(); ++j ){
       const size_t index = contributingIndices[j];

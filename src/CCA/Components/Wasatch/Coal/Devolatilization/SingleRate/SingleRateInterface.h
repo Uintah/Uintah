@@ -43,16 +43,14 @@ using WasatchCore::GraphCategories;
   template< typename FieldT >
   class SingleRateInterface: public DEV::DevolatilizationBase
   {
+    GraphCategories& gc_;
     const Coal::CoalComposition coalComp_;
     const Expr::Tag pTempTag_, pMassTag_, pMass0Tag_;
-    Expr::TagList   mvCharTags_;
     const bool isDAE_;
-
     SingleRateInformation singleRateData_;
     const Coal::StringNames& sNames_;
+    Expr::TagList   mvCharTags_;
     bool haveRegisteredExprs_;
-
-    GraphCategories& gc_;
 
     /**
      *  \brief Parse ODEs relevant to the single rate model.

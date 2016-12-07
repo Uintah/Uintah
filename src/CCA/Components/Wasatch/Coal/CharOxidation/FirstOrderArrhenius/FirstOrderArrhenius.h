@@ -48,9 +48,9 @@ class FirstOrderArrhenius
   DECLARE_FIELDS( FieldT, charMass_,  pressure_, gTemp_, pTemp_, pDiameter_, mixMw_ )
   DECLARE_VECTOR_OF_FIELDS( FieldT, yi_ )
 
-  const double    pi_, gasConst_, shNum_;
   const CharData& charData_;
   const FOAData&  foaData_;
+  const double    pi_, gasConst_, shNum_;
   double          ea_, aH2o_, aCo2_;
   CHAR::Vec       mwVec_;
 
@@ -95,12 +95,12 @@ public:
              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
     : ExpressionBuilder( resultTags, nghost ),
       yiTags_      ( yiTags       ),
+      charMassTag_ ( charMassTag  ),
       pressureTag_ ( pressureTag  ),
+      pDiameterTag_( pDiameterTag ),
       mixMwTag_    ( mixMwTag     ),
       gTempTag_    ( gTempTag     ),
       pTempTag_    ( pTempTag     ),
-      charMassTag_ ( charMassTag  ),
-      pDiameterTag_( pDiameterTag ),
       charData_    ( charData     ),
       foaData_     ( foaData      )
     {}

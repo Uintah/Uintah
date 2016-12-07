@@ -60,6 +60,10 @@ namespace CHAR{
   public:
     class Builder : public Expr::ExpressionBuilder
     {
+      const Expr::Tag tempPTag_, tempGTag_, massFracO2Tag_, totalMWTag_, densityTag_, charMassTag_,
+      intGasPressTag_, prtDiamt_, initprtmast_;
+      CharOxidationData oxiData_;
+      const CharModel chmodel_;
     public:
       Builder( const Expr::TagList& charOxTag,
                const Expr::Tag& prtDiamt,
@@ -74,13 +78,9 @@ namespace CHAR{
                const CharOxidationData oxiData,
                const CharModel chmodel);
       ~Builder(){}
-      Expr::ExpressionBase* build() const;
-
-    private:
-      const Expr::Tag tempPTag_, tempGTag_, massFracO2Tag_, totalMWTag_, densityTag_, charMassTag_,
-      intGasPressTag_, prtDiamt_, initprtmast_;
-      CharOxidationData oxiData_;
-      const CharModel chmodel_;
+      Expr::ExpressionBase* build() const  {
+        return new CharOxidation<FieldT>(prtDiamt_ ,tempPTag_, tempGTag_, massFracO2Tag_,totalMWTag_,densityTag_, charMassTag_, intGasPressTag_, initprtmast_, oxiData_, chmodel_ );
+      }
     };
 
     void evaluate();
@@ -113,8 +113,8 @@ namespace CHAR{
                  const CharOxidationData oxiData,
                  const CharModel chmodel)
    : Expr::Expression<FieldT>(),
-     oxiData_       ( oxiData ),
-     chmodel_       ( chmodel )
+     chmodel_( chmodel ),
+     oxiData_( oxiData )
   {
     tempP_       = this->template create_field_request<FieldT>( tempPTag       );
     tempG_       = this->template create_field_request<FieldT>( intTempGas     );
@@ -325,7 +325,7 @@ namespace CHAR{
       double  f_2;
       double bisec=0.0;
 
-      if (dobisection) {
+      if( dobisection ){
 
         h1 = po2Inf/10000;
         f_1 = SurfaceO2_error( q, co2CORatio, h1, *igaspres, *itempg, *itempP, po2Inf, c_s, *iprtdiam, k1, k2, k_a_s, chmodel_);
@@ -339,7 +339,7 @@ namespace CHAR{
       err_ = 1.0;
       i=0;
       double halff = 1.0;
-      while (dobisection && err_>f0err && halff/h2>f0err) {
+      while( dobisection && err_>f0err && halff/h2>f0err ){
         i++;
         halff = (h2-h1)/2.0;
         po2S = h1 + halff ;
@@ -384,7 +384,6 @@ namespace CHAR{
                     const CharOxidationData oxiData,
                     const CharModel chmodel)
   : ExpressionBuilder(charOxTag),
-    prtDiamt_      ( prtDiamt ),
     tempPTag_      ( tempPTag ),
     tempGTag_      ( intTempGas ),
     massFracO2Tag_ ( massFracO2Tag ),
@@ -392,6 +391,7 @@ namespace CHAR{
     densityTag_    ( densityTag ),
     charMassTag_   ( charMassTag ),
     intGasPressTag_( intGasPressTag ),
+    prtDiamt_      ( prtDiamt ),
     initprtmast_   ( initprtmast ),
     oxiData_( oxiData ),
     chmodel_( chmodel )
@@ -409,16 +409,6 @@ namespace CHAR{
           <<"\nas it already considers char oxidation.";
       throw std::runtime_error( msg.str() );
     }
-  }
-
-  //--------------------------------------------------------------------
-
-  template< typename FieldT >
-  Expr::ExpressionBase*
-  CharOxidation<FieldT>::
-  Builder::build() const
-  {
-    return new CharOxidation<FieldT>(prtDiamt_ ,tempPTag_, tempGTag_, massFracO2Tag_,totalMWTag_,densityTag_, charMassTag_, intGasPressTag_, initprtmast_, oxiData_, chmodel_ );
   }
 
   //--------------------------------------------------------------------

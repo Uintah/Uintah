@@ -61,6 +61,8 @@ public:
 
   class Builder : public Expr::ExpressionBuilder
   {
+    const Expr::Tag initCoreDensityTag_, charConversionTag_;
+    const CCKData& cckData_;
   public:
     /**
      *  @brief Build a CoreDensity expression
@@ -71,19 +73,15 @@ public:
              const Expr::Tag& initCoreDensityTag,
              const CCKData&   cckData,
              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
-      : ExpressionBuilder( resultTag, nghost ),
-        charConversionTag_ ( charConversionTag  ),
+      : Expr::ExpressionBuilder( resultTag, nghost ),
         initCoreDensityTag_( initCoreDensityTag ),
+        charConversionTag_ ( charConversionTag  ),
         cckData_           ( cckData            )
     {}
 
     Expr::ExpressionBase* build() const{
       return new CoreDensity<FieldT>( charConversionTag_,initCoreDensityTag_, cckData_ );
     }
-
-  private:
-    const Expr::Tag initCoreDensityTag_, charConversionTag_;
-    const CCKData& cckData_;
   };
 
   ~CoreDensity(){}

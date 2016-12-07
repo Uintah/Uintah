@@ -44,7 +44,7 @@ SingleRateInterface( GraphCategories& gc,
                      const bool isDAE )
   : DEV::DevolatilizationBase(),
     gc_            ( gc        ),
-	   coalComp_      ( ct        ),
+    coalComp_      ( ct        ),
     pTempTag_      ( pTempTag  ),
     pMassTag_      ( pMassTag  ),
     pMass0Tag_     ( pMass0Tag ),

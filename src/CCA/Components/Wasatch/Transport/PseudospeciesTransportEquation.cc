@@ -68,13 +68,13 @@ namespace WasatchCore{
                                       false ),
       params_        ( params                                   ),
       psParams_      ( params->findBlock("TarAndSootEquations") ),
-      pseudoSpecName_( pseudospeciesName                        ),
       solnVarName_   ( "rho_" + pseudospeciesName               ),
-      isConstDensity_( false                                    ),
-      isStrong_      ( true                                     ),
+      pseudoSpecName_( pseudospeciesName                        ),
       densityTag_    ( densityTag                               ),
       primVarTag_    ( pseudospeciesName, Expr::STATE_NONE      ),
-      enableTurbulence_(  turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE )
+      enableTurbulence_(  turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE ),
+      isStrong_      ( true   ),
+      isConstDensity_( false  )
   {
     //_____________
     // Turbulence
@@ -88,9 +88,6 @@ namespace WasatchCore{
         factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
       }
     }
-
-    primVarTag_ = Expr::Tag( pseudoSpecName_, Expr::STATE_NONE );
-
     if( callSetup ) setup();
   }
 

@@ -33,11 +33,6 @@ namespace LH
               o2_rhsTag_,     h2o_rhsTag_,      h2_rhsTag_,
               co2_rhsTag_,    co_rhsTag_;
 
-    TagList co2CoTags_, char_co2coTags_, h2andh2o_rhsTags_;
-
-    ExpressionID oxidationRHSID_, co2coRHSID_, o2RHSID_, gasifco2ID_, gasifh2oID_,
-                 charRHSID_, h2Andh2oRHSID_;
-
     const bool initDevChar_;  ///< Initial char in volatile matter (Only with CPD Model)
 
     const CHAR::CharModel         charModel_;
@@ -46,6 +41,12 @@ namespace LH
     WasatchCore::GraphCategories& gc_;
 
     const Coal::StringNames& sNames_;
+
+    TagList co2CoTags_, char_co2coTags_, h2andh2o_rhsTags_;
+
+    ExpressionID oxidationRHSID_, co2coRHSID_, o2RHSID_, gasifco2ID_, gasifh2oID_,
+                 charRHSID_, h2Andh2oRHSID_;
+
 
     LangmuirInterface(); // no copying
     LangmuirInterface& operator=( const LangmuirInterface& );  // no assignment

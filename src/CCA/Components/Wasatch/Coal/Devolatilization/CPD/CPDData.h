@@ -121,16 +121,14 @@ enum CPDSpecies {
     static const SpeciesSum& self();
 
     ~SpeciesSum();
-  // obtain a vector of vector which shows the contribution of each species to a component. 
+    // obtain a vector of vector which shows the contribution of each species to a component.
     const SpecContributeVec& get_vec_comp() const{ return sContVec_; } 
-//     const SpecContributeMap& get_map_comp() const{ return sContMap_; }
 
-  // obtain number of components
-    int get_ncomp() const{ return sContVec_.size(); } //
+    // obtain number of components
+    int get_ncomp() const{ return sContVec_.size(); }
     
   private:
     SpecContributeVec sContVec_;
-//     SpecContributeMap sContMap_;
     MWCompPair species_connect( const CPDSpecies spec );
   };
 

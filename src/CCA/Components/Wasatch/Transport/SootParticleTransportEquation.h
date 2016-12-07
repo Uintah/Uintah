@@ -63,7 +63,7 @@ public:
                                  GraphCategories& gc,
                                  const Expr::Tag densityTag,
                                  const TurbulenceParameters& turbulenceParams );
- \
+
   ~SootParticleTransportEquation();
 
 protected:

@@ -34,19 +34,19 @@ namespace EVAP{
                  const Expr::Tag gasPressureTag,
                  const Expr::Tag pMassTag,
                  const Coal::CoalType ct )
-    : gc_      ( gc       ),
-      coalComp_( ct       ),
-      ct_      ( ct       ),
-      tempGTag_( tempGTag ),
-      tempPTag_( tempPTag ),
-      diamPTag_( diamPTag ),
-      rePTag_  ( rePTag   ),
-      scGTag_  ( scGTag   ),
+    : gc_             ( gc              ),
+      coalComp_       ( ct              ),
+      ct_             ( ct              ),
+      tempGTag_       ( tempGTag        ),
+      tempPTag_       ( tempPTag        ),
+      diamPTag_       ( diamPTag        ),
+      rePTag_         ( rePTag          ),
+      scGTag_         ( scGTag          ),
       waterMasFracTag_( waterMasFracTag ),
       totalMWTag_     ( totalMWTag      ),
       gasPressureTag_ ( gasPressureTag  ),
-      pMassTag_       ( pMassTag      ),
-      eqnsParsed_     ( false )
+      pMassTag_       ( pMassTag        ),
+      eqnsParsed_     ( false           )
   {
     ostringstream msg;
     msg << __FILE__ << " : " << __LINE__ << endl;

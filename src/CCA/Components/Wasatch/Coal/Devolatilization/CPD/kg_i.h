@@ -91,9 +91,9 @@ kg_i( const Expr::TagList& giTag,
   const std::vector<double>& fg = cpd_.get_fgi();
   const double sumfg = cpd_.get_sumfg();
   const double c0 = c0_fun( cpd_.get_coal_composition().get_C(), cpd_.get_coal_composition().get_O());
-  const int nspec = cpd_.get_nspec();
+  const size_t nspec = cpd_.get_nspec();
   gimax_.resize(nspec,0.0);
-  for (size_t i=0; i<nspec; ++i) {
+  for( size_t i=0; i<nspec; ++i ){
 	gimax_[i] = 2.0 * (1.0-c0) * fg[i] / sumfg;
   }
 
