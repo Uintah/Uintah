@@ -73,7 +73,7 @@ fi
 
 if test "$7" = "yes"; then
   # Building with CUDA
-  THREADS="-DENABLE_THREADS=ON -DNTHREADS=1"
+  THREADS="-DENABLE_THREADS=OFF -DNTHREADS=1"
   if [[ `hostname` = titan* ]]; then
     CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" -DCUDA_HOST_COMPILER=/opt/gcc/4.9.0/bin/g++"
   else
@@ -81,14 +81,14 @@ if test "$7" = "yes"; then
   fi
 else
   # Building without CUDA
-  THREADS="-DENABLE_THREADS=ON -DNTHREADS=1"
+  THREADS="-DENABLE_THREADS=OFF -DNTHREADS=1"
   CUDA=""
 fi
 
 ###########################################################################
 # GIT Hash Tags for the various libraries
 
-SPATIAL_OPS_TAG=94da0f8782d7c171a2a3483f268ae957f4bfaad9
+SPATIAL_OPS_TAG=41179f2247a74949767a0c2395d13bdd7987eddd
 TAB_PROPS_TAG=0a671fcdaf53cb517666ba760513a7ce141ecb6e
 RAD_PROPS_TAG=a2626cdccfbb97ccb7d68d43bfe085194cccf4d5
 EXPR_LIB_TAG=09cf96dec852cab2d636180dfb39793debaedc76
