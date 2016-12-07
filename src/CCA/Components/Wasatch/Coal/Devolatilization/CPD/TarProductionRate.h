@@ -17,42 +17,23 @@
  *
  *  The tar production rate is given as
  * \f[
- *
  *     r_{\mathrm{tar}} = mass_{p,0} * x_{v,0} * (1 - x_{l.0} - sum{x_{g_{i}}} * \frac{dQ_{1}}{dt},
- *
  * \f]
  *
- *  <li>    with
+ * with
  * \f[
  *     Q_{1} = (1-p)^(s + 3)
  * \f]
  * 
  *  <ul>
- *
- *
- *  <li>
- *
- *
  *  <li> \f$ m_{p} \f$ is the mass of the coal particles,
- *
- *
  *  <li> \f$ s + 1 \f$ is the coordination number for the coal
  *       lattice structure,
- *
- *
  *  <li> \f$ x_{{v}} \f$ is the volatiliziable mass fraction in the coal,
- *  
- *  
  *  <li> \f$ x_{l,0} \f$ is the mass fraction of labile bridge in th volatiliziable mass,
- *  
- *  
  *  <li> \f$ x_{g_{i}} \f$ are the mass fraction of functional groups in th volatiliziable mass, and
- *        
- *
- *
  *  <li> \f$ p = l/l_{0} \f$ is the normalized population of intact labile
  *        and char bridges.
- *
  *  </ul>
  *
  *  @param lbPop:     (kg lb/kg lb0) labile bridge population

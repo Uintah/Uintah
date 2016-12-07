@@ -11,22 +11,13 @@ namespace CPD{
 /**
  *  \ingroup CPD
  *  \class kg_i
- *  Calculating the reaction constant for each g_i
+ *  Calculating the reaction constant for each g_i,
+ *    \f[ kg_{i}=A_{i}exp\left(\frac{-E_{i}}{RT}\right) \f]
+ *  where
  *
- *  \param gitag     gi amount kg (internal CPD expression )
- *  \param tempTag   Particle Temperature K
- *  \initprtmastag   Initial particle mass kg
- *
- *
- *  kg_{i}=A_{i}exp\left(\frac{-E_{i}}{RT}\right)
- *
- *  which :
- *
- *  $A_{i}$ is constant and obtain from CPDInformation class
- *  $E_{i}$ is change with time and being calculated by Eb\_fun().
- *
+ *  \f$A_{i}\f$ is constant and obtain from CPDInformation class
+ *  \f$E_{i}\f$ is change with time and being calculated by \codeEb_fun()\endcode.
  */
-
 template <typename FieldT>
 class kg_i
   : public Expr::Expression<FieldT>
@@ -47,6 +38,12 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
+    /**
+     *  \param kgiTag
+     *  \param giTag     gi amount kg (internal CPD expression )
+     *  \param tempTag   Particle Temperature K
+     *  \param initprtmastag   Initial particle mass kg
+     */
     Builder( const Expr::TagList& kgiTag,
              const Expr::TagList& giTag,
              const Expr::Tag& tempTag,

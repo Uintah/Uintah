@@ -102,14 +102,14 @@ namespace CHAR{
     const Tag& char_consumption_rate_tag();
 
     /**
-     *  \brief obtain the Tag for the char consumption rate due to resction of
-     *           C_{(char)}+CO_{2}\rightarrow2CO
+     *  \brief obtain the Tag for the char consumption rate due to reaction of
+     *          \f$ C_{(char)}+CO_{2}\rightarrow 2CO \f$
      */
     const Tag& char_gasification_co2_rate_tag();
 
     /**
      *  \brief obtain the Tag for the char consumption rate due to reaction of
-     *           C_{(char)}+H_{2}O\rightarrowCO+H_{2}
+     *          \f$ C_{(char)}+H_{2}O\rightarrowCO+H_{2} \f$
      */
     const Tag& char_gasification_h2o_rate_tag();
 

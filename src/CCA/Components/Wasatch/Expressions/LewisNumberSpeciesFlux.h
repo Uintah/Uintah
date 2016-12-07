@@ -180,7 +180,7 @@ evaluate()
 
   SpatialOps::SpatFldPtr<FluxT> fluxSum = SpatialOps::SpatialFieldStore::get<FluxT>( *(fluxes[0]) );
 
-  for( int i=0; i<nspec_; ++i ){
+  for( size_t i=0; i<nspec_; ++i ){
     FluxT& flux = *fluxes[i];
     const ScalarT& yi        = yi_[i]    ->field_ref();
     const ScalarT& thermCond = thermCond_->field_ref();

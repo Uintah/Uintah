@@ -10,9 +10,9 @@
  *  \ingroup Devolatilization
  *  \brief   Evaluates the devolatilization rate and product by 
  *           Single Rate  model
- *
+ *  \f[
  *      CH_{h}O_{o}\rightarrow oCO+\frac{h-(1-o)}{2}H_{2}+\frac{(1-o)}{2}C_{2}H_{2}
- *
+ *  \f]
  *  \author  Babak Goshayeshi
  *
  *  \param   tempPtag : Particle Temperature tag in K

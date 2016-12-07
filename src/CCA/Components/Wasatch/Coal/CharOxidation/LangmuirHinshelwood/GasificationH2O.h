@@ -7,9 +7,8 @@
 /**
  *  \class GasificationH2O
  *
- *
- *    Reaction :
- *               C_{(char)}+H_{2}O\rightarrow CO+H_{2}
+ *  Reaction :
+ *    \f[ C_{(char)}+H_{2}O\rightarrow CO+H_{2} \f]
  */
 namespace CHAR{
 

@@ -13,14 +13,21 @@ namespace CHAR {
  *  \brief calculates the ratio CO2 production and CO production.
  *
  *
- *    The ratio calculate by equation in below :
- *
- *    \frac{moles CO}{moles CO_{2}} = A exp ( \frac{-E}{RT})
- *
+ *  The ratio is calculated as:
+ *  \f[
+ *    \frac{moles CO}{moles CO_{2}} = A \exp \left( \frac{-E}{RT}\right)
+ *  \f]
  *    Also in [2]
- *    \frac{CO_{2}}{CO}=A_{0}P_{O2}^{\eta_{0}}exp\left(\frac{B}{T_{p}}\right)
+ *  \f[
+ *    \frac{CO_{2}}{CO}=A_{0}P_{O2}^{\eta_{0}}\exp\left(\frac{B}{T_{p}}\right)
+ *  \f]
+ *  where \f$A_{0}=0.02\f$, \f$B=3070\f$ K and \f$\eta_{0}=0.21\f$
  *
- *     which A_{0}=0.02,\; B=3070\, K,\;\eta_{0}=0.21
+ * [1] "On the Products of the Heteroheneous Oxidation Reaction At The Surface of Burning Coal Char Particle,"
+ *     Reginald E Mitchel, 21 Symposium on Combustion - 1988, pp 69-78
+ *
+ * [2] A. F. Sarofim L. Tognotti, J. P. Longwell. "The products of the high tem- perature oxidation of a single
+ *     char particle in an electrodynamic balance", Symposium (International) on Combustion, Twenty-Third:1207-1213, 1990.
  *
  */
 template< typename FieldT >
@@ -88,14 +95,6 @@ public:
     //  const FieldT& totalmw  = totalmw_ ->field_ref();
     //  const FieldT& gaspress = gaspress_->field_ref();
     //result <<= 0.02* pow((*gaspress_ * *o2massf_ * *totalmw_ / 32), 0.21)*exp(3070/ *tempP_);
-
-    /*
-     * [1] "On the Products of the Heteroheneous Oxidation Reaction At The Surface of Burning Coal Char Particle,"
-     *     Reginald E Mitchel, 21 Symposium on Combustion - 1988, pp 69-78
-     *
-     * [2] A. F. Sarofim L. Tognotti, J. P. Longwell. "The products of the high tem- perature oxidation of a single
-     *     char particle in an electrodynamic balance", Symposium (International) on Combustion, Twenty-Third:1207-1213, 1990.
-     */
   }
 };
 

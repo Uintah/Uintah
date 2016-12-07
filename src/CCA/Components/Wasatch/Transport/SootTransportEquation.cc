@@ -49,10 +49,7 @@ setup_soot_equation( Uintah::ProblemSpecP params,
                     const Expr::Tag densityTag,
                     GraphCategories& gc )
 {
-  EqnTimestepAdaptorBase* sootEqnAdaptor;
-
   const TagNames& tagNames = TagNames::self();
-  Expr::ExpressionFactory&   factory = *gc[ADVANCE_SOLUTION]->exprFactory;
   Expr::ExpressionFactory& icFactory = *gc[INITIALIZATION  ]->exprFactory;
 
   proc0cout << "Setting up transport equation for soot" << std::endl;

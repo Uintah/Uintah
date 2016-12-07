@@ -58,17 +58,17 @@ namespace CHAR{
     const Coal::CoalComposition& get_coal_composition() const{ return coalComp_; } ///< return the CoalComposition
    
     /**
-     *  \brief returns $\varepsilon{0}$ - initial porosity of coal particle
+     *  \brief returns \f$\varepsilon_{0}\f$ - initial porosity of coal particle
      */
     double get_e0() const {return e0_;};
 
     /**
-     *  \brief returns $r_{pore}$ - mean pore radius (m)
+     *  \brief returns \f$r_{pore}\f$ - mean pore radius (m)
      */
     double get_r_pore() const {return rPore_;};
 
     /**
-     *  \brief returns $S_{0}$ - internal surface area of initial char (m2/kg)
+     *  \brief returns \f$S_{0}\f$ - internal surface area of initial char (m2/kg)
      */
     double get_S_0() const {return s0_;};
 
