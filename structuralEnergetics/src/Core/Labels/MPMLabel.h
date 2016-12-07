@@ -88,17 +88,17 @@ namespace Uintah {
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pLastLevelLabel;
       const VarLabel* pLastLevelLabel_preReloc;
-      const VarLabel* pTemperatureLabel; //for heat conduction
-      const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
-      const VarLabel* pTempCurrentLabel; //for thermal stress 
-      const VarLabel* pTempPreviousLabel; //for thermal stress 
-      const VarLabel* pTempPreviousLabel_preReloc; //for thermal stress  
-      const VarLabel* pdTdtLabel; //for heat conduction
-      const VarLabel* pdTdtLabel_preReloc; //for heat conduction
-      const VarLabel* pExternalHeatRateLabel; //for heat conduction
-      const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
-      const VarLabel* pExternalHeatFluxLabel; //for heat conduction
-      const VarLabel* pExternalHeatFluxLabel_preReloc; //for heat conduction
+      const VarLabel* pTemperatureLabel;                  //for heat conduction
+      const VarLabel* pTemperatureLabel_preReloc;         //for heat conduction
+      const VarLabel* pTempCurrentLabel;                  //for thermal stress
+      const VarLabel* pTempPreviousLabel;                 //for thermal stress
+      const VarLabel* pTempPreviousLabel_preReloc;        //for thermal stress
+      const VarLabel* pdTdtLabel;                         //for heat conduction
+      const VarLabel* pdTdtLabel_preReloc;                //for heat conduction
+      const VarLabel* pExternalHeatRateLabel;             //for heat conduction
+      const VarLabel* pExternalHeatRateLabel_preReloc;    //for heat conduction
+      const VarLabel* pExternalHeatFluxLabel;             //for heat conduction
+      const VarLabel* pExternalHeatFluxLabel_preReloc;    //for heat conduction
       const VarLabel* pParticleIDLabel;
       const VarLabel* pParticleIDLabel_preReloc;
       const VarLabel* pSizeLabel;
@@ -117,18 +117,24 @@ namespace Uintah {
       const VarLabel* pFiberDirLabel_preReloc;
       const VarLabel* pScaleFactorLabel;
       const VarLabel* pScaleFactorLabel_preReloc;
-      const VarLabel* pTemperatureGradientLabel; //for heat conduction
+      const VarLabel* pTemperatureGradientLabel;          //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
-      const VarLabel* pConcGradientLabel; //for scalar diffusion
-      const VarLabel* pConcGradientLabel_preReloc; //for scalar diffusion
-      const VarLabel* pDiffusivityLabel; //for scalar diffusion
-      const VarLabel* pDiffusivityLabel_preReloc; //for scalar diffusion
+      const VarLabel* pConcGradientLabel;                 //for scalar diffusion
+      const VarLabel* pConcGradientLabel_preReloc;        //for scalar diffusion
+      const VarLabel* pDiffusivityLabel;                  //for scalar diffusion
+      const VarLabel* pDiffusivityLabel_preReloc;         //for scalar diffusion
       const VarLabel* TotalConcLabel;
       const VarLabel* MaxConcLabel;
       const VarLabel* MinConcLabel;
       const VarLabel* pAvgConcLabel;
       const VarLabel* pESPotential;
       
+      // For fixing Mie-Gruneison EOS - JBH
+      const VarLabel* pDissipatedEnergyLabel;
+      const VarLabel* pDissipatedEnergyLabel_preReloc;
+      const VarLabel* pHeatEnergyLabel;
+      const VarLabel* pHeatEnergyLabel_preReloc;
+
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
       const VarLabel* gMassLabel;
@@ -142,12 +148,12 @@ namespace Uintah {
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gContactLabel;
-      const VarLabel* gTemperatureRateLabel; //for heat conduction
-      const VarLabel* gTemperatureLabel; //for heat conduction
-      const VarLabel* gSp_volLabel;          // specific volume 
-      const VarLabel* gSp_vol_srcLabel;      // specific volume 
-      const VarLabel* gTemperatureNoBCLabel; //for heat conduction
-      const VarLabel* gTemperatureStarLabel; //for heat conduction
+      const VarLabel* gTemperatureRateLabel;              //for heat conduction
+      const VarLabel* gTemperatureLabel;                  //for heat conduction
+      const VarLabel* gSp_volLabel;                       // specific volume
+      const VarLabel* gSp_vol_srcLabel;                   // specific volume
+      const VarLabel* gTemperatureNoBCLabel;              //for heat conduction
+      const VarLabel* gTemperatureStarLabel;              //for heat conduction
       const VarLabel* gdTdtLabel;
       const VarLabel* gHeatFluxLabel;
       const VarLabel* gExternalHeatRateLabel;
@@ -170,12 +176,12 @@ namespace Uintah {
       const VarLabel* numLocInCellLabel;
       const VarLabel* numInCellLabel;
       const VarLabel* gradPAccNCLabel;
-      const VarLabel* dTdt_NCLabel; //for heat conduction
-      const VarLabel* massBurnFractionLabel; //for burn modeling
+      const VarLabel* dTdt_NCLabel;                       //for heat conduction
+      const VarLabel* massBurnFractionLabel;              //for burn modeling
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
       
-      const VarLabel* AccArchesNCLabel; //for interaction with Arches, Fluid Mechanics
+      const VarLabel* AccArchesNCLabel;     //for interaction with Arches, Fluid Mechanics
       const VarLabel* heaTranSolid_NCLabel; //for interaction with Arches, Heat Transfer
 
       const VarLabel* StrainEnergyLabel;
