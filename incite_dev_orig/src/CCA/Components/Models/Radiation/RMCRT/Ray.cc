@@ -270,7 +270,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
       isMultilevel = true;
       algorithm    = dataOnion;
-      alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
+      alg_ps->get( "haloCells",          d_haloCells );
       alg_ps->get( "haloLength",         d_haloLength );
       alg_ps->get( "coarsenExtraCells" , d_coarsenExtraCells );
 
@@ -1419,6 +1419,12 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
       double length = nCells.length();
       int n_Cells   = RoundUp( length );
       d_haloCells   = IntVector( n_Cells, n_Cells, n_Cells );
+    }
+    if (d_haloCells < IntVector(0,0,0) ){
+      ostringstream warn;
+      warn << "RMCRT:DataOnion ERROR: ";
+      warn << "The number of halo cells is negative or has not been specified ("<< d_haloCells << ")";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
 
     int maxElem = Max( d_haloCells.x(), d_haloCells.y(), d_haloCells.z() );
