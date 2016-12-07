@@ -76,6 +76,12 @@ namespace WasatchCore{
     const Expr::Tag
     mixMW;
     
+    // tar and soot related
+    const Expr::Tag
+    tar, soot,         sootParticleNumberDensity,
+    tarOxidationRate,  sootOxidationRate,
+    sootFormationRate, sootAgglomerationRate;
+
     // thermochemistry related variables
     const Expr::Tag
     heatCapacity,

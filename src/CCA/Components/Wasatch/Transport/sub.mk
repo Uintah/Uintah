@@ -80,10 +80,15 @@ SRCS +=                                                \
         $(SRCDIR)/TransportEquation.cc                 \
         $(SRCDIR)/ParseEquationHelper.cc               \
         $(SRCDIR)/PersistentParticleICs.cc             
-#        $(SRCDIR)/SetupCoalModels.cc
 
 ifeq ($(HAVE_POKITT),yes)
-   SRCS += $(SRCDIR)/SetupCoalModels.cc
+   SRCS += $(SRCDIR)/SetupCoalModels.cc                \
+           $(SRCDIR)/PseudospeciesTransportEquation.cc \
+           $(SRCDIR)/SootParticleTransportEquation.cc  \
+           $(SRCDIR)/SootTransportEquation.cc          \
+           $(SRCDIR)/TarTransportEquation.cc           \
+           $(SRCDIR)/TarAndSootInfo.cc
+           
 endif
 
 ########################################################################

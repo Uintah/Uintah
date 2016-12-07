@@ -22,9 +22,14 @@
 #  IN THE SOFTWARE.
 # 
 # 
+# 
+# 
+# 
 # Makefile fragment for this subdirectory 
 
-SRCDIR := CCA/Components/Wasatch/Expressions
+# only compile the contents of this folder if HAVE_POKITT=yes
+ifeq ($(HAVE_POKITT),yes)
+SRCDIR := CCA/Components/Wasatch/Expressions/TarAndSoot
 
 #
 # These are files that if CUDA is enabled (via configure), must be
@@ -33,54 +38,34 @@ SRCDIR := CCA/Components/Wasatch/Expressions
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=      \
-     BasicExprBuilder     \
-     ConvectiveFlux       \
-     DensityCalculator    \
-     DiffusiveFlux        \
-     DiffusiveVelocity    \
-     Dilatation           \
-     ExprAlgebra          \
-     MomentumPartialRHS   \
-     MomentumRHS          \
-     MonolithicRHS        \
-     PoissonExpression    \
-     Pressure             \
-     PressureSource       \
-     PrimVar              \
-     ScalabilityTestSrc   \
-     ScalarEOSCoupling    \
-     ScalarRHS            \
-     SimpleEmission       \
-     SolnVarEst           \
-     Strain               \
-     TimeAdvance          
+CUDA_ENABLED_SRCS =        \
+     SootAgglomerationRate \
+     SootFormationRate     \
+     SootOxidationRate     \
+     TarOxidationRate
 
 ifeq ($(HAVE_CUDA),yes)
+
    # CUDA enabled files, listed here (and with a rule at the end of
    # this sub.mk) are copied to the binary side and renamed with a .cu
    # extension (.cc replaced with .cu) so that they can be compiled
    # using the nvcc compiler.
+
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
    DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
+
 else
+
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).cc)
+
 endif
 
 #
 # Non-CUDA Dependent src files... can be specified the old fashioned
 # way:
 #
-SRCS += \
-        $(SRCDIR)/DORadSolver.cc          \
-        $(SRCDIR)/RadPropsEvaluator.cc    \
-        $(SRCDIR)/StableTimestep.cc       \
-        $(SRCDIR)/Reduction.cc            \
-        $(SRCDIR)/ReductionBase.cc        \
-        $(SRCDIR)/Coordinate.cc           \
-        $(SRCDIR)/RadiationSource.cc      \
-        $(SRCDIR)/CellType.cc      \
-        $(SRCDIR)/TabPropsHeatLossEvaluator.cc
+#SRCS +=                                        \
+#    $(SRCDIR)/
 
 ########################################################################
 #
@@ -94,22 +79,5 @@ ifeq ($(HAVE_CUDA),yes)
   # Call the make-cuda-target function on each of the CUDA_ENABLED_SRCS:
   $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
-endif
-
-########################################################################
-#
-# Recursively build subdirectories...
-#
-
-SUBDIRS := \
-        $(SRCDIR)/BoundaryConditions   \
-        $(SRCDIR)/EmbeddedGeometry     \
-        $(SRCDIR)/MMS                  \
-        $(SRCDIR)/PBE                  \
-        $(SRCDIR)/Particles            \
-        $(SRCDIR)/PostProcessing       \
-        $(SRCDIR)/TarAndSoot           \
-        $(SRCDIR)/Turbulence
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
+endif # ifeq ($(HAVE_CUDA),yes)
+endif # ifeq ($(HAVE_POKITT),yes)

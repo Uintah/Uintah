@@ -44,6 +44,9 @@
 #include "EnthalpyTransportEquation.h"
 #ifdef HAVE_POKITT
 #include "SpeciesTransportEquation.h"
+#include <CCA/Components/Wasatch/Transport/TarTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/SootTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/SootParticleTransportEquation.h>
 #include <pokitt/CanteraObjects.h>
 #include <pokitt/transport/ViscosityMix.h>
 #endif
@@ -167,6 +170,42 @@ namespace WasatchCore{
     // nothing to do - return empty equation set.
     std::vector<EqnTimestepAdaptorBase*> eqns;
     return eqns;
+#   endif
+  }
+
+  //==================================================================
+
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_tar_and_soot_equations( Uintah::ProblemSpecP params,
+                               const TurbulenceParameters& turbParams,
+                               const Expr::Tag& densityTag,
+                               GraphCategories& gc )
+  {
+    std::vector<EqnTimestepAdaptorBase*> adaptors;
+
+#   ifdef HAVE_POKITT
+    // setup a transport equation for tar
+    adaptors.push_back(setup_tar_equation( params,
+                                           turbParams,
+                                           densityTag,
+                                           gc ) );
+
+    // setup a transport equation for soot
+    adaptors.push_back(setup_soot_equation( params,
+                                            turbParams,
+                                            densityTag,
+                                            gc ) );
+
+    // setup a transport equation for soot particle number density
+    adaptors.push_back(setup_soot_particle_equation( params,
+                                                     turbParams,
+                                                     densityTag,
+                                                     gc ) );
+    return adaptors;
+#   else
+    // nothing to do - return empty equation set.
+
+    return adaptors;
 #   endif
   }
 

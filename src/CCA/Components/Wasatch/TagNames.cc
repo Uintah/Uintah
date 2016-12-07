@@ -69,6 +69,15 @@ namespace WasatchCore{
   // species related variables
   mixMW( "Mixture_MW", Expr::STATE_NONE ),
 
+  // tar and soot related
+  tar                      ( "tar"                         , Expr::STATE_NONE ),
+  tarOxidationRate         ( "tar_oxidation_rate"          , Expr::STATE_NONE ),
+  soot                     ( "soot"                        , Expr::STATE_NONE ),
+  sootOxidationRate        ( "soot_oxidation_rate"         , Expr::STATE_NONE ),
+  sootFormationRate        ( "soot_formation_rate"         , Expr::STATE_NONE ),
+  sootAgglomerationRate    ( "soot_agglomeration_rate"     , Expr::STATE_NONE ),
+  sootParticleNumberDensity( "soot_particle_number_density", Expr::STATE_NONE ),
+
   // thermochemistry related variables
   heatCapacity       ( "heat_capacity",        Expr::STATE_NONE ),
   thermalConductivity( "thermal_conductivity", Expr::STATE_NONE ),

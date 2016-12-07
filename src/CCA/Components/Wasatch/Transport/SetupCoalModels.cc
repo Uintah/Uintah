@@ -239,16 +239,28 @@ namespace WasatchCore{
                                                 Expr::ADD_SOURCE_EXPRESSION );
     }
 
+    const std::string tarName = tagNames_.tar.name();
+    const Tag p2cTarSrcTag = get_p2c_src_tag( tarName );
+    factory_.register_expression( new P2CBuilder( p2cTarSrcTag,
+                                                  coalInterface_->tar_source_term(),
+                                                  pSizeTag_,
+                                                  pPosTags_ ) );
+
+    factory_.attach_dependency_to_expression( p2cTarSrcTag,
+                                              get_rhs_tag( "rho_" + tarName ),
+                                              Expr::ADD_SOURCE_EXPRESSION );
+
     // Connect coal species source terms to coal species RHSs *****************************//
     const TagList coalSpeciesTags = coalInterface_->gas_species_source_terms();
     Uintah::ProblemSpecP constDensityParams = wasatchSpec_->findBlock("Density")
                                                               ->findBlock("Constant");
 
     if( constDensityParams ){
-      proc0cout<<"\n\n***************** WARNING ****************************\n"
-          <<"Constant density implemented.\n"
-          <<"Partcle-to-gas source terms for density are ignored.\n"
-          <<"******************************************************\n";
+      proc0cout<<"\n\n"
+               <<"***************** WARNING ****************************\n"
+               <<"Constant density implemented.\n"
+               <<"Partcle-to-gas source terms for density are ignored.  \n"
+               <<"******************************************************\n";
     }
     else if( !coalSpeciesTags.empty() ){
       const Tag p2cDensitySrcTag = get_p2c_src_tag( gDensTag_.name() );
@@ -256,10 +268,7 @@ namespace WasatchCore{
                                                     coalSpeciesTags,
                                                     pSizeTag_,
                                                     pPosTags_ ) );
-      std::cout<<std::endl<<"1.2"<<std::endl;
 
-      std::cout<<std::endl<<"gDensTag_.name()             : "<<gDensTag_.name()<<std::endl;
-      std::cout<<std::endl<<"get_rhs_tag(gDensTag_.name()): "<<get_rhs_tag(gDensTag_.name())<<std::endl;
       factory_.attach_dependency_to_expression( p2cDensitySrcTag,
                                                 get_rhs_tag( gDensTag_.name() ),
                                                 Expr::ADD_SOURCE_EXPRESSION );

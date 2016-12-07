@@ -1037,6 +1037,11 @@
                  Highvale_Char,             Eastern_Bituminous,      Eastern_Bituminous_Char,
                  Illinois_No_6,             Illinois_No_6_Char'"/>
     </Coal>
+    
+    <!-- This turns on tar and soot models. -->
+    <TarAndSootEquations spec="OPTIONAL NO_DATA">
+      <ConvectiveFlux spec="MULTIPLE"/>
+    </TarAndSootEquations>
 
     <MomentumEquations        spec="OPTIONAL NO_DATA">
       

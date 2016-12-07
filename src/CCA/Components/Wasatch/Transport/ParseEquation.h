@@ -122,6 +122,12 @@ namespace WasatchCore{
                            const Expr::Tag& densityTag,
                            GraphCategories& gc );
 
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_tar_and_soot_equations( Uintah::ProblemSpecP params,
+                                const TurbulenceParameters& turbParams,
+                                const Expr::Tag& densityTag,
+                                GraphCategories& gc );
+
   /**
    *  \brief Build mms source terms and parse them properly to the RHS's
    *

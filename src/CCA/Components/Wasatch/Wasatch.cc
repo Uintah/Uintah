@@ -846,6 +846,15 @@ namespace WasatchCore{
 
 #   ifdef HAVE_POKITT
     Uintah::ProblemSpecP coalSpec = wasatchSpec_->findBlock("Coal");
+    // setup tar and soot transport equations kinetic models if specified in the input file
+    if( wasatchSpec_->findBlock("TarAndSootEquations") || coalSpec ){
+      EquationAdaptors tarEqns = parse_tar_and_soot_equations( wasatchSpec_,
+                                                               turbParams,
+                                                               densityTag,
+                                                               graphCategories_ );
+      adaptors_.insert( adaptors_.end(), tarEqns.begin(), tarEqns.end() );
+    }
+
     if( coalSpec ){
         if( !(particleEqnSpec->findBlock("ParticleTemperature")) ){
           std::ostringstream msg;
@@ -856,7 +865,7 @@ namespace WasatchCore{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     	}
 
-        // setup coal models (an if-loop is needed here)
+        // setup coal models
         proc0cout << "Setting up coal models" << std::endl;
         Expr::ExpressionFactory& ifactory = *(graphCategories_[INITIALIZATION]->exprFactory);
         SetupCoalModels* scm = scinew SetupCoalModels( particleEqnSpec,
