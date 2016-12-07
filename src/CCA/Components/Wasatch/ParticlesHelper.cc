@@ -512,7 +512,7 @@ namespace Uintah {
     using namespace Uintah;
     for(int m = 0; m<matls->size(); m++){
       const int matl = matls->get(m);
-      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
+//      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
         ParticleSubset* pset = new_dw->getParticleSubset(matl, patch);

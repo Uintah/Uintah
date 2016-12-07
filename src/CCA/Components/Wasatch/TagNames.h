@@ -67,7 +67,6 @@ namespace WasatchCore{
     temperature,
     absorption,
     radiationsource, radvolq, radvrflux,
-    e0, rhoE0,
     enthalpy,
     xHeatFlux, yHeatFlux, zHeatFlux,
     kineticEnergy, totalKineticEnergy;

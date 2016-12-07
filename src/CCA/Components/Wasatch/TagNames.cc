@@ -59,12 +59,12 @@ namespace WasatchCore{
   radiationsource    ( "RadiationSource"  , Expr::STATE_NONE ),
   radvolq            ( "radiationVolq"    , Expr::STATE_NONE ),
   radvrflux          ( "VRFlux"           , Expr::STATE_NONE ),
-  kineticEnergy      ("KineticEnergy"     , Expr::STATE_NONE ),
-  totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
   enthalpy           ( "enthalpy"         , Expr::STATE_NONE ),
   xHeatFlux          ( "HeatFlux_X"       , Expr::STATE_NONE ),
   yHeatFlux          ( "HeatFlux_Y"       , Expr::STATE_NONE ),
   zHeatFlux          ( "HeatFlux_Z"       , Expr::STATE_NONE ),
+  kineticEnergy      ("KineticEnergy"     , Expr::STATE_NONE ),
+  totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
   
   // species related variables
   mixMW( "Mixture_MW", Expr::STATE_NONE ),

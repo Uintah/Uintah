@@ -296,8 +296,7 @@ namespace WasatchCore{
           msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
-        const Expr::ExpressionID diffID = factory.register_expression( builder );
-        //        factory.cleave_from_parents(diffID);
+        factory.register_expression( builder );
         
         FieldSelector fs;
         if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
