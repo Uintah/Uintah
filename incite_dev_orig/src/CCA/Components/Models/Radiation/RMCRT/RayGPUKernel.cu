@@ -624,7 +624,13 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
 
-          GPUVector ray_direction = findRayDirectionDevice( randNumStates );
+
+          GPUVector ray_direction;
+          if ( doLatinHyperCube ){                          // Latin-Hyper-Cube sampling
+            ray_direction = findRayDirectionHyperCubeDevice(randNumStates, RT_flags.nDivQRays, rand_i[iRay], iRay );
+          }else{                                            // Naive Monte-Carlo sampling
+            ray_direction = findRayDirectionDevice( randNumStates );
+          }
 
           GPUVector rayOrigin = rayOriginDevice( randNumStates, CC_pos, d_levels[fineL].Dx , RT_flags.CCRays );
 
