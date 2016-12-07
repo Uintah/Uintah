@@ -374,7 +374,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     modifies_divQ = true;
   }
 
-    const bool use_coarsen_model_alpha = true;
+    const bool use_coarsen_model_alpha = false;
   //__________________________________
   //  carryForward cellType on NON arches level
   for (int l = 0; l < maxLevels; l++) {
