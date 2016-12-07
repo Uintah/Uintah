@@ -38,7 +38,7 @@ namespace CHAR{
                  const Coal::CoalType coalType,
                  const DEV::DevModel  dvmodel,
                  const CharModel      chmodel )
-               : gc_( gc )
+  : gc_( gc )
   {
 
     // Ensure tags passed to CharInterface are valid.

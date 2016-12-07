@@ -98,19 +98,19 @@ namespace Coal{
                  const CoalType coalType,
                  const DEV::DevModel devModel,
                  const CHAR::CharModel chModel,
-                 const Expr::Tag pDiamTag,
-                 const Expr::Tag pTempTag,
-                 const Expr::Tag gTempTag,
-                 const Expr::Tag mixMWTag,
-                 const Expr::Tag pDensTag,
-                 const Expr::Tag gPressTag,
-                 const Expr::Tag pMassTag,
-                 const Expr::Tag rePtag,
-                 const Expr::Tag scGTag,
-                 const SpeciesTagMap specTagMap,
-                 const Expr::Tag pMass0Tag,
-                 const Expr::Tag pDens0Tag,
-                 const Expr::Tag pDiam0Tag )
+                 const Expr::Tag& pDiamTag,
+                 const Expr::Tag& pTempTag,
+                 const Expr::Tag& gTempTag,
+                 const Expr::Tag& mixMWTag,
+                 const Expr::Tag& pDensTag,
+                 const Expr::Tag& gPressTag,
+                 const Expr::Tag& pMassTag,
+                 const Expr::Tag& rePtag,
+                 const Expr::Tag& scGTag,
+                 const SpeciesTagMap& specTagMap,
+                 const Expr::Tag& pMass0Tag,
+                 const Expr::Tag& pDens0Tag,
+                 const Expr::Tag& pDiam0Tag )
     : gc_         ( gc ),
       pTempTag_   ( pTempTag  ),
       gTempTag_   ( gTempTag  ),
@@ -125,14 +125,8 @@ namespace Coal{
       pTemp_rhsTag_( Coal::StringNames::self().coal_temprhs, Expr::STATE_NONE ),
       heatReleasedToGasTag_( Coal::StringNames::self().char_heattogas, Expr::STATE_NONE ),
 
-      mvTag_      ( dev_ ->volatiles_tag()              ),
-      charTag_    ( char_->char_mass_tag()              ),
-      moistureTag_( evap_->retrieve_moisture_mass_tag() ),
-
       specTagMap_( specTagMap ),
-
-      devModel_   ( devModel   ),
-
+      devModel_  ( devModel   ),
 
       dev_( new DEV::DevolatilizationInterface<FieldT>( gc, coalType, devModel, pTempTag, pMassTag, pMass0Tag) ),
 
@@ -146,8 +140,11 @@ namespace Coal{
 
       evap_( new EVAP::EvapInterface<FieldT>( gc, gTempTag, pTempTag, pDiamTag, rePtag,
                                               scGTag, get_species_tag(H2O), mixMWTag,
-                                              gPressTag, pMassTag, coalType) )
+                                              gPressTag, pMassTag, coalType) ),
 
+      mvTag_      ( dev_ ->volatiles_tag()              ),
+      charTag_    ( char_->char_mass_tag()              ),
+      moistureTag_( evap_->retrieve_moisture_mass_tag() )
   {
     // assemble the collection of tags corresponding to gas phase
     // source terms from the CPD and Char oxidation models,

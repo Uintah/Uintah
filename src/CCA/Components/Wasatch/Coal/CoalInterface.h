@@ -37,15 +37,15 @@ using WasatchCore::GraphCategories;
                     pDiamTag_,rePTag_,   scGTag_,   pCpTag_,   pTemp_rhsTag_,
                     heatReleasedToGasTag_;
 
-    const Expr::Tag mvTag_, charTag_, moistureTag_;
-
     const SpeciesTagMap specTagMap_;
 
     const DEV::DevModel devModel_;
 
-    DEV::DevolatilizationInterface<FieldT>*  const dev_;
-    CHAR::CharInterface           <FieldT>*  const char_;
-    EVAP::EvapInterface           <FieldT>*  const evap_;
+    DEV::DevolatilizationInterface<FieldT>* dev_;
+    CHAR::CharInterface           <FieldT>* char_;
+    EVAP::EvapInterface           <FieldT>* evap_;
+
+    const Expr::Tag mvTag_, charTag_, moistureTag_;
 
     Expr::TagList gasSpeciesSourceTags_, productionRateTags_;
 
@@ -91,19 +91,19 @@ using WasatchCore::GraphCategories;
                     const CoalType coalType,
                     const DEV::DevModel devModel,
                     const CHAR::CharModel chModel,
-                    const Expr::Tag pDiamTag,
-                    const Expr::Tag pTempTag,
-                    const Expr::Tag gTempTag,
-                    const Expr::Tag mixMWTag,
-                    const Expr::Tag pDensTag,
-                    const Expr::Tag gPressTag,
-                    const Expr::Tag pMassTag,
-                    const Expr::Tag rePTag,
-                    const Expr::Tag scGTag,
-                    const SpeciesTagMap specTagMap,
-                    const Expr::Tag pMass0Tag,
-                    const Expr::Tag pDens0Tag,
-                    const Expr::Tag pDiam0Tag );
+                    const Expr::Tag& pDiamTag,
+                    const Expr::Tag& pTempTag,
+                    const Expr::Tag& gTempTag,
+                    const Expr::Tag& mixMWTag,
+                    const Expr::Tag& pDensTag,
+                    const Expr::Tag& gPressTag,
+                    const Expr::Tag& pMassTag,
+                    const Expr::Tag& rePTag,
+                    const Expr::Tag& scGTag,
+                    const SpeciesTagMap& specTagMap,
+                    const Expr::Tag& pMass0Tag,
+                    const Expr::Tag& pDens0Tag,
+                    const Expr::Tag& pDiam0Tag );
 
     ~CoalInterface();
 
