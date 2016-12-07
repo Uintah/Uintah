@@ -413,10 +413,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     includeExtraCells = true;
     _RMCRT->sched_sigmaT4Arches( fineLevel,  sched, cellType_dw, _temperature_label_vector, _absk_label_vector, includeExtraCells );
 
-    if (!use_coarsen_model_alpha) {
-      sched_setBoundaryConditions( fineLevel, sched, cellType_dw );
-    }
-
     _RMCRT->sched_CarryForward_AllLabels ( fineLevel, sched );
 
     // coarsen data to the coarser levels. do it in reverse order
