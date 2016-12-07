@@ -319,10 +319,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  bulletproofing
 
   if ( Parallel::usingDevice() ) {              // GPU
-    if( (algorithm == dataOnion && d_ROI_algo != patch_based ) ) {
+    if( (algorithm == dataOnion && d_ROI_algo != patch_based && d_ROI_algo != coneGeometry_based ) ) {
       std::ostringstream warn;
       warn << "GPU:RMCRT:ERROR: ";
-      warn << "At this time only ROI_extents type=\"patch_based\" work on the GPU";
+      warn << "At this time only ROI_extents type=\"patch_based\" and type=\"coneGeometry_based\" work on the GPU";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
@@ -3013,6 +3013,8 @@ void Ray::computeCellType( const ProcessorGroup*,
 
       //bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
       //bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
+      //TODO: The above code was the original patch based version I think.  To get that working again, it
+      //might be as simple as an if statement to see which mode (patch or cone geometry), and use it accordingly).
 
       //bool ray_outside_ROI    = (false); // removes patch-layout dependency, assumes that maxLengthFlux = maxLength
       //bool ray_outside_Region = (false);

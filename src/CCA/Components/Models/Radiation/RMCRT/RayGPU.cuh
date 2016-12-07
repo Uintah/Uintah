@@ -46,7 +46,7 @@ typedef Uintah::gpuPoint     GPUPoint;
 //______________________________________________________________________
 //
 const int d_MAXLEVELS = 5;               // FIX ME!
-
+const int d_flowCell = -1;               // HARDWIRED!
 //__________________________________
 //  returns gpuVector * scalar
 inline HOST_DEVICE GPUVector operator*(const GPUVector & a, double b)
@@ -488,17 +488,18 @@ struct RMCRT_flags {
     bool allowReflect;
     bool solveBoundaryFlux;
     bool CCRays;
-    bool usingFloats;           // if the communicated vars (sigmaT4 & abskg) are floats
+    bool usingFloats;            // if the communicated vars (sigmaT4 & abskg) are floats
 
-    double sigma;               // StefanBoltzmann constant
-    double sigmaScat;           // scattering coefficient
+    double sigma;                // StefanBoltzmann constant
+    double sigmaScat;            // scattering coefficient
     double threshold;
 
-    int nDivQRays;            // number of rays per cell used to compute divQ
-    int nFluxRays;            // number of boundary flux rays
-    int nRaySteps;            // number of ray steps taken
-    int whichROI_algo;        // which Region of Interest algorithm
-    int rayDirSampleAlgo;     // which ray direction sampling algorithm (Monte-Carlo or Latin-Hyper_Cube)
+    int nDivQRays;               // number of rays per cell used to compute divQ
+    int nFluxRays;               // number of boundary flux rays
+    int nRaySteps;               // number of ray steps taken
+    int whichROI_algo;           // which Region of Interest algorithm
+    int rayDirSampleAlgo;        // which ray direction sampling algorithm (Monte-Carlo or Latin-Hyper_Cube)
+    double maxLength[d_MAXLEVELS];  // hard coding it for d_MAXLEVELS levels for now.
 };
 
 //__________________________________
@@ -544,6 +545,7 @@ enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
 enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box 
                 dynamic,              // user specifies thresholds that are used to dynamically determine ROI
                 patch_based,          // The patch extents + halo are the ROI
+                coneGeometry_based,   // The halo values are computed on a per level basis, determined by ray count and grid resolution
                 boundedRayLength,     // the patch extents + boundedRayLength/Dx are the ROI
                 entireDomain          // The ROI is the entire computatonal Domain
              };
