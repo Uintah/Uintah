@@ -1027,6 +1027,8 @@ RMCRTCommon::randVector( std::vector <int> &int_array,
 
   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
     int rand_int =  mTwister.randInt(i);
+    //int rand_int =  0.3*i;  //FIXME: When doing a CPU vs GPU fixed random number run, use this line instead of
+                              //the one above.  A cleaner approach should be found here.
     int swap = int_array[i];
     int_array[i] = int_array[rand_int];
     int_array[rand_int] = swap;

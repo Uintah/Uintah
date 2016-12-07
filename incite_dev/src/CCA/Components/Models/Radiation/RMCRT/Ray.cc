@@ -1722,7 +1722,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 #if (DEBUG == 2)
           if( isDbgCell(origin) ) {
             printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BoundaryFlux: %g\n",
-                  origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
+                  origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux_fine[origin][ face ]);
           }
 #endif
 /*===========TESTING==========`*/

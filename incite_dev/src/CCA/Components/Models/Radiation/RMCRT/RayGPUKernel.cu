@@ -590,7 +590,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 #if (DEBUG == 2)
           if( isDbgCell(origin) ) {
             printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BoundaryFlux: %g\n",
-                  origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
+                   origin.x, origin.y, origin.z, face, sumProjI, boundFlux_fine[origin][ face ] );
           }
 #endif
 /*===========TESTING==========`*/
@@ -630,7 +630,13 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
 
-          GPUVector ray_direction = findRayDirectionDevice( randNumStates );
+
+          GPUVector ray_direction;
+          if ( doLatinHyperCube ){                          // Latin-Hyper-Cube sampling
+            ray_direction = findRayDirectionHyperCubeDevice(randNumStates, RT_flags.nDivQRays, rand_i[iRay], iRay );
+          }else{                                            // Naive Monte-Carlo sampling
+            ray_direction = findRayDirectionDevice( randNumStates );
+          }
 
           GPUVector rayOrigin = rayOriginDevice( randNumStates, CC_pos, d_levels[fineL].Dx , RT_flags.CCRays );
 
