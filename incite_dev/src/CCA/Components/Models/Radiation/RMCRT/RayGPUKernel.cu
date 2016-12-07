@@ -363,7 +363,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 //  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
 //  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
 
-
   // calculate the thread indices
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + finePatch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + finePatch.loEC.y;
@@ -425,7 +424,15 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     GPUVariableSanityCK(abskg[fineL],        fineLevel_ROI_Lo,fineLevel_ROI_Hi);
     GPUVariableSanityCK(sigmaT4OverPi[fineL],fineLevel_ROI_Lo,fineLevel_ROI_Hi);
   }
-
+  else if ( RT_flags.whichROI_algo == coneGeometry_based) {
+    if(RT_flags.usingFloats){
+      abskg_gdw->get(abskg[fineL],           "abskgRMCRT",    finePatch.ID, matl, fineL);
+    } else {
+      abskg_gdw->get(abskg[fineL],           "abskg",    finePatch.ID, matl, fineL);
+    }
+    sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4",  finePatch.ID, matl, fineL);
+    cellType_gdw->get(cellType[fineL],     "cellType", finePatch.ID, matl, fineL);
+  }
   GPUGridVariable<double> divQ_fine;
   GPUGridVariable<GPUStencil7> boundFlux_fine;
   GPUGridVariable<double> radiationVolQ_fine;
@@ -515,6 +522,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
 
+        if (cellType[fineL][origin] != d_flowCell) // don't solve for fluxes in intrusions
+          continue;
+
         boundFlux_fine[origin].initialize(0.0);
 
         BoundaryFaces boundaryFaces;
@@ -601,6 +611,10 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       for (int z = finePatch.lo.z; z < finePatch.hi.z; z++) { // loop through z slices
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+
+        if (cellType[fineL][origin] != d_flowCell) // don't solve for fluxes in intrusions
+          continue;
+
         GPUPoint CC_pos = d_levels[fineL].getCellPosition(origin);
 
 #if( DEBUG == 1 )
@@ -1112,7 +1126,7 @@ __device__ void updateSumIDevice ( levelParams level,
       ray_location.y = ray_location.y + (disMin  * ray_direction.y);
       ray_location.z = ray_location.z + (disMin  * ray_direction.z);
 
-      in_domain = (celltype[cur]==-1);  //cellType of -1 is flow         HARDWIRED WARNING
+      in_domain = (celltype[cur] == d_flowCell);
 
       optical_thickness += abskg[prevCell]*disMin;
 
@@ -1355,8 +1369,11 @@ __device__ void updateSumIDevice ( levelParams level,
       in_domain = gridP.domain_BB.inside(CC_pos);        // position could be outside of domain
 
 
-      bool ray_outside_ROI    = ( containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-      bool ray_outside_Region = ( containsCellDevice(regionLo[L], regionHi[L], cur, dir) == false );
+      //bool ray_outside_ROI    = ( containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
+      //bool ray_outside_Region = ( containsCellDevice(regionLo[L], regionHi[L], cur, dir) == false );
+      //TODO: This is hard coded for the cone based calculations.  Get the above added back in for patch based.
+      bool ray_outside_ROI    = (RT_flags.maxLength[L]<tMaxV[dir]);
+      bool ray_outside_Region = (RT_flags.maxLength[L]<tMaxV[dir]);
 
       bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
       bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
@@ -1406,6 +1423,8 @@ __device__ void updateSumIDevice ( levelParams level,
       ray_location.x = ray_location.x + ( distanceTraveled * ray_direction.x );
       ray_location.y = ray_location.y + ( distanceTraveled * ray_direction.y );
       ray_location.z = ray_location.z + ( distanceTraveled * ray_direction.z );
+
+      in_domain = in_domain && (cellType[L][cur] == d_flowCell);
 
       //__________________________________
       // when moving to a coarse level tmax will change only in the direction the ray is moving
