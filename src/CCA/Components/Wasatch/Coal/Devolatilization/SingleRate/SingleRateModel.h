@@ -29,7 +29,7 @@ class SingleRateModel
   typedef typename Expr::Expression<FieldT>::ValVec SpecT;
 
   DECLARE_FIELDS( FieldT, tempP_, mv_, initprtmas_ )
-  const double mw_, h_, o_, volatilefrac_, tarMW_;
+  const double mw_, h_, o_, tarMW_, volatilefrac_;
   const bool isDAE_;
   
   SingleRateModel( const Expr::Tag& tempPtag,
@@ -95,12 +95,12 @@ SingleRateModel( const Expr::Tag& tempPtag,
                  const SingleRateInformation& data,
                  const bool isDAE)
 : Expr::Expression<FieldT>(),
-  volatilefrac_ (volatilefrac),
-  isDAE_(isDAE),
-  tarMW_( data.get_tarMonoMW()            ),
   mw_   ( data.get_molecularweight()      ),
   h_    ( data.get_hydrogen_coefficient() ),
-  o_    ( data.get_oxygen_coefficient()   )
+  o_    ( data.get_oxygen_coefficient()   ),
+  tarMW_( data.get_tarMonoMW()            ),
+  volatilefrac_( volatilefrac ),
+  isDAE_(isDAE)
 {
   this->set_gpu_runnable(true);
 

@@ -34,9 +34,9 @@ public:
              const Expr::Tag&     particleSizeTag,
              const Expr::TagList& particlePositionTags)
     : ExpressionBuilder( resultTag ),
-      pSrcTags_( particleSrcTags      ),
       pSizeTag_( particleSizeTag      ),
-      pPosTags_( particlePositionTags )
+      pPosTags_( particlePositionTags ),
+      pSrcTags_( particleSrcTags      )
     {}
 
     Builder( const Expr::Tag&     resultTag,
@@ -44,9 +44,9 @@ public:
              const Expr::Tag&     particleSizeTag,
              const Expr::TagList& particlePositionTags)
     : ExpressionBuilder( resultTag ),
-      pSrcTags_( Expr::tag_list(particleSrcTag) ),
       pSizeTag_( particleSizeTag      ),
-      pPosTags_( particlePositionTags )
+      pPosTags_( particlePositionTags ),
+      pSrcTags_( Expr::tag_list(particleSrcTag) )
     {}
 
     ~Builder(){}

@@ -867,7 +867,6 @@ namespace WasatchCore{
 
         // setup coal models
         proc0cout << "Setting up coal models" << std::endl;
-        Expr::ExpressionFactory& ifactory = *(graphCategories_[INITIALIZATION]->exprFactory);
         SetupCoalModels* scm = scinew SetupCoalModels( particleEqnSpec,
                                                        wasatchSpec_,
                                                        coalSpec,
@@ -1456,10 +1455,8 @@ namespace WasatchCore{
     //__________________________________
     //  Move data from parentOldDW to subSchedNewDW.
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = subsched_->getInitialRequiredVars();
-    for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
-    {
-      if (!(*it)->typeDescription()->isReductionVariable()) // avoid reduction vars
-      {
+    for( std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it ){
+      if( !(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
         subNewDW->transferFrom(parentOldDW, *it, patches, matls, true);
       }
     }
@@ -1480,10 +1477,8 @@ namespace WasatchCore{
       parOldDW = subsched_->get_dw(0);
       parNewDW = subsched_->get_dw(1);
 
-      for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
-      {
-        if (!(*it)->typeDescription()->isReductionVariable()) // avoid reduction vars
-        {
+      for( std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it ){
+        if (!(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
           subNewDW->transferFrom(subOldDW, *it, patches, matls, true);
         }
       }
@@ -1506,12 +1501,10 @@ namespace WasatchCore{
     
     // move dependencies to the parent DW
     const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = subsched_->getComputedVars();
-    for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it)
-    {
-      if (!(*it)->typeDescription()->isReductionVariable()) // avoid reduction vars
-      {
+    for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it ){
+      if( !(*it)->typeDescription()->isReductionVariable() ){ // avoid reduction vars
         std::string varname = (*it)->getName();
-        if (varname == "dt" || varname == "time" || varname == "rkstage" || varname == "timestep") continue;
+        if (varname == "dt" || varname == "time" || varname == "rkstage" || varname == "timestep" ) continue;
         parentNewDW->transferFrom(subNewDW, *it, patches, matls, true);
       }
     }
@@ -1522,7 +1515,7 @@ namespace WasatchCore{
   
   void
   Wasatch::scheduleSetInitialTime( const Uintah::LevelP& level,
-                                     Uintah::SchedulerP& sched )
+                                   Uintah::SchedulerP& sched )
   {
     //________________________________________________________
     // add a task to populate a "field" with the current time.
@@ -1534,15 +1527,15 @@ namespace WasatchCore{
       // add a task to update current simulation time
       Uintah::Task* updateCurrentTimeTask =
       scinew Uintah::Task( "set initial time",
-                          this,
-                          &Wasatch::set_initial_time );
+                           this,
+                           &Wasatch::set_initial_time );
       
       const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
-      tLabel_       = (!tLabel_      ) ? Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD )     : tLabel_      ;
-      tStepLabel_   = (!tStepLabel_  ) ? Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD ) : tStepLabel_  ;
+      tLabel_     = (!tLabel_      ) ? Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD )     : tLabel_    ;
+      tStepLabel_ = (!tStepLabel_  ) ? Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD ) : tStepLabel_;
       
-      updateCurrentTimeTask->computes( tLabel_       );
-      updateCurrentTimeTask->computes( tStepLabel_   );
+      updateCurrentTimeTask->computes( tLabel_     );
+      updateCurrentTimeTask->computes( tStepLabel_ );
       
       sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
     }
@@ -1552,20 +1545,20 @@ namespace WasatchCore{
   
   void
   Wasatch::set_initial_time( const Uintah::ProcessorGroup* const pg,
-                               const Uintah::PatchSubset* const patches,
-                               const Uintah::MaterialSubset* const materials,
-                               Uintah::DataWarehouse* const oldDW,
-                               Uintah::DataWarehouse* const newDW )
+                             const Uintah::PatchSubset* const patches,
+                             const Uintah::MaterialSubset* const materials,
+                             Uintah::DataWarehouse* const oldDW,
+                             Uintah::DataWarehouse* const newDW )
   {
     // grab the timestep
     const double simTime = sharedState_->getElapsedTime();
     const double timeStep = sharedState_->getCurrentTopLevelTimeStep();
     
     typedef Uintah::PerPatch<double> perPatchT;
-    perPatchT tstep   ( timeStep );
-    perPatchT time    ( simTime  );
+    perPatchT tstep( timeStep );
+    perPatchT time ( simTime  );
     
-    for (int p=0; p < patches->size(); p++){
+    for( int p=0; p < patches->size(); p++ ){
       const Uintah::Patch* patch = patches->get(p);
       newDW->put( tstep,   tStepLabel_, 0, patch );
       newDW->put( time,    tLabel_, 0, patch );
@@ -1610,8 +1603,8 @@ namespace WasatchCore{
       // add a task to update current simulation time
       Uintah::Task* updateCurrentTimeTask =
       scinew Uintah::Task( "update current time",
-                          this,
-                          &Wasatch::update_current_time,
+                           this,
+                           &Wasatch::update_current_time,
                           rkStage );
       updateCurrentTimeTask->requires( (has_dual_time() ? Uintah::Task::ParentOldDW : Uintah::Task::OldDW), sharedState_->get_delt_label() );
       
@@ -1620,12 +1613,13 @@ namespace WasatchCore{
       tLabel_       = (!tLabel_      ) ? Uintah::VarLabel::create( TagNames::self().time.name(), perPatchTD )     : tLabel_      ;
       tStepLabel_   = (!tStepLabel_  ) ? Uintah::VarLabel::create( TagNames::self().timestep.name(), perPatchTD ) : tStepLabel_  ;
       rkStageLabel_ = (!rkStageLabel_) ? Uintah::VarLabel::create( TagNames::self().rkstage.name(), perPatchTD )  : rkStageLabel_;
-      if (rkStage < 2) {
+      if( rkStage < 2 ){
         updateCurrentTimeTask->computes( dtLabel_      );
         updateCurrentTimeTask->computes( tLabel_       );
         updateCurrentTimeTask->computes( tStepLabel_   );
         updateCurrentTimeTask->computes( rkStageLabel_ );
-      } else {
+      }
+      else {
         updateCurrentTimeTask->modifies( dtLabel_      );
         updateCurrentTimeTask->modifies( tLabel_       );
         updateCurrentTimeTask->modifies( tStepLabel_   );
@@ -1640,11 +1634,11 @@ namespace WasatchCore{
   
   void
   Wasatch::update_current_time( const Uintah::ProcessorGroup* const pg,
-                                   const Uintah::PatchSubset* const patches,
-                                   const Uintah::MaterialSubset* const materials,
-                                   Uintah::DataWarehouse* const oldDW,
-                                   Uintah::DataWarehouse* const newDW,
-                                   const int rkStage )
+                                const Uintah::PatchSubset* const patches,
+                                const Uintah::MaterialSubset* const materials,
+                                Uintah::DataWarehouse* const oldDW,
+                                Uintah::DataWarehouse* const newDW,
+                                const int rkStage )
   {
     // grab the timestep
     Uintah::delt_vartype deltat;
@@ -1658,16 +1652,16 @@ namespace WasatchCore{
     const double timeStep = sharedState_->getCurrentTopLevelTimeStep();
     
     typedef Uintah::PerPatch<double> perPatchT;
-    perPatchT dt      (deltat );
-    perPatchT tstep   (timeStep );
-    perPatchT time    (simTime + timeCor[rkStage -1 ] * deltat  );
-    perPatchT rkstage ( rks                                     );
+    perPatchT dt     (deltat );
+    perPatchT tstep  (timeStep );
+    perPatchT time   (simTime + timeCor[rkStage -1 ] * deltat );
+    perPatchT rkstage( rks );
 
-    for (int p=0; p < patches->size(); p++){
+    for( int p=0; p < patches->size(); p++ ){
       const Uintah::Patch* patch = patches->get(p);
-      newDW->put( dt,      dtLabel_, 0, patch );
-      newDW->put( tstep,   tStepLabel_, 0, patch );
-      newDW->put( time,    tLabel_, 0, patch );
+      newDW->put( dt,      dtLabel_,      0, patch );
+      newDW->put( tstep,   tStepLabel_,   0, patch );
+      newDW->put( time,    tLabel_,       0, patch );
       newDW->put( rkstage, rkStageLabel_, 0, patch );
     }
   }
@@ -1683,7 +1677,7 @@ namespace WasatchCore{
     GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
     Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
     
-    if( adaptors_.size() == 0 && gh->rootIDs.empty()) return; // no equations registered.
+    if( adaptors_.size() == 0 && gh->rootIDs.empty() ) return; // no equations registered.
     
     for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
       const EqnTimestepAdaptorBase* const adaptor = *ia;
@@ -1725,7 +1719,6 @@ namespace WasatchCore{
                                           const int rkStage )
   {
     GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
-    Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
 
     if( adaptors_.size() == 0 && gh->rootIDs.empty()) return; // no equations registered.
 

@@ -45,10 +45,11 @@ namespace SAROFIM{
 
     const Coal::CoalComposition coalComp_;
     const Expr::Tag pTempTag_, pMassTag_, pMass0Tag_;
-    Expr::TagList dElementTags_, elementTags_, mvCharTags_;
+    const KobSarofimInformation sarofimData_;
     const Coal::StringNames& sNames_;
 
-    KobSarofimInformation sarofimData_;
+    Expr::TagList dElementTags_, elementTags_, mvCharTags_;
+
     Coal::CoalEquation  *hydrogenEqn_, *oxygenEqn_;
 
     bool haveRegisteredExprs_;
