@@ -1436,13 +1436,10 @@ namespace WasatchCore{
     
     //__________________________________
     //  turn off parentDW scrubbing
-    
     subsched_->setParentDWs(parentOldDW, parentNewDW);
     
-    DataWarehouse::ScrubMode parentOldDWScrubMode =
-                             parentOldDW->setScrubbing(DataWarehouse::ScrubNone);
-    DataWarehouse::ScrubMode parentNewDWScrubMode =
-                             parentNewDW->setScrubbing(DataWarehouse::ScrubNone);
+    parentOldDW->setScrubbing(DataWarehouse::ScrubNone);
+    parentNewDW->setScrubbing(DataWarehouse::ScrubNone);
     
     subsched_->clearMappings();
     subsched_->mapDataWarehouse(Uintah::Task::ParentOldDW, 0);
@@ -1705,9 +1702,8 @@ namespace WasatchCore{
     }
     
     typedef Expr::ConstantExpr<SpatialOps::SingleValueField>::Builder ConstantSingleValueT;
-    const double ds = timeIntegrator_.dualTimeds;
     const TagNames& tagNames = TagNames::self();
-    const Expr::ExpressionID dsID = exprFactory.register_expression(scinew ConstantSingleValueT(tagNames.ds, ds), true );
+    exprFactory.register_expression(scinew ConstantSingleValueT(tagNames.ds, timeIntegrator_.dualTimeds), true );
 
     //____________________________________________________________________
     // create all of the required tasks on the timestepper.  This involves

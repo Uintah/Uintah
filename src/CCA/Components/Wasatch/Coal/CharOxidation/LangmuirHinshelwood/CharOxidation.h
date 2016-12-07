@@ -36,9 +36,6 @@ namespace CHAR{
    *  \param   chmodel       : Char oxidation model, LH and Fractal base on [1]
 	 #                           and [2], respectively
    */
-
-
-
   template< typename FieldT >
   class CharOxidation
       : public Expr::Expression<FieldT>

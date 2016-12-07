@@ -240,10 +240,10 @@ namespace WasatchCore{
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
     Expr::ExpressionFactory& solnFactory = *solnGraphHelper_->exprFactory;
-    solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
-    const Expr::ExpressionID np1ID = solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
-    solnFactory.register_expression     ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NONE   )), true );
-    postProcGraphHelper_->exprFactory->register_expression ( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );    
+    solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
+    solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
+    solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NONE   )), true );
+    postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );
   }
 
   //------------------------------------------------------------------
@@ -261,7 +261,7 @@ namespace WasatchCore{
       throw std::runtime_error( msg.str() );
     }
 
-    for ( int i = 0; i<rhsTags.size(); ++i ){
+    for( size_t i = 0; i<rhsTags.size(); ++i ){
       add_equation<FieldT>( solnVarTags[i].name(),
                             rhsTags[i] );
     }

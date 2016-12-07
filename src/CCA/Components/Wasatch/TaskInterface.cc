@@ -796,7 +796,7 @@ namespace WasatchCore{
       Expr::DualTime::BDFDualTimeIntegrator& dtIntegrator = *dualTimeIntegrators[patchID];
       dtIntegrator.set_dual_time_step_expression(factory.get_id(tags.ds));
 
-      for (int i=0; i<varNames.size(); i++) {
+      for( size_t i=0; i<varNames.size(); i++ ){
         dtIntegrator.add_variable<SVolField>(varNames[i], rhsTags[i]);
       }
       dtIntegrator.prepare_for_integration<SVolField>();

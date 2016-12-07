@@ -150,12 +150,12 @@
                     const Expr::Tag&     gmuTag,
                     const Expr::Tag&     glambdaTag)
   : ExpressionBuilder( pConvCoefTag ),
-    pPosTags_  ( pPosTags  ),
     pReTag_    ( pReTag    ),
     psizeTag_  ( psizeTag  ),
     gcpTag_    ( gcpTag    ),
     gmuTag_    ( gmuTag    ),
-    glambdaTag_( glambdaTag)
+    glambdaTag_( glambdaTag),
+    pPosTags_  ( pPosTags  )
   {}
 
   //------------------------------------------------------------------
