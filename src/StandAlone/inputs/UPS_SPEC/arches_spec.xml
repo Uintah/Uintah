@@ -1353,6 +1353,7 @@
                                                                            westbrook_dryer,
                                                                            coal_gas_oxi,
                                                                            coal_gas_oxi_mom,
+                                                                           ht_convection,
                                                                            coal_gas_heat,
                                                                            coal_gas_devol,
                                                                            coal_gas_devol_mom,
@@ -1398,6 +1399,9 @@
 
             <!-- Tabulated reaction rate -->
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
+            
+             <!-- Spec for dTcorrectionFractor for the gas phase convection heat flux near the wall -->
+            <dTCorrectionFactor         spec="OPTIONAL STRING" need_applies_to="type ht_convection" />
 
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />

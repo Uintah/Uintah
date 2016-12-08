@@ -19,6 +19,7 @@
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
+#include <CCA/Components/Arches/SourceTerms/HTConvection.h>
 #include <CCA/Components/Arches/SourceTerms/PCTransport.h>
 #include <CCA/Components/Arches/SourceTerms/SecondMFMoment.h>
 #include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
@@ -284,6 +285,10 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       } else if (src_type == "BrownSootFormation_Tar") {
         SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_Tar::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+      
+      } else if (src_type == "ht_convection") {
+        SourceTermBase::Builder* srcBuilder = scinew HTConvection::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "SootMassBalance") {
