@@ -3713,7 +3713,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
     const std::string varName = dependantVar->m_var->getName();
     //TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
-    if (varName == "abskg" && varName == "abskgRMCRT" ) {
+    if (varName != "divQ" && varName != "RMCRTboundFlux" && varName != "radiationVolq" ) {
       continue;
     }
     if (gpudw != nullptr) {
