@@ -232,6 +232,11 @@ public:
   {
     svolSpatialMask_ = spatMask;
   }
+  
+  inline void set_interior_svol_spatial_mask( const SpatialOps::SpatialMask<SVolField>* spatMask )
+  {
+    interiorSvolSpatialMask_ = spatMask;
+  }
 
   /**
    *  \brief Set nebo-mask-friendly interior points. This is a vector of locally indexed ijk interior points. Interior
@@ -271,6 +276,15 @@ public:
   inline void set_bc_type ( WasatchCore::BndCondTypeEnum bcTypeEnum)
   {
     bcTypeEnum_ = bcTypeEnum;
+  }
+
+  /**
+   *  \brief Set the type of this boundary: INLET, VELOCITY, etc...
+   *
+   */
+  inline void set_bnd_type ( WasatchCore::BndTypeEnum bndTypeEnum)
+  {
+    bndTypeEnum_ = bndTypeEnum;
   }
 
   /**
@@ -359,6 +373,7 @@ protected:
   SpatialOps::IntVec patchCellOffset_;
   SpatialOps::IntVec bndNormal_;
   
+  WasatchCore::BndTypeEnum bndTypeEnum_;
   WasatchCore::BndCondTypeEnum bcTypeEnum_; // DIRICHLET, NEUMANN, UNSUPPORTED
   Uintah::Patch::FaceType faceTypeEnum_;    // xminus, xplus...
   SpatialOps::BCSide bcSide_, shiftSide_;
@@ -399,6 +414,7 @@ protected:
   const std::vector<int>* boundaryParticles_; // vector of indices of particles on this boundary
   
   const SpatialOps::SpatialMask<SVolField>* svolSpatialMask_;
+  const SpatialOps::SpatialMask<SVolField>* interiorSvolSpatialMask_;
   const SpatialOps::SpatialMask<FieldT>*    spatialMask_;
 };
 

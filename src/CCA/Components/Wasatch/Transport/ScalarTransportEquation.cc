@@ -327,7 +327,7 @@ namespace WasatchCore{
         // for variable density problems, we must ALWAYS guarantee proper boundary conditions for
         // rhof_{n+1}. Since we apply bcs on rhof at the bottom of the graph, we can't apply
         // the same bcs on rhof (time advanced). Hence, we set rhof_rhs to zero always :)
-        if( !myBndSpec.has_field(rhs_name()) ){
+        if( !myBndSpec.has_field(rhs_name()) ){ // if nothing has been specified for the RHS
           const BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
           bcHelper.add_boundary_condition(bndName, rhsBCSpec);
         }

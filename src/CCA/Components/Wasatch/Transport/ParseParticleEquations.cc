@@ -34,6 +34,7 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/Transport/ParseParticleEquations.h>
 #include <CCA/Components/Wasatch/Transport/EquationAdaptors.h>
 #include <CCA/Components/Wasatch/Transport/ParticleSizeEquation.h>
@@ -280,11 +281,20 @@ namespace WasatchCore{
         const Expr::Tag pvTag = Expr::Tag(pvname, Expr::STATE_DYNAMIC);
         const Expr::Tag pwTag = Expr::Tag(pwname, Expr::STATE_DYNAMIC);
 
-        const Expr::ExpressionID stabDtID = factory.register_expression(
-            scinew StableTimestep::Builder( TagNames::self().stableTimestep,
-                                            densityTag, viscTag,
-                                            xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag ),
-                                            true );
+        const bool isCompressible = (Wasatch::flow_treatment() == COMPRESSIBLE);
+        Expr::ExpressionID stabDtID;
+        if (isCompressible){
+          stabDtID = factory.register_expression(scinew StableTimestep<SVolField,SVolField,SVolField>::Builder( TagNames::self().stableTimestep,
+                                                                                                                                        densityTag, viscTag,
+                                                                                                                                        xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, TagNames::self().soundspeed ),true );
+        } else {
+          const Expr::Tag soundspeedTag = isCompressible ? TagNames::self().soundspeed : Expr::Tag();
+          stabDtID = factory.register_expression(scinew StableTimestep<XVolField,YVolField,ZVolField>::Builder( TagNames::self().stableTimestep,
+                                                                                                                                        densityTag, viscTag,
+                                                                                                                                        xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, Expr::Tag() ),true );
+          
+        }
+                                            
         // force this onto the graph.
         gc[ADVANCE_SOLUTION]->rootIDs.insert( stabDtID );
       }

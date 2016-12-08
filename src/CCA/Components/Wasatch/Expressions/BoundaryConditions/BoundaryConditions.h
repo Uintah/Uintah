@@ -372,4 +372,143 @@ private:
 };
 
 //-------------------------------------------------------------------------------------------------
+/**
+ *  \class 	BCOneSidedConvFluxDiv
+ *  \ingroup 	Expressions
+ *  \author 	Tony Saad
+ *  \date    March, 2014
+ *
+ *  \brief One sided convective flux BC. Used in NSCBCs.
+ *
+ *  \tparam FieldT - the type of field for the RHS.
+ *  \tparam DivOpT - the type of divergence operator to invert.
+ */
+template< typename FieldT, typename DivOpT >
+class BCOneSidedConvFluxDiv
+: public BoundaryConditionBase<FieldT>
+{
+  BCOneSidedConvFluxDiv( const Expr::Tag& uTag,
+                         const Expr::Tag& phiTag )
+  {
+    this->set_gpu_runnable(true);
+    u_ = this->template create_field_request<FieldT>(uTag);
+    phi_ = this->template create_field_request<FieldT>(phiTag);
+  }
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    Builder( const Expr::Tag& resultTag,
+             const Expr::Tag& uTag,
+             const Expr::Tag& phiTag )
+    : ExpressionBuilder(resultTag),
+    uTag_  (uTag),
+    phiTag_(phiTag)
+    {}
+    inline Expr::ExpressionBase* build() const{ return new BCOneSidedConvFluxDiv(uTag_, phiTag_); }
+  private:
+    const Expr::Tag uTag_, phiTag_;
+  };
+  
+  ~BCOneSidedConvFluxDiv(){}
+  void evaluate();
+  void bind_operators( const SpatialOps::OperatorDatabase& opdb );
+private:
+  const DivOpT*  divOp_;
+  
+  DECLARE_FIELDS(FieldT, u_, phi_)
+};
+
+//-------------------------------------------------------------------------------------------------
+/**
+ *  \class 	BCOneSidedGradP
+ *  \ingroup 	Expressions
+ *  \author 	Tony Saad
+ *  \date    March, 2014
+ *
+ *  \brief One sided gradp BC. Used in NSCBCs.
+ *
+ *  \tparam FieldT - the type of field for the RHS.
+ *  \tparam GradOpT - the type of gradient operator to invert.
+ */
+template< typename FieldT, typename GradOpT >
+class BCOneSidedGradP
+: public BoundaryConditionBase<FieldT>
+{
+  BCOneSidedGradP( const Expr::Tag& pTag )
+  {
+    this->set_gpu_runnable(true);
+    p_ = this->template create_field_request<FieldT>(pTag);
+  }
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    Builder( const Expr::Tag& resultTag,
+            const Expr::Tag& pTag)
+    : ExpressionBuilder(resultTag),
+    pTag_  (pTag)
+    {}
+    inline Expr::ExpressionBase* build() const{ return new BCOneSidedGradP(pTag_); }
+  private:
+    const Expr::Tag pTag_;
+  };
+  
+  ~BCOneSidedGradP(){}
+  void evaluate();
+  void bind_operators( const SpatialOps::OperatorDatabase& opdb );
+private:
+  const GradOpT*  gradOp_;
+  
+  DECLARE_FIELDS(FieldT, p_);
+};
+
+//-------------------------------------------------------------------------------------------------
+/**
+ *  \class 	ConstantBCNew
+ *  \ingroup 	Expressions
+ *  \author 	Tony Saad
+ *  \date    Dec, 2016
+ *
+ *  \brief Prototype for new style of Boundary Conditions. 
+ *
+ *  \tparam FieldT - the type of field for the RHS.
+ */
+template< typename FieldT, typename OpT >
+class ConstantBCNew
+: public BoundaryConditionBase<FieldT>
+{
+  ConstantBCNew(double bcVal):
+  bcVal_(bcVal)
+  {
+    this->set_gpu_runnable(true);
+  }
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    Builder( const Expr::Tag& resultTag, double bcVal)
+    : ExpressionBuilder(resultTag), bcVal_(bcVal)
+    {}
+    inline Expr::ExpressionBase* build() const{ return new ConstantBCNew(bcVal_); }
+  private:
+    double bcVal_;
+  };
+  
+  ~ConstantBCNew(){}
+  void evaluate()
+  {
+    FieldT& lhs = this->value();
+    (*op_)(*this->interiorSvolSpatialMask_, lhs, bcVal_, this->isMinusFace_);
+  }
+  void bind_operators( const SpatialOps::OperatorDatabase& opdb )
+  {
+    op_ = opdb.retrieve_operator<OpT>();
+  }
+private:
+  const OpT* op_;
+  double bcVal_;
+};
+
+//-------------------------------------------------------------------------------------------------
 #endif // BoundaryConditions_h

@@ -30,16 +30,77 @@
 #include <CCA/Components/Wasatch/Transport/CompressibleMomentumTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquationHelper.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OutflowBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OpenBC.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/Derivative.h>
+// -- NSCBC Includes -- //
+#include <nscbc/CharacteristicBCBuilder.h>
+#include <nscbc/TagManager.h>
+#include <nscbc/SpeedOfSound.h>
 
 namespace WasatchCore{
 
   //====================================================================
-
+  // Find out if a certain momentum component of MomDirT is perpendicular to face
+  template <typename MomDirT> bool is_perpendicular(const Uintah::Patch::FaceType face)
+  {return false;}
   
+  template<>
+  bool is_perpendicular<SpatialOps::XDIR>(const Uintah::Patch::FaceType face)
+  {
+    if (face == Uintah::Patch::xminus || face == Uintah::Patch::xplus) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  template<>
+  bool is_perpendicular<SpatialOps::YDIR>(const Uintah::Patch::FaceType face)
+  {
+    if (face == Uintah::Patch::yminus || face == Uintah::Patch::yplus) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  template<>
+  bool is_perpendicular<SpatialOps::ZDIR>(const Uintah::Patch::FaceType face)
+  {
+    if (face == Uintah::Patch::zminus || face == Uintah::Patch::zplus) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  //====================================================================
+  // Typedef the normal direction based on DirT
+  template< typename DirT>
+  struct NormalDirTypeSelector
+  {
+  public:
+    typedef typename SpatialOps::SSurfXField   NormalDirT;
+  };
+
+  template<>
+  struct NormalDirTypeSelector<SpatialOps::XDIR>
+  {
+    typedef typename SpatialOps::SSurfXField   NormalDirT;
+  };
+  
+  template<>
+  struct NormalDirTypeSelector<SpatialOps::YDIR>
+  {
+    typedef typename SpatialOps::SSurfYField   NormalDirT;
+  };
+
+  template<>
+  struct NormalDirTypeSelector<SpatialOps::ZDIR>
+  {
+    typedef typename SpatialOps::SSurfZField   NormalDirT;
+  };
 
   //============================================================================
   
@@ -167,20 +228,18 @@ namespace WasatchCore{
       this->value() <<= ( pressure_->field_ref() * mixMW_->field_ref() )/( gasConstant_ * temperature_->field_ref() );
     }
   };
-
   
   //----------------------------------------------------------------------------
   
   Expr::ExpressionID
   ContinuityTransportEquation::initial_condition( Expr::ExpressionFactory& exprFactory )
   {
-    typedef Density_IC<FieldT>::Builder DensIC;
+    typedef Density_IC<MyFieldT>::Builder DensIC;
     return exprFactory.register_expression( scinew DensIC( initial_condition_tag(),
                                                            temperatureTag_,
                                                            TagNames::self().pressure,
                                                            mixMWTag_ ) );
   }
-
 
   //============================================================================
 
@@ -192,6 +251,7 @@ namespace WasatchCore{
                                          const Expr::Tag densityTag,
                                          const Expr::Tag temperatureTag,
                                          const Expr::Tag mixMWTag,
+                                         const Expr::Tag e0Tag, // total internal energy tag
                                          const Expr::Tag bodyForceTag,
                                          const Expr::Tag srcTermTag,
                                          GraphCategories& gc,
@@ -206,7 +266,10 @@ namespace WasatchCore{
                                               srcTermTag,
                                               gc,
                                               params,
-                                              turbParams )
+                                              turbParams ),
+   temperatureTag_(temperatureTag),
+   mixMWTag_(mixMWTag),
+   e0Tag_(e0Tag)
   {
     // todo:
     //  - strain tensor       // registered by MomentumTransportEquationBase
@@ -254,6 +317,8 @@ namespace WasatchCore{
   ~CompressibleMomentumTransportEquation()
   {}
 
+  //----------------------------------------------------------------------------
+  
   template <typename MomDirT>
   void CompressibleMomentumTransportEquation<MomDirT>::
   setup_boundary_conditions( WasatchBCHelper& bcHelper,
@@ -271,7 +336,7 @@ namespace WasatchCore{
     //
     {
       // add dt dummy modifier for outflow bcs...
-      bcHelper.create_dummy_dependency<SpatialOps::SingleValueField, FieldT>(rhs_part_tag(this->solnVarName_), tag_list(tagNames.dt),ADVANCE_SOLUTION);
+      bcHelper.create_dummy_dependency<SpatialOps::SingleValueField, FieldT>(rhs_part_tag(this->solnVarName_), tag_list(tagNames.dt), ADVANCE_SOLUTION);
       
       // add momentum dummy modifiers
       const Expr::Tag momTimeAdvanceTag(this->solnvar_np1_tag());
@@ -296,13 +361,104 @@ namespace WasatchCore{
     //
     
     // make logical decisions based on the specified boundary types
+    int jobid = 0;
+
+    // we will need the speed of sound
+    if( !( advSlnFactory.have_entry(tagNames.soundspeed) ) ){
+      typedef typename NSCBC::SpeedOfSound<SVolField>::Builder SoundSpeed;
+      advSlnFactory.register_expression(
+                                        new SoundSpeed( tagNames.soundspeed, this->pressureTag_, this->densityTag_, tagNames.cp, tagNames.cv )
+                                        );
+    }
+
     BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
     {
       const std::string& bndName = bndPair.first;
       const BndSpec& myBndSpec = bndPair.second;
       
       const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
-      
+
+      //============================================================================================
+      // NSCBC TREATMENT
+      std::map< NSCBC::TagName, Expr::Tag > tags;
+      std::map< NSCBC::TagListName, Expr::TagList > tagLists;
+      {
+        int normVelIndex = 0; // velocity component normal to this boundary face u_i. This will be picked from velTags_[]
+        switch (myBndSpec.face) {
+          case Uintah::Patch::xminus:
+          case Uintah::Patch::xplus:
+            normVelIndex = 0;
+            break;
+          case Uintah::Patch::yminus:
+          case Uintah::Patch::yplus:
+            normVelIndex = 1;
+            break;
+          case Uintah::Patch::zminus:
+          case Uintah::Patch::zplus:
+            normVelIndex = 2;
+            break;
+          default:
+            break;
+        }
+        
+        // we will need dudx, dvdy, and dwdz. Register here if they were not registered
+        const Expr::TagList dVelTags = tag_list(tagNames.dudx, tagNames.dvdy, tagNames.dwdz);
+        if( !( advSlnFactory.have_entry(tagNames.dudx) ) ){
+          typedef typename Derivative<SVolField, SVolField, SpatialOps::XDIR>::Builder dudx;
+          advSlnFactory.register_expression(new dudx( tagNames.dudx, this->velTags_[0] ));
+        }
+        
+        if( !( advSlnFactory.have_entry(tagNames.dvdy) ) ){
+          typedef typename Derivative<SVolField, SVolField, SpatialOps::YDIR>::Builder dvdy;
+          advSlnFactory.register_expression(new dvdy( tagNames.dvdy, this->velTags_[1] ));
+        }
+        
+        if( !( advSlnFactory.have_entry(tagNames.dwdz) ) ){
+          typedef typename Derivative<SVolField, SVolField, SpatialOps::ZDIR>::Builder dwdz;
+          advSlnFactory.register_expression(new dwdz( tagNames.dwdz, this->velTags_[2] ));
+        }
+        
+        // we will also need dpdx, dpdy, and dpdz. Register here if they were not registered
+        const Expr::TagList dPTags = tag_list(tagNames.dpdx, tagNames.dpdy,tagNames.dpdz);
+        if( !( advSlnFactory.have_entry(tagNames.dpdx) ) ){
+          typedef typename Derivative<SVolField, SVolField, SpatialOps::XDIR>::Builder dpdx;
+          advSlnFactory.register_expression(new dpdx( tagNames.dpdx, this->pressureTag_ ));
+        }
+        
+        if( !( advSlnFactory.have_entry(tagNames.dpdy) ) ){
+          typedef typename Derivative<SVolField, SVolField, SpatialOps::YDIR>::Builder dpdy;
+          advSlnFactory.register_expression(new dpdy( tagNames.dpdy, this->pressureTag_ ));
+        }
+        
+        if( !( advSlnFactory.have_entry(tagNames.dpdz) ) ){
+          typedef typename Derivative<SVolField, SVolField, SpatialOps::ZDIR>::Builder dpdz;
+          advSlnFactory.register_expression(new dpdz( tagNames.dpdz, this->pressureTag_ ));
+        }
+        
+        // now fill in the tas for the NSCBC tag manager
+        tags[NSCBC::U]       = this->velTags_[0];
+        tags[NSCBC::V]       = this->velTags_[1];
+        tags[NSCBC::W]       = this->velTags_[2];
+        tags[NSCBC::FACEVEL] = this->velTags_[normVelIndex];
+        tags[NSCBC::DVEL]    = dVelTags[normVelIndex];
+        tags[NSCBC::T]       = this->temperatureTag_;
+        tags[NSCBC::P]       = this->pressureTag_;
+        tags[NSCBC::PFACE]   = dPTags[normVelIndex];
+        tags[NSCBC::RHO]     = this->densityTag_;
+        tags[NSCBC::MMW]     = this->mixMWTag_;
+        tags[NSCBC::CP]      = tagNames.cp;
+        tags[NSCBC::CV]      = tagNames.cv;
+        tags[NSCBC::C]       = tagNames.soundspeed;
+        tags[NSCBC::E0]      = this->e0Tag_;
+        tagLists[NSCBC::H_N]     = tag_list(tagNames.enthalpy);
+        
+        // create the NSCBC tag manager
+        NSCBC::TagManager nscbcTagMgr( tags, tagLists, false );
+        
+        bcHelper.setup_nscbc<MomDirT>(myBndSpec, nscbcTagMgr, jobid++);
+      }
+      //============================================================================================
+
       // variable density: add bccopiers on all boundaries
       if( !this->is_constant_density() ){
         // if we are solving a variable density problem, then set bcs on density estimate rho*
@@ -310,7 +466,7 @@ namespace WasatchCore{
         // check if this boundary applies a bc on the density
         if( myBndSpec.has_field(this->densityTag_.name()) ){
           // create a bc copier for the density estimate
-          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_" + bndName +"_bccopier", Expr::STATE_NONE);
+          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_" + bndName + "_bccopier", Expr::STATE_NONE);
           BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
           if( !initFactory.have_entry(rhoStarBCTag) ){
             const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
@@ -343,31 +499,231 @@ namespace WasatchCore{
           bcHelper.add_boundary_condition(bndName, momBCSpec);
 
           // set zero pressure gradient
-          BndCondSpec pressureBCSpec = {this->pressureTag_.name(),"none" ,0.0,NEUMANN,DOUBLE_TYPE};
+          BndCondSpec pressureBCSpec = {this->pressureTag_.name(),"none" ,0.0, NEUMANN, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
           
           // set zero velocity
           BndCondSpec velBCSpec = {this->thisVelTag_.name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, velBCSpec);
           
-          break;
+          // set zero momentum RHS on the wall
+          BndCondSpec momRHSBCSpec = {this->rhs_tag().name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momRHSBCSpec);
+
         }
-        case VELOCITY:
-        case OUTFLOW:
+          break;
+        case VELOCITY: // we will use this as the hard inflow
+        {
+          // set zero momentum RHS at inlets
+          BndCondSpec momRHSBCSpec = {this->rhs_tag().name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momRHSBCSpec);
+        }
+          break;
+        case OUTFLOW:  // we will use OUTFLOW/OPEN as NONREFLECTING
         case OPEN:
+        {
+          std::cout << " here \n";
+          typedef typename SpatialOps::UnitTriplet<MomDirT>::type UnitTripletT;
+          
+          //Create the one sided stencil gradient
+          Expr::Tag convModTag;
+          Expr::Tag pModTag;
+          
+          Expr::ExpressionBuilder* builder1 = NULL;
+          Expr::ExpressionBuilder* builder2 = NULL;
+          
+          switch (myBndSpec.face) {
+            case Uintah::Patch::xplus:
+            case Uintah::Patch::yplus:
+            case Uintah::Patch::zplus:
+            {
+              if ( is_perpendicular<MomDirT>(myBndSpec.face) ) {
+                typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<typename UnitTripletT::Negate>,FieldT>::type OpT;
+                
+                convModTag = Expr::Tag(this->solnVarName_ + "_partial_rhs_mod_plus_side_" + bndName, Expr::STATE_NONE);
+                typedef typename BCOneSidedConvFluxDiv<FieldT,OpT>::Builder builderT;
+                builder1 = new builderT( convModTag, thisVelTag_, mom_tag(this->solnVarName_));
+                
+                pModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_plus_side_" + bndName, Expr::STATE_NONE);
+                typedef typename BCOneSidedGradP<FieldT,OpT>::Builder pbuilderT;
+                builder2 = new pbuilderT( pModTag, this->pressureTag_ );
+              }
+            }
+              break;
+            case Uintah::Patch::xminus:
+            case Uintah::Patch::yminus:
+            case Uintah::Patch::zminus:
+            {
+              if ( is_perpendicular<MomDirT>(myBndSpec.face) ) {
+                typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<UnitTripletT>,FieldT>::type OpT;
+                
+                convModTag = Expr::Tag(this->solnVarName_ + "_partial_rhs_mod_minus_side_" + bndName, Expr::STATE_NONE);
+                typedef typename BCOneSidedConvFluxDiv<FieldT,OpT>::Builder builderT;
+                builder1 = new builderT( convModTag, thisVelTag_, mom_tag(this->solnVarName_) );
+                
+                pModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_minus_side_" + bndName, Expr::STATE_NONE);
+                typedef typename BCOneSidedGradP<FieldT,OpT>::Builder pbuilderT;
+                builder2 = new pbuilderT( pModTag, this->pressureTag_ );
+              }
+            }
+              break;
+            default:
+              break;
+          }
+          
+          if ( is_perpendicular<MomDirT>(myBndSpec.face) ) {
+            advSlnFactory.register_expression(builder1);
+            BndCondSpec rhsConvFluxSpec = {this->rhs_tag().name() + "_partial", convModTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsConvFluxSpec);
+
+            advSlnFactory.register_expression(builder2);
+            BndCondSpec rhsGradPSpec = {this->rhs_tag().name(), pModTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsGradPSpec);
+          }
+          
+          // construct an appropriate convective flux in the boundary by using one-sided Neumann interpolation
+          Expr::Tag normalConvModTag;
+          Expr::Tag normalStrainModTag;
+          Expr::Tag momModTag;
+          Expr::Tag pModTag2;
+          Expr::Tag rhsModTag;
+          
+          switch (myBndSpec.face) {
+            case Uintah::Patch::xplus:
+            case Uintah::Patch::xminus:
+            {
+              normalConvModTag = Expr::Tag( this->normalConvFluxTag_.name() + "_" + Expr::context2str(this->normalConvFluxTag_.context()) + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
+              normalStrainModTag = Expr::Tag( this->normalStrainTag_.name() + "_" + Expr::context2str(this->normalStrainTag_.context()) + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
+              momModTag = Expr::Tag( this->solnVarName_ + "_" + Expr::context2str(this->solnVarTag_.context()) + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
+              pModTag2 = Expr::Tag( this->pressureTag_.name() + "_" + Expr::context2str(this->pressureTag_.context()) + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
+              
+              typedef OpTypes<FieldT> Ops;
+              typedef typename Ops::InterpC2FX   DirichletT;
+              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+              typedef typename ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
+              
+              // for normal fluxes
+              typedef typename NormalDirTypeSelector<MomDirT>::NormalDirT FluxT;
+              typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+              
+              if (!initFactory.have_entry(momModTag)) initFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
+              
+              if (!advSlnFactory.have_entry(normalConvModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalConvModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(normalStrainModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalStrainModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(momModTag)) advSlnFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(pModTag2)) advSlnFactory.register_expression( new constBCNeumannT( pModTag2, 0.0 ) );
+            }
+              break;
+
+            case Uintah::Patch::yplus:
+            case Uintah::Patch::yminus:
+            {
+              normalConvModTag = Expr::Tag( this->normalConvFluxTag_.name() + "_" + Expr::context2str(this->normalConvFluxTag_.context()) + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+              normalStrainModTag = Expr::Tag( this->normalStrainTag_.name() + "_" + Expr::context2str(this->normalStrainTag_.context()) + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+              momModTag = Expr::Tag( this->solnVarName_ + "_" + Expr::context2str(this->solnVarTag_.context()) + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+              pModTag2 = Expr::Tag( this->pressureTag_.name() + "_" + Expr::context2str(this->pressureTag_.context()) + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+              
+              typedef OpTypes<FieldT> Ops;
+              typedef typename Ops::InterpC2FY   DirichletT;
+              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, SVolField, SVolField >::type NeumannT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+              typedef typename ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
+              
+              // for normal fluxes
+              typedef typename NormalDirTypeSelector<MomDirT>::NormalDirT FluxT;
+              typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+              
+              if (!initFactory.have_entry(momModTag)) initFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
+              
+              if (!advSlnFactory.have_entry(normalConvModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalConvModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(normalStrainModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalStrainModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(momModTag)) advSlnFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(pModTag2)) advSlnFactory.register_expression( new constBCNeumannT( pModTag2, 0.0 ) );
+            }
+              break;
+
+            case Uintah::Patch::zplus:
+            case Uintah::Patch::zminus:
+            {
+              normalConvModTag = Expr::Tag( this->normalConvFluxTag_.name() + "_" + Expr::context2str(this->normalConvFluxTag_.context()) + "_bc_" + myBndSpec.name + "_Zdirbc", Expr::STATE_NONE );
+              normalStrainModTag = Expr::Tag( this->normalStrainTag_.name() + "_" + Expr::context2str(this->normalStrainTag_.context()) + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
+              momModTag = Expr::Tag( this->solnVarName_ + "_" + Expr::context2str(this->solnVarTag_.context()) + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
+              pModTag2 = Expr::Tag( this->pressureTag_.name() + "_" + Expr::context2str(this->pressureTag_.context()) + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
+              
+              typedef OpTypes<FieldT> Ops;
+              typedef typename Ops::InterpC2FZ   DirichletT;
+              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, SVolField, SVolField >::type NeumannT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+              typedef typename ConstantBCNew<FieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename ConstantBCNew<FieldT,NeumOpT>::Builder constBCNeumannT;
+              
+              // for normal fluxes
+              typedef typename NormalDirTypeSelector<MomDirT>::NormalDirT FluxT;
+              typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+              
+              if (!initFactory.have_entry(momModTag)) initFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
+              
+              if (!advSlnFactory.have_entry(normalConvModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalConvModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(normalStrainModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( normalStrainModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(momModTag)) advSlnFactory.register_expression( new constBCNeumannT( momModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(pModTag2)) advSlnFactory.register_expression( new constBCNeumannT( pModTag2, 0.0 ) );
+            }
+              break;
+
+            default:
+              break;
+          }
+          if ( is_perpendicular<MomDirT>(myBndSpec.face) ) {
+            BndCondSpec convFluxBCSpec = {this->normalConvFluxTag_.name(),normalConvModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, convFluxBCSpec);
+            
+            BndCondSpec stressBCSpec = {this->normalStrainTag_.name(),normalStrainModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, stressBCSpec);
+          }
+
+          // set Neumann = 0 on momentum
+          BndCondSpec momBCSpec = {this->solnVarName_, momModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+          bcHelper.add_boundary_condition(bndName, momBCSpec);
+
+          // set Neumann = 0 on the pressure
+          BndCondSpec pBCSpec = {this->pressureTag_.name(), pModTag2.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+          bcHelper.add_boundary_condition(bndName, pBCSpec);
+          
+          // If we need a boundary condition for the rhs
+//          BndCondSpec rhsZeroSpec = {this->rhs_tag().name(), "none", 0.0, DIRICHLET, FUNCTOR_TYPE};
+//          bcHelper.add_boundary_condition(bndName, rhsZeroSpec);
+
+        }
+          break;
         case USER:
+        {}
+          break;
         default:
         {
           std::ostringstream msg;
           msg << "ERROR: VELOCITY, OPEN, and OUTFLOW boundary conditions are not currently supported for compressible flows in Wasatch. " << bndName
           << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-          break;
         }
+           break;
       } // SWITCH BOUNDARY TYPE
     } // BOUNDARY LOOP
   }
 
+  //----------------------------------------------------------------------------
+  
   template <typename MomDirT>
   void CompressibleMomentumTransportEquation<MomDirT>::
   apply_initial_boundary_conditions( const GraphHelper& graphHelper,
@@ -376,12 +732,12 @@ namespace WasatchCore{
     const Category taskCat = INITIALIZATION;
     
     // apply velocity boundary condition, if specified
-    bcHelper.apply_boundary_condition<FieldT>(this->thisVelTag_, taskCat);
+    bcHelper.apply_boundary_condition<FieldT>(this->thisVelTag_, taskCat, true);
     
     // tsaad: boundary conditions will not be applied on the initial condition of momentum. This leads
     // to tremendous complications in our graphs. Instead, specify velocity initial conditions
     // and velocity boundary conditions, and momentum bcs will appropriately propagate.
-    bcHelper.apply_boundary_condition<FieldT>(this->initial_condition_tag(), taskCat);
+    bcHelper.apply_boundary_condition<FieldT>(this->initial_condition_tag(), taskCat, true);
     
     if( !this->is_constant_density() ){
       const TagNames& tagNames = TagNames::self();
@@ -396,6 +752,16 @@ namespace WasatchCore{
     }
   }
   
+  //----------------------------------------------------------------------------
+
+  template<typename MomDirT>
+  NSCBC::TransportVal NSCBCMomentum(){}
+  
+  template<> NSCBC::TransportVal NSCBCMomentum<SpatialOps::XDIR>(){return NSCBC::MOMENTUM_X;}
+  template<> NSCBC::TransportVal NSCBCMomentum<SpatialOps::YDIR>(){return NSCBC::MOMENTUM_Y;}
+  template<> NSCBC::TransportVal NSCBCMomentum<SpatialOps::ZDIR>(){return NSCBC::MOMENTUM_Z;}
+  
+  //----------------------------------------------------------------------------
   
   template <typename MomDirT>
   void CompressibleMomentumTransportEquation<MomDirT>::
@@ -413,13 +779,22 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true);
     // set bcs for pressure
     bcHelper.apply_boundary_condition<FieldT>( this->pressureTag_, taskCat);
+    // set bcs for convective flux
+    bcHelper.apply_boundary_condition< typename NormalDirTypeSelector<MomDirT>::NormalDirT >( this->normalConvFluxTag_, taskCat);
+    // set bcs for strain
+    bcHelper.apply_boundary_condition< typename NormalDirTypeSelector<MomDirT>::NormalDirT >( this->normalStrainTag_, taskCat);
+    // apply NSCBC boundary conditions
+    bcHelper.apply_nscbc_boundary_condition(this->rhs_tag(), NSCBCMomentum<MomDirT>(), taskCat);
   }
 
   //============================================================================
-
+  
   template class CompressibleMomentumTransportEquation<SpatialOps::XDIR>;
   template class CompressibleMomentumTransportEquation<SpatialOps::YDIR>;
   template class CompressibleMomentumTransportEquation<SpatialOps::ZDIR>;
+  template struct NormalDirTypeSelector<SpatialOps::XDIR>;
+  template struct NormalDirTypeSelector<SpatialOps::YDIR>;
+  template struct NormalDirTypeSelector<SpatialOps::ZDIR>;
 } // namespace Wasatch
 
 

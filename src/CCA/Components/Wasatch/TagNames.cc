@@ -79,8 +79,19 @@ namespace WasatchCore{
   sootAgglomerationRate    ( "soot_agglomeration_rate"     , Expr::STATE_NONE ),
 
   // thermochemistry related variables
-  heatCapacity       ( "heat_capacity",        Expr::STATE_NONE ),
+  soundspeed         ( "sound_speed"         , Expr::STATE_NONE ),
+  heatCapacity       ( "heat_capacity"       , Expr::STATE_NONE ),
+  cp                 ( "cp"                  , Expr::STATE_NONE ),
+  cv                 ( "cv"                  , Expr::STATE_NONE ),
   thermalConductivity( "thermal_conductivity", Expr::STATE_NONE ),
+  
+  // NSCBC related vars
+  dudx( "dudx", Expr::STATE_NONE ),
+  dvdy( "dvdy", Expr::STATE_NONE ),
+  dwdz( "dwdz", Expr::STATE_NONE ),
+  dpdx( "dpdx", Expr::STATE_NONE ),
+  dpdy( "dpdy", Expr::STATE_NONE ),
+  dpdz( "dpdz", Expr::STATE_NONE ),
 
   // momentum related variables
   pressure  ( "pressure"  , Expr::STATE_NONE ),

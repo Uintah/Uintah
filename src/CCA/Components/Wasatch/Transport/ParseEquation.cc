@@ -32,16 +32,16 @@
 #include <CCA/Components/Wasatch/Transport/EquationAdaptors.h>
 
 //-- Add headers for individual transport equations here --//
-#include "TransportEquation.h"
+#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/ScalabilityTestTransportEquation.h>
-#include "MomentumTransportEquationBase.h"
-#include "LowMachMomentumTransportEquation.h"
-#include "CompressibleMomentumTransportEquation.h"
-#include "TotalInternalEnergyTransportEquation.h"
-#include "EquationBase.h"
-#include "MomentTransportEquation.h"
-#include "EnthalpyTransportEquation.h"
+#include <CCA/Components/Wasatch/Transport/MomentumTransportEquationBase.h>
+#include <CCA/Components/Wasatch/Transport/LowMachMomentumTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/CompressibleMomentumTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/TotalInternalEnergyTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
+#include <CCA/Components/Wasatch/Transport/MomentTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/EnthalpyTransportEquation.h>
 #ifdef HAVE_POKITT
 #include "SpeciesTransportEquation.h"
 #include <CCA/Components/Wasatch/Transport/TarTransportEquation.h>
@@ -631,11 +631,17 @@ namespace WasatchCore{
               << "Creating momentum equations..." << std::endl;
 
     if( isCompressible ){
+      std::string rhoETotalName, eTotalName;
+      Expr::Tag e0Tag;
       Uintah::ProblemSpecP energySpec = wasatchSpec->findBlock("EnergyEquation");
       if( !energySpec ){
         std::ostringstream msg;
         msg << "ERROR: When solving a compressible flow problem you must specify an energy equation." << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      } else {
+        energySpec->get("SolutionVariable", rhoETotalName);
+        energySpec->get("PrimitiveVariable", eTotalName);
+        e0Tag = Expr::Tag(eTotalName, Expr::STATE_NONE);
       }
       
       Expr::Tag xVelTag, yVelTag, zVelTag;
@@ -649,6 +655,7 @@ namespace WasatchCore{
                                                   densityTag,
                                                   TagNames::self().temperature,
                                                   TagNames::self().mixMW,
+                                                  e0Tag,
                                                   xBodyForceTag,
                                                   xSrcTermTag,
                                                   gc,
@@ -669,6 +676,7 @@ namespace WasatchCore{
                                                   densityTag,
                                                   TagNames::self().temperature,
                                                   TagNames::self().mixMW,
+                                                  e0Tag,
                                                   yBodyForceTag,
                                                   ySrcTermTag,
                                                   gc,
@@ -688,6 +696,7 @@ namespace WasatchCore{
                                                   densityTag,
                                                   TagNames::self().temperature,
                                                   TagNames::self().mixMW,
+                                                  e0Tag,
                                                   zBodyForceTag,
                                                   zSrcTermTag,
                                                   gc,
@@ -713,10 +722,8 @@ namespace WasatchCore{
       // register total internal energy equation
       const Expr::TagList velTags = tag_list(xVelTag, yVelTag, zVelTag);
       const Expr::TagList bodyForceTags = tag_list(xBodyForceTag,yBodyForceTag,zBodyForceTag);
-      std::string rhoETotal;
-      energySpec->get("SolutionVariable", rhoETotal);
       proc0cout << "Creating TotalInternalEnergyTransportEquation" << std::endl;
-      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation( rhoETotal,
+      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation( rhoETotalName,
                                                                             wasatchSpec,
                                                                             energySpec,
                                                                             gc,
@@ -801,10 +808,20 @@ namespace WasatchCore{
         pvTag = Expr::Tag(pvname,Expr::STATE_DYNAMIC);
         pwTag = Expr::Tag(pwname,Expr::STATE_DYNAMIC);
       }
-      const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
-                                                                                                                            densityTag,
-                                                                                                                            viscTag,
-                                                                                                                            xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag ), true);
+      Expr::ExpressionID stabDtID;
+      if (isCompressible) {
+        stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep<SVolField,SVolField,SVolField>::Builder( TagNames::self().stableTimestep,
+                                                                                                                                                            densityTag,
+                                                                                                                                                            viscTag,
+                                                                                                                                                            xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, TagNames::self().soundspeed ), true);
+        
+      } else {
+        stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep<XVolField,YVolField,ZVolField>::Builder( TagNames::self().stableTimestep,
+                                                                                                                                                            densityTag,
+                                                                                                                                                            viscTag,
+                                                                                                                                                            xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, Expr::Tag() ), true);
+        
+      }
       // force this onto the graph.
       solnGraphHelper->rootIDs.insert( stabDtID );
     }

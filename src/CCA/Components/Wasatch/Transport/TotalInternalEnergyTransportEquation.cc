@@ -35,7 +35,9 @@
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
-
+#include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #ifdef HAVE_POKITT
 #include <pokitt/thermo/InternalEnergy.h>
 #include <pokitt/thermo/Temperature.h>
@@ -46,6 +48,24 @@
 #endif
 
 namespace WasatchCore {
+  
+#define SETUP_PLUS_BC(DIR,VELIDX) \
+{\
+  typedef typename SpatialOps::UnitTriplet<DIR>::type UnitTripletT; \
+  typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<typename UnitTripletT::Negate>, MyFieldT>::type OpT;\
+  retModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_plus_side_" + bndName, Expr::STATE_NONE);\
+  typedef typename BCOneSidedConvFluxDiv<MyFieldT,OpT>::Builder retbuilderT;\
+  builder3 = new retbuilderT( retModTag, velTags_[VELIDX], Expr::Tag("rhoet_and_pressure", Expr::STATE_NONE) );\
+}
+  
+#define SETUP_MINUS_BC(DIR,VELIDX)\
+{\
+  typedef typename SpatialOps::UnitTriplet<DIR>::type UnitTripletT; \
+  typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<UnitTripletT>,MyFieldT>::type OpT;\
+  retModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_minus_side_" + bndName, Expr::STATE_NONE);\
+  typedef typename BCOneSidedConvFluxDiv<MyFieldT,OpT>::Builder retbuilderT;\
+  builder3 = new retbuilderT( retModTag, velTags_[VELIDX], Expr::Tag("rhoet_and_pressure", Expr::STATE_NONE) );\
+}
 
    //============================================================================
 
@@ -449,7 +469,7 @@ namespace WasatchCore {
   //============================================================================
 
   TotalInternalEnergyTransportEquation::
-  TotalInternalEnergyTransportEquation( const std::string e0Name,
+  TotalInternalEnergyTransportEquation( const std::string rhoe0Name,
                                         Uintah::ProblemSpecP wasatchSpec,
                                         Uintah::ProblemSpecP energyEqnSpec,
                                         GraphCategories& gc,
@@ -461,7 +481,7 @@ namespace WasatchCore {
                                         const Expr::Tag& viscTag,
                                         const Expr::Tag& dilTag,
                                         const TurbulenceParameters& turbulenceParams )
-    : ScalarTransportEquation<SVolField>( e0Name,
+    : ScalarTransportEquation<SVolField>( rhoe0Name,
                                           energyEqnSpec,
                                           gc, densityTag,
                                           false, /* variable density */
@@ -506,8 +526,26 @@ namespace WasatchCore {
     else
 #   endif
     {
+      // calorically perfect gas
       typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
       solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_, tags.mixMW ) );
+
+      const double gasConstant = 8314.459848;  // universal R = J/(kmol K).
+      
+      typedef Expr::LinearFunction<MyFieldT>::Builder SimpleEnthalpy;
+      solnFactory.register_expression( scinew SimpleEnthalpy( tags.enthalpy, temperatureTag, 7.0/2.0*gasConstant, 0.0 ) );
+      
+      // register expressions for CP and CV
+      typedef MultiplicativeInverse<MyFieldT>::Builder ReciprocalFunc;
+      
+      // register an expression for cp = 7/2 * R/Mw
+      double slope = 7.0/2.0 * gasConstant;
+      solnFactory.register_expression( new ReciprocalFunc( tags.cp, tags.mixMW, slope,0.0 ) );
+      
+      // register an expression for cv = 5/2 * R/Mw
+      slope = 5.0/2.0 * gasConstant;
+      solnFactory.register_expression( new ReciprocalFunc( tags.cv, tags.mixMW, slope,0.0 ) );
+
     }
     //----------------------------------------------------------
     // viscous dissipation
@@ -721,5 +759,201 @@ namespace WasatchCore {
   }
 
   //---------------------------------------------------------------------------
+  
+  void TotalInternalEnergyTransportEquation::
+  setup_boundary_conditions( WasatchBCHelper& bcHelper, GraphCategories& graphCat )
+  {
+//    ScalarTransportEquation<SVolField>::setup_boundary_conditions(bcHelper,graphCat);
+    Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
+    Expr::ExpressionFactory& initFactory   = *(graphCat[INITIALIZATION  ]->exprFactory);
+    
+    const TagNames& tagNames = TagNames::self();
+    
+    
+    // make logical decisions based on the specified boundary types
+    BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
+      const std::string& bndName = bndPair.first;
+      const BndSpec& myBndSpec = bndPair.second;
+      
+      switch ( myBndSpec.type ){
+        case OUTFLOW:
+        case OPEN:{
+          // for constant density problems, on all types of boundary conditions, set the scalar rhs
+          // to zero. The variable density case requires setting the scalar rhs to zero ALL the time
+          // and is handled in the code above.
+
+          //-----------------------------------------------
+          // Use Neumann zero on the normal convective fluxes
+          std::string normalConvFluxName;
+          Expr::Tag convModTag, rhoetModTag;
+          switch (myBndSpec.face) {
+            case Uintah::Patch::xplus:
+            case Uintah::Patch::xminus:
+            {
+              normalConvFluxName = "rhoet_and_pressure_convFlux_X";
+              convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
+              rhoetModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
+              
+              typedef OpTypes<MyFieldT> Ops;
+              typedef typename Ops::InterpC2FX   DirichletT;
+              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+              typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+
+              // for normal fluxes
+              typedef typename SpatialOps::SSurfXField FluxT;
+              typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+              
+              if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
+              if (!initFactory.have_entry(rhoetModTag)) initFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(rhoetModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+            }
+              break;
+            case Uintah::Patch::yminus:
+            case Uintah::Patch::yplus:
+            {
+              normalConvFluxName = "rhoet_and_pressure_convFlux_Y";
+              convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+              rhoetModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+
+              typedef OpTypes<MyFieldT> Ops;
+              typedef typename Ops::InterpC2FY   DirichletT;
+              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, SVolField, SVolField >::type NeumannT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+              typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+
+              // for normal fluxes
+              typedef typename SpatialOps::SSurfYField FluxT;
+              typedef typename SpatialOps::OperatorTypeBuilder<Divergence, FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+              
+              if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
+              if (!initFactory.have_entry(rhoetModTag)) initFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(rhoetModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+            }
+              break;
+            case Uintah::Patch::zminus:
+            case Uintah::Patch::zplus:
+            {
+              normalConvFluxName = "rhoet_and_pressure_convFlux_Z";
+              convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
+              rhoetModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
+              
+              typedef OpTypes<MyFieldT> Ops;
+              typedef typename Ops::InterpC2FZ   DirichletT;
+              typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, SVolField, SVolField >::type NeumannT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+              typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
+              typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+
+              // for normal fluxes
+              typedef typename SpatialOps::SSurfZField FluxT;
+              typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+              typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+              typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+              
+              if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
+              if (!initFactory.have_entry(rhoetModTag)) initFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+              if (!advSlnFactory.have_entry(rhoetModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoetModTag, 0.0 ) );
+            }
+              break;
+            default:
+              break;
+          }
+          BndCondSpec convFluxSpec = {normalConvFluxName,convModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+          bcHelper.add_boundary_condition(bndName, convFluxSpec);
+          //-----------------------------------------------
+          
+          //Create the one sided stencil gradient
+          Expr::Tag retModTag;
+          Expr::ExpressionBuilder* builder3 = NULL;
+          
+          switch (myBndSpec.face) {
+            case Uintah::Patch::xplus:
+            {
+              SETUP_PLUS_BC(SpatialOps::XDIR, 0);
+            }
+              break;
+            case Uintah::Patch::yplus:
+            {
+              SETUP_PLUS_BC(SpatialOps::YDIR, 1);
+            }
+              break;
+            case Uintah::Patch::zplus:
+            {
+              SETUP_PLUS_BC(SpatialOps::ZDIR, 2);
+            }
+              break;
+            case Uintah::Patch::xminus:
+            {
+              SETUP_MINUS_BC(SpatialOps::XDIR, 0);
+            }
+              break;
+            case Uintah::Patch::yminus:
+            {
+              SETUP_MINUS_BC(SpatialOps::YDIR, 1);
+            }
+              break;
+            case Uintah::Patch::zminus:
+            {
+              SETUP_MINUS_BC(SpatialOps::ZDIR, 2);
+            }
+              break;
+            default:
+              break;
+          }
+          
+          advSlnFactory.register_expression(builder3);
+          BndCondSpec retRHSSpec = {this->rhs_tag().name(), retModTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+          bcHelper.add_boundary_condition(bndName, retRHSSpec);
+          
+          // set Neumann 0 on rhoet
+          BndCondSpec retBCSpec = {this->solnVarName_, rhoetModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+          bcHelper.add_boundary_condition(bndName, retBCSpec);
+
+        }
+          break; // OUTFLOW/OPEN
+        case USER:
+        {
+          // parse through the list of user specified BCs that are relevant to this transport equation
+        }
+          break;
+        case VELOCITY:
+        {
+          // parse through the list of user specified BCs that are relevant to this transport equation
+        }
+          break;
+        default:
+          break;
+      }
+    }
+
+  }
+
+  //---------------------------------------------------------------------------
+  
+  void TotalInternalEnergyTransportEquation::
+  apply_boundary_conditions( const GraphHelper& graphHelper,
+                            WasatchBCHelper& bcHelper )
+  {
+    //ScalarTransportEquation<SVolField>::apply_boundary_conditions(graphHelper, bcHelper);
+    const Category taskCat = ADVANCE_SOLUTION;
+    bcHelper.apply_boundary_condition<MyFieldT>( solnvar_np1_tag(), taskCat );
+    bcHelper.apply_boundary_condition<MyFieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
+
+    bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>(Expr::Tag("rhoet_and_pressure_convFlux_X", Expr::STATE_NONE), taskCat);
+    bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag("rhoet_and_pressure_convFlux_Y", Expr::STATE_NONE), taskCat);
+    bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag("rhoet_and_pressure_convFlux_Z", Expr::STATE_NONE), taskCat);
+    bcHelper.apply_nscbc_boundary_condition(this->rhs_tag(), NSCBC::ENERGY, taskCat);
+  }
+
 
 } /* namespace WasatchCore */

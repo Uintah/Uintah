@@ -48,6 +48,91 @@
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
+//--------------------------------------------------------------------
+
+/**
+ *  \class MultiplicativeInverse
+ *  \author Tony Saad
+ *  \date October, 2016
+ *  \brief Implements a reciprocal or multiplicative inverse function, $a/x + b$.
+ */
+template< typename ValT >
+class MultiplicativeInverse : public Expr::Expression<ValT>
+{
+public:
+  
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& indepVarTag,
+            const double& a=1.0,
+            const double& b=0.0);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag xTag_;
+    const double a_, b_;
+  };
+  
+  void evaluate();
+  
+private:
+  MultiplicativeInverse( const Expr::Tag& xTag, const double& a, const double& b );
+  const double a_, b_;
+  DECLARE_FIELD(ValT, x_)
+};
+
+//====================================================================
+//--------------------------------------------------------------------
+
+template<typename ValT>
+MultiplicativeInverse<ValT>::
+MultiplicativeInverse( const Expr::Tag& xTag,
+                       const double& a,
+                       const double& b)
+: Expr::Expression<ValT>(),
+  a_(a),
+  b_(b)
+{
+  this->set_gpu_runnable( true );
+  x_ = this->template create_field_request<ValT>(xTag);
+}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+void
+MultiplicativeInverse<ValT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  ValT& result = this->value();
+  const ValT& x = x_->field_ref();
+  result <<= a_ * 1.0/x + b_;
+}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+MultiplicativeInverse<ValT>::Builder::
+Builder( const Expr::Tag& result,
+        const Expr::Tag& xTag,
+        const double& a,
+        const double& b)
+: ExpressionBuilder(result),
+xTag_( xTag ),
+a_(a),
+b_(b)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+Expr::ExpressionBase*
+MultiplicativeInverse<ValT>::Builder::build() const
+{
+  return new MultiplicativeInverse<ValT>( xTag_, a_, b_ );
+}
 
 //--------------------------------------------------------------------
 

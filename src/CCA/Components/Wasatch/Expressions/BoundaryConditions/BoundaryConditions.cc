@@ -32,7 +32,7 @@
  The reason that we create this mask is to set values in the staggered extra cells for appropriate visualization
 */
 #define STAGGERED_MASK \
-  convert<FieldT>( *(this->svolSpatialMask_),SpatialOps::MINUS_SIDE, SpatialOps::PLUS_SIDE)
+  convert<FieldT>( *(this->svolSpatialMask_), SpatialOps::MINUS_SIDE, SpatialOps::PLUS_SIDE)
 
 /* 
  \brief The APPLY_COMPLEX_BC macro allows the application of complex boundary conditions. The general formulation is as follows:
@@ -198,21 +198,21 @@
             case Uintah::Patch::xplus:                                                          \
             {                                                                                   \
               typedef typename OpT::DirichletX::DestFieldType DesT;                             \
-              (*this->diriXOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+              (*this->diriXOp_)(convert<DesT>( *(this->spatialMask_), this->shiftSide_ ), f, BCVALUE, this->isMinusFace_);  \
               break;                                                                            \
             }                                                                                   \
             case Uintah::Patch::yminus:                                                         \
             case Uintah::Patch::yplus:                                                          \
             {                                                                                   \
               typedef typename OpT::DirichletY::DestFieldType DesT;                             \
-              (*this->diriYOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+              (*this->diriYOp_)( convert<DesT>( *(this->spatialMask_), this->shiftSide_ ), f, BCVALUE, this->isMinusFace_);  \
               break;                                                                            \
             }                                                                                   \
             case Uintah::Patch::zminus:                                                         \
             case Uintah::Patch::zplus:                                                          \
             {                                                                                   \
               typedef typename OpT::DirichletZ::DestFieldType DesT;                             \
-              (*this->diriZOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+              (*this->diriZOp_)(convert<DesT>( *(this->spatialMask_), this->shiftSide_ ), f, BCVALUE, this->isMinusFace_);  \
               break;                                                                            \
             }                                                                                   \
             default:                                                                            \
@@ -465,6 +465,49 @@ evaluate()
 }
 
 // ###################################################################
+template< typename FieldT, typename DivOpT >
+void
+BCOneSidedConvFluxDiv<FieldT, DivOpT>::
+bind_operators(const SpatialOps::OperatorDatabase& opdb)
+{
+  divOp_ = opdb.retrieve_operator<DivOpT>();
+}
+
+//---------------------------------------------------------------------
+template< typename FieldT, typename DivOpT >
+void
+BCOneSidedConvFluxDiv<FieldT, DivOpT>::
+evaluate()
+{
+  FieldT& result = this->value();
+  const FieldT& phi = phi_->field_ref();
+  const FieldT& vel = u_->field_ref();
+  masked_assign( *this->interiorSvolSpatialMask_, result, result - 1.0 * (*divOp_)( phi*vel) );
+  masked_assign( *this->spatialMask_, result, 0.0 );
+}
+
+// ###################################################################
+template< typename FieldT, typename GradOpT >
+void
+BCOneSidedGradP<FieldT, GradOpT>::
+bind_operators(const SpatialOps::OperatorDatabase& opdb)
+{
+  gradOp_ = opdb.retrieve_operator<GradOpT>();
+}
+
+//---------------------------------------------------------------------
+template< typename FieldT, typename GradOpT >
+void
+BCOneSidedGradP<FieldT, GradOpT>::
+evaluate()
+{
+  FieldT& result = this->value();
+  const FieldT& p = p_->field_ref();
+  masked_assign( *this->interiorSvolSpatialMask_, result, result - 1.0 * (*gradOp_)( p ) );
+  masked_assign( *this->spatialMask_, result, 0.0 );
+}
+
+// ###################################################################
 // EXPLICIT INSTANTIATION
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #define INSTANTIATE_BC_PROFILES(VOLT)       \
@@ -473,7 +516,7 @@ template class OneSidedDirichletBC<VOLT>;   \
 template class LinearBC           <VOLT>;   \
 template class ParabolicBC        <VOLT>;   \
 template class PowerLawBC         <VOLT>;   \
-template class BCCopier<VOLT>;
+template class BCCopier           <VOLT>;
 
 INSTANTIATE_BC_PROFILES(SVolField)
 INSTANTIATE_BC_PROFILES(XVolField)
@@ -484,3 +527,19 @@ template class BCPrimVar<SVolField>;
 template class BCPrimVar<XVolField>;
 template class BCPrimVar<YVolField>;
 template class BCPrimVar<ZVolField>;
+template class ConstantBC<SpatialOps::SSurfXField>;
+template class ConstantBC<SpatialOps::SSurfYField>;
+template class ConstantBC<SpatialOps::SSurfZField>;
+
+#define INSTANTIATE_ONE_SIDED_BC(VOLT,DIRT,A,B,C)\
+typedef typename SpatialOps::UnitTriplet<DIRT>::type A;\
+typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<typename SpatialOps::UnitTriplet<DIRT>::type::Negate>,VOLT>::type B;\
+typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<SpatialOps::UnitTriplet<DIRT>::type>,VOLT>::type C;\
+template class BCOneSidedConvFluxDiv<VOLT,B>;\
+template class BCOneSidedGradP<VOLT,B>;\
+template class BCOneSidedConvFluxDiv<VOLT,C>;\
+template class BCOneSidedGradP<VOLT,C>;
+
+INSTANTIATE_ONE_SIDED_BC(SpatialOps::SVolField, SpatialOps::XDIR, AX, BX, CX);
+INSTANTIATE_ONE_SIDED_BC(SpatialOps::SVolField, SpatialOps::YDIR, AY, BY, CY);
+INSTANTIATE_ONE_SIDED_BC(SpatialOps::SVolField, SpatialOps::ZDIR, AZ, BZ, CZ);

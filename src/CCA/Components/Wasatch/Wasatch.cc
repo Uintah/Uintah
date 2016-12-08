@@ -917,7 +917,7 @@ namespace WasatchCore{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_, wasatchSpec_);
     
     // handle intrusion boundaries
     if( wasatchSpec_->findBlock("EmbeddedGeometry") ){
@@ -1156,7 +1156,7 @@ namespace WasatchCore{
   void
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
-  {
+  {    
     const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
@@ -1300,7 +1300,7 @@ namespace WasatchCore{
           particlesHelper_->schedule_find_boundary_particles(level,sched);
         }
         
-        bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+        bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_, wasatchSpec_);
       }
       
       if( doParticles_ ){

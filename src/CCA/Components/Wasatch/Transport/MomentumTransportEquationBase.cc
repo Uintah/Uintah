@@ -325,7 +325,8 @@ namespace WasatchCore{
                           const Expr::TagList& velTags,
                           Expr::TagList& strainTags,
                           const Expr::Tag& dilTag,
-                          Expr::ExpressionFactory& factory )
+                          Expr::ExpressionFactory& factory,
+                          Expr::Tag& normalStrainTag)
   {
     typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
@@ -345,15 +346,24 @@ namespace WasatchCore{
     if( isViscous ) {
       if( doMom[0] ){
         const Expr::ExpressionID strainID = setup_strain< XFace >( strainXt, thisVelTag, velTags[0], factory );
-        if( momComponent == XDIR ) normalStrainID = strainID;
+        if( momComponent == XDIR ) {
+          normalStrainID = strainID;
+          normalStrainTag = strainXt;
+        }
       }
       if( doMom[1] ){
         const Expr::ExpressionID strainID = setup_strain< YFace >( strainYt, thisVelTag, velTags[1], factory );
-        if( momComponent == YDIR ) normalStrainID = strainID;
+        if( momComponent == YDIR ) {
+          normalStrainID = strainID;
+          normalStrainTag = strainYt;
+        }
       }
       if( doMom[2] ){
         const Expr::ExpressionID strainID = setup_strain< ZFace >( strainZt, thisVelTag, velTags[2], factory );
-        if( momComponent == ZDIR ) normalStrainID = strainID;
+        if( momComponent == ZDIR ) {
+          normalStrainID = strainID;
+          normalStrainTag = strainZt;
+        }
       }
       factory.cleave_from_children( normalStrainID );
       factory.cleave_from_parents ( normalStrainID );
@@ -371,7 +381,8 @@ namespace WasatchCore{
                          const Expr::TagList& velTags,
                          Expr::TagList& strainTags,
                          const Expr::Tag& dilTag,
-                         Expr::ExpressionFactory& factory )
+                         Expr::ExpressionFactory& factory,
+                         Expr::Tag& normalStrainTag)
   {
     typedef SVolField FieldT;
     typedef SpatialOps::FaceTypes<FieldT>::XFace XFace;
@@ -392,15 +403,24 @@ namespace WasatchCore{
     if( isViscous ) {
       if( doMom[0] ){
         const Expr::ExpressionID strainID = setup_collocated_strain< XFace, SpatialOps::XDIR >( strainXt, thisVelTag, velTags[0], factory );
-        if( momComponent == XDIR ) normalStrainID = strainID;
+        if( momComponent == XDIR ) {
+          normalStrainID = strainID;
+          normalStrainTag = strainXt;
+        }
       }
       if( doMom[1] ){
         const Expr::ExpressionID strainID = setup_collocated_strain< YFace, SpatialOps::YDIR >( strainYt, thisVelTag, velTags[1], factory );
-        if( momComponent == YDIR ) normalStrainID = strainID;
+        if( momComponent == YDIR ) {
+          normalStrainID = strainID;
+          normalStrainTag = strainYt;
+        }
       }
       if( doMom[2] ){
         const Expr::ExpressionID strainID = setup_collocated_strain< ZFace, SpatialOps::ZDIR >( strainZt, thisVelTag, velTags[2], factory );
-        if( momComponent == ZDIR ) normalStrainID = strainID;
+        if( momComponent == ZDIR ) {
+          normalStrainID = strainID;
+          normalStrainTag = strainZt;
+        }
       }
       factory.cleave_from_children( normalStrainID );
       factory.cleave_from_parents ( normalStrainID );
@@ -451,7 +471,8 @@ namespace WasatchCore{
                                       ConvInterpMethods convInterpMethod,
                                       const Expr::Tag& momTag,
                                       const Expr::Tag& volFracTag,
-                                      Expr::ExpressionFactory& factory )
+                                      Expr::ExpressionFactory& factory,
+                                      Expr::Tag& normalConvFluxTag)
   {
     set_convflux_tags( doMom, cfTags, momTag );
     const Expr::Tag& cfxt = cfTags[0];
@@ -467,15 +488,24 @@ namespace WasatchCore{
     
     if( doMom[0] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< XFace, XVolField >( cfxt, momTag, velTags[0],convInterpMethod, volFracTag, factory );
-      if( stagLoc == XDIR )  normalConvFluxID = id;
+      if( stagLoc == XDIR )  {
+        normalConvFluxID = id;
+        normalConvFluxTag = cfxt;
+      }
     }
     if( doMom[1] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< YFace, YVolField >( cfyt, momTag, velTags[1], convInterpMethod, volFracTag, factory );
-      if( stagLoc == YDIR )  normalConvFluxID = id;
+      if( stagLoc == YDIR ){
+        normalConvFluxID = id;
+        normalConvFluxTag = cfyt;
+      }
     }
     if( doMom[2] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< ZFace, ZVolField >( cfzt, momTag, velTags[2], convInterpMethod, volFracTag, factory );
-      if( stagLoc == ZDIR )  normalConvFluxID = id;
+      if( stagLoc == ZDIR ) {
+        normalConvFluxID = id;
+        normalConvFluxTag = cfzt;
+      }
     }
     // convective fluxes require ghost updates after they are calculated
     // jcs note that we need to set BCs on these quantities as well.
@@ -495,7 +525,8 @@ namespace WasatchCore{
                                       ConvInterpMethods convInterpMethod,
                                       const Expr::Tag& momTag,
                                       const Expr::Tag& volFracTag,
-                                      Expr::ExpressionFactory& factory )
+                                      Expr::ExpressionFactory& factory,
+                                      Expr::Tag& normalConvFluxTag)
   {
     set_convflux_tags( doMom, cfTags, momTag );
     const Expr::Tag& cfxt = cfTags[0];
@@ -511,15 +542,24 @@ namespace WasatchCore{
     
     if( doMom[0] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< XFace, SVolField >( cfxt, momTag, velTags[0],convInterpMethod, volFracTag, factory );
-      if( momComponent == XDIR )  normalConvFluxID = id;
+      if( momComponent == XDIR )  {
+        normalConvFluxID = id;
+        normalConvFluxTag = cfxt;
+      }
     }
     if( doMom[1] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< YFace, SVolField >( cfyt, momTag, velTags[1], convInterpMethod, volFracTag, factory );
-      if( momComponent == YDIR )  normalConvFluxID = id;
+      if( momComponent == YDIR ) {
+        normalConvFluxID = id;
+        normalConvFluxTag = cfyt;
+      }
     }
     if( doMom[2] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< ZFace, SVolField >( cfzt, momTag, velTags[2], convInterpMethod, volFracTag, factory );
-      if( momComponent == ZDIR )  normalConvFluxID = id;
+      if( momComponent == ZDIR ) {
+        normalConvFluxID = id;
+        normalConvFluxTag = cfzt;
+      }
     }
     // convective fluxes require ghost updates after they are calculated
     // jcs note that we need to set BCs on these quantities as well.
@@ -614,7 +654,7 @@ namespace WasatchCore{
       this->params_->findBlock("ConvectiveInterpMethod")->getAttribute("method",convInterpMethod);
     }
     
-    this->normalConvFluxID_ = register_momentum_convective_fluxes<FieldT>(momComponent, doMom, this->velTags_, cfTags, get_conv_interp_method(convInterpMethod), this->solnVarTag_, this->thisVolFracTag_, factory );
+    this->normalConvFluxID_ = register_momentum_convective_fluxes<FieldT>(momComponent, doMom, this->velTags_, cfTags, get_conv_interp_method(convInterpMethod), this->solnVarTag_, this->thisVolFracTag_, factory, this->normalConvFluxTag_ );
     
     //__________________
     // dilatation - needed by pressure source term and strain tensor
@@ -635,7 +675,7 @@ namespace WasatchCore{
     //___________________________________
     // diffusive flux (strain components)
     Expr::TagList strainTags;
-    this->normalStrainID_ = register_strain_tensor<FieldT>(momComponent, doMom, this->isViscous_, this->velTags_, strainTags, dilTag, factory);
+    this->normalStrainID_ = register_strain_tensor<FieldT>(momComponent, doMom, this->isViscous_, this->velTags_, strainTags, dilTag, factory, this->normalStrainTag_);
     
     //--------------------------------------
     // TURBULENCE
@@ -740,7 +780,7 @@ namespace WasatchCore{
                                const Expr::TagList& velTags,\
                                Expr::TagList& strainTags,\
                                const Expr::Tag& dilTag,\
-                               Expr::ExpressionFactory& factory );
+                               Expr::ExpressionFactory& factory, Expr::Tag& normalStrainTag );
   
   REGISTER_STRAIN(SVolField);
   REGISTER_STRAIN(XVolField);
@@ -756,7 +796,7 @@ namespace WasatchCore{
                                              ConvInterpMethods convInterpMethod,\
                                              const Expr::Tag& momTag,\
                                              const Expr::Tag& volFracTag,\
-                                             Expr::ExpressionFactory& factory );
+                                             Expr::ExpressionFactory& factory, Expr::Tag& normalConvFluxTag );
   
   REGISTER_CONVECTIVE_FLUXES(SVolField);
   REGISTER_CONVECTIVE_FLUXES(XVolField);

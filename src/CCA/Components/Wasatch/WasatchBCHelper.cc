@@ -32,6 +32,8 @@
 
 //-- Uintah Includes --//
 #include <Core/Grid/Patch.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Grid/Variables/Iterator.h>
 #include <Core/Grid/Variables/CellIterator.h> // Uintah::Iterator
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -53,12 +55,104 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 
+
 /**
  * \file    WasatchBCHelper.cc
  * \author  Tony Saad
  */
 
 namespace WasatchCore {
+  
+  NSCBC::BCType get_nscbc_type(const BndTypeEnum& wasatchBndType)
+  {
+    switch (wasatchBndType) {
+      case WALL:
+        return NSCBC::WALL;
+        break;
+      case VELOCITY:
+        return NSCBC::HARD_INFLOW;
+        break;
+      case OPEN:
+      case OUTFLOW:
+        return NSCBC::NONREFLECTING;
+        break;
+      default:
+      {
+        std::ostringstream msg;
+        msg << "ERROR: An unsupported boundary type has been specified for the NSCBC boundary treatment. \n";
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+        break;
+    }
+  }
+  
+  SpatialOps::BCSide get_bc_side(const Uintah::Patch::FaceType face)
+  {
+    switch (face) {
+      case Uintah::Patch::xminus:
+      case Uintah::Patch::yminus:
+      case Uintah::Patch::zminus:
+        return SpatialOps::MINUS_SIDE;
+        break;
+      case Uintah::Patch::xplus:
+      case Uintah::Patch::yplus:
+      case Uintah::Patch::zplus:
+        return SpatialOps::PLUS_SIDE;
+        break;
+      default:
+      {
+        std::ostringstream msg;
+        msg << "ERROR: An invalid uintah face has been specified when tyring to apply bc \n";
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+        break;
+    }
+  }
+
+  //============================================================================
+
+  // This function returns true if the boundary condition is applied in the same direction
+  // as the staggered field. For example, xminus/xplus on a XVOL field.
+  NSCBC::Direction get_nscbc_dir( const Uintah::Patch::FaceType face ){
+    switch (face) {
+      case Uintah::Patch::xminus:
+      case Uintah::Patch::xplus:
+        return NSCBC::XDIR;
+        break;
+      case Uintah::Patch::yminus:
+      case Uintah::Patch::yplus:
+        return NSCBC::YDIR;
+        break;
+      case Uintah::Patch::zminus:
+      case Uintah::Patch::zplus:
+        return NSCBC::ZDIR;
+        break;
+      default:
+      {
+        std::ostringstream msg;
+        msg << "ERROR: An invalid uintah face has been specified when tyring to apply bc \n";
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+        break;
+    }
+  }
+  
+  
+  // This function returns true if the boundary condition is applied in the same direction
+  // as the staggered field. For example, xminus/xplus on a XVOL field.
+  template <typename MomDirT>
+  NSCBC::Direction get_mom_dir(){}
+  
+  template<>
+  NSCBC::Direction get_mom_dir<SpatialOps::XDIR>(){return NSCBC::XDIR;}
+  
+  template<>
+  NSCBC::Direction get_mom_dir<SpatialOps::YDIR>(){return NSCBC::YDIR;}
+  
+  template<>
+  NSCBC::Direction get_mom_dir<SpatialOps::ZDIR>(){return NSCBC::ZDIR;}
+
+  //============================================================================
 
   // This function returns true if the boundary condition is applied in the same direction
   // as the staggered field. For example, xminus/xplus on a XVOL field.
@@ -230,15 +324,35 @@ namespace WasatchCore {
 
   WasatchBCHelper::WasatchBCHelper( const Uintah::LevelP& level,
                                    Uintah::SchedulerP& sched,
-                      const Uintah::MaterialSet* const materials,
-                      const PatchInfoMap& patchInfoMap,
-                      GraphCategories& grafCat,
-                      BCFunctorMap& bcFunctorMap )
+                                   const Uintah::MaterialSet* const materials,
+                                   const PatchInfoMap& patchInfoMap,
+                                   GraphCategories& grafCat,
+                                   BCFunctorMap& bcFunctorMap,
+                                   Uintah::ProblemSpecP wasatchSpec)
   : BCHelper(level, sched, materials),
     patchInfoMap_(patchInfoMap),
     bcFunctorMap_(bcFunctorMap),
     grafCat_     (grafCat)
-  {}
+  {
+    Uintah::BBox b;
+    level->getInteriorSpatialRange(b);
+    const Uintah::Vector l = b.max() - b.min();
+    
+    nscbcSpec_.lx = l.x();
+    nscbcSpec_.ly = l.y();
+    nscbcSpec_.lz = l.z();
+    nscbcSpec_.pFar = 101325.0;
+    nscbcSpec_.enableNSCBC = false;
+    
+    // far field pressure
+    if (wasatchSpec->findBlock("NSCBC")) {
+      Uintah::ProblemSpecP nscbcXMLSpec = wasatchSpec->findBlock("NSCBC");
+      double pFar = 101325.0;
+      nscbcXMLSpec->getAttribute("pfarfield", pFar);
+      nscbcSpec_.pFar = pFar;
+      nscbcSpec_.enableNSCBC = true;
+    }
+  }
 
   //------------------------------------------------------------------------------------------------
 
@@ -246,6 +360,7 @@ namespace WasatchCore {
   {}
   
   //------------------------------------------------------------------------------------------------
+  
   template<typename SrcT, typename TargetT>
   void WasatchBCHelper::create_dummy_dependency( const Expr::Tag& attachDepToThisTag,
                                           const Expr::TagList dependencies,
@@ -272,7 +387,7 @@ namespace WasatchCore {
       functorSet.insert( dummyTag.name() );
       bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
     }
-
+    
     // if the dependency was already added then return
     if( factory.have_entry(dummyTag) ){
       return;
@@ -287,8 +402,8 @@ namespace WasatchCore {
   
   template <typename FieldT>
   void WasatchBCHelper::apply_boundary_condition( const Expr::Tag& varTag,
-                                           const Category& taskCat,
-                                           const bool setOnExtraOnly )
+                                                  const Category& taskCat,
+                                                  const bool setOnExtraOnly )
 
   {            
     using namespace std;
@@ -325,6 +440,7 @@ namespace WasatchCore {
                   const string& functorName = *functorIter;
                   const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
                   if (factory.have_entry(modTag)) {
+                    proc0cout << "dummy functor = " << modTag << std::endl;
                     factory.attach_modifier_expression( modTag, varTag, patchID, true );
                   }
                   ++functorIter;
@@ -351,6 +467,7 @@ namespace WasatchCore {
             //_____________________________________________________________________________________
             // check if we have this patchID in the list of patchIDs
             if( myBndSpec.has_patch(patchID) ){
+              
               //____________________________________________________________________________________
               // get the patch info from which we can get the operators database
               const PatchInfoMap::const_iterator ipi = patchInfoMap_.find( patchID );
@@ -396,6 +513,7 @@ namespace WasatchCore {
               // get the unit normal
               const Uintah::IntVector uNorm = patch->getFaceDirection(myBndSpec.face);
               const IntVecT unitNormal( uNorm.x(), uNorm.y(), uNorm.z() );
+              modExpr.set_bnd_type(myBndSpec.type);
               modExpr.set_boundary_normal(unitNormal);
               modExpr.set_bc_type(myBndCondSpec->bcType);
               modExpr.set_face_type(myBndSpec.face);
@@ -409,14 +527,16 @@ namespace WasatchCore {
               modExpr.set_boundary_particles(get_particles_bnd_mask(myBndSpec,patchID));
               // tsaad: do not delete this. this could be needed for some outflow/open boundary conditions
               //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
-              modExpr.set_spatial_mask(this->get_spatial_mask<FieldT>(myBndSpec,patchID));
-              modExpr.set_svol_spatial_mask(this->get_spatial_mask<SVolField>(myBndSpec,patchID));
+              modExpr.set_spatial_mask      ( this->get_spatial_mask<FieldT>   (myBndSpec,patchID) );
+              modExpr.set_svol_spatial_mask ( this->get_spatial_mask<SVolField>(myBndSpec,patchID) );
+              modExpr.set_interior_svol_spatial_mask ( this->get_spatial_mask<SVolField>(myBndSpec,patchID, true) );
             }
           }
         }
       }
     }
   }
+  
   //------------------------------------------------------------------------------------------------
   
   void WasatchBCHelper::synchronize_pressure_expression()
@@ -618,6 +738,187 @@ namespace WasatchCore {
       }
     }
   }
+  //------------------------------------------------------------------------------------------------
+  
+  template <typename MomDirT>
+  void WasatchBCHelper::setup_nscbc(const BndSpec& myBndSpec, NSCBC::TagManager nscbcTagMgr, const int jobid)
+  {
+    if (!do_nscbc()) return;
+    using namespace std;
+    string bndName = myBndSpec.name;
+    Expr::ExpressionFactory& factory = *(grafCat_[ADVANCE_SOLUTION]->exprFactory);
+    typedef SVolField FieldT;
+    
+    bool do2, do3;
+    const Expr::Tag& u = nscbcTagMgr[NSCBC::U];
+    const Expr::Tag& v = nscbcTagMgr[NSCBC::V];
+    const Expr::Tag& w = nscbcTagMgr[NSCBC::W];
+    const bool dox = ( u != Expr::Tag() );
+    const bool doy = ( v != Expr::Tag() );
+    const bool doz = ( w != Expr::Tag() );
+    double length = 1.0;
+    
+    NSCBC::Direction dir = get_nscbc_dir(myBndSpec.face);
+    switch ( dir ) {
+      case NSCBC::XDIR:
+        do2 = doy;
+        do3 = doz;
+        length = nscbcSpec_.lx;
+        break;
+      case NSCBC::YDIR:
+        do2 = dox;
+        do3 = doz;
+        length = nscbcSpec_.ly;
+        break;
+      case NSCBC::ZDIR:
+        do2 = dox;
+        do3 = doy;
+        length = nscbcSpec_.lz;
+        break;
+      default:
+        break;
+    }
+    
+    const double gasConstant = 8314.459848;  // universal R = J/(kmol K).
+    std::vector<double> mw = {28.966}; // we will need a vector of molecular weights---------
+    BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
+    {
+      BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
+      {
+        const int patchID = patch->getID();
+        const string strPatchID = number_to_string(patchID) + number_to_string(jobid);
+        //_____________________________________________________________________________________
+        // check if we have this patchID in the list of patchIDs
+        if( myBndSpec.has_patch(patchID) ){
+          const SpatialOps::SpatialMask<FieldT>& mask = *this->get_spatial_mask<FieldT>(myBndSpec,patchID,true);
+          NSCBC::NSCBCInfo<FieldT> nscbcInfo( mask,
+                                              get_bc_side(myBndSpec.face),
+                                              get_nscbc_dir(myBndSpec.face),
+                                              get_nscbc_type(myBndSpec.type),
+                                              strPatchID,
+                                              nscbcSpec_.pFar,
+                                              length );
+          
+          NSCBC::BCBuilder<FieldT>* nscbcBuilder = new NSCBC::BCBuilder<FieldT>(nscbcInfo, mw, gasConstant, nscbcTagMgr, do2, do3, patchID);
+          if ( nscbcBuildersMap_.find(bndName) != nscbcBuildersMap_.end() ) {
+            if (nscbcBuildersMap_.find(bndName)->second.find(patchID) == nscbcBuildersMap_.find(bndName)->second.end()) {
+              nscbcBuildersMap_.find(bndName)->second.insert( pair< int, NSCBC::BCBuilder<FieldT>* > (patchID, nscbcBuilder)       );
+            } else {
+              continue;
+            }
+            
+          } else {
+            PatchIDNSCBCBuilderMapT patchIDBuilderMap;
+            patchIDBuilderMap.insert( pair< int, NSCBC::BCBuilder<FieldT>* > (patchID, nscbcBuilder)       );
+            nscbcBuildersMap_.insert( pair< string, PatchIDNSCBCBuilderMapT >(bndName, patchIDBuilderMap ) );
+          }
+          //
+        }
+      }
+    }
+  }
+  //------------------------------------------------------------------------------------------------
+  
+  void WasatchBCHelper::apply_nscbc_boundary_condition(const Expr::Tag& varTag,
+                                                       const NSCBC::TransportVal& quantity,
+                                                       const Category& taskCat)
+  {
+    if (!do_nscbc()) return;
+    using namespace std;
+    typedef SVolField FieldT;
+    const string& fieldName = varTag.name();
+    Expr::ExpressionFactory& factory = *(grafCat_[taskCat]->exprFactory);
+    
+    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
+    {
+      const BndSpec& myBndSpec = bndSpecPair.second;      
+      {
+        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
+        {
+          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
+          {
+            const int patchID = patch->getID();
+            const string strPatchID = number_to_string(patchID);
+            //_____________________________________________________________________________________
+            // check if we have this patchID in the list of patchIDs
+            if( myBndSpec.has_patch(patchID) ) {
+              string bndName = myBndSpec.name;
+              NSCBC::BCBuilder<FieldT>* nscbc = nscbcBuildersMap_.find(bndName)->second.find(patchID)->second;
+              nscbc->attach_rhs_modifier( factory, varTag, quantity, -1 );
+            }
+          }
+        }
+      }
+    }
+
+//    {
+//      const Expr::Tag t1("RP_XFace_Plus_NonreflectingFlow30", Expr::STATE_NONE);
+//      const Expr::Tag t2("RP_XFace_Minus_NonreflectingFlow00", Expr::STATE_NONE);
+//      
+//      
+//      typedef typename Expr::ConstantExpr<FieldT>::Builder ConstExprT;
+//      
+//      if( !( factory.have_entry(t1) ) ){
+//        
+//        factory.register_expression(new ConstExprT( t1, 0.0 ), false);
+//        create_dummy_dependency<SVolField, SVolField>(Expr::Tag("x-mom_rhs",Expr::STATE_NONE), tag_list(t1), ADVANCE_SOLUTION);
+//      }
+//      
+//      if( !( factory.have_entry(t2) ) ){
+//        
+//        factory.register_expression(new ConstExprT( t2, 0.0 ), false);
+//        create_dummy_dependency<SVolField, SVolField>(Expr::Tag("x-mom_rhs",Expr::STATE_NONE), tag_list(t2), ADVANCE_SOLUTION);
+//      }
+//      
+//    }
+    //_____________________________________________________________________________________
+    // process functors... this is an ugly part of the code but we
+    // have to deal with this because Uintah doesn't allow a given task
+    // to run on different patches with different requires. We also can't
+    // get a bc graph to play nicely with the time advance graphs.
+    // this block will essentially enforce the same dependencies across
+    // all patches by adding functor expressions on them. those patches
+    // that do NOT have that functor associated with any of their boundaries
+    // will just expose the dependencies advertised by the functor but will
+    // accomplish nothing else because that functor doesn't have any bc points
+    // associated with it.
+    BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() )
+    {
+      BOOST_FOREACH( const int im, matSubSet->getVector() )
+      {
+        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
+        {
+          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
+          {
+            const int patchID = patch->getID();
+            proc0cout << "nscbc patchID = " << patchID << std::endl;
+            BCFunctorMap::iterator iter = bcFunctorMap_.begin();
+            while ( iter != bcFunctorMap_.end() ) {
+              string functorPhiName = (*iter).first;
+              proc0cout << "nscbc functor PhiName = " << functorPhiName << " fieldname = " << fieldName << std::endl;
+              if ( functorPhiName.compare(fieldName) == 0 ) {
+                // get the functor set associated with this field
+                BCFunctorMap::mapped_type::const_iterator functorIter = (*iter).second.begin();
+                while( functorIter != (*iter).second.end() ){
+                  const string& functorName = *functorIter;
+                  const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
+                  proc0cout << "nscbc functor = " << modTag << std::endl;
+
+                  if (factory.have_entry(modTag)) {
+                    proc0cout << "dummy nscbc functor = " << modTag << std::endl;
+                    factory.attach_modifier_expression( modTag, varTag, patchID, true );
+                  }
+                  ++functorIter;
+                } // while
+              } // if
+              ++iter;
+            } // while bcFunctorMap_
+          } // patches
+        } // localPatches_
+      } // matSubSet
+    } // materials_
+
+  }
 
   //------------------------------------------------------------------------------------------------
 
@@ -646,6 +947,9 @@ namespace WasatchCore {
                                                                                  const Category taskCat );
 
   INSTANTIATE_BC_TYPES(SpatialOps::SVolField);
+  INSTANTIATE_BC_TYPES(SpatialOps::SSurfXField);
+  INSTANTIATE_BC_TYPES(SpatialOps::SSurfYField);
+  INSTANTIATE_BC_TYPES(SpatialOps::SSurfZField);
   INSTANTIATE_BC_TYPES(SpatialOps::XVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::YVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::ZVolField);
@@ -653,5 +957,10 @@ namespace WasatchCore {
   template void WasatchBCHelper::apply_boundary_condition< ParticleField >( const Expr::Tag& varTag,
                                                                             const Category& taskCat,
                                                                             const bool setOnExtraOnly);
+  
+  template void WasatchBCHelper::setup_nscbc<SpatialOps::XDIR>(const BndSpec& myBndSpec, NSCBC::TagManager nscbcTagMgr, const int jobid);
+  template void WasatchBCHelper::setup_nscbc<SpatialOps::YDIR>(const BndSpec& myBndSpec, NSCBC::TagManager nscbcTagMgr, const int jobid);
+  template void WasatchBCHelper::setup_nscbc<SpatialOps::ZDIR>(const BndSpec& myBndSpec, NSCBC::TagManager nscbcTagMgr, const int jobid);
+
 
 } // class WasatchBCHelper

@@ -145,7 +145,13 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-    ("gpu-compressible-1d"  , gpu_compressible_1d_ups,   1, "All", ["gpu", "abs_tolerance=1e-10", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("compressible-test-1d-nonreflecting-x",  "compressible-test-1d-nonreflecting-x.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-test-1d-nonreflecting-y",  "compressible-test-1d-nonreflecting-y.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-test-1d-nonreflecting-z",  "compressible-test-1d-nonreflecting-z.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
+  ("compressible-test-2d-nonreflecting-xy",  "compressible-test-2d-nonreflecting-xy.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-test-2d-nonreflecting-xz",  "compressible-test-2d-nonreflecting-xz.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-test-2d-nonreflecting-yz",  "compressible-test-2d-nonreflecting-yz.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
+  ("compressible-test-3d-nonreflecting",  "compressible-test-3d-nonreflecting.ups", 8,  "All",  ["exactComparison","no_restart","no_memoryTest"] )  
   ]
 
 DUALTIMETESTS=[
@@ -157,6 +163,13 @@ DUALTIMETESTS=[
 
 
 COMPRESSIBLETESTS=[
+  ("compressible-test-1d-nonreflecting-x",  "compressible-test-1d-nonreflecting-x.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-test-1d-nonreflecting-y",  "compressible-test-1d-nonreflecting-y.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-test-1d-nonreflecting-z",  "compressible-test-1d-nonreflecting-z.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
+  ("compressible-test-2d-nonreflecting-xy",  "compressible-test-2d-nonreflecting-xy.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-test-2d-nonreflecting-xz",  "compressible-test-2d-nonreflecting-xz.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-test-2d-nonreflecting-yz",  "compressible-test-2d-nonreflecting-yz.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
+  ("compressible-test-3d-nonreflecting",  "compressible-test-3d-nonreflecting.ups", 8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-bubble-2d",        "compressible-bubble-2d.ups",         4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-bubble-2d-PGS",    "compressible-bubble-2d-AC-PGS.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-bubble-2d-ASR",    "compressible-bubble-2d-AC-ASR.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  

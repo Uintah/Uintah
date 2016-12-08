@@ -3,6 +3,7 @@
 
 #include <expression/Expression.h>
 #include <spatialops/structured/FVStaggered.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 /**
  *  \class 	StableTimestep
  *  \author 	Tony Saad
@@ -13,31 +14,33 @@
  common CFD criteria.
  *
  */
+template< typename Vel1T, typename Vel2T, typename Vel3T >
 class StableTimestep
  : public Expr::Expression<SpatialOps::SingleValueField>
 {
-  DECLARE_FIELDS(SVolField, rho_, visc_)
-  DECLARE_FIELD(XVolField, u_)
-  DECLARE_FIELD(YVolField, v_)
-  DECLARE_FIELD(ZVolField, w_)
+  typedef SVolField FieldT;
+  DECLARE_FIELDS(SVolField, rho_, visc_, csound_)
+  DECLARE_FIELD(Vel1T, u_)
+  DECLARE_FIELD(Vel2T, v_)
+  DECLARE_FIELD(Vel3T, w_)
   DECLARE_FIELDS(ParticleField, pu_, pv_, pw_)
 
   double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
-  const bool doX_, doY_, doZ_, isViscous_, doParticles_;
+  const bool doX_, doY_, doZ_, isViscous_, doParticles_, isCompressible_;
   const bool is3dconvdiff_;
   
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SOpT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SOpT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SOpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1T, SVolField >::type X2SOpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2T, SVolField >::type Y2SOpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel3T, SVolField >::type Z2SOpT;
   const X2SOpT* x2SInterp_;
   const Y2SOpT* y2SInterp_;
   const Z2SOpT* z2SInterp_;
 
   // gradient operators are declared here to extract grid-spacing information
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel1T, SpatialOps::XDIR>::Gradient, Vel1T, FieldT >::type GradXT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel2T, SpatialOps::YDIR>::Gradient, Vel2T, FieldT >::type GradYT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel3T, SpatialOps::ZDIR>::Gradient, Vel3T, FieldT >::type GradZT;
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
@@ -49,7 +52,8 @@ class StableTimestep
               const Expr::Tag& wTag,
               const Expr::Tag& puTag,
               const Expr::Tag& pvTag,
-              const Expr::Tag& pwTag);
+              const Expr::Tag& pwTag,
+              const Expr::Tag& csoundTag);
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -66,12 +70,13 @@ public:
              const Expr::Tag& wTag,
              const Expr::Tag& puTag,
              const Expr::Tag& pvTag,
-             const Expr::Tag& pwTag);
+             const Expr::Tag& pwTag,
+             const Expr::Tag& csoundTag);
 
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_, puTag_, pvTag_, pwTag_;
+    const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_, puTag_, pvTag_, pwTag_, csoundTag_;
   };
 
   ~StableTimestep();

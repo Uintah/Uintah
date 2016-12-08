@@ -39,6 +39,10 @@
 #include <CCA/Components/Wasatch/PatchInfo.h>
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
 
+// -- NSCBC Includes -- //
+#include <nscbc/CharacteristicBCBuilder.h>
+#include <nscbc/TagManager.h>
+
 /**
  * \file WasatchBCHelper.h
  */
@@ -61,13 +65,13 @@ namespace WasatchCore {
     typedef OpTypes<FieldT> Ops;
     
   public:
-    typedef typename Ops::InterpC2FX   InterpX;
-    typedef typename Ops::InterpC2FY   InterpY;
-    typedef typename Ops::InterpC2FZ   InterpZ;
-    
     typedef typename Ops::InterpC2FX   DirichletX;
     typedef typename Ops::InterpC2FY   DirichletY;
     typedef typename Ops::InterpC2FZ   DirichletZ;
+
+    typedef typename Ops::InterpC2FX   InterpX;
+    typedef typename Ops::InterpC2FY   InterpY;
+    typedef typename Ops::InterpC2FZ   InterpZ;
     
     typedef typename Ops::GradX   NeumannX;
     typedef typename Ops::GradY   NeumannY;
@@ -110,6 +114,63 @@ namespace WasatchCore {
   
   //
   template<>
+  struct BCOpTypeSelector<FaceTypes<SVolField>::XFace>
+  {
+    typedef SpatialOps::SSurfXField FieldT;
+  public:
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletX;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpX;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannX;
+    
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletY;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpY;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannY;
+
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletZ;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpZ;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannZ;
+
+  };
+
+  template<>
+  struct BCOpTypeSelector<FaceTypes<SVolField>::YFace>
+  {
+    typedef SpatialOps::SSurfYField FieldT;
+  public:
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletX;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpX;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannX;
+    
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletY;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpY;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannY;
+    
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletZ;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpZ;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannZ;
+  };
+  
+  template<>
+  struct BCOpTypeSelector<FaceTypes<SVolField>::ZFace>
+  {
+    typedef SpatialOps::SSurfZField FieldT;
+  public:
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletX;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpX;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannX;
+    
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletY;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpY;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannY;
+    
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type DirichletZ;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, FieldT, SpatialOps::SVolField >::type InterpZ;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  FieldT, SpatialOps::SVolField >::type NeumannZ;
+  };
+
+
+  //
+  template<>
   struct BCOpTypeSelector<FaceTypes<XVolField>::XFace>
   {
   public:
@@ -117,6 +178,7 @@ namespace WasatchCore {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type InterpX;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::XSurfXField, SpatialOps::XVolField >::type NeumannX;
   };
+  
   //
   template<>
   struct BCOpTypeSelector<FaceTypes<YVolField>::YFace>
@@ -125,6 +187,7 @@ namespace WasatchCore {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type InterpY;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::YSurfYField, SpatialOps::YVolField >::type NeumannY;
   };
+  
   //
   template<>
   struct BCOpTypeSelector<FaceTypes<ZVolField>::ZFace>
@@ -132,6 +195,25 @@ namespace WasatchCore {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type DirichletZ;
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type InterpZ;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type NeumannZ;
+  };
+
+  
+  //****************************************************************************
+  /**
+   *  @struct NSCBCSpec
+   *  @author Tony Saad
+   *  @date   Nov 2016
+   *
+   *  @brief  Stores information about NSCBC spec (far field etc...)
+   */
+  //****************************************************************************
+  struct NSCBCSpec
+  {
+    bool enableNSCBC;
+    double pFar; // far field relaxation pressure
+    double lx;   // domain length in the x direction
+    double ly;   // domain length in the y direction
+    double lz;   // domain length in the z direction
   };
 
   //****************************************************************************
@@ -151,6 +233,13 @@ namespace WasatchCore {
     BCFunctorMap&              bcFunctorMap_      ;
     GraphCategories&           grafCat_           ;
     
+    typedef std::map <int, NSCBC::BCBuilder<SVolField>* > PatchIDNSCBCBuilderMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
+    typedef std::map <std::string, PatchIDNSCBCBuilderMapT    > NSCBCMapT         ;  // boundary name -> (patch ID -> NSCBC Builder )
+    
+    NSCBCMapT nscbcBuildersMap_;
+    
+    NSCBCSpec nscbcSpec_;
+    
   public:
     
     WasatchBCHelper( const Uintah::LevelP& level,
@@ -158,7 +247,8 @@ namespace WasatchCore {
                     const Uintah::MaterialSet* const materials,
                     const PatchInfoMap& patchInfoMap,
                     GraphCategories& grafCat,
-                    BCFunctorMap& bcFunctorMap );
+                    BCFunctorMap& bcFunctorMap,
+                    Uintah::ProblemSpecP wasatchSpec);
         
     ~WasatchBCHelper();
 
@@ -216,6 +306,22 @@ namespace WasatchCore {
                                    const bool setOnExtraOnly=false );
     
     /**
+     *  \brief Key member function that applies a boundary condition on a given expression.
+     *
+     *  \param varTag The Expr::Tag of the expression on which the boundary
+     *   condition is to be applied.
+     *
+     *  \param taskCat Specifies on which graph to apply this boundary condition.
+     *
+     *  \param setOnExtraOnly Optional boolean flag - specifies whether to set the boundary value
+     *  DIRECTLY on the extra cells without doing averaging using interior cells. This is only useful
+     *  for DIRICHLET boundary conditions.
+     */
+    void apply_nscbc_boundary_condition( const Expr::Tag& varTag,
+                                         const NSCBC::TransportVal& quantity,
+                                         const Category& taskCat  );
+
+    /**
      *  \brief Allows one to inject dummy dependencies to help with boundary condition expressions.
      *  \param targetTag    The Expression tag on which we want to attach a new dependency
      *  \param dependencies A TagList of new dependencies to attach to targetTag
@@ -227,6 +333,10 @@ namespace WasatchCore {
                                  const Expr::TagList dependencies,
                                  const Category taskCat);
     
+    template <typename MomDirT>
+    void setup_nscbc(const BndSpec& myBndSpec, NSCBC::TagManager nscbcTagMgr, const int jobid);
+    
+    bool do_nscbc() {return nscbcSpec_.enableNSCBC;}
   }; // class WasatchBCHelper
   
 } // namespace WasatchCore

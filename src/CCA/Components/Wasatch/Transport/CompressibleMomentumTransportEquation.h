@@ -21,6 +21,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -48,7 +50,7 @@ namespace WasatchCore{
    */
   class ContinuityTransportEquation : public TransportEquation
   {
-    typedef SpatialOps::SVolField  FieldT;
+    typedef SpatialOps::SVolField  MyFieldT;
     
     const Expr::Tag xVelTag_, yVelTag_, zVelTag_;
     const Expr::Tag densTag_, temperatureTag_, pressureTag_, mixMWTag_;
@@ -76,6 +78,9 @@ namespace WasatchCore{
     void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                    GraphCategories& graphCat )
     {
+      Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
+      Expr::ExpressionFactory& initFactory   = *(graphCat[INITIALIZATION  ]->exprFactory);
+
       // make logical decisions based on the specified boundary types
       BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
         const std::string& bndName = bndPair.first;
@@ -103,13 +108,15 @@ namespace WasatchCore{
           }
             break;
           case VELOCITY:
+          {}
+            break;
           case OUTFLOW:
           case OPEN:{
             // for constant density problems, on all types of boundary conditions, set the scalar rhs
             // to zero. The variable density case requires setting the scalar rhs to zero ALL the time
             // and is handled in the code above.
-            if( isConstDensity_ ){
-              if( myBndSpec.has_field(rhs_name()) ){
+            if( isConstDensity_ ) {
+              if( myBndSpec.has_field(rhs_name()) ) {
                 std::ostringstream msg;
                 msg << "ERROR: You cannot specify scalar rhs boundary conditions unless you specify USER "
                 << "as the type for the boundary condition. Please revise your input file. "
@@ -120,6 +127,150 @@ namespace WasatchCore{
               const BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
               bcHelper.add_boundary_condition(bndName, rhsBCSpec);
             }
+            
+            Expr::Tag rhsModTag;
+            Expr::ExpressionBuilder* builder1 = NULL;
+            typedef typename SpatialOps::UnitTriplet<SpatialOps::XDIR>::type UnitTripletT;
+
+            Expr::Tag normalVelTag;
+            switch (myBndSpec.face) {
+              case Uintah::Patch::xplus: case Uintah::Patch::xminus: normalVelTag = xVelTag_; break;
+              case Uintah::Patch::yplus: case Uintah::Patch::yminus: normalVelTag = yVelTag_; break;
+              case Uintah::Patch::zplus: case Uintah::Patch::zminus: normalVelTag = zVelTag_; break;
+              default: break;
+            }
+            
+            
+            switch (myBndSpec.face) {
+              case Uintah::Patch::xplus:
+              case Uintah::Patch::yplus:
+              case Uintah::Patch::zplus:
+              {
+                rhsModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_plus_side_" + bndName, Expr::STATE_NONE);
+                typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<typename UnitTripletT::Negate>,MyFieldT>::type OpT;
+                typedef typename BCOneSidedConvFluxDiv<MyFieldT,OpT>::Builder builderT;
+                builder1 = new builderT( rhsModTag, normalVelTag, this->densTag_ );
+              }
+                break;
+              case Uintah::Patch::xminus:
+              case Uintah::Patch::yminus:
+              case Uintah::Patch::zminus:
+              {
+                rhsModTag = Expr::Tag(this->solnVarName_ + "_rhs_mod_minus_side_" + bndName, Expr::STATE_NONE);
+                typedef typename SpatialOps::OneSidedOpTypeBuilder<SpatialOps::Gradient,SpatialOps::OneSidedStencil3<UnitTripletT>,MyFieldT>::type OpT;
+                typedef typename BCOneSidedConvFluxDiv<MyFieldT,OpT>::Builder builderT;
+                builder1 = new builderT( rhsModTag, normalVelTag, this->densTag_ );
+              }
+                break;
+              default:
+                break;
+            }
+            advSlnFactory.register_expression(builder1);
+            
+            //-----------------------------------------------
+            // Use Neumann zero on the normal convective fluxes
+            std::string normalConvFluxName;
+            Expr::Tag convModTag, rhoModTag;
+            switch (myBndSpec.face) {
+              case Uintah::Patch::xplus:
+              case Uintah::Patch::xminus:
+              {
+                std::string dir = "X";
+                normalConvFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
+                
+                convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
+                rhoModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_xdirbc", Expr::STATE_NONE );
+                
+                typedef OpTypes<MyFieldT> Ops;
+                typedef typename Ops::InterpC2FX   DirichletT;
+                typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, SVolField, SVolField >::type NeumannT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+                typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
+                typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+                
+                // for normal fluxes
+                typedef typename SpatialOps::SSurfXField FluxT;
+                typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+                typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+                
+                if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
+                if (!initFactory.have_entry(rhoModTag)) initFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
+                if (!advSlnFactory.have_entry(rhoModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
+              }
+                break;
+              case Uintah::Patch::yminus:
+              case Uintah::Patch::yplus:
+              {
+                std::string dir = "Y";
+                normalConvFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
+
+                convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+                rhoModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_ydirbc", Expr::STATE_NONE );
+                
+                typedef OpTypes<MyFieldT> Ops;
+                typedef typename Ops::InterpC2FY   DirichletT;
+                typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, SVolField, SVolField >::type NeumannT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+                typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
+                typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+                
+                // for normal fluxes
+                typedef typename SpatialOps::SSurfYField FluxT;
+                typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+                typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+                
+                if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
+                if (!initFactory.have_entry(rhoModTag)) initFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
+                if (!advSlnFactory.have_entry(rhoModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
+              }
+                break;
+              case Uintah::Patch::zminus:
+              case Uintah::Patch::zplus:
+              {
+                std::string dir = "Z";
+                normalConvFluxName = this->solnVarName_ + TagNames::self().convectiveflux + dir;
+
+                convModTag = Expr::Tag( normalConvFluxName + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
+                rhoModTag = Expr::Tag( this->solnVarName_ + "_STATE_NONE" + "_bc_" + myBndSpec.name + "_zdirbc", Expr::STATE_NONE );
+                
+                typedef OpTypes<MyFieldT> Ops;
+                typedef typename Ops::InterpC2FZ   DirichletT;
+                typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, SVolField, SVolField >::type NeumannT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<DirichletT> DiriOpT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannT> NeumOpT;
+                typedef typename ConstantBCNew<MyFieldT,DiriOpT>::Builder constBCDirichletT;
+                typedef typename ConstantBCNew<MyFieldT,NeumOpT>::Builder constBCNeumannT;
+                
+                // for normal fluxes
+                typedef typename SpatialOps::SSurfZField FluxT;
+                typedef typename SpatialOps::OperatorTypeBuilder<Divergence,  FluxT, SpatialOps::SVolField >::type NeumannFluxT;
+                typedef typename SpatialOps::NeboBoundaryConditionBuilder<NeumannFluxT> NeumFluxOpT;
+                typedef typename ConstantBCNew<FluxT, NeumFluxOpT>::Builder constBCNeumannFluxT;
+                
+                if (!advSlnFactory.have_entry(convModTag)) advSlnFactory.register_expression( new constBCNeumannFluxT( convModTag, 0.0 ) );
+                if (!initFactory.have_entry(rhoModTag)) initFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
+                if (!advSlnFactory.have_entry(rhoModTag)) advSlnFactory.register_expression( new constBCNeumannT( rhoModTag, 0.0 ) );
+              }
+                break;
+              default:
+                break;
+            }
+            BndCondSpec convFluxSpec = {normalConvFluxName, convModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, convFluxSpec);
+            //-----------------------------------------------
+            
+            // correct the convective flux using a 1-sided stencil. do this directly on the RHS.
+            BndCondSpec rhsConvFluxSpec = {this->rhs_tag().name(), rhsModTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsConvFluxSpec);
+
+            // set Neumann 0 on density
+            BndCondSpec rhoBCSpec = {this->solnVarName_, rhoModTag.name(), 0.0, NEUMANN, FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhoBCSpec);
+
             
             break;
           }
@@ -141,7 +292,7 @@ namespace WasatchCore{
     {
       const Category taskCat = INITIALIZATION;
       // apply velocity boundary condition, if specified
-      bcHelper.apply_boundary_condition<FieldT>(this->initial_condition_tag(), taskCat);
+      bcHelper.apply_boundary_condition<MyFieldT>(this->initial_condition_tag(), taskCat);
       
     }
     
@@ -151,10 +302,25 @@ namespace WasatchCore{
                                    WasatchBCHelper& bcHelper )
     {
       const Category taskCat = ADVANCE_SOLUTION;
-      // set bcs for momentum - use the TIMEADVANCE expression
-      bcHelper.apply_boundary_condition<FieldT>( this->solnvar_np1_tag(), taskCat );
-      // set bcs for velocity
-      bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true );
+      
+      // set bcs for density at np1 - use the TIMEADVANCE expression
+      bcHelper.apply_boundary_condition<MyFieldT>( this->solnvar_np1_tag(), taskCat );
+      
+      // set bcs for density convective flux
+      std::string convFluxName = this->solnVarName_ + TagNames::self().convectiveflux + "X";
+      bcHelper.apply_boundary_condition<SpatialOps::SSurfXField>( Expr::Tag(convFluxName, Expr::STATE_NONE), taskCat );
+
+      convFluxName = this->solnVarName_ + TagNames::self().convectiveflux + "Y";
+      bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>( Expr::Tag(convFluxName, Expr::STATE_NONE), taskCat );
+      
+      convFluxName = this->solnVarName_ + TagNames::self().convectiveflux + "Z";
+      bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>( Expr::Tag(convFluxName, Expr::STATE_NONE), taskCat );
+
+      // set bcs for density RHS
+      bcHelper.apply_boundary_condition<MyFieldT>( this->rhs_tag(), taskCat );
+
+      // set nscbcs for density
+      bcHelper.apply_nscbc_boundary_condition(this->rhs_tag(), NSCBC::DENSITY, taskCat);
     }
     
     void setup_diffusive_flux( FieldTagInfo& rhsInfo ){}
@@ -165,7 +331,7 @@ namespace WasatchCore{
     Expr::ExpressionID setup_rhs( FieldTagInfo& info, const Expr::TagList& srcTags )
     {
       
-      typedef ScalarRHS<FieldT>::Builder RHSBuilder;
+      typedef ScalarRHS<MyFieldT>::Builder RHSBuilder;
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       
       info[PRIMITIVE_VARIABLE] = solnVarTag_;
@@ -178,21 +344,21 @@ namespace WasatchCore{
     void setup_convective_flux( FieldTagInfo& rhsInfo )
     {
       if( xVelTag_ != Expr::Tag() )
-        setup_convective_flux_expression<FieldT>( "X", densTag_,
+        setup_convective_flux_expression<MyFieldT>( "X", densTag_,
                                                  Expr::Tag(), /* default tag name for conv. flux */
                                                  CENTRAL,
                                                  xVelTag_,
                                                  *gc_[ADVANCE_SOLUTION]->exprFactory,
                                                  rhsInfo );
       if( yVelTag_ != Expr::Tag() )
-        setup_convective_flux_expression<FieldT>( "Y", densTag_,
+        setup_convective_flux_expression<MyFieldT>( "Y", densTag_,
                                                  Expr::Tag(), /* default tag name for conv. flux */
                                                  CENTRAL,
                                                  yVelTag_,
                                                  *gc_[ADVANCE_SOLUTION]->exprFactory,
                                                  rhsInfo );
       if( zVelTag_ != Expr::Tag() )
-        setup_convective_flux_expression<FieldT>( "Z", densTag_,
+        setup_convective_flux_expression<MyFieldT>( "Z", densTag_,
                                                  Expr::Tag(), /* default tag name for conv. flux */
                                                  CENTRAL,
                                                  zVelTag_,
@@ -227,6 +393,7 @@ namespace WasatchCore{
                                            const Expr::Tag densityTag,
                                            const Expr::Tag temperatureTag,
                                            const Expr::Tag mixMWTag,
+                                           const Expr::Tag e0Tag, // total internal energy tag
                                            const Expr::Tag bodyForceTag,
                                            const Expr::Tag srcTermTag,
                                            GraphCategories& gc,
@@ -281,6 +448,7 @@ namespace WasatchCore{
 
   protected:
 
+    const Expr::Tag temperatureTag_, mixMWTag_, e0Tag_;
     void setup_diffusive_flux( FieldTagInfo& ){}
     void setup_convective_flux( FieldTagInfo& ){}
     void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}

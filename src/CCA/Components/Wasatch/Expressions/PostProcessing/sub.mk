@@ -41,6 +41,7 @@ CUDA_ENABLED_SRCS =       \
      VelocityMagnitude     \
      KineticEnergy       \
      ContinuityResidual    \
+     Derivative    \
      Vorticity
 
 ifeq ($(HAVE_CUDA),yes)

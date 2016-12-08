@@ -67,7 +67,7 @@ namespace WasatchCore {
      *  \param dilTag the tag for the dilatation
      *  \param turbulenceParams
      */
-    TotalInternalEnergyTransportEquation( const std::string e0Name,
+    TotalInternalEnergyTransportEquation( const std::string rhoe0Name,
                                           Uintah::ProblemSpecP wasatchSpec,
                                           Uintah::ProblemSpecP energyEqnSpec,
                                           GraphCategories& gc,
@@ -81,6 +81,9 @@ namespace WasatchCore {
                                           const TurbulenceParameters& turbulenceParams );
 
     ~TotalInternalEnergyTransportEquation();
+    
+    void apply_boundary_conditions( const GraphHelper& graphHelper, WasatchBCHelper& bcHelper );
+    void setup_boundary_conditions( WasatchBCHelper& bcHelper, GraphCategories& graphCat );
 
   protected:
     void setup_diffusive_flux ( FieldTagInfo& );

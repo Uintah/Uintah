@@ -646,6 +646,11 @@
    </DualTime>
 
 
+    <!-- far field pressure -->
+    <NSCBC spec="OPTIONAL NO_DATA"    
+           attribute1="pfarfield REQUIRED DOUBLE">
+   </NSCBC>
+
     <!-- The CommonGeometry block allows one to define geometries that can be reused in
                             other parts of the input file and the code. For example, when initializing
                             particle position so that particles fill a certain shape, we need three basic

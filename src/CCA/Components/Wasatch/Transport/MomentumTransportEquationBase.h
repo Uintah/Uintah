@@ -198,6 +198,7 @@ namespace WasatchCore{
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
     Expr::TagList momTags_, oldMomTags_;  ///< TagList for the momentum expressions
     Expr::Tag     thisVolFracTag_;
+    Expr::Tag     normalStrainTag_, normalConvFluxTag_;
 
   private:
 

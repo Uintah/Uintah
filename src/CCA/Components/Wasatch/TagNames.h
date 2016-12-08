@@ -83,8 +83,11 @@ namespace WasatchCore{
 
     // thermochemistry related variables
     const Expr::Tag
-    heatCapacity,
-    thermalConductivity;
+    soundspeed,
+    heatCapacity, cp, cv,
+    thermalConductivity,    
+    dudx, dvdy, dwdz,
+    dpdx, dpdy, dpdz;
     
     // momentum related variables
     const Expr::Tag
