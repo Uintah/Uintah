@@ -91,7 +91,7 @@
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity"/>
-      <Constant>0</Constant>
+      <Constant>1.95e-5</Constant>
     </BasicExpression>
     <!-- Momentum transport equations -->
     <MomentumEquations>
@@ -200,7 +200,7 @@
         <lower>[-0.5,-0.5,0]</lower>
         <upper>[0.5,0.5,1]</upper>
         <resolution>[100,100,1]</resolution>
-        <patches>[2,2,1]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
       <periodic>[0,0,1]</periodic>
     </Level>
