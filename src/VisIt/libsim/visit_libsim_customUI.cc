@@ -35,6 +35,7 @@
 #include <Core/Grid/Material.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Time.h>
 
 #include <CCA/Ports/Output.h>
 
@@ -97,11 +98,13 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetWallTimes( visit_simulation_data *sim )
 {
+  double time = Time::currentSeconds();
+  
   WallTimers* walltimers  = sim->simController->getWallTimers();
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
   int row = 0;
-  
+
   VisItUI_setTableValueS("WallTimesVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "ExpMovingAve",  0);
@@ -118,7 +121,7 @@ void visit_SetWallTimes( visit_simulation_data *sim )
   ++row;
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "Total",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
-			 walltimers->Total().seconds(), 0);
+			 time, 0);
   ++row;
   VisItUI_setTableValueS("WallTimesVariableTable", row, 0, "Maximum",  0);
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
@@ -127,7 +130,7 @@ void visit_SetWallTimes( visit_simulation_data *sim )
   visit_SetStripChartValue( sim, "TimeStep",     walltimers->TimeStep().seconds() );
   visit_SetStripChartValue( sim, "ExpMovingAve", walltimers->ExpMovingAverage().seconds() );
   visit_SetStripChartValue( sim, "InSitu",       walltimers->InSitu().seconds() );
-  visit_SetStripChartValue( sim, "Total",        walltimers->Total().seconds() );
+  visit_SetStripChartValue( sim, "Total",        time );
 }
 
 

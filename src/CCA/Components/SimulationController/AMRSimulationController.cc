@@ -100,8 +100,6 @@ AMRSimulationController::run()
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
 
-  walltimers.Total.reset( true );
-  
   bool first = true;
 
   // If VisIt has been included into the build, initialize the lib sim
@@ -220,8 +218,12 @@ AMRSimulationController::run()
   ReportStats( first );
 
 #ifdef HAVE_VISIT
+  walltimers.TimeStep.stop();
+
   if( CheckInSitu( &visitSimData, first ) )
     exit(0);
+
+  walltimers.TimeStep.start();
 #endif      
 
   // Reset the runtime performance stats

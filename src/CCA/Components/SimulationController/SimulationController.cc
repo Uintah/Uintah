@@ -84,6 +84,11 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
                                                   ProblemSpecP     pspec ) :
   UintahParallelComponent( myworld ), d_ups( pspec ), d_doAMR( doAMR )
 {
+  // Initialize the global wall timer - this initialization is a fall
+  // back initialization as it should have happened in the main so the
+  // time is as close as possible to actual wall time.
+  Time::currentSeconds();
+
   //initialize the overhead percentage
   overheadIndex = 0;
   
@@ -297,7 +302,7 @@ SimulationController::isLast( void )
 	   ( d_sharedState->getCurrentTopLevelTimeStep() >=
 	     d_timeinfo->maxTimestep ) ||
 	   ( d_timeinfo->max_wall_time != 0 &&
-	     walltimers.Total().seconds() >= d_timeinfo->max_wall_time ) );
+	     Time::currentSeconds() >= d_timeinfo->max_wall_time ) );
 }
 
 //______________________________________________________________________
@@ -661,10 +666,8 @@ SimulationController::ReportStats( bool header /* = false */ )
     dbg << std::endl;
     dbg << "Simulation and run time stats are reported "
 	<< "at the end of each time step" << std::endl;
-    dbg << "Wall Time == Wall time for all time steps, "
-	<< "excluding in-situ." << std::endl;
     dbg << "EMA == Wall time as an exponential moving average "
-	<< "using a window of " << walltimers.getWindow()
+	<< "using a window of the last " << walltimers.getWindow()
 	<< " time steps" << std::endl;
 
     dbg.flush();
@@ -768,10 +771,10 @@ SimulationController::ReportStats( bool header /* = false */ )
 //	    << "delT="       << setw(12) << d_prev_delt
 	    << "Next delT="  << setw(12) << d_delt
 
-	    << "Wall Time= " << setw(12) << walltimers.TimeStep().seconds()
-//	    << "Time Step= " << setw(12) << timeStep.seconds()
+	    << "Wall Time = " << setw(10) << Time::currentSeconds()
+	    // << "All Time steps= " << setw(12) << walltimers.TimeStep().seconds()
+	    // << "Current Time Step= " << setw(12) << timeStep.seconds()
 	    << "EMA="        << setw(12) << walltimers.ExpMovingAverage().seconds();
-//  message << "Total Wall Time = " << setw(10) << walltimers.Total().seconds();
 
     // Report on the memory used.
     if (avg_memused == max_memused && avg_highwater == max_highwater) {

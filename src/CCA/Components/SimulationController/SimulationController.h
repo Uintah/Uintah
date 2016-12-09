@@ -83,7 +83,6 @@ public:
   Timers::Simple ExpMovingAverage;   // Execution exponential moving average
                                      // for N time steps.
   Timers::Simple InSitu;             // In-situ time for previous time step
-  Timers::Simple Total;              // Total wall time
 
   int    getWindow( void ) { return AVERAGE_WINDOW; };
   void resetWindow( void ) { d_nSamples = 0; };

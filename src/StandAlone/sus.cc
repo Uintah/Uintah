@@ -218,6 +218,9 @@ usage( const std::string& message, const std::string& badarg, const std::string&
 void
 sanityChecks()
 {
+  // This set the global time.
+  Time::currentSeconds();
+  
 #if defined( DISABLE_SCI_MALLOC )
   if (getenv("MALLOC_STATS")) {
     printf("\nERROR:\n");
@@ -590,6 +593,7 @@ main( int argc, char *argv[], char *env[] )
       std::cout.flush();
       Time::waitFor( (double)sleepTime );
     }
+
     //__________________________________
     // Read input file
     ProblemSpecP ups;
@@ -702,7 +706,6 @@ main( int argc, char *argv[], char *env[] )
     ctl->getSimulationStateP()->setVisIt( do_VisIt );
 #endif
 
-
     RegridderCommon* regridder = nullptr;
     if(do_AMR) {
       regridder = RegridderFactory::create( ups, world );
@@ -716,7 +719,6 @@ main( int argc, char *argv[], char *env[] )
     SolverInterface * solve = SolverFactory::create( ups, world, solver );
 
     proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
-
 
 
     //______________________________________________________________________
