@@ -104,7 +104,7 @@
     <critical_stress               spec="OPTIONAL DOUBLE" />
     <damage_cutoff                 spec="OPTIONAL DOUBLE" />
     <damage_model                  spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'hancock_mackenzie, johnson_cook'" >
+                                     attribute1="type REQUIRED STRING 'hancock_mackenzie, johnson_cook, none'" >
       <Dc                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: what are these for? -->
       <D0                          spec="OPTIONAL DOUBLE" />
       <D1                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is tihs?  is it really optional? -->

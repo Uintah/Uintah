@@ -56,11 +56,13 @@ FrictionContact::FrictionContact(const ProcessorGroup* myworld,
 {
   // Constructor
   d_vol_const=0.;
-  d_sepFac=0.8;
+  d_sepFac=9.9e99;  // Default to large number to provide no constraint
+  d_compColinearNorms=true;
   
   ps->require("mu",d_mu);
   ps->get("volume_constraint",d_vol_const);
   ps->get("separation_factor",d_sepFac);
+  ps->get("colinear_norms",   d_compColinearNorms);
 
   d_sharedState = d_sS;
 
@@ -197,27 +199,31 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
      }
     }  // loop over matls
 
-
-    for(NodeIterator iter=patch->getExtraNodeIterator();
+    // Make normal vectors colinear by setting all norms to be
+    // in the opposite direction of the norm with the largest magnitude
+    if(d_compColinearNorms){
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
-       IntVector c = *iter;
-       double max_mag = gsurfnorm[0][c].length();
-       int max_mag_matl = 0;
-       for(int m=1; m<numMatls; m++){
-         double mag = gsurfnorm[m][c].length();
-         if(mag > max_mag){
-            max_mag = mag;
-            max_mag_matl = m;
+        IntVector c = *iter;
+        double max_mag = gsurfnorm[0][c].length();
+        int max_mag_matl = 0;
+        for(int m=1; m<numMatls; m++){
+          double mag = gsurfnorm[m][c].length();
+          if(mag > max_mag){
+             max_mag = mag;
+             max_mag_matl = m;
+          }
+        }  // loop over matls
+
+        for(int m=0; m<numMatls; m++){
+         if(m!=max_mag_matl){
+           gsurfnorm[m][c] = -gsurfnorm[max_mag_matl][c];
          }
-       }  // loop over matls
-       for(int m=0; m<numMatls; m++){
-        gposition[m][c] /= gmass[m][c];
-        if(m!=max_mag_matl){
-          gsurfnorm[m][c] = -gsurfnorm[max_mag_matl][c];
-        }
-       }  // loop over matls
+        }  // loop over matls
+      }
     }
 
+    // Make norms unit length
     for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
       MPMBoundCond bc;
@@ -230,6 +236,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
          if(length>1.0e-15){
             gsurfnorm[m][c] = gsurfnorm[m][c]/length;
          }
+         gposition[m][c] /= gmass[m][c];
       }
     }  // loop over matls
 
@@ -354,9 +361,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               Vector normal = gsurfnorm[n][c];
               Vector sepvec = (centerOfMassMass/(centerOfMassMass - mass))*
                               (centerOfMassPos - gposition[n][c]);
-              double sepscal= Dot(sepvec,normal);
-//              double sepscal= sepvec.length();
-//              if(sepscal < sepDis){
+//              double sepscal= Dot(sepvec,normal);
+              double sepscal= sepvec.length();
+              if(sepscal < sepDis){
               double normalDeltaVel=Dot(deltaVelocity,normal);
               Vector Dv(0.,0.,0.);
               double Tn = gnormtraction[n][c];
@@ -420,7 +427,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                 Dv=scale_factor*Dv;
                 gvelocity[n][c]+=Dv;
               }  // if traction
-//             }   // if sepscal
+             }   // if sepscal
             }    // if !compare && !compare
           }      // matls
         }        // if (volume constraint)
@@ -556,10 +563,10 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
               Vector normal = gsurfnorm[n][c];
               Vector sepvec = (centerOfMassMass/(centerOfMassMass - mass))*
                               (centerOfMassPos - gposition[n][c]);
-              double sepscal= Dot(sepvec,normal);
-//              double sepscal= sepvec.length();
+//              double sepscal= Dot(sepvec,normal);
+              double sepscal= sepvec.length();
 
-//              if(sepscal < sepDis){
+              if(sepscal < sepDis){
               double normalDeltaVel=Dot(deltaVelocity,normal);
 
               Vector Dv(0.,0.,0.);
@@ -619,7 +626,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                 Dv=scale_factor*Dv;
                 gvelocity_star[n][c]+=Dv;
               } // traction
-//             }  // if sepscal
+             }  // if sepscal
             }   // if !compare && !compare
           }     // for numMatls
         }       // volume constraint
