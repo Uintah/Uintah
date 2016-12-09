@@ -3578,7 +3578,7 @@ Ray::CoarsenModelAlpha( const ProcessorGroup*,
             IntVector cc = fineLevel->mapCellToCoarser(fc,levelOffSet);
                     
               if( cc.x() >= cl.x() && cc.y() >= cl.y() && cc.z() >= cl.z() &&   
-                  cc.x() <= ch.x() && cc.y() <= ch.y() && cc.z() <= ch.z() ) {  
+                  cc.x() < ch.x() && cc.y() < ch.y() && cc.z() < ch.z() ) {  
 
                 bool includeInAverage= (std::abs(xNormal[fc+xbadjust])  >0.5 || std::abs(yNormal[fc+ybadjust]) > 0.5 || std::abs(zNormal[fc+zbadjust] ) > 0.5 || cellType[fc]!=8); // celltype of 8 is wall, override, xyz normals if its an inlet or outlet
                 if (includeInAverage){
