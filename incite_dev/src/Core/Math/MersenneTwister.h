@@ -90,7 +90,7 @@
 #include <math.h>
 #include <random>
 
-#define FIXED_RANDOM_NUM
+//#define FIXED_RANDOM_NUM
 
 class MTRand {
 // Data
