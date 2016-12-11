@@ -588,7 +588,7 @@ struct solveDivQFunctor {
     // This operator() replaces the cellIterator loop used to solve DivQ
     void operator() ( int i, int j, int k, unsigned long int & m_nRaySteps ) const {
 
-      MTRand mTwister;
+      MTRand mTwister; //TODO: Can't this object just get passed in? Brad P Dec 10 2016
       vector <int> m_rand_i( m_latinHyperCube ? m_d_nDivQRays : 0 );  // Only needed for LHC scheme
 
       //for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -611,13 +611,6 @@ struct solveDivQFunctor {
         //}
         for ( int index = 0; index < max; index++ ) {  // Populate sequential array from 0 to max-1
           m_rand_i[index] = index;
-        }
-
-        //if( d_isSeedRandom == false ){
-        //  mTwister.seed((cell.x() + cell.y() + cell.z()));
-        //}
-        if ( m_d_isSeedRandom == false ) {
-          mTwister.seed( i + j + k );
         }
 
         //for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
@@ -654,13 +647,6 @@ struct solveDivQFunctor {
           //_____________________________________________________________________________________//
           //==== START findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay ) ====//
 
-          //if( d_isSeedRandom == false ){
-          //  m_mTwister.seed((i + j + k) * iRay + 1);
-          //}
-          if ( m_d_isSeedRandom == false ) {
-            mTwister.seed( (i + j + k) * iRay + 1 );
-          }
-
           // Random Points On Sphere
           //double plusMinus_one = 2.0 *(mTwister.randDblExc() + (double) rand_i[iRay])/d_nDivQRays - 1.0;  // add fuzz to avoid inf in 1/dirVector
           //double r = sqrt(1.0 - plusMinus_one * plusMinus_one);     // Radius of circle at z
@@ -682,13 +668,6 @@ struct solveDivQFunctor {
 
           //_________________________________________________________//
           //==== START findRayDirection(mTwister, origin, iRay ) ====//
-
-          //if( d_isSeedRandom == false ){
-          //  mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-          //}
-          if ( m_d_isSeedRandom == false ) {
-            mTwister.seed( (i + j + k) * iRay + 1 );
-          }
 
           // Random Points On Sphere
           //double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON;  // add fuzz to avoid inf in 1/dirVector
@@ -893,13 +872,6 @@ struct solveDivQFunctor {
               //_________________________________________________//
               //==== START findRayDirection( mTwister, cur ) ====//
 
-              //if( d_isSeedRandom == false ){
-              //  mTwister.seed((cur.x() + cur.y() + cur.z()) * -9 +1);
-              //}
-              if ( m_d_isSeedRandom == false ) {
-                mTwister.seed( (cur[0] + cur[1] + cur[2]) * -9 + 1 );
-              }
-
               // Random Points On Sphere
               //double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON;  // add fuzz to avoid inf in 1/dirVector
               //double r = sqrt(1.0 - plusMinus_one * plusMinus_one);     // Radius of circle at z
@@ -1085,6 +1057,9 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Ray::rayTrace");
+    if ( d_isSeedRandom == false ){
+      mTwister.seed(patch->getID());
+    }
 
     CCVariable<double> divQ;
     CCVariable<Stencil7> boundFlux;
@@ -1567,7 +1542,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     const Patch* finePatch = finePatches->get(p);
     printTask(finePatches, finePatch,dbg,"Doing Ray::rayTrace_dataOnion");
-
+    if ( d_isSeedRandom == false ){
+      mTwister.seed(finePatch->getID());
+    }
      //__________________________________
     //  retrieve fine level data ( patch_based )
     if ( d_ROI_algo == patch_based ){
@@ -1647,7 +1624,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
           if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
             randVector(rand_i, mTwister, origin);
           }
-
 
           //__________________________________
           // Flux ray loop
@@ -1897,10 +1873,6 @@ void Ray::rayDirection_cellFace( MTRand& mTwister,
                                  double& cosTheta)
 {
 
-  if( d_isSeedRandom == false ){                 // !! This could use a compiler directive for speed-up
-    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-  }
-
   // Surface Way to generate a ray direction from the positive z face
   double phi   = 2 * M_PI * mTwister.rand(); // azimuthal angle.  Range of 0 to 2pi
   double theta = acos(mTwister.rand());      // polar angle for the hemisphere
@@ -1935,9 +1907,6 @@ Ray::rayDirectionHyperCube_cellFace(MTRand& mTwister,
                                  const int bin_i,
                                  const int bin_j)
 {
-  if( d_isSeedRandom == false ){                 // !! This could use a compiler directive for speed-up
-    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-  }
 
  // randomly sample within each randomly selected region (may not be needed, alternatively choose center of subregion)
   cosTheta = (mTwister.randDblExc() + (double) bin_i)/d_nFluxRays;
@@ -1971,9 +1940,6 @@ Ray::findRayDirectionHyperCube(MTRand& mTwister,
                                const int bin_i,
                                const int bin_j)
 {
-  if( d_isSeedRandom == false ){
-    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-  }
 
   // Random Points On Sphere
   double plusMinus_one = 2.0 *(mTwister.randDblExc() + (double) bin_i)/d_nDivQRays - 1.0;  // add fuzz to avoid inf in 1/dirVector

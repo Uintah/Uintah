@@ -88,6 +88,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <random>
 
 //#define FIXED_RANDOM_NUM
 
@@ -322,8 +323,12 @@ inline void MTRand::seed()
                 if( success ) { seed( bigSeed, N );  return; }
         }
 #endif  
-        // Was not successful, so use time() and clock() instead
-        seed( hash( time(nullptr), clock() ) );
+        //C++11 gives us a useful random number generator.  It replaces the above code.  It's
+        //also thread safe, meaning that two threads won't get the same random number at the same time
+        //Note that this has limited entropy, so seed shouldn't be called many, many times in quick succession.
+        std::random_device r;
+        seed (r());
+
 }
 
 

@@ -157,15 +157,16 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   // This rand_i array is only needed for LATIN_HYPER_CUBE scheme
   const int size = 1000;
   int rand_i[ size ];       //Give it a buffer room of 1000.  But we should only use nFluxRays items in it.
-                            //Hopefully this 1000 will always be greater than nFluxRays.
+                             //Hopefully this 1000 will always be greater than nFluxRays.
+                             //TODO, a 4D array is probably better here (x,y,z, ray#), saves
+                             //on memory (no unused buffer) and computation time (don't need to compute
+                             //the rays twice)
+
   if (nFluxRays > size) {
     printf("\n\n\nERROR!  rayTraceKernel() - Cannot have more rays than the rand_i array size.  nFluxRays is %d, size of the array is.%d\n\n\n",
         nFluxRays, size);
     //We have to return, otherwise the upcoming math in rayDirectionHyperCube_cellFaceDevice will generate nan values.
     return;
-  }
-  if (doLatinHyperCube){
-    randVectorDevice(rand_i, nFluxRays, randNumStates);
   }
  
   //______________________________________________________________________
@@ -176,6 +177,10 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   //______________________________________________________________________
   //          B O U N D A R Y F L U X
   //______________________________________________________________________
+  setupRandNumsSeedAndSequences(randNumStates,
+                               (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
+                               patch.ID);
+
   if( RT_flags.solveBoundaryFlux ){
 
     __shared__ int3 dirIndexOrder[6];
@@ -208,6 +213,11 @@ __global__ void rayTraceKernel( dim3 dimGrid,
       for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+
+        //get a new set of random numbers
+        if (doLatinHyperCube){
+          randVectorDevice(rand_i, nFluxRays, randNumStates);
+        }
 
         boundFlux[origin].initialize(0.0);
 
@@ -283,6 +293,11 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   //______________________________________________________________________
   //         S O L V E   D I V Q
   //______________________________________________________________________
+  //Setup the original seeds so we can get the same random numbers again.
+  setupRandNumsSeedAndSequences(randNumStates,
+                               (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
+                               patch.ID);
+
   if( RT_flags.solveDivQ ){
     const int nDivQRays = RT_flags.nDivQRays;               // for readability
 
@@ -292,6 +307,12 @@ __global__ void rayTraceKernel( dim3 dimGrid,
       for (int z = patch.lo.z; z < patch.hi.z; z++) {       // loop through z slices
 
         GPUIntVector origin = make_int3(tidX, tidY, z);     // for each thread
+
+        //Get the same set of random numbers as we had before.  We need the same rays.
+        if (doLatinHyperCube){
+          randVectorDevice(rand_i, nFluxRays, randNumStates);
+        }
+
         double sumI = 0;
         GPUPoint CC_pos = level.getCellPosition(origin);
 
@@ -466,16 +487,16 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
   // This rand_i array is only needed for LATIN_HYPER_CUBE scheme
   const int size = 1000;
-  int rand_i[ size ];       //Give it a buffer room of 1000.  But we should only use nFluxRays items in it.
-                            //Hopefully this 1000 will always be greater than nFluxRays.
+  int rand_i[ size ];      //Give it a buffer room of 1000.  But we should only use nFluxRays items in it.
+                           //Hopefully this 1000 will always be greater than nFluxRays.
+                           //TODO, a 4D array is probably better here (x,y,z, ray#), saves
+                           //on memory (no unused buffer) and computation time (don't need to compute
+                           //the rays twice)
   if (nFluxRays > size) {
     printf("\n\n\nERROR!  rayTraceKernel() - Cannot have more rays than the rand_i array size.  nFluxRays is %d, size of the array is.%d\n\n\n",
         nFluxRays, size);
     //We have to return, otherwise the upcoming math in rayDirectionHyperCube_cellFaceDevice will generate nan values.
     return;
-  }
-  if (doLatinHyperCube){
-    randVectorDevice(rand_i, nFluxRays, randNumStates);
   }
 
   //______________________________________________________________________
@@ -488,6 +509,10 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   //______________________________________________________________________
   //          B O U N D A R Y F L U X
   //______________________________________________________________________
+  setupRandNumsSeedAndSequences(randNumStates,
+                               (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
+                               finePatch.ID);
+
   if( RT_flags.solveBoundaryFlux ){
     __shared__ int3 dirIndexOrder[6];
     __shared__ int3 dirSignSwap[6];
@@ -596,6 +621,11 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   //______________________________________________________________________
   //         S O L V E   D I V Q
   //______________________________________________________________________
+  //Setup the original seeds so we can get the same random numbers again.
+  setupRandNumsSeedAndSequences(randNumStates,
+                               (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
+                               finePatch.ID);
+
   if( RT_flags.solveDivQ ) {
 
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
@@ -604,6 +634,12 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       for (int z = finePatch.lo.z; z < finePatch.hi.z; z++) { // loop through z slices
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+
+        //Get the same set of random numbers as we had before.  We need the same rays.
+        if (doLatinHyperCube){
+          randVectorDevice(rand_i, nFluxRays, randNumStates);
+        }
+
         GPUPoint CC_pos = d_levels[fineL].getCellPosition(origin);
 
         // don't compute in intrusions and walls
@@ -1558,10 +1594,29 @@ __device__ int randIntDevice(curandState* globalState,
 //______________________________________________________________________
 //  Each thread gets same seed, a different sequence number, no offset
 //  This will create repeatable results.
-__global__ void setupRandNumKernel(curandState* randNumStates)
+__device__ void setupRandNumsSeedAndSequences(curandState* randNumStates, int numStates, unsigned long long patchID)
 {
-  int tID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
-  curand_init(1234, tID, 0, &randNumStates[tID]);
+  //generate a sequence argument for curand_init().  It is the way CUDA documentation mentions
+  //to generate statistically pseudorandom numbers.  "Sequences generated with different seeds
+  //usually do not have statistically correlated values, but some choices of seeds may give
+  //statistically correlated sequences. Sequences generated with the same seed and different
+  //sequence numbers will not have statistically correlated values." from here:
+  //http://docs.nvidia.com/cuda/curand/device-api-overview.html#axzz4SPy8xMuj
+
+  //First start by getting a unique threadID.
+  int indexId = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
+      + threadIdx.z * blockDim.y * blockDim.x + threadIdx.y * blockDim.x + threadIdx.x;
+
+  //It's crucially important that the second argument of curand_init, the sequence argument, be unique.  Since
+  //each RMCRT kernel just knows thread/block layout but has no knowledge of where it lies on the domain
+  //we're doing to offset our tID relative to unique patchID numbers.  This is assuming no two
+  //RMCRT tasks will operate on the same patch.
+  //To help generate a unique number, put the patchID bits on the left side of an int, and the
+  //threadID bits on the right side.
+
+  unsigned long long tID = ((patchID << 32) | (indexId)); //We should definitely never have more
+                                                           //than 2^32-1 patches, so this should work
+  curand_init(1234, tID, 0, &randNumStates[indexId]);
 }
 
 //______________________________________________________________________
@@ -1689,8 +1744,8 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
 {
   // setup random number generator states on the device, 1 for each thread
   curandState* randNumStates;
-  int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-  
+  int numStates = dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z;
+
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
 
@@ -1707,11 +1762,6 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
   }
   dtask->addTempHostMemoryToBeFreedOnCompletion(h_debugRandNums);
   cudaMemcpyAsync(d_debugRandNums, h_debugRandNums, randNumsByteSize, cudaMemcpyHostToDevice, *stream );
-
-
-  setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
-
-
 
   rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                             dimBlock,
@@ -1783,13 +1833,11 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
 
   //__________________________________
   // setup random number generator states on the device, 1 for each thread
-  int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
+  int numStates = dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z;
 
   curandState* randNumStates;
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
-
-  setupRandNumKernel<<< dimGrid, dimBlock, 0, *stream>>>( randNumStates );
 
   rayTraceDataOnionKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                                      dimBlock,
