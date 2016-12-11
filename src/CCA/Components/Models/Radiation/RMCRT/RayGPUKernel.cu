@@ -213,7 +213,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
 
-        //get a new set or random numbers
+        //get a new set of random numbers
         if (doLatinHyperCube){
           randVectorDevice(rand_i, nFluxRays, randNumStates);
         }
@@ -549,7 +549,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
 
-        //get a new set or random numbers
+        //get a new set of random numbers
         if (doLatinHyperCube){
           randVectorDevice(rand_i, nFluxRays, randNumStates);
         }
