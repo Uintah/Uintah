@@ -481,9 +481,6 @@ RMCRTCommon::findRayDirection(MTRand& mTwister,
                              const IntVector& origin,
                              const int iRay )
 {
-  if( d_isSeedRandom == false ){
-    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-  }
 
   // Random Points On Sphere
   double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON;  // add fuzz to avoid inf in 1/dirVector
@@ -1019,10 +1016,6 @@ RMCRTCommon::randVector( std::vector <int> &int_array,
 
   for (int i=0; i<max; i++){   // populate sequential array from 0 to max-1
     int_array[i] = i;
-  }
-
-  if( d_isSeedRandom == false ){
-    mTwister.seed((cell.x() + cell.y() + cell.z()));
   }
 
   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1

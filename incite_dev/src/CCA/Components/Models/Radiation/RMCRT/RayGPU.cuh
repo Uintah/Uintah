@@ -670,6 +670,10 @@ template< class T>
 
 //______________________________________________________________________
 //
+__device__ void setupRandNumsSeedAndSequences(curandState* randNumStates, int numStates, unsigned long long patchID);
+
+//______________________________________________________________________
+//
 __device__ double randDblExcDevice(curandState* randNumStates);
 
 
