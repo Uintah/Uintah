@@ -664,9 +664,9 @@ ElasticPlasticHP::computeStableTimestep(const Patch* patch,
 //______________________________________________________________________
 //
 void 
-ElasticPlasticHP::addComputesAndRequires(Task* task,
-                                       const MPMMaterial* matl,
-                                       const PatchSet* patches) const
+ElasticPlasticHP::addComputesAndRequires(      Task         * task,
+                                         const MPMMaterial  * matl,
+                                         const PatchSet     * patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -816,11 +816,15 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
     ParticleVariable<Matrix3> pRotation_new;
     ParticleVariable<double>  pPlasticStrain_new, pDamage_new, pPorosity_new; 
     ParticleVariable<double>  pStrainRate_new, pPlasticStrainRate_new;
-    ParticleVariable<double>  pDissipatedEnergy_new, pHeatEnergy_new;
     ParticleVariable<int>     pLocalized_new;
     ParticleVariable<double>  pdTdt, p_q, pEnergy_new;
     ParticleVariable<Matrix3> pStress_new;
     
+    // Added for thermodynamic tracking
+    ParticleVariable<double>  pAdiabaticTempDelta_new;
+    ParticleVariable<double>  pDissipatedEnergy_new;
+    ParticleVariable<double>  pHeatEnergy_new;
+
     new_dw->allocateAndPut(pRotation_new,    
                            pRotationLabel_preReloc,               pset);
     new_dw->allocateAndPut(pStrainRate_new,      
@@ -845,6 +849,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
                            lb->pHeatEnergyLabel_preReloc,         pset);
     new_dw->allocateAndPut(pDissipatedEnergy_new,
                            lb->pDissipatedEnergyLabel_preReloc,   pset);
+//    new_dw->allocateAndPut(pAdiabaticTempDelta_new,
+//                           lb->pAdiabaticTempDeltaLabel_preReloc, pset);
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
 
     
@@ -863,6 +869,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
       // Energy trackers for useful and irreversible heat flow.
       pDissipatedEnergy_new[idx] = 0.0;
       pHeatEnergy_new[idx] = 0.0;
+//      pAdiabaticTempDelta_new[idx] = 0.0;
 
       // Assign zero int. heating by default, modify with appropriate sources
       // This has units (in MKS) of K/s  (i.e. temperature/time)
@@ -1098,6 +1105,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
       double Dkk = tensorD.Trace();
       double dTdt_isentropic = d_eos->computeIsentropicTemperatureRate(
                                                  temperature,rho_0,rho_cur,Dkk);
+      //pAdiabaticTempDelta_new[idx] = dTdt_isentropic;
       pdTdt[idx] += dTdt_isentropic;
 
       // Calculate Tdot from viscoelasticity
@@ -1106,10 +1114,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
       double Tdot_VW = defState->viscoElasticWorkRate*fac;
 
       // Viscoelastic heating (should be irreversible, FIXME)- JBH
-      //pDissipatedEnergy_new[idx] = Tdot_VW;
-
-      // Forward for now.
-      //pDissipatedEnergy_new[idx] = pDissipatedEnergy[idx];
+      pDissipatedEnergy_new[idx] = Tdot_VW;
 
       pdTdt[idx] += Tdot_VW;
 
@@ -1129,7 +1134,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
       pdTdt[idx] += Tdot_AV*include_AV_heating;
 
       // Heating from artificial viscosity is irreversible
-      //pDissipatedEnergy_new[idx] += Tdot_AV*include_AV_heating;
+      pDissipatedEnergy_new[idx] += Tdot_AV*include_AV_heating;
 
       Matrix3 tensorHy = one*p;
    
@@ -2032,11 +2037,11 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
 //______________________________________________________________________
 //
 void 
-ElasticPlasticHP::addComputesAndRequires(Task* task,
-                                       const MPMMaterial* matl,
-                                       const PatchSet* patches,
-                                       const bool recurse,
-                                       const bool SchedParent) const
+ElasticPlasticHP::addComputesAndRequires(      Task         * task,
+                                         const MPMMaterial  * matl,
+                                         const PatchSet     * patches,
+                                         const bool           recurse,
+                                         const bool           SchedParent) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForImplicitHypo(task, matlset, true, recurse, SchedParent);

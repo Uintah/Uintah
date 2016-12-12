@@ -101,8 +101,8 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   contactModel        = 0;
   thermalContactModel = 0;
   heatConductionModel = 0;
-  NGP     = 1;
-  NGN     = 1;
+//  NGP     = 1;
+//  NGN     = 1;
   d_recompile = false;
   dataArchiver = 0;
   d_loadCurveIndex=0;
@@ -2115,13 +2115,14 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
   new_dw->put(delt_vartype(999.0), lb->delTLabel, level);
 }
 
-void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* ,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw)
+void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup *,
+                                           const PatchSubset    * patches,
+                                           const MaterialSubset * ,
+                                                 DataWarehouse  * old_dw,
+                                                 DataWarehouse  * new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++)
+  {
     const Patch* patch = patches->get(p);
 
     printTask(patches,patch,cout_doing,"Doing interpolateParticlesToGrid");
@@ -3576,8 +3577,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
         pVelGrad[idx]=tensorL;
         pTempGrad[idx] = Vector(0.0,0.0,0.0);
-        if (flags->d_doExplicitHeatConduction){
-         if(flags->d_axisymmetric){
+        if (flags->d_doExplicitHeatConduction)
+        {
+         if(flags->d_axisymmetric)
+         {
            cout << "Fix the pTempGradient calc for axisymmetry" << endl;
          }
          // Get the node indices that surround the cell
@@ -3925,13 +3928,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
 
 }
 
-void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
-                                                    const PatchSubset* patches,
-                                                    const MaterialSubset* ,
-                                                    DataWarehouse* old_dw,
-                                                    DataWarehouse* new_dw)
+void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup  * ,
+                                                    const PatchSubset     * patches,
+                                                    const MaterialSubset  * ,
+                                                          DataWarehouse   * old_dw,
+                                                          DataWarehouse   * new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++)
+  {
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
               "Doing interpolateToParticlesAndUpdateMom2");
@@ -3948,6 +3952,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     double thermal_energy = 0.0;
     double totalmass = 0;
     double partvoldef = 0.;
+
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
@@ -4042,7 +4047,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
+          iter != pset->end(); iter++)
+      {
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
@@ -4056,7 +4062,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
         double burnFraction = 0.0;
 
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < NN; k++) {
+        for (int k = 0; k < NN; k++)
+        {
           IntVector node = ni[k];
 
           fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
@@ -4078,10 +4085,12 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
         }
 
         double rho;
-        if(pvolume[idx] > 0.){
+        if(pvolume[idx] > 0.)
+        {
           rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
         }
-        else{
+        else
+        {
           rho = rho_init;
         }
         pmassNew[idx]     = Max(pmass[idx]*(1.    - burnFraction),0.);
@@ -4097,10 +4106,13 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       // file, set their velocity back to the velocity that it came into
       // this step with
       for(ParticleSubset::iterator iter  = pset->begin();
-                                   iter != pset->end(); iter++){
+                                   iter != pset->end(); iter++)
+      {
         particleIndex idx = *iter;
-        if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
-             (pLocalized[idx]==-999)){
+        if ((pmassNew[idx] <= flags->d_min_part_mass) ||
+             pTempNew[idx] < 0.                       ||
+             (pLocalized[idx]==-999) )
+        {
           delset->addParticle(idx);
 //        cout << "Material = " << m << " Deleted Particle = " << idx
 //             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
@@ -4111,17 +4123,19 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
 //             << " volnew = " << pvolume[idx] << endl;
         }
       }
-
       new_dw->deleteParticles(delset);
+
       //__________________________________
       //  particle debugging label-- carry forward
-      if (flags->d_with_color) {
+      if (flags->d_with_color)
+      {
         constParticleVariable<double> pColor;
         ParticleVariable<double>pColor_new;
         old_dw->get(pColor, lb->pColorLabel, pset);
         new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
         pColor_new.copyData(pColor);
       }
+      // This would be a good place to put color changes for reactions. -- JBH
     }
 
     // DON'T MOVE THESE!!!
