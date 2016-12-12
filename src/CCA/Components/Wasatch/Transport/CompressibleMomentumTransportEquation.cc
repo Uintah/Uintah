@@ -521,8 +521,7 @@ namespace WasatchCore{
           break;
         case OUTFLOW:  // we will use OUTFLOW/OPEN as NONREFLECTING
         case OPEN:
-        {
-          std::cout << " here \n";
+        {          
           typedef typename SpatialOps::UnitTriplet<MomDirT>::type UnitTripletT;
           
           //Create the one sided stencil gradient

@@ -440,7 +440,7 @@ namespace WasatchCore {
                   const string& functorName = *functorIter;
                   const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
                   if (factory.have_entry(modTag)) {
-                    proc0cout << "dummy functor = " << modTag << std::endl;
+                    DBGBC << "dummy functor = " << modTag << std::endl;
                     factory.attach_modifier_expression( modTag, varTag, patchID, true );
                   }
                   ++functorIter;
@@ -891,21 +891,21 @@ namespace WasatchCore {
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
           {
             const int patchID = patch->getID();
-            proc0cout << "nscbc patchID = " << patchID << std::endl;
+            DBGBC << "nscbc patchID = " << patchID << std::endl;
             BCFunctorMap::iterator iter = bcFunctorMap_.begin();
             while ( iter != bcFunctorMap_.end() ) {
               string functorPhiName = (*iter).first;
-              proc0cout << "nscbc functor PhiName = " << functorPhiName << " fieldname = " << fieldName << std::endl;
+              DBGBC << "nscbc functor PhiName = " << functorPhiName << " fieldname = " << fieldName << std::endl;
               if ( functorPhiName.compare(fieldName) == 0 ) {
                 // get the functor set associated with this field
                 BCFunctorMap::mapped_type::const_iterator functorIter = (*iter).second.begin();
                 while( functorIter != (*iter).second.end() ){
                   const string& functorName = *functorIter;
                   const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
-                  proc0cout << "nscbc functor = " << modTag << std::endl;
+                  DBGBC << "nscbc functor = " << modTag << std::endl;
 
                   if (factory.have_entry(modTag)) {
-                    proc0cout << "dummy nscbc functor = " << modTag << std::endl;
+                    DBGBC << "dummy nscbc functor = " << modTag << std::endl;
                     factory.attach_modifier_expression( modTag, varTag, patchID, true );
                   }
                   ++functorIter;
