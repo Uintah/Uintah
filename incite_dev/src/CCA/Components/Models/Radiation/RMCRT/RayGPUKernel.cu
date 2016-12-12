@@ -83,6 +83,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
                                 curandState* randNumStates,
                                 RMCRT_flags RT_flags,
                                 varLabelNames* labelNames,
+                                int curTimestep,
                                 GPUDataWarehouse* abskg_gdw,
                                 GPUDataWarehouse* sigmaT4_gdw,
                                 GPUDataWarehouse* cellType_gdw,
@@ -178,7 +179,8 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   //______________________________________________________________________
   setupRandNumsSeedAndSequences(randNumStates,
                                (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
-                               patch.ID);
+                               patch.ID,
+                               curTimestep);
 
   if( RT_flags.solveBoundaryFlux ){
 
@@ -295,7 +297,8 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   //Setup the original seeds so we can get the same random numbers again.
   setupRandNumsSeedAndSequences(randNumStates,
                                (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
-                               patch.ID);
+                               patch.ID,
+                               curTimestep);
 
   if( RT_flags.solveDivQ ){
     const int nDivQRays = RT_flags.nDivQRays;               // for readability
@@ -372,6 +375,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          int3* regionHi,
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
+                                         int curTimestep,
                                          GPUDataWarehouse* abskg_gdw,
                                          GPUDataWarehouse* sigmaT4_gdw,
                                          GPUDataWarehouse* cellType_gdw,
@@ -502,9 +506,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     return;
   }
 
-
-
-
   //______________________________________________________________________
   //           R A D I O M E T E R
   //______________________________________________________________________
@@ -517,7 +518,8 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   //______________________________________________________________________
   setupRandNumsSeedAndSequences(randNumStates,
                                (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
-                               finePatch.ID);
+                               finePatch.ID,
+                               curTimestep);
 
   if( RT_flags.solveBoundaryFlux ){
     __shared__ int3 dirIndexOrder[6];
@@ -638,7 +640,8 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   //Setup the original seeds so we can get the same random numbers again.
   setupRandNumsSeedAndSequences(randNumStates,
                                (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
-                               finePatch.ID);
+                               finePatch.ID,
+                               curTimestep);
 
   if( RT_flags.solveDivQ ) {
 
@@ -713,6 +716,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 //______________________________________________________________________
 __device__ GPUVector findRayDirectionDevice( curandState* randNumStates )
 {
+  printf("WHOOOOAAAA\n");
   // Random Points On Sphere
   // add fuzz to prevent infs in 1/dirVector calculation
   double plusMinus_one = 2.0 * randDblExcDevice( randNumStates ) - 1.0 + DBL_EPSILON;
@@ -763,9 +767,11 @@ __device__ void rayDirectionHyperCube_cellFaceDevice(curandState* randNumStates,
 {
   // randomly sample within each randomly selected region (may not be needed, alternatively choose center of subregion)
   cosTheta = (randDblExcDevice(randNumStates) + (double) bin_i)/(double)nFluxRays;
+  //cosTheta = (0.3 + (double) bin_i)/(double)nFluxRays;
 
   double theta = acos(cosTheta);      // polar angle for the hemisphere
   double phi   = 2.0 * M_PI * (randDblExcDevice(randNumStates) + (double) bin_j)/(double)nFluxRays;        // Uniform betwen 0-2Pi
+  //double phi   = 2.0 * M_PI * (0.3 + (double) bin_j)/(double)nFluxRays;        // Uniform betwen 0-2Pi
 
   cosTheta = cos(theta);
 
@@ -791,12 +797,14 @@ __device__ GPUVector findRayDirectionHyperCubeDevice(curandState* randNumStates,
 {
   // Random Points On Sphere
   double plusMinus_one = 2.0 *(randDblExcDevice( randNumStates ) + (double) bin_i)/nDivQRays - 1.0;
+  //double plusMinus_one = 2.0 *(0.3 + (double) bin_i)/nDivQRays - 1.0;
 
   // Radius of circle at z
   double r = sqrt(1.0 - plusMinus_one * plusMinus_one);
 
   // Uniform betwen 0-2Pi
   double phi = 2.0 * M_PI * (randDblExcDevice( randNumStates ) + (double) bin_j)/nDivQRays;
+  //double phi = 2.0 * M_PI * (0.3 + (double) bin_j)/nDivQRays;
 
   GPUVector dirVector;
   dirVector[0] = r*cos(phi);                       // Convert to cartesian
@@ -825,6 +833,9 @@ __device__ void randVectorDevice( int int_array[],
     int_array[i] = int_array[rand_int];
     int_array[rand_int] = swap;
   }
+  //for (int i = 0 ; i < 20; i++) {
+  //  int_array[i] = i;
+  //}
 }
 //______________________________________________________________________
 // Compute the Ray direction from a cell face
@@ -868,6 +879,9 @@ GPUVector rayOriginDevice( curandState* randNumStates,
     rayOrigin[0] =  CC_pos.x - 0.5*dx.x  + randDblDevice(randNumStates) * dx.x;
     rayOrigin[1] =  CC_pos.y - 0.5*dx.y  + randDblDevice(randNumStates) * dx.y;
     rayOrigin[2] =  CC_pos.z - 0.5*dx.z  + randDblDevice(randNumStates) * dx.z;
+    //rayOrigin[0] =  CC_pos.x - 0.5*dx.x  + 0.3 * dx.x;
+    //rayOrigin[1] =  CC_pos.y - 0.5*dx.y  + 0.3 * dx.y;
+    //rayOrigin[2] =  CC_pos.z - 0.5*dx.z  + 0.3 * dx.z;
   }else{
     rayOrigin[0] = CC_pos.x;
     rayOrigin[1] = CC_pos.y;
@@ -1561,7 +1575,8 @@ __device__ void updateSumIDevice ( levelParams level,
 //______________________________________________________________________
 __device__ double randDblDevice(curandState* globalState)
 {
-  int tid = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+  int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
+      + threadIdx.z * blockDim.y * blockDim.x + threadIdx.y * blockDim.x + threadIdx.x;
   curandState localState = globalState[tid];
   double val = curand(&localState);
   globalState[tid] = localState;
@@ -1608,7 +1623,10 @@ __device__ int randIntDevice(curandState* globalState,
 //______________________________________________________________________
 //  Each thread gets same seed, a different sequence number, no offset
 //  This will create repeatable results.
-__device__ void setupRandNumsSeedAndSequences(curandState* randNumStates, int numStates, unsigned long long patchID)
+__device__ void setupRandNumsSeedAndSequences(curandState* randNumStates,
+                                              int numStates,
+                                              unsigned long long patchID,
+                                              unsigned long long curTimestep)
 {
   //generate a sequence argument for curand_init().  It is the way CUDA documentation mentions
   //to generate statistically pseudorandom numbers.  "Sequences generated with different seeds
@@ -1625,10 +1643,11 @@ __device__ void setupRandNumsSeedAndSequences(curandState* randNumStates, int nu
   //each RMCRT kernel just knows thread/block layout but has no knowledge of where it lies on the domain
   //we're doing to offset our tID relative to unique patchID numbers.  This is assuming no two
   //RMCRT tasks will operate on the same patch.
-  //To help generate a unique number, put the patchID bits on the left side of an int, and the
-  //threadID bits on the right side.
+  //To help generate a unique number, use the left 20 bits from the patchID, the next 20 bits from the curTimestep
+  //and the last 24 bits from the indexId.
 
-  unsigned long long tID = ((patchID << 32) | (indexId)); //We should definitely never have more
+  //threadID bits on the right side.
+  unsigned long long tID = (((patchID & 0xFFFFF) << 44) | ((curTimestep& 0xFFFFF) << 24) |  (indexId & 0xFFFFFF)); //We should definitely never have more
                                                            //than 2^32-1 patches, so this should work
   curand_init(1234, tID, 0, &randNumStates[indexId]);
 }
@@ -1750,6 +1769,7 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
                                    varLabelNames* labelNames,
+                                   int curTimestep,
                                    GPUDataWarehouse* abskg_gdw,
                                    GPUDataWarehouse* sigmaT4_gdw,
                                    GPUDataWarehouse* cellType_gdw,
@@ -1786,6 +1806,7 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
                                                             randNumStates,
                                                             RT_flags,
                                                             labelNames,
+                                                            curTimestep,
                                                             abskg_gdw,
                                                             sigmaT4_gdw,
                                                             cellType_gdw,
@@ -1812,6 +1833,7 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              GPUIntVector fineLevel_ROI_Hi,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
+                                             int curTimestep,
                                              GPUDataWarehouse* abskg_gdw,
                                              GPUDataWarehouse* sigmaT4_gdw,
                                              GPUDataWarehouse* cellType_gdw,
@@ -1854,7 +1876,6 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
 
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
-
   rayTraceDataOnionKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                                      dimBlock,
                                                                      matlIndex,
@@ -1866,6 +1887,7 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                                                      dev_regionHi,
                                                                      randNumStates,
                                                                      RT_flags,
+                                                                     curTimestep,
                                                                      abskg_gdw,
                                                                      sigmaT4_gdw,
                                                                      cellType_gdw,
@@ -1889,6 +1911,7 @@ __host__ void launchRayTraceKernel<double>( DetailedTask* dtask,
                                             cudaStream_t* stream,
                                             RMCRT_flags RT_flags,
                                             varLabelNames* labelNames,
+                                            int curTimestep,
                                             GPUDataWarehouse* abskg_gdw,
                                             GPUDataWarehouse* sigmaT4_gdw,
                                             GPUDataWarehouse* cellType_gdw,
@@ -1907,6 +1930,7 @@ __host__ void launchRayTraceKernel<float>( DetailedTask* dtask,
                                            cudaStream_t* stream,
                                            RMCRT_flags RT_flags,
                                            varLabelNames* labelNames,
+                                           int curTimestep,
                                            GPUDataWarehouse* abskg_gdw,
                                            GPUDataWarehouse* sigmaT4_gdw,
                                            GPUDataWarehouse* celltype_gdw,
@@ -1927,6 +1951,7 @@ __host__ void launchRayTraceDataOnionKernel<double>( DetailedTask* dtask,
                                                      GPUIntVector fineLevel_ROI_Hi,
                                                      cudaStream_t* stream,
                                                      RMCRT_flags RT_flags,
+                                                     int curTimestep,
                                                      GPUDataWarehouse* abskg_gdw,
                                                      GPUDataWarehouse* sigmaT4_gdw,
                                                      GPUDataWarehouse* cellType_gdw,
@@ -1947,6 +1972,7 @@ __host__ void launchRayTraceDataOnionKernel<float>( DetailedTask* dtask,
                                                     GPUIntVector fineLevel_ROI_Hi,
                                                     cudaStream_t* stream,
                                                     RMCRT_flags RT_flags,
+                                                    int curTimestep,
                                                     GPUDataWarehouse* abskg_gdw,
                                                     GPUDataWarehouse* sigmaT4_gdw,
                                                     GPUDataWarehouse* cellType_gdw,

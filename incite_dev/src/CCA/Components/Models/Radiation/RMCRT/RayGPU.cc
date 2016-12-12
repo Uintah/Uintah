@@ -55,13 +55,13 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                       void* stream,
                       int deviceID,
                       bool modifies_divQ,
+                      SimulationStateP sharedState,
                       Task::WhichDW which_abskg_dw,
                       Task::WhichDW which_sigmaT4_dw,
-                      Task::WhichDW which_celltype_dw )
+                      Task::WhichDW which_celltype_dw)
 {
   if (event == Task::GPU) {
 #ifdef HAVE_CUDA
-
     const Level* level = getLevel(patches);
 
     //__________________________________
@@ -216,6 +216,7 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                               (cudaStream_t*)stream,
                               RT_flags,
                               labelNames,
+                              sharedState->getCurrentTopLevelTimeStep(),
                               abskg_gdw,
                               sigmaT4_gdw,
                               celltype_gdw,
@@ -256,9 +257,10 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                void* stream,
                                int deviceID,
                                bool modifies_divQ,
+                               SimulationStateP   sharedState,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW which_sigmaT4_dw,
-                               Task::WhichDW which_celltype_dw )
+                               Task::WhichDW which_celltype_dw)
 {
   if (event == Task::GPU) {
 
@@ -441,6 +443,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                        fineLevel_ROI_Hi,
                                        (cudaStream_t*)stream,
                                        RT_flags, 
+                                       sharedState->getCurrentTopLevelTimeStep(),
                                        abskg_gdw,
                                        sigmaT4_gdw,
                                        celltype_gdw,
@@ -482,9 +485,10 @@ void Ray::rayTraceGPU< float > ( DetailedTask* dtask,
                                  void* stream,
                                  int deviceID,
                                  bool,
+                                 SimulationStateP,
                                  Task::WhichDW,
                                  Task::WhichDW,
-                                 Task::WhichDW );
+                                 Task::WhichDW);
 
 template
 void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
@@ -499,9 +503,10 @@ void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
                                   void* stream,
                                   int deviceID,
                                   bool,
+                                  SimulationStateP,
                                   Task::WhichDW,
                                   Task::WhichDW,
-                                  Task::WhichDW );
+                                  Task::WhichDW);
 
 template
 void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
@@ -516,9 +521,10 @@ void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
                                           void* stream,
                                           int deviceID,
                                           bool,
+                                          SimulationStateP,
                                           Task::WhichDW,
                                           Task::WhichDW,
-                                          Task::WhichDW );
+                                          Task::WhichDW);
 
 template
 void Ray::rayTraceDataOnionGPU< double > ( DetailedTask* dtask,
@@ -533,6 +539,7 @@ void Ray::rayTraceDataOnionGPU< double > ( DetailedTask* dtask,
                                            void* stream,
                                            int deviceID,
                                            bool,
+                                           SimulationStateP,
                                            Task::WhichDW,
                                            Task::WhichDW,
-                                           Task::WhichDW );
+                                           Task::WhichDW);

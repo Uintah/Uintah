@@ -424,9 +424,9 @@ Ray::sched_rayTrace( const LevelP& level,
   if (Parallel::usingDevice()) {          // G P U
 
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,  modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,  modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw );
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,  modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,  modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw);
     }
     tsk->usesDevice(true);
   } else {                                // C P U
@@ -1352,10 +1352,10 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     taskname = "Ray::rayTraceDataOnionGPU";
 
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw);
     }
     else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, d_sharedState, abskg_dw, sigma_dw, celltype_dw);
     }
     tsk->usesDevice(true);
   }
