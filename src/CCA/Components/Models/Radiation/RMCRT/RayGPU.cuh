@@ -670,7 +670,10 @@ template< class T>
 
 //______________________________________________________________________
 //
-__device__ void setupRandNumsSeedAndSequences(curandState* randNumStates, int numStates, unsigned long long patchID);
+__device__ void setupRandNumsSeedAndSequences(curandState* randNumStates,
+                                              int numStates,
+                                              unsigned long long patchID,
+                                              unsigned long long curTimestep);
 
 //______________________________________________________________________
 //
@@ -709,28 +712,12 @@ __host__ void launchRayTraceKernel( DetailedTask* dtask,
                                     cudaStream_t* stream,
                                     RMCRT_flags RT_flags,
                                     varLabelNames* labelNames,
+                                    int curTimestep,
                                     GPUDataWarehouse* abskg_gdw,
                                     GPUDataWarehouse* sigmaT4_gdw,
                                     GPUDataWarehouse* celltype_gdw,
                                     GPUDataWarehouse* old_gdw,
                                     GPUDataWarehouse* new_gdw );
-
-//______________________________________________________________________
-//
-template< class T >
-__global__ void rayTraceKernel( dim3 dimGrid,
-                                dim3 dimBlock,
-                                const int matlIndex,
-                                levelParams level,
-                                patchParams patch,
-                                curandState* randNumStates,
-                                RMCRT_flags RT_flags,
-                                varLabelNames* labelNames,
-                                GPUDataWarehouse* abskg_gdw,
-                                GPUDataWarehouse* sigmaT4_gdw,
-                                GPUDataWarehouse* celltype_gdw,
-                                GPUDataWarehouse* old_gdw,
-                                GPUDataWarehouse* new_gdw );
 
 //______________________________________________________________________
 //
@@ -746,31 +733,12 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              GPUIntVector fineLevel_ROI_Hi,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
+                                             int curTimestep,
                                              GPUDataWarehouse* abskg_gdw,
                                              GPUDataWarehouse* sigmaT4_gdw,
                                              GPUDataWarehouse* celltype_gdw,
                                              GPUDataWarehouse* old_gdw,
                                              GPUDataWarehouse* new_gdw );
-
-//______________________________________________________________________
-//
-template< class T >
-__global__ void rayTraceDataOnionKernel( dim3 dimGrid,
-                                         dim3 dimBlock,
-                                         int matl,
-                                         patchParams finePatch,
-                                         gridParams gridP,
-                                         GPUIntVector fineLevel_ROI_Lo,
-                                         GPUIntVector fineLevel_ROI_Hi,
-                                         int3* regionLo,
-                                         int3* regionHi,
-                                         curandState* randNumStates,
-                                         RMCRT_flags RT_flags,
-                                         GPUDataWarehouse* abskg_gdw,
-                                         GPUDataWarehouse* sigmaT4_gdw,
-                                         GPUDataWarehouse* celltype_gdw,
-                                         GPUDataWarehouse* old_gdw,
-                                         GPUDataWarehouse* new_gdw );
 
 } // end namespace Uintah
 
