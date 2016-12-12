@@ -53,6 +53,12 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
+//-- Debug Stream --//
+#include <Core/Util/DebugStream.h>
+
+static Uintah::DebugStream dbgbc("WASATCH_BC", false);
+#define DBC_BC_ON  dbgbc.active()
+#define DBGBC  if( DBC_BC_ON  ) dbgbc
 
 /**
  * \file BCHelper.h

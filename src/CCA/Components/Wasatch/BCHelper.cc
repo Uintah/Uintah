@@ -52,12 +52,6 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 
-//-- Debug Stream --//
-#include <Core/Util/DebugStream.h>
-
-static Uintah::DebugStream dbgbc("WASATCH_BC", false);
-#define DBC_BC_ON  dbgbc.active()
-#define DBGBC  if( DBC_BC_ON  ) dbgbc
 
 /**
  * \file    BCHelper.cc
