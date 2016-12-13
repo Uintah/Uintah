@@ -59,7 +59,8 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  for(int p=0; p<patches->size(); p++)
+  {
     const Patch* patch = patches->get(p);
 
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -68,6 +69,7 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
     StaticArray<constNCVariable<double> > gTemp(numMatls);
     StaticArray<NCVariable<double> > thermalContactTemperatureRate(numMatls);
     vector<double> Cp(numMatls);
+
     // for Fracture (additional field)-----------------------------------------
     StaticArray<constNCVariable<double> > Gmass(numMatls);
     StaticArray<constNCVariable<double> > GTemp(numMatls);
@@ -76,7 +78,8 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
   
-    for(int m = 0; m < numMatls; m++){
+    for(int m = 0; m < numMatls; m++)
+    {
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[dwi], lb->gMassLabel,        dwi, patch, Ghost::None,0);
@@ -85,7 +88,9 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
                             lb->gThermalContactTemperatureRateLabel,dwi,patch);
       thermalContactTemperatureRate[dwi].initialize(0.);
       Cp[m]=mpm_matl->getSpecificHeat();
-      if (flag->d_fracture) {
+
+      if (flag->d_fracture)
+      {
         // for Fracture (for additional field)----------------------------------
         new_dw->get(Gmass[dwi],lb->GMassLabel,       dwi, patch, Ghost::None,0);
         new_dw->get(GTemp[dwi],lb->GTemperatureLabel,dwi, patch, Ghost::None,0);
@@ -96,11 +101,13 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
       // -------------------------------------------------------------------
     }
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-      double numerator=0.0;
-      double denominator=0.0;
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
+    {
+      double numerator    = 0.0;
+      double denominator  = 0.0;
       IntVector c = *iter;
-      for(int m = 0; m < numMatls; m++) {
+      for(int m = 0; m < numMatls; m++)
+      {
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
         int n = mpm_matl->getDWIndex();
         numerator   += (gTemp[n][c] * gmass[n][c]  * Cp[m]);

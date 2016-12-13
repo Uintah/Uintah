@@ -49,9 +49,11 @@ using std::string;
 using namespace std;
 
 
-ApproachContact::ApproachContact(const ProcessorGroup* myworld,
-                                 ProblemSpecP& ps,SimulationStateP& d_sS,
-                                 MPMLabel* Mlb,MPMFlags* MFlag)
+ApproachContact::ApproachContact(const ProcessorGroup   * myworld,
+                                       ProblemSpecP     & ps,
+                                       SimulationStateP & d_sS,
+                                       MPMLabel         * Mlb,
+                                       MPMFlags         * MFlag)
   : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
@@ -62,10 +64,13 @@ ApproachContact::ApproachContact(const ProcessorGroup* myworld,
 
   d_sharedState = d_sS;
 
-  if(flag->d_8or27==8){
+  if(flag->d_8or27==8)
+  {
     NGP=1;
     NGN=1;
-  } else {
+  }
+  else
+  {
     NGP=2;
     NGN=2;
   }
@@ -79,6 +84,7 @@ ApproachContact::~ApproachContact()
 void ApproachContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
+
   contact_ps->appendElement("type","approach");
   contact_ps->appendElement("mu",d_mu);
   contact_ps->appendElement("volume_constraint",d_vol_const);
@@ -87,11 +93,11 @@ void ApproachContact::outputProblemSpec(ProblemSpecP& ps)
 }
 
 
-void ApproachContact::exMomInterpolated(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* matls,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
+void ApproachContact::exMomInterpolated(const ProcessorGroup  *,
+                                        const PatchSubset     * patches,
+                                        const MaterialSubset  * matls,
+                                              DataWarehouse   * old_dw,
+                                              DataWarehouse   * new_dw)
 { 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
@@ -106,7 +112,8 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
   StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
   StaticArray<NCVariable<double> >       frictionWork(numMatls);
 
-  for(int p=0;p<patches->size();p++){
+  for(int p=0; p<patches->size(); p++)
+  {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
@@ -118,9 +125,10 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<double> S(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
+
+    vector<IntVector>   ni(interpolator->size());
+    vector<double>      S(interpolator->size());
+    vector<Vector>      d_S(interpolator->size());
     string interp_type = flag->d_interpolator_type;
 
     delt_vartype delT;
@@ -128,7 +136,8 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
-    for(int m=0;m<numMatls;m++){
+    for(int m=0; m<numMatls; m++)
+    {
       int dwi = matls->get(m);
 
       new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
@@ -157,80 +166,94 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
       // Compute the normals for all of the interior nodes
       int NN = flag->d_8or27;
-      if(flag->d_axisymmetric){
-        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+      if(flag->d_axisymmetric)
+      {
+        for(ParticleSubset::iterator it=pset->begin();  it!=pset->end();  it++)
+        {
+
           particleIndex idx = *it;
 
           NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
                                            psize[idx],deformationGradient[idx]);
           double rho = pmass[idx]/pvolume[idx];
 
-           for(int k = 0; k < NN; k++) {
-             if (patch->containsNode(ni[k])){
-               Vector G(d_S[k].x(),d_S[k].y(),0.0);
-               gsurfnorm[m][ni[k]] += rho * G;
-             }
-           }
+          for(int k = 0; k < NN; k++)
+          {
+            if (patch->containsNode(ni[k]))
+            {
+              Vector G(d_S[k].x(),d_S[k].y(),0.0);
+              gsurfnorm[m][ni[k]] += rho * G;
+            }
+          }
         }
-     } else {
-        for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
+      }
+      else
+      {
+        for(ParticleSubset::iterator it=pset->begin();  it!=pset->end(); it++)
+        {
           particleIndex idx = *it;
 
           NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
                                            psize[idx],deformationGradient[idx]);
 
-           for(int k = 0; k < NN; k++) {
-             if (patch->containsNode(ni[k])){
+          for(int k = 0; k < NN; k++)
+          {
+            if (patch->containsNode(ni[k]))
+            {
                Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                            d_S[k].z()*oodx[2]);
                gsurfnorm[m][ni[k]] += pmass[idx] * grad;
-
-             }
-           }
-        }
-     }
-
-     MPMBoundCond bc;
-     bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
-
-     for(NodeIterator iter=patch->getExtraNodeIterator();
-                       !iter.done();iter++){
-          IntVector c = *iter;
-          double length = gsurfnorm[m][c].length();
-          if(length>1.0e-15){
-            gsurfnorm[m][c] = gsurfnorm[m][c]/length;
+            }
           }
-     }
+        }
+      }
+
+
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
+
+      for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done(); iter++)
+      {
+        IntVector c = *iter;
+        double length = gsurfnorm[m][c].length();
+        if(length>1.0e-15)
+        {
+          gsurfnorm[m][c] = gsurfnorm[m][c]/length;
+        }
+      }
     }
 
 #if 1
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++)
+    {
       IntVector c = *iter;
 
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
       double totalNodalVol=0.0; 
-      for(int n = 0; n < numMatls; n++){
+      for(int n = 0; n < numMatls; n++)
+      {
         if(!d_matls.requested(n)) continue;
-        centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
-        centerOfMassMass+=gmass[n][c]; 
-        totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
+        centerOfMassMom   +=  gvelocity[n][c] * gmass[n][c];
+        centerOfMassMass  +=  gmass[n][c];
+        totalNodalVol     +=  gvolume[n][c]*8.0*NC_CCweight[c];
       }
 
       // Apply Coulomb friction contact
       // For grid points with mass calculate velocity
-      if(!compare(centerOfMassMass,0.0)){
-       Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-
+      if(!compare(centerOfMassMass,0.0))
+      {
+        Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
        // Only apply contact if the node is nearly "full".  There are
        // two options:
 
 //       if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
-       if((totalNodalVol/cell_vol) > d_vol_const){
+       if((totalNodalVol/cell_vol) > d_vol_const)
+       {
          double scale_factor=1.0;
 
        // 2. This option uses only cell volumes.  The idea is that a cell is full
-       // if totalNodalVol/cell_vol .ge. 1.0, and the contraint should only be
+       // if totalNodalVol/cell_vol .ge. 1.0, and the constraint should only be
        // applied when cells are full.  This logic is used when d_vol_const=0.
        // For d_vol_const > 0 the contact forces are ramped up linearly from 0
        // for totalNodalVol/cell_vol .le. 1.0-d_vol_const to 1.0 for
@@ -256,27 +279,28 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
         // is nonzero (not numerical noise) and the difference from
         // the centerOfMassVelocity is nonzero (More than one velocity
         // field is contributing to grid vertex).
-        for(int n = 0; n < numMatls; n++){
+        for(int n = 0; n < numMatls; n++)
+        {
           if(!d_matls.requested(n)) continue;
           double mass=gmass[n][c];
           Vector deltaVelocity=gvelocity[n][c]-centerOfMassVelocity;
-          if(!compare(mass/centerOfMassMass,0.0)
-          && !compare(mass-centerOfMassMass,0.0)){
-
+          if( !compare(mass/centerOfMassMass,0.0) &&
+              !compare(mass-centerOfMassMass,0.0)   )
+          {
             // Apply frictional contact IF the surface is in compression
             // OR the surface is stress free and approaching.
             // Otherwise apply free surface conditions (do nothing).
             Vector normal = gsurfnorm[n][c];
             double normalDeltaVel=Dot(deltaVelocity,normal);
             Vector Dv(0.,0.,0.);
-            if(normalDeltaVel>0.0){
-
+            if(normalDeltaVel > 0.0)
+            {
                 // Simplify algorithm in case where approach velocity
                 // is in direction of surface normal (no slip).
                 Vector normal_normaldV = normal*normalDeltaVel;
                 Vector dV_normalDV = deltaVelocity - normal_normaldV;
-                if(compare(dV_normalDV.length2(),0.0)){
-
+                if(compare(dV_normalDV.length2(), 0.0))
+                {
                   // Calculate velocity change needed to enforce contact
                   Dv=-normal_normaldV;
                 }
@@ -284,7 +308,8 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
                 // General algorithm, including frictional slip.  The
                 // contact velocity change and frictional work are both
                 // zero if normalDeltaVel is zero.
-                else if(!compare(fabs(normalDeltaVel),0.0)){
+                else if(!compare(fabs(normalDeltaVel),0.0) )
+                {
                   Vector surfaceTangent = dV_normalDV/dV_normalDV.length();
                   double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
                   double frictionCoefficient=

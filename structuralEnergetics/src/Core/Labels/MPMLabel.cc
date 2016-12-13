@@ -296,9 +296,9 @@ MPMLabel::MPMLabel()
       ParticleVariable<double>::getTypeDescription() );
   pHeatEnergyLabel_preReloc = VarLabel::create("p.heatEnergy+",
       ParticleVariable<double>::getTypeDescription() );
-  pAdiabaticTempDeltaLabel = VarLabel::create("p.adiabaticDelTemp",
+  pAdiabatic_dTdtLabel = VarLabel::create("p.adiabatic_dTdt",
       ParticleVariable<double>::getTypeDescription() );
-  pAdiabaticTempDeltaLabel_preReloc = VarLabel::create("p.adiabaticDelTemp+",
+  pAdiabatic_dTdtLabel_preReloc = VarLabel::create("p.adiabatic_dTdt+",
       ParticleVariable<double>::getTypeDescription() );
 
   // Node Centered Variables
