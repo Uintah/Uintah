@@ -110,7 +110,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
   StaticArray<NCVariable<double> >       gnormtraction(numMatls);
 
-  for(int p=0;p<patches->size();p++){
+  for(int p=0; p<patches->size(); p++)
+  {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
@@ -123,20 +124,23 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
-    vector<double> S(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
+    vector<double>     S(interpolator->size());
+    vector<Vector>   d_S(interpolator->size());
     string interp_type = flag->d_interpolator_type;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    // First, calculate the gradient of the mass everywhere
-    // normalize it, and stick it in surfNorm
-    for(int m=0;m<numMatls;m++){
+    // First, calculate the gradient of the mass everywhere, normalize it,
+    //   and stick it in surfNorm
+
+    for(int m=0;m<numMatls;m++)
+    {
       int dwi = matls->get(m);
 
       new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
       new_dw->get(gvolume[m],         lb->gVolumeLabel,dwi, patch, gnone, 0);
+
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,       dwi,patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,       dwi,patch);
       new_dw->allocateAndPut(gposition[m], lb->gPositionLabel,       dwi,patch);
@@ -145,10 +149,11 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
 
-      constParticleVariable<Point> px;
-      constParticleVariable<double> pmass, pvolume;
-      constParticleVariable<Matrix3> psize;
-      constParticleVariable<Matrix3> deformationGradient;
+      constParticleVariable<Point>    px;
+      constParticleVariable<double>   pmass;
+      constParticleVariable<double>   pvolume;
+      constParticleVariable<Matrix3>  psize;
+      constParticleVariable<Matrix3>  deformationGradient;
 
       old_dw->get(px,                  lb->pXLabel,                  pset);
       old_dw->get(pmass,               lb->pMassLabel,               pset);
@@ -159,11 +164,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
       gposition[m].initialize(Point(0.0,0.0,0.0));
 
-      if(!d_matls.requested(m)) continue;
+      if( !d_matls.requested(m) ) continue;
 
       // Compute the normals for all of the interior nodes
-      int NN = flag->d_8or27;
-      if(flag->d_axisymmetric){
+      int NN = flag->d_8or27; //??? JBH
+      if(flag->d_axisymmetric)
+      {
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 
@@ -179,7 +185,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
              }
            }
         }
-     } else {
+      }
+      else
+      {
         for(ParticleSubset::iterator it=pset->begin();it!=pset->end();it++){
           particleIndex idx = *it;
 

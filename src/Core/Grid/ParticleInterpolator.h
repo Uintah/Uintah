@@ -60,11 +60,11 @@ namespace Uintah {
                                     
 
                                     
-    virtual int findCellAndShapeDerivatives(const Point& pos,
-                                             std::vector<IntVector>& ni,
-                                             std::vector<Vector>& d_S,
-                                             const Matrix3& size, 
-                                             const Matrix3& defgrad=Matrix3(0)) = 0;
+    virtual int findCellAndShapeDerivatives(const Point                   & pos,
+                                                  std::vector<IntVector>  & ni,
+                                                  std::vector<Vector>     & d_S,
+                                            const Matrix3                 & size,
+                                            const Matrix3                 & defgrad = Matrix3(0)) = 0;
                                              
     virtual int findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                        std::vector<IntVector>& ni,

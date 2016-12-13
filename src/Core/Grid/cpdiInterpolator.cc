@@ -62,11 +62,12 @@ cpdiInterpolator* cpdiInterpolator::clone(const Patch* patch)
   return scinew cpdiInterpolator(patch, d_lcrit);
 }
     
-int cpdiInterpolator::findCellAndWeights(const Point& pos,
-                                            vector<IntVector>& ni, 
-                                            vector<double>& S,
-                                            const Matrix3& size,
-                                            const Matrix3& defgrad)
+int cpdiInterpolator::findCellAndWeights(const Point              & pos,
+                                               vector<IntVector>  & ni,
+                                               vector<double>     & S,
+                                         const Matrix3            & size,
+                                         const Matrix3            & defgrad
+                                        )
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
