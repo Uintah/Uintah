@@ -30,7 +30,7 @@
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>

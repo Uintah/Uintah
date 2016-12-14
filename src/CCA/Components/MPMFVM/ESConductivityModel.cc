@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPMFVM/ESConductivityModel.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>

@@ -35,9 +35,9 @@
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModelFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/SerialMPM.h>                // for SerialMPM
 #include <CCA/Components/Regridder/PerPatchVars.h>       // for PatchFlagP, etc
 #include <CCA/Ports/DataWarehouse.h>                     // for DataWarehouse

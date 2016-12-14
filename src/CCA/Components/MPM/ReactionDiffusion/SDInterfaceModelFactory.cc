@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/SDInterfaceModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/CommonIFConcDiff.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>

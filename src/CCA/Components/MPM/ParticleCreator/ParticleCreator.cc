@@ -40,7 +40,7 @@
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <iostream>

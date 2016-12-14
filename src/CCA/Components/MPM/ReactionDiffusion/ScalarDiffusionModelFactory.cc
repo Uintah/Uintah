@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
-#include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
-#include <CCA/Components/MPM/ReactionDiffusion/NonLinearDiff1.h>
-#include <CCA/Components/MPM/ReactionDiffusion/NonLinearDiff2.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ConstantRate.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/JGConcentrationDiffusion.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/RFConcDiffusion1MPM.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/NonLinearDiff1.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/NonLinearDiff2.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ConstantRate.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
