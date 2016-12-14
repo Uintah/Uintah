@@ -46,7 +46,7 @@
  * calculation of the diffusion coefficient.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -62,7 +62,7 @@ namespace Uintah {
   class MPMMaterial;
   class DataWarehouse;
   class ProcessorGroup;
-  
+
   class NonLinearDiff2 : public ScalarDiffusionModel {
   public:
     
@@ -70,35 +70,53 @@ namespace Uintah {
                         std::string diff_type);
     ~NonLinearDiff2();
 
-    virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
-                                                   const PatchSet* patch) const;
-
-    virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
-                                    DataWarehouse* new_dw);
+    virtual void addInitialComputesAndRequires(      Task         * task,
+                                               const MPMMaterial  * matl,
+                                               const PatchSet     * patches
+                                              ) const ;
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
+                                  std::vector<const VarLabel*>& to
+                                 ) const;
 
-    virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
-		                                      const PatchSet* patch) const;
 
-    virtual void computeFlux(const Patch* patch, const MPMMaterial* matl,
-                             DataWarehouse* old_dw, DataWarehouse* new_dw);
+    virtual void computeFlux(const Patch          * patch,
+                             const MPMMaterial    * matl,
+                                   DataWarehouse  * old_dw,
+                                   DataWarehouse  * new_dw
+                            );
 
-    virtual void addSplitParticlesComputesAndRequires(Task* task,
-                                                      const MPMMaterial* matl,
-                                                      const PatchSet* patches);
+    virtual void initializeSDMData(const Patch          * patch,
+                                   const MPMMaterial    * matl,
+                                         DataWarehouse  * new_dw
+                                  );
 
-    virtual void splitSDMSpecificParticleData(const Patch* patch, const int dwi,
-                                              const int fourOrEight,
-                                              ParticleVariable<int> &prefOld,
-                                              ParticleVariable<int> &prefNew,
-                                              const unsigned int oldNumPar,
-                                              const int numNewPartNeeded,
-                                              DataWarehouse* old_dw,
-                                              DataWarehouse* new_dw);
+    virtual void scheduleComputeFlux(      Task         * task,
+                                     const MPMMaterial  * matl,
+                                     const PatchSet     * patch
+                                    ) const;
 
-    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
+    virtual void addSplitParticlesComputesAndRequires(      Task        * task,
+                                                      const MPMMaterial * matl,
+                                                      const PatchSet    * patches
+                                                     ) const;
+
+    virtual void splitSDMSpecificParticleData(const Patch                 * patch,
+                                              const int dwi,
+                                              const int nDims,
+                                                    ParticleVariable<int> & prefOld,
+                                                    ParticleVariable<int> & pref,
+                                              const unsigned int            oldNumPar,
+                                              const int                     numNewPartNeeded,
+                                                    DataWarehouse         * old_dw,
+                                                    DataWarehouse         * new_dw
+                                             );
+
+
+    virtual void outputProblemSpec(
+                                   ProblemSpecP & ps,
+                                   bool           output_rdm_tag = true
+                                   ) const ;
 
   private:
     double d_tuning1;
