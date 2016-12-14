@@ -33,32 +33,15 @@
 #include <iostream>
 using namespace Uintah;
 
-#define USE_PARTICLE_VALUES
-
 NonLinearDiff2::NonLinearDiff2(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, std::string diff_type):
-  ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
-
-  ProblemSpecP diff_curve = 0;
-  ProblemSpecP time_point = 0;
-
-  double time;
-  std::string flux_direction;
-
-  d_use_pressure = false;
-  d_flux_direction = fd_in;
-
-  ps->require("use_pressure", d_use_pressure);
+  ScalarDiffusionModel(ps, sS, Mflag, diff_type)
+{
   ps->require("tuning1", d_tuning1);
   ps->require("tuning2", d_tuning2);
-
-  if(d_use_pressure){
-    ps->require("tuning3", d_tuning3);
-    ps->require("tuning4", d_tuning4);
-    ps->require("tuning5", d_tuning5);
-  }
 }
 
-NonLinearDiff2::~NonLinearDiff2() {
+NonLinearDiff2::~NonLinearDiff2()
+{
 
 }
 
@@ -83,14 +66,10 @@ void NonLinearDiff2::initializeSDMData(const Patch* patch, const MPMMaterial* ma
   ParticleVariable<Vector>  pFlux;
 
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
-  new_dw->allocateAndPut(pPressure,    d_lb->pPressureLabel_t1, pset);
-  new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel,  pset);
   new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pDiffusivity[*iter] = diffusivity;
-    pPressure[*iter]    = 0.0;
-    pConcInterp[*iter]  = 0.0;
     pFlux[*iter]        = Vector(0,0,0);
   }
 }
@@ -99,13 +78,9 @@ void NonLinearDiff2::addParticleState(std::vector<const VarLabel*>& from,
                                             std::vector<const VarLabel*>& to)
 {
   from.push_back(d_lb->pDiffusivityLabel);
-  from.push_back(d_lb->pPressureLabel_t1);
-  from.push_back(d_lb->pConcInterpLabel);
   from.push_back(d_lb->pFluxLabel);
 
   to.push_back(d_lb->pDiffusivityLabel_preReloc);
-  to.push_back(d_lb->pPressureLabel_t1_preReloc);
-  to.push_back(d_lb->pConcInterpLabel_preReloc);
   to.push_back(d_lb->pFluxLabel_preReloc);
 }
 
@@ -120,18 +95,15 @@ void NonLinearDiff2::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   task->requires(Task::OldDW, d_lb->pConcentrationLabel,      matlset, gnone);
   task->requires(Task::OldDW, d_lb->pStressLabel,             matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pDiffusivityLabel,        matlset, gnone);
 
   task->requires(Task::NewDW, d_lb->pSizeLabel_preReloc,      matlset, gnone);
-  task->requires(Task::NewDW, d_lb->gConcentrationLabel,      matlset, gac, NGN);
-  task->requires(Task::NewDW, d_lb->gHydrostaticStressLabel,  matlset, gac, NGN);
+  task->requires(Task::NewDW, d_lb->pESPotential,             matlset, gnone);
+  task->requires(Task::NewDW, d_lb->pESGradPotential,         matlset, gnone);
 
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 
   task->computes(d_lb->pFluxLabel_preReloc,        matlset);
   task->computes(d_lb->pDiffusivityLabel_preReloc, matlset);
-  task->computes(d_lb->pPressureLabel_t1_preReloc, matlset);
-  task->computes(d_lb->pConcInterpLabel_preReloc,  matlset);
 }
 
 void NonLinearDiff2::computeFlux(const Patch* patch,
@@ -152,20 +124,16 @@ void NonLinearDiff2::computeFlux(const Patch* patch,
   double comp_diffusivity;
 
   constParticleVariable<Vector>  pConcGrad;
+  constParticleVariable<Vector>  pESGradPotential;
   constParticleVariable<double>  pConcentration;
+  constParticleVariable<double>  pESPotential;
   constParticleVariable<Matrix3> pStress;
   constParticleVariable<Point>   px;
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pFOld;
-  constParticleVariable<double>  pDiffusivity_old;
-
-  constNCVariable<double>  gConcentration;
-  constNCVariable<double>  gHydroStress;
 
   ParticleVariable<Vector>       pFlux;
   ParticleVariable<double>       pDiffusivity;
-  ParticleVariable<double>       pPressure1;
-  ParticleVariable<double>       pConcInterp;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -174,20 +142,16 @@ void NonLinearDiff2::computeFlux(const Patch* patch,
   old_dw->get(pConcentration, d_lb->pConcentrationLabel,      pset);
   old_dw->get(pStress,        d_lb->pStressLabel,             pset);
   old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
-  old_dw->get(pDiffusivity_old, d_lb->pDiffusivityLabel,      pset);
 
-  new_dw->get(psize,          d_lb->pSizeLabel_preReloc,      pset);
-
-  new_dw->get(gConcentration, d_lb->gConcentrationLabel,     dwi, patch, gac, NGN);
-  new_dw->get(gHydroStress,   d_lb->gHydrostaticStressLabel, dwi, patch, gac, NGN);
+  new_dw->get(psize,            d_lb->pSizeLabel_preReloc,    pset);
+  new_dw->get(pESPotential,     d_lb->pESPotential,           pset);
+  new_dw->get(pESGradPotential, d_lb->pESGradPotential,       pset);
 
   new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel_preReloc,        pset);
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel_preReloc, pset);
-  new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1_preReloc, pset);
-  new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel_preReloc,  pset);
 
   double non_lin_comp = 0.0;
-  double D = 0.0;
+  double D = diffusivity;
   double timestep = 1.0e99;
   double pressure = 0.0;
   double concentration = 0.0;
@@ -198,43 +162,21 @@ void NonLinearDiff2::computeFlux(const Patch* patch,
 
     int NN=interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
 
-#if defined USE_PARTICLE_VALUES
     double neg_one_third = -1.0/3.0;
     concentration = pConcentration[idx];
     pressure = neg_one_third * pStress[idx].Trace(); 
-#else
-    concentration = 0.0;
-    pressure      = 0.0;
-    for(int k = 0; k < NN; k++) {
-      IntVector node = ni[k];
-      concentration += gConcentration[node] * S[k];
-      pressure      -= gHydroStress[node]   * S[k];
+
+    /*
+    if(pConcentration[idx] < d_tuning1){
+      pFlux[idx] = D * pConcGrad[idx];
+    }else{
+      double B = d_tuning2 * (1 - pConcentration[idx]);
+      pFlux[idx] = D * pConcGrad[idx] - B * pESGradPotential[idx];
     }
-#endif
+    */
+    pFlux[idx] = concentration * D * pESGradPotential[idx];
 
-    comp_diffusivity = computeDiffusivityTerm(concentration, pressure);
-      if(d_flux_direction == fd_in || d_flux_direction == fd_transition){
-        if(d_use_pressure){
-          pressure = pressure * d_tuning5;
-          if(pressure < d_tuning3){
-            pressure = d_tuning3;
-          }
-          if(pressure > d_tuning4){
-            pressure = d_tuning4;
-          }
-          D = comp_diffusivity*exp(d_tuning1 * concentration)*exp(-d_tuning2 * pressure);
-        }else{
-          non_lin_comp = exp(d_tuning1 * concentration);
-          D = comp_diffusivity * non_lin_comp;
-        }
-      }else if(d_flux_direction == fd_out){
-        D = pDiffusivity_old[idx];
-      }
-
-    pFlux[idx] = D * pConcGrad[idx];
     pDiffusivity[idx] = D;
-    pPressure1[idx] = pressure;
-    pConcInterp[idx] = concentration;
     timestep = std::min(timestep, computeStableTimeStep(D, dx));
   } //End of Particle Loop
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
@@ -246,8 +188,6 @@ void NonLinearDiff2::addSplitParticlesComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->modifies(d_lb->pDiffusivityLabel_preReloc, matlset);
-  task->modifies(d_lb->pPressureLabel_t1_preReloc, matlset);
-  task->modifies(d_lb->pConcInterpLabel_preReloc,  matlset);
   task->modifies(d_lb->pFluxLabel_preReloc,        matlset);
 }
 
@@ -262,27 +202,21 @@ void NonLinearDiff2::splitSDMSpecificParticleData(const Patch* patch, const int 
 {
 	ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-	ParticleVariable<double>  pDiffusivity, pPressure, pConcInterp;
+	ParticleVariable<double>  pDiffusivity;
 	ParticleVariable<Vector>  pFlux;
 
   new_dw->getModifiable(pDiffusivity, d_lb->pDiffusivityLabel_preReloc,  pset);
-  new_dw->getModifiable(pPressure,    d_lb->pPressureLabel_t1_preReloc,  pset);
-  new_dw->getModifiable(pConcInterp,  d_lb->pConcInterpLabel_preReloc,   pset);
   new_dw->getModifiable(pFlux,        d_lb->pFluxLabel_preReloc,         pset);
 
   ParticleVariable<double>  pDiffusivityTmp, pPressureTmp, pConcInterpTmp;
   ParticleVariable<Vector>  pFluxTmp;
 
   new_dw->allocateTemporary(pDiffusivityTmp, pset);
-  new_dw->allocateTemporary(pPressureTmp,    pset);
-  new_dw->allocateTemporary(pConcInterpTmp,  pset);
   new_dw->allocateTemporary(pFluxTmp,        pset);
 
 	// copy data from old variables for particle IDs and the position vector
 	for(unsigned int pp=0; pp<oldNumPar; ++pp ){
     pDiffusivityTmp[pp] = pDiffusivity[pp];
-		pPressureTmp[pp]    = pPressure[pp];
-		pConcInterpTmp[pp]  = pConcInterp[pp];
 		pFluxTmp[pp]        = pFlux[pp];
   }
 
@@ -297,8 +231,6 @@ void NonLinearDiff2::splitSDMSpecificParticleData(const Patch* patch, const int 
 	          new_index=oldNumPar+(fourOrEight-1)*numRefPar+i;
 	        }
 	        pDiffusivityTmp[new_index] = pDiffusivity[idx];
-	        pPressureTmp[new_index]    = pPressure[idx];
-	        pConcInterpTmp[new_index]  = pConcInterp[idx];
 	        pFluxTmp[new_index]        = pFlux[idx];
 	      }
 	      numRefPar++;
@@ -306,8 +238,6 @@ void NonLinearDiff2::splitSDMSpecificParticleData(const Patch* patch, const int 
 	  }
 
 	  new_dw->put(pDiffusivityTmp, d_lb->pDiffusivityLabel_preReloc, true);
-	  new_dw->put(pPressureTmp,    d_lb->pPressureLabel_t1_preReloc, true);
-	  new_dw->put(pConcInterpTmp,  d_lb->pConcInterpLabel_preReloc,  true);
 	  new_dw->put(pFluxTmp,        d_lb->pFluxLabel_preReloc,        true);
 }
 
@@ -315,22 +245,17 @@ void NonLinearDiff2::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
 {
 
   ProblemSpecP rdm_ps = ps;
-  ProblemSpecP diff_curve_ps = 0;
-  ProblemSpecP time_point_ps = 0;
   if (output_rdm_tag) {
     rdm_ps = ps->appendChild("diffusion_model");
-    rdm_ps->setAttribute("type","non_linear1");
+    rdm_ps->setAttribute("type","non_linear2");
   }
 
-  rdm_ps->appendElement("diffusivity",diffusivity);
+  rdm_ps->appendElement("diffusivity", diffusivity);
   rdm_ps->appendElement("max_concentration",max_concentration);
-  rdm_ps->appendElement("use_pressure", d_use_pressure);
   rdm_ps->appendElement("tuning1", d_tuning1);
   rdm_ps->appendElement("tuning2", d_tuning2);
 
-  if(d_use_pressure){
-    rdm_ps->appendElement("tuning3", d_tuning3);
-    rdm_ps->appendElement("tuning4", d_tuning4);
-    rdm_ps->appendElement("tuning5", d_tuning5);
+  if(d_conductivity_equation){
+    d_conductivity_equation->outputProblemSpec(rdm_ps);
   }
 }

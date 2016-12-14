@@ -130,6 +130,7 @@ void ESMPM::problemSetup(const ProblemSpecP& prob_spec, const ProblemSpecP& rest
 
   d_conductivity_model = ESConductivityModelFactory::create(prob_spec, d_shared_state,
                                                       d_mpm_flags, d_mpm_lb, d_fvm_lb);
+
 }
 
 void ESMPM::outputProblemSpec(ProblemSpecP& prob_spec)
@@ -226,6 +227,7 @@ void ESMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     d_amrmpm->scheduleNormalizeNodalVelTempConc(sched, patches, mpm_matls);
     d_amrmpm->scheduleExMomInterpolated(        sched, patches, mpm_matls);
     d_conductivity_model->scheduleComputeConductivity(sched, patches, all_matls, d_es_matl);
+    d_amrmpm->scheduleConcInterpolated(sched, patches, mpm_matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -347,7 +349,8 @@ void ESMPM::scheduleInterpESPotentialToPart(SchedulerP& sched,
 
   task->requires(Task::NewDW, d_fvm_lb->ccESPotential, es_matls,  d_gac, 1);
   task->requires(Task::OldDW, d_mpm_lb->pXLabel,       mpm_matls, d_gac, 0);
-  task->computes(d_mpm_lb->pESPotential, mpm_matls);
+  task->computes(d_mpm_lb->pESPotential,     mpm_matls);
+  task->computes(d_mpm_lb->pESGradPotential, mpm_matls);
 
   sched->addTask(task, patches, all_matls);
 
@@ -360,6 +363,7 @@ void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* pa
 {
   std::vector<IntVector> ni(8);
   std::vector<double> S(8);
+  std::vector<Vector> dS(8);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -376,6 +380,7 @@ void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* pa
     anchor.z(anchor.z() + cell_dim.z()/2);
 
     double cell_vol = cell_dim.x() * cell_dim.y() * cell_dim.z();
+    double dxinv[3] = {1/cell_dim.x(), 1/cell_dim.y(), 1/cell_dim.z()};
 
     IntVector low_idx  = patch->getCellLowIndex();
     IntVector high_idx = patch->getExtraCellHighIndex();
@@ -390,13 +395,15 @@ void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* pa
 
       constParticleVariable<Point> p_position;
       ParticleVariable<double> p_espotential;
+      ParticleVariable<Vector> p_esgradpotential;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, d_gac,
                                                              0, d_mpm_lb->pXLabel);
 
       old_dw->get(p_position, d_mpm_lb->pXLabel, pset);
 
-      new_dw->allocateAndPut(p_espotential, d_mpm_lb->pESPotential, pset);
+      new_dw->allocateAndPut(p_espotential,     d_mpm_lb->pESPotential,     pset);
+      new_dw->allocateAndPut(p_esgradpotential, d_mpm_lb->pESGradPotential, pset);
 
       ParticleSubset::iterator iter;
 
@@ -436,13 +443,28 @@ void ESMPM::interpESPotentialToPart(const ProcessorGroup*, const PatchSubset* pa
         S[6] = fx * fy * fz1;
         S[7] = fx * fy * fz;
 
+        dS[0] = Vector(- fy1 * fz1, -fx1 * fz1, -fx1 * fy1);
+        dS[1] = Vector(- fy1 * fz,  -fx1 * fz,   fx1 * fy1);
+        dS[2] = Vector(- fy  * fz1,  fx1 * fz1, -fx1 * fy);
+        dS[3] = Vector(- fy  * fz,   fx1 * fz,   fx1 * fy);
+        dS[4] = Vector(  fy1 * fz1, -fx  * fz1, -fx  * fy1);
+        dS[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
+        dS[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
+        dS[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
+
         double espotential = 0;
+        Vector esgradpotential(0.0, 0.0, 0.0);
 
         for(int i = 0; i < 8; i++){
-          espotential += cc_espotential[ni[i]] * S[i];
+          IntVector node = ni[i];
+          espotential += cc_espotential[node] * S[i];
+          for(int j = 0; j < 3; j++){
+            esgradpotential[j] += cc_espotential[node] * dS[i][j] * dxinv[j];
+          }
         }
 
         p_espotential[idx] = espotential;
+        p_esgradpotential[idx] = esgradpotential;
 
       }
 

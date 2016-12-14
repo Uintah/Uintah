@@ -62,13 +62,6 @@ namespace Uintah {
   class MPMMaterial;
   class DataWarehouse;
   class ProcessorGroup;
-
-
-  enum FluxDirection{
-    fd_in,
-    fd_out,
-    fd_transition
-  };
   
   class NonLinearDiff2 : public ScalarDiffusionModel {
   public:
@@ -108,8 +101,6 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
 
   private:
-    bool d_use_pressure;
-    FluxDirection d_flux_direction;
     double d_tuning1;
     double d_tuning2;
     double d_tuning3;
