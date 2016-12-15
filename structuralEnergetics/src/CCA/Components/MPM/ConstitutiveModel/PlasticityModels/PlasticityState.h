@@ -62,6 +62,9 @@ namespace Uintah {
     double specificHeat;
     double porosity;
     double energy;
+    double storedElasticWork;
+    double storedHeat;
+
     Matrix3 backStress;
 
     PlasticityState();

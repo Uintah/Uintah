@@ -870,24 +870,26 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
  *               heat rate in the particles (pdTdtLabel)
  *               is computed here */
 /////////////////////////////////////////////////////////////////////////
-void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls)
+void SerialMPM::scheduleComputeStressTensor(
+                                                  SchedulerP  & sched,
+                                            const PatchSet    * patches,
+                                            const MaterialSet * matls
+                                           )
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
+                           getLevel(patches)->getGrid()->numLevels())) return;
 
   printSchedule(patches,cout_doing,"MPM::scheduleComputeStressTensor");
 
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("MPM::computeStressTensor",
                         this, &SerialMPM::computeStressTensor);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+  for(int m = 0; m < numMatls; m++)
+  {
+          MPMMaterial       * mpm_matl  = d_sharedState->getMPMMaterial(m);
+          ConstitutiveModel * cm        = mpm_matl->getConstitutiveModel();
+    const MaterialSubset    * matlset   = mpm_matl->thisMaterial();
     cm->addComputesAndRequires(t, mpm_matl, patches);
-    const MaterialSubset* matlset = mpm_matl->thisMaterial();
     t->computes(lb->p_qLabel_preReloc, matlset);
   }
 
@@ -1222,11 +1224,15 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requires(Task::OldDW, lb->pHeatEnergyLabel,                gnone);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
+
+  // Some energy may have been added previously due to CM.
+  t->modifies(lb->pHeatEnergyLabel_preReloc);
 
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pVelocityLabel_preReloc);
@@ -2431,39 +2437,32 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
   }
 }
 
-void SerialMPM::computeStressTensor(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* ,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw)
+void SerialMPM::computeStressTensor(const ProcessorGroup  * ,
+                                    const PatchSubset     * patches,
+                                    const MaterialSubset  * ,
+                                          DataWarehouse   * old_dw,
+                                          DataWarehouse   * new_dw)
 {
 
   printTask(patches, patches->get(0),cout_doing,
             "Doing computeStressTensor");
 
-  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-
-    if (cout_dbg.active()) {
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++)
+  {
+    if (cout_dbg.active())
+    {
       cout_dbg << " Patch = " << (patches->get(0))->getID();
       cout_dbg << " Mat = " << m;
     }
-
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-
-    if (cout_dbg.active())
-      cout_dbg << " MPM_Mat = " << mpm_matl;
+    if (cout_dbg.active()) cout_dbg << " MPM_Mat = " << mpm_matl;
 
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-
-    if (cout_dbg.active())
-      cout_dbg << " CM = " << cm;
+    if (cout_dbg.active()) cout_dbg << " CM = " << cm;
 
     cm->setWorld(UintahParallelComponent::d_myworld);
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
-
-    if (cout_dbg.active())
-      cout_dbg << " Exit\n" ;
-
+    if (cout_dbg.active())  cout_dbg << " Exit\n" ;
   }
 }
 
@@ -3345,24 +3344,24 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   }  // patch loop
 }
 
-void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
-                                                const PatchSubset* patches,
-                                                const MaterialSubset* ,
-                                                DataWarehouse* old_dw,
-                                                DataWarehouse* new_dw)
+void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup  * ,
+                                                const PatchSubset     * patches,
+                                                const MaterialSubset  * ,
+                                                      DataWarehouse   * old_dw,
+                                                      DataWarehouse   * new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++)
+  {
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing interpolateToParticlesAndUpdate");
+    printTask(patches,patch,cout_doing,"Doing interpolateToParticlesAndUpdate");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
-    vector<double> S(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    vector<double>    S(interpolator->size());
+    vector<Vector>    d_S(interpolator->size());
 
+    Vector      dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
     // velocity and position respectively
@@ -3393,9 +3392,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
     NC_CCweight_new.copyData(NC_CCweight);
 
-    for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
+    for(int m = 0; m < numMPMMatls; m++)
+    {
+      MPMMaterial*  mpm_matl      = d_sharedState->getMPMMaterial( m );
+      int           dwi           = mpm_matl->getDWIndex();
+
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
@@ -3412,6 +3413,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Matrix3> pFOld;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
       constParticleVariable<int> pLocalized;
+      ParticleVariable<double> pHeatEnergyNew;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew;
@@ -3431,6 +3433,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+
+      new_dw->getModifiable(pHeatEnergyNew,lb->pHeatEnergyLabel_preReloc, pset);
 
       new_dw->allocateAndPut(pvelocitynew,lb->pVelocityLabel_preReloc,    pset);
       new_dw->allocateAndPut(pxnew,       lb->pXLabel_preReloc,           pset);
@@ -3495,8 +3499,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       double Cp=mpm_matl->getSpecificHeat();
 
       // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
+      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++)
+      {
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
@@ -3508,6 +3512,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double fricTempRate = 0.0;
         double tempRate = 0.0;
         double burnFraction = 0.0;
+        double nodalFlux = 0.0;
+        double particleHeatFlux = 0.0;
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < NN; k++) {
@@ -3515,11 +3521,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
 
-          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
-          tempRate += (gTemperatureRate[node] + dTdt[node] +
-                       fricTempRate)   * S[k];
+//          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+          nodalFlux = ( gTemperatureRate[node] +
+                        frictionTempRate[node]*flags->d_addFrictionWork ) * S[k];
+          tempRate += (nodalFlux) + dTdt[node]*S[k];
+          particleHeatFlux += nodalFlux;
+//          tempRate += (gTemperatureRate[node] + dTdt[node] +
+//                       fricTempRate)   * S[k];
           burnFraction += massBurnFrac[node]     * S[k];
         }
+
+        // Add external specific heat flux into particle.
+        pHeatEnergyNew[idx] +=  particleHeatFlux * Cp * delT * pmass[idx];
 
         // Update the particle's position and velocity
 //        pxnew[idx]           = px[idx]    + vel*delT;
