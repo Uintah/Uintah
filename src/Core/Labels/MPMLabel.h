@@ -136,6 +136,8 @@ namespace Uintah {
       const VarLabel* pHeatEnergyLabel_preReloc;
       const VarLabel* pAdiabatic_dTdtLabel;
       const VarLabel* pAdiabatic_dTdtLabel_preReloc;
+      const VarLabel* pWorkEnergyLabel;
+      const VarLabel* pWorkEnergyLabel_preReloc;
 
 
       const VarLabel* gLambdaDotLabel;

@@ -170,7 +170,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
   for (int p=0;  p<patches->size();  p++)
   {
     const Patch* patch = patches->get(p);
-
     if (cout_doing.active())
     {
       cout_doing << "Doing computeInternalHeatRate on patch "
@@ -204,10 +203,12 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
       constParticleVariable<Point>    px;
       constParticleVariable<double>   pvol;
-      constParticleVariable<Matrix3>  psize, deformationGradient;
+      constParticleVariable<Matrix3>  psize;
+      constParticleVariable<Matrix3>  deformationGradient;
       constParticleVariable<Vector>   pTempGrad;
       
-      constNCVariable<double>         gTemperature, gMass;
+      constNCVariable<double>         gTemperature;
+      constNCVariable<double>         gMass;
       NCVariable<double>              gdTdt;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -226,8 +227,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
       // Compute rate of temperature change at the grid due to conduction
       // and plastic work
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++)
+      for(ParticleSubset::iterator iter=pset->begin(); iter!=pset->end();iter++)
       {
         particleIndex idx = *iter;
   

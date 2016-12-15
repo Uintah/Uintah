@@ -288,6 +288,7 @@ MPMLabel::MPMLabel()
   pConcGradientLabel_preReloc =VarLabel::create("p.concentrationGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
+  // Thermodynamic related variables
   pDissipatedEnergyLabel = VarLabel::create("p.dissipatedEnergy",
       ParticleVariable<double>::getTypeDescription() );
   pDissipatedEnergyLabel_preReloc = VarLabel::create("p.dissipatedEnergy+",
@@ -299,6 +300,10 @@ MPMLabel::MPMLabel()
   pAdiabatic_dTdtLabel = VarLabel::create("p.adiabatic_dTdt",
       ParticleVariable<double>::getTypeDescription() );
   pAdiabatic_dTdtLabel_preReloc = VarLabel::create("p.adiabatic_dTdt+",
+      ParticleVariable<double>::getTypeDescription() );
+  pWorkEnergyLabel = VarLabel::create("p.workEnergy",
+      ParticleVariable<double>::getTypeDescription() );
+  pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",
       ParticleVariable<double>::getTypeDescription() );
 
   // Node Centered Variables
