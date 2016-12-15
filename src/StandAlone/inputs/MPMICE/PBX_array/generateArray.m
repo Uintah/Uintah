@@ -12,13 +12,13 @@ format short e;
 
 %__________________________________
 %  user defined variables 
-nRows    = 8
-nCols    = 8
-radius   = 0.0254
+nRows    = 2
+nCols    = 2
+radius   = 0.01
 zLo      = 0.0
 zHi      = 0.01
-loosePacking = false;
-tightPacking = true;
+loosePacking = true;
+tightPacking = false;
 
 %__________________________________
 x = zeros(nRows, nCols);
