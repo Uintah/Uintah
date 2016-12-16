@@ -33,6 +33,11 @@ if($statusFind != 0 ) then
 endif
 
 # change </xmlTag>  to <\/xmlTag> so sed can use it
+echo "$findPattern"> .tmp
+set findPattern = `sed s/'\/'/"\\\/"/g .tmp`
+/bin/rm .tmp
+
+# change </xmlTag>  to <\/xmlTag> so sed can use it
 echo "$replacePattern"> .tmp
 set replacePattern = `sed s/'\/'/"\\\/"/g .tmp`
 /bin/rm .tmp
@@ -53,6 +58,6 @@ endif
 #Now perform the sed command on the file
 sed -i s/"$findPattern"/"$replacePattern"/g $f
 
-/bin/rm $f.tmp 
+#/bin/rm $f.tmp 
 
 exit(0)
