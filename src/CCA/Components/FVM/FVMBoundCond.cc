@@ -110,48 +110,84 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
           case Patch::xplus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
               IntVector c(*bound_ptr - xoffset);
-              A[c].e = 0;
-              rhs[c] -= bc_value * fcx_conductivity[c + xoffset] * e;
+              if(bc_kind == "Dirichlet"){
+                A[c].e = 0;
+                rhs[c] -= bc_value * fcx_conductivity[c + xoffset] * e;
+              }else if(bc_kind == "Neumann"){
+                A[c].e = 0;
+                A[c].p += fcx_conductivity[c + xoffset] * e;
+                rhs[c] -= bc_value;
+              }
             }
             nCells += bound_ptr.size();
             break;
           case Patch::xminus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
               IntVector c(*bound_ptr + xoffset);
-              A[c].w = 0;
-              rhs[c] -= bc_value * fcx_conductivity[c] * w;
+              if(bc_kind == "Dirichlet"){
+                A[c].w = 0;
+                rhs[c] -= bc_value * fcx_conductivity[c] * w;
+              }else if(bc_kind == "Neumann"){
+                A[c].w = 0;
+                A[c].p += fcx_conductivity[c] * w;
+                rhs[c] -= bc_value;
+              }
             }
             nCells += bound_ptr.size();
             break;
           case Patch::yplus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
               IntVector c(*bound_ptr - yoffset);
-              A[c].n = 0;
-              rhs[c] -= bc_value * fcy_conductivity[c + yoffset] * n;
+              if(bc_kind == "Dirichlet"){
+                A[c].n = 0;
+                rhs[c] -= bc_value * fcy_conductivity[c + yoffset] * n;
+              }else if(bc_kind == "Neumann"){
+                A[c].n = 0;
+                A[c].p += fcy_conductivity[c + yoffset] * n;
+                rhs[c] -= bc_value;
+              }
             }
             nCells += bound_ptr.size();
             break;
           case Patch::yminus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
               IntVector c(*bound_ptr + yoffset);
-              A[c].s = 0;
-              rhs[c] -= bc_value * fcx_conductivity[c] * s;
+              if(bc_kind == "Dirichlet"){
+                A[c].s = 0;
+                rhs[c] -= bc_value * fcy_conductivity[c] * s;
+              }else if(bc_kind == "Neumann"){
+                A[c].s = 0;
+                A[c].p += fcy_conductivity[c] * s;
+                rhs[c] -= bc_value;
+              }
             }
             nCells += bound_ptr.size();
             break;
           case Patch::zplus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
               IntVector c(*bound_ptr - zoffset);
-              A[c].t = 0;
-              rhs[c] -= bc_value * fcz_conductivity[c + zoffset] * t;
+              if(bc_kind == "Dirichlet"){
+                A[c].t = 0;
+                rhs[c] -= bc_value * fcz_conductivity[c + zoffset] * t;
+              }else if(bc_kind == "Neumann"){
+                A[c].t = 0;
+                A[c].p += fcz_conductivity[c + zoffset] * t;
+                rhs[c] -= bc_value;
+              }
             }
             nCells += bound_ptr.size();
             break;
           case Patch::zminus:
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
               IntVector c(*bound_ptr + zoffset);
-              A[c].b = 0;
-              rhs[c] -= bc_value * fcz_conductivity[c] * b;
+              if(bc_kind == "Dirichlet"){
+                A[c].b = 0;
+                rhs[c] -= bc_value * fcz_conductivity[c] * b;
+              }else if(bc_kind == "Neumann"){
+                A[c].b = 0;
+                A[c].p = fcz_conductivity[c] * b;
+                rhs[c] -= bc_value;
+              }
             }
             nCells += bound_ptr.size();
             break;
@@ -185,7 +221,12 @@ void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi, CCVariable<doub
             es_potential[*bound_ptr] = bc_value;
           }
           nCells += bound_ptr.size();
-        } // end bc_kind if statement
+        }else if(bc_kind == "Neumann"){
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            es_potential[*bound_ptr] = bc_value;
+          }
+          nCells += bound_ptr.size();
+        }// end bc_kind if statement
       } // end foundIterator if statement
     } // end child loop
   } // end face loop
