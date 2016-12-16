@@ -92,8 +92,8 @@ MieGruneisenEOSEnergy::computePressure(const MPMMaterial* matl,
   double eta = 1. - rho_0/rho;
 
   // Retrieve specific internal energy e
-  double e = state->storedElasticWork + state->storedHeat;
-
+  double e = state->energy;
+ 
   // Calculate the pressure, See:
   // Steinberg, D.,
   // Equation of State and Strength Properties of Selected materials,

@@ -483,7 +483,8 @@ ElasticPlasticHP::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pEnergyLabel);
   from.push_back(lb->pDissipatedEnergyLabel);
   from.push_back(lb->pHeatEnergyLabel);
-  from.push_back(lb->pWorkEnergyLabel);
+//  from.push_back(lb->pWorkEnergyLabel);
+  from.push_back(lb->pAdiabatic_dTdtLabel);
 
   to.push_back(pRotationLabel_preReloc);
   to.push_back(pStrainRateLabel_preReloc);
@@ -495,7 +496,8 @@ ElasticPlasticHP::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pEnergyLabel_preReloc);
   to.push_back(lb->pDissipatedEnergyLabel_preReloc);
   to.push_back(lb->pHeatEnergyLabel_preReloc);
-  to.push_back(lb->pWorkEnergyLabel_preReloc);
+//  to.push_back(lb->pWorkEnergyLabel_preReloc);
+  to.push_back(lb->pAdiabatic_dTdtLabel_preReloc);
 
   // Add the particle state for the flow & deviatoric stress model
   d_flow     ->addParticleState(from, to);
@@ -520,7 +522,8 @@ ElasticPlasticHP::addInitialComputesAndRequires(Task* task,
   task->computes(pEnergyLabel,                matlset);
   task->computes(lb->pDissipatedEnergyLabel,  matlset);
   task->computes(lb->pHeatEnergyLabel,        matlset);
-  task->computes(lb->pWorkEnergyLabel,        matlset);
+//  task->computes(lb->pWorkEnergyLabel,        matlset);
+  task->computes(lb->pAdiabatic_dTdtLabel,    matlset);
  
   // Add internal evolution variables computed by flow & deviatoric stress model
   d_flow     ->addInitialComputesAndRequires(task, matl, patch);
@@ -566,7 +569,8 @@ ElasticPlasticHP::initializeCMData(const Patch          * patch,
   new_dw->allocateAndPut(pEnergy,            pEnergyLabel,                pset);
   new_dw->allocateAndPut(pDissipatedEnergy,  lb->pDissipatedEnergyLabel,  pset);
   new_dw->allocateAndPut(pHeatEnergy,        lb->pHeatEnergyLabel,        pset);
-  new_dw->allocateAndPut(pWorkEnergy,        lb->pWorkEnergyLabel,        pset);
+//  new_dw->allocateAndPut(pWorkEnergy,        lb->pWorkEnergyLabel,        pset);
+  new_dw->allocateAndPut(pAdiabatic_dTdt,    lb->pAdiabatic_dTdtLabel,    pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++)
   {
@@ -581,7 +585,7 @@ ElasticPlasticHP::initializeCMData(const Patch          * patch,
     pDissipatedEnergy[*iter] = 0.;
     pHeatEnergy[*iter] = 0.;
     pAdiabatic_dTdt[*iter] = 0.;
-    pWorkEnergy[*iter] = 0.;
+ //   pWorkEnergy[*iter] = 0.;
   }
 
   // Do some extra things if the porosity or the damage distribution
@@ -699,7 +703,7 @@ ElasticPlasticHP::addComputesAndRequires(      Task         * task,
   task->requires(Task::OldDW, pEnergyLabel,               matlset, gnone);
   task->requires(Task::OldDW, lb->pDissipatedEnergyLabel, matlset, gnone);
   task->requires(Task::OldDW, lb->pHeatEnergyLabel,       matlset, gnone);
-  task->requires(Task::OldDW, lb->pWorkEnergyLabel,       matlset, gnone);
+//  task->requires(Task::OldDW, lb->pWorkEnergyLabel,       matlset, gnone);
 
   task->computes(pRotationLabel_preReloc,             matlset);
   task->computes(pStrainRateLabel_preReloc,           matlset);
@@ -711,7 +715,9 @@ ElasticPlasticHP::addComputesAndRequires(      Task         * task,
   task->computes(pEnergyLabel_preReloc,               matlset);
   task->computes(lb->pDissipatedEnergyLabel_preReloc, matlset);
   task->computes(lb->pHeatEnergyLabel_preReloc,       matlset);
-  task->computes(lb->pWorkEnergyLabel_preReloc,       matlset);
+//  task->computes(lb->pWorkEnergyLabel_preReloc,       matlset);
+  task->computes(lb->pAdiabatic_dTdtLabel_preReloc,   matlset);
+
 
   // Add internal evolution variables computed by flow model
   d_flow->addComputesAndRequires(task, matl, patches);
@@ -811,7 +817,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
     old_dw->get(pRotation,          pRotationLabel,             pset);
     old_dw->get(pDissipatedEnergy,  lb->pDissipatedEnergyLabel, pset);
     old_dw->get(pHeatEnergy,        lb->pHeatEnergyLabel,       pset);
-    old_dw->get(pWorkEnergy,        lb->pWorkEnergyLabel,             pset);
+//    old_dw->get(pWorkEnergy,        lb->pWorkEnergyLabel,             pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
     constParticleVariable<long64> pParticleID; 
@@ -864,8 +870,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
                            lb->pHeatEnergyLabel_preReloc,         pset);
     new_dw->allocateAndPut(pDissipatedEnergy_new,
                            lb->pDissipatedEnergyLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pAdiabatic_dTdt_new,
+                           lb->pAdiabatic_dTdtLabel_preReloc, pset);
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pWorkEnergy_new, lb->pWorkEnergyLabel_preReloc,    pset);
+ //   new_dw->allocateAndPut(pWorkEnergy_new, lb->pWorkEnergyLabel_preReloc,    pset);
 
     
     d_flow     ->getInternalVars(pset, old_dw);
@@ -883,7 +891,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
       // Energy trackers for useful and irreversible heat flow.
       pDissipatedEnergy_new[idx] = pDissipatedEnergy[idx];
       pHeatEnergy_new[idx] = pHeatEnergy[idx];
-      pWorkEnergy_new[idx] = pWorkEnergy[idx];
+//      pWorkEnergy_new[idx] = pWorkEnergy[idx];
 
 
       // Assign zero int. heating by default, modify with appropriate sources
@@ -975,8 +983,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
       state->initialMeltTemp     = Tm;
       state->specificHeat        = matl->getSpecificHeat();
       state->energy              = pEnergy[idx];
-      state->storedElasticWork   = pWorkEnergy[idx];
-      state->storedHeat          = pHeatEnergy[idx];
+ //     state->storedElasticWork   = pWorkEnergy[idx];
+ //     state->storedHeat          = pHeatEnergy[idx];
       
       // Get or compute the specific heat
       if (d_computeSpecificHeat) {
@@ -1391,7 +1399,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset   * patches,
                                         - p_q[idx]*Vdot*delT*include_AV_heating;
 
         // Store specific work energy
-        pWorkEnergy_new[idx]  += pSpecificStrainEnergy;
+//        pWorkEnergy_new[idx]  += pSpecificStrainEnergy;
         totalStrainEnergy += pSpecificStrainEnergy*pMass[idx];
       }else{
         pEnergy_new[idx] = pEnergy[idx];
