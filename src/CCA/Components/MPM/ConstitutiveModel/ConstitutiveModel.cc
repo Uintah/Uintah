@@ -315,8 +315,7 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
     particleIndex idx = *iter;
                                                                             
     // Get the node indices that surround the cell
-    int NN = 
-      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
                                                                             
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
 
@@ -359,8 +358,7 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
       particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
-      int NN = 
-       interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
 
       computeGrad(velGrad, ni, d_S, oodx, gVel);
 
@@ -416,8 +414,7 @@ ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
     particleIndex idx = *iter;
                                                                                 
     // Get the node indices that surround the cell
-    int NN = 
-       interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
                                                                                 
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
                                                                                 
@@ -451,8 +448,7 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
       particleIndex idx = *iter;
                                                                                 
       // Get the node indices that surround the cell
-      int NN = 
-       interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
                                                                                 
       computeGrad(IncDispGrad, ni, d_S, oodx, gDisp);
                                                                                 

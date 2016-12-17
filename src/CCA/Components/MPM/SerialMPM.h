@@ -482,20 +482,6 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
-#if 0
-  virtual void scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP&, 
-                                                           const PatchSet*,
-                                                           const MaterialSet*);
-
-  virtual void scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP&, 
-                                                           const PatchSet*,
-                                                           const MaterialSet*);
-#endif
-
-  virtual void scheduleInterpolateParticleVelToGridMom(SchedulerP&, 
-                                                       const PatchSet*,
-                                                       const MaterialSet*);
-
   virtual void scheduleInsertParticles(SchedulerP&, 
                                        const PatchSet*,
                                        const MaterialSet*);
@@ -507,30 +493,6 @@ protected:
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
-                                                   const PatchSubset* patches,
-                                                   const MaterialSubset* matls,
-                                                   DataWarehouse* old_dw,
-                                                   DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
-                                                   const PatchSubset* patches,
-                                                   const MaterialSubset* matls,
-                                                   DataWarehouse* old_dw,
-                                                   DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void interpolateParticleVelToGridMom(const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset* matls,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw);
 
   bool needRecompile(double time, double dt,
                      const GridP& grid);

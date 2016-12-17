@@ -1762,7 +1762,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       pEnergy_new[idx] = pEnergy[idx];
 
       // Calculate the displacement gradient
-      int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
                                                    psize[idx],pDeformGrad[idx]);
       computeGrad(DispGrad, ni, d_S, oodx, gDisp);
 
@@ -2169,7 +2169,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Calculate the displacement gradient
-      int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
                                                    psize[idx],pDeformGrad[idx]);
       computeGradAndBmats(DispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 
