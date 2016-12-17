@@ -122,7 +122,10 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pVelocityLabel = VarLabel::create( "p.velocity", 
-			ParticleVariable<Vector>::getTypeDescription() );
+                        ParticleVariable<Vector>::getTypeDescription() );
+  
+  pVelocitySSPlusLabel = VarLabel::create( "p.velocitySSPlus", 
+                        ParticleVariable<Vector>::getTypeDescription() );
   
   pExternalForceLabel = VarLabel::create( "p.externalforce",
 			ParticleVariable<Vector>::getTypeDescription() );
@@ -310,6 +313,9 @@ MPMLabel::MPMLabel()
 			NCVariable<Vector>::getTypeDescription() );
   
   gVelocityBCLabel = VarLabel::create( "g.velocityBC",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gVelSPSSPLabel = VarLabel::create( "g.velocitySPLusSSPlus",
 			NCVariable<Vector>::getTypeDescription() );
   
   gPositionLabel = VarLabel::create( "g.position",
@@ -798,6 +804,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pMassLabel_preReloc);
   VarLabel::destroy(pVelocityLabel);
   VarLabel::destroy(pVelocityLabel_preReloc);
+  VarLabel::destroy(pVelocitySSPlusLabel);
   VarLabel::destroy(pExternalForceLabel);
   VarLabel::destroy(pExternalForceCorner1Label);
   VarLabel::destroy(pExternalForceCorner2Label);
@@ -869,6 +876,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gMassAllLabel);
   VarLabel::destroy(gVelocityLabel);
   VarLabel::destroy(gVelocityBCLabel);
+  VarLabel::destroy(gVelSPSSPLabel);
   VarLabel::destroy(gPositionLabel);
   VarLabel::destroy(gExternalForceLabel);
   VarLabel::destroy(gInternalForceLabel);

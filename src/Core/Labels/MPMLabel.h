@@ -72,6 +72,7 @@ namespace Uintah {
       const VarLabel* pMassLabel_preReloc;
       const VarLabel* pVelocityLabel;
       const VarLabel* pVelocityLabel_preReloc;
+      const VarLabel* pVelocitySSPlusLabel;
       const VarLabel* pExternalForceLabel;
       const VarLabel* pExternalForceCorner1Label;
       const VarLabel* pExternalForceCorner2Label;
@@ -137,6 +138,7 @@ namespace Uintah {
       const VarLabel* gAccelerationLabel;
       const VarLabel* gVelocityLabel;
       const VarLabel* gVelocityBCLabel;
+      const VarLabel* gVelSPSSPLabel;
       const VarLabel* gVelocityStarLabel;
       const VarLabel* gPositionLabel;
       const VarLabel* gExternalForceLabel;
