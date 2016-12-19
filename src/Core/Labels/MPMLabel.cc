@@ -297,10 +297,6 @@ MPMLabel::MPMLabel()
       ParticleVariable<double>::getTypeDescription() );
   pHeatEnergyLabel_preReloc = VarLabel::create("p.heatEnergy+",
       ParticleVariable<double>::getTypeDescription() );
-  pAdiabatic_dTdtLabel = VarLabel::create("p.adiabatic_dTdt",
-      ParticleVariable<double>::getTypeDescription() );
-  pAdiabatic_dTdtLabel_preReloc = VarLabel::create("p.adiabatic_dTdt+",
-      ParticleVariable<double>::getTypeDescription() );
   pWorkEnergyLabel = VarLabel::create("p.workEnergy",
       ParticleVariable<double>::getTypeDescription() );
   pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",

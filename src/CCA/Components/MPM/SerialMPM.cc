@@ -400,6 +400,12 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->AccStrainEnergyLabel);
   }
 
+  // JBH - Thermodynamics
+  t->computes(lb->pDissipatedEnergyLabel);
+  t->computes(lb->pHeatEnergyLabel);
+  t->computes(lb->pWorkEnergyLabel);
+  // JBH - Thermodynamics
+
   if(flags->d_artificial_viscosity){
     t->computes(lb->p_qLabel);
   }
@@ -1224,7 +1230,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
-//  t->requires(Task::OldDW, lb->pHeatEnergyLabel,                gnone);
+  t->requires(Task::OldDW, lb->pHeatEnergyLabel,                gnone);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -1232,7 +1238,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
 
   // Some energy may have been added previously due to CM.
-//  t->modifies(lb->pHeatEnergyLabel_preReloc);
+  t->computes(lb->pHeatEnergyLabel_preReloc);
 
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pVelocityLabel_preReloc);
@@ -1950,7 +1956,8 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 {
   particleIndex totalParticles=0;
 
-  for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++)
+  {
     const Patch* patch = patches->get(p);
 
     printTask(patches, patch,cout_doing,"Doing actuallyInitialize");
@@ -1967,18 +1974,21 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     // - Find the walls with symmetry BC and double NC_CCweight
     NC_CCweight.initialize(0.125);
     for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-        face=Patch::nextFace(face)){
+        face=Patch::nextFace(face))
+    {
       int mat_id = 0;
-
-      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+      if (patch->haveBC(face,mat_id,"symmetry","Symmetric"))
+      {
         for(CellIterator iter = patch->getFaceIterator(face,Patch::FaceNodes);
-                                                  !iter.done(); iter++) {
+                                                  !iter.done(); iter++)
+        {
           NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
         }
       }
     }
 
-    for(int m=0;m<matls->size();m++){
+    for(int m=0;m<matls->size();m++)
+    {
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
       if(!flags->d_doGridReset){
@@ -3413,7 +3423,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup  * ,
       constParticleVariable<Matrix3> pFOld;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
       constParticleVariable<int> pLocalized;
- //     ParticleVariable<double> pHeatEnergyNew;
+      constParticleVariable<double> pHeatEnergy;
+      ParticleVariable<double> pHeatEnergyNew;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew;
@@ -3433,8 +3444,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup  * ,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+      old_dw->get(pHeatEnergy,  lb->pHeatEnergyLabel,                pset);
 
-//      new_dw->getModifiable(pHeatEnergyNew,lb->pHeatEnergyLabel_preReloc, pset);
+      new_dw->allocateAndPut(pHeatEnergyNew,lb->pHeatEnergyLabel_preReloc, pset);
 
       new_dw->allocateAndPut(pvelocitynew,lb->pVelocityLabel_preReloc,    pset);
       new_dw->allocateAndPut(pxnew,       lb->pXLabel_preReloc,           pset);
@@ -3521,18 +3533,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup  * ,
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
 
-          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
-//          nodalFlux = ( gTemperatureRate[node] +
-//                        frictionTempRate[node]*flags->d_addFrictionWork ) * S[k];
-//          tempRate += (nodalFlux) + dTdt[node]*S[k];
-//          particleHeatFlux += nodalFlux;
-          tempRate += (gTemperatureRate[node] + dTdt[node] +
-                       fricTempRate)   * S[k];
+//          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+          nodalFlux = ( gTemperatureRate[node] +
+                        frictionTempRate[node]*flags->d_addFrictionWork ) * S[k];
+          tempRate += (nodalFlux) + dTdt[node]*S[k];
+          particleHeatFlux += nodalFlux;
+//          tempRate += (gTemperatureRate[node] + dTdt[node] +
+//                       fricTempRate)   * S[k];
           burnFraction += massBurnFrac[node]     * S[k];
         }
 
         // Add external specific heat flux into particle.
-//        pHeatEnergyNew[idx] +=  particleHeatFlux * Cp * delT * pmass[idx];
+        pHeatEnergyNew[idx] =  pHeatEnergy[idx] +
+                                    particleHeatFlux * Cp * delT * pmass[idx];
 
         // Update the particle's position and velocity
 //        pxnew[idx]           = px[idx]    + vel*delT;
