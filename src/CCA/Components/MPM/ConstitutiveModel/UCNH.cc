@@ -1339,13 +1339,12 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         old_dw->get(gDisp,           lb->dispNewLabel, dwi, patch, gac, 1);
       }
 
-      int NN = d_8or27;
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
       
         // Compute the displacement gradient and B matrices
         if(d_usePlasticity || d_useDamage){
-          NN = interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, 
+          interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, 
                                                     pSize[idx],pDefGrad[idx]);
       
           computeGradAndBmats(pDispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
@@ -1449,7 +1448,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
           D[4][3] = D[3][4];
             
           // Fill in the B and Bnl matrices and the dof vector
-          int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
                                                       pSize[idx],pDefGrad[idx]);
           loadBMatsGIMP(l2g,dof,B,Bnl,d_S,ni,oodx);
           // kmat = B.transpose()*D*B*volold

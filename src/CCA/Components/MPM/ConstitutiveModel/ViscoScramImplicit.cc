@@ -428,7 +428,7 @@ ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
         pdTdt[idx] = 0.;
 
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
                                           psize[idx],deformationGradient[idx]);
         int dof[24];
         loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);

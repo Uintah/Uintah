@@ -84,9 +84,6 @@ MPMLabel::MPMLabel()
   pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
                         ParticleVariable<double>::getTypeDescription() ); 
     
-  pXXLabel  = VarLabel::create( "p.xx",
-			ParticleVariable<Point>::getTypeDescription() );
-                     
   p_qLabel  = VarLabel::create( "p.q",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -789,7 +786,6 @@ MPMLabel::~MPMLabel()
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
   VarLabel::destroy(pTempCurrentLabel); // for thermal stress
-  VarLabel::destroy(pXXLabel);
 
   //PermanentParticleState
   VarLabel::destroy(pDeformationMeasureLabel);

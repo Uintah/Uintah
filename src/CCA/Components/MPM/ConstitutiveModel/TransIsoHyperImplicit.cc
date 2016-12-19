@@ -305,13 +305,15 @@ TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
         old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,1);
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
                                                         pset, px,
-                                                        deformationGradient_new,deformationGradient,                                                        dx, psize,interpolator);
+                                                        deformationGradient_new,
+                                                        deformationGradient,
+                                                        dx, psize,interpolator);
       }
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, 
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, 
                                        psize[idx],deformationGradient[idx]);
         int dof[24];
         loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);

@@ -1224,7 +1224,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pVelGradLabel_preReloc);
   t->computes(lb->pDeformationMeasureLabel_preReloc);
   t->computes(lb->pTemperatureGradientLabel_preReloc);
-  t->computes(lb->pXXLabel);
 
   //__________________________________
   //  reduction variables
@@ -3224,7 +3223,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      ParticleVariable<Point> pxnew,pxx;
+      ParticleVariable<Point> pxnew;
       constParticleVariable<Vector> pvelocity;
       constParticleVariable<Matrix3> psize;
       ParticleVariable<Vector> pvelocitynew;
@@ -3260,7 +3259,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->allocateAndPut(pvelocitynew,lb->pVelocityLabel_preReloc,    pset);
       new_dw->allocateAndPut(pxnew,       lb->pXLabel_preReloc,           pset);
-      new_dw->allocateAndPut(pxx,         lb->pXXLabel,                   pset);
       new_dw->allocateAndPut(pdispnew,    lb->pDispLabel_preReloc,        pset);
       new_dw->allocateAndPut(pmassNew,    lb->pMassLabel_preReloc,        pset);
       new_dw->allocateAndPut(pvolume,     lb->pVolumeLabel_preReloc,      pset);
@@ -3351,8 +3349,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pxnew[idx]           = px[idx]    + vel*delT;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
         pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
-        // pxx is only useful if we're not in normal grid resetting mode.
-        pxx[idx]             = px[idx]    + pdispnew[idx];
         pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
         pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
 

@@ -1175,11 +1175,11 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-//       Assign zero internal heating by default - modify if necessary.
+//    Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-//       Calculate the displacement gradient
-      int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+//     Calculate the displacement gradient
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
                                                    psize[idx],pDeformGrad[idx]);
       computeGrad(DispGrad, ni, d_S, oodx, gDisp);
 
@@ -1555,7 +1555,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Calculate the displacement gradient
-      int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
                                                    psize[idx],pDeformGrad[idx]);
       computeGradAndBmats(DispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 

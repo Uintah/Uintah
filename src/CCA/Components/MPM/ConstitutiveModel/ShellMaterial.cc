@@ -975,7 +975,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
       
-      int NN = interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,
+      interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,
                                                   d_S,pSize[idx],pDefGrad[idx]);
       // Calculate the in-surface identity tensor
       Matrix3 nn(pNormal[idx], pNormal[idx]);
