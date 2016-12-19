@@ -83,16 +83,24 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
 {
+  // This routine intializes into the computes of *MPM::scheduleInitialize(...)
   Matrix3 I; I.Identity();
   Matrix3 zero(0.);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double>  pdTdt;
+  ParticleVariable<double> pDissipatedEnergy, pHeatEnergy, pWorkEnergy;
   ParticleVariable<Matrix3> pDefGrad, pStress;
 
-  new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
-  new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
-  new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
+  new_dw->allocateAndPut(pdTdt,             lb->pdTdtLabel,               pset);
+  new_dw->allocateAndPut(pDefGrad,          lb->pDeformationMeasureLabel, pset);
+  new_dw->allocateAndPut(pStress,           lb->pStressLabel,             pset);
+
+  // JBH - Thermodynamics
+  new_dw->allocateAndPut(pDissipatedEnergy, lb->pDissipatedEnergyLabel,   pset);
+  new_dw->allocateAndPut(pHeatEnergy,       lb->pHeatEnergyLabel,         pset);
+  new_dw->allocateAndPut(pWorkEnergy,       lb->pWorkEnergyLabel,         pset);
+  // JBH - Thermodynamics
 
   // To fix : For a material that is initially stressed we need to
   // modify the stress tensors to comply with the initial stress state
@@ -102,13 +110,20 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
     pdTdt[idx] = 0.0;
     pDefGrad[idx] = I;
     pStress[idx] = zero;
+    // JBH - Thermodynamics
+    pDissipatedEnergy[idx]  = 0.0;
+    pHeatEnergy[idx]        = 0.0;
+    pWorkEnergy[idx]        = 0.0;
+    // JBH - Thermodynamics
   }
 }
 
 void 
-ConstitutiveModel::addComputesAndRequires(Task*, 
-                                          const MPMMaterial*,
-                                          const PatchSet*) const
+ConstitutiveModel::addComputesAndRequires(
+                                                Task        *,
+                                          const MPMMaterial *,
+                                          const PatchSet    *
+                                         ) const
 {
   throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);
 }
@@ -148,6 +163,7 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
+
   task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
   task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
                                                             matlset, gnone);
@@ -156,9 +172,21 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
     task->requires(Task::NewDW, lb->pgCodeLabel,            matlset, gnone); 
     task->requires(Task::NewDW, lb->GVelocityStarLabel,     matlset, gac, NGN);
   }
+  task->requires(Task::NewDW, lb->pHeatEnergyLabel_preReloc, matlset, gnone);
+
+  // JBH - Thermodynamics
+  task->requires(Task::OldDW, lb->pWorkEnergyLabel,         matlset, gnone);
+  task->requires(Task::OldDW, lb->pDissipatedEnergyLabel,   matlset, gnone);
+  task->requires(Task::OldDW, lb->pHeatEnergyLabel,         matlset, gnone);
+
+  task->computes(lb->pWorkEnergyLabel_preReloc,         matlset);
+  task->computes(lb->pDissipatedEnergyLabel_preReloc,   matlset);
+  task->modifies(lb->pHeatEnergyLabel_preReloc,         matlset);
+  // JBH - Thermodynamics
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel,                        matlset);
+
   //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
 
