@@ -33,9 +33,9 @@
 #  include <CCA/Ports/PIDXOutputContext.h>
 #endif
 
+#include <Core/Containers/OffsetArray1.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Containers/OffsetArray1.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/UnknownVariable.h>
@@ -43,10 +43,12 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Util/Time.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/XMLUtils.h>
+#include <Core/Util/StringUtil.h>
+
 #include <libxml/xmlreader.h>
 
 #include <iostream>
@@ -177,7 +179,9 @@ DataArchive::queryOutputFormat( FILE * doc )
     else if( line.compare( 0, 14, "<outputFormat>" ) == 0 ) {
       vector<string> pieces = UintahXML::splitXMLtag( line );
 
-      if( pieces[1] == "PIDX" || pieces[1] == "pidx" ) {
+      const string format = string_tolower( pieces[1] );
+
+      if( format == "pidx" ) {
         d_outputFileFormat = PIDX;
       }
       else {
@@ -727,11 +731,11 @@ DataArchive::query(       Variable     & var,
   //__________________________________
   //  bulletproofing
   if( isPIDXEnabled() == false && d_outputFileFormat == PIDX ){
-    ostringstream warn;
-    warn << "\nERROR DataArchive::query()\n"
-         << "The uda you are trying to open was written using the PIDX file format.\n"
-         << "You must configure and compile with PIDX enabled.";
-    throw InternalError( warn.str() , __FILE__, __LINE__ );
+    ostringstream error;
+    error << "\nERROR DataArchive::query()\n"
+          << "The uda you are trying to open was written using the PIDX file format.\n"
+          << "You must configure and compile with PIDX enabled.";
+    throw InternalError( error.str() , __FILE__, __LINE__ );
   }
 
 
