@@ -482,7 +482,7 @@ private:
   template<class T>
   void
   DataArchive::query(       std::vector<T> & values,
-                            const std::string    & name,
+                      const std::string    & name,
                             int              matlIndex,
                             long64           particleID,
                             int              levelIndex,
@@ -492,7 +492,7 @@ private:
 
     std::vector<int> index;
     std::vector<double> times;
-    queryTimesteps(index, times); // build timesteps if not already done
+    queryTimesteps( index, times ); // build timesteps if not already done
 
     // figure out what kind of variable we're looking for
     std::vector<std::string> type_names;
@@ -510,10 +510,10 @@ private:
         type = *type_iter;
       }
     }
-    if (type == nullptr) {
+    if( type == nullptr ) {
       throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
     }
-    if (type->getType() != TypeDescription::ParticleVariable) {
+    if( type->getType() != TypeDescription::ParticleVariable ) {
       throw InternalError("Variable type is not ParticleVariable", __FILE__, __LINE__);
     }
     // find the first timestep
@@ -529,11 +529,11 @@ private:
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
-      Patch* patch = nullptr;
-      GridP grid = queryGrid( ts);
-      findPatchAndIndex(grid, patch, idx, particleID, matlIndex, levelIndex, ts);
-      //    std::cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
-      if (patch == nullptr) {
+      Patch * patch = nullptr;
+      GridP   grid  = queryGrid( ts );
+      findPatchAndIndex( grid, patch, idx, particleID, matlIndex, levelIndex, ts );
+
+      if( patch == nullptr ) {
         throw VariableNotFoundInGrid( name, particleID, matlIndex, "DataArchive::query", __FILE__, __LINE__ );
       }
 
@@ -542,7 +542,6 @@ private:
       // Now find the index that corresponds to the particleID
       // std::cerr <<" time = "<<t<<",  value = "<<var[idx]<<std::endl;
       values.push_back(var[idx]);
-
     }
     dbg << "DataArchive::query(values) completed in " << (Uintah::Time::currentSeconds() - call_start) << " seconds\n";
   }  
@@ -551,7 +550,7 @@ private:
   template<class T>
   void
   DataArchive::query(       std::vector<T> & values,
-                            const std::string    & name,
+                      const std::string    & name,
                             int              matlIndex,
                             IntVector        loc,
                             double           startTime,
@@ -575,8 +574,8 @@ private:
         type = *type_iter;
       }
     }
-    if (type == nullptr) {
-      throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
+    if ( type == nullptr ) {
+      throw InternalError( "Unable to determine variable type", __FILE__, __LINE__ );
     }
 
     // Find the first timestep.
@@ -590,8 +589,8 @@ private:
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
-      Patch* patch = nullptr;
-      GridP grid = queryGrid(ts);
+      Patch * patch = nullptr;
+      GridP   grid  = queryGrid( ts );
 
       // which levels to query between.
       int startLevel, endLevel;

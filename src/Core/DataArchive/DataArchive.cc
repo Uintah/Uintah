@@ -348,7 +348,7 @@ DataArchive::queryPatchwiseProcessor( const Patch * patch, const int index )
 //______________________________________________________________________
 //
 GridP
-DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, bool assignBCs )
+DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, bool assignBCs /* = true */ )
 {
   // The following variable along with d_cell_scale is necessary to allow the
   // UdaScale module work.  Small domains are a problem for the SCIRun widgets
