@@ -173,8 +173,8 @@
   <Grid>
     <Level>
       <Box label = "1">
-        <lower>     [ -0.02, -0.01, 0.0]     </lower>
-        <upper>     [ 0.02,  0.03, 0.02]     </upper>
+        <lower>     [ -0.02, -0.03, 0.0]     </lower>
+        <upper>     [ 0.02,  0.025, 0.02]     </upper>
         
         <patches>   [4,2,2]  </patches>
         <extraCells>[1,1,1]  </extraCells>
