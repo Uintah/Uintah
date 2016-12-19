@@ -92,7 +92,7 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
 
       double g_conc = g_sum_concmass / g_sum_mass;
 
-      for(int m = 0; m < d_materials_list.size(); m++)
+      for(unsigned int m = 0; m < d_materials_list.size(); m++)
       {
         int mat_idx = d_materials_list[m];
         if(mat_idx >= 0 && mat_idx < num_matls)

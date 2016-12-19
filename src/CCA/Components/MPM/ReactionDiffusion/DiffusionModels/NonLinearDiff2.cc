@@ -85,16 +85,14 @@ void NonLinearDiff2::computeFlux(
                                 )
 {
 
-  Ghost::GhostType gac   = Ghost::AroundCells;
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
   std::vector<IntVector> ni(interpolator->size());
   std::vector<double> S(interpolator->size());
 
-  double current_time1 = d_sharedState->getElapsedTime();
+  //double current_time1 = d_sharedState->getElapsedTime();
 
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
-  double comp_diffusivity;
 
   constParticleVariable<Vector>  pConcGrad;
   constParticleVariable<Vector>  pESGradPotential;
@@ -123,21 +121,17 @@ void NonLinearDiff2::computeFlux(
   new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel_preReloc,        pset);
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel_preReloc, pset);
 
-  double non_lin_comp = 0.0;
   double D = diffusivity;
   double timestep = 1.0e99;
-  double pressure = 0.0;
   double concentration = 0.0;
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
     particleIndex idx = *iter;
 
-    int NN=interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
 
-    double neg_one_third = -1.0/3.0;
     concentration = pConcentration[idx];
-    pressure = neg_one_third * pStress[idx].Trace(); 
 
     /*
     if(pConcentration[idx] < d_tuning1){
@@ -186,7 +180,7 @@ void NonLinearDiff2::scheduleComputeFlux(
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType gnone = Ghost::None;
-  Ghost::GhostType gac   = Ghost::AroundCells;
+  //Ghost::GhostType gac   = Ghost::AroundCells;
   task->requires(Task::OldDW, d_lb->pXLabel,                  matlset, gnone);
   task->requires(Task::OldDW, d_lb->pConcGradientLabel,       matlset, gnone);
   task->requires(Task::OldDW, d_lb->pConcentrationLabel,      matlset, gnone);

@@ -27,6 +27,7 @@
     <conductivity_equation   spec="OPTIONAL NO_DATA"
                              attribute1="type REQUIRED STRING 'fixed, binary'">
       <min_conc              spec="OPTIONAL DOUBLE" />
+      <max_conc              spec="OPTIONAL DOUBLE" />
       <conductivity          spec="OPTIONAL DOUBLE" />
       <min_conductivity      spec="OPTIONAL DOUBLE" />
       <max_conductivity      spec="OPTIONAL DOUBLE" />

@@ -31,11 +31,12 @@ using namespace Uintah;
 BinaryEquation::BinaryEquation(ProblemSpecP& ps) :
   ConductivityEquation(ps)
 {
-  ps->require("min_conc", d_min_concentration);
+  ps->require("min_conc", d_min_conc);
+  ps->require("max_conc", d_max_conc);
   ps->require("min_conductivity", d_min_conductivity);
   ps->require("max_conductivity", d_max_conductivity);
 
-  d_slope = d_max_conductivity - d_min_conductivity;
+  d_slope = (d_max_conductivity - d_min_conductivity)/(d_max_conc - d_min_conc);
 }
 
 BinaryEquation::~BinaryEquation()
@@ -45,10 +46,13 @@ BinaryEquation::~BinaryEquation()
 
 double BinaryEquation::computeConductivity(double concentration)
 {
-  if(concentration > d_min_concentration)
+  if(concentration > d_min_conc && concentration <= d_max_conc){
     return (d_min_conductivity + d_slope * concentration);
-  else
+  }else if(concentration > d_max_conc){
+    return d_max_conductivity;
+  }else{
     return d_min_conductivity;
+  }
 
   //return (d_min_conductivity + d_slope * concentration);
 }
@@ -58,7 +62,8 @@ void BinaryEquation::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP eq_ps;
   eq_ps = ps->appendChild("conductivity_equation");
   eq_ps->setAttribute("type", "binary");
-  eq_ps->appendElement("min_conc", d_min_concentration);
+  eq_ps->appendElement("min_conc", d_min_conc);
+  eq_ps->appendElement("max_conc", d_max_conc);
   eq_ps->appendElement("min_conductivity", d_min_conductivity);
   eq_ps->appendElement("max_conductivity", d_max_conductivity);
 }

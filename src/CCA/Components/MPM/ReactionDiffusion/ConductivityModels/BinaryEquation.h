@@ -56,7 +56,8 @@ namespace Uintah
       virtual void outputProblemSpec(ProblemSpecP& ps);
 
     private:
-      double d_min_concentration;
+      double d_min_conc;
+      double d_max_conc;
       double d_min_conductivity;
       double d_max_conductivity;
       double d_slope;
