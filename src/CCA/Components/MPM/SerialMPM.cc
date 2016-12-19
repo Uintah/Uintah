@@ -623,6 +623,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleSetPrescribedMotion(            sched, patches, matls);
+//scheduleComputeSSPlusVp(                sched, patches, matls);
+//scheduleComputeSPlusSSPlusVp(           sched, patches, matls);
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeHeatExchange(          sched, patches, matls);
     scheduleComputeInternalHeatRate(      sched, patches, matls);
@@ -782,6 +784,58 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
   }
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::scheduleComputeSSPlusVp(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeSSPlusVp");
+
+  Task* t=scinew Task("MPM::computeSSPlusVp",
+                      this, &SerialMPM::computeSSPlusVp);
+
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gnone = Ghost::None;
+  t->requires(Task::OldDW, lb->pXLabel,                         gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+
+  t->requires(Task::NewDW, lb->gVelocityLabel,                  gac,NGN);
+
+  t->computes(lb->pVelocitySSPlusLabel);
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::scheduleComputeSPlusSSPlusVp(SchedulerP& sched,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeSPlusSSPlusVp");
+
+  Task* t=scinew Task("MPM::computeSPlusSSPlusVp",
+                      this, &SerialMPM::computeSPlusSSPlusVp);
+
+  Ghost::GhostType gan = Ghost::AroundNodes;
+  Ghost::GhostType gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, lb->pXLabel,                     gan, NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,                  gan, NGP);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,    gan, NGP);
+  t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,        gan, NGP);
+  t->requires(Task::NewDW, lb->gMassLabel,                  gac, NGN);
+
+  t->computes(lb->gVelSPSSPLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -1191,6 +1245,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
+//  t->requires(Task::NewDW, lb->gVelSPSSPLabel,                  gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
   if (flags->d_doExplicitHeatConduction){
     t->requires(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
@@ -2183,6 +2238,136 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     delete interpolator;
     delete linear_interpolator;
   }  // End loop over patches
+}
+
+void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* ,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing computeSSPlusVp");
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> px;
+      constParticleVariable<Matrix3> psize;
+      constParticleVariable<Matrix3> pFOld;
+      ParticleVariable<Vector> pvelSSPlus;
+      constNCVariable<Vector> gvelocity;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      old_dw->get(px,       lb->pXLabel,                         pset);
+      old_dw->get(psize,    lb->pSizeLabel,                      pset);
+      old_dw->get(pFOld,    lb->pDeformationMeasureLabel,        pset);
+
+      new_dw->allocateAndPut(pvelSSPlus,lb->pVelocitySSPlusLabel,    pset);
+
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      new_dw->get(gvelocity,    lb->gVelocityLabel,   dwi,patch,gac,NGP);
+
+      // Loop over particles
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // Get the node indices that surround the cell
+        int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+                                                  psize[idx], pFOld[idx]);
+        // Accumulate the contribution from each surrounding vertex
+        Vector vel(0.0,0.0,0.0);
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel      += gvelocity[node]  * S[k];
+        }
+        pvelSSPlus[idx]    = vel;
+      }
+    }
+    delete interpolator;
+  }
+}
+
+void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* ,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing computeSPlusSSPlusVp");
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
+    Ghost::GhostType  gan = Ghost::AroundNodes;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> px;
+      constParticleVariable<Matrix3> psize, pFOld;
+      constParticleVariable<Vector> pvelSSPlus;
+      constParticleVariable<double> pmass;
+
+      NCVariable<Vector> gvelSPSSP;
+      constNCVariable<double> gmass;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+
+      old_dw->get(px,         lb->pXLabel,                         pset);
+      old_dw->get(pmass,      lb->pMassLabel,                      pset);
+      old_dw->get(psize,      lb->pSizeLabel,                      pset);
+      old_dw->get(pFOld,      lb->pDeformationMeasureLabel,        pset);
+      new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
+      new_dw->get(gmass,      lb->gMassLabel,         dwi,patch,gac,NGP);
+      new_dw->allocateAndPut(gvelSPSSP,   lb->gVelSPSSPLabel,   dwi,patch);
+
+      gvelSPSSP.initialize(Vector(0,0,0));
+
+      // Loop over particles
+      for (ParticleSubset::iterator iter = pset->begin();
+           iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        int NN =
+           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+        Vector pmom = pvelSSPlus[idx]*pmass[idx];
+
+        IntVector node;
+        for(int k = 0; k < NN; k++) {
+          node = ni[k];
+          if(patch->containsNode(node)) {
+            gvelSPSSP[node] += pmom * S[k];
+          }
+        }
+      } // End of particle loop
+      for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+        IntVector c = *iter;
+        gvelSPSSP[c] /= gmass[c];
+      }
+    }
+    delete interpolator;
+  }
 }
 
 void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
@@ -3224,9 +3409,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew;
-      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<Vector> pvelocity,pvelSSPlus;
       constParticleVariable<Matrix3> psize;
-      ParticleVariable<Vector> pvelocitynew;
+      ParticleVariable<Vector> pvelnew;
       ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass,pVolumeOld, pTemperature;
       ParticleVariable<double> pmassNew,pvolume,pTempNew;
@@ -3242,7 +3427,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<double> pTempPreNew;
 
       // Get the arrays of grid data on which the new part. values depend
-      constNCVariable<Vector> gvelocity_star, gacceleration;
+      constNCVariable<Vector> gvelocity_star, gacceleration, gvelSPSSP;
       constNCVariable<double> gTemperatureRate, gTempStar;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
 
@@ -3256,19 +3441,20 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+//    new_dw->get(pvelSSPlus,   lb->pVelocitySSPlusLabel,            pset);
 
-      new_dw->allocateAndPut(pvelocitynew,lb->pVelocityLabel_preReloc,    pset);
-      new_dw->allocateAndPut(pxnew,       lb->pXLabel_preReloc,           pset);
-      new_dw->allocateAndPut(pdispnew,    lb->pDispLabel_preReloc,        pset);
-      new_dw->allocateAndPut(pmassNew,    lb->pMassLabel_preReloc,        pset);
-      new_dw->allocateAndPut(pvolume,     lb->pVolumeLabel_preReloc,      pset);
-      new_dw->allocateAndPut(pVelGrad,    lb->pVelGradLabel_preReloc,     pset);
-      new_dw->allocateAndPut(pTempGrad,   lb->pTemperatureGradientLabel_preReloc,
+      new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,     pset);
+      new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,            pset);
+      new_dw->allocateAndPut(pdispnew,   lb->pDispLabel_preReloc,         pset);
+      new_dw->allocateAndPut(pmassNew,   lb->pMassLabel_preReloc,         pset);
+      new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,       pset);
+      new_dw->allocateAndPut(pVelGrad,   lb->pVelGradLabel_preReloc,      pset);
+      new_dw->allocateAndPut(pTempGrad,  lb->pTemperatureGradientLabel_preReloc,
                                                                           pset);
-      new_dw->allocateAndPut(pFNew,       lb->pDeformationMeasureLabel_preReloc,
+      new_dw->allocateAndPut(pFNew,      lb->pDeformationMeasureLabel_preReloc,
                                                                           pset);
-      new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
-      new_dw->allocateAndPut(pTempNew,    lb->pTemperatureLabel_preReloc, pset);
+      new_dw->allocateAndPut(pTempPreNew,lb->pTempPreviousLabel_preReloc, pset);
+      new_dw->allocateAndPut(pTempNew,   lb->pTemperatureLabel_preReloc,  pset);
 
       //Carry forward ParticleID and pSize
       old_dw->get(pids,                lb->pParticleIDLabel,          pset);
@@ -3296,6 +3482,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+//    new_dw->get(gvelSPSSP,       lb->gVelSPSSPLabel,       dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
       if (flags->d_doExplicitHeatConduction){
@@ -3328,6 +3515,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                   psize[idx], pFOld[idx]);
 
         Vector vel(0.0,0.0,0.0);
+//        Vector velSSPSSP(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
         double fricTempRate = 0.0;
         double tempRate = 0.0;
@@ -3337,6 +3525,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           vel      += gvelocity_star[node]  * S[k];
+//          velSSPSSP+= gvelSPSSP[node]       * S[k];
           acc      += gacceleration[node]   * S[k];
 
           fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
@@ -3346,18 +3535,30 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
 
         // Update the particle's position and velocity
-        pxnew[idx]           = px[idx]    + vel*delT;
-        pdispnew[idx]        = pdisp[idx] + vel*delT;
-        pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
-        pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
-        pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
+        pxnew[idx]      = px[idx]    + vel*delT;
+        pdispnew[idx]   = pdisp[idx] + vel*delT;
+        pvelnew[idx]    = pvelocity[idx]    + acc*delT;
+#if 0
+        // PIC, or XPIC(1)
+        pxnew[idx]       = px[idx]    + vel*delT
+                     - 0.5*(acc*delT + (pvelocity[idx] - pvelSSPlus[idx]))*delT;
+        pvelnew[idx]     = pvelSSPlus[idx]    + acc*delT;
+        // XPIC(2)
+        pxnew[idx]       = px[idx]    + vel*delT
+                     - 0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
+                                                       + velSSPSSP)*delT;
+        pvelnew[idx]     = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
+        pdispnew[idx]    = pdisp[idx] + (pxnew[idx]-px[idx]);
+#endif
 
-        pmassNew[idx]     = Max(pmass[idx]*(1.    - burnFraction),0.);
+        pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
+        pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
+        pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-        ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+        ke += .5*pmass[idx]*pvelnew[idx].length2();
         CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-        totalMom   += pvelocitynew[idx]*pmass[idx];
+        totalMom   += pvelnew[idx]*pmass[idx];
         totalmass  += pmass[idx];
       }
 
@@ -3509,14 +3710,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
        for(ParticleSubset::iterator iter  = pset->begin();
                                     iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        if(pvelocitynew[idx].length() > flags->d_max_vel){
-          if(pvelocitynew[idx].length() >= pvelocity[idx].length()){
-            pvelocitynew[idx]=(pvelocitynew[idx]/pvelocitynew[idx].length())
+        if(pvelnew[idx].length() > flags->d_max_vel){
+          if(pvelnew[idx].length() >= pvelocity[idx].length()){
+            pvelnew[idx]=(pvelnew[idx]/pvelnew[idx].length())
                              *(flags->d_max_vel*.9);
             cout << endl <<"Warning: particle " <<pids[idx]
                  <<" hit speed ceiling #1. Modifying particle vel. accordingly."
                  << endl;
-            //pvelocitynew[idx]=pvelocity[idx];
+            //pvelnew[idx]=pvelocity[idx];
           }
         }
       }// for particles

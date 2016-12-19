@@ -235,6 +235,18 @@ protected:
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
+  virtual void computeSSPlusVp(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
+  virtual void computeSPlusSSPlusVp(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   virtual void addCohesiveZoneForces(const ProcessorGroup*,
@@ -405,6 +417,12 @@ protected:
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
+
+  virtual void scheduleComputeSSPlusVp(SchedulerP&, const PatchSet*,
+                                                    const MaterialSet*);
+
+  virtual void scheduleComputeSPlusSSPlusVp(SchedulerP&, const PatchSet*,
+                                                         const MaterialSet*);
 
   virtual void scheduleAddCohesiveZoneForces(SchedulerP&, 
                                              const PatchSet*,
