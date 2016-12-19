@@ -1,25 +1,42 @@
 <config>
 <postProcessCmd_path>orderAccuracy/postProcessTools/compare_MPM_AA_MMS</postProcessCmd_path>
 
-<symbolicLinks> </symbolicLinks>
+<symbolicLinks> /home/harman/builds/structuralEnergetics/src/StandAlone/inputs/MPM/MaterialData</symbolicLinks>
 
+<test>
+  <name>impact_Velocity</name>
+  <ups>impact-Al-Al_thin.ups</ups>
+  <tst>impact_velocity.tst</tst>
+</test>
+
+<!--
+<test>
+  <name>impact</name>
+  <ups>advect_3L_1D.ups</ups>
+  <tst>advect_3L_1D.tst</tst>
+</test>
+-->
+
+<!--
 <test>
   <name>advect_3L_1D</name>
   <ups>advect_3L_1D.ups</ups>
   <tst>advect_3L_1D.tst</tst>
 </test>
+
 <test>
   <name>advect_3L_2D</name>
   <ups>advect_3L_2D.ups</ups>
   <tst>advect_3L_2D.tst</tst>
 </test>
+
 <test>
   <name>advect_3L_3D</name>
   <ups>advect_3L_3D.ups</ups>
   <tst>advect_3L_3D.tst</tst>
 </test>
 
-<!--
+
 <test>
   <name>3rdorderBS_AA_MMS</name>
   <ups>AA.ups</ups>
