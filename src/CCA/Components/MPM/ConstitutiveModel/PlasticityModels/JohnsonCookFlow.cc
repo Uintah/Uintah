@@ -204,11 +204,13 @@ JohnsonCookFlow::computeFlowStress(const PlasticityState* state,
 }
 
 double 
-JohnsonCookFlow::computeEpdot(const PlasticityState* state,
-                                 const double& ,
-                                 const double& ,
-                                 const MPMMaterial* matl,
-                                 const particleIndex )
+JohnsonCookFlow::computeEpdot(
+															const PlasticityState * state,
+                              const double					& ,
+                              const double					& ,
+                              const MPMMaterial     * matl,
+                              const particleIndex 
+                             )
 {
   // All quantities should be at the beginning of the 
   // time step
