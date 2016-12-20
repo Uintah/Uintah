@@ -206,7 +206,7 @@ void NonLinearDiff1::computeFlux(
                                                       iter++){
     particleIndex idx = *iter;
 
-    int NN=interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
 
 #if defined USE_PARTICLE_VALUES
     double neg_one_third = -1.0/3.0;

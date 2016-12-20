@@ -26,24 +26,7 @@
 #define UINTAH_RD_NONLINEARDIFF2_H
 
 /*
- * This Non-Linear Diffusivity model contains two different models for
- * computing the diffusion coefficient. The first uses only concentration
- * as the input variable and is based on the following papers:
- *
- * Two-Phase Electrochemical Lithiation in Amorphous Silicon
- * Jiang Wei Wang, Yu He, Feifei Fan, Xiao Hua Liu, Shuman Xia, Yang Liu,
- * C. Thomas Harris, Hong Li, Jian Yu Huang, Scott X. Mao, and Ting Zhu
- * Nano Letters 2013 13 (2), 709-715
- *
- * Size-Dependent Fracture of Silicon Nanoparticles During Lithiation
- * Xiao Hua Liu, Li Zhong, Shan Huang, Scott X. Mao, Ting Zhu, and Jian Yu Huang
- * ACS Nano 2012 6 (2), 1522-1531
- *
- * Also note the supplementary information associated with each paper
- * for more details.
- *
- * The second model uses both concentration and pressure as inputs for the 
- * calculation of the diffusion coefficient.
+ * This Non-Linear Diffusivity model ....
  */
 
 #include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
