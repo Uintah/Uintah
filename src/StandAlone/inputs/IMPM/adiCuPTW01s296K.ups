@@ -52,7 +52,6 @@
   </DataArchiver>
 
   <MPM>
-    <do_grid_reset> false </do_grid_reset>
     <time_integrator>implicit</time_integrator>
     <boundary_traction_faces>[zminus,zplus]</boundary_traction_faces> 
     <dynamic>true</dynamic>

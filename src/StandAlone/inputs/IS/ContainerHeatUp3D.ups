@@ -286,7 +286,6 @@
     <num_iters_to_increase_delT>    5        </num_iters_to_increase_delT>
     <delT_decrease_factor>          0.4      </delT_decrease_factor>
     <delT_increase_factor>          2.0      </delT_increase_factor>
-    <do_grid_reset>                 true     </do_grid_reset>
     <DoImplicitHeatConduction>      true     </DoImplicitHeatConduction>
     <DoThermalExpansion>            true     </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>

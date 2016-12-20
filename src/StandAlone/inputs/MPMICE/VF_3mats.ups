@@ -48,7 +48,6 @@
        <time_integrator>explicit  </time_integrator>
        <interpolator>                   gimp       </interpolator>
        <use_load_curves>false     </use_load_curves>
-       <do_grid_reset>  true      </do_grid_reset>
        <testForNegTemps_mpm>false </testForNegTemps_mpm>
        <withColor>      true      </withColor>
     </MPM>

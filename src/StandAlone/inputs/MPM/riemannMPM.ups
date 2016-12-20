@@ -78,7 +78,6 @@
     <MPM>
         <interpolator>gimp</interpolator>
         <artificial_viscosity>true</artificial_viscosity>
-        <do_grid_reset>true</do_grid_reset>
     </MPM>
 
     <!--____________________________________________________________________-->

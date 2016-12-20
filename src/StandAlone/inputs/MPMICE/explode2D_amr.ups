@@ -212,7 +212,6 @@
     <DoPressureStabilization>false</DoPressureStabilization>
     <computeNodalHeatFlux>false</computeNodalHeatFlux>
     <DoThermalExpansion>false</DoThermalExpansion>
-    <do_grid_reset>true</do_grid_reset>
     <minimum_particle_mass>3.0000000000000001e-12</minimum_particle_mass>
     <minimum_mass_for_acc>0</minimum_mass_for_acc>
     <maximum_particle_velocity>1000</maximum_particle_velocity>

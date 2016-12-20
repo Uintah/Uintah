@@ -21,7 +21,6 @@
        <time_integrator>explicit</time_integrator>
        <interpolator>cpdi</interpolator>
        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
-       <do_grid_reset>true</do_grid_reset>
        <RunMMSProblem>GeneralizedVortex</RunMMSProblem>
     </MPM>
     <DataArchiver>

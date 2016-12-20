@@ -40,7 +40,6 @@
        <time_integrator>implicit</time_integrator>
        <dynamic>true</dynamic>
        <interpolator>linear</interpolator>
-       <do_grid_reset>false</do_grid_reset>
        <ForceBC_force_increment_factor>0.0</ForceBC_force_increment_factor>
        <iters_before_timestep_restart>25</iters_before_timestep_restart>
        <num_iters_to_decrease_delT>12</num_iters_to_decrease_delT>
