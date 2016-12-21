@@ -56,6 +56,7 @@ namespace Uintah {
       const VarLabel* pFluxLabel_preReloc;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
+      const VarLabel* pXXLabel;
       const VarLabel* pPartitionUnityLabel;
 
       //PermanentParticleState
