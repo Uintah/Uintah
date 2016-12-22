@@ -53,7 +53,13 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
 void
 PressureEqn::setup_solver( ProblemSpecP& db ){
 
-  m_hypreSolver_parameters = m_hypreSolver->readParameters(db, "pressure",
+  ProblemSpecP db_pressure = db->findBlock("KMomentum")->findBlock("PressureSolver");
+
+  if ( !db_pressure ){
+    throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
+  }
+
+  m_hypreSolver_parameters = m_hypreSolver->readParameters(db_pressure, "pressure",
                                                            m_sharedState );
   m_hypreSolver_parameters->setSolveOnExtraCells(false);
 
@@ -142,6 +148,8 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
            area_NS * ( ymom[N] - ymom[c] ) +
            area_TB * ( zmom[T] - zmom[c] );
 
+    b[c] *= -1.;
+
   }
 }
 
@@ -172,7 +180,6 @@ PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
   x.initialize(0.0);
   guess.initialize(0.0);
   Apress.copyData( old_Apress );
-
 
 }
 
@@ -206,6 +213,8 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("z-mom");
 
+  const double dt = tsk_info->get_dt();
+
   for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
     IntVector c = *iter;
@@ -214,11 +223,13 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     IntVector T  = c + IntVector(0,0,1);
 
     // b
-    b[c] = area_EW * ( xmom[E] - xmom[c] ) +
-           area_NS * ( ymom[N] - ymom[c] ) +
-           area_TB * ( zmom[T] - zmom[c] );
+    b[c] = ( area_EW * ( xmom[E] - xmom[c] ) +
+             area_NS * ( ymom[N] - ymom[c] ) +
+             area_TB * ( zmom[T] - zmom[c] ) ) / dt ;
 
     b[c] *= eps[c];
+
+    b[c] *= -1.;
 
   }
 }
@@ -294,18 +305,19 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
   }
 
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
-  IntVector periodic_vector = level->getPeriodicBoundaries();
-  const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
+  IntVector m_periodic_vector = level->getPeriodicBoundaries();
+
+  const bool isPeriodic = m_periodic_vector.x() == 1 && m_periodic_vector.y() == 1 && m_periodic_vector.z() ==1;
   if ( isPeriodic || m_enforceSolvability ) {
     m_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, time_substep);
   }
 
   bool modifies_hypre = false;
-  bool modifies_x = true;
+
+  bool modifies_x = true; //because x was computed upstream
 
   if ( time_substep > 0 ) {
     modifies_hypre = true;
-    modifies_x = true;
   }
 
   m_hypreSolver->scheduleSolve(level, sched,  matls,

@@ -32,6 +32,7 @@
     <save label="wVel"/>
     <save label="gamma"/>
     <save label="pressure"/>
+    <save label="b_press"/>
     <checkpoint cycle="2" interval=".3"/>
     <compression>gzip</compression>
   </DataArchiver>

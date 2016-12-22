@@ -76,6 +76,8 @@
         </Eqn>
       </TransportEqns>
 
+      <BoundaryConditions/>
+
       <Properties>
         <ConstantProps>
           <density>1.0</density>

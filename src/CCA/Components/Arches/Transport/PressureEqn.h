@@ -76,6 +76,8 @@ private:
 
     SimulationStateP m_sharedState;
 
+    IntVector m_periodic_vector; 
+
   };
 }
 #endif
