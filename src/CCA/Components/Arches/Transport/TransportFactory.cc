@@ -3,6 +3,7 @@
 #include <CCA/Components/Arches/Transport/KMomentum.h>
 #include <CCA/Components/Arches/Transport/ComputePsi.h>
 #include <CCA/Components/Arches/Transport/KFEUpdate.h>
+#include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 namespace Uintah{
@@ -138,6 +139,11 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     _momentum_compute_psi.push_back(compute_psi_name);
     _momentum_update.push_back(update_task_name);
 
+    //Pressure eqn
+    TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0);
+    register_task( "build_pressure_system", press_tsk );
+    _pressure_eqn.push_back("build_pressure_system");
+
   }
 }
 
@@ -230,6 +236,11 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
     fe_tsk->problemSetup( db_mom );
     fe_tsk->create_local_labels();
 
+    TaskInterface* press_tsk = retrieve_task("build_pressure_system");
+    print_task_setup_info("build_pressure_system", "building pressure terms, A, b");
+    press_tsk->problemSetup( db );
+    press_tsk->create_local_labels();
+
   }
 }
 
@@ -241,10 +252,17 @@ void TransportFactory::schedule_initialization( const LevelP& level,
 
   for ( auto i = _tasks.begin(); i != _tasks.end(); i++ ){
 
-    TaskInterface* tsk = retrieve_task( i->first );
-    tsk->schedule_init( level, sched, matls, doing_restart );
+    if ( i->first != "build_pressure_system" ){
+      TaskInterface* tsk = retrieve_task( i->first );
+      tsk->schedule_init( level, sched, matls, doing_restart );
+    }
 
   }
+
+  //because this relies on momentum solvers. 
+  TaskInterface* tsk = retrieve_task( "build_pressure_system" );
+  tsk->schedule_init( level, sched, matls, doing_restart );
+
 }
 
 } //namespace Uintah

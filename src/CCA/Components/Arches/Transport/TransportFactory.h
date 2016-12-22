@@ -35,12 +35,14 @@ namespace Uintah{
         return _scalar_compute_psi;
       } else if ( subset == "momentum_psi_builders" ){
         return _momentum_compute_psi;
+      } else if ( subset == "pressure_eqn" ){
+        return _pressure_eqn;
       } else {
         throw InvalidValue("Error: Task subset not recognized for TransportFactory.",__FILE__,__LINE__);
       }
 
     }
-    
+
     void schedule_initialization( const LevelP& level,
                                   SchedulerP& sched,
                                   const MaterialSet* matls,
@@ -56,6 +58,7 @@ namespace Uintah{
     std::vector<std::string> _momentum_spp;
     std::vector<std::string> _scalar_compute_psi;
     std::vector<std::string> _momentum_compute_psi;
+    std::vector<std::string> _pressure_eqn;
 
   };
 }

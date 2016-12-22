@@ -39,6 +39,8 @@
     <save label="ucell_zvel"/>
     <save label="ucell_xvel"/>
     <save label="gamma"/>
+    <save label="b_press"/>
+    <save label="A_press"/>
     <checkpoint cycle="2" interval=".3"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -80,7 +82,7 @@
       </Face>
       <Face side="y-">
         <BCType var="Dirichlet" label="x-mom">
-          <value>2.</value>
+          <value>0.</value>
         </BCType>
         <BCType var="Neumann" label="y-mom">
           <value>0.</value>
@@ -91,34 +93,34 @@
       </Face>
       <Face side="y+">
         <BCType var="Dirichlet" label="x-mom">
-          <value>2.</value>
-        </BCType>
-        <BCType var="Neumann" label="y-mom">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="z-mom">
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
           <value>0.</value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType var="Neumann" label="x-mom">
+        <BCType var="Dirichlet" label="x-mom">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="y-mom">
+        <BCType var="Dirichlet" label="y-mom">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="z-mom">
+        <BCType var="Dirichlet" label="z-mom">
           <value>0.</value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="Neumann" label="x-mom">
+        <BCType var="Dirichlet" label="x-mom">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="y-mom">
+        <BCType var="Dirichlet" label="y-mom">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="z-mom">
+        <BCType var="Dirichlet" label="z-mom">
           <value>0.</value>
         </BCType>
       </Face>

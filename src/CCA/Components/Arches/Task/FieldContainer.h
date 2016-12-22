@@ -461,6 +461,8 @@ namespace Uintah{
             delete iter->second.get_field<CCVariable<double> >();
           } else if ( type == CCVariable<Vector>::getTypeDescription() ){
             delete iter->second.get_field<CCVariable<Vector> >();
+          } else if ( type == CCVariable<Stencil7>::getTypeDescription() ){
+            delete iter->second.get_field<CCVariable<Stencil7> >();
           } else if ( type == SFCXVariable<double>::getTypeDescription() ){
             delete iter->second.get_field<SFCXVariable<double> >();
           } else if ( type == SFCYVariable<double>::getTypeDescription() ){
@@ -488,6 +490,8 @@ namespace Uintah{
             delete iter->second.get_field<constCCVariable<double> >();
           } else if ( type == CCVariable<Vector>::getTypeDescription() ){
             delete iter->second.get_field<constCCVariable<Vector> >();
+          } else if ( type == CCVariable<Stencil7>::getTypeDescription() ){
+            delete iter->second.get_field<constCCVariable<Stencil7> >();
           } else if ( type == SFCXVariable<double>::getTypeDescription() ){
             delete iter->second.get_field<constSFCXVariable<double> >();
           } else if ( type == SFCYVariable<double>::getTypeDescription() ){

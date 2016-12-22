@@ -422,8 +422,8 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
-    // ** PROJECTION ** 
-
+    // ** PRESSURE PROJECTION **
+    i_transport->second->retrieve_task("build_pressure_system")->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep );
 
     // now apply boundary conditions for all scalar for the next timestep
     for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
