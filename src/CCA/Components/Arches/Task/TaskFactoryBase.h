@@ -102,13 +102,17 @@ namespace Uintah{
     /** @brief Test to see if a task exists **/
     const bool has_task( const std::string name ){
 
-        std::vector<std::string>::const_iterator i_full_tasks = std::find(_active_tasks.begin(), _active_tasks.end(), name);
-        std::vector<std::string>::const_iterator i_atomic_tasks = std::find(_active_tasks.begin(), _active_tasks.end(), name);
+        std::vector<std::string>::const_iterator i_full_tasks
+          = std::find(_active_tasks.begin(), _active_tasks.end(), name);
+        std::vector<std::string>::const_iterator i_atomic_tasks
+          = std::find(_active_atomic_tasks.begin(), _active_atomic_tasks.end(), name);
 
         if ( i_full_tasks == _active_tasks.end() && i_atomic_tasks == _active_atomic_tasks.end() ){
           return false;
         }
+
         return true;
+
     }
 
     virtual void add_task( ProblemSpecP& db ){

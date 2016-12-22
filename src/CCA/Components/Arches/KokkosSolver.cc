@@ -377,8 +377,10 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
   for ( int time_substep = 0; time_substep < _rk_order; time_substep++ ){
 
     //Compute U from rhoU
-    TaskInterface* tsk = i_prop_fac->second->retrieve_task("u_from_rho_u");
-    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+    if ( i_prop_fac->second->has_task( "u_from_rho_u" )){
+      TaskInterface* tsk = i_prop_fac->second->retrieve_task("u_from_rho_u");
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+    }
 
     //(pre-update properties tasks)
     SVec prop_preupdate_tasks = i_prop_fac->second->retrieve_task_subset("pre_update_property_models");
@@ -434,12 +436,13 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
-    //APPLY BC for OULET AND PRESSURE PER STAS'S BCs
-    AtomicTaskInterface* rhohat_tsk = i_transport->second->retrieve_atomic_task("vel_rho_hat_bc");
-    rhohat_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
-
     // ** PRESSURE PROJECTION **
     if ( i_transport->second->has_task("build_pressure_system")){
+
+      //APPLY BC for OULET AND PRESSURE PER STAS'S BCs
+      AtomicTaskInterface* rhohat_tsk = i_transport->second->retrieve_atomic_task("vel_rho_hat_bc");
+      rhohat_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
+
       PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(i_transport->second->retrieve_task("build_pressure_system"));
       // Compute the coeffificients
       press_tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep );
@@ -463,13 +466,14 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
         i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
       }
+
+      //for sanity sake, recompute the velocities from momentum:
+      // Note - This will be recomputed when the timestep restarts so there is some redundancy here.
+      i_prop_fac->second->retrieve_task("u_from_rho_u")->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1);
+
     }
+  } // RK Integrator 
 
-  }
-
-  //for sanity sake, recompute the velocities from momentum:
-  // Note - This will be recomputed when the timestep restarts so there is some redundancy here.
-  i_prop_fac->second->retrieve_task("u_from_rho_u")->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1);
 
   return 0;
 
