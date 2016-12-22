@@ -150,7 +150,7 @@ private:
 
       IntVector ijk;
       int face = i_info->first[0];
-      IntVector shift;
+      IntVector shift(0,0,0);
 
       // First column is the face (-1,1,-2,2,-3,3) corresponding to the face
       // (-x,x,-y,y,-z,z) and the other two are the remaining indices for
@@ -249,7 +249,6 @@ private:
     T& var = *(tsk_info->get_uintah_field<T>(_task_name));
 
     const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-    double dx;
     Vector DX = patch->dCell();
 
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -257,8 +256,8 @@ private:
       const BndCondSpec* spec = i_bc->second.find(m_default_label);
       Uintah::Patch::FaceType face = i_bc->second.face;
 
-      IntVector shift;
-      double delta;
+      IntVector shift(0,0,0);
+      double delta=0.;
       int I = 0;
 
       if ( face == Patch::xminus ){

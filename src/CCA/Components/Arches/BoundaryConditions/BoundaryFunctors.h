@@ -312,7 +312,7 @@ namespace Uintah { namespace ArchesCore{
                     const BndSpec* bnd, Uintah::Iterator bndIter ){
 
         VariableHelper<T> var_help;
-        typedef typename VariableHelper<T>::ConstType CT;
+        //typedef typename VariableHelper<T>::ConstType CT;
         T& var = *( tsk_info->get_uintah_field<T>(var_name));
         constCCVariable<double>& rho =
           *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));

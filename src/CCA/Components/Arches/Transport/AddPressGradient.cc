@@ -37,6 +37,7 @@ void AddPressGradient::register_eval( std::vector<AFC::VariableInformation>& var
 
 void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
+  double dt = tsk_info->get_dt();
   Vector DX = patch->dCell();
   SFCXVariable<double>& xmom = tsk_info->get_uintah_field_add<SFCXVariable<double> >( m_xmom );
   SFCYVariable<double>& ymom = tsk_info->get_uintah_field_add<SFCYVariable<double> >( m_ymom );
@@ -45,11 +46,14 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
+  // because the hypre solve required a positive diagonal
+  // so we -1 * ( Ax = b ) requiring that we change the sign
+  // back.
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    xmom(i,j,k) += ( p(i,j,k) - p(i-1,j,k) ) / DX.x();
-    ymom(i,j,k) += ( p(i,j,k) - p(i,j-1,k) ) / DX.y();
-    zmom(i,j,k) += ( p(i,j,k) - p(i,j,k-1) ) / DX.z();
+    xmom(i,j,k) += ( p(i-1,j,k) - p(i,j,k) ) / DX.x();
+    ymom(i,j,k) += ( p(i,j-1,k) - p(i,j,k) ) / DX.y();
+    zmom(i,j,k) += ( p(i,j,k-1) - p(i,j,k) ) / DX.z();
 
   });
 }

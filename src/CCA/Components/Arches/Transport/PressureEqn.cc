@@ -287,10 +287,10 @@ PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 void
 PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_substep ){
 
-  const VarLabel* A;
-  const VarLabel* b;
-  const VarLabel* x;
-  const VarLabel* guess;
+  const VarLabel* A = NULL;
+  const VarLabel* b = NULL;
+  const VarLabel* x = NULL;
+  const VarLabel* guess = NULL;
 
   for ( auto i = _local_labels.begin(); i != _local_labels.end(); i++ ){
     if ( (*i)->getName() == "A_press" ){

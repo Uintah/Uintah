@@ -394,9 +394,6 @@ private:
   KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     Vector Dx = patch->dCell();
-    double ax = Dx.y() * Dx.z();
-    double ay = Dx.z() * Dx.x();
-    double az = Dx.x() * Dx.y();
     double V = Dx.x()*Dx.y()*Dx.z();
 
     CFXT& u     = *(tsk_info->get_const_uintah_field<CFXT>(m_x_velocity_name));
@@ -450,6 +447,7 @@ private:
           GET_FX_BUFFERED_PATCH_RANGE( 1, 0 )
           Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
           Uintah::parallel_for( x_range, get_flux );
+
         } else if ( my_dir == ArchesCore::YDIR ){
 
           CT& u_fx = tsk_info->get_const_uintah_field_add<CT>("vcell_xvel");
@@ -462,6 +460,7 @@ private:
           GET_FY_BUFFERED_PATCH_RANGE( 1, 0 )
           Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
           Uintah::parallel_for( y_range, get_flux );
+
         } else {
 
           CT& u_fx = tsk_info->get_const_uintah_field_add<CT>("wcell_xvel");
@@ -474,6 +473,7 @@ private:
           GET_FZ_BUFFERED_PATCH_RANGE( 1, 0 )
           Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
           Uintah::parallel_for( z_range, get_flux );
+
         }
 
       }
@@ -492,11 +492,6 @@ private:
           Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
 
           Uintah::parallel_for( range, [&](int i, int j, int k){
-
-            if ( i == 5 && j == 0 && k == 12 ){
-              double d;
-              d = 0.;
-            }
 
             const double SE = (u(i+1,j,k) - u(i,j,k))/Dx.x();
             const double SW = (u(i,j,k) - u(i,j,k))/Dx.x();

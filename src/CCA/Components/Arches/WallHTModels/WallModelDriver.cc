@@ -122,7 +122,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       coal_ht->problemSetup( db_model );
 
       _all_ht_models.push_back( coal_ht );
-  
+
       _dep_vel_name = get_dep_vel_name( db_model );
     } else {
 
@@ -130,7 +130,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 
     }
   }
-  
+
   if (do_coal_region){
     const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
     _deposit_thickness_label = VarLabel::create( "deposit_thickness", CC_double );
@@ -156,7 +156,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   _HF_S_label     = VarLabel::find( "radiationFluxS" );
   _HF_T_label     = VarLabel::find( "radiationFluxT" );
   _HF_B_label     = VarLabel::find( "radiationFluxB" );
-      
+
   if (do_coal_region){
     _ave_dep_vel_label = VarLabel::find(_dep_vel_name);
   }
@@ -226,7 +226,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
     const Patch* patch = patches->get(p);
     HTVariables vars;
-    vars.time = _shared_state->getElapsedTime();  
+    vars.time = _shared_state->getElapsedTime();
     delt_vartype DT;
     old_dw->get(DT, _shared_state->get_delt_label());
     vars.delta_t = DT;
@@ -257,7 +257,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         old_dw->get(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch, Ghost::AroundCells, 1 );
         old_dw->get(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch, Ghost::AroundCells, 1 );
         old_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-    
+
       if (do_coal_region){
         old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
         old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
@@ -284,7 +284,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       //but that creates a danger of a developer forgeting to perform the operation. For now, do it
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue.
       vars.T_copy.copyData( vars.T );
-             
+
     } else if ( time_subset == 0 && timestep % _calc_freq != 0 ) {
 
       // no ht solve this step:
@@ -297,7 +297,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       constCCVariable<double> T_real_old;
       constCCVariable<double> T_old;
       constCCVariable<int> cell_type;
-      
+
       old_dw->get( T_old             , _T_label        , _matl_index , patch    , Ghost::None , 0 );
       //if ( !doing_restart )
         //old_dw->get( T_real_old      , _True_T_Label   , _matl_index , patch    , Ghost::None , 0 );
@@ -331,7 +331,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
           T_real[*c] = 0.0;
         }
       }
-      
+
       if (do_coal_region){
         CCVariable<double> deposit_thickness;
         constCCVariable<double> deposit_thickness_old;
@@ -467,7 +467,7 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars, CCV
     IntVector offset = patch->faceDirection(face);
     CellIterator cell_iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
 
-    constCCVariable<double>* q;
+    constCCVariable<double>* q = NULL;
     switch (face) {
       case Patch::xminus:
         q = &(vars.incident_hf_w);
@@ -943,13 +943,13 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               }
 
               rad_q /= total_area_face; // representative radiative flux to the cell.
-               
-              R_wall = wi.dy / wi.k; 
-              
+
+              R_wall = wi.dy / wi.k;
+
               vars.deposit_thickness[c] = vars.ave_deposit_velocity[c] * wi.t_sb;
 
               vars.deposit_thickness[c] = min(vars.deposit_thickness[c],wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
-              
+
               // here we computed quantaties to find which deposition regime we are in.
               double qnet_max = rad_q - _sigma_constant * std::pow( wi.T_slag, 4.0 );
               qnet_max *= wi.emissivity;
@@ -958,8 +958,8 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               double rad_q_max = (wi.T_slag-wi.T_inner)/(R_wall*wi.emissivity) + _sigma_constant*std::pow(wi.T_slag,4.0);
 
               if (vars.deposit_thickness[c] < dp_max) {
-                // Regime 1 
-                //vars.deposit_thickness[c] = vars.deposit_thickness[c]; 
+                // Regime 1
+                //vars.deposit_thickness[c] = vars.deposit_thickness[c];
               } else if (rad_q > rad_q_max) {
                 // Regime 3
                 vars.deposit_thickness[c]=0;
@@ -967,13 +967,13 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 // Regime 2
                 vars.deposit_thickness[c]=dp_max;
               }
-              
-              vars.deposit_thickness[c] = (1-wi.relax) * vars.deposit_thickness_old[c] + wi.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes. 
 
-              R_d = vars.deposit_thickness[c] / wi.k_deposit; 
+              vars.deposit_thickness[c] = (1-wi.relax) * vars.deposit_thickness_old[c] + wi.relax * vars.deposit_thickness[c];  // here we time average the deposit thickness so that it doesn't vary when we switch regimes.
+
+              R_d = vars.deposit_thickness[c] / wi.k_deposit;
               R_tot = R_wall + R_d; // total thermal resistance
-              T_old =  vars.T_real_old[c]; 
-              TW_new =  vars.T_real_old[c]; 
+              T_old =  vars.T_real_old[c];
+              TW_new =  vars.T_real_old[c];
               net_q = rad_q;
               newton_solve( wi, vars, TW_new, T_old, rad_q, net_q, R_tot ); // this funcitons solves for the new TW_new.
               vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
@@ -1051,9 +1051,9 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, dou
   double f1       = 0.0;
   double T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
   double TW_guess, TW_tmp, TW_old;
-  
+
   //required variables
-  
+
   // new solve
   TW_guess = T_old;
   TW_old = TW_guess-delta;
