@@ -58,7 +58,7 @@
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
-      <Face side="x-">
+      <Face side="x-" type="Velocity">
         <BCType var="Custom" label="x-mom" type="velocity">
           <value>1.3</value>
         </BCType>
@@ -69,7 +69,7 @@
           <value>0</value>
         </BCType>
       </Face>
-      <Face side="x+">
+      <Face side="x+" type="Outflow">
         <BCType var="Neumann" label="x-mom">
           <value>0.</value>
         </BCType>
@@ -80,7 +80,7 @@
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="y-">
+      <Face side="y-" type="Wall">
         <BCType var="Dirichlet" label="x-mom">
           <value>0.</value>
         </BCType>
@@ -91,7 +91,7 @@
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="y+">
+      <Face side="y+" type="Wall">
         <BCType var="Dirichlet" label="x-mom">
           <value>0.</value>
         </BCType>
@@ -102,7 +102,7 @@
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="z-">
+      <Face side="z-" type="Wall">
         <BCType var="Dirichlet" label="x-mom">
           <value>0.</value>
         </BCType>
@@ -113,7 +113,7 @@
           <value>0.</value>
         </BCType>
       </Face>
-      <Face side="z+">
+      <Face side="z+" type="Wall">
         <BCType var="Dirichlet" label="x-mom">
           <value>0.</value>
         </BCType>

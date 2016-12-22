@@ -2,6 +2,7 @@
 #define Uintah_Component_Arches_AtomicTaskInterface_h
 
 #include <CCA/Components/Arches/Task/TaskVariableTools.h>
+#include <CCA/Components/Arches/WBCHelper.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/LevelP.h>
@@ -11,7 +12,6 @@
 #include <Core/Grid/Task.h>
 #include <string>
 #include <vector>
-#include <boost/foreach.hpp>
 
 //===============================================================
 
@@ -20,7 +20,7 @@
 * @author Jeremy Thornock
 * @date   2016
 *
-* @brief An atomic task (schedule + call back)
+* @brief An atomic task (schedule + call back only)
 *
 **/
 
@@ -35,7 +35,7 @@ namespace Uintah{
 
 public:
 
-    enum TASK_TYPE { STANDARD_TASK, BC_TASK };
+    enum ATOMIC_TASK_TYPE { ATOMIC_STANDARD_TASK };
 
     typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> ParticleTuple;
 
@@ -49,7 +49,7 @@ public:
 
     /** @brief Print task name. **/
     void print_task_name(){
-      std::cout << "Task: " << _task_name << std::endl;
+      std::cout << "Task: " << m_task_name << std::endl;
     }
 
     /** @brief Input file interface **/
@@ -67,7 +67,7 @@ public:
     void schedule_task( const LevelP& level,
                         SchedulerP& sched,
                         const MaterialSet* matls,
-                        TASK_TYPE task_type,
+                        ATOMIC_TASK_TYPE task_type,
                         int time_substep );
 
     /** @brief The actual task interface function that references the
@@ -81,19 +81,23 @@ public:
                   int time_substep );
 
     /** @brief Builder class containing instructions on how to build the task **/
-    class TaskBuilder {
+    class AtomicTaskBuilder {
 
       public:
 
-        TaskBuilder(){};
+        AtomicTaskBuilder(){};
 
-        virtual ~TaskBuilder() {}
+        virtual ~AtomicTaskBuilder() {}
 
         virtual AtomicTaskInterface* build() = 0;
 
       protected:
 
     };
+
+    void set_bcHelper( Uintah::WBCHelper* helper ){
+      m_bcHelper = helper;
+    }
 
 protected:
 
@@ -103,9 +107,10 @@ protected:
     /** @brief The actual work done within the derived class **/
     virtual void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
-    std::string                  _task_name;
-    const int                    _matl_index;
-    std::vector<const VarLabel*> _local_labels;
+    std::string                  m_task_name;
+    const int                    m_matl_index;
+    std::vector<const VarLabel*> m_local_labels;
+    WBCHelper* m_bcHelper;
 
     /** @brief A helper struct for creating new varlabels as requested by the task **/
     template <typename T>
@@ -137,7 +142,7 @@ protected:
     void register_new_variable(const std::string name){
 
       RegisterNewVariableHelper<T>* helper = scinew RegisterNewVariableHelper<T>();
-      helper->create_variable( name, _local_labels );
+      helper->create_variable( name, m_local_labels );
       delete helper;
 
     }

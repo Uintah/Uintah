@@ -90,12 +90,15 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
     // A
     Stencil7& A = Apress[c];
 
-    A.e = area_EW/DX.x();
-    A.w = area_EW/DX.x();
-    A.n = area_NS/DX.y();
-    A.s = area_NS/DX.y();
-    A.t = area_TB/DX.z();
-    A.b = area_TB/DX.z();
+    A.e = -area_EW/DX.x();
+    A.w = -area_EW/DX.x();
+    A.n = -area_NS/DX.y();
+    A.s = -area_NS/DX.y();
+    A.t = -area_TB/DX.z();
+    A.b = -area_TB/DX.z();
+
+    A.p = A.e + A.w + A.n + A.s + A.t + A.b;
+    A.p *= -1;
 
     // b
     b[c] = area_EW * ( xmom[E] - xmom[c] ) +
@@ -125,7 +128,7 @@ PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
 
   b.initialize(0.0);
-  Apress.copyData( Apress );
+  Apress.copyData( old_Apress );
 
 }
 
@@ -173,5 +176,54 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     b[c] *= eps[c];
 
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+PressureEqn::register_compute_bcs(
+  std::vector<AFC::VariableInformation>& variable_registry, const int time_substep ){
+
+  register_variable( "b_press", AFC::MODIFIES, variable_registry );
+  register_variable( "A_press", AFC::MODIFIES, variable_registry );
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  CCVariable<Stencil7>& A = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
+
+  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+
+    Uintah::Iterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
+    IntVector iDir = patch->faceDirection( i_bc->second.face );
+    Patch::FaceType face = i_bc->second.face;
+    BndTypeEnum my_type = i_bc->second.type;
+
+    double sign;
+
+    if ( my_type == OUTLET ||
+         my_type == PRESSURE ){
+      // Dirichlet
+      // P = 0
+      sign = -1.0;
+    } else {
+      // Applies to Inlets
+      // Neumann
+      // dP/dX = 0
+      sign = 1.0;
+    }
+
+    for (cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
+
+      IntVector c = *cell_iter - iDir;
+
+      A[c].p = A[c].p + sign * A[c][face];
+      A[c][face] = 0.;
+
+    }
   }
 }

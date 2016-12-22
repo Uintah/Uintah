@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Arches/KokkosSolver.h>
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <CCA/Components/Arches/UPSHelper.h>
@@ -416,14 +417,26 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     }
 
     // now update them:
+    // At this stage we have the hatted (uncorrected) velocities
     SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update");
     for ( SVec::iterator i = mom_fe_up.begin(); i != mom_fe_up.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
+    //APPLY BC for OULET AND PRESSURE PER STAS'S BCs
+    AtomicTaskInterface* rhohat_tsk = i_transport->second->retrieve_atomic_task("vel_rho_hat_bc");
+    rhohat_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
+
     // ** PRESSURE PROJECTION **
+    // Compute the coeffificients
     i_transport->second->retrieve_task("build_pressure_system")->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep );
+    // Compute the boundary conditions on the linear system
+    i_transport->second->retrieve_task("build_pressure_system")->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep );
+
+    //SOLVE THE SYSTEM
+
+    //CORRECT THE VELOCITIES
 
     // now apply boundary conditions for all scalar for the next timestep
     for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){

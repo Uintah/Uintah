@@ -3,6 +3,7 @@
 
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <string>
 #include <iomanip>
@@ -20,6 +21,8 @@ namespace Uintah{
 
     typedef std::map< std::string, TaskInterface*>              TaskMap;
     typedef std::map< std::string, TaskInterface::TaskBuilder*> BuildMap;
+    typedef std::map< std::string, AtomicTaskInterface*>              ATaskMap;
+    typedef std::map< std::string, AtomicTaskInterface::AtomicTaskBuilder*> ABuildMap;
     typedef std::map<std::string, std::vector<std::string> >    TypeToTaskMap;
 
     //May need to overload for the builders.
@@ -29,15 +32,22 @@ namespace Uintah{
     /** @brief Actually build and call problemSetups for each tasks **/
     virtual void build_all_tasks( ProblemSpecP& db ) = 0;
 
-    /** @brief Register tasks in a convnient container **/
+    /** @brief Register tasks in a convenient container **/
     void register_task(std::string task_name,
                        TaskInterface::TaskBuilder* builder );
+
+    /** @brief Register tasks in a convenient container **/
+    void register_atomic_task( std::string task_name,
+                               AtomicTaskInterface::AtomicTaskBuilder* builder );
 
     /** @brief Retrieve a subset (collection) of tasks given the subset name **/
     virtual std::vector<std::string> retrieve_task_subset(const std::string subset) = 0;
 
-    /** @brief Retrieve a task by its name **/
+    /** @brief Retrieve a task by name **/
     TaskInterface* retrieve_task( const std::string task_name );
+
+    /** @brief Retrieve an atomic task by name **/
+    AtomicTaskInterface* retrieve_atomic_task( const std::string task_name );
 
     /** @brief Set the particle helper **/
     void set_particle_helper( ArchesParticlesHelper* part_helper ){ _part_helper = part_helper; }
@@ -46,7 +56,9 @@ namespace Uintah{
     void set_shared_state( SimulationStateP shared_state ){ _shared_state = shared_state; }
 
     TaskMap   _tasks;             ///< Task map
-    TaskMap& retrieve_all_tasks(){ return _tasks; };
+    ATaskMap   _atomic_tasks;      ///< Atomic Task map
+    TaskMap& retrieve_all_tasks(){ return _tasks; }
+    ATaskMap& retrieve_all_atomic_tasks(){ return _atomic_tasks; }
 
     /** @brief Retrieve the map of types -> tasks. **/
     const TypeToTaskMap& retrieve_type_to_tasks(){ return _type_to_tasks; }
@@ -99,6 +111,9 @@ namespace Uintah{
       for ( auto i = _tasks.begin(); i != _tasks.end(); i++ ){
         i->second->set_bcHelper( helper );
       }
+      for ( auto i = _atomic_tasks.begin(); i != _atomic_tasks.end(); i++ ){
+        i->second->set_bcHelper( helper ); 
+      }
 
     }
 
@@ -112,11 +127,13 @@ namespace Uintah{
 
   protected:
 
-    BuildMap  _builders;                          ///< Builder map
-    std::vector<std::string> _active_tasks;       ///< Task which are active
-    std::vector<std::string> m_task_init_order;   ///< Allows a factory to set an execution order for the tasks
-    TypeToTaskMap _type_to_tasks;                 ///< Collects all tasks of a common type
-    SimulationStateP _shared_state;               ///< Uintah SharedState
+    BuildMap  _builders;                           ///< Builder map
+    ABuildMap  _atomic_builders;                    ///< Builders for atomic tasks
+    std::vector<std::string> _active_tasks;        ///< Active tasks
+    std::vector<std::string> _active_atomic_tasks; ///< Active atomic tasks
+    std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks
+    TypeToTaskMap _type_to_tasks;                  ///< Collects all tasks of a common type
+    SimulationStateP _shared_state;                ///< Uintah SharedState
 
     WBCHelper* m_bcHelper;
 

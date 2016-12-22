@@ -7,15 +7,15 @@ typedef ArchesFieldContainer::VAR_DEPEND VAR_DEPEND;
 typedef ArchesFieldContainer::VariableRegistry VariableRegistry;
 
 AtomicTaskInterface::AtomicTaskInterface( std::string task_name, int matl_index ) :
-  _task_name(task_name),
-  _matl_index(matl_index)
+  m_task_name(task_name),
+  m_matl_index(matl_index)
 {
 }
 
 AtomicTaskInterface::~AtomicTaskInterface()
 {
   //destroy local labels
-  for ( auto ilab = _local_labels.begin(); ilab != _local_labels.end(); ilab++ ){
+  for ( auto ilab = m_local_labels.begin(); ilab != m_local_labels.end(); ilab++ ){
     VarLabel::destroy( *ilab );
   }
 }
@@ -25,16 +25,16 @@ AtomicTaskInterface::~AtomicTaskInterface()
 void AtomicTaskInterface::schedule_task( const LevelP& level,
                                    SchedulerP& sched,
                                    const MaterialSet* matls,
-                                   TASK_TYPE task_type,
+                                   ATOMIC_TASK_TYPE task_type,
                                    int time_substep ){
 
   VariableRegistry variable_registry;
 
   Task* tsk;
 
-  if ( task_type == STANDARD_TASK ){
+  if ( task_type == ATOMIC_STANDARD_TASK ){
     register_eval( variable_registry, time_substep );
-    tsk = scinew Task( _task_name, this, &AtomicTaskInterface::do_task, variable_registry,
+    tsk = scinew Task( m_task_name, this, &AtomicTaskInterface::do_task, variable_registry,
                        time_substep );
   } else {
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
@@ -61,7 +61,7 @@ void AtomicTaskInterface::schedule_task( const LevelP& level,
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
-      throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__);
+      throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+m_task_name, __FILE__, __LINE__);
       break;
 
     }
@@ -91,7 +91,7 @@ void AtomicTaskInterface::do_task( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index,
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, m_matl_index,
       variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;

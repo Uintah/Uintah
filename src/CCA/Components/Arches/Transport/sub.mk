@@ -32,6 +32,7 @@ SRCS += \
         $(SRCDIR)/KScalarRHS.cc       \
         $(SRCDIR)/KMomentum.cc        \
 			  $(SRCDIR)/PressureEqn.cc      \
+				$(SRCDIR)/VelRhoHatBC.cc      \
         $(SRCDIR)/TransportFactory.cc 
 
 ########################################################################

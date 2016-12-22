@@ -555,6 +555,7 @@ private:
 
   }
 
+//--------------------------------------------------------------------------------------------------
   template <typename T> void
   KMomentum<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
@@ -571,6 +572,7 @@ private:
 
   }
 
+//--------------------------------------------------------------------------------------------------
   template <typename T> void
   KMomentum<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
