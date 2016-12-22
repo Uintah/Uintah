@@ -413,7 +413,7 @@ namespace Uintah{
     CT& velU  = *(tsk_info->get_const_uintah_field<CT>(_gas_u_velocity_name));
     CT& velV  = *(tsk_info->get_const_uintah_field<CT>(_gas_v_velocity_name));
     CT& velW  = *(tsk_info->get_const_uintah_field<CT>(_gas_w_velocity_name));
-    CT* volQPtr;
+    CT* volQPtr = NULL;
     if ( d_radiation ){
       volQPtr = tsk_info->get_const_uintah_field<CT>(_volq_name);
     }
@@ -452,7 +452,7 @@ namespace Uintah{
       const std::string w_velocity_name = get_name( ienv, _base_w_velocity_name );
       const std::string abskp_name = get_name( ienv, _base_abskp_name );
 
-      CT* absKpPtr;
+      CT* absKpPtr = NULL;
       if ( d_radiation ){
         absKpPtr = tsk_info->get_const_uintah_field<CT>(abskp_name);
       }
