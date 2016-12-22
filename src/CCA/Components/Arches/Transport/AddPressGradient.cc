@@ -51,9 +51,9 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   // back.
   Uintah::parallel_for( range, [&](int i, int j, int k){
 
-    xmom(i,j,k) += ( p(i-1,j,k) - p(i,j,k) ) / DX.x();
-    ymom(i,j,k) += ( p(i,j-1,k) - p(i,j,k) ) / DX.y();
-    zmom(i,j,k) += ( p(i,j,k-1) - p(i,j,k) ) / DX.z();
+    xmom(i,j,k) += dt * ( p(i-1,j,k) - p(i,j,k) ) / DX.x();
+    ymom(i,j,k) += dt * ( p(i,j-1,k) - p(i,j,k) ) / DX.y();
+    zmom(i,j,k) += dt * ( p(i,j,k-1) - p(i,j,k) ) / DX.z();
 
   });
 }

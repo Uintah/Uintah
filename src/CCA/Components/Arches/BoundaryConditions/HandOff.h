@@ -148,7 +148,7 @@ private:
     for ( auto i_info = m_boundary_info.values.begin(); i_info != m_boundary_info.values.end();
           i_info++ ){
 
-      IntVector ijk;
+      IntVector ijk(0,0,0);
       int face = i_info->first[0];
       IntVector shift(0,0,0);
 
