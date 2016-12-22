@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/Utility/GridInfo.h>
 #include <CCA/Components/Arches/Utility/WaveFormInit.h>
 #include <CCA/Components/Arches/Utility/RandParticleLoc.h>
+#include <CCA/Components/Arches/Utility/AlmgrenMMS.h>
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleVelocity.h>
 #include <CCA/Components/Arches/Utility/InitLagrangianParticleSize.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
@@ -68,6 +69,25 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         } else {
           throw InvalidValue("Error: Grid type not valid for WaveForm initializer: "+variable_type, __FILE__, __LINE__);
         }
+
+      } else if ( type == "almgren_mms"){
+
+        std::string var_type;
+        db_task->findBlock("variable")->getAttribute("type", var_type);
+
+        TaskInterface::TaskBuilder* tsk;
+
+        if ( var_type == "CC" ){
+          tsk = scinew AlmgrenMMS<CCVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else if ( var_type == "FX" ){
+          tsk = scinew AlmgrenMMS<SFCXVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else if ( var_type == "FY" ){
+          tsk = scinew AlmgrenMMS<SFCYVariable<double> >::Builder( task_name, 0, eqn_name );
+        } else {
+          tsk = scinew AlmgrenMMS<SFCZVariable<double> >::Builder( task_name, 0, eqn_name );
+        }
+
+        register_task( task_name, tsk );
 
       } else if ( type == "random_lagrangian_particles"){
 

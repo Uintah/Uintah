@@ -37,7 +37,8 @@ SRCS += \
           $(SRCDIR)/TaskAlgebra.cc                    \
           $(SRCDIR)/SurfaceVolumeFractionCalc.cc      \
           $(SRCDIR)/UtilityFactory.cc                 \
-          $(SRCDIR)/WaveFormInit.cc                   
+          $(SRCDIR)/WaveFormInit.cc                   \
+          $(SRCDIR)/AlmgrenMMS.cc                   
 
 ########################################################################
 #

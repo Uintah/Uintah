@@ -1131,8 +1131,15 @@
         <task                           spec="MULTIPLE NO_DATA"
                                         attribute1="task_label REQUIRED STRING"
                                         attribute2="variable_label   OPTIONAL STRING"
-                                        attribute3="type  REQUIRED STRING 'wave, random_lagrangian_particles,
-                                                                           lagrangian_particle_velocity, lagrangian_particle_size'">
+                                        attribute3="type  REQUIRED STRING 'wave, 
+                                                                           almgren_mms,
+                                                                           random_lagrangian_particles,
+                                                                           lagrangian_particle_velocity, 
+                                                                           lagrangian_particle_size'">
+
+          <variable                     spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
+                                        need_applies_to="type almgren_mms"/>
 
           <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
@@ -1159,6 +1166,20 @@
                                         need_applies_to="type square"/>
 
           </wave>
+
+          <!-- ALMGREN MMS -->
+          <amplitude                  spec="OPTIONAL DOUBLE"
+                                      need_applies_to="type almgren_mms"/>
+          <frequency                  spec="OPTIONAL DOUBLE"
+                                      need_applies_to="type almgren_mms"/>
+          <which_vel                  spec="REQUIRED STRING 'u,v'"
+                                      need_applies_to="type almgren_mms"/> <!-- for a 2D plane, specify which component 
+                                                                                to which this corresponds -->
+          <coordinates                spec="REQUIRED NO_DATA"
+                                      attribute1="x REQUIRED STRING"
+                                      attribute2="y REQUIRED STRING"/> <!-- specify the the x and y varlabel names for 
+                                                                            the mms -->
+
 
           <!-- LAGRANGIAN PARTICLE POSITION -->
           <!-- nothing here yet -->
