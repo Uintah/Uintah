@@ -628,10 +628,15 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                 BCValueTypeEnum bcValType=INVALID_TYPE;
 
                 if ( atomBCTypeEnum == DIRICHLET || atomBCTypeEnum == NEUMANN ){
-                  // doubles
-                  const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
-                  doubleVal = new_bc->getValue();
-                  bcValType = DOUBLE_TYPE;
+
+                  if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
+                    // This is a hack to accomidate the Velocity BC in old arches. 
+                  } else {
+                    // doubles
+                    const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
+                    doubleVal = new_bc->getValue();
+                    bcValType = DOUBLE_TYPE;
+                  }
                 } else {
                   // functors
                   if ( bndCondBase->getValueType() == Uintah::BoundCondBase::DOUBLE_TYPE ){
