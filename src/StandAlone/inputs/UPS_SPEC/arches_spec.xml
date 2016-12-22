@@ -1177,7 +1177,8 @@
                                                                                 to which this corresponds -->
           <coordinates                spec="REQUIRED NO_DATA"
                                       attribute1="x REQUIRED STRING"
-                                      attribute2="y REQUIRED STRING"/> <!-- specify the the x and y varlabel names for 
+                                      attribute2="y REQUIRED STRING"
+                                      need_applies_to="type almgren_mms"/> <!-- specify the the x and y varlabel names for 
                                                                             the mms -->
 
 
