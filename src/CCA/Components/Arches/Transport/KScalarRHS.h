@@ -29,7 +29,7 @@
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
 #include <CCA/Components/Arches/Directives.h>
-#include <CCA/Components/Arches/BoundaryFunctors.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 #include <CCA/Components/Arches/UPSHelper.h>
 
 #ifdef DO_TIMINGS

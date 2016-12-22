@@ -28,6 +28,7 @@ endif
 
 SRCS += \
         $(SRCDIR)/BoundaryConditionFactory.cc \
+				$(SRCDIR)/BoundaryFunctorHelper.cc \
         $(SRCDIR)/HandOff.cc
 
 ########################################################################

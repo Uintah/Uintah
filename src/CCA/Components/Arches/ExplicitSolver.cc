@@ -25,7 +25,7 @@
 //----- ExplicitSolver.cc ----------------------------------------------
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
-#include <CCA/Components/Arches/BoundaryFunctors.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>

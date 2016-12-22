@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/BoundaryFunctorHelper.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctorHelper.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>

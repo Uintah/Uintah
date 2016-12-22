@@ -10,7 +10,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Task/TaskVariableTools.h>
-#include <CCA/Components/Arches/BoundaryFunctorHelper.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctorHelper.h>
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <CCA/Components/Arches/GridTools.h>
 

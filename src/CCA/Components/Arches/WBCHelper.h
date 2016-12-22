@@ -36,7 +36,7 @@
 
 //-- Arches Includes --//
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/BoundaryFunctorHelper.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctorHelper.h>
 
 //-- C++ Includes --//
 #include <map>

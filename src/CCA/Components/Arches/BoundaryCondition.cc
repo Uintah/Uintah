@@ -37,7 +37,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/WBCHelper.h>
-#include <CCA/Components/Arches/BoundaryFunctors.h>
+#include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
