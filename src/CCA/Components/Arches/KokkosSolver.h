@@ -28,6 +28,7 @@
 #define Uintah_Component_Arches_KokkosSolver_h
 
 #include <CCA/Components/Arches/NonlinearSolver.h>
+#include <CCA/Ports/SolverInterface.h>
 
 namespace Uintah{
 
@@ -43,23 +44,27 @@ namespace Uintah{
 
   public:
     Builder( SimulationStateP& sharedState,
-             const ProcessorGroup* myWorld ) :
+             const ProcessorGroup* myWorld,
+             SolverInterface* solver ) :
              m_sharedState(sharedState),
-             m_myWorld(myWorld)
+             m_myWorld(myWorld),
+             m_solver(solver)
     { }
      ~Builder(){}
 
      KokkosSolver* build(){
-       return scinew KokkosSolver( m_sharedState, m_myWorld );
+       return scinew KokkosSolver( m_sharedState, m_myWorld, m_solver );
      }
 
   private:
     SimulationStateP& m_sharedState;
     const ProcessorGroup* m_myWorld;
+    SolverInterface* m_solver;
   };
 
   KokkosSolver( SimulationStateP& sharedState,
-                const ProcessorGroup* myworld );
+                const ProcessorGroup* myworld,
+                SolverInterface* solver );
 
   virtual ~KokkosSolver();
 
@@ -119,6 +124,8 @@ namespace Uintah{
     const VarLabel* m_tot_muLabel;
 
     double m_dt_init;
+
+    SolverInterface* m_hypreSolver;
 
 };
 }

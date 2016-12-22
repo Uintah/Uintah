@@ -5,11 +5,14 @@
 
 namespace Uintah{
 
+  class SolverInterface;
+  class SolverParameters;
+
   class PressureEqn : public TaskInterface {
 
 public:
 
-    PressureEqn( std::string task_name, int matl_index );
+    PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state );
     ~PressureEqn();
 
     void problemSetup( ProblemSpecP& db );
@@ -37,19 +40,26 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index ) : m_task_name(task_name),
-               m_matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index, SimulationStateP shared_state ) : m_task_name(task_name),
+               m_matl_index(matl_index), m_state(shared_state){}
       ~Builder(){}
 
       PressureEqn* build()
-      { return scinew PressureEqn( m_task_name, m_matl_index ); }
+      { return scinew PressureEqn( m_task_name, m_matl_index, m_state ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
+      SimulationStateP m_state;
 
     };
+
+    void solve( const LevelP& level, SchedulerP& sched, const int time_substep );
+
+    void set_solver( SolverInterface* solver ){ m_hypreSolver = solver; }
+
+    void setup_solver( ProblemSpecP& db );
 
 private:
 
@@ -57,6 +67,14 @@ private:
     std::string m_xmom_name;
     std::string m_ymom_name;
     std::string m_zmom_name;
+    std::string m_pressure_name;
+
+    bool m_enforceSolvability;
+
+    SolverInterface* m_hypreSolver;
+    SolverParameters* m_hypreSolver_parameters;
+
+    SimulationStateP m_sharedState;
 
   };
 }

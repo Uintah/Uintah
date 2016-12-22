@@ -5,6 +5,7 @@
 #include <CCA/Components/Arches/Transport/KFEUpdate.h>
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/Transport/VelRhoHatBC.h>
+#include <CCA/Components/Arches/Transport/AddPressGradient.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 
@@ -142,13 +143,17 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     _momentum_update.push_back(update_task_name);
 
     //Pressure eqn
-    TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0);
+    TaskInterface::TaskBuilder* press_tsk = scinew PressureEqn::Builder("build_pressure_system", 0, _shared_state);
     register_task( "build_pressure_system", press_tsk );
     _pressure_eqn.push_back("build_pressure_system");
 
     //BC for velrhohat
     AtomicTaskInterface::AtomicTaskBuilder* velrhohatbc_tsk = scinew VelRhoHatBC::Builder("vel_rho_hat_bc", 0);
     register_atomic_task( "vel_rho_hat_bc", velrhohatbc_tsk);
+
+    //pressure Gradient
+    AtomicTaskInterface::AtomicTaskBuilder* gradP_tsk = scinew AddPressGradient::Builder("pressure_correction", 0);
+    register_atomic_task( "pressure_correction", gradP_tsk);
 
 
   }
@@ -245,13 +250,18 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
     TaskInterface* press_tsk = retrieve_task("build_pressure_system");
     print_task_setup_info("build_pressure_system", "building pressure terms, A, b");
-    press_tsk->problemSetup( db );
+    press_tsk->problemSetup( db_mom );
     press_tsk->create_local_labels();
 
     AtomicTaskInterface* rhouhatbc_tsk = retrieve_atomic_task("vel_rho_hat_bc");
     print_task_setup_info("vel_rho_hat_bc", "applies bc on rhouhat");
-    rhouhatbc_tsk->problemSetup(db);
+    rhouhatbc_tsk->problemSetup(db_mom);
     rhouhatbc_tsk->create_local_labels();
+
+    AtomicTaskInterface* gradP_tsk = retrieve_atomic_task("pressure_correction");
+    print_task_setup_info("pressure_correction", "correction for vels");
+    gradP_tsk->problemSetup(db_mom);
+    gradP_tsk->create_local_labels();
 
   }
 }
@@ -272,8 +282,10 @@ void TransportFactory::schedule_initialization( const LevelP& level,
   }
 
   //because this relies on momentum solvers.
-  TaskInterface* tsk = retrieve_task( "build_pressure_system" );
-  tsk->schedule_init( level, sched, matls, doing_restart );
+  if ( has_task( "build_pressure_system" ) ){
+    TaskInterface* tsk = retrieve_task( "build_pressure_system" );
+    tsk->schedule_init( level, sched, matls, doing_restart );
+  }
 
 }
 

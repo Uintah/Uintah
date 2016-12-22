@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/GridTools.h>
+#include <CCA/Ports/SolverInterface.h>
 
 using namespace Uintah;
 
@@ -7,12 +8,20 @@ typedef ArchesFieldContainer AFC;
 typedef ArchesTaskInfoManager ATIM;
 
 //--------------------------------------------------------------------------------------------------
-PressureEqn::PressureEqn( std::string task_name, int matl_index ) :
+PressureEqn::PressureEqn( std::string task_name, int matl_index, SimulationStateP shared_state ) :
 TaskInterface( task_name, matl_index ) {
+
+  m_hypreSolver_parameters = NULL;
+  m_sharedState = shared_state;
+  m_pressure_name = "pressure";
+
 }
 
 //--------------------------------------------------------------------------------------------------
 PressureEqn::~PressureEqn(){
+
+  delete m_hypreSolver_parameters;
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -20,6 +29,8 @@ void PressureEqn::create_local_labels(){
 
   register_new_variable<CCVariable<Stencil7> >( "A_press" );
   register_new_variable<CCVariable<double> >( "b_press" );
+  register_new_variable<CCVariable<double> >( m_pressure_name );
+  register_new_variable<CCVariable<double> >( "guess_press");
 
 }
 
@@ -35,6 +46,26 @@ PressureEqn::problemSetup( ProblemSpecP& db ){
   m_ymom_name = "y-mom";
   m_zmom_name = "z-mom";
 
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+PressureEqn::setup_solver( ProblemSpecP& db ){
+
+  m_hypreSolver_parameters = m_hypreSolver->readParameters(db, "pressure",
+                                                           m_sharedState );
+  m_hypreSolver_parameters->setSolveOnExtraCells(false);
+
+  //force a zero setup frequency since nothing else
+  //makes any sense at the moment.
+  m_hypreSolver_parameters->setSetupFrequency(0.0);
+
+  m_enforceSolvability = false;
+  if ( db->findBlock("enforce_solvability")){
+    m_enforceSolvability = true;
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -44,6 +75,8 @@ PressureEqn::register_initialize(
 
   register_variable( "A_press", AFC::COMPUTES, variable_registry );
   register_variable( "b_press", AFC::COMPUTES, variable_registry );
+  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry );
+  register_variable( "guess_press", AFC::COMPUTES, variable_registry );
   register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
   register_variable( "x-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
   register_variable( "y-mom", AFC::REQUIRES, 1, AFC::NEWDW, variable_registry );
@@ -62,6 +95,8 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
 
   CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
+  CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
+  CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("x-mom");
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("y-mom");
@@ -79,6 +114,8 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
   }
 
   b.initialize(0.0);
+  x.initialize(0.0);
+  guess.initialize(0.0);
 
   for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
@@ -116,6 +153,8 @@ PressureEqn::register_timestep_init(
   register_variable( "A_press", AFC::COMPUTES, variable_registry );
   register_variable( "A_press", AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
   register_variable( "b_press", AFC::COMPUTES, variable_registry );
+  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry );
+  register_variable( "guess_press", AFC::COMPUTES, variable_registry );
 
 }
 
@@ -126,9 +165,14 @@ PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
   CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
   constCCVariable<Stencil7>& old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7> >("A_press");
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
+  CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
+  CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
 
   b.initialize(0.0);
+  x.initialize(0.0);
+  guess.initialize(0.0);
   Apress.copyData( old_Apress );
+
 
 }
 
@@ -193,6 +237,7 @@ PressureEqn::register_compute_bcs(
 void
 PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
+  //This only applies BCs to A. Boundary conditions to the RHS are handled upstream in RhoUHatBC
   CCVariable<Stencil7>& A = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
@@ -226,4 +271,49 @@ PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     }
   }
+}
+
+void
+PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_substep ){
+
+  const VarLabel* A;
+  const VarLabel* b;
+  const VarLabel* x;
+  const VarLabel* guess;
+
+  for ( auto i = _local_labels.begin(); i != _local_labels.end(); i++ ){
+    if ( (*i)->getName() == "A_press" ){
+      A = *i;
+    } else if ( (*i)->getName() == "b_press" ){
+      b = *i;
+    } else if ( (*i)->getName() == m_pressure_name ){
+      x = *i;
+    } else if ( (*i)->getName() == "guess_press"){
+      guess = *i;
+    }
+  }
+
+  const MaterialSet* matls = m_sharedState->allArchesMaterials();
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
+  if ( isPeriodic || m_enforceSolvability ) {
+    m_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, time_substep);
+  }
+
+  bool modifies_hypre = false;
+  bool modifies_x = true;
+
+  if ( time_substep > 0 ) {
+    modifies_hypre = true;
+    modifies_x = true;
+  }
+
+  m_hypreSolver->scheduleSolve(level, sched,  matls,
+                               A,      Task::NewDW,
+                               x,      modifies_x,
+                               b,      Task::NewDW,
+                               guess,  Task::NewDW,
+                               m_hypreSolver_parameters,
+                               modifies_hypre);
+
 }

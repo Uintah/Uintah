@@ -157,7 +157,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   } else if ( db->findBlock("KokkosSolver")) {
 
-    builder = scinew KokkosSolver::Builder( m_sharedState, d_myworld );
+    builder = scinew KokkosSolver::Builder( m_sharedState, d_myworld, hypreSolver );
 
   } else {
 

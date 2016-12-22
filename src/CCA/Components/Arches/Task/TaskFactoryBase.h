@@ -99,6 +99,18 @@ namespace Uintah{
 
     }
 
+    /** @brief Test to see if a task exists **/
+    const bool has_task( const std::string name ){
+
+        std::vector<std::string>::const_iterator i_full_tasks = std::find(_active_tasks.begin(), _active_tasks.end(), name);
+        std::vector<std::string>::const_iterator i_atomic_tasks = std::find(_active_tasks.begin(), _active_tasks.end(), name);
+
+        if ( i_full_tasks == _active_tasks.end() && i_atomic_tasks == _active_atomic_tasks.end() ){
+          return false;
+        }
+        return true;
+    }
+
     virtual void add_task( ProblemSpecP& db ){
       //The derived class must do this for each specific factory.
       throw InvalidValue("Error: This factory currently cannot add tasks on the fly.", __FILE__,__LINE__);
@@ -112,7 +124,7 @@ namespace Uintah{
         i->second->set_bcHelper( helper );
       }
       for ( auto i = _atomic_tasks.begin(); i != _atomic_tasks.end(); i++ ){
-        i->second->set_bcHelper( helper ); 
+        i->second->set_bcHelper( helper );
       }
 
     }

@@ -32,6 +32,8 @@
     <save label="x-mom_x_flux"/>
     <save label="x-mom_y_flux"/>
     <save label="x-mom_z_flux"/>
+    <save label="phi"/>
+    <save label="pressure"/>
     <save label="uVel"/>
     <save label="vVel"/>
     <save label="wVel"/>
@@ -68,6 +70,9 @@
         <BCType var="Dirichlet" label="z-mom">
           <value>0</value>
         </BCType>
+        <BCType var="Dirichlet" label="phi">
+          <value>1.0</value>
+        </BCType>
       </Face>
       <Face side="x+" type="Outflow">
         <BCType var="Neumann" label="x-mom">
@@ -78,6 +83,9 @@
         </BCType>
         <BCType var="Neumann" label="z-mom">
           <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y-" type="Wall">
@@ -90,6 +98,9 @@
         <BCType var="Neumann" label="z-mom">
           <value>0.</value>
         </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face side="y+" type="Wall">
         <BCType var="Dirichlet" label="x-mom">
@@ -100,6 +111,9 @@
         </BCType>
         <BCType var="Dirichlet" label="z-mom">
           <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z-" type="Wall">
@@ -112,6 +126,9 @@
         <BCType var="Dirichlet" label="z-mom">
           <value>0.</value>
         </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face side="z+" type="Wall">
         <BCType var="Dirichlet" label="x-mom">
@@ -122,6 +139,9 @@
         </BCType>
         <BCType var="Dirichlet" label="z-mom">
           <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -167,55 +187,37 @@
       </PropertyModelsV2>
 
       <KMomentum>
-        <convection scheme="upwind"/>
+        <convection scheme="central"/>
         <inviscid/>
-      </KMomentum>
 
-      <Initialization>
-        <!--<task task_label="x-mom_initialize"-->
-              <!--variable_label="x-mom"-->
-              <!--type="wave">-->
-              <!--<wave type="square">-->
-                <!--<grid type="FX"/>-->
-                <!--<independent_variable label="gridX" type="CC"/>-->
-                <!--<square min="0.0"-->
-                        <!--max="1.0"-->
-                        <!--f="1.0"-->
-                        <!--offset="0.5"/>-->
-              <!--</wave>-->
-        <!--</task>-->
-        <!--<task task_label="y-mom_initialize"-->
-              <!--variable_label="y-mom"-->
-              <!--type="wave">-->
-              <!--<wave type="square">-->
-                <!--<grid type="FY"/>-->
-                <!--<independent_variable label="gridX" type="CC"/>-->
-                <!--<square min="0.0"-->
-                        <!--max="1.0"-->
-                        <!--f="1.0"-->
-                        <!--offset="0.5"/>-->
-              <!--</wave>-->
-        <!--</task>-->
-        <!--<task task_label="z-mom_initialize"-->
-              <!--variable_label="z-mom"-->
-              <!--type="wave">-->
-              <!--<wave type="square">-->
-                <!--<grid type="FZ"/>-->
-                <!--<independent_variable label="gridX" type="CC"/>-->
-                <!--<square min="0.0"-->
-                        <!--max="1.0"-->
-                        <!--f="1.0"-->
-                        <!--offset="0.5"/>-->
-              <!--</wave>-->
-        <!--</task>-->
-      </Initialization>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      
+      <KScalarTransport>
+        <eqn_group label="CCFields"
+                   type="CC">
+
+          <eqn label="phi">
+            <convection scheme="superbee"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
 
       <BoundaryConditions>
         <force_area_calc/>
       </BoundaryConditions>
 
-      <KokkosSolver>
-      </KokkosSolver>
+      <KokkosSolver/>
 
     </ARCHES>
   </CFD>

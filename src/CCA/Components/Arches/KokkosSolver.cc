@@ -28,7 +28,7 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <CCA/Components/Arches/UPSHelper.h>
-//NEW TASK INTERFACE STUFF
+#include <CCA/Components/Arches/Transport/PressureEqn.h>
 //factories
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
@@ -48,8 +48,9 @@ typedef std::vector<std::string> SVec;
 
 //--------------------------------------------------------------------------------------------------
 KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
-                            const ProcessorGroup* myworld )
-  : NonlinearSolver( myworld ), m_sharedState(shared_state)
+                            const ProcessorGroup* myworld,
+                            SolverInterface* solver )
+  : NonlinearSolver( myworld ), m_sharedState(shared_state), m_hypreSolver(solver)
 {}
 
 //--------------------------------------------------------------------------------------------------
@@ -131,6 +132,13 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
     proc0cout << "   " << i->first << std::endl;
     i->second->build_all_tasks(db);
 
+  }
+
+  //Set the hypre solver in the pressure eqn:
+  if ( m_task_factory_map["transport_factory"]->has_task("build_pressure_system")){
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("build_pressure_system"));
+    press_tsk->set_solver( m_hypreSolver );
+    press_tsk->setup_solver( db );
   }
 
   proc0cout << std::endl;
@@ -324,7 +332,9 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   }
 
   //Recompute velocities from momentum:
-  m_task_factory_map["property_models_factory"]->retrieve_task("u_from_rho_u")->schedule_init( level, sched, matls, doing_restart, true );
+  if ( m_task_factory_map["transport_factory"]->has_task("build_pressure_system")){
+    m_task_factory_map["property_models_factory"]->retrieve_task("u_from_rho_u")->schedule_init( level, sched, matls, doing_restart, true );
+  }
 
 }
 
@@ -429,26 +439,30 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     rhohat_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
 
     // ** PRESSURE PROJECTION **
-    // Compute the coeffificients
-    i_transport->second->retrieve_task("build_pressure_system")->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep );
-    // Compute the boundary conditions on the linear system
-    i_transport->second->retrieve_task("build_pressure_system")->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep );
+    if ( i_transport->second->has_task("build_pressure_system")){
+      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(i_transport->second->retrieve_task("build_pressure_system"));
+      // Compute the coeffificients
+      press_tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep );
+      // Compute the boundary conditions on the linear system
+      press_tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep );
+      // Solve it - calling out to hypre external lib
+      press_tsk->solve(level, sched, time_substep);
+      // Correct velocities
+      AtomicTaskInterface* gradP_tsk = i_transport->second->retrieve_atomic_task("pressure_correction");
+      gradP_tsk->schedule_task(level, sched, matls, AtomicTaskInterface::ATOMIC_STANDARD_TASK, time_substep);
 
-    //SOLVE THE SYSTEM
-
-    //CORRECT THE VELOCITIES
-
-    // now apply boundary conditions for all scalar for the next timestep
-    for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-    }
-    for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
-      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
-    }
-    for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
-      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+      // now apply boundary conditions for all scalar for the next timestep
+      for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
+        TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+        tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+      }
+      for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){
+        TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+        tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+      }
+      for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
+        i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
+      }
     }
 
   }
