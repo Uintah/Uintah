@@ -110,9 +110,14 @@ namespace Uintah { namespace ArchesCore{
               var[*bndIter] = spec->value;
               var[*bndIter - iDir] = spec->value;
             }
-          } else {
+          } else if ( dot > 0 ){
             for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
               var[*bndIter] = spec->value;
+              var[*bndIter + iDir] = spec->value;
+            }
+          } else {
+            for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+              var[*bndIter] = 2. * spec->value - var[*bndIter - iDir];
             }
           }
 

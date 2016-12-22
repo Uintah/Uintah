@@ -12,8 +12,8 @@
         <var                            spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction,
-                                                                          co2, h2o, soot, specific_heat, 
-                                                                          uvelocity, vvelocity, wvelocity, 
+                                                                          co2, h2o, soot, specific_heat,
+                                                                          uvelocity, vvelocity, wvelocity,
                                                                           total_viscosity'"/>
       </VarID>
 
@@ -96,7 +96,7 @@
                                                                                              restarts -->
           <abskg                        spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type burns_christon, cloudBenchmark"/> 
+                                        need_applies_to="type burns_christon, cloudBenchmark"/>
 
           <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi*dt) (all three components) and the sum(squared value) from which
                a time average can be computed.
@@ -737,15 +737,15 @@
           <default                      spec="REQUIRED NO_DATA"
                                         attribute1="value REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'dirichlet, neumann'"
-                                        attribute3="label REQUIRED STRING"/> <!-- if info isn't found in the handoff file, this condition is applied 
-                                                                                  Note that in the case of the nuemann condition, it used the variable 
+                                        attribute3="label REQUIRED STRING"/> <!-- if info isn't found in the handoff file, this condition is applied
+                                                                                  Note that in the case of the nuemann condition, it used the variable
                                                                                   specified in the "label" attribute to set the condition. -->
         </bc>
 
 
         <force_area_calc                spec="OPTIONAL NO_DATA"/> <!-- Force the code to compute areas on ALL boundaries. By default, areas are not computed
-                                                                       (except in the case of MassFlowInlet and Swirl) to reduce the amount of reduction 
-                                                                       information needed during setup. --> 
+                                                                       (except in the case of MassFlowInlet and Swirl) to reduce the amount of reduction
+                                                                       information needed during setup. -->
 
         <check_for_inlet_obstructions   spec="OPTIONAL NO_DATA"/> <!-- If present, then the code will 1) throw an error when massflow inlets
                                                                        are obstructed by intrusions 2) provide a warning when velocity inlets
@@ -1072,10 +1072,10 @@
           </eqn>
 
           <!--
-            The eqn group needs a velocity vector and diffusion coefficient for construction. This specficies which labels are being used. 
+            The eqn group needs a velocity vector and diffusion coefficient for construction. This specficies which labels are being used.
               * Note that this spec is potentially different than the velocity role as specified in the <ARCHES><VarID>
-                section. It is to allow for flexibility, although we might want to reevaluate. 
-              * Note that the same velocity spec and diffusion_coef is used across all scalars in this eqn group. 
+                section. It is to allow for flexibility, although we might want to reevaluate.
+              * Note that the same velocity spec and diffusion_coef is used across all scalars in this eqn group.
               * Note that the default velocity spec names are currently uVelocitySPBC, v* and w*
            -->
           <velocity                     spec="OPTIONAL NO_DATA"
@@ -1091,8 +1091,10 @@
 
       <!-- Kokkos Momentum -->
       <KMomentum                        spec="OPTIONAL NO_DATA">
-         <convection                    spec="OPTIONAL NO_DATA"
+
+        <convection                     spec="OPTIONAL NO_DATA"
                                         attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
+        <inviscid                       spec="OPTIONAL NO_DATA"/> <!-- Turn off diffusion -->
       </KMomentum>
 
       <!-- Initialization tasks -->
@@ -1405,7 +1407,7 @@
 
             <!-- Tabulated reaction rate -->
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
-            
+
              <!-- Spec for dTcorrectionFractor for the gas phase convection heat flux near the wall -->
             <dTCorrectionFactor         spec="OPTIONAL STRING" need_applies_to="type ht_convection" />
 
@@ -1506,7 +1508,7 @@
               <nRadRays                  spec="OPTIONAL INTEGER 'positive'"/>
               <nFluxRays                 spec="OPTIONAL INTEGER 'positive'"/>
 
-              
+
               <ScatteringOn              spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
@@ -1517,7 +1519,7 @@
 
               <algorithm                 spec="OPTIONAL NO_DATA"
                                              attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
-                                             
+
                 <coarsenExtraCells       spec="OPTIONAL BOOLEAN" need_applies_to="type RMCRT_coarseLevel, dataOnion" />
 
                 <orderOfInterpolation    spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
@@ -1591,7 +1593,7 @@
                                                                                      bowman_nox,
                                                                                      BrownSootFormation_rhoYs,
                                                                                      BrownSootFormation_nd,
-                                                                                     BrownSootFormation_Tar, 
+                                                                                     BrownSootFormation_Tar,
                                                                                      SootMassBalance"/>
             <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light -->
               <geom_object/>                                                                            <!-- defines the location of the pilot -->

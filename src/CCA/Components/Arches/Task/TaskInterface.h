@@ -98,7 +98,8 @@ public:
     void schedule_init( const LevelP& level,
                         SchedulerP& sched,
                         const MaterialSet* matls,
-                        const bool is_restart );
+                        const bool is_restart,
+                        const bool reinitialize=false );
 
     /** @brief The actual task interface function that references the
      *         derived class implementation **/

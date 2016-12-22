@@ -149,7 +149,7 @@ private:
 
     using namespace ArchesCore;
 
-    _eqn_names.clear(); 
+    _eqn_names.clear();
     for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != 0;
          eqn_db = eqn_db->findNextBlock("eqn")){
 
@@ -188,9 +188,9 @@ private:
 
         LIMITER enum_limiter = conv_helper->get_limiter_from_string(limiter);
 
-        _name_to_limiter_map.insert(std::make_pair(_task_name, enum_limiter));
-
         std::string which_mom = _task_name.substr(0,5);
+
+        _name_to_limiter_map.insert(std::make_pair(which_mom, enum_limiter));
 
         _eqn_names.push_back(which_mom);
 

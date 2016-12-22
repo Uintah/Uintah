@@ -102,10 +102,19 @@ namespace Uintah{
 
     }
 
+    /** @brief Allow the factory to specify the order of scheduling for its tasks for initialization**/
+    virtual void schedule_initialization( const LevelP& level,
+                                  SchedulerP& sched,
+                                  const MaterialSet* matls,
+                                  bool doing_restart ){
+      throw InvalidValue("Error: Task factory specific initialization for this factory is not implemented", __FILE__, __LINE__);
+    }
+
   protected:
 
     BuildMap  _builders;                          ///< Builder map
     std::vector<std::string> _active_tasks;       ///< Task which are active
+    std::vector<std::string> m_task_init_order;   ///< Allows a factory to set an execution order for the tasks
     TypeToTaskMap _type_to_tasks;                 ///< Collects all tasks of a common type
     SimulationStateP _shared_state;               ///< Uintah SharedState
 

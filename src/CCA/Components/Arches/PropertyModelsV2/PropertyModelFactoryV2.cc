@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConstantProperty.h>
 #include <CCA/Components/Arches/PropertyModelsV2/FaceVelocities.h>
+#include <CCA/Components/Arches/PropertyModelsV2/UFromRhoU.h>
 #include <CCA/Components/Arches/PropertyModelsV2/BurnsChriston.h>
 #include <CCA/Components/Arches/PropertyModelsV2/cloudBenchmark.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
@@ -40,6 +41,11 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
   TaskInterface::TaskBuilder* vel_tsk = scinew FaceVelocities::Builder( m_vel_name, 0 );
   register_task(m_vel_name, vel_tsk);
   _pre_update_property_tasks.push_back(m_vel_name);
+
+  if ( db->findBlock("KMomentum") ){
+    TaskInterface::TaskBuilder* u_from_rho_u_tsk = scinew UFromRhoU::Builder( "u_from_rho_u", 0);
+    register_task("u_from_rho_u", u_from_rho_u_tsk);
+  }
 
   if ( db->findBlock("PropertyModelsV2")){
 
@@ -135,8 +141,20 @@ PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
 {
 
   TaskInterface* vel_tsk = retrieve_task(m_vel_name);
-  vel_tsk->create_local_labels();
   vel_tsk->problemSetup(db);
+  vel_tsk->create_local_labels();
+
+  _task_order.push_back( m_vel_name );
+
+
+  if ( db->findBlock("KMomentum") ){
+
+    TaskInterface* u_from_rho_u_tsk = retrieve_task( "u_from_rho_u");
+    u_from_rho_u_tsk->problemSetup(db);
+    u_from_rho_u_tsk->create_local_labels();
+
+  }
+
 
   if ( db->findBlock("PropertyModelsV2")){
 
@@ -148,8 +166,18 @@ PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
       TaskInterface* tsk = retrieve_task(name);
       tsk->problemSetup(db_model);
       tsk->create_local_labels();
+
+      //Assuming that everything here is independent:
+      _task_order.push_back(name);
+
     }
   }
+
+  if ( db->findBlock("KMomentum") ){
+    //Requires density so putting it last
+    _task_order.push_back( "u_from_rho_u");
+  }
+
 }
 
 void
@@ -203,7 +231,7 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
       }
 
       assign_task_to_type_storage(name, type);
-      print_task_setup_info( name, type ); 
+      print_task_setup_info( name, type );
 
       //also build the task here
       TaskInterface* tsk = retrieve_task(name);
@@ -212,4 +240,19 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
     }
   }
+}
+
+//--------------------------------------------------------------------------------------------------
+void PropertyModelFactoryV2::schedule_initialization( const LevelP& level,
+                                                      SchedulerP& sched,
+                                                      const MaterialSet* matls,
+                                                      bool doing_restart ){
+
+  for ( auto i = _task_order.begin(); i != _task_order.end(); i++ ){
+
+    TaskInterface* tsk = retrieve_task( *i );
+    tsk->schedule_init( level, sched, matls, doing_restart );
+
+  }
+
 }

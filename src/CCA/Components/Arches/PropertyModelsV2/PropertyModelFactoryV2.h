@@ -44,6 +44,11 @@ namespace Uintah{
 
     void add_task( ProblemSpecP& db );
 
+    void schedule_initialization( const LevelP& level,
+                                  SchedulerP& sched,
+                                  const MaterialSet* matls,
+                                  bool doing_restart );
+
   protected:
 
   private:
@@ -52,6 +57,8 @@ namespace Uintah{
     std::vector<std::string> _finalize_property_tasks;    ///<Tasks that execute at the end of the time step
     std::vector<std::string> _pre_table_post_iv_update;   ///<Tasks that execute after IV update and before table lookup
     std::vector<std::string> _var_stats_tasks;            ///<All Tasks associated with variable stats
+
+    std::vector<std::string> _task_order;                 ///<The order in which these tasks should execute
 
     std::string m_vel_name;                               ///<Name of the task that creates all face velocities
 

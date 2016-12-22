@@ -177,10 +177,10 @@ namespace Uintah{ namespace ArchesCore{
   struct VariableHelper<Uintah::SFCXVariable<double> >{
     typedef Uintah::constSFCXVariable<double> ConstType;
     typedef Uintah::SFCXVariable<double> Type;
-    typedef Uintah::CCVariable<double> XFaceType;
+    typedef Uintah::SFCXVariable<double> XFaceType;
     typedef Uintah::SFCXVariable<double> YFaceType;
     typedef Uintah::SFCXVariable<double> ZFaceType;
-    typedef Uintah::constCCVariable<double> ConstXFaceType;
+    typedef Uintah::constSFCXVariable<double> ConstXFaceType;
     typedef Uintah::constSFCXVariable<double> ConstYFaceType;
     typedef Uintah::constSFCXVariable<double> ConstZFaceType;
     DIR dir;
@@ -202,10 +202,10 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::constSFCYVariable<double> ConstType;
     typedef Uintah::SFCYVariable<double> Type;
     typedef Uintah::SFCYVariable<double> XFaceType;
-    typedef Uintah::CCVariable<double> YFaceType;
+    typedef Uintah::SFCYVariable<double> YFaceType;
     typedef Uintah::SFCYVariable<double> ZFaceType;
     typedef Uintah::constSFCYVariable<double> ConstXFaceType;
-    typedef Uintah::constCCVariable<double> ConstYFaceType;
+    typedef Uintah::constSFCYVariable<double> ConstYFaceType;
     typedef Uintah::constSFCYVariable<double> ConstZFaceType;
     DIR dir;
     const int ioff;
@@ -217,7 +217,7 @@ namespace Uintah{ namespace ArchesCore{
     const int jdt2;
     const int kdt1;
     const int kdt2;
-    VariableHelper():dir(YDIR), ioff(1), joff(0), koff(0),
+    VariableHelper():dir(YDIR), ioff(0), joff(1), koff(0),
     idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
   };
 
@@ -227,10 +227,10 @@ namespace Uintah{ namespace ArchesCore{
     typedef Uintah::SFCZVariable<double> Type;
     typedef Uintah::SFCZVariable<double> XFaceType;
     typedef Uintah::SFCZVariable<double> YFaceType;
-    typedef Uintah::CCVariable<double> ZFaceType;
+    typedef Uintah::SFCZVariable<double> ZFaceType;
     typedef Uintah::constSFCZVariable<double> ConstXFaceType;
     typedef Uintah::constSFCZVariable<double> ConstYFaceType;
-    typedef Uintah::constCCVariable<double> ConstZFaceType;
+    typedef Uintah::constSFCZVariable<double> ConstZFaceType;
     DIR dir;
     const int ioff;
     const int joff;
@@ -241,7 +241,7 @@ namespace Uintah{ namespace ArchesCore{
     const int jdt2;
     const int kdt1;
     const int kdt2;
-    VariableHelper():dir(ZDIR), ioff(1), joff(0), koff(0),
+    VariableHelper():dir(ZDIR), ioff(0), joff(0), koff(1),
     idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
   };
 

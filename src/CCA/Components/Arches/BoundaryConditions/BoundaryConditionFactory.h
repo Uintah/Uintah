@@ -25,6 +25,11 @@ namespace Uintah{
     }
 
     void add_task( ProblemSpecP& db );
+    
+    void schedule_initialization( const LevelP& level,
+                                  SchedulerP& sched,
+                                  const MaterialSet* matls,
+                                  bool doing_restart );
 
   protected:
 

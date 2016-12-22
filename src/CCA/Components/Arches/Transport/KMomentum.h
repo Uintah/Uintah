@@ -103,6 +103,7 @@ private:
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
     std::string m_mu_name;
+    std::string m_rho_name;
     std::string m_eps_name;
 
     std::vector<std::string> m_eqn_names;
@@ -110,6 +111,10 @@ private:
     std::vector<double> m_low_clip;
     std::vector<double> m_high_clip;
     std::vector<double> m_init_value;
+
+    ArchesCore::DIR my_dir;
+
+    bool m_inviscid;
 
     int m_total_eqns;
 
@@ -137,6 +142,9 @@ private:
     m_total_eqns = 1;
     m_eqn_names.push_back(task_name);
 
+    ArchesCore::VariableHelper<T> helper;
+    my_dir = helper.dir;
+
   }
 
   //------------------------------------------------------------------------------------------------
@@ -161,6 +169,11 @@ private:
       m_conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
     } else {
       m_conv_scheme.push_back(NOCONV);
+    }
+
+    m_inviscid = false;
+    if ( db->findBlock("inviscid")){
+      m_inviscid = true;
     }
 
     //Clipping
@@ -223,6 +236,7 @@ private:
     m_y_velocity_name = var_map.vvel_name;
     m_z_velocity_name = var_map.wvel_name;
     m_mu_name = var_map.mu_name;
+    m_rho_name = "density";
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:
@@ -249,6 +263,7 @@ private:
     }
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T> void
   KMomentum<T>::register_initialize(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
@@ -264,6 +279,7 @@ private:
     }
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T> void
   KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -306,6 +322,7 @@ private:
     }
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T> void
   KMomentum<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -350,14 +367,29 @@ private:
     }
 
     //globally common variables
+    if ( my_dir == ArchesCore::XDIR ){
+      register_variable( "ucell_xvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( "ucell_yvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( "ucell_zvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    } else if ( my_dir == ArchesCore::YDIR ){
+      register_variable( "vcell_xvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( "vcell_yvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( "vcell_zvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    } else {
+      register_variable( "wcell_xvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( "wcell_yvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( "wcell_zvel", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    }
     register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
     register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( m_rho_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T> void
   KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
@@ -372,8 +404,7 @@ private:
     CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
     CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
     constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
-
-    Uintah::BlockRange range_cl_to_ech(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
+    constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_rho_name));
 
 #ifdef DO_TIMINGS
     SpatialOps::TimeLogger timer("kokkos_scalar_assemble.out."+_task_name);
@@ -407,59 +438,100 @@ private:
         CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(m_eqn_names[ieqn]+"_y_psi"));
         CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(m_eqn_names[ieqn]+"_z_psi"));
 
-        Uintah::ComputeConvectiveFlux get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
-                                                x_flux, y_flux, z_flux, eps );
-        Uintah::parallel_for( range_cl_to_ech, get_flux );
+        if ( my_dir == ArchesCore::XDIR ){
+
+          CT& u_fx = tsk_info->get_const_uintah_field_add<CT>("ucell_xvel");
+          CT& v_fy = tsk_info->get_const_uintah_field_add<CT>("ucell_yvel");
+          CT& w_fz = tsk_info->get_const_uintah_field_add<CT>("ucell_zvel");
+
+          Uintah::ComputeConvectiveFlux get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
+                                                  x_flux, y_flux, z_flux, eps );
+
+          GET_FX_BUFFERED_PATCH_RANGE( 1, 0 )
+          Uintah::BlockRange x_range( low_fx_patch_range, high_fx_patch_range );
+          Uintah::parallel_for( x_range, get_flux );
+        } else if ( my_dir == ArchesCore::YDIR ){
+
+          CT& u_fx = tsk_info->get_const_uintah_field_add<CT>("vcell_xvel");
+          CT& v_fy = tsk_info->get_const_uintah_field_add<CT>("vcell_yvel");
+          CT& w_fz = tsk_info->get_const_uintah_field_add<CT>("vcell_zvel");
+
+          Uintah::ComputeConvectiveFlux get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
+                                                  x_flux, y_flux, z_flux, eps );
+
+          GET_FY_BUFFERED_PATCH_RANGE( 1, 0 )
+          Uintah::BlockRange y_range( low_fy_patch_range, high_fy_patch_range );
+          Uintah::parallel_for( y_range, get_flux );
+        } else {
+
+          CT& u_fx = tsk_info->get_const_uintah_field_add<CT>("wcell_xvel");
+          CT& v_fy = tsk_info->get_const_uintah_field_add<CT>("wcell_yvel");
+          CT& w_fz = tsk_info->get_const_uintah_field_add<CT>("wcell_zvel");
+
+          Uintah::ComputeConvectiveFlux get_flux( phi, u_fx, v_fy, w_fz, x_psi, y_psi, z_psi,
+                                                  x_flux, y_flux, z_flux, eps );
+
+          GET_FZ_BUFFERED_PATCH_RANGE( 1, 0 )
+          Uintah::BlockRange z_range( low_fz_patch_range, high_fz_patch_range );
+          Uintah::parallel_for( z_range, get_flux );
+        }
 
       }
 
       //Stress
-      const double areaEW = Dx.y()*Dx.z();
-      const double areaNS = Dx.x()*Dx.z();
-      const double areaTB = Dx.x()*Dx.y();
+      if ( !m_inviscid ){
+        const double areaEW = Dx.y()*Dx.z();
+        const double areaNS = Dx.x()*Dx.z();
+        const double areaTB = Dx.x()*Dx.y();
 
-      ArchesCore::VariableHelper<T> var_help;
+        ArchesCore::VariableHelper<T> var_help;
 
-      if ( var_help.dir == 0 ){
+        if ( var_help.dir == 0 ){
 
-        GET_FX_BUFFERED_PATCH_RANGE(1, 0)
-        Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
+          GET_FX_BUFFERED_PATCH_RANGE(1, 0)
+          Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
 
-        Uintah::parallel_for( range, [&](int i, int j, int k){
+          Uintah::parallel_for( range, [&](int i, int j, int k){
 
-          const double SE = (u(i+1,j,k) - u(i,j,k))/Dx.x();
-          const double SW = (u(i,j,k) - u(i,j,k))/Dx.x();
-          const double SN = 0.5 * (( u(i,j+1,k) - u(i,j,k) ) / Dx.y() + (v(i,j+1,k) - v(i-1,j+1,k))/Dx.x());
-          const double SS = 0.5 * (( u(i,j,k) - u(i,j-1,k) ) / Dx.y() + (v(i,j,k) - v(i-1,j,k))/Dx.x());
-          const double ST = 0.5 * (( u(i,j,k+1) - u(i,j,k) ) / Dx.z() + (w(i,j,k+1) - w(i-1,j,k+1))/Dx.x());
-          const double SB = 0.5 * (( u(i,j,k) - u(i,j,k-1) ) / Dx.z() + (w(i,j,k) - w(i-1,j,k))/Dx.x());
+            if ( i == 5 && j == 0 && k == 12 ){
+              double d;
+              d = 0.;
+            }
 
-          const double mu_E = mu(i,j,k);
-          const double mu_W = mu(i-1,j,k);
-          const double mu_N = 0.5 * ( 0.5 * (mu(i,j+1,k) + mu(i,j,k))   + 0.5 * (mu(i-1,j+1,k) + mu(i-1,j,k)) );
-          const double mu_S = 0.5 * ( 0.5 * (mu(i,j,k)   + mu(i,j-1,k)) + 0.5 * (mu(i-1,j,k)   + mu(i-1,j-1,k)) );
-          const double mu_T = 0.5 * ( 0.5 * (mu(i,j,k+1) + mu(i,j,k))   + 0.5 * (mu(i-1,j,k+1) + mu(i-1,j,k)) );
-          const double mu_B = 0.5 * ( 0.5 * (mu(i,j,k)   + mu(i,j,k-1)) + 0.5 * (mu(i-1,j,k)   + mu(i-1,j,k-1)) );
+            const double SE = (u(i+1,j,k) - u(i,j,k))/Dx.x();
+            const double SW = (u(i,j,k) - u(i,j,k))/Dx.x();
+            const double SN = 0.5 * (( u(i,j+1,k) - u(i,j,k) ) / Dx.y() + (v(i,j+1,k) - v(i-1,j+1,k))/Dx.x());
+            const double SS = 0.5 * (( u(i,j,k) - u(i,j-1,k) ) / Dx.y() + (v(i,j,k) - v(i-1,j,k))/Dx.x());
+            const double ST = 0.5 * (( u(i,j,k+1) - u(i,j,k) ) / Dx.z() + (w(i,j,k+1) - w(i-1,j,k+1))/Dx.x());
+            const double SB = 0.5 * (( u(i,j,k) - u(i,j,k-1) ) / Dx.z() + (w(i,j,k) - w(i-1,j,k))/Dx.x());
 
-          // add in once we have a rho
-          // const double rho_E = rho(i,j,k);
-          // const double rho_W = rho(i-1,j,k);
-          // const double rho_N = 0.5 * ( 0.5 * (rho(i,j+1,k) + rho(i,j,k))   + 0.5 * (rho(i-1,j+1,k) + rho(i-1,j,k)) );
-          // const double rho_S = 0.5 * ( 0.5 * (rho(i,j,k)   + rho(i,j-1,k)) + 0.5 * (rho(i-1,j,k)   + rho(i-1,j-1,k)) );
-          // const double rho_T = 0.5 * ( 0.5 * (rho(i,j,k+1) + rho(i,j,k))   + 0.5 * (rho(i-1,j,k+1) + rho(i-1,j,k)) );
-          // const double rho_B = 0.5 * ( 0.5 * (rho(i,j,k)   + rho(i,j,k-1)) + 0.5 * (rho(i-1,j,k)   + rho(i-1,j,k-1)) );
+            const double mu_E = mu(i,j,k);
+            const double mu_W = mu(i-1,j,k);
+            const double mu_N = 0.5 * ( 0.5 * (mu(i,j+1,k) + mu(i,j,k))   + 0.5 * (mu(i-1,j+1,k) + mu(i-1,j,k)) );
+            const double mu_S = 0.5 * ( 0.5 * (mu(i,j,k)   + mu(i,j-1,k)) + 0.5 * (mu(i-1,j,k)   + mu(i-1,j-1,k)) );
+            const double mu_T = 0.5 * ( 0.5 * (mu(i,j,k+1) + mu(i,j,k))   + 0.5 * (mu(i-1,j,k+1) + mu(i-1,j,k)) );
+            const double mu_B = 0.5 * ( 0.5 * (mu(i,j,k)   + mu(i,j,k-1)) + 0.5 * (mu(i-1,j,k)   + mu(i-1,j,k-1)) );
 
-          double div_tauij = areaEW * ( mu_E * SE - mu_W * SW ) +
-                             areaNS * ( mu_N * SN - mu_S * SS ) +
-                             areaTB * ( mu_T * ST - mu_B * SB );
+            // add in once we have a rho
+            const double rho_E = rho(i,j,k);
+            const double rho_W = rho(i-1,j,k);
+            const double rho_N = 0.5 * ( 0.5 * (rho(i,j+1,k) + rho(i,j,k))   + 0.5 * (rho(i-1,j+1,k) + rho(i-1,j,k)) );
+            const double rho_S = 0.5 * ( 0.5 * (rho(i,j,k)   + rho(i,j-1,k)) + 0.5 * (rho(i-1,j,k)   + rho(i-1,j-1,k)) );
+            const double rho_T = 0.5 * ( 0.5 * (rho(i,j,k+1) + rho(i,j,k))   + 0.5 * (rho(i-1,j,k+1) + rho(i-1,j,k)) );
+            const double rho_B = 0.5 * ( 0.5 * (rho(i,j,k)   + rho(i,j,k-1)) + 0.5 * (rho(i-1,j,k)   + rho(i-1,j,k-1)) );
 
-          rhs(i,j,k) += div_tauij;
+            double div_tauij = areaEW * ( rho_E * mu_E * SE - rho_W * mu_W * SW ) +
+                               areaNS * ( rho_N * mu_N * SN - rho_S * mu_S * SS ) +
+                               areaTB * ( rho_T * mu_T * ST - rho_B * mu_B * SB );
 
-        });
-      } else if ( var_help.dir == 1 ){
-        GET_FY_BUFFERED_PATCH_RANGE(1, 0);
-      } else {
-        GET_FZ_BUFFERED_PATCH_RANGE(1, 0);
+            rhs(i,j,k) += div_tauij;
+
+          });
+        } else if ( var_help.dir == 1 ){
+          GET_FY_BUFFERED_PATCH_RANGE(1, 0);
+        } else {
+          GET_FZ_BUFFERED_PATCH_RANGE(1, 0);
+        }
       }
 
       //Sources:

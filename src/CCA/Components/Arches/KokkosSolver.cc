@@ -295,43 +295,24 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   // Setup BCs
   setupBCs( level, sched, matls );
 
-  // Task Initialize
-  //utility factory
-  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
-  // build the x,y,z location scalars
-  TaskInterface* tsk = i_util_fac->second->retrieve_task("grid_info");
-  tsk->schedule_init( level, sched, matls, is_restart );
-  // set the volume fractions
-  tsk = i_util_fac->second->retrieve_task("vol_fraction_calc");
-  tsk->schedule_init( level, sched, matls, is_restart );
+  m_task_factory_map["utility_factory"]->retrieve_task("grid_info")->schedule_init( level, sched, matls, is_restart );
 
-  //property factory
-  BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
-  TaskFactoryBase::TaskMap all_prop_tasks = i_prop_fac->second->retrieve_all_tasks();
-  for ( auto i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, doing_restart);
-  }
+  // set the volume fractions
+  m_task_factory_map["utility_factory"]->retrieve_task("vol_fraction_calc")->schedule_init( level, sched, matls, is_restart );
 
   //transport factory
-  BFM::iterator i_trans_fac = m_task_factory_map.find("transport_factory");
-  TaskFactoryBase::TaskMap all_trans_tasks = i_trans_fac->second->retrieve_all_tasks();
-  for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, doing_restart);
-  }
+  TaskFactoryBase::TaskMap all_trans_tasks = m_task_factory_map["transport_factory"]->retrieve_all_tasks();
+  m_task_factory_map["transport_factory"]->schedule_initialization( level, sched, matls, doing_restart );
+
+  //property factory
+  m_task_factory_map["property_models_factory"]->schedule_initialization( level, sched, matls, doing_restart );
 
   // generic field initializer
-  BFM::iterator i_init_fac = m_task_factory_map.find("initialize_factory");
-  TaskFactoryBase::TaskMap all_init_tasks = i_init_fac->second->retrieve_all_tasks();
-  for ( auto i = all_init_tasks.begin(); i != all_init_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, doing_restart);
-  }
+  m_task_factory_map["initialize_factory"]->schedule_initialization( level, sched, matls, doing_restart );
 
   // boundary condition factory
-  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
-  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
-  for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, doing_restart);
-  }
+  m_task_factory_map["boundary_condition_factory"]->schedule_initialization( level, sched, matls, doing_restart );
+  TaskFactoryBase::TaskMap all_bc_tasks = m_task_factory_map["boundary_condition_factory"]->retrieve_all_tasks();
 
   //Need to apply BC's after everything is initialized
   for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
@@ -341,6 +322,8 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
     i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
   }
 
+  //Recompute velocities from momentum:
+  m_task_factory_map["property_models_factory"]->retrieve_task("u_from_rho_u")->schedule_init( level, sched, matls, doing_restart, true );
 
 }
 
@@ -382,6 +365,10 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
   //RK loop
   for ( int time_substep = 0; time_substep < _rk_order; time_substep++ ){
 
+    //Compute U from rhoU
+    TaskInterface* tsk = i_prop_fac->second->retrieve_task("u_from_rho_u");
+    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+
     //(pre-update properties tasks)
     SVec prop_preupdate_tasks = i_prop_fac->second->retrieve_task_subset("pre_update_property_models");
     for (auto i = prop_preupdate_tasks.begin(); i != prop_preupdate_tasks.end(); i++){
@@ -389,7 +376,8 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
-    //(scalars)
+    // ** SCALARS **
+    // PRE-PROJECTION
     // first compute the psi functions for the limiters:
     SVec scalar_psi_builders = i_transport->second->retrieve_task_subset("scalar_psi_builders");
     for ( SVec::iterator i = scalar_psi_builders.begin(); i != scalar_psi_builders.end(); i++){
@@ -412,7 +400,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
-    //(momentum)
+    // ** MOMENTUM **
     // first compute the psi functions for the limiters:
     SVec momentum_psi_builders = i_transport->second->retrieve_task_subset("momentum_psi_builders");
     for ( SVec::iterator i = momentum_psi_builders.begin(); i != momentum_psi_builders.end(); i++){
@@ -434,6 +422,9 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
     }
 
+    // ** PROJECTION ** 
+
+
     // now apply boundary conditions for all scalar for the next timestep
     for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
@@ -448,6 +439,10 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     }
 
   }
+
+  //for sanity sake, recompute the velocities from momentum:
+  // Note - This will be recomputed when the timestep restarts so there is some redundancy here.
+  i_prop_fac->second->retrieve_task("u_from_rho_u")->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1);
 
   return 0;
 

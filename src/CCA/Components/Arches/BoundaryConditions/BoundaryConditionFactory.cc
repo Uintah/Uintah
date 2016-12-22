@@ -59,7 +59,7 @@ BoundaryConditionFactory::build_all_tasks( ProblemSpecP& db )
       db_bc->getAttribute("label", name);
       db_bc->getAttribute("type", type);
 
-      print_task_setup_info( name, type ); 
+      print_task_setup_info( name, type );
       TaskInterface* tsk = retrieve_task(name);
       tsk->problemSetup(db_bc);
       tsk->create_local_labels();
@@ -117,5 +117,19 @@ BoundaryConditionFactory::add_task( ProblemSpecP& db )
       tsk->create_local_labels();
 
     }
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+void BoundaryConditionFactory::schedule_initialization( const LevelP& level,
+                                                        SchedulerP& sched,
+                                                        const MaterialSet* matls,
+                                                        bool doing_restart ){
+
+  for ( auto i = _tasks.begin(); i != _tasks.end(); i++ ){
+
+    TaskInterface* tsk = retrieve_task( i->first );
+    tsk->schedule_init( level, sched, matls, doing_restart );
+
   }
 }

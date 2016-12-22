@@ -88,7 +88,8 @@ void TaskInterface::schedule_task( const LevelP& level,
 void TaskInterface::schedule_init( const LevelP& level,
                                    SchedulerP& sched,
                                    const MaterialSet* matls,
-                                   const bool is_restart ){
+                                   const bool is_restart,
+                                   const bool reinitialize ){
 
   VariableRegistry variable_registry;
 
@@ -116,8 +117,14 @@ void TaskInterface::schedule_init( const LevelP& level,
     switch(ivar.depend) {
 
     case ArchesFieldContainer::COMPUTES:
-      tsk->computes( ivar.label );
+    {
+      if ( reinitialize ){
+        tsk->modifies( ivar.label );
+      } else {
+        tsk->computes( ivar.label );
+      }
       break;
+    }
     case ArchesFieldContainer::MODIFIES:
       tsk->modifies( ivar.label );
       break;
@@ -156,7 +163,7 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
   for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
 
     counter++;
-    
+
     ArchesFieldContainer::VariableInformation& ivar = *pivar;
 
     switch(ivar.depend) {

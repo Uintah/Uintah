@@ -232,4 +232,19 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
   }
 }
+
+//--------------------------------------------------------------------------------------------------
+void TransportFactory::schedule_initialization( const LevelP& level,
+                                                SchedulerP& sched,
+                                                const MaterialSet* matls,
+                                                bool doing_restart ){
+
+  for ( auto i = _tasks.begin(); i != _tasks.end(); i++ ){
+
+    TaskInterface* tsk = retrieve_task( i->first );
+    tsk->schedule_init( level, sched, matls, doing_restart );
+
+  }
+}
+
 } //namespace Uintah

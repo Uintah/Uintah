@@ -40,6 +40,11 @@ namespace Uintah{
       }
 
     }
+    
+    void schedule_initialization( const LevelP& level,
+                                  SchedulerP& sched,
+                                  const MaterialSet* matls,
+                                  bool doing_restart );
 
   private:
 

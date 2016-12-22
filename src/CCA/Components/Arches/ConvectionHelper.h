@@ -124,11 +124,7 @@ namespace Uintah {
         const double Sup = u(C_) > 0 ? phi(CM_) : phi(C_);
         const double Sdn = u(C_) > 0 ? phi(C_) : phi(CM_);
         const double afc = ( eps(C_) + eps(CM_) ) / 2. < 0.51 ? 0.0 : 1.0;
-        //if ( i == 0 ){
-        //  flux_x(C_) = afc * u(C_) * ( Sup + 0.5 * 1. * ( Sdn - Sup )) ;
-        //} else {
-          flux_x(C_) = afc * u(C_) * ( Sup + 0.5 * psi_x(C_) * ( Sdn - Sup )) ;
-        //}
+        flux_x(C_) = afc * u(C_) * ( Sup + 0.5 * psi_x(C_) * ( Sdn - Sup )) ;
       }
       //Y-dir
       {

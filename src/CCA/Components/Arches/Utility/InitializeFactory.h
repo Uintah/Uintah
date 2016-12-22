@@ -4,31 +4,36 @@
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <string>
 
-namespace Uintah{ 
+namespace Uintah{
 
-  class InitializeFactory : public TaskFactoryBase { 
+  class InitializeFactory : public TaskFactoryBase {
 
-  public: 
+  public:
 
-    InitializeFactory(); 
-    ~InitializeFactory(); 
+    InitializeFactory();
+    ~InitializeFactory();
 
-    void register_all_tasks( ProblemSpecP& db ); 
+    void register_all_tasks( ProblemSpecP& db );
 
-    void build_all_tasks( ProblemSpecP& db ); 
+    void build_all_tasks( ProblemSpecP& db );
 
     std::vector<std::string> retrieve_task_subset(const std::string subset){
-      throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset, which means there is no implementation for this factory.",__FILE__,__LINE__); 
-    } 
+      throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset, which means there is no implementation for this factory.",__FILE__,__LINE__);
+    }
+    
+    void schedule_initialization( const LevelP& level,
+                                  SchedulerP& sched,
+                                  const MaterialSet* matls,
+                                  bool doing_restart );
 
 
-  protected: 
+  protected:
 
 
-  private: 
-  
-  
-  
+  private:
+
+
+
   };
 }
-#endif 
+#endif

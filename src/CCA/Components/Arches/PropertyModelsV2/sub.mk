@@ -35,7 +35,8 @@ SRCS += \
         $(SRCDIR)/PropertyModelFactoryV2.cc \
         $(SRCDIR)/VariableStats.cc          \
         $(SRCDIR)/FaceVelocities.cc         \
-	$(SRCDIR)/BurnsChriston.cc          \
+        $(SRCDIR)/UFromRhoU.cc              \
+	      $(SRCDIR)/BurnsChriston.cc          \
         $(SRCDIR)/WallHFVariable.cc
 
 ########################################################################
