@@ -120,20 +120,66 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   wcell_yvel.initialize(0.0);
   wcell_zvel.initialize(0.0);
 
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getExtraCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  IntVector low = patch->getCellLowIndex();
+  IntVector high = patch->getCellHighIndex();
+
+  //x-direction:
+  if ( xplus ) high += IntVector(1,0,0);
+  if ( yminus ) low -= IntVector(0,1,0);
+  if ( yplus ) high += IntVector(0,1,0);
+  if ( zminus ) low -= IntVector(0,0,1);
+  if ( zplus ) high += IntVector(0,0,1);
+  Uintah::BlockRange x_range(low, high);
+
+  Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
     ucell_xvel(i,j,k) = 0.5*(uVel(i,j,k) + uVel(i-1,j,k));
     ucell_yvel(i,j,k) = 0.5*(vVel(i,j,k) + vVel(i-1,j,k));
     ucell_zvel(i,j,k) = 0.5*(wVel(i,j,k) + wVel(i-1,j,k));
 
+  });
+
+  //y-direction:
+  low = patch->getCellLowIndex();
+  high = patch->getCellHighIndex();
+  if ( yplus ) high += IntVector(0,1,0);
+  if ( xminus ) low -= IntVector(1,0,0);
+  if ( xplus ) high += IntVector(1,0,0);
+  if ( zminus ) low -= IntVector(0,0,1);
+  if ( zplus ) high += IntVector(0,0,1);
+  Uintah::BlockRange y_range(low, high);
+
+  Uintah::parallel_for( y_range, [&](int i, int j, int k){
+
     vcell_xvel(i,j,k) = 0.5*(uVel(i,j,k) + uVel(i,j-1,k));
     vcell_yvel(i,j,k) = 0.5*(vVel(i,j,k) + vVel(i,j-1,k));
     vcell_zvel(i,j,k) = 0.5*(wVel(i,j,k) + wVel(i,j-1,k));
+
+  });
+
+  //z-direction:
+  low = patch->getCellLowIndex();
+  high = patch->getCellHighIndex();
+  if ( zplus ) high += IntVector(0,0,1);
+  if ( xminus ) low -= IntVector(1,0,0);
+  if ( xplus ) high += IntVector(1,0,0);
+  if ( yminus ) low -= IntVector(0,1,0);
+  if ( yplus ) high += IntVector(0,1,0);
+  Uintah::BlockRange z_range(low, high);
+
+  Uintah::parallel_for( z_range, [&](int i, int j, int k){
 
     wcell_xvel(i,j,k) = 0.5*(uVel(i,j,k) + uVel(i,j,k-1));
     wcell_yvel(i,j,k) = 0.5*(vVel(i,j,k) + vVel(i,j,k-1));
     wcell_zvel(i,j,k) = 0.5*(wVel(i,j,k) + wVel(i,j,k-1));
 
   });
+
 }

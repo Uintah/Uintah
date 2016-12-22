@@ -171,6 +171,7 @@ private:
       throw InvalidValue("Error: <TimeIntegrator> must have value: 1, 2, or 3 (representing the order).",__FILE__, __LINE__);
     }
 
+    _eqn_names.clear(); 
     for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != 0;
          eqn_db = eqn_db->findNextBlock("eqn")){
 
@@ -184,7 +185,14 @@ private:
     ArchesCore::VariableHelper<T> varhelp;
     m_dir = varhelp.dir;
 
+    //special momentum case
+    if ( _eqn_names.size() == 0 ){
+      std::string which_mom = _task_name.substr(0,5);
+      _eqn_names.push_back(which_mom);
+    }
+
   }
+
 
   template <typename T>
   void KFEUpdate<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){

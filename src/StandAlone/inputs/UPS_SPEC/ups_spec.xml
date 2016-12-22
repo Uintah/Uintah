@@ -568,7 +568,7 @@
                                                                      MassFlowInlet, PartMassFlowInlet , Swirl, FromFile, ForcedDirichlet,
                                                                      TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
-                              attribute4="type      OPTIONAL STRING 'int'" 
+                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff'" 
                               attribute5="value     OPTIONAL STRING" >
                                                                 
           <value            spec="OPTIONAL STRING"/>
@@ -599,9 +599,6 @@
           <roughness        spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- roughness height for the ground [m]--> 
           <freestream_h     spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- height of the free stream velocity --> 
           <k                spec="OPTIONAL DOUBLE" need_applies_to="var StABL"/> <!-- von Karman constant, default=0.41 --> 
-
-          <!-- mass flow rate -->
-          <mdot             spec="OPTIONAL DOUBLE"/> <!-- [kg/s] mass flow rate -->
 
         </BCType>
       </Face>

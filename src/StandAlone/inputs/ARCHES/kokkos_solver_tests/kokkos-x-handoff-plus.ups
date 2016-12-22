@@ -45,13 +45,11 @@
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
       <Face side="x+">
-        <BCType var="Custom" label="cc_phi_upwind">
-          <value>handoff</value>
-          <variable label="phi_handoff"/>
+        <BCType var="Custom" label="cc_phi_upwind" type="handoff">
+          <value>phi_handoff</value>
         </BCType>
-        <BCType var="Dirichlet" label="cc_phi_vanleer">
-          <value>handoff</value>
-          <variable label="phi_handoff"/>
+        <BCType var="Custom" label="cc_phi_vanleer" type="handoff">
+          <value>phi_handoff</value>
         </BCType>
       </Face>
       <Face side="x-">

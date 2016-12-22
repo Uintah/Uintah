@@ -139,14 +139,17 @@ private:
   TaskInterface( task_name, matl_index ){
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   ComputePsi<T>::~ComputePsi(){}
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void ComputePsi<T>::problemSetup( ProblemSpecP& db ){
 
     using namespace ArchesCore;
 
+    _eqn_names.clear(); 
     for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != 0;
          eqn_db = eqn_db->findNextBlock("eqn")){
 
@@ -170,7 +173,30 @@ private:
         delete conv_helper;
 
       }
+    }
 
+    // FOR MOMENTUM SPECIFICALLY
+    if ( _eqn_names.size() == 0 ){
+
+      std::string limiter;
+
+      if ( db->findBlock("convection")){
+
+        db->findBlock("convection")->getAttribute("scheme",limiter);
+
+        ConvectionHelper* conv_helper = scinew ConvectionHelper();
+
+        LIMITER enum_limiter = conv_helper->get_limiter_from_string(limiter);
+
+        _name_to_limiter_map.insert(std::make_pair(_task_name, enum_limiter));
+
+        std::string which_mom = _task_name.substr(0,5);
+
+        _eqn_names.push_back(which_mom);
+
+        delete conv_helper;
+
+      }
     }
 
     ArchesCore::GridVarMap<T> var_map;

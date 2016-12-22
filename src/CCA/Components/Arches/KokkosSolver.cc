@@ -45,11 +45,13 @@ using namespace Uintah;
 typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
 typedef std::vector<std::string> SVec;
 
+//--------------------------------------------------------------------------------------------------
 KokkosSolver::KokkosSolver( SimulationStateP& shared_state,
                             const ProcessorGroup* myworld )
   : NonlinearSolver( myworld ), m_sharedState(shared_state)
 {}
 
+//--------------------------------------------------------------------------------------------------
 KokkosSolver::~KokkosSolver(){
   for (auto i = m_bcHelper.begin(); i != m_bcHelper.end(); i++){
     delete i->second;
@@ -57,13 +59,14 @@ KokkosSolver::~KokkosSolver(){
   m_bcHelper.clear();
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 {
 
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
 
-  // Setup BCs -------------------------------------------------------------------------------------
+  // Setup BCs
   setupBCs( level, sched, matls );
 
   //transport factory
@@ -72,10 +75,12 @@ KokkosSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
 {}
 
+//--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::problemSetup( const ProblemSpecP& input_db,
                             SimulationStateP& state,
@@ -91,9 +96,6 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
 
   commonProblemSetup( db_ks );
 
-  //------------------------------------------------------------------------------------------------
-  //NEW TASK STUFF
-  //build the factories
   std::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory());
   std::shared_ptr<TransportFactory> TransF(scinew TransportFactory());
   std::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
@@ -134,6 +136,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
 {
@@ -211,6 +214,7 @@ KokkosSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::computeStableTimeStep( const ProcessorGroup*,
                                      const PatchSubset* patches,
@@ -268,6 +272,7 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup*,
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::setTimeStep( const ProcessorGroup*,
                            const PatchSubset* patches,
@@ -280,16 +285,17 @@ KokkosSolver::setTimeStep( const ProcessorGroup*,
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doing_restart )
 {
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
   bool is_restart = false;
 
-  // Setup BCs -------------------------------------------------------------------------------------
+  // Setup BCs
   setupBCs( level, sched, matls );
 
-  // Task Initialize -------------------------------------------------------------------------------
+  // Task Initialize
   //utility factory
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   // build the x,y,z location scalars
@@ -327,7 +333,6 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
     i->second->schedule_init(level, sched, matls, doing_restart);
   }
 
-  // Apply BCs -------------------------------------------------------------------------------------
   //Need to apply BC's after everything is initialized
   for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
     i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
@@ -339,6 +344,7 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
 
 }
 
+//--------------------------------------------------------------------------------------------------
 int
 KokkosSolver::nonlinearSolve( const LevelP& level,
                                      SchedulerP& sched )
@@ -447,6 +453,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
 
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::setupBCs( const LevelP& level, SchedulerP& sched, const MaterialSet* matls ){
   //boundary condition helper

@@ -191,7 +191,7 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
     tsk->create_local_labels();
 
     TaskInterface* psi_tsk = retrieve_task("x-mom-psi");
-    print_task_setup_info( "x-mom-compute-rhs", "compute psi");
+    print_task_setup_info( "x-mom-compute-psi", "compute psi");
     psi_tsk->problemSetup( db_mom );
     psi_tsk->create_local_labels();
 

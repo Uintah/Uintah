@@ -1091,6 +1091,8 @@
 
       <!-- Kokkos Momentum -->
       <KMomentum                        spec="OPTIONAL NO_DATA">
+         <convection                    spec="OPTIONAL NO_DATA"
+                                        attribute1="scheme REQUIRED STRING 'central, upwind, superbee, roe, vanleer'"/>
       </KMomentum>
 
       <!-- Initialization tasks -->

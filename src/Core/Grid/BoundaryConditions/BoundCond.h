@@ -91,6 +91,8 @@ WARNING
 
    T getValue() const { return d_value;}; 
 
+   const std::string getType() const { return d_type; };
+
  protected:
    T d_value;
 

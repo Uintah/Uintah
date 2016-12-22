@@ -248,13 +248,13 @@ namespace Uintah { namespace ArchesCore{
 
     public:
 
-      SecondaryVariableBC( std::string sec_var_name ) : m_sec_var_name(sec_var_name){}
+      SecondaryVariableBC( std::string sec_var_name ) : m_sec_var_name(sec_var_name){
+        m_dep.push_back( m_sec_var_name );
+      }
       ~SecondaryVariableBC(){}
 
       void add_dep( std::vector<std::string>& master_dep ){
 
-        // Pushing all dependencies onto the local list
-        m_dep.push_back( m_sec_var_name );
         // Now adding dependencies to the master list.
         // This checks for repeats to ensure a variable isn't added twice.
         check_master_list( m_dep, master_dep );
@@ -284,6 +284,103 @@ namespace Uintah { namespace ArchesCore{
 
     };
 
+    //------
+
+    struct VelocityBC : BaseFunctor {
+
+    public:
+
+      VelocityBC( std::string density_name, double value ):m_density_name(density_name), m_vel_value(value){
+        m_dep.push_back( m_density_name );
+      }
+      ~VelocityBC(){}
+
+      void add_dep( std::vector<std::string>& master_dep ){
+
+        // Now adding dependencies to the master list.
+        // This checks for repeats to ensure a variable isn't added twice.
+        check_master_list( m_dep, master_dep );
+
+      }
+
+      void eval_bc( std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                    const BndSpec* bnd, Uintah::Iterator bndIter ){
+
+        VariableHelper<T> var_help;
+        typedef typename VariableHelper<T>::ConstType CT;
+        T& var = *( tsk_info->get_uintah_field<T>(var_name));
+        constCCVariable<double>& rho =
+          *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
+
+        IntVector iDir = patch->faceDirection( bnd->face );
+
+        //
+        IntVector offset(0,0,0);
+        bool parallel_dir = false;
+        if ( bnd->face == Patch::xminus || bnd->face == Patch::xplus ){
+
+          if ( var_help.dir == XDIR ){
+            parallel_dir = true;
+          } else if ( var_help.dir == YDIR ){
+            offset[1] = 1;
+          } else if ( var_help.dir == ZDIR ){
+            offset[2] = 1;
+          }
+
+        } else if ( bnd->face == Patch::yminus || bnd->face == Patch::yplus ){
+
+          if ( var_help.dir == XDIR ){
+            offset[0] = 1;
+          } else if ( var_help.dir == YDIR ){
+            parallel_dir = true;
+          } else if ( var_help.dir == ZDIR ){
+            offset[2] = 1;
+          }
+
+        } else if ( bnd->face == Patch::zminus || bnd->face == Patch::zplus ){
+
+          if ( var_help.dir == XDIR ){
+            offset[0] = 1;
+          } else if ( var_help.dir == YDIR ){
+            offset[1] = 1;
+          } else if ( var_help.dir == ZDIR ){
+            parallel_dir = true;
+          }
+
+        }
+
+        IntVector offset_iDir = iDir + offset;
+
+        if ( parallel_dir ){
+          //The face normal and the velocity are in parallel
+          for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+
+            const double interp_rho = 0.5*(rho[*bndIter-iDir]+rho[*bndIter]);
+
+            var[*bndIter-iDir] = interp_rho*m_vel_value;
+            var[*bndIter] = var[*bndIter-iDir];
+
+          }
+        } else {
+          //The face normal and the velocity are tangential
+          for ( bndIter.reset(); !bndIter.done(); bndIter++ ){
+
+            const double interp_rho =0.5*(0.5*(rho[*bndIter-iDir]+rho[*bndIter]) +
+                                          0.5*(rho[*bndIter-offset_iDir]+rho[*bndIter + offset]));
+
+            var[*bndIter] = 2.*interp_rho*m_vel_value - var[*bndIter-iDir];
+
+          }
+        }
+      }
+
+    private:
+
+      std::string m_density_name;
+      const double m_vel_value;
+      std::vector<std::string> m_dep;
+
+    };
     // ----------------------- END FUNCTORS --------------------------------------------------------
 
     void create_bcs( ProblemSpecP& db, std::vector<std::string> variables ){
@@ -336,15 +433,15 @@ namespace Uintah { namespace ArchesCore{
 
               } else if ( type == "Custom" ){
 
-                std::string value;
-                db_bc_type->require("value", value);
+                std::string custom_type="NA";
+                db_bc_type->getAttribute("type",custom_type);
 
 // --------------- HERE IS WHERE WE INSERT CUSTOMIZABLE BC FUNCTORS --------------------------------
 
-                if ( value == "massflow" ){
+                if ( custom_type == "massflow" ){
 
-                  double mdot;
-                  db_bc_type->require("mdot", mdot);
+                  double mdot = 0.0;
+                  db_bc_type->require("value", mdot);
 
                   std::string density_label = "density";
                   if ( db_bc_type->findBlock("density") ){
@@ -354,34 +451,32 @@ namespace Uintah { namespace ArchesCore{
                   std::shared_ptr<BaseFunctor> fun(scinew MassFlow(mdot, density_label));
                   insert_functor( face_name, varname, fun);
 
-                } else if ( value == "table_value" ) {
+                } else if ( custom_type == "table_value" ) {
 
                   std::string tabulated_var_name = "NA";
-
-                  if ( !db_bc_type->findBlock("variable") ){
-                    std::stringstream msg;
-                    msg << "Error: For Boundary Condition: " << value << " for variable: " << varname <<  " you are missing the <variable label=\"...\"> section." << std::endl;
-                    throw ProblemSetupException(msg.str(),__FILE__,__LINE__);
-                  }
-
-                  db_bc_type->findBlock("variable")->getAttribute("label", tabulated_var_name );
+                  db_bc_type->require("value", tabulated_var_name);
 
                   std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(tabulated_var_name));
                   insert_functor( face_name, varname, fun );
 
-                } else if ( value == "handoff" ) {
+                } else if ( custom_type == "handoff" ) {
 
                   std::string handoff_var_name = "NA";
-
-                  if ( !db_bc_type->findBlock("variable") ){
-                    std::stringstream msg;
-                    msg << "Error: For Boundary Condition: " << value << " for variable: " << varname <<  " you are missing the <variable label=\"...\"> section." << std::endl;
-                    throw ProblemSetupException(msg.str(),__FILE__,__LINE__);
-                  }
-
-                  db_bc_type->findBlock("variable")->getAttribute("label", handoff_var_name );
+                  db_bc_type->require("value", handoff_var_name);
 
                   std::shared_ptr<BaseFunctor> fun(scinew SecondaryVariableBC(handoff_var_name));
+                  insert_functor( face_name, varname, fun );
+
+                } else if ( custom_type == "velocity" ){
+
+                  //HARD CODED! - Possibly fix for the future?
+                  std::string density_name = "density";
+
+                  double vel_value=0.0;
+                  db_bc_type->require("value", vel_value);
+
+                  std::shared_ptr<BaseFunctor> fun( scinew VelocityBC(density_name, vel_value));
+
                   insert_functor( face_name, varname, fun );
 
                 } else {
@@ -391,7 +486,9 @@ namespace Uintah { namespace ArchesCore{
                 }
 
               } else {
+
                 throw InvalidValue("Error: BC var type not recognized: "+type, __FILE__, __LINE__);
+
               }
             }
           }
@@ -439,7 +536,7 @@ namespace Uintah { namespace ArchesCore{
 
           std::shared_ptr<BaseFunctor> bc_fun = NULL;
           if ( spec->bcType == CUSTOM ){
-            //CUSTOM BCS
+            //CUSTOM BCS (i.e., NOT Dirichlet or Neumann)
             std::string key_name = pair_face_var_names( facename, *i_eqn );
             bc_fun = m_bcFunStorage[key_name];
           }

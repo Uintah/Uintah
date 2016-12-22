@@ -102,6 +102,7 @@ private:
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
+    std::string m_mu_name;
     std::string m_eps_name;
 
     std::vector<std::string> m_eqn_names;
@@ -131,6 +132,7 @@ private:
   TaskInterface( task_name, matl_index ) {
 
     m_boundary_functors = scinew ArchesCore::BCFunctors<T>();
+
     // Hard Coded defaults for the momentum eqns:
     m_total_eqns = 1;
     m_eqn_names.push_back(task_name);
@@ -220,6 +222,7 @@ private:
     m_x_velocity_name = var_map.uvel_name;
     m_y_velocity_name = var_map.vvel_name;
     m_z_velocity_name = var_map.wvel_name;
+    m_mu_name = var_map.mu_name;
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:
@@ -242,6 +245,7 @@ private:
       register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
       register_new_variable<FYT>( m_eqn_names[i]+"_y_flux" );
       register_new_variable<FZT>( m_eqn_names[i]+"_z_flux" );
+      register_new_variable<T>( m_eqn_names[i]+"_div_tauij" );
     }
   }
 
@@ -311,7 +315,6 @@ private:
 
       T& phi = *(tsk_info->get_uintah_field<T>( m_eqn_names[ieqn] ));
       T& rhs = *(tsk_info->get_uintah_field<T>( m_eqn_names[ieqn]+"_rhs" ));
-      typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
       CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( m_eqn_names[ieqn] ));
 
       phi.copyData(old_phi);
@@ -351,6 +354,7 @@ private:
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+    register_variable( m_mu_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
   }
 
@@ -367,8 +371,9 @@ private:
     CFYT& v     = *(tsk_info->get_const_uintah_field<CFYT>(m_y_velocity_name));
     CFZT& w     = *(tsk_info->get_const_uintah_field<CFZT>(m_z_velocity_name));
     CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
-    Uintah::BlockRange range_cl_to_ech(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
+    constCCVariable<double>& mu = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_mu_name));
 
+    Uintah::BlockRange range_cl_to_ech(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
 
 #ifdef DO_TIMINGS
     SpatialOps::TimeLogger timer("kokkos_scalar_assemble.out."+_task_name);
@@ -406,6 +411,55 @@ private:
                                                 x_flux, y_flux, z_flux, eps );
         Uintah::parallel_for( range_cl_to_ech, get_flux );
 
+      }
+
+      //Stress
+      const double areaEW = Dx.y()*Dx.z();
+      const double areaNS = Dx.x()*Dx.z();
+      const double areaTB = Dx.x()*Dx.y();
+
+      ArchesCore::VariableHelper<T> var_help;
+
+      if ( var_help.dir == 0 ){
+
+        GET_FX_BUFFERED_PATCH_RANGE(1, 0)
+        Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
+
+        Uintah::parallel_for( range, [&](int i, int j, int k){
+
+          const double SE = (u(i+1,j,k) - u(i,j,k))/Dx.x();
+          const double SW = (u(i,j,k) - u(i,j,k))/Dx.x();
+          const double SN = 0.5 * (( u(i,j+1,k) - u(i,j,k) ) / Dx.y() + (v(i,j+1,k) - v(i-1,j+1,k))/Dx.x());
+          const double SS = 0.5 * (( u(i,j,k) - u(i,j-1,k) ) / Dx.y() + (v(i,j,k) - v(i-1,j,k))/Dx.x());
+          const double ST = 0.5 * (( u(i,j,k+1) - u(i,j,k) ) / Dx.z() + (w(i,j,k+1) - w(i-1,j,k+1))/Dx.x());
+          const double SB = 0.5 * (( u(i,j,k) - u(i,j,k-1) ) / Dx.z() + (w(i,j,k) - w(i-1,j,k))/Dx.x());
+
+          const double mu_E = mu(i,j,k);
+          const double mu_W = mu(i-1,j,k);
+          const double mu_N = 0.5 * ( 0.5 * (mu(i,j+1,k) + mu(i,j,k))   + 0.5 * (mu(i-1,j+1,k) + mu(i-1,j,k)) );
+          const double mu_S = 0.5 * ( 0.5 * (mu(i,j,k)   + mu(i,j-1,k)) + 0.5 * (mu(i-1,j,k)   + mu(i-1,j-1,k)) );
+          const double mu_T = 0.5 * ( 0.5 * (mu(i,j,k+1) + mu(i,j,k))   + 0.5 * (mu(i-1,j,k+1) + mu(i-1,j,k)) );
+          const double mu_B = 0.5 * ( 0.5 * (mu(i,j,k)   + mu(i,j,k-1)) + 0.5 * (mu(i-1,j,k)   + mu(i-1,j,k-1)) );
+
+          // add in once we have a rho
+          // const double rho_E = rho(i,j,k);
+          // const double rho_W = rho(i-1,j,k);
+          // const double rho_N = 0.5 * ( 0.5 * (rho(i,j+1,k) + rho(i,j,k))   + 0.5 * (rho(i-1,j+1,k) + rho(i-1,j,k)) );
+          // const double rho_S = 0.5 * ( 0.5 * (rho(i,j,k)   + rho(i,j-1,k)) + 0.5 * (rho(i-1,j,k)   + rho(i-1,j-1,k)) );
+          // const double rho_T = 0.5 * ( 0.5 * (rho(i,j,k+1) + rho(i,j,k))   + 0.5 * (rho(i-1,j,k+1) + rho(i-1,j,k)) );
+          // const double rho_B = 0.5 * ( 0.5 * (rho(i,j,k)   + rho(i,j,k-1)) + 0.5 * (rho(i-1,j,k)   + rho(i-1,j,k-1)) );
+
+          double div_tauij = areaEW * ( mu_E * SE - mu_W * SW ) +
+                             areaNS * ( mu_N * SN - mu_S * SS ) +
+                             areaTB * ( mu_T * ST - mu_B * SB );
+
+          rhs(i,j,k) += div_tauij;
+
+        });
+      } else if ( var_help.dir == 1 ){
+        GET_FY_BUFFERED_PATCH_RANGE(1, 0);
+      } else {
+        GET_FZ_BUFFERED_PATCH_RANGE(1, 0);
       }
 
       //Sources:

@@ -256,8 +256,10 @@ namespace Uintah{ namespace ArchesCore{
       uvel_name = parse_ups_for_role( UVELOCITY, db, "NotSet" );
       vvel_name = parse_ups_for_role( VVELOCITY, db, "NotSet" );
       wvel_name = parse_ups_for_role( WVELOCITY, db, "NotSet" );
+      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
     std::string vol_frac_name = "cc_volume_fraction";
+    std::string mu_name;
     std::string uvel_name;
     std::string vvel_name;
     std::string wvel_name;
@@ -265,29 +267,35 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct GridVarMap<SFCXVariable<double> >{
     void problemSetup( ProblemSpecP db ){
+      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
     std::string vol_frac_name = "fx_volume_fraction";
     std::string uvel_name = "ucell_xvel";
     std::string vvel_name = "ucell_yvel";
     std::string wvel_name = "ucell_zvel";
+    std::string mu_name;
   };
   template <>
   struct GridVarMap<SFCYVariable<double> >{
     void problemSetup( ProblemSpecP db ){
+      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
     std::string vol_frac_name = "fy_volume_fraction";
     std::string uvel_name = "vcell_xvel";
     std::string vvel_name = "vcell_yvel";
     std::string wvel_name = "vcell_zvel";
+    std::string mu_name;
   };
   template <>
   struct GridVarMap<SFCZVariable<double> >{
     void problemSetup( ProblemSpecP db ){
+      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
     }
     std::string vol_frac_name = "fz_volume_fraction";
     std::string uvel_name = "wcell_xvel";
     std::string vvel_name = "wcell_yvel";
     std::string wvel_name = "wcell_zvel";
+    std::string mu_name;
   };
 
   /// @brief Returns a weight for interpolation
