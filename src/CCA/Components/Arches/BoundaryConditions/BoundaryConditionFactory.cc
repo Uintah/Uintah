@@ -59,7 +59,7 @@ BoundaryConditionFactory::build_all_tasks( ProblemSpecP& db )
       db_bc->getAttribute("label", name);
       db_bc->getAttribute("type", type);
 
-      proc0cout << "       Task: " << name << "  Type: " << type << std::endl;
+      print_task_setup_info( name, type ); 
       TaskInterface* tsk = retrieve_task(name);
       tsk->problemSetup(db_bc);
       tsk->create_local_labels();

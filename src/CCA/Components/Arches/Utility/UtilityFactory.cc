@@ -133,16 +133,19 @@ UtilityFactory::build_all_tasks( ProblemSpecP& db )
 
   // Grid spacing information
   TaskInterface* tsk = retrieve_task("grid_info");
+  print_task_setup_info( "grid_info", "grid properties calc.");
   tsk->problemSetup(db);
   tsk->create_local_labels();
 
   // computes the surface normals
   tsk = retrieve_task("surface_normals");
+  print_task_setup_info( "surface_normals", "surface normals calc.");
   tsk->problemSetup(db);
   tsk->create_local_labels();
 
   // computes a volume fraction for each cell type
   tsk = retrieve_task("vol_fraction_calc");
+  print_task_setup_info( "vol_fraction_calc", "calc vol frac");
   tsk->problemSetup(db);
   tsk->create_local_labels();
 
@@ -152,7 +155,10 @@ UtilityFactory::build_all_tasks( ProblemSpecP& db )
     for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != 0;
           db_util = db_util->findNextBlock("utility")){
       std::string name;
+      std::string type;
       db_util->getAttribute("label", name);
+      db_util->getAttribute("type", type);
+      print_task_setup_info( name, type );
       TaskInterface* tsk = retrieve_task(name);
       tsk->problemSetup(db_util);
       tsk->create_local_labels();

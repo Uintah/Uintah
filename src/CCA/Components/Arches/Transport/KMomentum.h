@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_KScalarRHS_h
-#define Uintah_Component_Arches_KScalarRHS_h
+#ifndef Uintah_Component_Arches_KMomentum_h
+#define Uintah_Component_Arches_KMomentum_h
 
 /*
  * The MIT License
@@ -39,12 +39,12 @@
 namespace Uintah{
 
   template<typename T>
-  class KScalarRHS : public TaskInterface {
+  class KMomentum : public TaskInterface {
 
 public:
 
-    KScalarRHS<T>( std::string task_name, int matl_index );
-    ~KScalarRHS<T>();
+    KMomentum<T>( std::string task_name, int matl_index );
+    ~KMomentum<T>();
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> ArchesVIVector;
 
@@ -70,7 +70,7 @@ public:
 
     void create_local_labels();
 
-    //Build instructions for this (KScalarRHS) class.
+    //Build instructions for this (KMomentum) class.
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
@@ -79,8 +79,8 @@ public:
       : m_task_name(task_name), m_matl_index(matl_index){}
       ~Builder(){}
 
-      KScalarRHS* build()
-      { return scinew KScalarRHS<T>( m_task_name, m_matl_index ); }
+      KMomentum* build()
+      { return scinew KMomentum<T>( m_task_name, m_matl_index ); }
 
       private:
 
@@ -99,20 +99,16 @@ private:
     typedef typename ArchesCore::VariableHelper<T>::ConstYFaceType CFYT;
     typedef typename ArchesCore::VariableHelper<T>::ConstZFaceType CFZT;
 
-    std::string m_D_name;
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
     std::string m_eps_name;
 
-    std::vector<std::string> _eqn_names;
-    std::vector<bool> m_do_diff;
+    std::vector<std::string> m_eqn_names;
     std::vector<bool> m_do_clip;
     std::vector<double> m_low_clip;
     std::vector<double> m_high_clip;
     std::vector<double> m_init_value;
-
-    bool m_has_D;
 
     int m_total_eqns;
 
@@ -131,33 +127,30 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  KScalarRHS<T>::KScalarRHS( std::string task_name, int matl_index ) :
+  KMomentum<T>::KMomentum( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ) {
 
     m_boundary_functors = scinew ArchesCore::BCFunctors<T>();
+    // Hard Coded defaults for the momentum eqns:
+    m_total_eqns = 1;
+    m_eqn_names.push_back(task_name);
 
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T>
-  KScalarRHS<T>::~KScalarRHS(){
+  KMomentum<T>::~KMomentum(){
 
     delete m_boundary_functors;
 
   }
 
+  //------------------------------------------------------------------------------------------------
   template <typename T> void
-  KScalarRHS<T>::problemSetup( ProblemSpecP& input_db ){
+  KMomentum<T>::problemSetup( ProblemSpecP& input_db ){
 
-  m_total_eqns = 0;
-
-  ConvectionHelper* conv_helper = scinew ConvectionHelper();
-  for (ProblemSpecP db = input_db->findBlock("eqn"); db != 0;
-       db = db->findNextBlock("eqn")){
-
-    //Equation name
-    std::string eqn_name;
-    db->getAttribute("label", eqn_name);
-    _eqn_names.push_back(eqn_name);
+    ProblemSpecP db = input_db;
+    ConvectionHelper* conv_helper = scinew ConvectionHelper();
 
     //Convection
     if ( db->findBlock("convection")){
@@ -166,13 +159,6 @@ private:
       m_conv_scheme.push_back(conv_helper->get_limiter_from_string(conv_scheme));
     } else {
       m_conv_scheme.push_back(NOCONV);
-    }
-
-    //Diffusion
-    if ( db->findBlock("diffusion")){
-      m_do_diff.push_back(true);
-    } else {
-      m_do_diff.push_back(false);
     }
 
     //Clipping
@@ -185,8 +171,8 @@ private:
       m_high_clip.push_back(high);
     } else {
       m_do_clip.push_back(false);
-      m_low_clip.push_back(-999.9);
-      m_high_clip.push_back(999.9);
+      m_low_clip.push_back(-99999.9);
+      m_high_clip.push_back(99999.9);
     }
 
     //Initial Value
@@ -222,89 +208,78 @@ private:
     m_source_info.push_back(eqn_srcs);
 
     // setup the boundary conditions for this eqn set
-    m_boundary_functors->create_bcs( db, _eqn_names );
+    m_boundary_functors->create_bcs( db, m_eqn_names );
 
+    delete conv_helper;
+
+    using namespace ArchesCore;
+
+    ArchesCore::GridVarMap<T> var_map;
+    var_map.problemSetup( input_db );
+    m_eps_name = var_map.vol_frac_name;
+    m_x_velocity_name = var_map.uvel_name;
+    m_y_velocity_name = var_map.vvel_name;
+    m_z_velocity_name = var_map.wvel_name;
+
+    if ( input_db->findBlock("velocity") ){
+      // can overide the global velocity space with this:
+      input_db->findBlock("velocity")->getAttribute("xlabel",m_x_velocity_name);
+      input_db->findBlock("velocity")->getAttribute("ylabel",m_y_velocity_name);
+      input_db->findBlock("velocity")->getAttribute("zlabel",m_z_velocity_name);
+    }
   }
 
-  delete conv_helper;
-
-  using namespace ArchesCore;
-
-  ArchesCore::GridVarMap<T> var_map;
-  var_map.problemSetup( input_db );
-  m_eps_name = var_map.vol_frac_name;
-  m_x_velocity_name = var_map.uvel_name;
-  m_y_velocity_name = var_map.vvel_name;
-  m_z_velocity_name = var_map.wvel_name;
-
-  if ( input_db->findBlock("velocity") ){
-    // can overide the global velocity space with this:
-    input_db->findBlock("velocity")->getAttribute("xlabel",m_x_velocity_name);
-    input_db->findBlock("velocity")->getAttribute("ylabel",m_y_velocity_name);
-    input_db->findBlock("velocity")->getAttribute("zlabel",m_z_velocity_name);
-  }
-
-  // Diffusion coeff -- assuming the same one across all eqns.
-  m_D_name = "NA";
-  m_has_D = false;
-
-  if ( input_db->findBlock("diffusion_coef") ) {
-    input_db->findBlock("diffusion_coef")->getAttribute("label",m_D_name);
-    m_has_D = true;
-  }
-
-  }
-
+  //------------------------------------------------------------------------------------------------
   template <typename T>
   void
-  KScalarRHS<T>::create_local_labels(){
+  KMomentum<T>::create_local_labels(){
 
     const int istart = 0;
-    int iend = _eqn_names.size();
+    int iend = m_eqn_names.size();
     for (int i = istart; i < iend; i++ ){
-      register_new_variable<T>( _eqn_names[i] );
-      register_new_variable<T>( _eqn_names[i]+"_rhs" );
-      register_new_variable<FXT>( _eqn_names[i]+"_x_flux" );
-      register_new_variable<FYT>( _eqn_names[i]+"_y_flux" );
-      register_new_variable<FZT>( _eqn_names[i]+"_z_flux" );
+      register_new_variable<T>( m_eqn_names[i] );
+      register_new_variable<T>( m_eqn_names[i]+"_rhs" );
+      register_new_variable<FXT>( m_eqn_names[i]+"_x_flux" );
+      register_new_variable<FYT>( m_eqn_names[i]+"_y_flux" );
+      register_new_variable<FZT>( m_eqn_names[i]+"_z_flux" );
     }
   }
 
   template <typename T> void
-  KScalarRHS<T>::register_initialize(
+  KMomentum<T>::register_initialize(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable(  _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable(  _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable(  m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES , variable_registry );
     }
   }
 
   template <typename T> void
-  KScalarRHS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  KMomentum<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       double scalar_init_value = m_init_value[ieqn];
 
-      T& phi    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
-      T& rhs    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]));
+      T& phi    = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]+"_rhs"));
+      T& rhs    = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]));
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k){
         phi(i,j,k) = scalar_init_value;
         rhs(i,j,k) = 0.0;
       });
 
-      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(_eqn_names[ieqn]+"_x_flux"));
-      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(_eqn_names[ieqn]+"_y_flux"));
-      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(_eqn_names[ieqn]+"_z_flux"));
+      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux"));
+      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux"));
+      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux"));
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
         x_flux(i,j,k) = 0.0;
@@ -317,27 +292,27 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T> void
-  KScalarRHS<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  KMomentum<T>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( _eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
-      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
-      register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry  );
+      register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::COMPUTES , variable_registry  );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
     }
   }
 
   template <typename T> void
-  KScalarRHS<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  KMomentum<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      T& phi = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn] ));
-      T& rhs = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn]+"_rhs" ));
+      T& phi = *(tsk_info->get_uintah_field<T>( m_eqn_names[ieqn] ));
+      T& rhs = *(tsk_info->get_uintah_field<T>( m_eqn_names[ieqn]+"_rhs" ));
       typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( _eqn_names[ieqn] ));
+      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( m_eqn_names[ieqn] ));
 
       phi.copyData(old_phi);
       rhs.initialize(0.0);
@@ -347,21 +322,21 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T> void
-  KScalarRHS<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  KMomentum<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      register_variable( _eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( _eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-      register_variable( _eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-      register_variable( _eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-      register_variable( _eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn]+"_rhs", ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
       if ( m_conv_scheme[ieqn] != NOCONV ){
-        register_variable( _eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-        register_variable( _eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-        register_variable( _eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( m_eqn_names[ieqn]+"_x_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( m_eqn_names[ieqn]+"_y_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+        register_variable( m_eqn_names[ieqn]+"_z_psi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       }
 
       typedef std::vector<SourceInfo> VS;
@@ -372,9 +347,6 @@ private:
     }
 
     //globally common variables
-    if ( m_has_D ){
-      register_variable( m_D_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-    }
     register_variable( m_x_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_y_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( m_z_velocity_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::LATEST, variable_registry, time_substep );
@@ -383,7 +355,7 @@ private:
   }
 
   template <typename T> void
-  KScalarRHS<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  KMomentum<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     Vector Dx = patch->dCell();
     double ax = Dx.y() * Dx.z();
@@ -403,16 +375,16 @@ private:
     timer.start("work");
 #endif
     const int istart = 0;
-    const int iend = _eqn_names.size();
+    const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      CT& phi     = *(tsk_info->get_const_uintah_field<CT>(_eqn_names[ieqn]));
-      T& rhs      = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
+      CT& phi     = *(tsk_info->get_const_uintah_field<CT>(m_eqn_names[ieqn]));
+      T& rhs      = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]+"_rhs"));
 
       //Convection:
-      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(_eqn_names[ieqn]+"_x_flux"));
-      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(_eqn_names[ieqn]+"_y_flux"));
-      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(_eqn_names[ieqn]+"_z_flux"));
+      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux"));
+      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux"));
+      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux"));
 
       Uintah::BlockRange init_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( init_range, [&](int i, int j, int k){
@@ -426,43 +398,14 @@ private:
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
-        CFXT& x_psi = *(tsk_info->get_const_uintah_field<CFXT>(_eqn_names[ieqn]+"_x_psi"));
-        CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(_eqn_names[ieqn]+"_y_psi"));
-        CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(_eqn_names[ieqn]+"_z_psi"));
+        CFXT& x_psi = *(tsk_info->get_const_uintah_field<CFXT>(m_eqn_names[ieqn]+"_x_psi"));
+        CFYT& y_psi = *(tsk_info->get_const_uintah_field<CFYT>(m_eqn_names[ieqn]+"_y_psi"));
+        CFZT& z_psi = *(tsk_info->get_const_uintah_field<CFZT>(m_eqn_names[ieqn]+"_z_psi"));
 
         Uintah::ComputeConvectiveFlux get_flux( phi, u, v, w, x_psi, y_psi, z_psi,
                                                 x_flux, y_flux, z_flux, eps );
         Uintah::parallel_for( range_cl_to_ech, get_flux );
 
-      }
-
-      //Diffusion:
-      if ( m_do_diff[ieqn] ) {
-
-        CT& D = *(tsk_info->get_const_uintah_field<CT>(m_D_name));
-
-        //NOTE: No diffusion allowed on boundaries.
-        GET_BUFFERED_PATCH_RANGE(1,-1);
-
-        Uintah::BlockRange range_diff(low_patch_range, high_patch_range);
-
-        Uintah::parallel_for( range_diff, [&](int i, int j, int k){
-
-          const double afx  = ( eps(i,j,k) + eps(i-1,j,k) ) / 2. < 0.51 ? 0.0 : 1.0;
-          const double afxp = ( eps(i,j,k) + eps(i+1,j,k) ) / 2. < 0.51 ? 0.0 : 1.0;
-          const double afy  = ( eps(i,j,k) + eps(i,j-1,k) ) / 2. < 0.51 ? 0.0 : 1.0;
-          const double afyp = ( eps(i,j,k) + eps(i,j+1,k) ) / 2. < 0.51 ? 0.0 : 1.0;
-          const double afz  = ( eps(i,j,k) + eps(i,j,k-1) ) / 2. < 0.51 ? 0.0 : 1.0;
-          const double afzp = ( eps(i,j,k) + eps(i,j,k+1) ) / 2. < 0.51 ? 0.0 : 1.0;
-
-          rhs(i,j,k) += ax/(2.*Dx.x()) * ( afxp  * ( D(i+1,j,k) + D(i,j,k))   * (phi(i+1,j,k) - phi(i,j,k))
-                                         - afx   * ( D(i,j,k)   + D(i-1,j,k)) * (phi(i,j,k)   - phi(i-1,j,k)) ) +
-                        ay/(2.*Dx.y()) * ( afyp  * ( D(i,j+1,k) + D(i,j,k))   * (phi(i,j+1,k) - phi(i,j,k))
-                                         - afy   * ( D(i,j,k)   + D(i,j-1,k)) * (phi(i,j,k)   - phi(i,j-1,k)) ) +
-                        az/(2.*Dx.z()) * ( afzp  * ( D(i,j,k+1) + D(i,j,k))   * (phi(i,j,k+1) - phi(i,j,k))
-                                         - afz   * ( D(i,j,k)   + D(i,j,k-1)) * (phi(i,j,k)   - phi(i,j,k-1)) );
-
-        });
       }
 
       //Sources:
@@ -487,14 +430,14 @@ private:
   }
 
   template <typename T> void
-  KScalarRHS<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  KMomentum<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-    for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++ ){
+    for ( auto i = m_eqn_names.begin(); i != m_eqn_names.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
     }
 
     std::vector<std::string> bc_dep;
-    m_boundary_functors->get_bc_dependencies( _eqn_names, m_bcHelper, bc_dep );
+    m_boundary_functors->get_bc_dependencies( m_eqn_names, m_bcHelper, bc_dep );
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
       register_variable( *i, ArchesFieldContainer::REQUIRES, 0 , ArchesFieldContainer::NEWDW,
                          variable_registry );
@@ -503,9 +446,9 @@ private:
   }
 
   template <typename T> void
-  KScalarRHS<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  KMomentum<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    m_boundary_functors->apply_bc( _eqn_names, m_bcHelper, tsk_info, patch );
+    m_boundary_functors->apply_bc( m_eqn_names, m_bcHelper, tsk_info, patch );
 
   }
 }

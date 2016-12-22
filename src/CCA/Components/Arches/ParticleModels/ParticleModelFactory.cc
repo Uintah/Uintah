@@ -307,6 +307,7 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
       db_model->getAttribute("label",model_name );
       db_model->getAttribute("type", type );
 
+      print_task_setup_info( model_name, type ); 
       TaskInterface* tsk = retrieve_task(model_name);
 
       tsk->problemSetup( db_model );

@@ -5,6 +5,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <string>
+#include <iomanip>
 
 namespace Uintah{
 
@@ -109,6 +110,19 @@ namespace Uintah{
     SimulationStateP _shared_state;               ///< Uintah SharedState
 
     WBCHelper* m_bcHelper;
+
+    /** @brief Print some helpful proc0cout information when setting up tasks **/
+    void print_task_setup_info(
+      std::string name, std::string type, std::string additional_info="NA" ){
+      std::stringstream msg;
+      if ( additional_info != "NA" ){
+        msg << "     " << std::setw(6) << std::left << "Task: " << std::setw(20) << std::left << name << std::setw(6) << std::left << " Type: " << std::setw(20) << std::left << type << " Additional Info: " << additional_info << std::endl;
+        proc0cout << msg.str();
+      } else {
+        msg << "     " << std::setw(6) << std::left << "Task: " << std::setw(20) << std::left << name << std::setw(6) << std::left << " Type: " << std::setw(20) << std::left << type << std::endl;
+        proc0cout << msg.str();
+      }
+    }
 
   private:
 

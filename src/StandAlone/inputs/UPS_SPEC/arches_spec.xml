@@ -1089,6 +1089,10 @@
         </eqn_group>
       </KScalarTransport>
 
+      <!-- Kokkos Momentum -->
+      <KMomentum                        spec="OPTIONAL NO_DATA">
+      </KMomentum>
+
       <!-- Initialization tasks -->
       <Initialization                   spec="OPTIONAL NO_DATA">
         <!-- label = unique label for this task

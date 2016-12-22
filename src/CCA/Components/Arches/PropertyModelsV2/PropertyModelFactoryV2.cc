@@ -203,6 +203,7 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
       }
 
       assign_task_to_type_storage(name, type);
+      print_task_setup_info( name, type ); 
 
       //also build the task here
       TaskInterface* tsk = retrieve_task(name);

@@ -209,7 +209,9 @@ private:
 
 
   template <typename T>
-  void ComputePsi<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  void ComputePsi<T>::register_timestep_eval(
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+    const int time_substep ){
 
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       register_variable( *i+"_x_psi", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );

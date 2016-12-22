@@ -103,8 +103,11 @@ InitializeFactory::build_all_tasks( ProblemSpecP& db )
         db_task = db_task->findNextBlock("task")){
 
       std::string task_name;
+      std::string type;
       db_task->getAttribute("task_label",task_name );
+      db_task->getAttribute("type", type );
 
+      print_task_setup_info( task_name, type ); 
       TaskInterface* tsk = retrieve_task(task_name);
       tsk->problemSetup( db_task );
 
