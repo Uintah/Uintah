@@ -646,6 +646,10 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
                     bcValType = FUNCTOR_TYPE;
 
                     DBGBC << " functor name = " << functorName << std::endl;
+                  } else if ( bndCondBase->getValueType() == Uintah::BoundCondBase::VECTOR_TYPE ){
+
+                    // do nothing
+
                   } else {
                     std::ostringstream msg;
                     msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bndName << ". "
