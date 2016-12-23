@@ -9,6 +9,7 @@
       <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />
       <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
       <refine_particles                   spec="OPTIONAL BOOLEAN" />
+      <XPIC2                              spec="OPTIONAL BOOLEAN" />
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
       <AMR                                spec="OPTIONAL BOOLEAN" />
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />

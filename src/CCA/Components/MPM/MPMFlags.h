@@ -79,6 +79,7 @@ namespace Uintah {
     int         d_maxGridLevel; // Only do MPM on this grid level
     bool        doMPMOnLevel(int level, int numLevels) const;
     bool        d_refineParticles;  // Refine particles, step toward AMR
+    bool        d_XPIC2;            // Use Nairn's XPIC2 algorithm
    
     std::string d_erosionAlgorithm; // Algorithm to erode material points
  

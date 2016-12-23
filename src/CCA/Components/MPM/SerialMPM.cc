@@ -623,8 +623,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleSetPrescribedMotion(            sched, patches, matls);
-//scheduleComputeSSPlusVp(                sched, patches, matls);
-//scheduleComputeSPlusSSPlusVp(           sched, patches, matls);
+  if(flags->d_XPIC2){
+    scheduleComputeSSPlusVp(              sched, patches, matls);
+    scheduleComputeSPlusSSPlusVp(         sched, patches, matls);
+  }
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeHeatExchange(          sched, patches, matls);
     scheduleComputeInternalHeatRate(      sched, patches, matls);
@@ -1245,12 +1247,15 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
-//  t->requires(Task::NewDW, lb->gVelSPSSPLabel,                  gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
   if (flags->d_doExplicitHeatConduction){
     t->requires(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
   }
   t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
+  if(flags->d_XPIC2){
+    t->requires(Task::NewDW, lb->gVelSPSSPLabel,                gac,NGN);
+    t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,          gnone);
+  }
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
   t->requires(Task::OldDW, lb->pParticleIDLabel,                gnone);
@@ -3441,7 +3446,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
-//    new_dw->get(pvelSSPlus,   lb->pVelocitySSPlusLabel,            pset);
+      if(flags->d_XPIC2){
+        new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
+      }
 
       new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,     pset);
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,            pset);
@@ -3482,7 +3489,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
-//    new_dw->get(gvelSPSSP,       lb->gVelSPSSPLabel,       dwi,patch,gac,NGP);
+      if(flags->d_XPIC2){
+        new_dw->get(gvelSPSSP,     lb->gVelSPSSPLabel,       dwi,patch,gac,NGP);
+      }
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
       if (flags->d_doExplicitHeatConduction){
@@ -3515,7 +3524,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                   psize[idx], pFOld[idx]);
 
         Vector vel(0.0,0.0,0.0);
-//        Vector velSSPSSP(0.0,0.0,0.0);
+        Vector velSSPSSP(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
         double fricTempRate = 0.0;
         double tempRate = 0.0;
@@ -3525,7 +3534,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
           vel      += gvelocity_star[node]  * S[k];
-//          velSSPSSP+= gvelSPSSP[node]       * S[k];
           acc      += gacceleration[node]   * S[k];
 
           fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
@@ -3533,22 +3541,31 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                        fricTempRate)   * S[k];
           burnFraction += massBurnFrac[node]     * S[k];
         }
+        if(flags->d_XPIC2){
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            velSSPSSP+= gvelSPSSP[node]       * S[k];
+          }
+        }
 
-        // Update the particle's position and velocity
-        pxnew[idx]      = px[idx]    + vel*delT;
-        pdispnew[idx]   = pdisp[idx] + vel*delT;
-        pvelnew[idx]    = pvelocity[idx]    + acc*delT;
+        if(flags->d_XPIC2){
+          // Update particle velocity and position using Nairn's XPIC(2) method
+          pxnew[idx]    = px[idx]    + vel*delT
+                       - 0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
+                                                       + velSSPSSP)*delT;
+          pvelnew[idx]  = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
+        } else{
+          // Update the particle's position and velocity using std "FLIP" method
+          pxnew[idx]   = px[idx]    + vel*delT;
+          pvelnew[idx] = pvelocity[idx]    + acc*delT;
+        }
+
+        pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
 #if 0
         // PIC, or XPIC(1)
         pxnew[idx]       = px[idx]    + vel*delT
                      - 0.5*(acc*delT + (pvelocity[idx] - pvelSSPlus[idx]))*delT;
         pvelnew[idx]     = pvelSSPlus[idx]    + acc*delT;
-        // XPIC(2)
-        pxnew[idx]       = px[idx]    + vel*delT
-                     - 0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
-                                                       + velSSPSSP)*delT;
-        pvelnew[idx]     = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
-        pdispnew[idx]    = pdisp[idx] + (pxnew[idx]-px[idx]);
 #endif
 
         pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
