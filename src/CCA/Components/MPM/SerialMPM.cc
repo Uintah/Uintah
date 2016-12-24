@@ -3514,69 +3514,100 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       double Cp=mpm_matl->getSpecificHeat();
 
-      // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
+      if(flags->d_XPIC2){
+        // Loop over particles
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
 
-        // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx], ni, S,
-                                                  psize[idx], pFOld[idx]);
+          // Get the node indices that surround the cell
+          int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+                                                    psize[idx], pFOld[idx]);
+          Vector vel(0.0,0.0,0.0);
+          Vector velSSPSSP(0.0,0.0,0.0);
+          Vector acc(0.0,0.0,0.0);
+          double fricTempRate = 0.0;
+          double tempRate = 0.0;
+          double burnFraction = 0.0;
 
-        Vector vel(0.0,0.0,0.0);
-        Vector velSSPSSP(0.0,0.0,0.0);
-        Vector acc(0.0,0.0,0.0);
-        double fricTempRate = 0.0;
-        double tempRate = 0.0;
-        double burnFraction = 0.0;
-
-        // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < NN; k++) {
-          IntVector node = ni[k];
-          vel      += gvelocity_star[node]  * S[k];
-          acc      += gacceleration[node]   * S[k];
-
-          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
-          tempRate += (gTemperatureRate[node] + dTdt[node] +
-                       fricTempRate)   * S[k];
-          burnFraction += massBurnFrac[node]     * S[k];
-        }
-        if(flags->d_XPIC2){
+          // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
+            vel      += gvelocity_star[node]  * S[k];
             velSSPSSP+= gvelSPSSP[node]       * S[k];
-          }
-        }
+            acc      += gacceleration[node]   * S[k];
 
-        if(flags->d_XPIC2){
-          // Update particle velocity and position using Nairn's XPIC(2) method
+            fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+            tempRate += (gTemperatureRate[node] + dTdt[node] +
+                         fricTempRate)   * S[k];
+            burnFraction += massBurnFrac[node]     * S[k];
+          }
+
+          // Update particle vel and pos using Nairn's XPIC(2) method
           pxnew[idx]    = px[idx]    + vel*delT
-                       - 0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
+                     - 0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
                                                        + velSSPSSP)*delT;
           pvelnew[idx]  = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
-        } else{
-          // Update the particle's position and velocity using std "FLIP" method
-          pxnew[idx]   = px[idx]    + vel*delT;
-          pvelnew[idx] = pvelocity[idx]    + acc*delT;
-        }
-
-        pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
+          pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
 #if 0
-        // PIC, or XPIC(1)
-        pxnew[idx]       = px[idx]    + vel*delT
+          // PIC, or XPIC(1)
+          pxnew[idx]    = px[idx]    + vel*delT
                      - 0.5*(acc*delT + (pvelocity[idx] - pvelSSPlus[idx]))*delT;
-        pvelnew[idx]     = pvelSSPlus[idx]    + acc*delT;
+          pvelnew[idx]   = pvelSSPlus[idx]    + acc*delT;
 #endif
+          pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
+          pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
+          pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+  
+          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
+          ke += .5*pmass[idx]*pvelnew[idx].length2();
+          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
+          totalMom   += pvelnew[idx]*pmass[idx];
+          totalmass  += pmass[idx];
+        }
+      } else {
+        // Loop over particles
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
 
-        pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
-        pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
-        pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+          // Get the node indices that surround the cell
+          int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+                                                    psize[idx], pFOld[idx]);
+          Vector vel(0.0,0.0,0.0);
+          Vector velSSPSSP(0.0,0.0,0.0);
+          Vector acc(0.0,0.0,0.0);
+          double fricTempRate = 0.0;
+          double tempRate = 0.0;
+          double burnFraction = 0.0;
 
-        thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-        ke += .5*pmass[idx]*pvelnew[idx].length2();
-        CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-        totalMom   += pvelnew[idx]*pmass[idx];
-        totalmass  += pmass[idx];
+          // Accumulate the contribution from each surrounding vertex
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            vel      += gvelocity_star[node]  * S[k];
+            acc      += gacceleration[node]   * S[k];
+
+            fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+            tempRate += (gTemperatureRate[node] + dTdt[node] +
+                         fricTempRate)   * S[k];
+            burnFraction += massBurnFrac[node]     * S[k];
+          }
+
+          // Update the particle's pos and vel using std "FLIP" method
+          pxnew[idx]   = px[idx]        + vel*delT;
+          pdispnew[idx]= pdisp[idx]     + vel*delT;
+          pvelnew[idx] = pvelocity[idx] + acc*delT;
+
+          pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
+          pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
+          pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+  
+          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
+          ke += .5*pmass[idx]*pvelnew[idx].length2();
+          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
+          totalMom   += pvelnew[idx]*pmass[idx];
+          totalmass  += pmass[idx];
+        }
       }
 
       // Compute velocity gradient and deformation gradient on every particle
