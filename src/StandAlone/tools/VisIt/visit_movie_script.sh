@@ -816,7 +816,7 @@ EOF
 	    
 	    echo "$visit $version -movie -start $runStart -end $runEnd -frame $runStart $geometry $format $fullMovieName -sessionfile $sessionFile -par $launchMethod $nNodes $nProcs $time $bank $partition" >> $logFile
 
-	    nohup $visit $version-movie -start $runStart -end $runEnd -frame $runStart $geometry $format $fullMovieName -sessionfile $sessionFile -par $launchMethod $nNodes $nProcs $time $bank $partition >>&! $logFile
+	    nohup $visit $version -movie -start $runStart -end $runEnd -frame $runStart $geometry $format $fullMovieName -sessionfile $sessionFile -par $launchMethod $nNodes $nProcs $time $bank $partition >>&! $logFile
 
 	    @ run = $run + 1
 	end
