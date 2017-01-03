@@ -450,6 +450,7 @@ if test "$BUILD_NSCBC" = "yes"; then
          $STATIC \
          -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
          -DCMAKE_CXX_FLAGS=-fPIC \
+         -DExprLib_DIR=$BASE_BUILD_DIR/Wasatch3P/install/ExprLib/share \
          .."
 
     run "make install"
