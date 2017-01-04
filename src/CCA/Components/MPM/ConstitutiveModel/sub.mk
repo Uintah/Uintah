@@ -50,6 +50,7 @@ SRCS   += \
         $(SRCDIR)/MWViscoElastic.cc             \
         $(SRCDIR)/IdealGasMP.cc                 \
         $(SRCDIR)/ShellMaterial.cc              \
+        $(SRCDIR)/ReactiveElasticPlasticHP.cc   \
         $(SRCDIR)/ElasticPlasticHP.cc           \
         $(SRCDIR)/Water.cc                      \
         $(SRCDIR)/TH_Water.cc                   \

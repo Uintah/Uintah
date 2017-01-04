@@ -7,7 +7,8 @@
                                                                              comp_neo_hook_plastic,
                                                                              elastic_plastic, 
                                                                              hypo_elastic, 
-                                                                             elastic_plastic_hp, 
+                                                                             elastic_plastic_hp,
+                                                                             reactive_EP, 
                                                                              ideal_gas,
                                                                              membrane, 
                                                                              murnaghanMPM, 
@@ -67,6 +68,7 @@
     <max_fiber_strain              spec="OPTIONAL DOUBLE" />
     <max_matrix_strain             spec="OPTIONAL DOUBLE" />
     <failure_option                spec="OPTIONAL DOUBLE" />
+    <heat_of_fusion                spec="REQUIRED DOUBLE 'positive'" need_applies_to="type reactive_EP" />
     <C1                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
     <C2                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
     <check_max_stress_failure      spec="OPTIONAL BOOLEAN" />
