@@ -55,6 +55,14 @@
 
 
 namespace Uintah {
+#ifdef UINTAH_ENABLE_KOKKOS
+typedef Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tempTableContainer; 
+typedef Kokkos::View<const double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tableContainer ;
+#else
+typedef std::vector<std::vector<double> > tempTableContainer; 
+typedef const std::vector<std::vector<double> >& tableContainer ;
+#endif
+
 
 class ArchesLabel;
 class MPMArchesLabel;
@@ -122,8 +130,10 @@ public:
 
   public:
 
-    Interp_class( const std::vector<std::vector<double> > & table, const std::vector<int>& IndepVarNo,
-                  const std::vector<std::vector<double> > & indepin, const std::vector<std::vector<double> >& ind_1in )
+    Interp_class( tableContainer  table,
+                  const std::vector<int>& IndepVarNo,
+                  const std::vector<std::vector<double> > & indepin,
+                  const std::vector<std::vector<double> >& ind_1in )
       : table2(table), d_allIndepVarNo(IndepVarNo), indep(indepin), ind_1(ind_1in)
     {}
 
@@ -133,7 +143,7 @@ public:
 
   protected:
 
-    const std::vector<std::vector<double> >& table2;
+    tableContainer  table2;
     const std::vector<int>&  d_allIndepVarNo;
     const std::vector< std::vector <double> >&  indep;
     const std::vector< std::vector <double > >&  ind_1;
@@ -146,7 +156,7 @@ public:
 
   public:
 
-    Interp1( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table,
+    Interp1( const std::vector<int>& indepVarNo, tableContainer  table,
              const std::vector< std::vector <double> >& i1)
       : Interp_class(table, indepVarNo, i1, i1 ) {
     }
@@ -199,8 +209,13 @@ public:
 
         for (unsigned int i = 0; i < var_index.size(); i++) {
 
+#ifdef UINTAH_ENABLE_KOKKOS
+          table_vals[0] = table2(var_index[i], lo_index[0]);
+          table_vals[1] = table2(var_index[i], hi_index[0]);
+#else
           table_vals[0] = table2[var_index[i]][lo_index[0]];
           table_vals[1] = table2[var_index[i]][hi_index[0]];
+#endif
 
           var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[0][lo_index[0]])*(iv[0]-ind_1[0][lo_index[0]])+ table_vals[0];
           var_values[i] = var_val;
@@ -218,7 +233,7 @@ public:
 
   public:
 
-    Interp2( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> > & table,
+    Interp2( const std::vector<int>& indepVarNo, tableContainer table,
              const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1)
       : Interp_class( table, indepVarNo, indep_headers, i1 ){}
 
@@ -308,10 +323,17 @@ public:
         }
 
         for (unsigned int i = 0; i < var_index.size(); i++) {
+#ifdef UINTAH_ENABLE_KOKKOS
+          table_vals[0] = table2(var_index[i], d_allIndepVarNo[0] * lo_index[1] + lo_index[0]);
+          table_vals[1] = table2(var_index[i], d_allIndepVarNo[0] * lo_index[1] + hi_index[0]);
+          table_vals[2] = table2(var_index[i], d_allIndepVarNo[0] * hi_index[1] + lo_index[0]);
+          table_vals[3] = table2(var_index[i], d_allIndepVarNo[0] * hi_index[1] + hi_index[0]);
+#else
           table_vals[0] = table2[var_index[i]][d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
           table_vals[1] = table2[var_index[i]][d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
           table_vals[2] = table2[var_index[i]][d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
           table_vals[3] = table2[var_index[i]][d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+#endif
 
           table_vals[0] = (table_vals[2] - table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0];
           table_vals[1] = (table_vals[3] - table_vals[1])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[1];
@@ -332,7 +354,7 @@ public:
 
   public:
 
-    Interp3( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> > & table,
+    Interp3( const std::vector<int>& indepVarNo, tableContainer  table,
              const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1)
       : Interp_class( table, indepVarNo, indep_headers, i1 ) {}
 
@@ -451,6 +473,16 @@ public:
 
         for ( unsigned int i = 0; i < var_index.size(); i++ ) {
 
+#ifdef UINTAH_ENABLE_KOKKOS
+          table_vals[0] = table2(var_index[i], d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[0]);
+          table_vals[1] = table2(var_index[i], d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[0]);
+          table_vals[2] = table2(var_index[i], d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[0]);
+          table_vals[3] = table2(var_index[i], d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[0]);
+          table_vals[4] = table2(var_index[i], d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[1]);
+          table_vals[5] = table2(var_index[i], d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[1]);
+          table_vals[6] = table2(var_index[i], d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[1]);
+          table_vals[7] = table2(var_index[i], d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[1]);
+#else
           table_vals[0] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[0]];
           table_vals[1] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[0]];
           table_vals[2] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[0]];
@@ -459,6 +491,7 @@ public:
           table_vals[5] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[1]];
           table_vals[6] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[1]];
           table_vals[7] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[1]];
+#endif
 
           if (ind_1[i1dep_ind1][hi_index[0]]!=ind_1[i1dep_ind1][lo_index[0]]){
             dist_vals[0]=(iv[0]-ind_1[i1dep_ind1][lo_index[0]])/(ind_1[i1dep_ind1][hi_index[0]]-ind_1[i1dep_ind1][lo_index[0]]);
@@ -498,7 +531,7 @@ public:
 
   public:
 
-    Interp4( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table,
+    Interp4( const std::vector<int>& indepVarNo, tableContainer  table,
              const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1)
       : Interp_class(table, indepVarNo, indep_headers, i1 ){}
 
@@ -589,7 +622,24 @@ public:
 
         for (unsigned int ii = 0; ii < var_index.size(); ii++) {
 
-          // popvals
+#ifdef UINTAH_ENABLE_KOKKOS
+          table_vals[0] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]);
+          table_vals[1] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]);
+          table_vals[2] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]);
+          table_vals[3] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]);
+          table_vals[4] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]);
+          table_vals[5] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]);
+          table_vals[6] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]);
+          table_vals[7] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]);
+          table_vals[8] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]);
+          table_vals[9] = table2 (var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]);
+          table_vals[10] = table2(var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]);
+          table_vals[11] = table2(var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]);
+          table_vals[12] = table2(var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]);
+          table_vals[13] = table2(var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]);
+          table_vals[14] = table2(var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]);
+          table_vals[15] = table2(var_index[ii], d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]);
+#else
           table_vals[0] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
           table_vals[1] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
           table_vals[2] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
@@ -606,6 +656,8 @@ public:
           table_vals[13] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
           table_vals[14] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
           table_vals[15] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+#endif
+          // popvals
 
           int npts =0;
           for (int i = 3; i > 0; i--) {
@@ -632,7 +684,7 @@ public:
 
     public:
 
-    InterpN( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table,
+    InterpN( const std::vector<int>& indepVarNo, tableContainer  table,
              const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1, int d_indepvarscount)
       : Interp_class( table, indepVarNo, indep_headers, i1 ){
 
@@ -773,7 +825,11 @@ public:
                 tab_index = tab_index + multiples[j]*hi_index[j];
               }
             }
+#ifdef UINTAH_ENABLE_KOKKOS
+            table_vals[i] = table2(var_index[ii], tab_index);
+#else
             table_vals[i] = table2[var_index[ii]][tab_index];
+#endif
           }
 
           for (int i = ivcount-1; i > 0; i--) {
@@ -885,7 +941,13 @@ private:
 
   //previous Arches specific variables:
   std::vector<std::vector<double> > i1;
-  std::vector<std::vector<double> > table;
+
+#ifdef UINTAH_ENABLE_KOKKOS 
+  // magic of kokkos, don't pass by reference and when an object goes out of scope it isn't necessarily deleted
+#else
+  tempTableContainer table;
+#endif
+
   std::vector<std::vector<double> > indep_headers;
 
   /// A dependent variable wrapper

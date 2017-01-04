@@ -853,10 +853,11 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
   }
 
 
-  table = vector<vector<double> >(d_varscount);
-  for ( int i = 0; i < d_varscount; i++ ){
-    table[i] = vector<double>(size);
-  }
+#ifdef UINTAH_ENABLE_KOKKOS
+  tempTableContainer table("ClassicMixingTable",d_varscount,size);
+#else
+  table = tempTableContainer (d_varscount , std::vector<double> (size,0.0));
+#endif
 
   int size2 = size/d_allIndepVarNum[d_indepvarscount-1];
   proc0cout << "Table size " << size << endl;
@@ -881,7 +882,11 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
         }
         for (int j=0; j<size2; j++) {
           double v = getDouble(fp);
+#ifdef UINTAH_ENABLE_KOKKOS
+          table(kk,j + mm*size2) = v;
+#else
           table[kk][j + mm*size2] = v;
+#endif
         }
       }
       if ( read_assign ) { read_assign = false; }
@@ -901,7 +906,11 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
       }
       for (int j=0; j<size; j++) {
         double v = getDouble(fp);
+#ifdef UINTAH_ENABLE_KOKKOS
+        table(kk, j) = v;
+#else
         table[kk][j] = v;
+#endif
       }
       if (read_assign){read_assign = false;}
     }
@@ -989,11 +998,11 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
     size = size*d_allIndepVarNum[i];
   }
 
-
-  table = vector<vector<double> >(d_varscount);
-  for ( int i = 0; i < d_varscount; i++ ){
-    table[i] = vector<double>(size);
-  }
+#ifdef UINTAH_ENABLE_KOKKOS
+  tempTableContainer table("ClassicMixingTable",d_varscount,size);
+#else
+  table = tempTableContainer (d_varscount , std::vector<double> (size,0.0));
+#endif
 
   int size2 = size/d_allIndepVarNum[d_indepvarscount-1];
   proc0cout << "Table size " << size << endl;
@@ -1018,7 +1027,12 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
         }
         for (int j=0; j<size2; j++) {
           double v = getDouble(table_stream);
+#ifdef UINTAH_ENABLE_KOKKOS
+          table(kk,j + mm*size2) = v;
+#else
           table[kk][j + mm*size2] = v;
+#endif
+ 
         }
       }
       if ( read_assign ) { read_assign = false; }
@@ -1038,7 +1052,11 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
       }
       for (int j=0; j<size; j++) {
         double v = getDouble(table_stream);
+#ifdef UINTAH_ENABLE_KOKKOS
+        table(kk, j) = v;
+#else
         table[kk][j] = v;
+#endif
       }
       if (read_assign){read_assign = false;}
     }
