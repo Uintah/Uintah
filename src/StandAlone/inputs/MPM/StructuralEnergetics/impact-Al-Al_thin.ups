@@ -18,15 +18,11 @@
   </Time>
 
   <DataArchiver>
-    <filebase>impact_Al-Al_thin.uda</filebase>
+    <filebase>Impact_Al-Al.uda</filebase>
 
     <outputInterval>2.0e-6</outputInterval>
-    <save label = "KineticEnergy"/>
-    <save label = "TotalMass"/>
-    <save label = "StrainEnergy"/>
-    <save label = "CenterOfMassPosition"/>
-    <save label = "TotalMomentum"/>
     <save label = "p.particleID"/>
+    <save label = "p.localized"/>
     <save label = "p.plasticStrain"/>
     <save label = "p.strainRate"/>
     <save label = "p.damage"/>
@@ -36,6 +32,7 @@
     <save label = "p.volume"/>
     <save label = "p.stress"/>
     <save label = "p.temperature"/>
+    <save label = "p.scalefactor"/>
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "p.color"/>
@@ -44,7 +41,7 @@
 
   <MPM>
     <time_integrator>explicit</time_integrator>
-    <interpolator>                   gimp   </interpolator>
+    <interpolator>                   fast_cpdi   </interpolator>
     <maximum_particle_velocity>      6.0e10  </maximum_particle_velocity>
     <minimum_mass_for_acc>           1.e-15 </minimum_mass_for_acc>
     <artificial_damping_coeff>       0.0     </artificial_damping_coeff>
@@ -54,10 +51,10 @@
     <do_contact_friction_heating>    false   </do_contact_friction_heating>
     <DoExplicitHeatConduction>       false   </DoExplicitHeatConduction>
     <axisymmetric> false </axisymmetric>
-    <erosion algorithm = "none"/>
+    <erosion algorithm = "ZeroStress"/>
     <withColor>                   true     </withColor>
 <!--
-    <erosion algorithm = "AllowNoTension"/>
+    <erosion algorithm = "none"/>
     <erosion algorithm = "RemoveMass"/>
 -->
   </MPM>
@@ -72,7 +69,6 @@
     <MPM>
       <material name="Al Bullet">
         <include href="MaterialData/Al.xml"/>
-
         <geom_object>
 	   <difference>
 	     <sphere label = "W2">
@@ -107,7 +103,7 @@
 	   </difference>
           
           <res>[2,2,2]</res>
-          <velocity>        [0.0,-500.0,0.0]  </velocity>
+          <velocity>        [0.0,-1650.0,0.0]  </velocity>
           <temperature>     294               </temperature>
           <color>           0                 </color>
         </geom_object> 
@@ -116,8 +112,23 @@
       
       <!--__________________________________-->
       <material name="Target">
-      
+<!--
         <include href="MaterialData/Al.xml"/>
+-->
+        <include href="MaterialData/MatConst6061T6Al.xml"/>
+        <constitutive_model type="UCNH">
+           <shear_modulus>      26.0e9      </shear_modulus>
+           <bulk_modulus>       66.4e9      </bulk_modulus>
+           <yield_stress>       324.0e6     </yield_stress>
+           <hardening_modulus>  114.0e6     </hardening_modulus>
+           <alpha> 0.0 </alpha>
+           
+           <useDamage>true</useDamage>
+           <failure_criteria>MaximumPrincipalStress</failure_criteria>
+           <failure_mean>       8.0e8     </failure_mean>
+           <failure_std>        5.0e8     </failure_std>
+           <failure_distrib>    weibull   </failure_distrib>
+        </constitutive_model>
         
         <geom_object>
           <box label = "Target">
@@ -173,7 +184,7 @@
   <Grid>
     <Level>
       <Box label = "1">
-        <lower>     [ -0.02, -0.03, 0.0]     </lower>
+        <lower>     [-0.02, -0.03, 0.0]     </lower>
         <upper>     [ 0.02,  0.025, 0.02]     </upper>
         
         <patches>   [4,2,2]  </patches>
