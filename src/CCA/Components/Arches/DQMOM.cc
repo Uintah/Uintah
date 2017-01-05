@@ -579,19 +579,22 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }
 
     // Cell iterator
+      vector<double> weights(N_);
+      vector<double> weight_models(N_); 
+      vector<double> weightedAbscissas(N_xi*N_);
+      vector<double> models(N_xi*N_);
+
     for ( CellIterator iter = patch->getCellIterator();
           !iter.done(); ++iter) {
       IntVector c = *iter;
-      vector<double> weights;
-      vector<double> weightedAbscissas;
-      vector<double> models;
-      vector<double> weight_models; 
+ 
 
       // get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
+      int jj=0;
       for( vector<constCCVarWrapper_withModels>::iterator iter = weightCCVars.begin();
            iter != weightCCVars.end(); ++iter ) {
         double temp_value = (iter->data)[c];
-        weights.push_back(temp_value);
+        weights[jj]=temp_value;
 
         // now sum the model terms for this weight
         double runningsum = 0;
@@ -601,14 +604,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           runningsum += temp_model_value;
         }
 
-        weight_models.push_back(runningsum);
+        weight_models[jj]=runningsum;
+        jj++;
       }
+            
 
       // get weighted abscissas in current cell from CCVariable in constCCVarWrapper, store value in vector
+      jj=0;
       for( vector<constCCVarWrapper_withModels>::iterator iter = weightedAbscissaCCVars.begin();
            iter != weightedAbscissaCCVars.end(); ++iter ) {
         double temp_value = (iter->data)[c];
-        weightedAbscissas.push_back(temp_value);
+        weightedAbscissas[jj]=temp_value;
 
         // now sum the model terms for this weighted abscissa
         double runningsum = 0;
@@ -618,12 +624,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           runningsum += temp_model_value;
         }
 
-        models.push_back(runningsum);
+        models[jj]=runningsum;
+        jj++;
       }
 
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
       
-      int dimension = (N_xi+1)*N_; 
         
       if (b_optimize == true) {
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
