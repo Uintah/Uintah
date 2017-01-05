@@ -579,6 +579,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }
 
     // Cell iterator
+      int dimension = N_*(N_xi+1);
       vector<double> weights(N_);
       vector<double> weight_models(N_); 
       vector<double> weightedAbscissas(N_xi*N_);
