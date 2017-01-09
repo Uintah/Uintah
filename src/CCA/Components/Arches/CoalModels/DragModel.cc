@@ -56,9 +56,6 @@ DragModel::DragModel( std::string modelName,
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 
-  //constants
-  _pi = acos(-1.0);
-
   //initialize
   _birth_label = nullptr;
 
@@ -278,7 +275,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     Vector Dx = patch->dCell();
-    double vol = Dx.x()* Dx.y()* Dx.z();
+    const double vol = Dx.x()* Dx.y()* Dx.z();
 
     CCVariable<double> model;
     CCVariable<double> gas_source;
@@ -294,6 +291,8 @@ DragModel::computeModel( const ProcessorGroup* pc,
       which_dw = new_dw;
       new_dw->getModifiable( model, d_modelLabel, matlIndex, patch );
       new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch );
+      model.initialize(0.0);
+      gas_source.initialize(0.0);
     }
 
     constCCVariable<double> weight_p_vel;
@@ -338,21 +337,29 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
-    double dt = DT;
+    const double dt = DT;
 
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    double c_gravity=_gravity[_dir];
 
-      IntVector c = *iter;
+    std::function<double  ( int i,  int j, int k)> lambdaBirth;
 
-      if (scaled_weight[c] > _weight_small) {
+    if ( add_birth ){
+      lambdaBirth = [&]( int i, int j, int k)-> double   { return  birth(i,j,k);};
+    }else{
+      lambdaBirth = [&]( int i, int j, int k)-> double   { return 0.0;};
+    }
 
-        Vector gas_vel = gasVel[c];
-        Vector part_vel = partVel[c];
-        double denph=den[c];
-        double rho_pph=rho_p[c];
-        double l_pph=l_p[c];
-        double weightph=weight[c];
-        double RHS_sourceph=RHS_source[c];
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+    Uintah::parallel_for(range,  [&]( int i,  int j, int k){
+
+        if (scaled_weight(i,j,k) > _weight_small) {
+
+        Vector gas_vel = gasVel(i,j,k);
+        Vector part_vel = partVel(i,j,k);
+        double denph=den(i,j,k);
+        double rho_pph=rho_p(i,j,k);
+        double l_pph=l_p(i,j,k);
+        double weightph=weight(i,j,k);
 
         // Verification
         //denph=0.394622;
@@ -367,47 +374,24 @@ DragModel::computeModel( const ProcessorGroup* pc,
         //part_vel[2]=0.334942;
 
         double diff = (gas_vel.x() - part_vel.x()) * (gas_vel.x() - part_vel.x())
-                    + (gas_vel.y() - part_vel.y()) * (gas_vel.y() - part_vel.y())
-                    + (gas_vel.z() - part_vel.z()) * (gas_vel.z() - part_vel.z());
+                      + (gas_vel.y() - part_vel.y()) * (gas_vel.y() - part_vel.y())
+                      + (gas_vel.z() - part_vel.z()) * (gas_vel.z() - part_vel.z());
         diff = pow(diff,0.5);
         double Re  = diff * l_pph / ( _kvisc / denph );
-        double f;
 
-        if(Re < 994.0) {
-          f = 1.0 + 0.15*pow(Re, 0.687);
-        } else {
-          f = 0.0183*Re;
-        }
+        double fDrag = Re <994 ? 1.0 + 0.15*pow(Re, 0.687) : 0.0183*Re;
 
         double t_p = ( rho_pph * l_pph * l_pph )/( 18.0 * _kvisc );
-        double tau=t_p/f;
+        double tau=t_p/fDrag;
 
-        // add rate clipping if drag time scale is smaller than dt..
-        if (tau > dt ){
-          model[c] = scaled_weight[c] * ( f / t_p * (gas_vel[_dir]-part_vel[_dir])+_gravity[_dir]) / (_vel_scaling_constant);
-          gas_source[c] = -weightph * rho_pph / 6.0 * _pi * f / t_p * ( gas_vel[_dir]-part_vel[_dir] ) * pow(l_pph,3.0);
-        } else {
-          //model[c] = (weightph/(_vel_scaling_constant*_weight_scaling_constant)) * (gas_vel[_dir]-part_vel[_dir]) / dt -  RHS_sourceph/vol;
-          if ( add_birth ){
-            double updated_weight = scaled_weight[c] + dt / vol * ( RHS_weight[c] );
-            updated_weight = std::max(updated_weight, 1e-15);
-            // model[c] = scaled_weight[c] / _vel_scaling_constant * ( gas_vel[_dir] - part_vel[_dir] ) / dt - ( RHS_sourceph / vol + birth[c] );
-            model[c] = 1. / _vel_scaling_constant * ( updated_weight * gas_vel[_dir] - weight_p_vel[c] ) / dt - ( RHS_sourceph / vol + birth[c]);
-          } else {
-            double updated_weight = scaled_weight[c] + dt / vol * ( RHS_weight[c] );
-            updated_weight = std::max(updated_weight, 1e-15);
-            //model[c] = scaled_weight[c] / _vel_scali  ng_constant * ( gas_vel[_dir] - part_vel[_dir] ) / dt - ( RHS_sourceph / vol );
-            model[c] = 1. / _vel_scaling_constant * ( updated_weight * gas_vel[_dir] - weight_p_vel[c] ) / dt - ( RHS_sourceph / vol );
-          }
-          gas_source[c] = 0.0;
-        }
-
-      } else {
-
-          model[c] = 0.0;
-          gas_source[c] = 0.0;
-
-      }
-    }
+        if (tau > dt ){ 
+          model(i,j,k) = scaled_weight(i,j,k) * ( fDrag / t_p * (gas_vel[_dir]-part_vel[_dir])+c_gravity) / (_vel_scaling_constant);
+          gas_source(i,j,k) =-weightph * rho_pph / 6.0 * M_PI * fDrag / t_p * ( gas_vel[_dir]-part_vel[_dir] ) * pow(l_pph,3.0);
+        }else{  // rate clip, if we aren't resolving timescale
+          double updated_weight = std::max(scaled_weight(i,j,k) + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
+          model(i,j,k) = 1. / _vel_scaling_constant * ( updated_weight * gas_vel[_dir] - weight_p_vel(i,j,k) ) / dt - ( RHS_source(i,j,k) / vol + lambdaBirth(i,j,k));
+        } // end timescale if
+      }  // end low-weight if
+    }); // end lambda
   }
 }

@@ -242,6 +242,16 @@ DQMOMTESTS = [
    ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1.1 , "All"   , ["exactComparison"]) 
 ]
 
+COALTESTS = [
+   ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
+   ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
+   ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All" , ["exactComparison"    ,  "no_cuda"]) , 
+#   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"    ,  "no_cuda"]) ,
+   ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
+   ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) 
+]
+
 RMCRTTESTS = [
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L_bounded"         , "RMCRT/rmcrt_bm1_1L_bounded.ups"             , 8   , "ALL"  , ["exactComparison"]) ,
@@ -330,7 +340,7 @@ NORMCRT = [
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS KOKKOSTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS NORMCRT DEBUG
+#LIST: LOCALTESTS KOKKOSTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS NORMCRT DEBUG COALTESTS
 #__________________________________
 
   
@@ -344,6 +354,8 @@ def getTestList(me) :
     TESTS = RMCRTTESTS
   elif me == "SCALARTESTS":
     TESTS = SCALARTESTS
+  elif me == "COALTESTS":
+    TESTS = COALTESTS
   elif me == "DQMOMTESTS":
     TESTS = DQMOMTESTS
   elif me == "NIGHTLYTESTS":
