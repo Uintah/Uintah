@@ -315,7 +315,9 @@ ClassicTableInterface::sched_getState( const LevelP& level,
   // dependent variables
   if ( initialize_me ) {
 
+      d_nDepVars =0;
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
+      d_nDepVars++;
       tsk->computes( i->second );
       MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
@@ -400,8 +402,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage;
 
-    int size = (int)d_allIndepVarNames.size();
-    for ( int i = 0; i < size; i++ ){
+    int nIndVars = (int)d_allIndepVarNames.size(); // number of independent variables
+    for ( int i = 0; i < nIndVars; i++ ){
 
       VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] );
 
@@ -416,9 +418,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
     DepVarMap depend_storage;
     if ( initialize_me ) {
-
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-
         DepVarCont storage;
 
         storage.var = scinew CCVariable<double>;
@@ -508,15 +508,23 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     CCVariable<double> arches_density;
     new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch );
 
-    // Go through the patch and populate the requested state variables
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    std::vector<double> iv1(nIndVars);
+    std::vector<int> depVarIndexes(d_nDepVars);
+    int ix=0;
+    for (DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i){
+      depVarIndexes[ix]=i->second.index;
+       ix++;
+    }
 
-      IntVector c = *iter;
+    // Go through the patch and populate the requested state variables
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+    Uintah::parallel_for(range,  [&]( int i,  int j, int k){
 
       // fill independent variables
-      std::vector<double> iv;
-      for ( std::vector<constCCVariable<double> >::iterator i = indep_storage.begin(); i != indep_storage.end(); ++i ) {
-        iv.push_back( (*i)[c] );
+      ix=0;
+      for ( std::vector<constCCVariable<double> >::iterator iter = indep_storage.begin(); iter != indep_storage.end(); ++iter ) {
+        iv1[ix]=(*iter)(i,j,k);
+        ix++;
       }
 
       // do a variable transform (if specified)
@@ -524,60 +532,56 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin();
           inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
 
-        double inert_f = inert_iter->second.var[c];
+        double inert_f = inert_iter->second.var(i,j,k);
         total_inert_f += inert_f;
       }
 
-      _iv_transform->transform( iv, total_inert_f );
+      _iv_transform->transform( iv1, total_inert_f );
 
-      //get all the needed varaible values from table with only one search
-      std::vector<int> indepVarIndexes;
       std::vector<double> depVarValues;
-      for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
-        indepVarIndexes.push_back( i->second.index );
-      }
-      depVarValues = ND_interp->find_val(iv, indepVarIndexes );
+      //get all the needed varaible values from table with only one search
+      depVarValues = ND_interp->find_val(iv1, depVarIndexes );// would it be faster to pass by reference?  ~12 dependent variables for coal in 1-2017
 
       int depVarCount = 0;
       //now deal with the mixing and density checks same as before
-      for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+      for ( DepVarMap::iterator iter = depend_storage.begin(); iter != depend_storage.end(); ++iter ){
 
         // for post look-up mixing
         for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin();
             inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
 
-          double inert_f = inert_iter->second.var[c];
+          double inert_f = inert_iter->second.var(i,j,k);
           doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second;
 
           double temp_table_value = depVarValues[depVarCount];
-          if ( i->first == "density" ){
+          if ( iter->first == "density" ){
             temp_table_value = 1.0/depVarValues[depVarCount];
           }
 
-          post_mixing( temp_table_value, inert_f, i->first, inert_species_map_list );
+          post_mixing( temp_table_value, inert_f, iter->first, inert_species_map_list );
 
-          if ( i->first == "density" ){
+          if ( iter->first == "density" ){
             depVarValues[depVarCount] = 1.0 / temp_table_value;
           } else {
             depVarValues[depVarCount] = temp_table_value;
           }
         }
 
-        depVarValues[depVarCount] *= eps_vol[c];
-        (*i->second.var)[c] = depVarValues[depVarCount];
+        depVarValues[depVarCount] *= eps_vol(i,j,k);
+        (*iter->second.var)(i,j,k) = depVarValues[depVarCount];
 
-        if (i->first == "density") {
+        if (iter->first == "density") {
 
-          arches_density[c] = depVarValues[depVarCount];
+          arches_density(i,j,k) = depVarValues[depVarCount];
 
           if (d_MAlab)
-            mpmarches_denmicro[c] = depVarValues[depVarCount];
+            mpmarches_denmicro(i,j,k) = depVarValues[depVarCount];
 
         }
         depVarCount++;
       }
 
-    }
+    });
 
     // set boundary property values:
     vector<Patch::FaceType> bf;
@@ -610,11 +614,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name );
 
         if ( bc_kind == "FromFile" ){
-          bool foundIterator =
             getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr );
           counter++;
         } else {
-          bool foundIterator =
             getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr );
           counter++;
         }

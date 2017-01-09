@@ -922,6 +922,7 @@ private:
 
   int d_indepvarscount;     ///< Number of independent variables
   int d_varscount;          ///< Total dependent variables
+  int d_nDepVars;           ///< number of dependent variables requested by arches
 
   std::string d_enthalpy_name;
   const VarLabel* d_enthalpy_label;
