@@ -717,8 +717,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         
         // update the rate
         AreaSum = 0.0; 
-        for (int i=0; i<_nQn_part;i++ ){ 
-          AreaSum+=  weight[i](i,j,k)*length[i](i,j,k)*length[i](i,j,k); // [#/m]
+        for (int ix=0; ix<_nQn_part;ix++ ){ 
+          AreaSum+=  weight[ix](i,j,k)*length[ix](i,j,k)*length[ix](i,j,k); // [#/m]
         }
         surfaceAreaFraction=w*p_diam*p_diam/AreaSum; // [-] this is the weighted area fraction for the current particle size.
         CO_CO2_ratio = 200.*exp(-9000./(_R_cal*p_T)); // [ kg CO / kg CO2]
