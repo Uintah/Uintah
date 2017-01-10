@@ -38,7 +38,7 @@
         <haloLength             spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion" />
         
         <ROI_extents            spec="OPTIONAL NO_DATA"
-                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based boundedRayLength'">
+                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based coneGeometry_based boundedRayLength'">
 
           <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
           <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
