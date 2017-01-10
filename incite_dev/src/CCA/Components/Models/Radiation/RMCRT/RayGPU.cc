@@ -393,9 +393,6 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
 
       const IntVector patchSize = hiEC - loEC;
 
-      const int xdim = patchSize.x();
-      const int ydim = patchSize.y();
-
       // get the cell spacing and convert patch extents to CUDA vector type
       patchParams patchP;
       const Vector dx = finePatch->dCell();
@@ -408,47 +405,62 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
 
       patchP.ID = finePatch->getID();
 
-      // define dimensions of the thread grid to be launched
-      int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
-      int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
+      //Careful profiling seems to show that this does best fitting around 96 registers per block
+      //To maximize the amount of threads we can push into a GPU SM, this is going to declare threads in a
+      //1D layout, then the kernel can then map those threads to individual cells.  We will not be
+      //trying to map threads to z-slices or some geometric approach, but rather simply threads->cells.
+      //An approach which seems to give 2 blocks per SM while using the most registers is around 320 threads.
+      //It seems we can also allow each thread to operate on many cells.  Setting that number to something large.
+      unsigned int numThreadsPerGPUBlock = 320;
+      kernelParams kp;
+      kp.numCellsPerThread = 100;
+      kp.numKernels = 1;
+      
+      const unsigned int numCellsPlusExtra = (hiEC.x() - loEC.x()) * (hiEC.y() - loEC.y()) * (hiEC.z() - loEC.z());
 
-      // if the # cells in a block < BLOCKSIZE^2 reduce block size
-      int blocksize = BLOCKSIZE;
-      if (xblocks == 1 && yblocks == 1) {
-        blocksize = std::max(xdim, ydim);
+      //trying to run two kernels instead of one.
+      unsigned int numBlocks = 1;
+      const unsigned int assignedNumCellsPlusExtra = numCellsPlusExtra / kp.numKernels;
+      if (assignedNumCellsPlusExtra > (numThreadsPerGPUBlock * kp.numCellsPerThread)) {
+          //Distribute proportionally along warp divisions of 32 threads.
+        numBlocks= 1 + ((assignedNumCellsPlusExtra-1)/ (numThreadsPerGPUBlock * kp.numCellsPerThread));
       }
-
-      dim3 dimBlock(blocksize, blocksize, 1);
-      dim3 dimGrid(xblocks, yblocks, 1);
+      
+      dim3 dimBlock(numThreadsPerGPUBlock, 1, 1);
+      dim3 dimGrid(numBlocks, 1, 1);
 
 #ifdef DEBUG
       patchP.print();
-      cout << " xdim: " << xdim << " ydim: " << ydim << endl;
-      cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << endl;
+      cout << " xdim: " << xdim << " ydim: " << ydim << " zdim: " << zdim << endl;
+      cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << " zblocks: " << zblocks << endl;
 #endif
 
       RT_flags.nRaySteps = 0;
 
+      for (int i = 0; i < kp.numKernels; i++) {
+        kp.curKernel = i;
+        //__________________________________
+        // set up and launch kernel
+        launchRayTraceDataOnionKernel<T>(dtask,
+                                         dimGrid,
+                                         dimBlock,
+                                         kp,
+                                         d_matl,
+                                         patchP,
+                                         gridP,
+                                         levelP,
+                                         fineLevel_ROI_Lo,
+                                         fineLevel_ROI_Hi,
+                                         (cudaStream_t*)stream,
+                                         RT_flags, 
+                                         sharedState->getCurrentTopLevelTimeStep(),
+                                         abskg_gdw,
+                                         sigmaT4_gdw,
+                                         celltype_gdw,
+                                         static_cast<GPUDataWarehouse*>(oldTaskGpuDW),
+                                         static_cast<GPUDataWarehouse*>(newTaskGpuDW));
 
-      //__________________________________
-      // set up and launch kernel
-      launchRayTraceDataOnionKernel<T>(dtask,
-                                       dimGrid,
-                                       dimBlock,
-                                       d_matl,
-                                       patchP,
-                                       gridP,
-                                       levelP,
-                                       fineLevel_ROI_Lo,
-                                       fineLevel_ROI_Hi,
-                                       (cudaStream_t*)stream,
-                                       RT_flags, 
-                                       sharedState->getCurrentTopLevelTimeStep(),
-                                       abskg_gdw,
-                                       sigmaT4_gdw,
-                                       celltype_gdw,
-                                       static_cast<GPUDataWarehouse*>(oldTaskGpuDW),
-                                       static_cast<GPUDataWarehouse*>(newTaskGpuDW));
+      }
 
       //__________________________________
       //

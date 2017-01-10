@@ -206,7 +206,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
     dirSignSwap[SOUTH]    = make_int3( 1, 1,  1);
     dirSignSwap[TOP]      = make_int3( 1, 1, -1);
     dirSignSwap[BOT]      = make_int3( 1, 1,  1);
-
+    __syncthreads();
     //__________________________________
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
     if ( (tidX >= patch.lo.x) && (tidY >= patch.lo.y) && (tidX < patch.hi.x) && (tidY < patch.hi.y) ) { // patch boundary check
@@ -250,9 +250,8 @@ __global__ void rayTraceKernel( dim3 dimGrid,
             GPUVector direction_vector;
             GPUVector rayOrigin;
             double cosTheta;
-
             if ( doLatinHyperCube ){                              // Latin-Hyper-Cube sampling
-              rayDirectionHyperCube_cellFaceDevice( randNumStates, origin,dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
+              rayDirectionHyperCube_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
                                                     direction_vector, cosTheta, rand_i[iRay], iRay, nFluxRays);
             } else {
               rayDirection_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
@@ -364,8 +363,11 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 __constant__ levelParams d_levels[d_MAXLEVELS];
 
 template< class T>
-__global__ void rayTraceDataOnionKernel( dim3 dimGrid,
+__global__
+__launch_bounds__(640, 1)
+void rayTraceDataOnionKernel( dim3 dimGrid,
                                          dim3 dimBlock,
+                                         kernelParams kp, 
                                          int matl,
                                          patchParams finePatch,
                                          gridParams gridP,
@@ -382,14 +384,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          GPUDataWarehouse* old_gdw,
                                          GPUDataWarehouse* new_gdw )
 {
-
-    // Not used right now
-//  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
-//  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
-
-  // calculate the thread indices
-  int tidX = threadIdx.x + blockIdx.x * blockDim.x + finePatch.loEC.x;
-  int tidY = threadIdx.y + blockIdx.y * blockDim.y + finePatch.loEC.y;
 
 #if 0
   if (tidX == 1 && tidY == 1) {
@@ -471,21 +465,38 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     new_gdw->get( divQ_fine,         "divQ",           finePatch.ID, matl, fineL );         // these should be allocateAntPut() calls
     new_gdw->get( boundFlux_fine,    "RMCRTboundFlux", finePatch.ID, matl, fineL );
     new_gdw->get( radiationVolQ_fine,"radiationVolq",  finePatch.ID, matl, fineL );
-
-
     //__________________________________
     // initialize Extra Cell Loop
-    if ( (tidX >= finePatch.loEC.x) && (tidY >= finePatch.loEC.y) && (tidX < finePatch.hiEC.x) && (tidY < finePatch.hiEC.y) ) { // finePatch boundary check
-      #pragma unroll
-      for (int z = finePatch.loEC.z; z < finePatch.hiEC.z; z++) { // loop through z slices
-        GPUIntVector c = make_int3(tidX, tidY, z);
+
+    //Assign the threads to extra cells
+    int3 finePatchSize = make_int3(finePatch.hiEC.x - finePatch.loEC.x,
+                                  finePatch.hiEC.y - finePatch.loEC.y,
+                                  finePatch.hiEC.z - finePatch.loEC.z);
+    const unsigned int numECCells = finePatchSize.x * finePatchSize.y * finePatchSize.z;
+    unsigned int startCell = kp.curKernel/((double)kp.numKernels) * numECCells;
+    unsigned int endCell = (kp.curKernel+1)/((double)kp.numKernels) * numECCells;
+    unsigned short threadECID = threadIdx.x + (blockIdx.x * blockDim.x * kp.numCellsPerThread) + startCell;
+    GPUIntVector c = make_int3((threadECID % finePatchSize.x) + finePatch.loEC.x,
+                               ((threadECID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.loEC.y,
+                               (threadECID / (finePatchSize.x * finePatchSize.y)) + finePatch.loEC.z);
+
+    int i = 0;
+    while (i < kp.numCellsPerThread && threadECID < endCell) {
         divQ_fine[c]          = 0.0;
         radiationVolQ_fine[c] = 0.0;
         boundFlux_fine[c].initialize(0.0);
-      }
+
+        //move to the next cell
+        threadECID += blockDim.x;
+        c.x = (threadECID % finePatchSize.x) + finePatch.loEC.x;
+        c.y = ((threadECID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.loEC.y;
+        c.z = (threadECID / (finePatchSize.x * finePatchSize.y)) + finePatch.loEC.z;
+        i++;
     }
   }
-  
+
+  //We're going to change thread to cell mappings, so make sure all vars have been initialized before continuing
+  __syncthreads();
   //__________________________________
   //
   bool doLatinHyperCube = (RT_flags.rayDirSampleAlgo == LATIN_HYPER_CUBE);
@@ -493,9 +504,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   const int nFluxRays = RT_flags.nFluxRays;               // for readability
 
   // This rand_i array is only needed for LATIN_HYPER_CUBE scheme
-  const int size = 1000;
-  int rand_i[ size ];      //Give it a buffer room of 1000.  But we should only use nFluxRays items in it.
-                           //Hopefully this 1000 will always be greater than nFluxRays.
+  const int size = 100;
+  int rand_i[ size ];      //Give it a buffer room of 100.  But we should only use nFluxRays items in it.
+                           //Hopefully this 100 will always be greater than nFluxRays.
                            //TODO, a 4D array is probably better here (x,y,z, ray#), saves
                            //on memory (no unused buffer) and computation time (don't need to compute
                            //the rays twice)
@@ -520,10 +531,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
                                finePatch.ID,
                                curTimestep);
-
   if( RT_flags.solveBoundaryFlux ){
-    __shared__ int3 dirIndexOrder[6];
-    __shared__ int3 dirSignSwap[6];
+    int3 dirIndexOrder[6];
+    int3 dirSignSwap[6];
 
     //_____________________________________________
     //   Ordering for Surface Method
@@ -545,21 +555,26 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     dirSignSwap[TOP]      = make_int3( 1, 1, -1);
     dirSignSwap[BOT]      = make_int3( 1, 1,  1);
 
-    if ( (tidX >= finePatch.lo.x) && (tidY >= finePatch.lo.y) && (tidX < finePatch.hi.x) && (tidY < finePatch.hi.y) ) { // finePatch boundary check
-      #pragma unroll
-      for (int z = finePatch.lo.z; z < finePatch.hi.z; z++) { // loop through z slices
+    int3 finePatchSize = make_int3(finePatch.hi.x - finePatch.lo.x,
+                                  finePatch.hi.y - finePatch.lo.y,
+                                  finePatch.hi.z - finePatch.lo.z);
+    const unsigned int numCells = finePatchSize.x * finePatchSize.y * finePatchSize.z;
+    unsigned int startCell = kp.curKernel/((double)kp.numKernels) * numCells;
+    unsigned int endCell = (kp.curKernel+1)/((double)kp.numKernels) * numCells;
+    unsigned short threadID = threadIdx.x + (blockIdx.x * blockDim.x * kp.numCellsPerThread) + startCell;
+    GPUIntVector origin = make_int3((threadID % finePatchSize.x) + finePatch.lo.x,
+                               ((threadID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.lo.y,
+                               (threadID / (finePatchSize.x * finePatchSize.y)) + finePatch.lo.z);
+    int cellCounter = 0;
+    while (cellCounter < kp.numCellsPerThread && threadID < endCell) {
+      //get a new set of random numbers
+      if (doLatinHyperCube){
+        randVectorDevice(rand_i, nFluxRays, randNumStates);
+      }
 
-        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+      if (cellType[fineL][origin] == d_flowCell) { // don't solve for fluxes in intrusions
 
-        //get a new set of random numbers
-        if (doLatinHyperCube){
-          randVectorDevice(rand_i, nFluxRays, randNumStates);
-        }
-
-        if (cellType[fineL][origin] != d_flowCell) // don't solve for fluxes in intrusions
-          continue;
-
-        boundFlux_fine[origin].initialize(0.0);
+        boundFlux_fine[origin].initialize(0.0);  //FIXME: Already initialized?
 
         BoundaryFaces boundaryFaces;
 
@@ -567,7 +582,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         boundFlux_fine[origin].p = has_a_boundaryDevice(origin, cellType[fineL], boundaryFaces);
 
         GPUPoint CC_pos = fineLevel.getCellPosition(origin);
-
         //__________________________________
         // Loop over boundary faces of the cell and compute incident radiative flux
         #pragma unroll
@@ -591,7 +605,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
             double cosTheta;
 
             if ( doLatinHyperCube ){        // Latin-Hyper-Cube sampling
-              rayDirectionHyperCube_cellFaceDevice( randNumStates, origin,dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
+              rayDirectionHyperCube_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
                                                     direction_vector, cosTheta, rand_i[iRay], iRay, nFluxRays);
             } else{                                               // Naive Monte-Carlo sampling
               rayDirection_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
@@ -604,15 +618,13 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                     fineLevel_ROI_Lo, fineLevel_ROI_Hi,
                                     regionLo, regionHi,
                                     sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
-
             sumProjI    += cosTheta * (sumI - sumI_prev);              // must subtract sumI_prev, since sumI accumulates intensity
 
             sumCosTheta += cosTheta;
 
             sumI_prev    = sumI;
 
-          } // end of flux ray loop
-
+          } // end of flux ray loop 
           sumProjI = sumProjI * (double) RT_flags.nFluxRays/sumCosTheta/2.0; // This operation corrects for error in the first moment over a half range of the solid angle (Modest Radiative Heat Transfer page 545 1rst edition)
 
           //__________________________________
@@ -620,45 +632,43 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
           int face = UintahFace[RayFace];
           boundFlux_fine[origin][ face ] = sumProjI * 2 *M_PI/ (double) RT_flags.nFluxRays;
 
-/*`==========TESTING==========*/
+  /*==========TESTING==========*/
 #if (DEBUG == 2)
           if( isDbgCell(origin) ) {
             printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BoundaryFlux: %g\n",
                    origin.x, origin.y, origin.z, face, sumProjI, boundFlux_fine[origin][ face ] );
           }
 #endif
-/*===========TESTING==========`*/
-
+  /*===========TESTING==========`*/
         } // boundary faces loop
-      }  // z slices loop
-    }  // X-Y Thread loop
+      } //end if checking for intrusions
+      //move to the next cell
+      threadID += blockDim.x;
+      origin.x = (threadID % finePatchSize.x) + finePatch.lo.x;
+      origin.y = ((threadID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.lo.y;
+      origin.z = (threadID / (finePatchSize.x * finePatchSize.y)) + finePatch.lo.z;
+      cellCounter++;
+    }  // while loop
   }
-
   //______________________________________________________________________
   //         S O L V E   D I V Q
   //______________________________________________________________________
-  //Setup the original seeds so we can get the same random numbers again.
-  setupRandNumsSeedAndSequences(randNumStates,
-                               (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
-                               finePatch.ID,
-                               curTimestep);
-
   if( RT_flags.solveDivQ ) {
-
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
-    if ( (tidX >= finePatch.lo.x) && (tidY >= finePatch.lo.y) && (tidX < finePatch.hi.x) && (tidY < finePatch.hi.y) ) { // finePatch boundary check
-      #pragma unroll
-      for (int z = finePatch.lo.z; z < finePatch.hi.z; z++) { // loop through z slices
+    int3 finePatchSize = make_int3(finePatch.hi.x - finePatch.lo.x,
+                                  finePatch.hi.y - finePatch.lo.y,
+                                  finePatch.hi.z - finePatch.lo.z);
+    const unsigned int numCells = finePatchSize.x * finePatchSize.y * finePatchSize.z;
+    unsigned int startCell = kp.curKernel/((double)kp.numKernels) * numCells;
+    unsigned int endCell = (kp.curKernel+1)/((double)kp.numKernels) * numCells;
+    unsigned short threadID = threadIdx.x + (blockIdx.x * blockDim.x * kp.numCellsPerThread) + startCell;
+    GPUIntVector origin = make_int3((threadID % finePatchSize.x) + finePatch.lo.x,
+                               ((threadID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.lo.y,
+                               (threadID / (finePatchSize.x * finePatchSize.y)) + finePatch.lo.z);
+    int cellCounter = 0;
+    while (cellCounter < kp.numCellsPerThread && threadID < endCell) {
 
-        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
-
-        //Get the same set of random numbers as we had before.  We need the same rays.
-        if (doLatinHyperCube){
-          randVectorDevice(rand_i, nFluxRays, randNumStates);
-        }
-
-        if (cellType[fineL][origin] != d_flowCell) // don't solve for fluxes in intrusions
-          continue;
+      if (cellType[fineL][origin] == d_flowCell) { // don't solve for fluxes in intrusions
 
         GPUPoint CC_pos = d_levels[fineL].getCellPosition(origin);
 
@@ -675,7 +685,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
 
-
           GPUVector ray_direction;
           if ( doLatinHyperCube ){                          // Latin-Hyper-Cube sampling
             ray_direction = findRayDirectionHyperCubeDevice(randNumStates, RT_flags.nDivQRays, rand_i[iRay], iRay );
@@ -684,7 +693,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
           }
 
           GPUVector rayOrigin = rayOriginDevice( randNumStates, CC_pos, d_levels[fineL].Dx , RT_flags.CCRays );
-
           updateSumI_MLDevice<T>(ray_direction, rayOrigin, origin, gridP,
                                  fineLevel_ROI_Lo, fineLevel_ROI_Hi,
                                  regionLo, regionHi,
@@ -704,11 +712,15 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                     origin.x, origin.y, origin.z, sumI,divQ_fine[origin], radiationVolQ_fine[origin],abskg[fineL][origin], sigmaT4OverPi[fineL][origin]);
         }
 #endif
-
-      }  // end z-slice loop
-    }  // end ROI loop
+      } //end if checking for intrusions
+      //move to the next cell
+      threadID += blockDim.x;
+      origin.x = (threadID % finePatchSize.x) + finePatch.lo.x;
+      origin.y = ((threadID % (finePatchSize.x * finePatchSize.y)) / (finePatchSize.x)) + finePatch.lo.y;
+      origin.z = (threadID / (finePatchSize.x * finePatchSize.y)) + finePatch.lo.z;
+      cellCounter++;
+    }  // end while loop
   }  // solve divQ
-
 }
 
 //______________________________________________________________________
@@ -716,7 +728,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 //______________________________________________________________________
 __device__ GPUVector findRayDirectionDevice( curandState* randNumStates )
 {
-  printf("WHOOOOAAAA\n");
   // Random Points On Sphere
   // add fuzz to prevent infs in 1/dirVector calculation
   double plusMinus_one = 2.0 * randDblExcDevice( randNumStates ) - 1.0 + DBL_EPSILON;
@@ -756,8 +767,8 @@ __device__ GPUVector findRayDirectionDevice( curandState* randNumStates )
 //______________________________________________________________________
 __device__ void rayDirectionHyperCube_cellFaceDevice(curandState* randNumStates,
                                                      const GPUIntVector& origin,
-                                                     const GPUIntVector& indexOrder,
-                                                     const GPUIntVector& signOrder,
+                                                     const int3& indexOrder,
+                                                     const int3& signOrder,
                                                      const int iRay,
                                                      GPUVector& dirVector,
                                                      double& cosTheta,
@@ -782,9 +793,9 @@ __device__ void rayDirectionHyperCube_cellFaceDevice(curandState* randNumStates,
   tmp[2] =  cosTheta;
 
   //Put direction vector as coming from correct face,
-  dirVector[0] = tmp[indexOrder[0]] * signOrder[0];
-  dirVector[1] = tmp[indexOrder[1]] * signOrder[1];
-  dirVector[2] = tmp[indexOrder[2]] * signOrder[2];
+  dirVector[0] = tmp[indexOrder.x] * signOrder.x;
+  dirVector[1] = tmp[indexOrder.y] * signOrder.y;
+  dirVector[2] = tmp[indexOrder.z] * signOrder.z;
 
 }
 
@@ -864,6 +875,7 @@ __device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
   directionVector[1] = tmp[indexOrder[1]] * signOrder[1];
   directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
 }
+
 
 
 //______________________________________________________________________
@@ -1267,7 +1279,7 @@ __device__ void updateSumIDevice ( levelParams level,
       }
 #endif
 
-    } //end domain while loop.  ++++++++++++++
+    } //end domain while loop.
 
     //  wall emission 12/15/11
     double wallEmissivity = abskg[cur];
@@ -1329,16 +1341,15 @@ __device__ void updateSumIDevice ( levelParams level,
 
   GPUIntVector cur = origin;
   GPUIntVector prevCell = cur;
-
   // Step and sign for ray marching
   int step[3];                                          // Gives +1 or -1 based on sign
   GPUVector sign;
-
   GPUVector inv_ray_direction = 1.0 / ray_direction;
 
 #if DEBUG == 1
   if( isDbgCellDevice(origin) ) {
 //  if( isThread0() ) {
+
     printf("        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_origin.x, ray_origin.y, ray_origin.z);
   }
 #endif
@@ -1388,9 +1399,7 @@ __device__ void updateSumIDevice ( levelParams level,
 
   //______________________________________________________________________
   //  Threshold  loop
-
   while (intensity > RT_flags.threshold) {
-
     DIR dir = NONE;
 
     while (in_domain) {
@@ -1507,7 +1516,7 @@ __device__ void updateSumIDevice ( levelParams level,
       }
 
       rayLength    += distanceTraveled;
-
+ 
       optical_thickness += abskg[prevLev][prevCell] * distanceTraveled;
 
       double expOpticalThick = exp(-optical_thickness);
@@ -1535,6 +1544,7 @@ __device__ void updateSumIDevice ( levelParams level,
       expOpticalThick_prev = expOpticalThick;
 
     }  //end domain while loop.  ++++++++++++++
+
     //__________________________________
     //
     double wallEmissivity = abskg[L][cur];
@@ -1575,7 +1585,8 @@ __device__ void updateSumIDevice ( levelParams level,
 //______________________________________________________________________
 __device__ double randDblDevice(curandState* globalState)
 {
-  int tid = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
+  int blockId = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
+  int tid = blockId * blockDim.x * blockDim.y * blockDim.z
       + threadIdx.z * blockDim.y * blockDim.x + threadIdx.y * blockDim.x + threadIdx.x;
   curandState localState = globalState[tid];
   double val = curand(&localState);
@@ -1636,7 +1647,8 @@ __device__ void setupRandNumsSeedAndSequences(curandState* randNumStates,
   //http://docs.nvidia.com/cuda/curand/device-api-overview.html#axzz4SPy8xMuj
 
   //First start by getting a unique threadID.
-  int indexId = blockIdx.x * blockDim.x * blockDim.y * blockDim.z
+  int blockId = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
+  int indexId = blockId * blockDim.x * blockDim.y * blockDim.z
       + threadIdx.z * blockDim.y * blockDim.x + threadIdx.y * blockDim.x + threadIdx.x;
 
   //It's crucially important that the second argument of curand_init, the sequence argument, be unique.  Since
@@ -1799,7 +1811,7 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
 
 
   rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
-                                                            dimBlock,
+                                                            dimBlock,                                               
                                                             matlIndx,
                                                             level,
                                                             patch,
@@ -1825,6 +1837,7 @@ template< class T>
 __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              dim3 dimGrid,
                                              dim3 dimBlock,
+                                             kernelParams kp,
                                              int matlIndex,
                                              patchParams patch,
                                              gridParams gridP,
@@ -1840,6 +1853,7 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              GPUDataWarehouse* old_gdw,
                                              GPUDataWarehouse* new_gdw )
 {
+
   // copy regionLo & regionHi to device memory
   int maxLevels = gridP.maxLevels;
 
@@ -1860,9 +1874,9 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
     myHi[l] = levelP[l].regionHi;        // They are different on each patch
   }
 
+  //TODO, possible bug, async copying a variable that dies when it goes out of scope
   CUDA_RT_SAFE_CALL( cudaMemcpyAsync( dev_regionLo, myLo, size, cudaMemcpyHostToDevice, *stream) );
   CUDA_RT_SAFE_CALL( cudaMemcpyAsync( dev_regionHi, myHi, size, cudaMemcpyHostToDevice, *stream) );
-
 
   //__________________________________
   // copy levelParams array to constant memory on device
@@ -1873,11 +1887,12 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
   int numStates = dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z;
 
   curandState* randNumStates;
-
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
+  
   rayTraceDataOnionKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                                      dimBlock,
+                                                                     kp,
                                                                      matlIndex,
                                                                      patch,
                                                                      gridP,
@@ -1893,6 +1908,10 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                                                      cellType_gdw,
                                                                      old_gdw,
                                                                      new_gdw);
+
+  //cudaDeviceSynchronize();
+  //cudaError_t result = cudaPeekAtLastError();
+  //printf("After the error code for patch %d was %d\n", patch.ID, result);
 #if DEBUG > 0
   cudaDeviceSynchronize();
 #endif
@@ -1943,6 +1962,7 @@ template
 __host__ void launchRayTraceDataOnionKernel<double>( DetailedTask* dtask,
                                                      dim3 dimGrid,
                                                      dim3 dimBlock,
+                                                     kernelParams kp,
                                                      int matlIndex,
                                                      patchParams patch,
                                                      gridParams gridP,
@@ -1964,6 +1984,7 @@ template
 __host__ void launchRayTraceDataOnionKernel<float>( DetailedTask* dtask,
                                                     dim3 dimGrid,
                                                     dim3 dimBlock,
+                                                    kernelParams kp,
                                                     int matlIndex,
                                                     patchParams patch,
                                                     gridParams gridP,

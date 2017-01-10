@@ -494,12 +494,21 @@ struct RMCRT_flags {
     double sigmaScat;            // scattering coefficient
     double threshold;
 
-    int nDivQRays;               // number of rays per cell used to compute divQ
-    int nFluxRays;               // number of boundary flux rays
-    int nRaySteps;               // number of ray steps taken
-    int whichROI_algo;           // which Region of Interest algorithm
-    int rayDirSampleAlgo;        // which ray direction sampling algorithm (Monte-Carlo or Latin-Hyper_Cube)
+    short nDivQRays;               // number of rays per cell used to compute divQ
+    short nFluxRays;               // number of boundary flux rays
+    short nRaySteps;               // number of ray steps taken
+    char whichROI_algo;           // which Region of Interest algorithm
+    char rayDirSampleAlgo;        // which ray direction sampling algorithm (Monte-Carlo or Latin-Hyper_Cube)
     double maxLength[d_MAXLEVELS];  // hard coding it for d_MAXLEVELS levels for now.
+
+};
+
+//__________________________________
+//Struct for easy modification of the number of kernels and/or blocks
+struct kernelParams {
+    unsigned char numKernels {0};
+    unsigned char curKernel {0};
+    unsigned int numCellsPerThread {0};
 };
 
 //__________________________________
@@ -580,8 +589,8 @@ __device__ void rayDirection_cellFaceDevice(curandState* randNumStates,
 //
 __device__ void rayDirectionHyperCube_cellFaceDevice(curandState* randNumStates,
                                                      const GPUIntVector& origin,
-                                                     const GPUIntVector& indexOrder,
-                                                     const GPUIntVector& signOrder,
+                                                     const int3& indexOrder,
+                                                     const int3& signOrder,
                                                      const int iRay,
                                                      GPUVector& dirVector,
                                                      double& cosTheta,
@@ -725,6 +734,7 @@ template< class T >
 __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              dim3 dimGrid,
                                              dim3 dimBlock,
+                                             kernelParams kp,
                                              int matlIndex,
                                              patchParams patchP,
                                              gridParams gridP,
