@@ -1,8 +1,20 @@
 <config>
 <postProcessCmd_path>orderAccuracy/comparisonUtils</postProcessCmd_path>
+
+<symbolicLinks> /home/harman/builds/structuralEnergetics/src/StandAlone/inputs/MPM/MaterialData</symbolicLinks>
+
+
+<test>
+  <name>cylinderDet_damage</name>
+  <ups>SE_cylinderDet.ups</ups>
+  <tst>explodeCylinder_damage.tst</tst>
+</test>
+
+<!--
 <test>
   <name>Rayleigh</name>
   <ups>rayleigh.ups</ups>
   <tst>rayleigh_dy.tst</tst>
 </test>
+-->
 </config>
