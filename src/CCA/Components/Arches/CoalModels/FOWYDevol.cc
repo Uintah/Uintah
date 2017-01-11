@@ -386,24 +386,70 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
 
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-    computeDevolSource doDevolSource(dt,
-                                     vol,
-                                     add_birth,
-                                     temperature,
-                                     rcmass,
-                                     charmass,
-                                     weight,
-                                     RHS_source,
-                                     char_RHS_source,
-                                     rc_weighted_scaled,
-                                     char_weighted_scaled,
-                                     rawcoal_birth,
-                                     devol_rate,
-                                     gas_devol_rate,
-                                     char_rate,
-                                     v_inf,
-                                     this);
+    Uintah::parallel_for( range, [&] (int i, int j, int k) {
+       double rcmass_init = rc_mass_init[d_quadNode];
+       double Z=0;
+   
+       if (weight(i,j,k)/_weight_scaling_constant > _weight_small) {
+   
+         double rcmassph=rcmass(i,j,k);
+         double RHS_sourceph=RHS_source(i,j,k);
+         double temperatureph=temperature(i,j,k);
+         double charmassph=charmass(i,j,k);
+         double weightph=weight(i,j,k);
+   
+         //VERIFICATION
+         //rcmassph=1;
+         //temperatureph=300;
+         //charmassph=0.0;
+         //weightph=_rc_scaling_constant*_weight_scaling_constant;
+         //rcmass_init = 1;
+   
+   
+         // m_init = m_residual_solid + m_h_off_gas + m_vol
+         // m_vol = m_init - m_residual_solid - m_h_off_gas
+         // but m_h_off_gas = - m_char
+         // m_vol = m_init - m_residual_solid + m_char
+   
+         double m_vol = rcmass_init - (rcmassph+charmassph);
+   
+         double v_inf_local = 0.5*_v_hiT*(1.0 - tanh(_C1*(_Tig-temperatureph)/temperatureph + _C2));
+         v_inf(i,j,k) = v_inf_local; 
+         double f_drive = std::max((rcmass_init*v_inf_local - m_vol) , 0.0);
+         double zFact =std::min(std::max(f_drive/rcmass_init/_v_hiT,2.5e-5 ),1.0-2.5e-5  );
+   
+         double rateMax = 0.0; 
+         if ( add_birth ){ 
+           rateMax = std::max(f_drive/dt 
+               + (  (RHS_sourceph+char_RHS_source(i,j,k)) /vol + rawcoal_birth(i,j,k) ) / weightph
+               * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
+         } else { 
+           rateMax = std::max(f_drive/dt 
+               + (  (RHS_sourceph+char_RHS_source(i,j,k)) /vol ) / weightph
+               * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
+         }
+   
+         Z = sqrt(2.0) * boost::math::erf_inv(1.0-2.0*zFact );
+   
+         double rate = std::min(_A*exp(-(_Ta + Z *_sigma)/temperatureph)*f_drive , rateMax);
+         devol_rate(i,j,k) = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
+         gas_devol_rate(i,j,k) = rate*weightph; // rate of creation of coal off gas
+         char_rate(i,j,k) = 0; // rate of creation of char
+   
+         //additional check to make sure we have positive rates when we have small amounts of rc and char.. 
+         if( devol_rate(i,j,k)>0.0 || ( rc_weighted_scaled(i,j,k) + char_weighted_scaled(i,j,k) )<1e-16) {
+           devol_rate(i,j,k) = 0;
+           gas_devol_rate(i,j,k) = 0;
+           char_rate(i,j,k) = 0;
+         }
+   
+       } else {
+         devol_rate(i,j,k) = 0;
+         gas_devol_rate(i,j,k) = 0;
+         char_rate(i,j,k) = 0;
+       }
+     } );
+//end cell loop
 
-    Uintah::parallel_for( range, doDevolSource );
   }//end patch loop
 }
