@@ -757,16 +757,16 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           }
           // get F and Jacobian -> dF/drh
           root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
-          for (int l=0; l<_NUM_reactions; l++) {
-            for (int j=0; j<_NUM_reactions; j++) {
-              for (int k=0; k<_NUM_reactions; k++) {
-                rh_l_delta[k] = rh_l[k];
-              }
-              rh_l_delta[j] = rh_l[j]+delta;
-              root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+          for (int j=0; j<_NUM_reactions; j++) {
+            for (int k=0; k<_NUM_reactions; k++) {
+              rh_l_delta[k] = rh_l[k];
+            }
+            rh_l_delta[j] = rh_l[j]+delta;
+            root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+            for (int l=0; l<_NUM_reactions; l++) {
               (*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
             }
-          } 
+          }
           // invert Jacobian -> (dF_(n)/drh_(n))^-1 
           if (_use_simple_invert){
             invert_2_2(dfdrh); // simple matrix inversion for a 2x2 matrix. 
