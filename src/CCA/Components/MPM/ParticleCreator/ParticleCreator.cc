@@ -981,13 +981,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   // JBH-Thermodynamics
   {
-     particle_state.push_back(d_lb->pDissipatedEnergyLabel);
      particle_state.push_back(d_lb->pHeatEnergyLabel);
-     particle_state.push_back(d_lb->pWorkEnergyLabel);
 
-     particle_state_preReloc.push_back(d_lb->pDissipatedEnergyLabel_preReloc);
      particle_state_preReloc.push_back(d_lb->pHeatEnergyLabel_preReloc);
-     particle_state_preReloc.push_back(d_lb->pWorkEnergyLabel_preReloc);
   }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,

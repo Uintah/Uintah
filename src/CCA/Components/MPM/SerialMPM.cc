@@ -401,9 +401,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
   // JBH - Thermodynamics
-  t->computes(lb->pDissipatedEnergyLabel);
   t->computes(lb->pHeatEnergyLabel);
-  t->computes(lb->pWorkEnergyLabel);
   // JBH - Thermodynamics
 
   if(flags->d_artificial_viscosity){

@@ -288,19 +288,19 @@ MPMLabel::MPMLabel()
   pConcGradientLabel_preReloc =VarLabel::create("p.concentrationGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  // Thermodynamic related variables
-  pDissipatedEnergyLabel = VarLabel::create("p.dissipatedEnergy",
-      ParticleVariable<double>::getTypeDescription() );
-  pDissipatedEnergyLabel_preReloc = VarLabel::create("p.dissipatedEnergy+",
-      ParticleVariable<double>::getTypeDescription() );
+  // JBH -- Thermodynamic related variables
+//  pDissipatedEnergyLabel = VarLabel::create("p.dissipatedEnergy",
+//      ParticleVariable<double>::getTypeDescription() );
+//  pDissipatedEnergyLabel_preReloc = VarLabel::create("p.dissipatedEnergy+",
+//      ParticleVariable<double>::getTypeDescription() );
   pHeatEnergyLabel = VarLabel::create("p.heatEnergy",
       ParticleVariable<double>::getTypeDescription() );
   pHeatEnergyLabel_preReloc = VarLabel::create("p.heatEnergy+",
       ParticleVariable<double>::getTypeDescription() );
-  pWorkEnergyLabel = VarLabel::create("p.workEnergy",
-      ParticleVariable<double>::getTypeDescription() );
-  pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",
-      ParticleVariable<double>::getTypeDescription() );
+//  pWorkEnergyLabel = VarLabel::create("p.workEnergy",
+//      ParticleVariable<double>::getTypeDescription() );
+//  pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",
+//      ParticleVariable<double>::getTypeDescription() );
 
   // Node Centered Variables
   
@@ -864,10 +864,13 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
 
-  VarLabel::destroy(pDissipatedEnergyLabel);
-  VarLabel::destroy(pDissipatedEnergyLabel_preReloc);
+  // JBH - Thermodynamics
+//  VarLabel::destroy(pDissipatedEnergyLabel);
+//  VarLabel::destroy(pDissipatedEnergyLabel_preReloc);
   VarLabel::destroy(pHeatEnergyLabel);
   VarLabel::destroy(pHeatEnergyLabel_preReloc);
+//  VarLabel::destroy(pWorkEnergyLabel);
+//  VarLabel::destroy(pWorkEnergyLabel_preReloc);
 
   VarLabel::destroy(TotalConcLabel);
   VarLabel::destroy(MaxConcLabel);

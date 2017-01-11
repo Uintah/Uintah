@@ -265,6 +265,8 @@ ReactiveEP::~ReactiveEP()
   VarLabel::destroy(pPorosityLabel);
   VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pEnergyLabel);
+  VarLabel::destroy(pDissipatedEnergyLabel);
+  VarLabel::destroy(pWorkEnergyLabel);
 
   VarLabel::destroy(pRotationLabel_preReloc);
   VarLabel::destroy(pStrainRateLabel_preReloc);
@@ -274,6 +276,8 @@ ReactiveEP::~ReactiveEP()
   VarLabel::destroy(pPorosityLabel_preReloc);
   VarLabel::destroy(pLocalizedLabel_preReloc);
   VarLabel::destroy(pEnergyLabel_preReloc);
+  VarLabel::destroy(pDissipatedEnergyLabel_preReloc);
+  VarLabel::destroy(pWorkEnergyLabel_preReloc);
 
   delete d_flow;
   delete d_yield;
@@ -371,6 +375,10 @@ ReactiveEP::initializeLocalMPMLabels()
     ParticleVariable<int>::getTypeDescription());
   pEnergyLabel = VarLabel::create("p.energy",
     ParticleVariable<double>::getTypeDescription());
+  pDissipatedEnergyLabel = VarLabel::create("p.dissipatedEnergy",
+    ParticleVariable<double>::getTypeDescription());
+  pWorkEnergyLabel = VarLabel::create("p.workEnergy",
+    ParticleVariable<double>::getTypeDescription());
 
   pRotationLabel_preReloc = VarLabel::create("p.rotation+",
     ParticleVariable<Matrix3>::getTypeDescription());
@@ -387,6 +395,10 @@ ReactiveEP::initializeLocalMPMLabels()
   pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
     ParticleVariable<int>::getTypeDescription());
   pEnergyLabel_preReloc = VarLabel::create("p.energy+",
+    ParticleVariable<double>::getTypeDescription());
+  pDissipatedEnergyLabel_preReloc = VarLabel::create("p.dissipatedEnergy+",
+    ParticleVariable<double>::getTypeDescription());
+  pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",
     ParticleVariable<double>::getTypeDescription());
 }
 //______________________________________________________________________
@@ -481,6 +493,8 @@ ReactiveEP::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pPorosityLabel);
   from.push_back(pLocalizedLabel);
   from.push_back(pEnergyLabel);
+  from.push_back(pDissipatedEnergyLabel);
+  from.push_back(pWorkEnergyLabel);
 
   to.push_back(pRotationLabel_preReloc);
   to.push_back(pStrainRateLabel_preReloc);
@@ -490,6 +504,8 @@ ReactiveEP::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pPorosityLabel_preReloc);
   to.push_back(pLocalizedLabel_preReloc);
   to.push_back(pEnergyLabel_preReloc);
+  to.push_back(pDissipatedEnergyLabel_preReloc);
+  to.push_back(pWorkEnergyLabel_preReloc);
 
   // Add the particle state for the flow & deviatoric stress model
   d_flow     ->addParticleState(from, to);
@@ -512,6 +528,8 @@ ReactiveEP::addInitialComputesAndRequires(Task* task,
   task->computes(pPorosityLabel,              matlset);
   task->computes(pLocalizedLabel,             matlset);
   task->computes(pEnergyLabel,                matlset);
+  task->computes(pDissipatedEnergyLabel,      matlset);
+  task->computes(pWorkEnergyLabel,            matlset);
  
   // Add internal evolution variables computed by flow & deviatoric stress model
   d_flow     ->addInitialComputesAndRequires(task, matl, patch);
@@ -543,8 +561,8 @@ ReactiveEP::initializeCMData(const Patch          * patch,
   ParticleVariable<Matrix3> pRotation;
   ParticleVariable<double>  pDamage, pPorosity,
                             pPlasticStrain, pPlasticStrainRate, pStrainRate,
-                            pEnergy, pDissipatedEnergy, pHeatEnergy;
-  ParticleVariable<double>  pWorkEnergy;
+                            pEnergy;
+  ParticleVariable<double>  pDissipatedEnergy, pWorkEnergy;
   ParticleVariable<int>     pLocalized;
 
   new_dw->allocateAndPut(pRotation,          pRotationLabel,              pset);
@@ -555,6 +573,8 @@ ReactiveEP::initializeCMData(const Patch          * patch,
   new_dw->allocateAndPut(pLocalized,         pLocalizedLabel,             pset);
   new_dw->allocateAndPut(pPorosity,          pPorosityLabel,              pset);
   new_dw->allocateAndPut(pEnergy,            pEnergyLabel,                pset);
+  new_dw->allocateAndPut(pDissipatedEnergy,  pDissipatedEnergyLabel,      pset);
+  new_dw->allocateAndPut(pWorkEnergy,        pWorkEnergyLabel,            pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++)
   {
@@ -566,6 +586,8 @@ ReactiveEP::initializeCMData(const Patch          * patch,
     pPorosity[*iter] = d_porosity.f0;
     pLocalized[*iter] = 0;
     pEnergy[*iter] = 0.;
+    pDissipatedEnergy[*iter] = 0.;
+    pWorkEnergy[*iter] = 0.;
   }
 
   // Do some extra things if the porosity or the damage distribution
@@ -680,9 +702,9 @@ ReactiveEP::addComputesAndRequires(      Task         * task,
   task->requires(Task::OldDW, pLocalizedLabel,            matlset, gnone);
   task->requires(Task::OldDW, lb->pParticleIDLabel,       matlset, gnone);
   task->requires(Task::OldDW, pEnergyLabel,               matlset, gnone);
-  task->requires(Task::OldDW, lb->pDissipatedEnergyLabel, matlset, gnone);
   task->requires(Task::OldDW, lb->pHeatEnergyLabel,       matlset, gnone);
-  task->requires(Task::OldDW, lb->pWorkEnergyLabel,       matlset, gnone);
+  task->requires(Task::OldDW, pDissipatedEnergyLabel,     matlset, gnone);
+  task->requires(Task::OldDW, pWorkEnergyLabel,           matlset, gnone);
 
   task->computes(pRotationLabel_preReloc,             matlset);
   task->computes(pStrainRateLabel_preReloc,           matlset);
@@ -692,6 +714,8 @@ ReactiveEP::addComputesAndRequires(      Task         * task,
   task->computes(pPorosityLabel_preReloc,             matlset);
   task->computes(pLocalizedLabel_preReloc,            matlset);
   task->computes(pEnergyLabel_preReloc,               matlset);
+  task->computes(pDissipatedEnergyLabel_preReloc,     matlset);
+  task->computes(pWorkEnergyLabel_preReloc,           matlset);
 
 
   // Add internal evolution variables computed by flow model
@@ -704,9 +728,9 @@ ReactiveEP::addComputesAndRequires(      Task         * task,
 //
 void 
 ReactiveEP::computeStressTensor(const PatchSubset   * patches,
-                                      const MPMMaterial   * matl,
-                                            DataWarehouse * old_dw,
-                                            DataWarehouse * new_dw)
+                                const MPMMaterial   * matl,
+                                      DataWarehouse * old_dw,
+                                      DataWarehouse * new_dw)
 {
   if (cout_EP.active())
   {
@@ -790,9 +814,9 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     old_dw->get(pEnergy,            pEnergyLabel,               pset);
     old_dw->get(pLocalized,         pLocalizedLabel,            pset);
     old_dw->get(pRotation,          pRotationLabel,             pset);
-    old_dw->get(pDissipatedEnergy,  lb->pDissipatedEnergyLabel, pset);
     old_dw->get(pHeatEnergy,        lb->pHeatEnergyLabel,       pset);
-    old_dw->get(pWorkEnergy,        lb->pWorkEnergyLabel,       pset);
+    old_dw->get(pDissipatedEnergy,  pDissipatedEnergyLabel,     pset);
+    old_dw->get(pWorkEnergy,        pWorkEnergyLabel,           pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
     constParticleVariable<long64> pParticleID; 
@@ -841,12 +865,12 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
     new_dw->allocateAndPut(pDissipatedEnergy_new,
-                           lb->pDissipatedEnergyLabel_preReloc,   pset);
+                           pDissipatedEnergyLabel_preReloc,       pset);
 
     // JBH - Thermodynamics
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
     new_dw->allocateAndPut(pWorkEnergy_new, 
-                           lb->pWorkEnergyLabel_preReloc,         pset);
+                           pWorkEnergyLabel_preReloc,             pset);
     // Particle heat may already have grid based conduction placed onto it.
     new_dw->getModifiable(pHeatEnergy_new,
                            lb->pHeatEnergyLabel_preReloc,         pset);
@@ -1385,11 +1409,12 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
       // So far we've stored del(temp)/del(time) in pDissipatedEnergy;
       //   convert the temperature change rate into a specific energy delta.
       //  dE' = dT/dt * Cp * dt
-      pDissipatedEnergy_new[idx] *= state->specificHeat * delT;
+      pDissipatedEnergy_new[idx] = pDissipatedEnergy[idx] +
+                                   pdTdt[idx] * state->specificHeat * delT;
 
       // AV heating should become incident heat to the particle next time step.
       // JBH - Thermodynamics
-      pHeatEnergy_new[idx] -= pDissipatedEnergy_new[idx];
+      // pHeatEnergy_new[idx] -= pDissipatedEnergy_new[idx];
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];

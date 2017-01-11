@@ -130,12 +130,12 @@ namespace Uintah {
       const VarLabel* pESPotential;
       
       // For fixing Mie-Gruneison EOS - JBH
-      const VarLabel* pDissipatedEnergyLabel;
-      const VarLabel* pDissipatedEnergyLabel_preReloc;
+//      const VarLabel* pDissipatedEnergyLabel;
+//      const VarLabel* pDissipatedEnergyLabel_preReloc;
       const VarLabel* pHeatEnergyLabel;
       const VarLabel* pHeatEnergyLabel_preReloc;
-      const VarLabel* pWorkEnergyLabel;
-      const VarLabel* pWorkEnergyLabel_preReloc;
+//      const VarLabel* pWorkEnergyLabel;
+//      const VarLabel* pWorkEnergyLabel_preReloc;
 
 
       const VarLabel* gLambdaDotLabel;
