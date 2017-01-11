@@ -124,7 +124,9 @@ namespace Uintah {
     const VarLabel* pDamageLabel;  
     const VarLabel* pPorosityLabel;  
     const VarLabel* pLocalizedLabel;  
-    const VarLabel* pEnergyLabel;  
+    const VarLabel* pEnergyLabel;
+    const VarLabel* pDissipatedEnergyLabel;
+    const VarLabel* pWorkEnergyLabel;
 
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel_preReloc;  
@@ -134,6 +136,8 @@ namespace Uintah {
     const VarLabel* pPorosityLabel_preReloc;  
     const VarLabel* pLocalizedLabel_preReloc;  
     const VarLabel* pEnergyLabel_preReloc;
+    const VarLabel* pDissipatedEnergyLabel_preReloc;
+    const VarLabel* pWorkEnergyLabel_preReloc;
 
   protected:
 
