@@ -46,7 +46,8 @@
 #include <numeric>
 
 #include <sci_defs/visit_defs.h>
-
+#define SQUARE(x) x*x
+#define CUBE(x) x*x*x
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
@@ -78,7 +79,6 @@ CharOxidationSmith::CharOxidationSmith( std::string modelName,
 : CharOxidation(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Set constants
-  _pi = acos(-1.0);
   // Enthalpy of formation (J/mol)
   _HF_CO2 = -393509.0;
   _HF_CO  = -110525.0;
@@ -729,7 +729,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         Re_p  = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
         
         cg = 101325. / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration 
-        p_area = _pi * std::pow(p_diam,2.); // particle surface area [m^2]
+        p_area = M_PI * p_diam*p_diam; // particle surface area [m^2]
         // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
         for (int l=0; l<_NUM_reactions; l++) {
           sum_x_D=0;
@@ -738,11 +738,11 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             sum_x_D = (_oxid_l[l] != _species_names[l2]) ? sum_x_D + species_mass_frac[l2]/(_MW_species[l2]*_D_mat[_oxidizer_indices[l]][l2]) : sum_x_D;
             sum_x = (_oxid_l[l] != _species_names[l2]) ? sum_x + species_mass_frac[l2]/(_MW_species[l2]) : sum_x;
           }
-          _D_oxid_mix_l[l] = sum_x/sum_x_D * std::pow( gas_T/_T0 ,1.5);
+          _D_oxid_mix_l[l] = sum_x/sum_x_D * std::sqrt(CUBE( gas_T/_T0));
         }
         for (int l=0; l<_NUM_reactions; l++) {
           Sc[l] = _dynamic_visc / (gas_rho * _D_oxid_mix_l[l]); // Schmidt number [-]
-          Sh[l] = 2.0 + 0.6 * std::pow(Re_p,0.5) * std::pow(Sc[l],0.33333); // Sherwood number [-]
+          Sh[l] = 2.0 + 0.6 * std::sqrt(Re_p) * std::cbrt(Sc[l]); // Sherwood number [-]
           oxid_mole_frac[l] = oxid_mass_frac[l] * MW / _MW_l[l]; // [mole fraction]
           co_r[l] = cg * oxid_mole_frac[l]; // oxidizer concentration, [kmoles/m^3]
           k_r[l] = ( 10.0 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * _phi_l[l] * 101325. ); // [m / s]
@@ -842,7 +842,6 @@ inline void
 CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l ){
 
   double rh = 0.0;
-  double rtotal = 0.0;
   double Bjm = 0.0;
   double Fac = 0.0;
   double mtc_r = 0.0;
@@ -850,11 +849,10 @@ CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &
   double denominator = 0.0;
   for (int l=0; l<_NUM_reactions; l++) {
     rh = std::accumulate(rh_l.begin(), rh_l.end(), 0.0);
-    rtotal = rh + r_devol; // [kg/m^3/s]
-    Bjm = std::min( 80.0 , (rtotal/w)/( 2. * _pi * _D_oxid_mix_l[l] * p_diam * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
+    Bjm = std::min( 80.0 , (rh + r_devol)/w/( 2. * M_PI * _D_oxid_mix_l[l] * p_diam * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
     Fac = ( Bjm >= 1e-7 ) ?  Bjm/(exp(Bjm)-1.) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
     mtc_r = (Sh[l] * _D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
-    numerator = std::pow( p_area * w, 2.0) * _Mh * MW * _phi_l[l] * k_r[l] * mtc_r * _S * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)] 
+    numerator =  SQUARE(p_area * w) * _Mh * MW * _phi_l[l] * k_r[l] * mtc_r * _S * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)] 
     denominator = MW * p_area * w *cg * (k_r[l] * _S + mtc_r); // [(kg-mix #) / (m^3 s)]
     F[l] = rh_l[l] - numerator / ( denominator + rh  + r_devol); // [kg-char/m^3/s]
   } 

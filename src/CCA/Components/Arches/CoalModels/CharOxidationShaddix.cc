@@ -554,16 +554,17 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
              Conc = MWmixph*denph*1000.0;
              ks = _As*exp(-_Es/(_R*particle_temperatureph));
 
+             double   expFactor=std::exp(3070.0/particle_temperatureph);
              PO2_surf_guess = PO2_inf/2.0;
              PO2_surf_old = PO2_surf_guess-delta;
-             CO2CO = 0.02*(std::pow(PO2_surf_old,0.21))*exp(3070.0/particle_temperatureph);
+             CO2CO = 0.02*(std::pow(PO2_surf_old,0.21))*expFactor;
              OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
              gamma = -(1.0-OF);
              q = ks*(std::pow(PO2_surf_old,_n));
              f0 = PO2_surf_old - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
 
              PO2_surf_new = PO2_surf_guess+delta;
-             CO2CO = 0.02*(std::pow(PO2_surf_new,0.21))*exp(3070.0/particle_temperatureph);
+             CO2CO = 0.02*(std::pow(PO2_surf_new,0.21))*expFactor;
              OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
              gamma = -(1.0-OF);
              q = ks*(std::pow(PO2_surf_new,_n));
@@ -577,14 +578,14 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                PO2_surf_new = std::max(0.0, std::min(PO2_inf, PO2_surf_new));            
                if (std::abs(PO2_surf_new-PO2_surf_old) < d_tol){
                  PO2_surf=PO2_surf_new;
-                 CO2CO = 0.02*(std::pow(PO2_surf,0.21))*exp(3070.0/particle_temperatureph);
+                 CO2CO = 0.02*(std::pow(PO2_surf,0.21))*expFactor;
                  OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
                  gamma = -(1.0-OF);
                  q = ks*(std::pow(PO2_surf,_n));
                  break;
                }
                f0 = f1;
-               CO2CO = 0.02*(std::pow(PO2_surf_new,0.21))*exp(3070.0/particle_temperatureph);
+               CO2CO = 0.02*(std::pow(PO2_surf_new,0.21))*expFactor;
                OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
                gamma = -(1.0-OF);
                q = ks*(std::pow(PO2_surf_new,_n));

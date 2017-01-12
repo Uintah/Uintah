@@ -139,7 +139,6 @@ private:
   double _HF_CO2; // [J/mol]
   double _HF_CO; // [J/mol]
   double _T0;
-  double _pi;
   double _R_cal; // [cal/ (K mol) ]
   double _R; // [J/ (K mol) ]
   
