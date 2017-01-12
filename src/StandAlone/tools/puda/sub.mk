@@ -37,8 +37,6 @@ SRCS := \
         $(SRCDIR)/jim1.cc         \
         $(SRCDIR)/jim2.cc         \
         $(SRCDIR)/jim3.cc         \
-        $(SRCDIR)/monica1.cc      \
-        $(SRCDIR)/monica2.cc      \
         $(SRCDIR)/PIC.cc          \
         $(SRCDIR)/POL.cc          \
         $(SRCDIR)/pressure.cc     \
