@@ -145,6 +145,21 @@
       <S_alpha                     spec="OPTIONAL DOUBLE" />
       <S_2                         spec="OPTIONAL DOUBLE" />
       <S_3                         spec="OPTIONAL DOUBLE" />
+      <R1_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
+      <R1_Gamma_0                     spec="OPTIONAL DOUBLE" />
+      <R1_S_alpha                     spec="OPTIONAL DOUBLE" />
+      <R1_S_2                         spec="OPTIONAL DOUBLE" />
+      <R1_S_3                         spec="OPTIONAL DOUBLE" />
+      <R2_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
+      <R2_Gamma_0                     spec="OPTIONAL DOUBLE" />
+      <R2_S_alpha                     spec="OPTIONAL DOUBLE" />
+      <R2_S_2                         spec="OPTIONAL DOUBLE" />
+      <R2_S_3                         spec="OPTIONAL DOUBLE" />
+      <R3_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
+      <R3_Gamma_0                     spec="OPTIONAL DOUBLE" />
+      <R3_S_alpha                     spec="OPTIONAL DOUBLE" />
+      <R3_S_2                         spec="OPTIONAL DOUBLE" />
+      <R3_S_3                         spec="OPTIONAL DOUBLE" />
     </equation_of_state>
     <evolve_damage                 spec="OPTIONAL BOOLEAN" />
     <evolve_porosity               spec="OPTIONAL BOOLEAN" />

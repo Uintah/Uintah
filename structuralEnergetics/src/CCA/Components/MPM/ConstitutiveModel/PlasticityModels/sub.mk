@@ -42,6 +42,7 @@ SRCS   += \
 	$(SRCDIR)/HyperElasticEOS.cc \
 	$(SRCDIR)/MieGruneisenEOS.cc \
 	$(SRCDIR)/MieGruneisenEOSEnergy.cc \
+	$(SRCDIR)/ThreeRegionMieGruneisenEOSEnergy.cc \
 	$(SRCDIR)/FlowModel.cc \
 	$(SRCDIR)/FlowStressModelFactory.cc \
 	$(SRCDIR)/IsoHardeningFlow.cc \
