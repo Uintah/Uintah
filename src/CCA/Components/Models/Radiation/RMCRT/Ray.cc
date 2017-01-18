@@ -1383,19 +1383,18 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
       _maxLength[maxLevels - i] = 0.0;
       _maxLengthFlux[maxLevels - i] = 0.0;
       _maxCells[maxLevels - i] = 0;
+      double fudge = 1.0;
+      int saftyOffSet=1; // This could be set to zero, but it would require a slight change of updateSumI_ML 1-2017
       for (int j = 0; j < 3; j++) {
-
-        //int RR= round(dxyzCoarse[j]/dxyzFine[j]);
-
-        double fudge = 1.0;
-        _maxLength[maxLevels - i] = std::max(fudge * dxyzCoarse[j] * ((double)d_nDivQRays - 2.0) / sqrt((double)d_nDivQRays - 1.0) / 4.0, _maxLength[maxLevels - i]);  // hard coded for Refinement
-        _maxLengthFlux[maxLevels - i] = std::max(fudge * dxyzCoarse[j] * ((double)d_nFluxRays * 2.0 - 2.0) / sqrt((double)d_nFluxRays * 2.0 - 1.0) / 4.0, _maxLengthFlux[maxLevels - i]);  //
-        _maxCells[maxLevels - i] = (int)std::max((int)(std::ceil(std::max(_maxLength[maxLevels - i], _maxLengthFlux[maxLevels - i]) / dxyzFine[j]) + 0.5) + 4, _maxCells[maxLevels - i]);  //
-  
+        _maxLength[maxLevels - i] =     std::max(fudge * dxyzCoarse[j] * ((double) d_nDivQRays - 2.0)           / sqrt((double)d_nDivQRays - 1.0)       / 4.0, _maxLength[maxLevels - i]);  // hard coded for Refinement
+        _maxLengthFlux[maxLevels - i] = std::max(fudge * dxyzCoarse[j] * ((double) d_nFluxRays * 2.0 - 2.0) / sqrt((double)d_nFluxRays * 2.0 - 1.0) / 4.0, _maxLengthFlux[maxLevels - i]);  //
       }
-//      proc0cout << _maxCells[maxLevels - i] << " " << _maxLength[maxLevels - i] << " " << i << " " << dxyzFine << " " << dxyzCoarse << "\n";
+
+
+      for (int j = 0; j < 3; j++) {
+        _maxCells[maxLevels - i] = (int)std::max( (int) (std::ceil(std::max(_maxLength[maxLevels - i], _maxLengthFlux[maxLevels - i]) / dxyzFine[j] + 0.5) ) + saftyOffSet, _maxCells[maxLevels - i]);  //
+      }
     }
-//    proc0cout << _maxCells[0] << " " << _maxLength[0] << " " << "\n";
   }
 
   printSchedule(level, dbg, taskname);
