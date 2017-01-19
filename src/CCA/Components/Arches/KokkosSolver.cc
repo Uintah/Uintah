@@ -60,6 +60,9 @@ KokkosSolver::~KokkosSolver(){
     delete i->second;
   }
   m_bcHelper.clear();
+
+  delete m_table_lookup;
+  
 }
 
 //--------------------------------------------------------------------------------------------------
