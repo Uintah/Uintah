@@ -182,7 +182,6 @@ ConstantProps::getState( const ProcessorGroup* pc,
 
     Ghost::GhostType gn = Ghost::None;
     const Patch* patch = patches->get(p);
-    int archIndex = 0;
 
     constCCVariable<double> eps_vol;
     new_dw->get( eps_vol, m_volFractionLabel, m_matl_index, patch, gn, 0 );

@@ -300,7 +300,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
 
     Ghost::GhostType gn = Ghost::None;
     const Patch* patch = patches->get(p);
-    int archIndex = 0;
 
     constCCVariable<double> eps_vol;
     constCCVariable<int> cell_type;

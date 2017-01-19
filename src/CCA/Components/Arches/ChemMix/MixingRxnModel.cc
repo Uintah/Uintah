@@ -359,7 +359,6 @@ MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
 
     //Ghost::GhostType gn = Ghost::None;
     const Patch* patch = patches->get(p);
-    int archIndex = 0;
 
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
