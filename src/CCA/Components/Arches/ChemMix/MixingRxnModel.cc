@@ -273,9 +273,13 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
       db_dv->getAttribute( "table_lookup", table_lookup );
       db_dv->getAttribute( "label", var_name );
 
-      if ( table_lookup == "true" )
+      if ( table_lookup == "true" ){
         bool test = insertIntoMap( var_name );
-
+        if ( !test ){
+          throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                             __FILE__,__LINE__);
+        }
+      }
     }
   }
 
@@ -285,16 +289,36 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   proc0cout << "    (below required by the CFD algorithm)" << endl;
   var_name = "density";
   bool test = insertIntoMap( var_name );
+  if ( !test ){
+    throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                       __FILE__,__LINE__);
+  }
   if ( !d_coldflow ){
     var_name = "temperature";
     test = insertIntoMap( var_name );
+    if ( !test ){
+      throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                         __FILE__,__LINE__);
+    }
     //var_name = "heat_capacity";
     var_name = "specificheat";
     test = insertIntoMap( var_name );
+    if ( !test ){
+      throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                         __FILE__,__LINE__);
+    }
     var_name = "CO2";
     test = insertIntoMap( var_name );
+    if ( !test ){
+     throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                        __FILE__,__LINE__);
+    }
     var_name = "H2O";
     test = insertIntoMap( var_name );
+    if ( !test ){
+     throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
+                        __FILE__,__LINE__);
+    }
   }
 
   proc0cout << endl;
@@ -309,6 +333,10 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) {
 
     bool test = insertIntoMap( *ivar );
+    if ( !test ){
+     throw InvalidValue("Error: Could not insert the following into the table lookup: "+*ivar,
+                        __FILE__,__LINE__);
+    }
 
   }
 }

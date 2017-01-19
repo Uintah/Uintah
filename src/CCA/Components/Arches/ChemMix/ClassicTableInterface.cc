@@ -257,8 +257,18 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
         std::string h_name = hl_model->get_hs_label_name();
         bool test = insertIntoMap( h_name );
 
+        if ( !test ){
+        throw InvalidValue("Error: could not insert the following into the lookup map: "+h_name,
+                           __FILE__,__LINE__);
+        }
+
         h_name = hl_model->get_ha_label_name();
         test = insertIntoMap( h_name );
+
+        if ( !test ){
+        throw InvalidValue("Error: could not insert the following into the lookup map: "+h_name,
+                           __FILE__,__LINE__);
+        }
 
       }
     }

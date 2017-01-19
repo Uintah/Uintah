@@ -234,7 +234,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
     Ghost::GhostType gn = Ghost::None;
     const Patch* patch = patches->get(p);
-    int archIndex = 0;
 
     // volume fraction:
     constCCVariable<double> eps_vol;

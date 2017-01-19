@@ -74,6 +74,10 @@ ConstantProps::problemSetup( const ProblemSpecP& db )
 
   db_coldflow->require( "density", _density );
   bool test = insertIntoMap("density");
+  if ( !test ){
+    throw InvalidValue("Error: Could not insert the following into the table lookup: density",
+                       __FILE__,__LINE__);
+  }
 
 
   //Automatically adding density_old to the table lookup because this
@@ -90,6 +94,10 @@ ConstantProps::problemSetup( const ProblemSpecP& db )
   if(db_coldflow->findBlock("temperature")) {
     db_coldflow->require( "temperature", _temperature );
     test = insertIntoMap("temperature");
+     if ( !test ){
+       throw InvalidValue("Error: Could not insert the following into the table lookup: temperature",
+                          __FILE__,__LINE__);
+     }
     _includeTemp=true;
   }
 

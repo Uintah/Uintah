@@ -115,6 +115,11 @@ ColdFlow::problemSetup( const ProblemSpecP& db )
 
     bool test = insertIntoMap( label );
 
+    if ( !test ){
+      throw InvalidValue("Error: Could not insert the following into the table lookup: "+label,
+                         __FILE__,__LINE__);
+    }
+
   }
 
   for ( ProblemSpecP db_sp = db_str2->findBlock("species"); db_sp != 0; db_sp = db_sp->findNextBlock("species") ){
@@ -128,6 +133,10 @@ ColdFlow::problemSetup( const ProblemSpecP& db )
     species_s2.insert(make_pair(label,value));
 
     bool test = insertIntoMap( label );
+    if ( !test ){
+      throw InvalidValue("Error: Could not insert the following into the table lookup: "+label,
+                         __FILE__,__LINE__);
+    }
 
   }
 
@@ -157,7 +166,15 @@ ColdFlow::problemSetup( const ProblemSpecP& db )
   // This sets the table lookup variables and saves them in a map
   // Map<string name, Label>
   bool test = insertIntoMap( "density" );
+  if ( !test ){
+    throw InvalidValue("Error: Could not insert the following into the table lookup: density",
+                       __FILE__,__LINE__);
+  }
   test = insertIntoMap( "temperature" );
+  if ( !test ){
+    throw InvalidValue("Error: Could not insert the following into the table lookup: temperature",
+                       __FILE__,__LINE__);
+  }
 
   proc0cout << "  Now matching user-defined IV's with table IV's" << endl;
   proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
