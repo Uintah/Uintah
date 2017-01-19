@@ -432,18 +432,19 @@
       <Turbulence model="compdynamicprocedure" />
 
       <Properties>
-        <table label="a_user_generated_label" type="classic"><ClassicTable>
-          <enthalpy_label>enthalpy</enthalpy_label>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
-          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar" />
-          <reference_state f="0.0" hl="0.0" var="0.0" />
-        </ClassicTable>
-      </table></Properties>
+        <table label="a_user_generated_label" type="classic">
+          <ClassicTable>
+            <enthalpy_label>enthalpy</enthalpy_label>
+            <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
+            <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar" />
+            <reference_state f="0.0" hl="0.0" var="0.0" />
+          </ClassicTable>
+        </table>
+      </Properties>
 
       <BoundaryConditions>
         <suppress_corner_recirculation />
       </BoundaryConditions>
-      
       
       <ExplicitSolver>
         

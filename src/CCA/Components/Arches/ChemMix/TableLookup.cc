@@ -129,7 +129,7 @@ TableLookup::addLookupSpecies( ){
   std::vector<std::string>& old_sps = helper.model_req_old_species;
 
   std::vector<bool> sps_check(sps.size(), false);
-  std::vector<bool> old_sps_check(sps.size(), false);
+  std::vector<bool> old_sps_check(old_sps.size(), false);
 
   for ( auto i_tab = m_tables.begin(); i_tab != m_tables.end(); i_tab++ ){
 

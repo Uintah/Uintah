@@ -1491,18 +1491,17 @@
         <filter_cs_squared>false</filter_cs_squared>
       </Turbulence>
       <Properties>
-        <table label="a_user_generated_label" type="coldflow"><inverse_density_average>false</inverse_density_average>
-      </table><table label="a_user_generated_label" type="coldflow"><first_order_drhodt>true</first_order_drhodt>
-        </table><table label="a_user_generated_label" type="coldflow"><filter_drhodt>false</filter_drhodt>
-        </table><table label="a_user_generated_label" type="classic"><ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/b_thunder_mod.mix.gz</inputfile>
-          <mixfrac_with_heatloss f_label="coal_gas_mix_frac" hl_label="heat_loss" />
-          <enthalpy_label>enthalpy</enthalpy_label>
-          <cold_flow>false</cold_flow>
-          <temperature_label_name>temperature</temperature_label_name>
-          <reference_state f="0.0787896104321" hl="0.533756296594" />
-        </ClassicTable>
-        </table></Properties>
+        <table label="a_user_generated_label" type="classic">
+          <ClassicTable>
+            <inputfile>inputs/ARCHES/ClassicMixingTables/coal/b_thunder_mod.mix.gz</inputfile>
+            <mixfrac_with_heatloss f_label="coal_gas_mix_frac" hl_label="heat_loss" />
+            <enthalpy_label>enthalpy</enthalpy_label>
+            <cold_flow>false</cold_flow>
+            <temperature_label_name>temperature</temperature_label_name>
+            <reference_state f="0.0787896104321" hl="0.533756296594" />
+          </ClassicTable>
+        </table>
+      </Properties>
       <DQMOM type="weightedAbs">
         <LinearSolver>
           <tolerance>1e-5</tolerance>

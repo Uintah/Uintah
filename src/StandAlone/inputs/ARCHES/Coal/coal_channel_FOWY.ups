@@ -1,10 +1,4 @@
 <Uintah_specification>
-
-
-
-
-
-
   <Meta>
     <title>DQMOM_coal</title>
   </Meta>
@@ -1057,18 +1051,20 @@
         <filter_cs_squared>false</filter_cs_squared>
       </Turbulence>
       <Properties>
-        <table label="a_user_generated_label" type="coldflow"><inverse_density_average>false</inverse_density_average>
-      </table><table label="a_user_generated_label" type="coldflow"><first_order_drhodt>true</first_order_drhodt>
-        </table><table label="a_user_generated_label" type="coldflow"><filter_drhodt>false</filter_drhodt>
-        </table><table label="a_user_generated_label" type="classic"><ClassicTable>
-          <enthalpy_label>enthalpy</enthalpy_label>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC_ben.mix.gz</inputfile>
-          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss" />
-          <cold_flow>false</cold_flow>
-          <temperature_label_name>temperature</temperature_label_name>
-          <reference_state eta="0.15976" fp="0.42469" hl="0.766" />
-        </ClassicTable>
-        </table></Properties>
+        <inverse_density_average>false</inverse_density_average>
+        <first_order_drhodt>true</first_order_drhodt>
+        <filter_drhodt>false</filter_drhodt>
+        <table label="a_user_generated_label" type="classic">
+          <ClassicTable>
+            <enthalpy_label>enthalpy</enthalpy_label>
+            <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC_ben.mix.gz</inputfile>
+            <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss" />
+            <cold_flow>false</cold_flow>
+            <temperature_label_name>temperature</temperature_label_name>
+            <reference_state eta="0.15976" fp="0.42469" hl="0.766" />
+          </ClassicTable>
+        </table>
+      </Properties>
       <DQMOM type="weightedAbs">
         <LinearSolver>
           <tolerance>1e-5</tolerance>

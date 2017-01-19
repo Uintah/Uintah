@@ -265,11 +265,13 @@
       </PropertyModels>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
-          <density>1.18</density>
-          <temperature>64.804</temperature>
-        </ConstantProps>
-      </table></Properties>
+        <table label="a_user_generated_label" type="constant">
+          <ConstantProps>
+            <density>1.18</density>
+            <temperature>64.804</temperature>
+          </ConstantProps>
+        </table>
+      </Properties>
 
       <ExplicitSolver>
 
