@@ -510,6 +510,9 @@ Properties::addLookupSpecies( ){
       || "ColdFlow" || "ConstantProps" ) {
     for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
       bool test = d_mixingRxnTable->insertIntoMap( *i );
+      if ( !test ){
+        throw InvalidValue("Error: Cannot locate the following variable for lookup in the table: "+*i, __FILE__, __LINE__ ); 
+      }
     }
   }
 
