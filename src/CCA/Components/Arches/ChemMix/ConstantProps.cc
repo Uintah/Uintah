@@ -63,7 +63,7 @@ ConstantProps::~ConstantProps()
 ConstantProps::problemSetup( const ProblemSpecP& db )
 {
   // Create sub-ProblemSpecP object
-  ProblemSpecP db_coldflow = db->findBlock("ConstantProps");
+  ProblemSpecP db_coldflow = db;
 
   d_allDepVarNames.push_back("density");
   d_allDepVarNames.push_back("temperature");

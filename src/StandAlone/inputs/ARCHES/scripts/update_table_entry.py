@@ -30,7 +30,8 @@ def fix_ups(filename):
       newTab = ET.Element('table')
       newTab.attrib['label'] = 'a_user_generated_label'
       newTab.attrib['type'] = mytype
-      newTab.insert(0,n)
+      for m in n: 
+        newTab.insert(0,m)
       Properties.insert(0,newTab)
     else: 
       Properties.insert(0,n)

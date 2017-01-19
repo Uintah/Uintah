@@ -69,7 +69,7 @@ ColdFlow::~ColdFlow()
 ColdFlow::problemSetup( const ProblemSpecP& db )
 {
   // Create sub-ProblemSpecP object
-  ProblemSpecP db_coldflow = db->findBlock("ColdFlow");
+  ProblemSpecP db_coldflow = db;
 
   // Hard code these since they are not read in from an external source
   d_allDepVarNames.push_back("density");

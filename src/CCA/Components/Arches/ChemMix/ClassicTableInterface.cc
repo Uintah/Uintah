@@ -95,7 +95,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
 {
   // Create sub-ProblemSpecP object
   string tableFileName;
-  ProblemSpecP db_classic = db->findBlock("ClassicTable");
+  ProblemSpecP db_classic = db;
 
   // Obtain object parameters
   db_classic->require( "inputfile", tableFileName );

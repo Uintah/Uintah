@@ -571,146 +571,150 @@
         <table                          spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'classic, coldflow, constant'">
-          <!-- cold flow mixing as 1/rho_mix = f/rho_0 + (1-f)/rho_1 -->
-          <ColdFlow                       spec="OPTIONAL NO_DATA" >
-            <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess -->
-            <mixture_fraction             spec="REQUIRED NO_DATA"
-                                          attribute1="label REQUIRED STRING"/>
-            <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature -->
+          <!-- COMMON SPEC -->
+          <post_mix                     spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type coldflow, classic, constant">
+            <!-- Notes on post stream mixing:
+              1) Dependent variables that are not specified are assumed to be ZERO (even density)
+              2) If specifying density, specify the INVERSE value
+              3) If specifying mixture molecular weight, specify the INVERSE value
+              4) Dont forget to set thermodynamic properties if you are computing heat loss.
+            -->
+            <stream                     spec="OPTIONAL NO_DATA"
+                                        attribute1="transport_label REQUIRED STRING">
+              <var                      spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="value REQUIRED DOUBLE"/>
+            </stream>
+          </post_mix>
 
-            <stream_0                     spec="REQUIRED NO_DATA"
-                                          attribute1="density REQUIRED DOUBLE 'positive'"
-                                          attribute2="temperature REQUIRED DOUBLE 'positive'"> <!-- f=1 stream, rho[=]kg/m^3, T[=]K -->
-              <species                    spec="MULTIPLE NO_DATA"
-                                          attribute1="label REQUIRED STRING"
-                                          attribute2="value REQUIRED DOUBLE 'positive'"/>
-            </stream_0>
-            <stream_1                     spec="REQUIRED NO_DATA"
-                                          attribute1="density REQUIRED DOUBLE 'positive'"
-                                          attribute2="temperature REQUIRED DOUBLE 'positive'"> <!-- f=0 stream, rho[=]kg/m^3, T[=]K -->
-              <species                    spec="MULTIPLE NO_DATA"
-                                          attribute1="label REQUIRED STRING"
-                                          attribute2="value REQUIRED DOUBLE 'positive'"/>
-            </stream_1>
-            <post_mix                     spec="OPTIONAL NO_DATA">
-              <!-- Notes on post stream mixing:
-                1) Dependent variables that are not specified are assumed to be ZERO (even density)
-                2) If specifying density, specify the INVERSE value
-                3) If specifying mixture molecular weight, specify the INVERSE value
-                4) Dont forget to set thermodynamic properties if you are computing heat loss.
-              -->
-              <stream                     spec="OPTIONAL NO_DATA"
-                                          attribute1="transport_label REQUIRED STRING">
-                <var                      spec="MULTIPLE NO_DATA"
-                                          attribute1="label REQUIRED STRING"
-                                          attribute2="value REQUIRED DOUBLE"/>
-              </stream>
-            </post_mix>
-            <!-- NOTE on the REFERENCE DENSITY -->
-            <!-- The reference density sets the fluid density for the relative buoyant force.  Specifically, the
-            buoyant term on the RHS of the momentum equation is computed as: F = (rho_ref - rho_local)*g
-            In general, one would choose the heaviest stream as the reference state, but one is encouraged to think
-            carefully about this -->
-            <reference_density            spec="OPTIONAL NO_DATA"
-                                          attribute1="value REQUIRED DOUBLE 'positive'"/>
-          </ColdFlow>
+          <!-- NOTE on the REFERENCE DENSITY -->
+          <!-- The reference density sets the fluid density for the relative buoyant force.  Specifically, the
+          buoyant term on the RHS of the momentum equation is computed as: F = (rho_ref - rho_local)*g
+          In general, one would choose the heaviest stream as the reference state, but one is encouraged to think
+          carefully about this -->
+          <reference_density            spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type coldflow, classic"/>
 
-          <ClassicTable                   spec="OPTIONAL NO_DATA">
-            <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess -->
-            <inputfile                    spec="REQUIRED STRING" />  <!-- table to be opened -->
-            <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- force adiabatic condition -->
-            <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>  <!-- warn when heat loss is clipped to bounds -->
-            <mf_for_hl                    spec="OPTIONAL NO_DATA"/>  <!-- DEVELOPER SWITCH -->
-            <enthalpy_label               spec="OPTIONAL STRING" />  <!-- Pointer to the enthalpy equation.  default = enthalpySP -->
-            <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature -->
+          <temperature_label_name       spec="OPTIONAL STRING"
+                                        need_applies_to="type constant, coldflow, classic"/><!-- default = temperature -->
 
-            <!-- IV specs for various table types -->
-            <!-- Single mixture (or other indep. var.) fraction table -->
-            <single_iv                    spec="OPTIONAL NO_DATA"
-                                          attribute1="iv_label REQUIRED STRING"/>
-            <!-- IV ordering for table write: (1) mixture fraction (2) scalar variance (3) heat loss -->
-            <standard_flamelet            spec="OPTIONAL NO_DATA"
-                                          attribute1="f_label   REQUIRED STRING"
-                                          attribute2="var_label REQUIRED STRING"
-                                          attribute3="hl_label  REQUIRED STRING"/>
-            <!-- IV ordering for table write: (1) mixture fraction (2) scalar variance (3) heat loss -->
-            <standard_equilibrium         spec="OPTIONAL NO_DATA"
-                                          attribute1="f_label   REQUIRED STRING"
-                                          attribute2="var_label REQUIRED STRING"
-                                          attribute3="hl_label  REQUIRED STRING"/>
-            <!-- IV ordering for table write: (1) eta (2) heat loss (3) f -->
-            <coal                         spec="OPTIONAL NO_DATA"
-                                          attribute1="fp_label REQUIRED STRING"
-                                          attribute2="eta_label REQUIRED STRING"
-                                          attribute3="hl_label REQUIRED STRING"/>
-            <rcce                         spec="OPTIONAL NO_DATA"
-                                          attribute1="fp_label REQUIRED STRING"
-                                          attribute2="eta_label REQUIRED STRING"
-                                          attribute3="hl_label REQUIRED STRING"/>
-            <rcce_fp                      spec="OPTIONAL NO_DATA"
-                                          attribute1="xi_label REQUIRED STRING"
-                                          attribute2="hl_label REQUIRED STRING"
-                                          attribute3="fp_label REQUIRED STRING"/>
-            <rcce_eta                     spec="OPTIONAL NO_DATA"
-                                          attribute1="xi_label REQUIRED STRING"
-                                          attribute2="eta_label REQUIRED STRING"
-                                          attribute3="hl_label REQUIRED STRING"/>
-            <inert_mixing                 spec="OPTIONAL NO_DATA"
-                                          attribute1="fp_label REQUIRED STRING"
-                                          attribute2="eta_label REQUIRED STRING"
-                                          attribute3="inert_label REQUIRED STRING"
-                                          attribute4="hl_label REQUIRED STRING"/>
-            <!-- IV ordering for table write: (1) mixture fraction (2) rxn extent -->
-            <acidbase                     spec="OPTIONAL NO_DATA"
-                                          attribute1="f_label REQUIRED STRING"
-                                          attribute2="extent_label REQUIRED STRING"/>
+          <!-- CONSTANT PROPERTIES -->
+          <!-- Notes:
+                * Reference density not required for constant properties because the entire world is considered constant
+          -->
+          <density                      spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type constant"/>
+          <temperature                  spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type constant"/>
 
-            <mixfrac_with_heatloss        spec="OPTIONAL NO_DATA"
-                                          attribute1="f_label REQUIRED STRING"
-                                          attribute2="hl_label REQUIRED STRING"/>
+          <!-- COLD FLOW PROPERTIES -->
+          <!-- Notes:
+              * Cold flow mixing as 1/rho_mix = f/rho_0 + (1-f)/rho_1
+              * Also like: phi_mix = f*phi_0 + (1-f)*phi_1
+          -->
+          <ignore_iv_density_check      spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type coldflow"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess -->
+          <mixture_fraction             spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type coldflow"/>
+          <stream_0                     spec="REQUIRED NO_DATA"
+                                        attribute1="density REQUIRED DOUBLE 'positive'"
+                                        attribute2="temperature REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type coldflow"> <!-- f=1 stream, rho[=]kg/m^3, T[=]K -->
+            <species                    spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+          </stream_0>
+          <stream_1                     spec="REQUIRED NO_DATA"
+                                        attribute1="density REQUIRED DOUBLE 'positive'"
+                                        attribute2="temperature REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type coldflow"> <!-- f=0 stream, rho[=]kg/m^3, T[=]K -->
+            <species                    spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+          </stream_1>
 
-            <post_mix                     spec="OPTIONAL NO_DATA">
-              <!-- Notes on post stream mixing:
-                1) Dependent variables that are not specified are assumed to be ZERO (even density)
-                2) If specifying density, specify the INVERSE value
-                3) If specifying mixture molecular weight, specify the INVERSE value
-                4) Dont forget to set thermodynamic properties if you are computing heat loss.
-              -->
-              <stream                     spec="OPTIONAL NO_DATA"
-                                          attribute1="transport_label REQUIRED STRING">
-                <var                      spec="MULTIPLE NO_DATA"
-                                          attribute1="label REQUIRED STRING"
-                                          attribute2="value REQUIRED DOUBLE"/>
-              </stream>
-            </post_mix>
-            <!-- NOTE on the REFERENCE DENSITY -->
-            <!-- The reference density sets the fluid density for the relative buoyant force.  Specifically, the
-            buoyant term on the RHS of the momentum equation is computed as: F = (rho_ref - rho_local)*g
-            Here the user has two options: 1. specify the reference density directly using <reference_density> or
-                                           2. specify the table independent variables resulting a table lookup on the
-                                              reference density.
-            In general, one would choose the heaviest stream as the reference state, but one is encouraged to think
-            carefully about this -->
-            <reference_density            spec="OPTIONAL NO_DATA"
-                                          attribute1="value REQUIRED DOUBLE 'positive'"/> <!-- Set the reference density directly: Better to use reference_state -->
+          <!-- CLASSIC TABLE PROPERTIES -->
+          <ignore_iv_density_check      spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type classic"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess -->
+          <inputfile                    spec="REQUIRED STRING"
+                                        need_applies_to="type classic"/>  <!-- table to be opened -->
+          <cold_flow                    spec="OPTIONAL BOOLEAN"
+                                        need_applies_to="type classic"/>  <!-- force adiabatic condition -->
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type classic"/>  <!-- warn when heat loss is clipped to bounds -->
+          <mf_for_hl                    spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type classic"/>  <!-- DEVELOPER SWITCH -->
+          <enthalpy_label               spec="OPTIONAL STRING"
+                                        need_applies_to="type classic"/>  <!-- Pointer to the enthalpy equation.  default = enthalpySP -->
+          <!-- IV specs for various table types -->
+          <!-- Single mixture (or other indep. var.) fraction table -->
+          <single_iv                    spec="OPTIONAL NO_DATA"
+                                        attribute1="iv_label REQUIRED STRING"
+                                        need_applies_to="type classic"/>
+          <!-- IV ordering for table write: (1) mixture fraction (2) scalar variance (3) heat loss -->
+          <standard_flamelet            spec="OPTIONAL NO_DATA"
+                                        attribute1="f_label   REQUIRED STRING"
+                                        attribute2="var_label REQUIRED STRING"
+                                        attribute3="hl_label  REQUIRED STRING"
+                                        need_applies_to="type classic"/>
+          <!-- IV ordering for table write: (1) mixture fraction (2) scalar variance (3) heat loss -->
+          <standard_equilibrium         spec="OPTIONAL NO_DATA"
+                                        attribute1="f_label   REQUIRED STRING"
+                                        attribute2="var_label REQUIRED STRING"
+                                        attribute3="hl_label  REQUIRED STRING"
+                                        need_applies_to="type classic"/>
+          <!-- IV ordering for table write: (1) eta (2) heat loss (3) f -->
+          <coal                         spec="OPTIONAL NO_DATA"
+                                        attribute1="fp_label REQUIRED STRING"
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="hl_label REQUIRED STRING"
+                                        need_applies_to="type classic"/>
+          <rcce                         spec="OPTIONAL NO_DATA"
+                                        attribute1="fp_label REQUIRED STRING"
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="hl_label REQUIRED STRING"
+                                        need_applies_to="type classic"/>
+          <rcce_fp                      spec="OPTIONAL NO_DATA"
+                                        attribute1="xi_label REQUIRED STRING"
+                                        attribute2="hl_label REQUIRED STRING"
+                                        attribute3="fp_label REQUIRED STRING"
+                                        need_applies_to="type classic"/>
+          <rcce_eta                     spec="OPTIONAL NO_DATA"
+                                        attribute1="xi_label REQUIRED STRING"
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="hl_label REQUIRED STRING"
+                                        need_applies_to="type classic"/>
+          <inert_mixing                 spec="OPTIONAL NO_DATA"
+                                        attribute1="fp_label REQUIRED STRING"
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="inert_label REQUIRED STRING"
+                                        attribute4="hl_label REQUIRED STRING"
+                                        need_applies_to="type classic"/>
+          <!-- IV ordering for table write: (1) mixture fraction (2) rxn extent -->
+          <acidbase                     spec="OPTIONAL NO_DATA"
+                                        attribute1="f_label REQUIRED STRING"
+                                        attribute2="extent_label REQUIRED STRING"
+                                        need_applies_to="type classic"/>
 
-            <reference_state              spec="OPTIONAL NO_DATA"
-                                          attribute1="fp OPTIONAL DOUBLE 'positive'"
-                                          attribute2="eta OPTIONAL DOUBLE 'positive'"
-                                          attribute3="xi OPTIONAL DOUBLE 'positive'"
-                                          attribute4="hl OPTIONAL DOUBLE"
-                                          attribute5="f OPTIONAL DOUBLE"
-                                          attribute6="var OPTIONAL DOUBLE 'positive'"
-                                          attribute7="extent OPTIONAL DOUBLE 'positive'"
-                                          attribute8="iv OPTIONAL DOUBLE 'positive'"/> <!-- Set the reference state from a fix set of IV -->
-          </ClassicTable>
+          <mixfrac_with_heatloss        spec="OPTIONAL NO_DATA"
+                                        attribute1="f_label REQUIRED STRING"
+                                        attribute2="hl_label REQUIRED STRING"
+                                        need_applies_to="type classic"/>
 
-          <ConstantProps                  spec="OPTIONAL NO_DATA">
-            <density                      spec="REQUIRED DOUBLE 'positive'"/>
-            <temperature                  spec="OPTIONAL DOUBLE 'positive'"/>
-            <temperature_label_name       spec="OPTIONAL STRING"/> <!-- default = temperature -->
-            <!-- no reference density specified here since the entire world is considered constant -->
-          </ConstantProps>
+          <reference_state              spec="OPTIONAL NO_DATA"
+                                        attribute1="fp OPTIONAL DOUBLE 'positive'"
+                                        attribute2="eta OPTIONAL DOUBLE 'positive'"
+                                        attribute3="xi OPTIONAL DOUBLE 'positive'"
+                                        attribute4="hl OPTIONAL DOUBLE"
+                                        attribute5="f OPTIONAL DOUBLE"
+                                        attribute6="var OPTIONAL DOUBLE 'positive'"
+                                        attribute7="extent OPTIONAL DOUBLE 'positive'"
+                                        attribute8="iv OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type classic"/><!-- Set the reference state from a fix set of IV -->
+
         </table>
 
       </Properties>

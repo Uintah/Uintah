@@ -839,7 +839,11 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 }
 
 inline void
-CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l ){
+CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r,
+                                   double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, 
+                                   double &r_devol, double &p_diam, std::vector<double> &Sh,
+                                   double &w, double &p_area,
+                                   std::vector<double> &_D_oxid_mix_l ){
 
   double rh = 0.0;
   double Bjm = 0.0;
