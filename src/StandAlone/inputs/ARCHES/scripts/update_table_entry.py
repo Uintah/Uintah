@@ -2,6 +2,22 @@ import sys
 import os
 from lxml import etree
 
+"""
+ Description:
+   This script modifies all tables in the current directory from which you run the script
+   with a user specified file extension. It updates the <Properties> node in the ups file
+   to be compatible with the latest code by (if it currently is not) by adding a <table>
+   node with a generic label (which you can change).
+   Note that your original ups file is stored with a *.orig_ups extension.
+
+ Usage:
+   python update_table_entry.py file_extension
+   file_name:             modify the file with this name to update the table section in the UPS file.
+                          example: python updated_table_entry.py myinput.ups
+   --do_all_ups_files:    do all files in this directory with an .ups extension
+   --do_all_xml_files:    do all files in this directory with an .xml extension
+   [--help, -help, -h]:   print this message
+"""
 def fix_ups(filename):
 
   parser = etree.XMLParser(remove_comments=False, remove_blank_text=True)
