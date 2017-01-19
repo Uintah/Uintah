@@ -28,6 +28,7 @@
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/ChemMix/TableLookup.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 
@@ -53,10 +54,12 @@ std::mutex intrusion_print_mutex{};
 }
 
 //_________________________________________
-IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL )
+IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props,
+                          TableLookup* table_lookup, int WALL )
   : _lab(lab)
   , _mpmlab(mpmlab)
   , _props(props)
+  , _table_lookup(table_lookup)
   , _WALL(WALL)
 {
   // helper for the intvector direction
@@ -469,7 +472,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
       if ( !iIntrusion->second.bc_cell_iterator.empty() && iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
 
-        MixingRxnModel* mixingTable = _props->getMixRxnModel();
+        MixingRxnModel* mixingTable = _table_lookup->get_table();
         StringVec iv_var_names = mixingTable->getAllIndepVars();
 
         BCIterator::iterator iBC_iter = (iIntrusion->second.bc_cell_iterator).find(patchID);
@@ -603,7 +606,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
       }
       if ( !iIntrusion->second.bc_face_iterator.empty() && iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
 
-        MixingRxnModel* mixingTable = _props->getMixRxnModel();
+        MixingRxnModel* mixingTable = _table_lookup->get_table();
         StringVec iv_var_names = mixingTable->getAllIndepVars();
 
         BCIterator::iterator iBC_iter = (iIntrusion->second.bc_face_iterator).find(patchID);

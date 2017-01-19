@@ -60,18 +60,20 @@ ConstantProps::~ConstantProps()
 // Problem Setup
 //---------------------------------------------------------------------------
   void
-ConstantProps::problemSetup( const ProblemSpecP& propertiesParameters )
+ConstantProps::problemSetup( const ProblemSpecP& db )
 {
   // Create sub-ProblemSpecP object
-  ProblemSpecP db_coldflow = propertiesParameters->findBlock("ConstantProps");
-  ProblemSpecP db_properties_root = propertiesParameters;
+  ProblemSpecP db_coldflow = db->findBlock("ConstantProps");
+
+  d_allDepVarNames.push_back("density");
+  d_allDepVarNames.push_back("temperature");
 
   // Need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_coldflow->getRootNode();
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);
 
   db_coldflow->require( "density", _density );
-  insertIntoMap("density");
+  bool test = insertIntoMap("density");
 
 
   //Automatically adding density_old to the table lookup because this
@@ -87,7 +89,7 @@ ConstantProps::problemSetup( const ProblemSpecP& propertiesParameters )
   _includeTemp=false;
   if(db_coldflow->findBlock("temperature")) {
     db_coldflow->require( "temperature", _temperature );
-    insertIntoMap("temperature");
+    test = insertIntoMap("temperature");
     _includeTemp=true;
   }
 

@@ -152,38 +152,59 @@ namespace Uintah {
 
     /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap),
                 which maps strings to VarLabels */
-    inline void insertIntoMap( const std::string var_name ){
+    inline bool insertIntoMap( const std::string var_name ){
 
-      VarMap::iterator i = d_dvVarMap.find( var_name );
+      // Check to ensure this variable is in this table:
+      auto i_var = std::find( d_allDepVarNames.begin(), d_allDepVarNames.end(), var_name );
 
-      if ( i == d_dvVarMap.end() ) {
+      if ( i_var != d_allDepVarNames.end() ){
 
-        const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() );
-        d_dvVarMap.insert( std::make_pair( var_name, the_label ) );
+        VarMap::iterator i = d_dvVarMap.find( var_name );
 
-        proc0cout << "    Adding ---> " << var_name << std::endl;
+        if ( i == d_dvVarMap.end() ) {
+
+          const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() );
+          d_dvVarMap.insert( std::make_pair( var_name, the_label ) );
+
+        }
+
+        return true;
+
+      } else {
+
+        return false;
 
       }
-      return;
+
     };
 
     /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap),
                 which maps strings to VarLabels */
-    inline void insertOldIntoMap( const std::string var_name ){
+    inline bool insertOldIntoMap( const std::string var_name ){
 
-      VarMap::iterator i = d_oldDvVarMap.find( var_name );
+      // Check to ensure this variable is in this table:
+      auto i_var = std::find( d_allDepVarNames.begin(), d_allDepVarNames.end(), var_name );
 
-      if ( i == d_oldDvVarMap.end() ) {
+      if ( i_var != d_allDepVarNames.end() ){
 
-        std::string name = var_name+"_old";
+        VarMap::iterator i = d_oldDvVarMap.find( var_name );
 
-        const VarLabel* the_old_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() );
-        d_oldDvVarMap.insert( std::make_pair( name, the_old_label ) );
+        if ( i == d_oldDvVarMap.end() ) {
 
-        proc0cout << "    Adding ---> " << name << std::endl;
+          std::string name = var_name+"_old";
+
+          const VarLabel* the_old_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() );
+          d_oldDvVarMap.insert( std::make_pair( name, the_old_label ) );
+
+        }
+
+        return true;
+
+      } else {
+
+        return false;
 
       }
-      return;
     };
 
     inline double get_Ha( std::vector<double>& iv, double inerts ){

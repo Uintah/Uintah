@@ -70,6 +70,7 @@ namespace Uintah{
   class ArchesVariables;
   class ArchesConstVariables;
   class Properties;
+  class TableLookup;
 
   class IntrusionBC {
 
@@ -77,7 +78,8 @@ namespace Uintah{
 
       enum INTRUSION_TYPE { INLET, SIMPLE_WALL };
 
-      IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL );
+      IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props,
+                   TableLookup* table_lookup, int WALL );
       ~IntrusionBC();
 
       /** @brief Interface to input file */
@@ -990,6 +992,7 @@ namespace Uintah{
       const ArchesLabel* _lab;
       const MPMArchesLabel* _mpmlab;
       Properties* _props;
+      TableLookup* _table_lookup; 
       int _WALL;
       bool _intrusion_on;
       bool _do_energy_exchange;

@@ -1,7 +1,7 @@
 #ifndef UT_SourceTermFactory_h
 #define UT_SourceTermFactory_h
 
-#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h> 
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -26,8 +26,8 @@
  */
  namespace Uintah {
 
-   class ArchesLabel; 
-   class BoundaryCondition; 
+   class ArchesLabel;
+   class BoundaryCondition;
 
 class SourceTermFactory
 {
@@ -63,13 +63,13 @@ public:
   SourceTermBase& retrieve_source_term( const std::string name );
 
   struct SourceContainer{           ///< Hold the source names for this transport equation and the sign to either add or subtract from rhs.
-    std::string name; 
-    double      weight;             
+    std::string name;
+    double      weight;
   };
 
-  void commonSrcProblemSetup( const ProblemSpecP& db ); 
+  void commonSrcProblemSetup( const ProblemSpecP& db );
 
-  void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop);
+  void extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup);
 
   /** @brief Determine if a source term is contained in the factory. */
   bool source_term_exists( const std::string name );
@@ -80,17 +80,17 @@ public:
   typedef std::map< std::string, SourceTermBase::Builder* > BuildMap;
   typedef std::map< std::string, SourceTermBase*    >       SourceMap;
 
-  /** @brief Returns the list of all source terms in Map form. */ 
+  /** @brief Returns the list of all source terms in Map form. */
   SourceMap& retrieve_all_sources(){
-    return _sources; }; 
- 
-  /** @brief Register all non-user defined sources */ 
+    return _sources; };
+
+  /** @brief Register all non-user defined sources */
   void registerSources( ArchesLabel* lab, const bool do_dmqom, const std::string which_dqmom );
 
-  /** @brief Register all user-defined sources */ 
+  /** @brief Register all user-defined sources */
   void registerUDSources(ProblemSpecP& db, ArchesLabel* lab, BoundaryCondition* bcs, const ProcessorGroup* my_world);
 
-  /** @brief Execute the sources at a given stage */ 
+  /** @brief Execute the sources at a given stage */
   void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep, const int stage );
 
 private:

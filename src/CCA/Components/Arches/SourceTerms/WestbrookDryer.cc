@@ -117,7 +117,7 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
 
   // add for table lookup
   ChemHelper& helper = ChemHelper::self();
-  helper.add_lookup_species( d_o2_label ); 
+  helper.add_lookup_species( d_o2_label );
   helper.add_lookup_species( d_rho_label );
   helper.add_lookup_species( d_T_label );
 
@@ -140,10 +140,10 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
 // Method: extra setup. We are using this function to get the fuel and oxidizer MW and the stoichiometric fuel to air ratio from the table.
 //---------------------------------------------------------------------------
 void
-WestbrookDryer::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop )
+WestbrookDryer::extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup )
 {
-  _properties = prop;
-  MixingRxnModel* mixingTable = _properties->getMixRxnModel();
+  _table_lookup = table_lookup;
+  MixingRxnModel* mixingTable = _table_lookup->get_table(); 
   const std::string key_stoich_massratio= "ST_fuel_O2_ratio";
   _stoich_massratio = mixingTable->getDoubleTableConstant(key_stoich_massratio);
   const std::string key_fuel_mass_frac= "MF_fuel";

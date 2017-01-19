@@ -72,6 +72,7 @@ class ExtraScalarSolver;
 class TurbulenceModel;
 class ScaleSimilarityModel;
 class Properties;
+class TableLookup;
 class BoundaryCondition;
 class PhysicalConstants;
 class PartVel;
@@ -103,7 +104,7 @@ public:
              _sharedState(sharedState),
              _MAlb(MAlb),
              _physConst(physConst),
-             _myworld(myworld), 
+             _myworld(myworld),
              _particle_helper(particle_helper),
              _hypreSolver(hypreSolver)
     { }
@@ -417,6 +418,7 @@ public:
   // for probing data for debuging or plotting
   // properties...solves density, temperature and specie concentrations
   Properties* d_props;
+  TableLookup* d_tabulated_properties; 
   // Boundary conditions
   BoundaryCondition* d_boundaryCondition;
   // Turbulence Model

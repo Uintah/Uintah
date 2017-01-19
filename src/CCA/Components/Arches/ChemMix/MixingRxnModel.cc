@@ -274,7 +274,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
       db_dv->getAttribute( "label", var_name );
 
       if ( table_lookup == "true" )
-        insertIntoMap( var_name );
+        bool test = insertIntoMap( var_name );
 
     }
   }
@@ -284,17 +284,17 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   //       They will be removed once the conversion to TabProps is complete.
   proc0cout << "    (below required by the CFD algorithm)" << endl;
   var_name = "density";
-  insertIntoMap( var_name );
+  bool test = insertIntoMap( var_name );
   if ( !d_coldflow ){
     var_name = "temperature";
-    insertIntoMap( var_name );
+    test = insertIntoMap( var_name );
     //var_name = "heat_capacity";
     var_name = "specificheat";
-    insertIntoMap( var_name );
+    test = insertIntoMap( var_name );
     var_name = "CO2";
-    insertIntoMap( var_name );
+    test = insertIntoMap( var_name );
     var_name = "H2O";
-    insertIntoMap( var_name );
+    test = insertIntoMap( var_name );
   }
 
   proc0cout << endl;
@@ -308,7 +308,7 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
   proc0cout << "  Adding these additional variables for table lookup: " << endl;
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) {
 
-    insertIntoMap( *ivar );
+    bool test = insertIntoMap( *ivar );
 
   }
 }

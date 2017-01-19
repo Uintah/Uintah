@@ -108,45 +108,45 @@ Properties::problemSetup(const ProblemSpecP& params)
     db_dqmom->getWithDefault("adiabGas_nonadiabPart", d_adiabGas_nonadiabPart, false);
   }
 
-  // read type of mixing model
-  mixModel = "NA";
-  if (db->findBlock("ClassicTable"))
-    mixModel = "ClassicTable";
-  else if (db->findBlock("ColdFlow"))
-    mixModel = "ColdFlow";
-  else if (db->findBlock("ConstantProps"))
-    mixModel = "ConstantProps";
-#if HAVE_TABPROPS
-  else if (db->findBlock("TabProps"))
-    mixModel = "TabProps";
-#endif
-  else
-    throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
-
-  SimulationStateP& sharedState = d_lab->d_sharedState;
-
-  if (mixModel == "ClassicTable") {
-
-    // New Classic interface
-    d_mixingRxnTable = scinew ClassicTableInterface( sharedState );
-    d_mixingRxnTable->problemSetup( db );
-  } else if (mixModel == "ColdFlow") {
-    d_mixingRxnTable = scinew ColdFlow( sharedState );
-    d_mixingRxnTable->problemSetup( db );
-  } else if (mixModel == "ConstantProps" ) {
-    d_mixingRxnTable = scinew ConstantProps( sharedState );
-    d_mixingRxnTable->problemSetup( db );
-  }
-#if HAVE_TABPROPS
-  else if (mixModel == "TabProps") {
-    // New TabPropsInterface stuff...
-    d_mixingRxnTable = scinew TabPropsInterface( sharedState );
-    d_mixingRxnTable->problemSetup( db );
-  }
-#endif
-  else{
-    throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
-  }
+//   // read type of mixing model
+//   mixModel = "NA";
+//   if (db->findBlock("ClassicTable"))
+//     mixModel = "ClassicTable";
+//   else if (db->findBlock("ColdFlow"))
+//     mixModel = "ColdFlow";
+//   else if (db->findBlock("ConstantProps"))
+//     mixModel = "ConstantProps";
+// #if HAVE_TABPROPS
+//   else if (db->findBlock("TabProps"))
+//     mixModel = "TabProps";
+// #endif
+//   else
+//     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
+//
+//   SimulationStateP& sharedState = d_lab->d_sharedState;
+//
+//   if (mixModel == "ClassicTable") {
+//
+//     // New Classic interface
+//     d_mixingRxnTable = scinew ClassicTableInterface( sharedState );
+//     d_mixingRxnTable->problemSetup( db );
+//   } else if (mixModel == "ColdFlow") {
+//     d_mixingRxnTable = scinew ColdFlow( sharedState );
+//     d_mixingRxnTable->problemSetup( db );
+//   } else if (mixModel == "ConstantProps" ) {
+//     d_mixingRxnTable = scinew ConstantProps( sharedState );
+//     d_mixingRxnTable->problemSetup( db );
+//   }
+// #if HAVE_TABPROPS
+//   else if (mixModel == "TabProps") {
+//     // New TabPropsInterface stuff...
+//     d_mixingRxnTable = scinew TabPropsInterface( sharedState );
+//     d_mixingRxnTable->problemSetup( db );
+//   }
+// #endif
+//   else{
+//     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
+//   }
 }
 
 //****************************************************************************
@@ -509,7 +509,7 @@ Properties::addLookupSpecies( ){
   if ( mixModel == "ClassicTable"  || mixModel == "TabProps"
       || "ColdFlow" || "ConstantProps" ) {
     for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
-      d_mixingRxnTable->insertIntoMap( *i );
+      bool test = d_mixingRxnTable->insertIntoMap( *i );
     }
   }
 

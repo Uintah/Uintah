@@ -52,6 +52,7 @@
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/WBCHelper.h>
+#include <CCA/Components/Arches/ChemMix/TableLookup.h>
 //NEW TASK INTERFACE STUFF
 //factories
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
@@ -205,6 +206,7 @@ ExplicitSolver::~ExplicitSolver()
 
   delete d_lab;
   delete d_props;
+  delete d_tabulated_properties;
   delete d_turbModel;
   delete d_scaleSimilarityModel;
   delete d_boundaryCondition;
@@ -432,6 +434,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   // read properties
   // d_MAlab = multimaterial arches common labels
   d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
+  d_tabulated_properties = scinew TableLookup( d_lab->d_sharedState );
+  d_tabulated_properties->problemSetup( db );
 
   d_props->problemSetup(db);
 
@@ -443,9 +447,9 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     PropertyModelBase* prop_model = iprop->second;
     if ( prop_model->getPropType() == "heat_loss" ) {
-      MixingRxnModel* mixing_table = d_props->getMixRxnModel();
+      MixingRxnModel* mixing_table = d_tabulated_properties->get_table();
       std::map<string,double> table_constants = mixing_table->getAllConstants();
-      if (d_props->getMixingModelType() == "ClassicTable" ) {
+      if ( d_tabulated_properties->get_table_type() == TableLookup::CLASSIC ) {
 
         ClassicTableInterface* classic_table = dynamic_cast<ClassicTableInterface*>(mixing_table);
         std::vector<double> hl_bounds;
@@ -471,7 +475,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   // read boundary condition information
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
-                                                 d_props );
+                                                 d_props, d_tabulated_properties );
 
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db,  grid);
@@ -686,10 +690,11 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
 
   // do any last setup operations on the active source terms:
-  src_factory.extraSetup( grid, d_boundaryCondition, d_props );
+  src_factory.extraSetup( grid, d_boundaryCondition, d_tabulated_properties );
 
   // Add extra species to table lookup as required by models
-  d_props->addLookupSpecies();
+  //d_props->addLookupSpecies();
+  d_tabulated_properties->addLookupSpecies();
 
   // Add new intrusion stuff:
   // get a reference to the intrusions
@@ -727,7 +732,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     eqn->set_intrusion_bool( using_new_intrusions );
 
     //send a reference of the mixing/rxn table to the eqn for initializiation
-    MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
+    MixingRxnModel* d_mixingTable = d_tabulated_properties->get_table();
     eqn->set_table( d_mixingTable );
 
     //look for an set any tabulated bc's
@@ -1180,9 +1185,12 @@ ExplicitSolver::initialize( const LevelP& level,
     int time_substep = 0; //no meaning here, but is required to be zero for
                           //variables to be properly allocated.
                           //
-    d_props->doTableMatching();
-    d_props->sched_checkTableBCs( level, sched );
-    d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
+    //d_props->doTableMatching();
+    //d_props->sched_checkTableBCs( level, sched );
+    //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
+
+    d_tabulated_properties->sched_checkTableBCs( level, sched );
+    d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, time_substep );
 
     d_init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
 
@@ -1946,7 +1954,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     bool initialize_it  = false;
     bool modify_ref_den = false;
     if ( curr_level == 0 ) initialize_it = true;
-    d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+    //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+
+    d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
@@ -2044,7 +2054,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #2
       bool initialize_it  = false;
       bool modify_ref_den = false;
-      d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+      //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+      d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
 
       // Property models after table lookup
       for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
@@ -2078,7 +2089,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #3
       initialize_it  = false;
       modify_ref_den = false;
-      d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+      //d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
+      d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
     }
 
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {

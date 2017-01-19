@@ -146,13 +146,7 @@ public:
   inline double getCarbonContent(double f) const{
     return d_carbon_fuel*f+d_carbon_air*(1.0-f);
   }
-  inline const std::string getMixingModelType(){
-    return mixModel;
-  }
-  inline MixingRxnModel* getMixRxnModel(){
-    return d_mixingRxnTable;
-  }
-
+  
   void addLookupSpecies( );
 
   void sched_computeProps( const LevelP&,

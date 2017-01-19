@@ -44,6 +44,7 @@
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/ChemMix/TableLookup.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
@@ -89,10 +90,12 @@ extern std::mutex coutLock;
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
                                      const MPMArchesLabel* MAlb,
                                      PhysicalConstants* phys_const,
-                                     Properties* props ) :
+                                     Properties* props,
+                                     TableLookup* table_lookup ) :
   d_lab(label), d_MAlab(MAlb),
   d_physicalConsts(phys_const),
-  d_props(props)
+  d_props(props),
+  d_table_lookup(table_lookup)
 {
 
   MM_CUTOFF_VOID_FRAC = 0.5;
@@ -182,7 +185,9 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
     if ( db->findBlock("intrusions") ) {
 
       for ( int i = 0; i < grid->numLevels(); i++ ){
-        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION )));
+        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props,
+                                                                  d_table_lookup,
+                                                                  BoundaryCondition::INTRUSION )));
         ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
         if (i == (grid->numLevels() - 1)){  //  Only create intrusions on the finest level.
                                             //  In the future, we may want to create intrusions on all levels,
@@ -2055,7 +2060,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
           //compute the density:
           typedef std::vector<std::string> StringVec;
-          MixingRxnModel* mixingTable = d_props->getMixRxnModel();
+          MixingRxnModel* mixingTable = d_table_lookup->get_table();
           StringVec iv_var_names = mixingTable->getAllIndepVars();
           vector<double> iv;
 
@@ -2114,7 +2119,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
           //compute the density:
           typedef std::vector<std::string> StringVec;
-          MixingRxnModel* mixingTable = d_props->getMixRxnModel();
+          MixingRxnModel* mixingTable = d_table_lookup->get_table();
           StringVec iv_var_names = mixingTable->getAllIndepVars();
           vector<double> iv;
 
@@ -2780,7 +2785,7 @@ BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0);
 
 
-  MixingRxnModel* mixingTable = d_props->getMixRxnModel();
+  MixingRxnModel* mixingTable = d_table_lookup->get_table();
   MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars();
 
   for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ) {
@@ -2829,7 +2834,7 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
     new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
 
-    MixingRxnModel* mixingTable = d_props->getMixRxnModel();
+    MixingRxnModel* mixingTable = d_table_lookup->get_table();
     MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars();
 
     // Get the independent variable information for table lookup

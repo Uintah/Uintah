@@ -36,7 +36,7 @@
 namespace Uintah {
 
 class BoundaryCondition;
-class Properties;
+class TableLookup; 
 
 class SourceTermBase{
 
@@ -74,7 +74,7 @@ public:
   virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ){};
 
   /** @brief Work to be performed after properties are setup */
-  virtual void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop ){ }
+  virtual void extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup ){ }
 
   /** @brief Returns the source label **/
   inline const VarLabel* getSrcLabel(){
@@ -123,6 +123,8 @@ protected:
   std::vector<std::string> _required_labels;              ///< Vector of required labels
   std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
   MY_GRID_TYPE _source_grid_type;                         ///< Source grid type
+  TableLookup* _table_lookup;
+
 }; // end SourceTermBase
 }  // end namespace Uintah
 

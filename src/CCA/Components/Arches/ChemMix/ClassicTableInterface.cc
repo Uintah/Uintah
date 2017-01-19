@@ -74,6 +74,7 @@ std::mutex enthalpy_map_mutex{};
 ClassicTableInterface::ClassicTableInterface( SimulationStateP& sharedState )
   : MixingRxnModel( sharedState )
 {
+  m_matl_index = 0;
   _boundary_condition = scinew BoundaryCondition_new( m_matl_index );
 }
 
@@ -90,12 +91,11 @@ ClassicTableInterface::~ClassicTableInterface()
 // Problem Setup
 //---------------------------------------------------------------------------
   void
-ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
+ClassicTableInterface::problemSetup( const ProblemSpecP& db )
 {
   // Create sub-ProblemSpecP object
   string tableFileName;
-  ProblemSpecP db_classic = propertiesParameters->findBlock("ClassicTable");
-  ProblemSpecP db_properties_root = propertiesParameters;
+  ProblemSpecP db_classic = db->findBlock("ClassicTable");
 
   // Obtain object parameters
   db_classic->require( "inputfile", tableFileName );
@@ -161,7 +161,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "-------------------------------------------------  " << endl;
 
   // Extract independent and dependent variables from input file
-  ProblemSpecP db_rootnode = propertiesParameters;
+  ProblemSpecP db_rootnode = db;
   db_rootnode = db_rootnode->getRootNode();
 
   proc0cout << endl;
@@ -255,10 +255,10 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
         HeatLoss* hl_model = dynamic_cast<HeatLoss*>(prop_model);
 
         std::string h_name = hl_model->get_hs_label_name();
-        insertIntoMap( h_name );
+        bool test = insertIntoMap( h_name );
 
         h_name = hl_model->get_ha_label_name();
-        insertIntoMap( h_name );
+        test = insertIntoMap( h_name );
 
       }
     }
@@ -380,7 +380,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     Ghost::GhostType gn = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int m_matl_index = m_matl_index;
 
     constCCVariable<double> eps_vol;
     new_dw->get( eps_vol, m_volFractionLabel, m_matl_index, patch, gn, 0 );

@@ -84,6 +84,7 @@ class CellInformation;
 class VarLabel;
 class PhysicalConstants;
 class Properties;
+class TableLookup;
 class ArchesLabel;
 class MPMArchesLabel;
 class ProcessorGroup;
@@ -347,7 +348,8 @@ void create_radiation_temperature( const ProcessorGroup* pc,
 BoundaryCondition(const ArchesLabel* label,
                   const MPMArchesLabel* MAlb,
                   PhysicalConstants* phys_const,
-                  Properties* props);
+                  Properties* props,
+                  TableLookup* table_lookup);
 
 
 ~BoundaryCondition();
@@ -835,6 +837,7 @@ bool _using_new_intrusion;
 PhysicalConstants* d_physicalConsts;
 // used to get properties of different streams
 Properties* d_props;
+TableLookup* d_table_lookup; 
 // mass flow
 double d_uvwout;
 double d_overallMB;

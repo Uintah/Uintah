@@ -66,11 +66,14 @@ ColdFlow::~ColdFlow()
 // Problem Setup
 //---------------------------------------------------------------------------
   void
-ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
+ColdFlow::problemSetup( const ProblemSpecP& db )
 {
   // Create sub-ProblemSpecP object
-  ProblemSpecP db_coldflow = propertiesParameters->findBlock("ColdFlow");
-  ProblemSpecP db_properties_root = propertiesParameters;
+  ProblemSpecP db_coldflow = db->findBlock("ColdFlow");
+
+  // Hard code these since they are not read in from an external source
+  d_allDepVarNames.push_back("density");
+  d_allDepVarNames.push_back("temperature");
 
   // Need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_coldflow->getRootNode();
@@ -110,7 +113,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
     species_s1.insert(make_pair(label,value));
 
-    insertIntoMap( label );
+    bool test = insertIntoMap( label );
 
   }
 
@@ -124,7 +127,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
     species_s2.insert(make_pair(label,value));
 
-    insertIntoMap( label );
+    bool test = insertIntoMap( label );
 
   }
 
@@ -147,18 +150,14 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
   db_coldflow->findBlock( "mixture_fraction")->getAttribute("label",d_cold_flow_mixfrac);
 
-  // Extract independent and dependent variables from input file
-  ProblemSpecP db_rootnode = propertiesParameters;
-  db_rootnode = db_rootnode->getRootNode();
-
   proc0cout << endl;
   proc0cout << "--- Cold Flow information --- " << endl;
   proc0cout << endl;
 
   // This sets the table lookup variables and saves them in a map
   // Map<string name, Label>
-  insertIntoMap( "density" );
-  insertIntoMap( "temperature" );
+  bool test = insertIntoMap( "density" );
+  test = insertIntoMap( "temperature" );
 
   proc0cout << "  Now matching user-defined IV's with table IV's" << endl;
   proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
