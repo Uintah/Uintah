@@ -146,11 +146,6 @@ ArchesLabel::ArchesLabel()
   // Label for void fraction, after correction for wall cells using cutoff
   d_mmgasVolFracLabel = VarLabel::create("mmgasVolFrac",  CC_double);
 
-  // Array containing the reference density multiplied by the void fraction
-  // used for correct reference density subtraction in the multimaterial
-  // case
-
-  d_denRefArrayLabel = VarLabel::create("denRefArray",  CC_double);
 
   // Microscopic density (i.e., without void fraction) of gas
   d_densityMicroLabel    =  VarLabel::create("denMicro",    CC_double);
@@ -333,7 +328,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_mmcellTypeLabel);
   VarLabel::destroy(d_mmgasVolFracLabel);
 
-  VarLabel::destroy(d_denRefArrayLabel);
   VarLabel::destroy(d_densityMicroLabel);
   VarLabel::destroy(d_densityMicroINLabel);
   VarLabel::destroy(d_pressPlusHydroLabel);
@@ -436,7 +430,7 @@ void ArchesLabel::problemSetup( const ProblemSpecP& db )
       d->getAttribute("role", role);
       d->getAttribute("label",label);
 
-      setVarlabelToRole( label, role ); 
+      setVarlabelToRole( label, role );
 
     }
   }

@@ -200,7 +200,6 @@ namespace Uintah {
       const VarLabel* d_mmcellTypeLabel;
       const VarLabel* d_mmgasVolFracLabel;
 
-      const VarLabel* d_denRefArrayLabel;
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
       const VarLabel* d_pressPlusHydroLabel;

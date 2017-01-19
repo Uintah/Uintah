@@ -214,17 +214,18 @@ namespace Uintah {
 
     };
 
-    inline double get_reference_density(CCVariable<double>& density, constCCVariable<int> cell_type){
+    inline double get_reference_density(CCVariable<double>& density, constCCVariable<double> volFraction ){
 
       int FLOW = -1;
 
       if ( d_user_ref_density ){
         return d_reference_density;
       } else {
-        if ( cell_type[d_ijk_den_ref] == FLOW ){
+        if ( volFraction[d_ijk_den_ref] > .5 ){
           return density[d_ijk_den_ref]; }
         else
-          throw InvalidValue("Error: Your reference density is in a wall. Choose another reference location.",__FILE__,__LINE__);
+          throw InvalidValue("Error: Your reference density is in a wall. Choose another reference location.",
+                             __FILE__,__LINE__);
       }
 
     };
@@ -1518,7 +1519,6 @@ namespace Uintah {
     const VarLabel* m_denRefArrayLabel;
     const VarLabel* m_densityLabel;
     const VarLabel* m_volFractionLabel;
-    const VarLabel* m_cellTypeLabel;
 
     /** @brief Sets the mixing table's dependent variable list. */
     void setMixDVMap( const ProblemSpecP& root_params );

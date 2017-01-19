@@ -272,7 +272,6 @@ ColdFlow::sched_getState( const LevelP& level,
   }
 
   tsk->requires( Task::NewDW, m_volFractionLabel, gn, 0 );
-  tsk->requires( Task::NewDW, m_cellTypeLabel, gn, 0 );
 
   // for inert mixing
   for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){
@@ -302,9 +301,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
 
     constCCVariable<double> eps_vol;
-    constCCVariable<int> cell_type;
     new_dw->get( eps_vol, m_volFractionLabel, m_matl_index, patch, gn, 0 );
-    new_dw->get( cell_type, m_cellTypeLabel, m_matl_index, patch, gn, 0 );
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage;
@@ -631,7 +628,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
     if ( modify_ref_den ) {
 
       //actually modify the reference density value:
-      double den_ref = get_reference_density(arches_density, cell_type);
+      double den_ref = get_reference_density(arches_density, eps_vol);
       if ( time_substep == 0 ){
         CCVariable<double> den_ref_array;
         new_dw->allocateAndPut(den_ref_array, m_denRefArrayLabel, m_matl_index, patch );

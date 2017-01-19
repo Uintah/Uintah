@@ -34,6 +34,7 @@ namespace Uintah{
 
   class WBCHelper;
   class TaskFactoryBase;
+  class TableLookup;
 
   class KokkosSolver : NonlinearSolver {
 
@@ -126,6 +127,7 @@ namespace Uintah{
     double m_dt_init;
 
     SolverInterface* m_hypreSolver;
+    TableLookup* m_table_lookup; 
 
 };
 }

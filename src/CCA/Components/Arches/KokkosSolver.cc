@@ -29,6 +29,7 @@
 #include <CCA/Components/Arches/WBCHelper.h>
 #include <CCA/Components/Arches/UPSHelper.h>
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
+#include <CCA/Components/Arches/ChemMix/TableLookup.h>
 //factories
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
@@ -140,6 +141,11 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
     press_tsk->set_solver( m_hypreSolver );
     press_tsk->setup_solver( db );
   }
+
+  // Adds any additional lookup species as specified by the models.
+  m_table_lookup = scinew TableLookup( m_sharedState );
+  m_table_lookup->problemSetup( db );
+  m_table_lookup->addLookupSpecies();
 
   proc0cout << std::endl;
 
@@ -472,7 +478,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
       i_prop_fac->second->retrieve_task("u_from_rho_u")->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1);
 
     }
-  } // RK Integrator 
+  } // RK Integrator
 
 
   return 0;

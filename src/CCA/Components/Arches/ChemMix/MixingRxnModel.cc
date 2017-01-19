@@ -33,6 +33,8 @@
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/UPSHelper.h>
+#include <CCA/Components/Arches/GridTools.h>
 
 // includes for Uintah
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -61,28 +63,10 @@ using namespace Uintah;
 MixingRxnModel::MixingRxnModel( SimulationStateP& sharedState ) :
 m_sharedState(sharedState)
 {
+
   d_does_post_mixing = false;
 
   m_matl_index = 0;
-
-  //resolve some common labels:
-  m_denRefArrayLabel = VarLabel::find("denRefArray");
-  m_densityLabel     = VarLabel::find("densityCP");
-  m_volFractionLabel = VarLabel::find("volFraction");
-  m_cellTypeLabel    = VarLabel::find("cellType");
-
-  if ( m_denRefArrayLabel == NULL ){
-    throw InvalidValue("Error: ref density label not resolved by the table.", __FILE__, __LINE__ );
-  }
-  if ( m_densityLabel == NULL ){
-    throw InvalidValue("Error: density label not resolved by the table.", __FILE__, __LINE__ );
-  }
-  if ( m_volFractionLabel == NULL ){
-    throw InvalidValue("Error: vol fraction label not resolved by the table.", __FILE__, __LINE__ );
-  }
-  if ( m_cellTypeLabel == NULL ){
-    throw InvalidValue("Error: cell type label not resolved by the table.", __FILE__, __LINE__ );
-  }
 
 }
 
@@ -96,6 +80,7 @@ MixingRxnModel::~MixingRxnModel()
     VarLabel::destroy( i->second );
   }
   delete _iv_transform;
+  VarLabel::destroy(m_denRefArrayLabel);
 }
 
 //---------------------------------------------------------------------------
@@ -104,6 +89,36 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 {
 
   ProblemSpecP db = params;
+
+  using namespace ArchesCore;
+
+  m_denRefArrayLabel = VarLabel::create( "denRefArray", CCVariable<double>::getTypeDescription() );
+  //resolve some common labels:
+
+  std::string density_name = parse_ups_for_role( DENSITY, db, "densityCP");
+  m_densityLabel = VarLabel::find(density_name);
+  if ( m_densityLabel == NULL ){
+    throw InvalidValue("Error: Cannot resolve density label.",__FILE__,__LINE__);
+  }
+
+  m_volFractionLabel = VarLabel::find("volFraction");
+  if ( m_volFractionLabel == NULL ){
+    GridVarMap<CCVariable<double> > varmap;
+    m_volFractionLabel = VarLabel::find(varmap.vol_frac_name);
+    if ( m_volFractionLabel == NULL ){
+      throw InvalidValue("Error: Cannot resolve volume fraction label.",__FILE__, __LINE__);
+    }
+  }
+
+  if ( m_denRefArrayLabel == NULL ){
+    throw InvalidValue("Error: ref density label not resolved by the table.", __FILE__, __LINE__ );
+  }
+  if ( m_densityLabel == NULL ){
+    throw InvalidValue("Error: density label not resolved by the table.", __FILE__, __LINE__ );
+  }
+  if ( m_volFractionLabel == NULL ){
+    throw InvalidValue("Error: vol fraction label not resolved by the table.", __FILE__, __LINE__ );
+  }
 
   db->getWithDefault("temperature_label_name", _temperature_label_name, "temperature");
 
@@ -350,10 +365,10 @@ MixingRxnModel::sched_checkTableBCs( const LevelP& level, SchedulerP& sched )
 }
 void
 MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
-    const PatchSubset* patches,
-    const MaterialSubset* matls,
-    DataWarehouse* old_dw,
-    DataWarehouse* new_dw )
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw )
 {
   for (int p=0; p < patches->size(); p++){
 

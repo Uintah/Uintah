@@ -224,6 +224,8 @@ private:
   bool d_momentum_coupling;
   bool d_central;
 
+  const VarLabel* d_denRefArrayLabel;
+
   // computes coefficients
   Discretization* d_discretize;
   // computes sources
@@ -696,7 +698,7 @@ private:
 
             uvel[c] = 1.0 - _A * cos( 2.0*_pi*(p.x() - dx2) )
                                * sin( 2.0*_pi*p.y() );
-                               
+
           } else if ( _plane == "z-x" ){
 
             uvel[c] = 1.0 + _B * sin( 2.0*_pi*p.z() )
@@ -1164,4 +1166,3 @@ private:
 
 
 #endif
-

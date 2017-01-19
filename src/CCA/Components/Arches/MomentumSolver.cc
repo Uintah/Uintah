@@ -502,7 +502,8 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
 
-  tsk->requires(Task::OldDW, d_lab->d_denRefArrayLabel,   gac, 1);
+  d_denRefArrayLabel = VarLabel::find("denRefArray");
+  tsk->requires(Task::OldDW, d_denRefArrayLabel,   gac, 1);
 
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
@@ -643,7 +644,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     old_values_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
 
     new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
-    old_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,   indx, patch, gac, 1);
+    old_dw->get(constVelocityVars.denRefArray, d_denRefArrayLabel,   indx, patch, gac, 1);
 
     new_dw->get(constVelocityVars.viscosity,   d_lab->d_viscosityCTSLabel,  indx, patch, gac, 2);
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
