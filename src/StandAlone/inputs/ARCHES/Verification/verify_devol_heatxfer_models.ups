@@ -295,18 +295,13 @@
       </DQMOM>
 
       <Properties>
-        <table label="a_user_generated_label" type="coldflow"><inverse_density_average>false</inverse_density_average>
-      </table><table label="a_user_generated_label" type="coldflow"><filter_drhodt>false</filter_drhodt>
-        </table><table label="a_user_generated_label" type="coldflow"><first_order_drhodt>true</first_order_drhodt>
-        </table><table label="a_user_generated_label" type="coldflow"><NewStaticMixingTable>
+        <table label="a_user_generated_label" type="coldflow"><NewStaticMixingTable>
           <co_output>false</co_output>
           <sulfur_chem>false</sulfur_chem>
           <soot_precursors>false</soot_precursors>
           <inputfile>gasify.mxn</inputfile>
           <loud_heatloss_warning>false</loud_heatloss_warning>
         </NewStaticMixingTable>
-        </table><table label="a_user_generated_label" type="coldflow"><use_mixing_model>false</use_mixing_model>
-        </table><table label="a_user_generated_label" type="coldflow"><empirical_soot>false</empirical_soot>
         </table></Properties>
 
 

@@ -102,7 +102,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   if (!rmcrt_ps){
     throw ProblemSetupException("ERROR:  RMCRT_radiation, the xml tag <RMCRT> was not found", __FILE__, __LINE__);
   }
-  
+
   // Are we using floats for all-to-all variables
   map<string,string> type;
   rmcrt_ps->getAttributes(type);
@@ -111,8 +111,8 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
   if( isFloat == "float" ){
     _FLT_DBL = TypeDescription::float_type;
-  } 
-  
+  }
+
   _RMCRT = scinew Ray( _FLT_DBL );
 
 
@@ -157,7 +157,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 //  so the reaction models can create the  VarLabel
 //______________________________________________________________________
 void
-RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop )
+RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup )
 {
 
   _boundaryCondition = bc;
@@ -288,7 +288,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq );
 
       if( _RMCRT->d_coarsenExtraCells == false ) {
-        sched_setBoundaryConditions( level, sched, notUsed, _radiation_calc_freq, backoutTemp ); 
+        sched_setBoundaryConditions( level, sched, notUsed, _radiation_calc_freq, backoutTemp );
       }
     }
 
@@ -332,11 +332,11 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       if( level->hasFinerLevel() ){
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
-        
+
         if( _RMCRT->d_coarsenExtraCells == false ) {
           sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
         }
-        
+
         _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
       }
     }
@@ -580,7 +580,7 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
 
   tsk->modifies( _RMCRT->d_sigmaT4Label );
   tsk->modifies( _RMCRT->d_abskgLabel );         // this label changes name if using floats
-  
+
 //  tsk->modifies( _abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );

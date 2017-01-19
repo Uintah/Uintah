@@ -14,19 +14,26 @@ def fix_ups(filename):
   for n in Properties:
 
     Properties.remove(n)
-    type=''
+    mytype=''
+    found_one = 0
     if ( n.tag == 'ConstantProps'):
-      type='constant'
+      mytype='constant'
+      found_one = 1
     elif ( n.tag == "ClassicTable"):
-      type='classic'
-    else:
-      type='coldflow'
+      mytype='classic'
+      found_one = 1
+    elif ( n.tag == "ColdFlow" ): 
+      mytype='coldflow'
+      found_one = 1
 
-    newTab = ET.Element('table')
-    newTab.attrib['label'] = 'a_user_generated_label'
-    newTab.attrib['type'] = type
-    newTab.insert(0,n)
-    Properties.insert(0,newTab)
+    if ( found_one == 1 ): 
+      newTab = ET.Element('table')
+      newTab.attrib['label'] = 'a_user_generated_label'
+      newTab.attrib['type'] = mytype
+      newTab.insert(0,n)
+      Properties.insert(0,newTab)
+    else: 
+      Properties.insert(0,n)
 
   os.system('cp '+filename+' '+filename+'.orig_ups')
 
@@ -45,9 +52,11 @@ def usage():
   print ''
   print 'Usage: '
   print '  python update_table_entry.py file_extension'
-  print '  file_extension:        modify all files with this file extension in the current directory'
-  print '                         example: python updated_table_entry.py .ups'
-  print '  --help, -help, -h:     print this message '
+  print '  file_name:             modify the file with this name to update the table section in the UPS file.'
+  print '                         example: python updated_table_entry.py myinput.ups'
+  print '  --do_all_ups_files:    do all files in this directory with an .ups extension'
+  print '  --do_all_xml_files:    do all files in this directory with an .xml extension'
+  print '  [--help, -help, -h]:   print this message '
   exit()
 
 args = sys.argv
@@ -57,13 +66,28 @@ if args[1] == '-h': usage()
 if args[1] == '--help': usage()
 if args[1] == '-help': usage()
 
-for filename in os.listdir('.'):
 
-  if filename.endswith(args[1]):
+if args[1] == '--do_all_ups_files': 
+  for filename in os.listdir('.'):
+  
+    if filename.endswith('.ups'):
+  
+      print 'Fixing file: ', filename
+  
+      fix_ups(filename)
+elif args[1] == '--do_all_xml_files': 
+  for filename in os.listdir('.'):
+  
+    if filename.endswith('.xml'):
+  
+      print 'Fixing file: ', filename
+  
+      fix_ups(filename)
+else: 
+    print 'Fixing file: ', args[1]
+    fix_ups(args[1])
 
-    print 'Fixing file: ', filename
-
-    fix_ups(filename)
+print 'Done. The original UPS file is saved with the extension *.orig_ups'
 
 
 

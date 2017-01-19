@@ -55,7 +55,7 @@ public:
 
   void problemSetup(const ProblemSpecP& db );
 
-  void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop );
+  void extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* prop );
 
   void sched_computeSource( const LevelP& level,
                             SchedulerP& sched,
