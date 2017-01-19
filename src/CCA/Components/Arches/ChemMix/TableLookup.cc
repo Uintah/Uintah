@@ -54,41 +54,48 @@ void
 TableLookup::problemSetup( const ProblemSpecP& params )
 {
 
-  ProblemSpecP db = params->findBlock("Properties");
+  if ( !params->findBlock("Properties") ){
 
-  for ( ProblemSpecP db_tabs = db->findBlock("table"); db_tabs != 0;
-        db_tabs = db_tabs->findNextBlock("table")){
+    proc0cout << "\n \n     WARNING: No tables (Chemistry of otherwise) found in the input file!\n \n " << std::endl;
 
-    std::string type;
-    std::string label;
+  } else {
 
-    db_tabs->getAttribute("label", label);
-    db_tabs->getAttribute("type", type);
+    ProblemSpecP db = params->findBlock("Properties");
 
-    if ( type == "classic") {
+    for ( ProblemSpecP db_tabs = db->findBlock("table"); db_tabs != 0;
+          db_tabs = db_tabs->findNextBlock("table")){
 
-      m_tables.insert(std::make_pair(label, scinew ClassicTableInterface( m_sharedState )));
-      m_tables[label]->problemSetup(db_tabs);
-      m_table_type = CLASSIC;
+      std::string type;
+      std::string label;
 
-    } else if ( type == "coldflow") {
+      db_tabs->getAttribute("label", label);
+      db_tabs->getAttribute("type", type);
 
-      m_tables.insert(std::make_pair(label, scinew ColdFlow( m_sharedState )));
-      m_tables[label]->problemSetup(db_tabs);
-      m_table_type = COLDFLOW;
+      if ( type == "classic") {
 
-    } else if ( type == "constant" ){
+        m_tables.insert(std::make_pair(label, scinew ClassicTableInterface( m_sharedState )));
+        m_tables[label]->problemSetup(db_tabs);
+        m_table_type = CLASSIC;
 
-      m_tables.insert(std::make_pair(label, scinew ConstantProps( m_sharedState )));
-      m_tables[label]->problemSetup(db_tabs);
-      m_table_type = CONSTANT; 
+      } else if ( type == "coldflow") {
 
-    } else {
+        m_tables.insert(std::make_pair(label, scinew ColdFlow( m_sharedState )));
+        m_tables[label]->problemSetup(db_tabs);
+        m_table_type = COLDFLOW;
 
-      throw InvalidValue("ERROR!: No valid property model specified!",__FILE__,__LINE__);
+      } else if ( type == "constant" ){
+
+        m_tables.insert(std::make_pair(label, scinew ConstantProps( m_sharedState )));
+        m_tables[label]->problemSetup(db_tabs);
+        m_table_type = CONSTANT;
+
+      } else {
+
+        throw InvalidValue("ERROR!: No valid property model specified!",__FILE__,__LINE__);
+
+      }
 
     }
-
   }
 
 }
