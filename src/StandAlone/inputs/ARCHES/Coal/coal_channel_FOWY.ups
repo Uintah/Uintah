@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
-<!--A Channel flow of particles in a 1m^3 box. -->
-<!--The particles enter at 300K.  The domain is filled -->
-<!-- gas initialized at temperature 775K-->
-<!--This case is the same as Coal_channel_FOWY,-->
-<!--except it uses RadProps for particle radiation properties-->
-<!--This case also uses first order time integration-->
+  <!--A Channel flow of particles in a 1m^3 box. -->
+  <!--The particles enter at 300K.  The domain is filled -->
+  <!-- gas initialized at temperature 775K-->
+  <!--This case is the same as Coal_channel_FOWY,-->
+  <!--except it uses RadProps for particle radiation properties-->
+  <!--This case also uses first order time integration-->
   <Meta>
     <title>DQMOM_coal</title>
   </Meta>
@@ -1058,17 +1058,17 @@
         <filter_cs_squared>false</filter_cs_squared>
       </Turbulence>
       <Properties>
-        <ClassicTable>
-          <enthalpy_label>enthalpy</enthalpy_label>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC_ben.mix.gz</inputfile>
-          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
-          <cold_flow>false</cold_flow>
-          <temperature_label_name>temperature</temperature_label_name>
-          <reference_state eta="0.15976" fp="0.42469" hl="0.766"/>
-        </ClassicTable>
-        <filter_drhodt>false</filter_drhodt>
-        <first_order_drhodt>true</first_order_drhodt>
         <inverse_density_average>false</inverse_density_average>
+        <first_order_drhodt>true</first_order_drhodt>
+        <filter_drhodt>false</filter_drhodt>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state eta="0.15976" fp="0.42469" hl="0.766"/>
+          <temperature_label_name>temperature</temperature_label_name>
+          <cold_flow>false</cold_flow>
+          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC_ben.mix.gz</inputfile>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </table>
       </Properties>
       <DQMOM type="weightedAbs">
         <LinearSolver>

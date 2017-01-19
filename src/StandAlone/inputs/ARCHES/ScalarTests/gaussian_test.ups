@@ -1,15 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
-
   <Meta>
     <title>Scalar Test, -x inlet</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
@@ -18,7 +14,6 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>50</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>gaussian_test.uda</filebase>
     <outputInitTimestep/>
@@ -29,9 +24,12 @@
     <save label="uvelRhoHat"/>
     <save label="vvelRhoHat"/>
     <save label="wvelRhoHat"/>
-    <save label="mixture_fraction_sb"/>   <!-- Super Bee flux lim. --> 
-    <save label="mixture_fraction_roe"/>  <!-- Roe Min/Mod flux lim. --> 
-    <save label="mixture_fraction_up"/>   <!-- Upwind --> 
+    <save label="mixture_fraction_sb"/>
+    <!-- Super Bee flux lim. -->
+    <save label="mixture_fraction_roe"/>
+    <!-- Roe Min/Mod flux lim. -->
+    <save label="mixture_fraction_up"/>
+    <!-- Upwind -->
     <save label="mixture_fraction_gaussian"/>
     <save label="density"/>
     <save label="pressurePS"/>
@@ -39,7 +37,6 @@
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
@@ -78,7 +75,6 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
@@ -89,25 +85,19 @@
       </Box>
       <periodic>[0,1,1]</periodic>
     </Level>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.001000</viscosity>
   </PhysicalConstants>
-
   <CFD>
-
     <!-- ARCHES specification -->
     <ARCHES>
-
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction_sb" type="CCscalar">
@@ -164,23 +154,18 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-
       <Properties>
-        <ColdFlow>
-          <mixture_fraction label="mixture_fraction_gaussian"/>
-          <stream_0 density="1.18" temperature="298"/>
-          <stream_1 density="0.0118" temperature="298"/>
+        <table label="a_user_generated_label" type="coldflow">
           <reference_density value="1.18"/>
-        </ColdFlow>
+          <stream_1 density="0.0118" temperature="298"/>
+          <stream_0 density="1.18" temperature="298"/>
+          <mixture_fraction label="mixture_fraction_gaussian"/>
+        </table>
       </Properties>
-
       <BoundaryConditions>
       </BoundaryConditions>
-
       <ExplicitSolver>
-
         <initial_dt>0.05</initial_dt>
-
         <PressureSolver>
           <Parameters>
             <tolerance>1.0e-10</tolerance>
@@ -189,15 +174,10 @@
             <maxiterations>250</maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
-
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

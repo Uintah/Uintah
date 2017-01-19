@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Pipe Emitting Heptane</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>2.0</maxTime>
@@ -16,7 +14,6 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>25</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>coal_pipe.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
@@ -26,12 +23,12 @@
     <save label="enthalpy"/>
     <save label="volFraction"/>
     <save label="cellType"/>
-<!-- Table Variables -->
-<!-- iv's -->
+    <!-- Table Variables -->
+    <!-- iv's -->
     <save label="coal_gas_mix_frac"/>
     <save label="mixture_fraction_2"/>
     <save label="heat_loss"/>
-<!-- dv's -->
+    <!-- dv's -->
     <save label="density" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
     <save label="temperature" table_lookup="true"/>
@@ -41,7 +38,6 @@
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
@@ -67,8 +63,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
@@ -93,8 +89,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="y-" name="y- wall">
@@ -119,8 +115,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
@@ -145,8 +141,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z-" name="z- wall">
@@ -171,8 +167,8 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
@@ -197,12 +193,11 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType label="abskg" var="ForcedDirichlet">
+          <value> 1.0 </value>
         </BCType>
       </Face>
     </BoundaryConditions>
-
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
@@ -213,23 +208,19 @@
       </Box>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
-<!-- TIME INTEGRATOR -->
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
-<!-- SCALARS -->
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="coal_gas_mix_frac" type="CCscalar">
           <doDiff>true</doDiff>
@@ -271,7 +262,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -282,7 +272,6 @@
           </initialization>
           <src label="divQ"/>
         </Eqn>
-
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
@@ -298,9 +287,7 @@
             </DORadiationModel>
           </src>
         </Sources>
-
       </TransportEqns>
-
       <PropertyModels>
         <model type="radiation_properties" label="abskg">
           <initialization type="constant">
@@ -313,7 +300,7 @@
         </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
-            <constant>0</constant> 
+            <constant>0</constant>
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
@@ -324,21 +311,18 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
-
       <Turbulence model="smagorinsky">
         <cf>0.17</cf>
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
       </Turbulence>
-
       <Properties>
-        <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/oxy-coal.mix.gz</inputfile>
-          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state eta="0.0" fp="0.0" hl="0.0"/>
-        </ClassicTable>
+          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/oxy-coal.mix.gz</inputfile>
+        </table>
       </Properties>
-
       <BoundaryConditions>
         <suppress_corner_recirculation/>
         <intrusions>
@@ -371,11 +355,9 @@
                 <constant>0.25</constant>
               </scalar>
             </scalars>
-
           </intrusion>
         </intrusions>
       </BoundaryConditions>
-
       <ExplicitSolver>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
@@ -386,14 +368,10 @@
             <maxiterations>   250   </maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

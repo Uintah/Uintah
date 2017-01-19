@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>DQMOM_coal</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>8.0</maxTime>
@@ -16,16 +14,15 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>10</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>mini_BSF.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>200</outputTimestepInterval>
-    <save label = "eta_source1"/>
-    <save label = "eta_source2"/>
-    <save label = "eta_source3"/>
-    <save label = "heat_source"/>
-    <save label = "pressurePS"/>
+    <save label="eta_source1"/>
+    <save label="eta_source2"/>
+    <save label="eta_source3"/>
+    <save label="heat_source"/>
+    <save label="pressurePS"/>
     <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
@@ -34,16 +31,16 @@
     <save label="coal_gas_mix_frac_RHS"/>
     <save label="coal_gas_mix_frac_Fdiff"/>
     <save label="coal_gas_mix_frac_Fconv"/>
-    <save label = "radiationVolq"/>
-    <save label = "abskg"/>
-    <save label = "divQ"/>
-    <save label = "enthalpy"/>
-    <save label = "length_0" />
-    <save label = "length_1" />
-    <save label = "length_2" />
-    <save label = "w_qn0" />
-    <save label = "w_qn1" />
-    <save label = "w_qn2" />
+    <save label="radiationVolq"/>
+    <save label="abskg"/>
+    <save label="divQ"/>
+    <save label="enthalpy"/>
+    <save label="length_0"/>
+    <save label="length_1"/>
+    <save label="length_2"/>
+    <save label="w_qn0"/>
+    <save label="w_qn1"/>
+    <save label="w_qn2"/>
     <save label="ux_0"/>
     <save label="ux_1"/>
     <save label="ux_2"/>
@@ -56,43 +53,42 @@
     <save label="Charmass_0"/>
     <save label="Charmass_1"/>
     <save label="Charmass_2"/>
-    <save label = "heat_pT_qn0"/>
-    <save label = "heat_pT_qn1"/>
-    <save label = "heat_pT_qn2"/>
-    <save label = "heat_qn0_Qconv"/>
-    <save label = "heat_qn0_Qrad"/>
-    <save label = "heat_qn1_Qconv"/>
-    <save label = "heat_qn1_Qrad"/>
-    <save label = "heat_qn2_Qconv"/>
-    <save label = "heat_qn2_Qrad"/>
+    <save label="heat_pT_qn0"/>
+    <save label="heat_pT_qn1"/>
+    <save label="heat_pT_qn2"/>
+    <save label="heat_qn0_Qconv"/>
+    <save label="heat_qn0_Qrad"/>
+    <save label="heat_qn1_Qconv"/>
+    <save label="heat_qn1_Qrad"/>
+    <save label="heat_qn2_Qconv"/>
+    <save label="heat_qn2_Qrad"/>
     <save label="pE_0"/>
     <save label="pE_1"/>
     <save label="pE_2"/>
     <!-- Table Variables -->
-    <save label = "mixture_fraction_2"/>
-    <save label = "heat_loss"/>
-    <save label = "coal_gas_mix_frac"/>
-    <save label = "temperature" table_lookup = "true"/>
-    <save label = "density"     table_lookup = "true"/>
-    <save label = "CO"          table_lookup = "true"/>
-    <save label = "CO2"         table_lookup = "true"/>
-    <save label = "H2O"         table_lookup = "true"/>
-    <save label = "OH"          table_lookup = "true"/>
-    <save label = "O2"          table_lookup = "true"/>
-    <save label = "sensibleenthalpy" table_lookup = "true"/>
-    <save label = "adiabaticenthalpy"   table_lookup = "true"/>
-    <save label = "N2"          table_lookup = "true"/>
-    <save label = "mixture_molecular_weight" table_lookup = "true"/>
-
-    <checkpoint cycle = "2" walltimeStart = "200" walltimeInterval = "3550"/> <!-- checkpoint every 1 hour -->
+    <save label="mixture_fraction_2"/>
+    <save label="heat_loss"/>
+    <save label="coal_gas_mix_frac"/>
+    <save label="temperature" table_lookup="true"/>
+    <save label="density" table_lookup="true"/>
+    <save label="CO" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <save label="OH" table_lookup="true"/>
+    <save label="O2" table_lookup="true"/>
+    <save label="sensibleenthalpy" table_lookup="true"/>
+    <save label="adiabaticenthalpy" table_lookup="true"/>
+    <save label="N2" table_lookup="true"/>
+    <save label="mixture_molecular_weight" table_lookup="true"/>
+    <checkpoint cycle="2" walltimeStart="200" walltimeInterval="3550"/>
+    <!-- checkpoint every 1 hour -->
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-" name="x- face">
-        <BCType  label="x- wall" var="WallBC">
+        <BCType label="x- wall" var="WallBC">
           <value>0.0000</value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -192,9 +188,8 @@
           <value>0.0</value>
         </BCType>
       </Face>
-
       <Face side="x+" name="x+ face">
-        <BCType  label="x+ wall" var="WallBC">
+        <BCType label="x+ wall" var="WallBC">
           <value>0.0000</value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -294,9 +289,8 @@
           <value>0.0</value>
         </BCType>
       </Face>
-
       <Face side="y-" name="y- face">
-        <BCType  label="y- wall" var="WallBC">
+        <BCType label="y- wall" var="WallBC">
           <value>0.0000</value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -396,9 +390,8 @@
           <value>0.0</value>
         </BCType>
       </Face>
-
       <Face side="y+" name="y+ face">
-        <BCType  label="y+ wall" var="WallBC">
+        <BCType label="y+ wall" var="WallBC">
           <value>0.0000</value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -498,9 +491,8 @@
           <value>0.0</value>
         </BCType>
       </Face>
-
       <Face side="z-" name="z- face">
-        <BCType  label="z- wall" var="WallBC">
+        <BCType label="z- wall" var="WallBC">
           <value>0.0000</value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -600,9 +592,8 @@
           <value>0.0</value>
         </BCType>
       </Face>
-
       <Face side="z+" name="z+ face">
-        <BCType  label="z+ wall" var="WallBC">
+        <BCType label="z+ wall" var="WallBC">
           <value>0.0000</value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -702,12 +693,10 @@
           <value>0.0</value>
         </BCType>
       </Face>
-
       <Face rectangle="y-" lower="0.3000 0.0000 0.0000" upper="0.3500 0.0000 0.0500" name="b1">
-        <BCType  label="coalburner-1_y-" var="VelocityInlet">
+        <BCType label="coalburner-1_y-" var="VelocityInlet">
           <value>[0.0000,11.7230,10.0833]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -805,13 +794,10 @@
           <value>-9.9714</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.3000 0.0000 0.0000" upper="0.3500 0.0500 0.0000" name="b2">
-        <BCType  label="coalburner-1_y-z" var="VelocityInlet">
+        <BCType label="coalburner-1_y-z" var="VelocityInlet">
           <value>[0.0000,11.7230,10.0833]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -909,13 +895,10 @@
           <value>-9.9714</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.3000 0.8400 0.9500" upper="0.3500 0.8400 1.0000" name="b3">
-        <BCType  label="coalburner-1_y+" var="VelocityInlet">
+        <BCType label="coalburner-1_y+" var="VelocityInlet">
           <value>[0.0000,-11.7230,-10.0833]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1013,13 +996,10 @@
           <value>-9.9714</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.3000 0.7900 1.0000" upper="0.3500 0.8400 1.0000" name="b4">
-        <BCType  label="coalburner-1_y+z" var="VelocityInlet">
+        <BCType label="coalburner-1_y+z" var="VelocityInlet">
           <value>[0.0000,-11.7230,-10.0833]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1117,13 +1097,10 @@
           <value>-9.9714</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.3000 0.7900 0.0000" upper="0.3500 0.8400 0.0000" name="b5">
-        <BCType  label="coalburner-1_z-" var="VelocityInlet">
+        <BCType label="coalburner-1_z-" var="VelocityInlet">
           <value>[0.0000,-9.0394,12.7668]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1221,13 +1198,10 @@
           <value>-9.9714</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.3000 0.8400 0.0000" upper="0.3500 0.8400 0.0500" name="b6">
-        <BCType  label="coalburner-1_z-y" var="VelocityInlet">
+        <BCType label="coalburner-1_z-y" var="VelocityInlet">
           <value>[0.0000,-9.0394,12.7668]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1325,13 +1299,10 @@
           <value>-9.9714</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.3000 0.0000 1.0000" upper="0.3500 0.0500 1.0000" name="b7">
-        <BCType  label="coalburner-1_z+" var="VelocityInlet">
+        <BCType label="coalburner-1_z+" var="VelocityInlet">
           <value>[0.0000,9.0394,-12.7668]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1429,13 +1400,10 @@
           <value>-9.9714</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.3000 0.0000 0.9500" upper="0.3500 0.0000 1.0000" name="b8">
-        <BCType  label="coalburner-1_z+y" var="VelocityInlet">
+        <BCType label="coalburner-1_z+y" var="VelocityInlet">
           <value>[0.0000,9.0394,-12.7668]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1533,13 +1501,10 @@
           <value>-9.9714</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.4500 0.0000 0.0000" upper="0.4900 0.0000 0.0400" name="b9">
-        <BCType  label="secondary-1_y-" var="VelocityInlet">
+        <BCType label="secondary-1_y-" var="VelocityInlet">
           <value>[0.0000,16.7831,14.4357]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1637,13 +1602,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.4500 0.0000 0.0000" upper="0.4900 0.0400 0.0000" name="b10">
-        <BCType  label="secondary-1_y-z" var="VelocityInlet">
+        <BCType label="secondary-1_y-z" var="VelocityInlet">
           <value>[0.0000,16.7831,14.4357]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1741,13 +1703,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.4500 0.8400 0.9600" upper="0.4900 0.8400 1.0000" name="b11">
-        <BCType  label="secondary-1_y+" var="VelocityInlet">
+        <BCType label="secondary-1_y+" var="VelocityInlet">
           <value>[0.0000,-16.7831,-14.4357]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1845,13 +1804,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.4500 0.8000 1.0000" upper="0.4900 0.8400 1.0000" name="b12">
-        <BCType  label="secondary-1_y+z" var="VelocityInlet">
+        <BCType label="secondary-1_y+z" var="VelocityInlet">
           <value>[0.0000,-16.7831,-14.4357]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -1949,13 +1905,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.4500 0.8000 0.0000" upper="0.4900 0.8400 0.0000" name="b13">
-        <BCType  label="secondary-1_z-" var="VelocityInlet">
+        <BCType label="secondary-1_z-" var="VelocityInlet">
           <value>[0.0000,-12.9412,18.2776]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
@@ -2053,13 +2006,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.4500 0.8400 0.0000" upper="0.4900 0.8400 0.0400" name="b14">
-        <BCType  label="secondary-1_z-y" var="VelocityInlet">
+        <BCType label="secondary-1_z-y" var="VelocityInlet">
           <value>[0.0000,-12.9412,18.2776]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -2157,13 +2107,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.4500 0.0000 1.0000" upper="0.4900 0.0400 1.0000" name="b15">
-        <BCType  label="secondary-1_z+" var="VelocityInlet">
+        <BCType label="secondary-1_z+" var="VelocityInlet">
           <value>[0.0000,12.9412,-18.2776]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -2261,13 +2208,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.4500 0.0000 0.9600" upper="0.4900 0.0000 1.0000" name="b16">
-        <BCType  label="secondary-1_z+y" var="VelocityInlet">
+        <BCType label="secondary-1_z+y" var="VelocityInlet">
           <value>[0.0000,12.9412,-18.2776]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -2365,13 +2309,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.2800 0.0000 0.0000" upper="0.2900 0.0000 0.0500" name="b17">
-        <BCType  label="secondary-2_y-" var="VelocityInlet">
+        <BCType label="secondary-2_y-" var="VelocityInlet">
           <value>[0.0000,20.2471,17.4152]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -2469,13 +2410,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.2800 0.0000 0.0000" upper="0.2900 0.0500 0.0000" name="b18">
-        <BCType  label="secondary-2_y-z" var="VelocityInlet">
+        <BCType label="secondary-2_y-z" var="VelocityInlet">
           <value>[0.0000,20.2471,17.4152]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -2573,13 +2511,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.2800 0.8400 0.9500" upper="0.2900 0.8400 1.0000" name="b19">
-        <BCType  label="secondary-2_y+" var="VelocityInlet">
+        <BCType label="secondary-2_y+" var="VelocityInlet">
           <value>[0.0000,-20.2471,-17.4152]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -2677,13 +2612,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.2800 0.7900 1.0000" upper="0.2900 0.8400 1.0000" name="b20">
-        <BCType  label="secondary-2_y+z" var="VelocityInlet">
+        <BCType label="secondary-2_y+z" var="VelocityInlet">
           <value>[0.0000,-20.2471,-17.4152]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -2781,13 +2713,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.2800 0.7900 0.0000" upper="0.2900 0.8400 0.0000" name="b21">
-        <BCType  label="secondary-2_z-" var="VelocityInlet">
+        <BCType label="secondary-2_z-" var="VelocityInlet">
           <value>[0.0000,-15.6123,22.0500]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -2885,13 +2814,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.2800 0.8400 0.0000" upper="0.2900 0.8400 0.0500" name="b22">
-        <BCType  label="secondary-2_z-y" var="VelocityInlet">
+        <BCType label="secondary-2_z-y" var="VelocityInlet">
           <value>[0.0000,-15.6123,22.0500]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
@@ -2989,13 +2915,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.2800 0.0000 1.0000" upper="0.2900 0.0500 1.0000" name="b23">
-        <BCType  label="secondary-2_z+" var="VelocityInlet">
+        <BCType label="secondary-2_z+" var="VelocityInlet">
           <value>[0.0000,15.6123,-22.0500]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3093,13 +3016,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.2800 0.0000 0.9500" upper="0.2900 0.0000 1.0000" name="b24">
-        <BCType  label="secondary-2_z+y" var="VelocityInlet">
+        <BCType label="secondary-2_z+y" var="VelocityInlet">
           <value>[0.0000,15.6123,-22.0500]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3197,13 +3117,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.3600 0.0000 0.0000" upper="0.3700 0.0000 0.0500" name="b25">
-        <BCType  label="secondary-3_y-" var="VelocityInlet">
+        <BCType label="secondary-3_y-" var="VelocityInlet">
           <value>[0.0000,20.2471,17.4152]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3301,13 +3218,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.3600 0.0000 0.0000" upper="0.3700 0.0500 0.0000" name="b26">
-        <BCType  label="secondary-3_y-z" var="VelocityInlet">
+        <BCType label="secondary-3_y-z" var="VelocityInlet">
           <value>[0.0000,20.2471,17.4152]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3405,13 +3319,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.3600 0.8400 0.9500" upper="0.3700 0.8400 1.0000" name="b27">
-        <BCType  label="secondary-3_y+" var="VelocityInlet">
+        <BCType label="secondary-3_y+" var="VelocityInlet">
           <value>[0.0000,-20.2471,-17.4152]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3509,13 +3420,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.3600 0.7900 1.0000" upper="0.3700 0.8400 1.0000" name="b28">
-        <BCType  label="secondary-3_y+z" var="VelocityInlet">
+        <BCType label="secondary-3_y+z" var="VelocityInlet">
           <value>[0.0000,-20.2471,-17.4152]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3613,13 +3521,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.3600 0.7900 0.0000" upper="0.3700 0.8400 0.0000" name="b29">
-        <BCType  label="secondary-3_z-" var="VelocityInlet">
+        <BCType label="secondary-3_z-" var="VelocityInlet">
           <value>[0.0000,-15.6123,22.0500]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3717,13 +3622,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.3600 0.8400 0.0000" upper="0.3700 0.8400 0.0500" name="b30">
-        <BCType  label="secondary-3_z-y" var="VelocityInlet">
+        <BCType label="secondary-3_z-y" var="VelocityInlet">
           <value>[0.0000,-15.6123,22.0500]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3821,13 +3723,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.3600 0.0000 1.0000" upper="0.3700 0.0500 1.0000" name="b31">
-        <BCType  label="secondary-3_z+" var="VelocityInlet">
+        <BCType label="secondary-3_z+" var="VelocityInlet">
           <value>[0.0000,15.6123,-22.0500]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -3925,13 +3824,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.3600 0.0000 0.9500" upper="0.3700 0.0000 1.0000" name="b32">
-        <BCType  label="secondary-3_z+y" var="VelocityInlet">
+        <BCType label="secondary-3_z+y" var="VelocityInlet">
           <value>[0.0000,15.6123,-22.0500]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4029,13 +3925,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.8000 0.0000 0.0000" upper="0.8600 0.0000 0.0700" name="b33">
-        <BCType  label="sofa-1_y-" var="VelocityInlet">
+        <BCType label="sofa-1_y-" var="VelocityInlet">
           <value>[0.0000,6.0916,5.2396]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4133,13 +4026,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.8000 0.0000 0.0000" upper="0.8600 0.0700 0.0000" name="b34">
-        <BCType  label="sofa-1_y-z" var="VelocityInlet">
+        <BCType label="sofa-1_y-z" var="VelocityInlet">
           <value>[0.0000,6.0916,5.2396]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4237,13 +4127,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.8000 0.8400 0.9300" upper="0.8600 0.8400 1.0000" name="b35">
-        <BCType  label="sofa-1_y+" var="VelocityInlet">
+        <BCType label="sofa-1_y+" var="VelocityInlet">
           <value>[0.0000,-6.0916,-5.2396]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4341,13 +4228,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.8000 0.7700 1.0000" upper="0.8600 0.8400 1.0000" name="b36">
-        <BCType  label="sofa-1_y+z" var="VelocityInlet">
+        <BCType label="sofa-1_y+z" var="VelocityInlet">
           <value>[0.0000,-6.0916,-5.2396]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4445,13 +4329,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z-" lower="0.8000 0.7700 0.0000" upper="0.8600 0.8400 0.0000" name="b37">
-        <BCType  label="sofa-1_z-" var="VelocityInlet">
+        <BCType label="sofa-1_z-" var="VelocityInlet">
           <value>[0.0000,-4.6972,6.6340]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4549,13 +4430,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="0.8000 0.8400 0.0000" upper="0.8600 0.8400 0.0700" name="b38">
-        <BCType  label="sofa-1_z-y" var="VelocityInlet">
+        <BCType label="sofa-1_z-y" var="VelocityInlet">
           <value>[0.0000,-4.6972,6.6340]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4653,13 +4531,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="z+" lower="0.8000 0.0000 1.0000" upper="0.8600 0.0700 1.0000" name="b39">
-        <BCType  label="sofa-1_z+" var="VelocityInlet">
+        <BCType label="sofa-1_z+" var="VelocityInlet">
           <value>[0.0000,4.6972,-6.6340]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4757,13 +4632,10 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y-" lower="0.8000 0.0000 0.9300" upper="0.8600 0.0000 1.0000" name="b40">
-        <BCType  label="sofa-1_z+y" var="VelocityInlet">
+        <BCType label="sofa-1_z+y" var="VelocityInlet">
           <value>[0.0000,4.6972,-6.6340]</value>
         </BCType>
-
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -4861,10 +4733,8 @@
           <value>-9.9714e-04</value>
         </BCType>
       </Face>
-
-
       <Face rectangle="y+" lower="1.6000 0.8400 0.0000" upper="2.0000 0.8400 1.0000" name="b41">
-        <BCType  label="the outlet" var="OutletBC">
+        <BCType label="the outlet" var="OutletBC">
           <value>0.0000</value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -4965,7 +4835,6 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
     <Level>
       <Box label="upper">
         <lower>[0.0,0.0,0.0]</lower>
@@ -4976,25 +4845,20 @@
       </Box>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000030</viscosity>
   </PhysicalConstants>
-
   <CFD>
     <!-- ARCHES specification -->
     <ARCHES>
-      
       <!-- include the coal data base that you are using -->
-      <include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="Coal_Properties" />
-
+      <include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="Coal_Properties"/>
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
       <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="enthalpy" type="CCscalar">
@@ -5010,7 +4874,6 @@
           <src label="divQ"/>
           <src label="heat_source"/>
         </Eqn>
-
         <Eqn label="mixture_fraction_2" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -5026,8 +4889,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
-
         <Eqn label="coal_gas_mix_frac" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -5046,7 +4907,6 @@
           <src label="eta_source2"/>
           <!--src label="eta_source3"/-->
         </Eqn>
-
         <Eqn label="test_scalar" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -5063,8 +4923,6 @@
           </Clipping>
           <src label="eta_source3"/>
         </Eqn>
-        
-
         <!-- define source terms here-->
         <Sources>
           <src label="divQ" type="do_radiation">
@@ -5080,7 +4938,6 @@
               <ordinates>4</ordinates>
             </DORadiationModel>
           </src>
-
           <src label="eta_source1" type="coal_gas_devol">
             <devol_model_name>devol</devol_model_name>
           </src>
@@ -5098,7 +4955,6 @@
           </src>
         </Sources>
       </TransportEqns>
-
       <PropertyModels>
         <model type="radiation_properties" label="abskg">
           <initialization type="constant">
@@ -5121,29 +4977,25 @@
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
-
         <model type="cc_constant" label="soot">
-          <initialization type ="constant">
+          <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
         </model>
       </PropertyModels>
-
-
       <!-- compdynamicprocedure is the best-->
       <Turbulence model="compdynamicprocedure">
       </Turbulence>
-
       <Properties>
-        <ClassicTable>
-          <enthalpy_label>enthalpy</enthalpy_label>   <!-- NON Adiabatic case-->
-          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
-          <hl_scalar_init>0.885</hl_scalar_init>
-          <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac" hl_label="heat_loss"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state fp="0.0" eta="0.0" hl="0.0"/>
-        </ClassicTable>
+          <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac" hl_label="heat_loss"/>
+          <hl_scalar_init>0.885</hl_scalar_init>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
+          <!-- NON Adiabatic case-->
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </table>
       </Properties>
-
       <DQMOM type="weightedAbs">
         <LinearSolver>
           <tolerance>1e-5</tolerance>
@@ -5153,54 +5005,54 @@
           </Optimization>
         </LinearSolver>
         <number_quad_nodes>3</number_quad_nodes>
-        <VelModel type = "Dragforce">
+        <VelModel type="Dragforce">
         </VelModel>
         <Models>
           <model label="xdragforce" type="XDrag">
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="ux" role="particle_xvel"/>
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="Charmass" role="char_mass" />
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
             </ICVars>
           </model>
           <model label="ydragforce" type="YDrag">
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="uy" role="particle_yvel"/>
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="Charmass" role="char_mass" />
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
             </ICVars>
           </model>
           <model label="zdragforce" type="ZDrag">
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="uz" role="particle_zvel"/>
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="Charmass" role="char_mass" />
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
             </ICVars>
           </model>
           <model label="devol" type="YamamotoDevol">
             <ICVars>
-              <variable label="heat_pT" role="particle_temperature_from_enthalpy" />
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="Charmass" role="char_mass" />
+              <variable label="heat_pT" role="particle_temperature_from_enthalpy"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
             </ICVars>
           </model>
           <model label="heat" type="EnthalpyShaddix">
             <ICVars>
-              <variable label="length" role="particle_length" />
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="pE"     role="particle_enthalpy"/>
-              <variable label="Charmass" role="char_mass" />
+              <variable label="length" role="particle_length"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="pE" role="particle_enthalpy"/>
+              <variable label="Charmass" role="char_mass"/>
             </ICVars>
           </model>
           <model label="char" type="CharOxidationShaddix">
             <ICVars>
-              <variable label="length" role="particle_length" />
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="Charmass" role="char_mass" />
-              <variable label="heat_pT"     role="particle_temperature_from_enthalpy"/>
+              <variable label="length" role="particle_length"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
+              <variable label="heat_pT" role="particle_temperature_from_enthalpy"/>
             </ICVars>
           </model>
         </Models>
@@ -5224,7 +5076,6 @@
           </Clipping>
           <conv_scheme>roe_minmod</conv_scheme>
         </Weights>
-
         <Ic label="length">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -5244,8 +5095,6 @@
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
-
-
         <Ic label="RCmass">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -5257,12 +5106,11 @@
             <env_constant qn="2" value="0.0">
             </env_constant>
           </initialization>
-          <model label="devol" />
+          <model label="devol"/>
           <scaling_const>1.0e-10</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
-
         <Ic label="Charmass">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -5274,13 +5122,11 @@
             <env_constant qn="2" value="0.0">
             </env_constant>
           </initialization>
-          <model label="char" />
+          <model label="char"/>
           <scaling_const>1.0e-10</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
-
-
         <Ic label="pE">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -5292,12 +5138,11 @@
             <env_constant qn="2" value="-0.00215">
             </env_constant>
           </initialization>
-          <model label="heat" />
+          <model label="heat"/>
           <scaling_const>1e-4</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
-
         <Ic label="ux">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -5330,7 +5175,6 @@
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
-
         <Ic label="uz">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -5347,33 +5191,79 @@
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
-
-        <Moment><m>[0,0,0,0,0,0,0]</m></Moment>
-        <Moment><m>[1,0,0,0,0,0,0]</m></Moment>
-        <Moment><m>[0,1,0,0,0,0,0]</m></Moment>
-        <Moment><m>[0,0,1,0,0,0,0]</m></Moment>
-        <Moment><m>[0,0,0,1,0,0,0]</m></Moment>
-        <Moment><m>[0,0,0,0,1,0,0]</m></Moment>
-        <Moment><m>[0,0,0,0,0,1,0]</m></Moment>
-        <Moment><m>[0,0,0,0,0,0,1]</m></Moment>
-        <Moment><m>[0,0,3,2,2,3,0]</m></Moment>
-        <Moment><m>[2,1,1,0,1,0,3]</m></Moment>
-        <Moment><m>[1,3,3,2,2,1,2]</m></Moment>
-        <Moment><m>[3,3,0,2,1,1,1]</m></Moment>
-        <Moment><m>[1,3,3,3,2,0,1]</m></Moment>
-        <Moment><m>[3,0,2,0,1,1,2]</m></Moment>
-        <Moment><m>[1,2,1,2,0,2,2]</m></Moment>
-        <Moment><m>[0,1,0,0,2,0,0]</m></Moment>
-        <Moment><m>[1,3,2,0,2,3,1]</m></Moment>
-        <Moment><m>[1,2,3,3,1,1,3]</m></Moment>
-        <Moment><m>[1,3,2,2,2,2,3]</m></Moment>
-        <Moment><m>[0,1,3,2,1,0,0]</m></Moment>
-        <Moment><m>[3,3,2,1,0,3,1]</m></Moment>
-        <Moment><m>[3,2,2,2,1,3,0]</m></Moment>
-        <Moment><m>[1,0,2,1,3,0,1]</m></Moment>
-        <Moment><m>[0,0,0,3,0,0,1]</m></Moment>
+        <Moment>
+          <m>[0,0,0,0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[1,0,0,0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,0,0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,1,0,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,1,0,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,0,1,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,0,0,1,0]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,0,0,0,1]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,3,2,2,3,0]</m>
+        </Moment>
+        <Moment>
+          <m>[2,1,1,0,1,0,3]</m>
+        </Moment>
+        <Moment>
+          <m>[1,3,3,2,2,1,2]</m>
+        </Moment>
+        <Moment>
+          <m>[3,3,0,2,1,1,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,3,3,3,2,0,1]</m>
+        </Moment>
+        <Moment>
+          <m>[3,0,2,0,1,1,2]</m>
+        </Moment>
+        <Moment>
+          <m>[1,2,1,2,0,2,2]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,0,0,2,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[1,3,2,0,2,3,1]</m>
+        </Moment>
+        <Moment>
+          <m>[1,2,3,3,1,1,3]</m>
+        </Moment>
+        <Moment>
+          <m>[1,3,2,2,2,2,3]</m>
+        </Moment>
+        <Moment>
+          <m>[0,1,3,2,1,0,0]</m>
+        </Moment>
+        <Moment>
+          <m>[3,3,2,1,0,3,1]</m>
+        </Moment>
+        <Moment>
+          <m>[3,2,2,2,1,3,0]</m>
+        </Moment>
+        <Moment>
+          <m>[1,0,2,1,3,0,1]</m>
+        </Moment>
+        <Moment>
+          <m>[0,0,0,3,0,0,1]</m>
+        </Moment>
       </DQMOM>
-
       <BoundaryConditions>
         <intrusions>
           <intrusion label="windbox_ym">
@@ -5590,7 +5480,6 @@
           </intrusion>
         </intrusions>
       </BoundaryConditions>
-
       <ExplicitSolver>
         <initial_dt>0.0003</initial_dt>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
@@ -5605,16 +5494,14 @@
           <src label="eta_source2"/>
           <!--src label="eta_source3"/-->
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <src label="coal_gas_momentum">
           </src>
         </MomentumSolver>
-     </ExplicitSolver>
+      </ExplicitSolver>
     </ARCHES>
   </CFD>
-
   <Multimaterial>
     <fluidThermalConductivity>0.03</fluidThermalConductivity>
     <heatExchange>false</heatExchange>

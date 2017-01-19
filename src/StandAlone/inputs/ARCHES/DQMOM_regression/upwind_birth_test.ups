@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>DQMOM/Scalar Test #2</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>5.0</maxTime>
@@ -17,7 +15,6 @@
     <timestep_multiplier>0.3</timestep_multiplier>
     <max_Timesteps>34</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>upwind_birth_test.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
@@ -27,10 +24,10 @@
     <save label="vVelocitySPBC"/>
     <save label="continuityResidual"/>
     <save label="velocityDivergence"/>
-<!-- EXTRA SCALARS -->
+    <!-- EXTRA SCALARS -->
     <save label="scalar_0"/>
     <save label="scalar_1"/>
-<!-- DQMOM Vars -->
+    <!-- DQMOM Vars -->
     <save label="length_qn0"/>
     <save label="length_qn1"/>
     <save label="length_0"/>
@@ -54,7 +51,6 @@
     <checkpoint cycle="2" interval="0.03"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -67,43 +63,37 @@
       <periodic>[1,1,1]</periodic>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[0,0,0]</reference_point>
     <viscosity>0.0002</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
-<!-- TIME INTEGRATOR -->
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
       <EulerianParticles>
         <ParticleVariables>
-          <variable label="length" role="size" />
-          <variable label="ux" role="uvel" />
-          <variable label="uy" role="vvel" />
-          <variable label="uz" role="wvel" />
-          <variable label="rho_part" role="density" />
+          <variable label="length" role="size"/>
+          <variable label="ux" role="uvel"/>
+          <variable label="uy" role="vvel"/>
+          <variable label="uz" role="wvel"/>
+          <variable label="rho_part" role="density"/>
         </ParticleVariables>
-      </EulerianParticles>   
-
+      </EulerianParticles>
       <ParticleModels>
-        <model  label="rho_part" type="constant" >
+        <model label="rho_part" type="constant">
           <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.,1.]</constant>
         </model>
       </ParticleModels>
-
-<!-- EXTRA SCALARS -->
+      <!-- EXTRA SCALARS -->
       <TransportEqns>
         <Eqn label="scalar_0" type="CCscalar">
-<!-- diffusive scalar -->
+          <!-- diffusive scalar -->
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
@@ -114,9 +104,8 @@
             <step_end>.5</step_end>
           </initialization>
         </Eqn>
-
         <Eqn label="scalar_1" type="CCscalar">
-<!-- non-diffusive scalar -->
+          <!-- non-diffusive scalar -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
@@ -127,10 +116,8 @@
             <step_end>.5</step_end>
           </initialization>
         </Eqn>
-
       </TransportEqns>
-
-<!-- DQMOM -->
+      <!-- DQMOM -->
       <DQMOM type="weightedAbs">
         <number_quad_nodes>2</number_quad_nodes>
         <save_moments>false</save_moments>
@@ -138,9 +125,8 @@
           <tolerance>1.0e-10</tolerance>
           <type>Simplest</type>
         </LinearSolver>
-<!-- particle models -->
+        <!-- particle models -->
         <VelModel type="Dragforce"/>
-
         <Models>
           <model label="weight_birth" type="SimpleBirth">
             <is_weight/>
@@ -160,11 +146,9 @@
             <direction>z</direction>
           </model>
         </Models>
-
-<!-- Weights test the uniform constant initialization mechanism -->
-
+        <!-- Weights test the uniform constant initialization mechanism -->
         <Weights>
-<!-- w [=] #/m^3 -->
+          <!-- w [=] #/m^3 -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
@@ -178,9 +162,8 @@
             <tol>1e-10</tol>
           </Clipping>
         </Weights>
-
         <Ic label="length">
-<!-- l [=] m -->
+          <!-- l [=] m -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
@@ -194,9 +177,8 @@
             </env_constant>
           </initialization>
         </Ic>
-
         <Ic label="mass">
-<!-- l [=] m -->
+          <!-- l [=] m -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
@@ -209,7 +191,6 @@
             </env_constant>
           </initialization>
         </Ic>
-
         <Ic label="ux">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -253,19 +234,15 @@
           <model label="zdragforce"/>
         </Ic>
       </DQMOM>
-
       <Turbulence model="none"/>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298.0</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <BoundaryConditions>
       </BoundaryConditions>
-
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
         <PressureSolver>
@@ -277,17 +254,13 @@
             <skip>              1     </skip>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <initialization type="almgren">
             <plane>x-y</plane>
           </initialization>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

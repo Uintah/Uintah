@@ -1,13 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
-
-<!--This tests the functionality of the partMassFlowInlet feature-->
-<!--The velocity at the inlet for all particle sizes was tested,-->
-<!--and should equal 0.585036 m/s, for 3 seperate inlets-->
-<!--Clearly this is a function of the inlet weight concentration as well as -->
-<!--the grid resolution. The velocity reported above is for For a 10x10x10 grid, and-->
-<!--a 2.0x2.0x2.0 m^3 box, with a mass flowinlet .01 kg/s for each inlet-->
- <!--This test also puts outputNthProc under arches-tests-->
+  <!--This tests the functionality of the partMassFlowInlet feature-->
+  <!--The velocity at the inlet for all particle sizes was tested,-->
+  <!--and should equal 0.585036 m/s, for 3 seperate inlets-->
+  <!--Clearly this is a function of the inlet weight concentration as well as -->
+  <!--the grid resolution. The velocity reported above is for For a 10x10x10 grid, and-->
+  <!--a 2.0x2.0x2.0 m^3 box, with a mass flowinlet .01 kg/s for each inlet-->
+  <!--This test also puts outputNthProc under arches-tests-->
   <Meta>
     <title>DQMOM_coal</title>
   </Meta>
@@ -21,9 +20,9 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>5</max_Timesteps>
   </Time>
-  <LoadBalancer type = "SimpleLoadBalancer">
-     <outputNthProc>         8 </outputNthProc>
-     <timestepInterval>      1000 </timestepInterval>
+  <LoadBalancer type="SimpleLoadBalancer">
+    <outputNthProc>         8 </outputNthProc>
+    <timestepInterval>      1000 </timestepInterval>
   </LoadBalancer>
   <DataArchiver>
     <filebase>partMassFlow.uda</filebase>
@@ -274,7 +273,7 @@
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="PartMassFlowInlet1" var="PartMassFlowInlet">
-           <value>0.01</value>
+          <value>0.01</value>
         </BCType>
         <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
           <value>1.0</value>
@@ -360,7 +359,7 @@
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="PartMassFlowInlet2" var="PartMassFlowInlet">
-           <value>0.01</value>
+          <value>0.01</value>
         </BCType>
         <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
           <value>1.0</value>
@@ -446,7 +445,7 @@
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="PartMassFlowInlet3" var="PartMassFlowInlet">
-           <value>0.01</value>
+          <value>0.01</value>
         </BCType>
         <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
           <value>1.0</value>
@@ -503,8 +502,6 @@
           <value>1.0</value>
         </BCType>
       </Face>
-
-
       <Face name="outlet" side="x+">
         <BCType id="all" label="xoutlet" var="OutletBC">
           <value>0.0</value>
@@ -1329,17 +1326,17 @@
         <filter_cs_squared>false</filter_cs_squared>
       </Turbulence>
       <Properties>
-        <ClassicTable>
-          <enthalpy_label>enthalpy</enthalpy_label>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC_ben.mix.gz</inputfile>
-          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
-          <cold_flow>false</cold_flow>
-          <temperature_label_name>temperature</temperature_label_name>
-          <reference_state eta="0.15976" fp="0.42469" hl="0.766"/>
-        </ClassicTable>
-        <filter_drhodt>false</filter_drhodt>
-        <first_order_drhodt>true</first_order_drhodt>
         <inverse_density_average>false</inverse_density_average>
+        <first_order_drhodt>true</first_order_drhodt>
+        <filter_drhodt>false</filter_drhodt>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state eta="0.15976" fp="0.42469" hl="0.766"/>
+          <temperature_label_name>temperature</temperature_label_name>
+          <cold_flow>false</cold_flow>
+          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC_ben.mix.gz</inputfile>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </table>
       </Properties>
       <DQMOM type="weightedAbs">
         <LinearSolver>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
@@ -193,12 +193,12 @@
         <filterl>0.000001</filterl>
       </Turbulence>
       <Properties>
-        <ColdFlow>
-          <mixture_fraction label="mixture_fraction"/>
-          <stream_0 density="0.3" temperature="298.0"/>
-          <stream_1 density="1.0" temperature="298.0"/>
+        <table label="a_user_generated_label" type="coldflow">
           <reference_density value="1.0"/>
-        </ColdFlow>
+          <stream_1 density="1.0" temperature="298.0"/>
+          <stream_0 density="0.3" temperature="298.0"/>
+          <mixture_fraction label="mixture_fraction"/>
+        </table>
       </Properties>
       <BoundaryConditions>
         <suppress_corner_recirculation/>

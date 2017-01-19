@@ -1,14 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
-
   <Meta>
     <title>"rmcrt benchmark 1 "</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>       5.0     </maxTime>
     <initTime>      0.0     </initTime>
@@ -17,24 +14,20 @@
     <max_Timesteps> 2       </max_Timesteps>
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
-  
   <AMR>
-     <useLockStep> true </useLockStep>
+    <useLockStep> true </useLockStep>
   </AMR>
-  
   <!--__________________________________-->
   <DataArchiver>
     <filebase>rmcrt_bm1_sphere.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="divQ"      levels="-1"/>
-    <save label="radiation_temperature"  levels = "-1"/>
-    <save label="abskg" />
-    <save label="sigmaT4" />
-    <save label="cellType" />
-    
-    <checkpoint cycle = "2" timestepInterval = "2"/>
+    <save label="divQ" levels="-1"/>
+    <save label="radiation_temperature" levels="-1"/>
+    <save label="abskg"/>
+    <save label="sigmaT4"/>
+    <save label="cellType"/>
+    <checkpoint cycle="2" timestepInterval="2"/>
   </DataArchiver>
-  
   <!--__________________________________-->
   <Grid>
     <BoundaryConditions>
@@ -43,17 +36,17 @@
         <BCType label="x- wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType  label = "radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType  label = "abskg"       var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -61,17 +54,17 @@
         <BCType label="x+ wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType  label = "radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType  label = "abskg"       var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -79,17 +72,17 @@
         <BCType label="y- wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType  label = "radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType  label = "abskg"       var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -97,17 +90,17 @@
         <BCType label="y+ wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType  label = "radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType  label = "abskg"       var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -115,17 +108,17 @@
         <BCType label="z- wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType  label = "radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType  label = "abskg"       var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -133,71 +126,65 @@
         <BCType label="z+ wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType  label = "radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType  label = "abskg"       var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
     </BoundaryConditions>
-
     <Level>
-      <Box label = "0">           <!-- coarse Level -->                     
-         <lower>      [0,0,0]     </lower>         
-         <upper>      [1, 1, 1]   </upper>         
-         <resolution> [20,20,20]  </resolution>    
-         <patches>    [2,2,2]     </patches> 
-         <extraCells> [1,1,1]     </extraCells>
+      <Box label="0">
+        <!-- coarse Level -->
+        <lower>      [0,0,0]     </lower>
+        <upper>      [1, 1, 1]   </upper>
+        <resolution> [20,20,20]  </resolution>
+        <patches>    [2,2,2]     </patches>
+        <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
-    
     <Level>
-      <Box label = "1">           <!-- fine Level -->                               
-         <lower>      [0,0,0]     </lower>         
-         <upper>      [1, 1, 1]   </upper>         
-         <resolution> [40,40,40]  </resolution>    
-         <patches>    [2,2,2]     </patches> 
-         <extraCells> [1,1,1]     </extraCells>
+      <Box label="1">
+        <!-- fine Level -->
+        <lower>      [0,0,0]     </lower>
+        <upper>      [1, 1, 1]   </upper>
+        <resolution> [40,40,40]  </resolution>
+        <patches>    [2,2,2]     </patches>
+        <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
   </Grid>
-  
   <!--__________________________________-->
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.</viscosity>
   </PhysicalConstants>
-
-
   <!--__________________________________-->
   <CFD>
     <!-- ARCHES specification -->
     <ARCHES>
-    
       <BoundaryConditions>
-          <wall_csmag>0.0</wall_csmag>
-          <intrusions>
-              <intrusion label="pipe_wall">
-              <constant_temperature T="200.0" />
-              <geom_object>
-                  <sphere label="furnace_out">
-                  <origin>[0.5, 0.5, 0.5]</origin>
-                  <radius>0.125</radius>
-                  </sphere>
-              </geom_object>
-            </intrusion>
-          </intrusions>
-
-
+        <wall_csmag>0.0</wall_csmag>
+        <intrusions>
+          <intrusion label="pipe_wall">
+            <constant_temperature T="200.0"/>
+            <geom_object>
+              <sphere label="furnace_out">
+                <origin>[0.5, 0.5, 0.5]</origin>
+                <radius>0.125</radius>
+              </sphere>
+            </geom_object>
+          </intrusion>
+        </intrusions>
         <!--To turn on dynamic wall temperature, uncomment WallHT 
         <WallHT>
           <model type="region_ht">
@@ -219,14 +206,11 @@
             <tol>1.0000000000000001e-05</tol>
           </model>
         </WallHT> -->
-
       </BoundaryConditions>
-
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
       <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_f" type="CCscalar">
@@ -240,8 +224,7 @@
             <low>0.0</low>
             <high>1.0</high>
           </Clipping>
-        </Eqn> 
-        
+        </Eqn>
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -251,24 +234,21 @@
           </initialization>
           <src label="divQ"/>
         </Eqn>
-
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
-            <abskg label="abskg" />
+            <abskg label="abskg"/>
             <RMCRT>
-                <randomSeed>          false       </randomSeed>
-                <nDivQRays>           10          </nDivQRays>
-                <Threshold>           0.05        </Threshold>
-                <solveBoundaryFlux>   false       </solveBoundaryFlux>
-                <StefanBoltzmann>     5.67051e-8  </StefanBoltzmann>
-                <cellTypeCoarsenLogic> ROUNDDOWN    </cellTypeCoarsenLogic>
-                
-                <algorithm type='dataOnion'>
-                  <haloCells>           [2,2,2]     </haloCells>
-
-                  <ROI_extents type='patch_based'/>
-            <!--       
+              <randomSeed>          false       </randomSeed>
+              <nDivQRays>           10          </nDivQRays>
+              <Threshold>           0.05        </Threshold>
+              <solveBoundaryFlux>   false       </solveBoundaryFlux>
+              <StefanBoltzmann>     5.67051e-8  </StefanBoltzmann>
+              <cellTypeCoarsenLogic> ROUNDDOWN    </cellTypeCoarsenLogic>
+              <algorithm type="dataOnion">
+                <haloCells>           [2,2,2]     </haloCells>
+                <ROI_extents type="patch_based"/>
+                <!--       
                   <ROI_extents type='dynamic'>
                     <abskg_threshold>     0.1    </abskg_threshold>
                   </ROI_extents>
@@ -277,14 +257,12 @@
                     <min>          [ 0.25,0.25,0.25 ]    </min>
                     <max>          [ 0.75,0.75,0.75]     </max>
                   </ROI_extents>
-             -->     
-                </algorithm>
-                
+             -->
+              </algorithm>
             </RMCRT>
           </src>
-       </Sources> 
+        </Sources>
       </TransportEqns>
-
       <PropertyModels>
         <model type="radiation_properties" label="abskg">
           <initialization type="constant">
@@ -295,18 +273,14 @@
           </calculator>
         </model>
       </PropertyModels>
-
       <Properties>
-        <ConstantProps>
-          <density>1.18</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>64.804</temperature>
-        </ConstantProps>
+          <density>1.18</density>
+        </table>
       </Properties>
-
       <ExplicitSolver>
-
         <initial_dt>0.05</initial_dt>
-
         <PressureSolver>
           <Parameters>
             <tolerance>1.0e-10</tolerance>
@@ -315,15 +289,10 @@
             <maxiterations>250</maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
-
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

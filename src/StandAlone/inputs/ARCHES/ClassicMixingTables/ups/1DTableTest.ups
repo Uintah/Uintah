@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>One Dimensional Test Case</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>.50</maxTime>
@@ -16,21 +14,19 @@
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <filebase>OneDimTable.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
-<!-- Table Variables -->
-<!-- iv's -->
+    <!-- Table Variables -->
+    <!-- iv's -->
     <save label="mixture_fraction"/>
-<!-- dv's -->
+    <!-- dv's -->
     <save label="temperature" table_lookup="true"/>
     <save label="linear_test" table_lookup="true"/>
     <save label="density" table_lookup="true"/>
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -100,26 +96,20 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.001</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
-<!-- TIME INTEGRATOR -->
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
-
-<!-- SCALARS -->
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -133,24 +123,19 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
       </TransportEqns>
-
       <Turbulence model="compdynamicprocedure"/>
-
       <Properties>
-        <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/MixTable1D.mix.gz</inputfile>
-          <cold_flow>true</cold_flow>
-          <single_iv iv_label="mixture_fraction"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state iv="0.0"/>
-        </ClassicTable>
+          <single_iv iv_label="mixture_fraction"/>
+          <cold_flow>true</cold_flow>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/MixTable1D.mix.gz</inputfile>
+        </table>
       </Properties>
-
       <BoundaryConditions>
         <suppress_corner_recirculation/>
       </BoundaryConditions>
-
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
@@ -161,14 +146,10 @@
             <maxiterations> 250    </maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

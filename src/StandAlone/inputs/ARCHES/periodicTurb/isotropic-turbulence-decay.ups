@@ -1,11 +1,9 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
   <Meta>
     <title>Arches Periodic Box</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>     0.67   </maxTime>
@@ -15,19 +13,17 @@
     <max_Timesteps> 5 </max_Timesteps>
     <timestep_multiplier>0.25</timestep_multiplier>
   </Time>
-
-<!--__________________________________-->
+  <!--__________________________________-->
   <DataArchiver>
     <filebase>isotropic-turbulence-decay.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
-    <save label="uVelocitySPBC"/>    
-    <save label="vVelocitySPBC"/>    
-    <save label="wVelocitySPBC"/>            
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
     <save label="continuityResidual"/>
@@ -35,8 +31,7 @@
     <checkpoint cycle="2" timestepInterval="0.001"/>
     <compression>gzip</compression>
   </DataArchiver>
-
-<!--__________________________________-->
+  <!--__________________________________-->
   <Grid>
     <Level>
       <Box label="1">
@@ -48,33 +43,26 @@
       <periodic>[1,1,1]</periodic>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>   [0,0,0]   </gravity>
     <reference_point> [0,0,0]   </reference_point>
     <viscosity> 1.184344e-5  </viscosity>
   </PhysicalConstants>
-
-<!--__________________________________-->
+  <!--__________________________________-->
   <CFD>
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
       <Turbulence model="compdynamicprocedure"/>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
-     <BoundaryConditions>
+      <BoundaryConditions>
     </BoundaryConditions>
-
       <ExplicitSolver>
         <kineticEnergy_fromFC>true    </kineticEnergy_fromFC>
         <PressureSolver>
@@ -87,17 +75,13 @@
             <skip>             1      </skip>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <initialization type="input">
             <input_file>inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz</input_file>
           </initialization>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

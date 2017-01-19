@@ -1,15 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
-
   <Meta>
     <title>Scalar Test, -x inlet</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
@@ -18,7 +14,6 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>500</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>exponential_vortex_test.uda</filebase>
     <outputInitTimestep/>
@@ -26,13 +21,15 @@
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
-    <save label="mixture_fraction_sb"/>   <!-- Super Bee flux lim. --> 
-    <save label="mixture_fraction_roe"/>  <!-- Roe Min/Mod flux lim. --> 
-    <save label="mixture_fraction_up"/>   <!-- Upwind --> 
+    <save label="mixture_fraction_sb"/>
+    <!-- Super Bee flux lim. -->
+    <save label="mixture_fraction_roe"/>
+    <!-- Roe Min/Mod flux lim. -->
+    <save label="mixture_fraction_up"/>
+    <!-- Upwind -->
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
@@ -65,7 +62,6 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
     <Level>
       <Box label="1">
         <lower>[-0.5,-0.5,-0.5]</lower>
@@ -76,25 +72,19 @@
       </Box>
       <periodic>[0,1,1]</periodic>
     </Level>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.001000</viscosity>
   </PhysicalConstants>
-
   <CFD>
-
     <!-- ARCHES specification -->
     <ARCHES>
-
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
       <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction_sb" type="CCscalar">
@@ -134,24 +124,20 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-
       <Turbulence model="smagorinsky">
-        <cf>0.15</cf> <!-- turn off turbulence model --> 
+        <cf>0.15</cf>
+        <!-- turn off turbulence model -->
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
       </Turbulence>
-
       <Properties>
-        <ConstantProps>
-          <density>1.18</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.18</density>
+        </table>
       </Properties>
-
       <ExplicitSolver>
-
         <initial_dt>0.05</initial_dt>
-
         <PressureSolver>
           <Parameters>
             <tolerance>1.0e-10</tolerance>
@@ -160,25 +146,20 @@
             <maxiterations>250</maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <initialization type="exponentialvortex">
             <x0>0.0</x0>
-            <y0>0.0</y0>            
+            <y0>0.0</y0>
             <z0>0.0</z0>
             <plane>x-y</plane>
-            <G>0.01</G>            
-            <R>0.1</R>                                    
-            <U>1.0</U>                                                
-            <V>0.0</V>                                                            
+            <G>0.01</G>
+            <R>0.1</R>
+            <U>1.0</U>
+            <V>0.0</V>
           </initialization>
         </MomentumSolver>
-
       </ExplicitSolver>
-
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

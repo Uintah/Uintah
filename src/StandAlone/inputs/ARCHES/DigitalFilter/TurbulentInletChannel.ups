@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
   <Meta>
    </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <max_Timesteps> 15 </max_Timesteps>
@@ -14,7 +12,6 @@
     <delt_max>        0.0001        </delt_max>
     <timestep_multiplier> 0.7     </timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <outputInitTimestep/>
     <filebase> ChannelDigitalFilter.uda</filebase>
@@ -25,16 +22,13 @@
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
     <save label="cellType"/>
-    <save label="uVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="wVelocitySPBC" />
-
- <!--save label="mixture_fraction"/-->    
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <!--save label="mixture_fraction"/-->
     <checkpoint cycle="2" interval="0.001"/>
   </DataArchiver>
-
   <Grid>
-
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
@@ -42,71 +36,63 @@
           <value> 1.0 </value>
         </BCType>
       </Face>
-
-
       <!--Face side="x-"-->
-    <Face rectangle="x-" lower="0 0 0" upper="0 0.1 0.1">
+      <Face rectangle="x-" lower="0 0 0" upper="0 0.1 0.1">
         <!--BCType  label = "inletx" var = "VelocityInlet">
           <value> [1,0,0] </value>
         </BCType-->
-        <BCType label="Turb_In" var = "TurbulentInlet">
+        <BCType label="Turb_In" var="TurbulentInlet">
           <inputfile> inputs/ARCHES/DigitalFilter/DFGChannel.txt.gz </inputfile>
           <!--period> 34 </period-->
-          <period> 5 </period> <!-- smaller than norm so it changes in short RT -->
+          <period> 5 </period>
+          <!-- smaller than norm so it changes in short RT -->
           <value> [1,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
       </Face>
-
       <Face side="x+">
-        <BCType  label = "outletx" var = "OutletBC">
+        <BCType label="outletx" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
-
-        <Face side="y-">
-        <BCType  label = "ymwall" var = "WallBC">
+      <Face side="y-">
+        <BCType label="ymwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="y+">
-        <BCType  label = "ypwall" var = "WallBC">
+        <BCType label="ypwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="z-">
-        <BCType  label = "zmwall" var = "WallBC">
+        <BCType label="zmwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="z+">
-        <BCType  label = "zpwall" var = "WallBC">
+        <BCType label="zpwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-      </Face>    
-
+      </Face>
     </BoundaryConditions>
-
     <Level>
       <Box label="1">
         <lower>       [0,0,0]   </lower>
@@ -115,36 +101,29 @@
         <extraCells>  [1,1,1]   </extraCells>
         <patches>     [6,1,1]   </patches>
       </Box>
-<!--periodic> [0,1,0] </periodic-->
+      <!--periodic> [0,1,0] </periodic-->
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>         [-9.8,0,0]    </gravity>
     <reference_point>       [-1,-1,-1]    </reference_point>
     <viscosity>       0.001      </viscosity>
   </PhysicalConstants>
-   
   <CFD>
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <Turbulence model="compdynamicprocedure"/>
-
       <Properties>
-        <ConstantProps>
-          <density>1.18</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.18</density>
+        </table>
       </Properties>
-
       <BoundaryConditions>
         <suppress_corner_recirculation/>
       </BoundaryConditions>
-
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -159,7 +138,7 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-<!--__________________________________-->
+      <!--__________________________________-->
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
@@ -171,14 +150,10 @@
             <skip>           1       </skip>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

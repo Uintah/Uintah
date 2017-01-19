@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Methane Jet Case</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime> 1.0 </maxTime>
@@ -16,13 +14,11 @@
     <delt_max>0.001</delt_max>
     <timestep_multiplier>0.35</timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <outputInitTimestep/>
     <filebase>scalar_variance_2eqn.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="passive_scalar"/>
-
     <save label="CCVelocity"/>
     <save label="density"/>
     <save label="cellType"/>
@@ -32,14 +28,11 @@
     <save label="mf2_src"/>
     <save label="mixture_fraction"/>
     <save label="mf_moment_2"/>
-    
-    <save label="gradmf2"/> 
+    <save label="gradmf2"/>
     <save label="gradmf2_src"/>
-
     <checkpoint cycle="2" timestepInterval="10"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -90,7 +83,7 @@
           <value>0.0</value>
         </BCType>
         <BCType label="mf_moment_2" var="Dirichlet">
-         <value> 1.0 </value>
+          <value> 1.0 </value>
         </BCType>
         <BCType label="gradmf2" var="Dirichlet">
           <value> 0.0 </value>
@@ -134,7 +127,7 @@
         </BCType>
         <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
-        </BCType> 
+        </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
         <BCType label="y+pressure" var="PressureBC">
@@ -154,7 +147,7 @@
         </BCType>
         <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
-        </BCType> 
+        </BCType>
       </Face>
       <Face side="z-" name="z- wall">
         <BCType label="z-pressure" var="PressureBC">
@@ -174,7 +167,7 @@
         </BCType>
         <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
-        </BCType> 
+        </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
         <BCType label="z+pressure" var="PressureBC">
@@ -197,26 +190,20 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
-<!-- TIME INTEGRATOR -->
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
-
-<!-- SCALARS -->
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -231,7 +218,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="passive_scalar" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -244,7 +230,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="mf_moment_2" type="CCscalar">
           <doDiff> true </doDiff>
           <doConv> true </doConv>
@@ -254,12 +239,11 @@
           </initialization>
           <src label="mf2_src"/>
           <determines_properties/>
-           <Clipping>
+          <Clipping>
             <low>0.0</low>
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="gradmf2" type="CCscalar">
           <doDiff> true </doDiff>
           <doConv> true </doConv>
@@ -270,10 +254,9 @@
           <src label="gradmf2_src"/>
           <Clipping>
             <low> 0.0 </low>
-          </Clipping>  
+          </Clipping>
           <determines_properties/>
-        </Eqn> 
-
+        </Eqn>
         <Sources>
           <src label="mf2_src" type="moment2_mixture_fraction_src">
             <density_label> density </density_label>
@@ -285,9 +268,7 @@
             <gradmixfrac_label> gradmf2 </gradmixfrac_label>
           </src>
         </Sources>
-
       </TransportEqns>
-
       <PropertyModels>
         <model type="scalar_diss" label="scalarDiss">
           <initialization type="constant">
@@ -296,7 +277,6 @@
           <D> 0.00001 </D>
           <grad_mixfrac2_label> gradmf2 </grad_mixfrac2_label>
         </model>
-
         <model type="norm_scalar_var" label="normScalarVar">
           <initialization type="constant">
             <constant> 0.0 </constant>
@@ -305,22 +285,17 @@
           <second_moment_label> mf_moment_2 </second_moment_label>
           <Clip> true </Clip>
         </model>
- 
       </PropertyModels>
-
       <Turbulence model="compdynamicprocedure"/>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298.0</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <BoundaryConditions>
         <suppress_corner_recirculation/>
       </BoundaryConditions>
-
       <ExplicitSolver>
         <PressureSolver>
           <Parameters>
@@ -331,14 +306,10 @@
             <relax_type> 2 </relax_type>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

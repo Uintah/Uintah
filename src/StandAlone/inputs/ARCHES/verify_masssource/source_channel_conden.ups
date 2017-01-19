@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
@@ -193,10 +193,10 @@
         <filterl>0.000001</filterl>
       </Turbulence>
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
       <BoundaryConditions>
         <suppress_corner_recirculation/>

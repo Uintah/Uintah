@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
   <Meta>
     <title>OFC_Utah_SUFCO</title>
@@ -1426,82 +1426,82 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
-        <ParticleProperties type="coal">
-          <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
-          <!-- [m] -->
-          <!--particle_weights>[0.574,0.263,0.163]</particle_weights-->
-          <!-- [mass fractions of each particle size] -->
-          <density>1300.0</density>
-          <!-- [kg/m^3] -->
-          <temperature>300.0</temperature>
-          <!-- initial particle temperature [K] -->
-          <ultimate_analysis>
-            <C>0.6674982537</C>
-            <H>0.0450054885</H>
-            <O>0.1357149985</O>
-            <N>0.0116754815</N>
-            <S>0.0035924558</S>
-            <CHAR>0.0000000000</CHAR>
-            <ASH>0.0786348668</ASH>
-            <H2O>0.0578784552</H2O>
-          </ultimate_analysis>
-          <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy>
-          <!-- raw coal enthalpy (at 298.15 K) [J/kg] -->
-          <char_enthalpy>0.0</char_enthalpy>
-          <!-- char enthalpy (at inlet conditions) [J/kg] -->
-          <ash_enthalpy>-9.5686e7</ash_enthalpy>
-          <!-- ash enthalpy (at inlet conditions) [J/kg] -->
-          <Yamamoto_coefficients>[1.75e10,2.592280258e5,0.53,16.26759,-39.1322,61.04079,-38.3719,0.108926,0.032302]</Yamamoto_coefficients>
-          <!-- Yamamto 1 step rate coefficients in the following order:  -->
-          <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
-          <KobayashiSarofim_coefficients>[8.7e7, 1.2e14, 25632.3, 49873.7, 0.357, 0.504]</KobayashiSarofim_coefficients>
-          <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
-          <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  -->
-          <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
-          <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
-          <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
-          <FOWYDevol>
-            <v_hiT>6.641e-01</v_hiT>
-            <Tig>590</Tig>
-            <A>19724227.36</A>
-            <Ta>1.113e4</Ta>
-            <b>14.258</b>
-            <c>-10.5698</c>
-            <d>3.1935</d>
-            <e>-1.23</e>
-            <sigma>8.258e2</sigma>
-          </FOWYDevol>
-          <ShaddixChar>
-            <As> 344.0 </As>
-            <Es> 45.5e3 </Es>
-            <n> 0.18 </n>
-          </ShaddixChar>
-          <SmithChar>
-            <use_simple_inversion>true</use_simple_inversion>
-            <char_MW>12.0</char_MW>
-            <surface_area_mult_factor>1.0</surface_area_mult_factor>
-            <species>H2</species>
-            <species>O2</species>
-            <species>H2O</species>
-            <species>CO</species>
-            <species>CO2</species>
-            <species>N2</species>
-            <reaction>
-              <oxidizer_name>O2</oxidizer_name>
-              <oxidizer_MW>32.0</oxidizer_MW>
-              <pre_exponential_factor>47.5</pre_exponential_factor>
-              <activation_energy>21869.02486</activation_energy>
-              <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
-            </reaction>
-            <reaction>
-              <oxidizer_name>CO2</oxidizer_name>
-              <oxidizer_MW>48.0</oxidizer_MW>
-              <pre_exponential_factor>660</pre_exponential_factor>
-              <activation_energy>49832.69598</activation_energy>
-              <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
-            </reaction>
-          </SmithChar>
-        </ParticleProperties>
+      <ParticleProperties type="coal">
+        <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
+        <!-- [m] -->
+        <!--particle_weights>[0.574,0.263,0.163]</particle_weights-->
+        <!-- [mass fractions of each particle size] -->
+        <density>1300.0</density>
+        <!-- [kg/m^3] -->
+        <temperature>300.0</temperature>
+        <!-- initial particle temperature [K] -->
+        <ultimate_analysis>
+          <C>0.6674982537</C>
+          <H>0.0450054885</H>
+          <O>0.1357149985</O>
+          <N>0.0116754815</N>
+          <S>0.0035924558</S>
+          <CHAR>0.0000000000</CHAR>
+          <ASH>0.0786348668</ASH>
+          <H2O>0.0578784552</H2O>
+        </ultimate_analysis>
+        <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy>
+        <!-- raw coal enthalpy (at 298.15 K) [J/kg] -->
+        <char_enthalpy>0.0</char_enthalpy>
+        <!-- char enthalpy (at inlet conditions) [J/kg] -->
+        <ash_enthalpy>-9.5686e7</ash_enthalpy>
+        <!-- ash enthalpy (at inlet conditions) [J/kg] -->
+        <Yamamoto_coefficients>[1.75e10,2.592280258e5,0.53,16.26759,-39.1322,61.04079,-38.3719,0.108926,0.032302]</Yamamoto_coefficients>
+        <!-- Yamamto 1 step rate coefficients in the following order:  -->
+        <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
+        <KobayashiSarofim_coefficients>[8.7e7, 1.2e14, 25632.3, 49873.7, 0.357, 0.504]</KobayashiSarofim_coefficients>
+        <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
+        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  -->
+        <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
+        <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
+        <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
+        <FOWYDevol>
+          <v_hiT>6.641e-01</v_hiT>
+          <Tig>590</Tig>
+          <A>19724227.36</A>
+          <Ta>1.113e4</Ta>
+          <b>14.258</b>
+          <c>-10.5698</c>
+          <d>3.1935</d>
+          <e>-1.23</e>
+          <sigma>8.258e2</sigma>
+        </FOWYDevol>
+        <ShaddixChar>
+          <As> 344.0 </As>
+          <Es> 45.5e3 </Es>
+          <n> 0.18 </n>
+        </ShaddixChar>
+        <SmithChar>
+          <use_simple_inversion>true</use_simple_inversion>
+          <char_MW>12.0</char_MW>
+          <surface_area_mult_factor>1.0</surface_area_mult_factor>
+          <species>H2</species>
+          <species>O2</species>
+          <species>H2O</species>
+          <species>CO</species>
+          <species>CO2</species>
+          <species>N2</species>
+          <reaction>
+            <oxidizer_name>O2</oxidizer_name>
+            <oxidizer_MW>32.0</oxidizer_MW>
+            <pre_exponential_factor>47.5</pre_exponential_factor>
+            <activation_energy>21869.02486</activation_energy>
+            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+          </reaction>
+          <reaction>
+            <oxidizer_name>CO2</oxidizer_name>
+            <oxidizer_MW>48.0</oxidizer_MW>
+            <pre_exponential_factor>660</pre_exponential_factor>
+            <activation_energy>49832.69598</activation_energy>
+            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+          </reaction>
+        </SmithChar>
+      </ParticleProperties>
       <EulerianParticles>
         <ParticleVariables>
           <variable label="RCmass" role="raw_coal"/>
@@ -1667,17 +1667,17 @@
         <filter_cs_squared>false</filter_cs_squared>
       </Turbulence>
       <Properties>
-        <ClassicTable>
-          <enthalpy_label>enthalpy</enthalpy_label>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC.mix.gz</inputfile>
-          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
-          <cold_flow>false</cold_flow>
-          <temperature_label_name>temperature</temperature_label_name>
-          <reference_state eta="0.1603310" fp="0.4241027" hl="0.764"/>
-        </ClassicTable>
-        <filter_drhodt>false</filter_drhodt>
-        <first_order_drhodt>true</first_order_drhodt>
         <inverse_density_average>false</inverse_density_average>
+        <first_order_drhodt>true</first_order_drhodt>
+        <filter_drhodt>false</filter_drhodt>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state eta="0.1603310" fp="0.4241027" hl="0.764"/>
+          <temperature_label_name>temperature</temperature_label_name>
+          <cold_flow>false</cold_flow>
+          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC.mix.gz</inputfile>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </table>
       </Properties>
       <DQMOM type="weightedAbs">
         <LinearSolver>

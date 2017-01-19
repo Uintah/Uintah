@@ -1,15 +1,12 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Test of 1D transport of kokkos-ized scalars - Pure convection </title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>100.</maxTime>
     <initTime>0.0</initTime>
@@ -19,7 +16,6 @@
     <timestep_multiplier>0.3</timestep_multiplier>
     <max_Timesteps>50</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>x-mom-minus.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
@@ -46,7 +42,6 @@
     <checkpoint cycle="2" interval=".3"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -146,35 +141,29 @@
       </Face>
     </BoundaryConditions>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[0,0,0]</reference_point>
     <viscosity>0.0002</viscosity>
   </PhysicalConstants>
-
   <CFD>
     <ARCHES>
-
       <TimeIntegrator order="1">
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <VarID>
         <var role="uvelocity" label="uVel"/>
         <var role="vvelocity" label="vVel"/>
         <var role="wvelocity" label="wVel"/>
         <var role="total_viscosity" label="gamma"/>
-        <var role="density"   label="density"/>
+        <var role="density" label="density"/>
       </VarID>
-
       <Properties>
-        <ConstantProps>
-          <temperature>298.</temperature>
+        <table label="a_user_generated_label" type="constant">
           <density>298.</density>
-        </ConstantProps>
+          <temperature>298.</temperature>
+        </table>
       </Properties>
-
       <PropertyModelsV2>
         <model label="density" type="constant_property">
           <grid type="CC"/>
@@ -185,11 +174,9 @@
           <value>1.e-4</value>
         </model>
       </PropertyModelsV2>
-
       <KMomentum>
         <convection scheme="central"/>
         <inviscid/>
-
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -202,23 +189,17 @@
           </Parameters>
         </PressureSolver>
       </KMomentum>
-      
       <KScalarTransport>
-        <eqn_group label="CCFields"
-                   type="CC">
-
+        <eqn_group label="CCFields" type="CC">
           <eqn label="phi">
             <convection scheme="superbee"/>
           </eqn>
         </eqn_group>
       </KScalarTransport>
-
       <BoundaryConditions>
         <force_area_calc/>
       </BoundaryConditions>
-
       <KokkosSolver/>
-
     </ARCHES>
   </CFD>
 </Uintah_specification>

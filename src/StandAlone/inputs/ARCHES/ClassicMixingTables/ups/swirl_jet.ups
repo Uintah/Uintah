@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Swirled Jet Case</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>2.50</maxTime>
@@ -16,14 +14,13 @@
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <filebase>swirled_jet.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="passive_scalar"/>
-<!-- Table Variables -->
-<!-- iv's -->
+    <!-- Table Variables -->
+    <!-- iv's -->
     <save label="normalizedScalarVar"/>
     <save label="mixture_fraction"/>
     <save label="heat_loss"/>
@@ -33,7 +30,7 @@
     <save label="enthalpy"/>
     <save label="cellType"/>
     <save label="volFraction"/>
-<!-- dv's -->
+    <!-- dv's -->
     <save label="CH4" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
     <save label="CO2" table_lookup="true"/>
@@ -43,7 +40,6 @@
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -199,28 +195,21 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[1,1,1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
       <BoundaryConditions/>
-
-<!-- TIME INTEGRATOR -->
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
-
-<!-- SCALARS -->
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -234,7 +223,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="passive_scalar" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -247,7 +235,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -258,7 +245,6 @@
           </initialization>
           <src label="divQ"/>
         </Eqn>
-
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
@@ -274,9 +260,7 @@
             </DORadiationModel>
           </src>
         </Sources>
-
       </TransportEqns>
-
       <PropertyModels>
         <model type="radiation_properties" label="abskg">
           <initialization type="constant">
@@ -308,17 +292,14 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
-
       <Turbulence model="compdynamicprocedure"/>
-
       <Properties>
-        <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
-          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state f="0.0" hl="0.0" var="0.0"/>
-        </ClassicTable>
+          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
+        </table>
       </Properties>
-
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
@@ -329,14 +310,10 @@
             <maxiterations>  75   </maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

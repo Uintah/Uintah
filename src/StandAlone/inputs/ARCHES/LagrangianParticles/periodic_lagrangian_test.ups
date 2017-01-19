@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Arches "2D" Periodic Box Almgren MMS </title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>10.0</maxTime>
@@ -17,7 +15,6 @@
     <timestep_multiplier>0.5</timestep_multiplier>
     <max_Timesteps>100</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>lagrangian_test.uda</filebase>
     <outputInitTimestep/>
@@ -31,23 +28,17 @@
     <save label="continuityResidual"/>
     <save label="velocityDivergence"/>
     <save label="p.x"/>
-
     <save label="p.u"/>
     <save label="p.v"/>
     <save label="p.w"/>
-
     <save label="p.px"/>
     <save label="p.py"/>
     <save label="p.pz"/>
-
     <save label="p.d"/>
-
     <save label="p.particleID"/>
-
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -60,23 +51,16 @@
       <periodic>[1,1,1]</periodic>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[0,0,0]</reference_point>
     <viscosity>0.0002</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
       <BoundaryConditions/>
-
-
-
-<!-- NEW STUFF --> 
-
+      <!-- NEW STUFF -->
       <!-- transported scalar -->
       <ScalarTransport>
         <eqn label="arches_task_scalar">
@@ -85,24 +69,20 @@
           <convection scheme="minmod"/>
         </eqn>
       </ScalarTransport>
-
       <LagrangianParticles>
         <ParticlesPerCell>100</ParticlesPerCell>
         <ParticlePosition x="p.px" y="p.py" z="p.pz"/>
         <ParticleVelocity u="p.u" v="p.v" w="p.w"/>
-        <ParticleSize     label="p.d"/>
-
+        <ParticleSize label="p.d"/>
         <ParticleVariables>
         </ParticleVariables>
-
       </LagrangianParticles>
-
       <Initialization>
         <task label="my_great_initializer" eqn="arches_task_scalar" type="wave">
           <!--<wave type="sine">-->
-            <!--<grid dependent_type="svol" independent_type="svol"/>-->
-            <!--<independent_variable label="gridX"/>-->
-            <!--<sine A="1.0" f=".5" offset="0"/>-->
+          <!--<grid dependent_type="svol" independent_type="svol"/>-->
+          <!--<independent_variable label="gridX"/>-->
+          <!--<sine A="1.0" f=".5" offset="0"/>-->
           <!--</wave>-->
           <wave type="square">
             <grid dependent_type="svol" independent_type="svol"/>
@@ -110,20 +90,15 @@
             <square min="0.0" max="1.0" f="1.0" offset="0.0"/>
           </wave>
         </task>
-
         <task label="Lx" type="random_lagrangian_particles"/>
-
         <task label="Lvel" type="lagrangian_particle_velocity">
           <velocity_init type="as_gas_velocity"/>
         </task>
-
         <task label="Ld" type="lagrangian_particle_size">
           <size_init type="random"/>
           <max_diameter>1e-4</max_diameter>
         </task>
-
       </Initialization>
-
       <ParticleModels>
         <model type="simple_rate" label="my_model">
           <A>1.0</A>
@@ -135,20 +110,16 @@
           <N>1</N>
         </model>
       </ParticleModels>
-
-<!-- END NEW STUFF -->
-
+      <!-- END NEW STUFF -->
       <TimeIntegrator order="1">
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <ExplicitSolver>
         <PressureSolver>
           <Parameters>
@@ -161,22 +132,18 @@
             <jump>              0     </jump>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <initialization type="almgren">
             <plane>x-y</plane>
           </initialization>
           <!--<initialization type="constant">-->
-            <!--<const_u>1.0</const_u>-->
-            <!--<const_v>1.0</const_v>-->
-            <!--<const_w>1.0</const_w>-->
+          <!--<const_u>1.0</const_u>-->
+          <!--<const_v>1.0</const_v>-->
+          <!--<const_w>1.0</const_w>-->
           <!--</initialization>-->
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

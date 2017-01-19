@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Arches Methane Plume Multi Patch Run with Radiation</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>10.0</maxTime>
@@ -16,7 +14,6 @@
     <delt_max>0.1</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <filebase>channel_WD_CO.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
@@ -56,7 +53,6 @@
     <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -70,7 +66,7 @@
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType var="WallBC"  label="y-pressure">
+        <BCType var="WallBC" label="y-pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -93,7 +89,7 @@
         </BCType>
       </Face>
       <Face rectangle="x-" lower="0.0 0.1 0.1" upper="0.0 0.4 0.4" name="fuel">
-        <BCType var="MassFlowInlet"  label="fuel inlet">
+        <BCType var="MassFlowInlet" label="fuel inlet">
           <value>0.0602</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -117,7 +113,7 @@
         </BCType>
       </Face>
       <Face rectangle="y-" lower="0.0 0.0 0.0" upper="0.4 0.0 0.5" name="secon_plus_tert">
-        <BCType var="MassFlowInlet"  label="secondary_plus_tertiary">
+        <BCType var="MassFlowInlet" label="secondary_plus_tertiary">
           <value>0.2225</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -140,7 +136,7 @@
         </BCType>
       </Face>
       <Face rectangle="y+" lower="0.0 0.5 0.0" upper="0.4 0.5 0.5" name="secon_plus_tert2">
-        <BCType var="MassFlowInlet"  label="secondary_plus_tertiary2">
+        <BCType var="MassFlowInlet" label="secondary_plus_tertiary2">
           <value>0.2225</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -163,7 +159,7 @@
         </BCType>
       </Face>
       <Face rectangle="z-" lower="0.0 0.0 0.0" upper="0.4 0.5 0.0" name="primary1">
-        <BCType var="MassFlowInlet"  label="primary inlet1">
+        <BCType var="MassFlowInlet" label="primary inlet1">
           <value>0.098</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -186,7 +182,7 @@
         </BCType>
       </Face>
       <Face rectangle="z+" lower="0.0 0.0 0.5" upper="0.4 0.5 0.5" name="primary2">
-        <BCType var="MassFlowInlet"  label="primary inlet2">
+        <BCType var="MassFlowInlet" label="primary inlet2">
           <value>0.098</value>
         </BCType>
         <BCType var="Dirichlet" label="eta">
@@ -209,7 +205,7 @@
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType var="OutletBC"  label="the outlet">
+        <BCType var="OutletBC" label="the outlet">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -232,7 +228,7 @@
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType var="WallBC"  label="y-pressure">
+        <BCType var="WallBC" label="y-pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -255,7 +251,7 @@
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType var="WallBC"  label="y+pressure">
+        <BCType var="WallBC" label="y+pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -278,7 +274,7 @@
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType var="WallBC"  label="z-pressure">
+        <BCType var="WallBC" label="z-pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -301,7 +297,7 @@
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="WallBC"  label="z+pressure">
+        <BCType var="WallBC" label="z+pressure">
           <value>0.0</value>
         </BCType>
         <BCType var="Neumann" label="eta">
@@ -325,21 +321,17 @@
       </Face>
     </BoundaryConditions>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <TransportEqns>
         <Eqn label="eta" type="CCscalar">
           <doDiff>true</doDiff>
@@ -355,7 +347,6 @@
           </Clipping>
           <src label="pos_source"/>
         </Eqn>
-
         <Eqn label="fp" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -372,7 +363,6 @@
             <weight>-1.0</weight>
           </src>
         </Eqn>
-
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -383,7 +373,6 @@
           </initialization>
           <src label="div_q"/>
         </Eqn>
-
         <Sources>
           <src label="pos_source" type="westbrook_dryer">
             <A>4e9</A>
@@ -429,17 +418,14 @@
           </src>
         </Sources>
       </TransportEqns>
-
       <Turbulence model="compdynamicprocedure"/>
-
       <Properties>
-        <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/ifrf_step1.mix.gz</inputfile>
-          <rcce eta_label = "eta" fp_label = "fp" hl_label="heat_loss"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state eta="0.0" fp="0.0" hl="0.0"/>
-        </ClassicTable>
+          <rcce eta_label="eta" fp_label="fp" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/ifrf_step1.mix.gz</inputfile>
+        </table>
       </Properties>
-
       <PropertyModels>
         <model type="radiation_properties" label="abskg">
           <initialization type="constant">
@@ -473,10 +459,10 @@
           </initialization>
           <mixture_fraction_label>eta</mixture_fraction_label>
           <density_label>density</density_label>
-          <variance_coefficient>0.14</variance_coefficient> <!-- Warning: not a good default value -->
+          <variance_coefficient>0.14</variance_coefficient>
+          <!-- Warning: not a good default value -->
         </model>
       </PropertyModels>
-
       <PropertyModelsV2>
         <model type="CO" label="CO_model">
           <CO_defect_label>CO_d</CO_defect_label>
@@ -496,9 +482,7 @@
           <Pr>0.4</Pr>
         </model>
       </PropertyModelsV2>
-
       <BoundaryConditions/>
-
       <ExplicitSolver>
         <PressureSolver>
           <Parameters>
@@ -509,14 +493,10 @@
             <setupFrequency>1     </setupFrequency>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

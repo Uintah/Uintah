@@ -1,11 +1,9 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
   <Meta>
     <title> CQMOM 2D Particle Trajectory Crossing with Point inlets</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <max_Timesteps> 5 </max_Timesteps>
@@ -15,35 +13,27 @@
     <delt_max>        0.001        </delt_max>
     <timestep_multiplier> 0.7     </timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <outputInitTimestep/>
     <filebase> BoxPTC_2D.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-
     <save label="cellType"/>
-    <save label="m_00" />
+    <save label="m_00"/>
     <save label="m_00_Fconv"/>
     <save label="m_00_FconvX"/>
     <save label="m_00_FconvY"/>
-    <save label="m_10" />
-    <save label="m_01" />
-    <save label="m_30" />
-    
-    <save label="w_0" />
-    <save label="w_1" />
-
-    <save label="partUVel_0" />
-    <save label="partUVel_1" />
-
-    <save label="partVVel_0" />
-    <save label="partVVel_1" />
-
+    <save label="m_10"/>
+    <save label="m_01"/>
+    <save label="m_30"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="partUVel_0"/>
+    <save label="partUVel_1"/>
+    <save label="partVVel_0"/>
+    <save label="partVVel_1"/>
     <checkpoint cycle="2" interval="0.001"/>
   </DataArchiver>
-
   <Grid>
-
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
@@ -72,9 +62,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face rectangle="x-" lower="0 0.4 0" upper="0 0.6 .1">
-        <BCType  label = "inletx" var = "VelocityInlet">
+        <BCType label="inletx" var="VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
@@ -99,9 +88,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face rectangle="y-" lower=".4 0 0" upper=".6 0 .2">
-        <BCType  label = "inletx" var = "VelocityInlet">
+        <BCType label="inletx" var="VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
@@ -127,9 +115,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="x+">
-        <BCType  label = "outletx" var = "OutletBC">
+        <BCType label="outletx" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -155,9 +142,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="y-">
-        <BCType  label = "ymwall" var = "WallBC">
+        <BCType label="ymwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -182,9 +168,8 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
       <Face side="y+">
-        <BCType  label = "ypwall" var = "OutletBC">
+        <BCType label="ypwall" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -209,9 +194,7 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-
     </BoundaryConditions>
-
     <Level>
       <Box label="1">
         <lower>       [0,0,0]   </lower>
@@ -223,33 +206,26 @@
       <periodic> [0,0,1] </periodic>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>         [0.0,0,0]    </gravity>
     <reference_point>       [-1,-1,-1]    </reference_point>
     <viscosity>       0.000      </viscosity>
   </PhysicalConstants>
-   
   <CFD>
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <Turbulence model="none"/>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <BoundaryConditions>
         <suppress_corner_recirculation/>
       </BoundaryConditions>
-
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -264,7 +240,7 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-<!--__________________________________-->
+      <!--__________________________________-->
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
@@ -276,13 +252,10 @@
             <skip>           1       </skip>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
-      
       <CQMOM partvel="true">
         <!-- base information-->
         <NumberInternalCoordinates> 2 </NumberInternalCoordinates>
@@ -292,31 +265,32 @@
         <WeightRatio> 1.0e-5 </WeightRatio>
         <InternalCoordinate name="partUVel" type="uVel"/>
         <InternalCoordinate name="partVVel" type="vVel"/>
-
         <!--transport-->
         <doDiff> false </doDiff>
         <doConv> true  </doConv>
         <conv_scheme> first </conv_scheme>
         <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
         <molecular_diffusivity> 0.0 </molecular_diffusivity>
-        
         <!-- moment eqns-->
-        <Moment> <m> [0,0] </m> </Moment>
-        
-        <Moment> <m> [1,0] </m> </Moment>
-        
-        <Moment> <m> [2,0] </m> </Moment>
-        
-        <Moment> <m> [3,0] </m> </Moment>
-        
-        <Moment> <m> [0,1] </m> </Moment>
-        
-        <Moment> <m> [1,1] </m> </Moment>
-
-        
+        <Moment>
+          <m> [0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,0] </m>
+        </Moment>
+        <Moment>
+          <m> [2,0] </m>
+        </Moment>
+        <Moment>
+          <m> [3,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,1] </m>
+        </Moment>
+        <Moment>
+          <m> [1,1] </m>
+        </Moment>
       </CQMOM>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

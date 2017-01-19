@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <Uintah_specification>
   <Meta>
    </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>         10.0        </maxTime>
@@ -14,7 +12,6 @@
     <max_Timesteps>   50          </max_Timesteps>
     <timestep_multiplier>0.35     </timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <filebase>outflow_test.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
@@ -27,7 +24,6 @@
     <save label="cellType"/>
     <checkpoint cycle="2" interval="0.01"/>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="my world">
@@ -61,38 +57,32 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <!-- Outlet --> 
+      <!-- Outlet -->
       <Face side="x+" name="myx+">
-        <!-- Momentum BCs --> 
+        <!-- Momentum BCs -->
         <BCType label="outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
       </Face>
     </BoundaryConditions>
   </Grid>
-
   <PhysicalConstants>
     <gravity>         [0,0,0]    </gravity>
     <reference_point>       [1,1,1]    </reference_point>
     <viscosity>       1.790e-5      </viscosity>
   </PhysicalConstants>
-
   <CFD>
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <BoundaryConditions/>
-
       <ExplicitSolver>
         <PressureSolver>
           <Parameters>
@@ -105,14 +95,10 @@
             <jump>              0     </jump>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

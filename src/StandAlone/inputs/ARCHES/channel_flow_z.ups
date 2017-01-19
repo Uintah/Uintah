@@ -1,15 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
-
   <Meta>
     <title>Laminar Channel Flow</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
@@ -18,7 +14,6 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>21</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>channel_flow_z.uda</filebase>
     <outputInitTimestep/>
@@ -27,7 +22,6 @@
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
     <save label="volFraction"/>
-
     <save label="CCVelocity"/>
     <save label="densityCP"/>
     <save label="continuityResidual"/>
@@ -36,16 +30,13 @@
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <MPM>
     <time_integrator>explicit</time_integrator>
     <interpolator>linear</interpolator>
   </MPM>
-
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-
       <Face side="z-" name="z- face">
         <BCType label="velocity inlet" var="MassFlowInlet">
           <value>0.01</value>
@@ -95,7 +86,6 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
@@ -105,25 +95,19 @@
         <patches>[1,1,1]</patches>
       </Box>
     </Level>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.001000</viscosity>
   </PhysicalConstants>
-
   <CFD>
-
     <!-- ARCHES specification -->
     <ARCHES>
-
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
@@ -141,19 +125,15 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <BoundaryConditions>
       </BoundaryConditions>
-
       <ExplicitSolver>
-
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
           <Parameters>
@@ -164,14 +144,10 @@
             <relax_type>2</relax_type>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
-
     </ARCHES>
-
   </CFD>
 </Uintah_specification>

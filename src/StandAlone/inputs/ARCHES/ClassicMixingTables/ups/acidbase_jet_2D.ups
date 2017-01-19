@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title> Acid Base Chemistry with Mixing Table </title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>.50</maxTime>
@@ -16,7 +14,6 @@
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <filebase> acidbase_jet.uda </filebase>
     <outputTimestepInterval> 5 </outputTimestepInterval>
@@ -42,7 +39,6 @@
     <checkpoint cycle="2" interval="0.002"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -154,26 +150,20 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-
   </Grid>
-
   <PhysicalConstants>
     <gravity> [-9.8,0,0] </gravity>
     <reference_point> [-1,-1,-1] </reference_point>
     <viscosity> 0.001 </viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
-<!-- TIME INTEGRATOR -->
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
-
-<!-- TIME INTEGRATOR: Specifics of Explicit Solver including Pressure -->
+      <!-- TIME INTEGRATOR: Specifics of Explicit Solver including Pressure -->
       <ExplicitSolver>
         <initial_dt> 0.01 </initial_dt>
         <restartOnNegativeDensityGuess> false </restartOnNegativeDensityGuess>
@@ -185,30 +175,26 @@
             <maxiterations> 500 </maxiterations>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme> central </convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
-<!-- TURBULENCE Specification -->
+      <!-- TURBULENCE Specification -->
       <Turbulence model="smagorinsky">
         <cf> 0.17 </cf>
         <fac_mesh> 1.0 </fac_mesh>
         <filterl> 0.000001 </filterl>
       </Turbulence>
-
-<!-- TABLE and Properties -->
+      <!-- TABLE and Properties -->
       <Properties>
-        <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/AcidBaseTable2D.mix.gz</inputfile>
-          <cold_flow> true </cold_flow>
-          <acidbase f_label="mixture_fraction" extent_label="rxn_extent"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state f="0.0" extent="0.0"/>
-        </ClassicTable>
+          <acidbase f_label="mixture_fraction" extent_label="rxn_extent"/>
+          <cold_flow> true </cold_flow>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/AcidBaseTable2D.mix.gz</inputfile>
+        </table>
       </Properties>
-
-<!-- EXTRA SCALARS -->
+      <!-- EXTRA SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff> true </doDiff>
@@ -218,7 +204,6 @@
             <constant> 0.0 </constant>
           </initialization>
         </Eqn>
-
         <Eqn label="rxn_extent" type="CCscalar">
           <doDiff> true </doDiff>
           <doConv> true </doConv>
@@ -228,7 +213,6 @@
           </initialization>
           <src label="rxn_extent_src"/>
         </Eqn>
-
         <Eqn label="residence_time" type="CCscalar">
           <doDiff> true </doDiff>
           <doConv> true </doConv>
@@ -238,7 +222,6 @@
           </initialization>
           <src label="residence_time_src"/>
         </Eqn>
-
         <Sources>
           <src label="residence_time_src" type="constant_src">
             <constant> 1000.0 </constant>
@@ -247,18 +230,13 @@
             <rxn_rate> Vtest2 </rxn_rate>
           </src>
         </Sources>
-
       </TransportEqns>
-
-<!-- BOUNDARY Specification -->
+      <!-- BOUNDARY Specification -->
       <BoundaryConditions>
         <suppress_corner_recirculation/>
       </BoundaryConditions>
-
     </ARCHES>
-
   </CFD>
-
   <Multimaterial>
     <fluidThermalConductivity> 0.03 </fluidThermalConductivity>
     <heatExchange> false </heatExchange>

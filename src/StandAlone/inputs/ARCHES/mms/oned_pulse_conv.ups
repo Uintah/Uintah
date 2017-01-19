@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Convection of a one-dimensional pulse of mixture fraction</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>200.</maxTime>
@@ -17,7 +15,6 @@
     <timestep_multiplier>0.1</timestep_multiplier>
     <max_Timesteps>10</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>pulse.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
@@ -34,7 +31,6 @@
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -47,23 +43,18 @@
       <periodic>[1,1,1]</periodic>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[14,1,1]</reference_point>
     <viscosity>0.0</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
       <BoundaryConditions/>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
       <TransportEqns>
         <Eqn label="f" type="CCscalar">
           <doConv>true</doConv>
@@ -77,15 +68,13 @@
           </initialization>
         </Eqn>
       </TransportEqns>
-
       <Properties>
-        <ColdFlow>
-          <mixture_fraction label="f"/>
-          <stream_0 density="1.0" temperature="298"/>
+        <table label="a_user_generated_label" type="coldflow">
           <stream_1 density="5.0" temperature="298"/>
-        </ColdFlow>
+          <stream_0 density="1.0" temperature="298"/>
+          <mixture_fraction label="f"/>
+        </table>
       </Properties>
-
       <ExplicitSolver>
         <PressureSolver>
           <enforce_solvability/>
@@ -100,7 +89,6 @@
             <jump>              0     </jump>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <initialization type="constant">
@@ -109,7 +97,6 @@
             <const_w>0.0</const_w>
           </initialization>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
   </CFD>

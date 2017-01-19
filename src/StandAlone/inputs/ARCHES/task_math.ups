@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Arches "2D" Periodic Box Almgren MMS </title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>0.1</maxTime>
@@ -17,7 +15,6 @@
     <timestep_multiplier>0.1</timestep_multiplier>
     <max_Timesteps>3</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>task_math.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
@@ -47,7 +44,6 @@
     <checkpoint cycle="2" interval="0.0001"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -60,31 +56,24 @@
       <periodic>[1,1,1]</periodic>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[0,0,0]</reference_point>
     <viscosity>0.0</viscosity>
   </PhysicalConstants>
-
   <CFD>
-
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
       <BoundaryConditions/>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <TransportEqns>
         <Eqn label="one" type="CCscalar">
           <doDiff>false</doDiff>
@@ -127,85 +116,96 @@
           </initialization>
         </Eqn>
       </TransportEqns>
-
       <Utilities>
         <utility type="variable_math" label="my_expression">
           <grid type="CC"/>
           <!-- variable to variable operations -->
-          <op label="addOp" type="ADD"> <!-- 1+2=3 -->
+          <op label="addOp" type="ADD">
+            <!-- 1+2=3 -->
             <dep>addResult</dep>
             <ind1>one</ind1>
             <ind2>two</ind2>
             <new_variable/>
           </op>
-          <op label="subOp" type="SUBTRACT"> <!-- 1-2=-1 -->
+          <op label="subOp" type="SUBTRACT">
+            <!-- 1-2=-1 -->
             <dep>subResult</dep>
             <ind1>one</ind1>
             <ind2>two</ind2>
             <new_variable/>
           </op>
-          <op label="multOp" type="MULTIPLY"> <!-- 3*-1 = -3 -->
+          <op label="multOp" type="MULTIPLY">
+            <!-- 3*-1 = -3 -->
             <dep>multResult</dep>
             <ind1>subResult</ind1>
             <ind2>addResult</ind2>
             <new_variable/>
           </op>
-          <op label="divOp" type="DIVIDE"> <!-- 1/3 = .33333 -->
+          <op label="divOp" type="DIVIDE">
+            <!-- 1/3 = .33333 -->
             <dep>divResult</dep>
             <ind1>one</ind1>
             <ind2>three</ind2>
             <new_variable/>
           </op>
-          <op label="powOp" type="POW"> <!-- 2^3 = 8 -->
+          <op label="powOp" type="POW">
+            <!-- 2^3 = 8 -->
             <dep>powResult</dep>
             <ind1>two</ind1>
             <ind2>three</ind2>
             <new_variable/>
           </op>
           <!-- variable to constant operations -->
-          <op label="addOpC" type="ADD"> <!-- 1+2=3 -->
+          <op label="addOpC" type="ADD">
+            <!-- 1+2=3 -->
             <dep>addResultC</dep>
             <ind1>one</ind1>
             <constant>2.0</constant>
             <new_variable/>
           </op>
-          <op label="subOpC" type="SUBTRACT"> <!-- 1-2=-1 -->
+          <op label="subOpC" type="SUBTRACT">
+            <!-- 1-2=-1 -->
             <dep>subResultC</dep>
             <ind1>one</ind1>
             <constant>2.0</constant>
             <new_variable/>
           </op>
-          <op label="multOpC" type="MULTIPLY"> <!-- 3*-1 = -3 -->
+          <op label="multOpC" type="MULTIPLY">
+            <!-- 3*-1 = -3 -->
             <dep>multResultC</dep>
             <ind1>subResult</ind1>
             <constant>3.</constant>
             <new_variable/>
           </op>
-          <op label="divOpC1" type="DIVIDE_VARIABLE_CONST"> <!-- 1/3 = .33333 -->
+          <op label="divOpC1" type="DIVIDE_VARIABLE_CONST">
+            <!-- 1/3 = .33333 -->
             <dep>divResultC1</dep>
             <ind1>one</ind1>
             <constant>3.</constant>
             <new_variable/>
           </op>
-          <op label="divOpC2" type="DIVIDE_CONST_VARIABLE"> <!-- 3/3 = 1. -->
+          <op label="divOpC2" type="DIVIDE_CONST_VARIABLE">
+            <!-- 3/3 = 1. -->
             <dep>divResultC2</dep>
             <ind1>three</ind1>
             <constant>3.</constant>
             <new_variable/>
           </op>
-          <op label="powOpC" type="POW"> <!-- 2^3 = 8 -->
+          <op label="powOpC" type="POW">
+            <!-- 2^3 = 8 -->
             <dep>powResultC</dep>
             <ind1>two</ind1>
             <constant>3.</constant>
             <new_variable/>
           </op>
-          <op label="expOp" type="EXP"> <!-- e^2 = 7.3890561 -->
+          <op label="expOp" type="EXP">
+            <!-- e^2 = 7.3890561 -->
             <dep>expResult</dep>
             <ind1>two</ind1>
-            <constant>1.0</constant> <!-- constant here is a bit hacky since it doens't actually use it...need to fix -->
+            <constant>1.0</constant>
+            <!-- constant here is a bit hacky since it doens't actually use it...need to fix -->
             <new_variable/>
           </op>
-
           <exe_order>
             <op label="addOp"/>
             <op label="subOp"/>
@@ -222,7 +222,6 @@
           </exe_order>
         </utility>
       </Utilities>
-
       <ExplicitSolver>
         <PressureSolver>
           <Parameters>
@@ -235,7 +234,6 @@
             <jump>              0     </jump>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
           <initialization type="constant">
@@ -244,10 +242,7 @@
             <const_w>0.10</const_w>
           </initialization>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>

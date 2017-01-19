@@ -1,14 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Arches Methane Plume Multi Patch Run with Radiation</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
@@ -17,7 +14,6 @@
     <timestep_multiplier>0.2</timestep_multiplier>
     <max_Timesteps>5</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>radiation_in_a_box.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
@@ -47,7 +43,6 @@
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -60,143 +55,138 @@
     </Level>
     <BoundaryConditions>
       <Face side="x-">
-        <BCType var="WallBC"  label="x-wall">
+        <BCType var="WallBC" label="x-wall">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy">
           <value>0.0</value>
         </BCType>
-        <BCType var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature">
           <value>1800</value>
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType var="WallBC"  label="x+wall">
+        <BCType var="WallBC" label="x+wall">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy">
           <value>0.0</value>
         </BCType>
-        <BCType var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature">
           <value>298</value>
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType var="WallBC"  label="y-wall">
+        <BCType var="WallBC" label="y-wall">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy">
           <value>0.0</value>
         </BCType>
-        <BCType var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature">
           <value>298</value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType var="WallBC"  label="y+wall">
+        <BCType var="WallBC" label="y+wall">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy">
           <value>0.0</value>
         </BCType>
-        <BCType var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature">
           <value>298</value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType var="WallBC"  label="z-wall">
+        <BCType var="WallBC" label="z-wall">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy">
           <value>0.0</value>
         </BCType>
-        <BCType var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature">
           <value>298</value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="WallBC"  label="z+wall">
+        <BCType var="WallBC" label="z+wall">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var">
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy">
           <value>0.0</value>
         </BCType>
-        <BCType var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature">
           <value>298</value>
         </BCType>
       </Face>
     </BoundaryConditions>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
-
   <CFD>
-
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -211,7 +201,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -222,9 +211,7 @@
           </initialization>
           <src label="divQ"/>
         </Eqn>
-
         <Sources>
-
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
@@ -238,11 +225,8 @@
               </LinearSolver>
             </DORadiationModel>
           </src>
-
         </Sources>
-
       </TransportEqns>
-
       <PropertyModels>
         <model type="radiation_properties" label="abskg">
           <initialization type="constant">
@@ -277,24 +261,20 @@
           </initialization>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
           <density_label>density</density_label>
-          <variance_coefficient>0.14</variance_coefficient> <!-- Warning: not a good default value --> 
+          <variance_coefficient>0.14</variance_coefficient>
+          <!-- Warning: not a good default value -->
         </model>
       </PropertyModels>
-
       <Properties>
-        <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic_new.mix.gz</inputfile>
-          <standard_equilibrium f_label="mixture_fraction"
-                                hl_label="heat_loss"
-                                var_label="scalar_var"/>
+        <table label="a_user_generated_label" type="classic">
           <reference_state f="0.0" hl="0.0" var="0.0"/>
-        </ClassicTable>
+          <standard_equilibrium f_label="mixture_fraction" hl_label="heat_loss" var_label="scalar_var"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic_new.mix.gz</inputfile>
+        </table>
       </Properties>
-
       <BoundaryConditions>
         <suppress_corner_recirculation/>
       </BoundaryConditions>
-
       <ExplicitSolver>
         <PressureSolver>
           <Parameters>
@@ -307,13 +287,10 @@
             <jump>              0     </jump>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
 </Uintah_specification>

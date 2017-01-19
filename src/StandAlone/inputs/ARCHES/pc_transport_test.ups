@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1'?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>PC Transport Test</title>
   </Meta>
-
   <SimulationComponent type="arches"/>
-
   <Solver type="hypre"/>
   <Time>
     <maxTime>0.1</maxTime>
@@ -16,23 +14,20 @@
     <delt_max>5</delt_max>
     <timestep_multiplier>0.1</timestep_multiplier>
   </Time>
-
   <DataArchiver>
     <filebase>pc_transport.uda</filebase>
     <outputInterval>0.01</outputInterval>
-    <!-- transported variables --> 
+    <!-- transported variables -->
     <save label="pc_0"/>
     <save label="pc_1"/>
     <save label="pc_2"/>
-    <!-- sources --> 
+    <!-- sources -->
     <save label="pc_src_0"/>
     <save label="pc_src_1"/>
     <save label="pc_src_2"/>
-
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
-
   <Grid>
     <Level>
       <Box label="1">
@@ -45,21 +40,17 @@
       <periodic>[1,1,1]</periodic>
     </Level>
   </Grid>
-
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[0,0,0]</reference_point>
     <viscosity>0.0</viscosity>
   </PhysicalConstants>
-
   <CFD>
-<!-- ARCHES specification -->
+    <!-- ARCHES specification -->
     <ARCHES>
-
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -74,7 +65,6 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
         <Eqn label="pc_0" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -102,7 +92,6 @@
           </initialization>
           <src label="pc_src_2"/>
         </Eqn>
-
         <Sources>
           <src label="pc_src_0" type="pc_transport">
             <pc_scal_file>string_1</pc_scal_file>
@@ -141,16 +130,13 @@
             <pc label="pc_2" score_number="2"/>
           </src>
         </Sources>
-
       </TransportEqns>
-
       <Properties>
-        <ConstantProps>
-          <density>1.0</density>
+        <table label="a_user_generated_label" type="constant">
           <temperature>298.0</temperature>
-        </ConstantProps>
+          <density>1.0</density>
+        </table>
       </Properties>
-
       <ExplicitSolver>
         <PressureSolver>
           <Parameters>
@@ -161,14 +147,10 @@
             <skip>              1     </skip>
           </Parameters>
         </PressureSolver>
-
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
       </ExplicitSolver>
     </ARCHES>
-
   </CFD>
-
 </Uintah_specification>
