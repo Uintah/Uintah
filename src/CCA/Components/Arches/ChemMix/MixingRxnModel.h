@@ -216,8 +216,6 @@ namespace Uintah {
 
     inline double get_reference_density(CCVariable<double>& density, constCCVariable<double> volFraction ){
 
-      int FLOW = -1;
-
       if ( d_user_ref_density ){
         return d_reference_density;
       } else {
