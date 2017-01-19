@@ -1,21 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!-- @version: -->
-<!---This input file generates a sqaure domain with 1500 kelvin walls   -->
-<!---The box exhibits a sinusodial temperature profile and a constant   -->
-<!--- absorption coefficient 5*exp(-x +-.1) --> 
-<!---a semi-analytical solution has been developed for comparison    -->
-<!---This input file is desinged to test various radiation models    -->
-<!---against an analytical solution. Run at 41 123 or 369^3 resolution.-->
-<!---Derek Harris-->
-
 <Uintah_specification>
   <Meta>
     <title>Arches Static CFG system with discrete ordinate radiation using 16 ordinates</title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
 
   <Time>
     <maxTime>3.5</maxTime>
@@ -29,12 +19,12 @@
   <DataArchiver>
     <filebase>RMCRT1L.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="divQ"/>
-    <save label="radiation_temperature"/>
-    <!--<save label="radiationVolq"/>-->
-    <save label="mixture_fraction"/>
-    <save label="abskg"/>
-    <checkpoint cycle="2" interval="0.02"/>
+    <save label="divQ" />
+    <save label="radiation_temperature" />
+    
+    <save label="mixture_fraction" />
+    <save label="abskg" />
+    <checkpoint cycle="2" interval="0.02" />
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -45,8 +35,8 @@
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
         <resolution>[41,41,41]</resolution>
-        <!--<resolution>[123,123,123]</resolution>-->
-        <!--<resolution>[369,369,369]</resolution>-->
+        
+        
         <extraCells>[1,1,1]</extraCells>
         <patches>[2,2,1]</patches>
       </Box>
@@ -54,141 +44,141 @@
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType var="Dirichlet" label="radiation_temperature"> 
+        <BCType label="radiation_temperature" var="Dirichlet"> 
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet"  label="abskg">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="WallBC"  label="x-wall">  
+        <BCType label="x-wall" var="WallBC">  
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType label="mixture_fraction" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType label="heat_loss" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType label="scalar_var" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType label="enthalpy" var="Neumann"> 
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType var="Dirichlet" label="radiation_temperature"> 
+        <BCType label="radiation_temperature" var="Dirichlet"> 
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet"  label="abskg">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="OutletBC"  label="the outlet"> 
+        <BCType label="the outlet" var="OutletBC"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType label="mixture_fraction" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType label="heat_loss" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType label="scalar_var" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType label="enthalpy" var="Neumann"> 
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y-">
-        <!---                one HOT wall               -->
-        <BCType var="Dirichlet" label="radiation_temperature"> 
+        
+        <BCType label="radiation_temperature" var="Dirichlet"> 
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet"  label="abskg">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="WallBC"  label="y-pressure">  
+        <BCType label="y-pressure" var="WallBC">  
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType label="mixture_fraction" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType label="heat_loss" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType label="scalar_var" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType label="enthalpy" var="Neumann"> 
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType var="Dirichlet" label="radiation_temperature"> 
+        <BCType label="radiation_temperature" var="Dirichlet"> 
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet"  label="abskg">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="WallBC"  label="y+pressure">  
+        <BCType label="y+pressure" var="WallBC">  
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType label="mixture_fraction" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType label="heat_loss" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType label="scalar_var" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType label="enthalpy" var="Neumann"> 
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType var="Dirichlet" label="radiation_temperature"> 
+        <BCType label="radiation_temperature" var="Dirichlet"> 
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet"  label="abskg">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="WallBC"  label="z-pressure">  
+        <BCType label="z-pressure" var="WallBC">  
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType label="mixture_fraction" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType label="heat_loss" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType label="scalar_var" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType label="enthalpy" var="Neumann"> 
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="Dirichlet" label="radiation_temperature"> 
+        <BCType label="radiation_temperature" var="Dirichlet"> 
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet"  label="abskg">
+        <BCType label="abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="WallBC"  label="z+pressure">  
+        <BCType label="z+pressure" var="WallBC">  
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="mixture_fraction"> 
+        <BCType label="mixture_fraction" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="heat_loss"> 
+        <BCType label="heat_loss" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="scalar_var"> 
+        <BCType label="scalar_var" var="Neumann"> 
           <value>0.0</value>
         </BCType>
-        <BCType var="Neumann" label="enthalpy"> 
+        <BCType label="enthalpy" var="Neumann"> 
           <value>0.0</value>
         </BCType>
       </Face>
@@ -205,19 +195,19 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="second"/>
+        <ExplicitIntegrator order="second" />
       </TimeIntegrator>
 
-      <Turbulence model="compdynamicprocedure"/>
+      <Turbulence model="compdynamicprocedure" />
 
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <determines_properties/>
+          <determines_properties />
           <initialization type="linear-x">
-            <!--<constant>.0</constant>-->
+            
           </initialization>
           <Clipping>
             <low>0.0</low>
@@ -230,17 +220,17 @@
           <doConv>true</doConv>
           <stage value="1" />
           <conv_scheme>upwind</conv_scheme>
-          <determines_properties/>
+          <determines_properties />
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
-          <src label="divQ"/>
+          <src label="divQ" />
         </Eqn>
 
         <Sources>
             <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
-            <abskg label = "abskg" /> 
+            <abskg label="abskg" /> 
             <RMCRT>
                 <randomSeed>         true     </randomSeed>
                 <nDivQRays>          2         </nDivQRays>
@@ -252,35 +242,35 @@
             </RMCRT>
           </src>
 
-          <!--<src label="divQ" type="do_radiation">-->
-            <!--<calc_frequency>1</calc_frequency>-->
-            <!--<calc_on_all_RKsteps>false</calc_on_all_RKsteps>-->
-            <!--<abskg label="abskg"/>-->
-            <!--<DORadiationModel>-->
-              <!--<ordinates>16</ordinates>-->
-              <!--<LinearSolver type="hypre">-->
-                <!--<res_tol>1.0e-10</res_tol>-->
-                <!--<ksptype>gmres</ksptype>-->
-                <!--<pctype>jacobi</pctype>-->
-                <!--<max_iter>1375</max_iter>-->
-              <!--</LinearSolver>-->
-            <!--</DORadiationModel>-->
-          <!--</src>-->
+          
+            
+            
+            
+            
+              
+              
+                
+                
+                
+                
+              
+            
+          
         </Sources>
 
       </TransportEqns>
 
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
+        <model label="abskg" type="radiation_properties">
           <initialization type="physical">
           </initialization>
           <calculator type="constant">
             <abskg_value>5.0</abskg_value>
-            <abskg label="gas_abskg"/>
+            <abskg label="gas_abskg" />
            <expressionNumber>1</expressionNumber>
           </calculator>
         </model>
-        <model type="empirical_soot" label="soot">
+        <model label="soot" type="empirical_soot">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -291,7 +281,7 @@
           <temperature_label>temperature</temperature_label>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
         </model>
-        <model type="scalsim_variance" label="scalar_var">
+        <model label="scalar_var" type="scalsim_variance">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -303,17 +293,17 @@
 
 
       <Properties>
-        <ClassicTable>
+        <table label="a_user_generated_label" type="classic"><ClassicTable>
           <inputfile>inputs/ARCHES/RMCRT/sinWaveTemp.mix.gz</inputfile>
-          <single_iv iv_label="mixture_fraction"/>
-          <reference_state iv="1.0"/>
+          <single_iv iv_label="mixture_fraction" />
+          <reference_state iv="1.0" />
         </ClassicTable>
-      </Properties>
+      </table></Properties>
 
 
 
       <BoundaryConditions>
-        <suppress_corner_recirculation/>
+        <suppress_corner_recirculation />
       </BoundaryConditions>
 
       <ExplicitSolver>

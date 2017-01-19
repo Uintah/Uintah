@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
    </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
   <Time>
     <maxTime>         10.0        </maxTime>
     <initTime>        0.0         </initTime>
@@ -18,14 +17,14 @@
   <DataArchiver>
     <filebase>outflow_test.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
-    <save label="totalKineticEnergy"/>
-    <save label="pressurePS"/>
-    <save label="uVelocitySPBC"/>
-    <save label="vVelocitySPBC"/>
-    <save label="wVelocitySPBC"/>
-    <save label="vorticity"/>
-    <save label="cellType"/>
-    <checkpoint cycle="2" interval="0.01"/>
+    <save label="totalKineticEnergy" />
+    <save label="pressurePS" />
+    <save label="uVelocitySPBC" />
+    <save label="vVelocitySPBC" />
+    <save label="wVelocitySPBC" />
+    <save label="vorticity" />
+    <save label="cellType" />
+    <checkpoint cycle="2" interval="0.01" />
   </DataArchiver>
 
   <Grid>
@@ -41,29 +40,29 @@
     </Level>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-      <Face rectangle="x-" lower="0 -.1 -.1" upper="0 .1 .1" name="doineedthis">
+      <Face lower="0 -.1 -.1" name="doineedthis" rectangle="x-" upper="0 .1 .1">
         <BCType label="inlet" var="VelocityInlet">
           <value>[0.1,0,0]</value>
         </BCType>
       </Face>
-      <Face side="x-" name="myx-">
+      <Face name="myx-" side="x-">
         <BCType label="backwall" var="WallBC">
           <value>0</value>
         </BCType>
       </Face>
-      <Face side="y-" name="myy-">
+      <Face name="myy-" side="y-">
         <BCType label="y- pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y+" name="myy+">
+      <Face name="myy+" side="y+">
         <BCType label="y+ pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
       </Face>
-      <!-- Outlet --> 
-      <Face side="x+" name="myx+">
-        <!-- Momentum BCs --> 
+       
+      <Face name="myx+" side="x+">
+         
         <BCType label="outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -81,17 +80,17 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="second"/>
+        <ExplicitIntegrator order="second" />
       </TimeIntegrator>
 
       <Properties>
-        <ConstantProps>
+        <table label="a_user_generated_label" type="constant"><ConstantProps>
           <density>1.0</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </Properties>
+      </table></Properties>
 
-      <BoundaryConditions/>
+      <BoundaryConditions />
 
       <ExplicitSolver>
         <PressureSolver>

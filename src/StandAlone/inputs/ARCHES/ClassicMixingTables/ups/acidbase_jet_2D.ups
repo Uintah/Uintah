@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title> Acid Base Chemistry with Mixing Table </title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
   <Time>
     <maxTime>.50</maxTime>
     <max_Timesteps>25</max_Timesteps>
@@ -20,26 +18,26 @@
   <DataArchiver>
     <filebase> acidbase_jet.uda </filebase>
     <outputTimestepInterval> 5 </outputTimestepInterval>
-    <save label="pressurePS"/>
-    <save label="uVelocitySPBC"/>
-    <save label="vVelocitySPBC"/>
-    <save label="wVelocitySPBC"/>
-    <save label="CCVelocity"/>
-    <save label="vorticity"/>
-    <save label="totalKineticEnergy"/>
-    <save label="viscosityCTS"/>
-    <save label="mixture_fraction"/>
-    <save label="rxn_extent"/>
-    <save label="residence_time"/>
-    <save label="temperature" table_lookup="true"/>
-    <!--save label="density" table_lookup="true"/-->
-    <save label="pH" table_lookup="true"/>
-    <save label="S" table_lookup="true"/>
-    <save label="Eq-CaCO3" table_lookup="true"/>
-    <save label="Vtest1" table_lookup="true"/>
-    <save label="Vtest2" table_lookup="true"/>
-    <save label="cellType"/>
-    <checkpoint cycle="2" interval="0.002"/>
+    <save label="pressurePS" />
+    <save label="uVelocitySPBC" />
+    <save label="vVelocitySPBC" />
+    <save label="wVelocitySPBC" />
+    <save label="CCVelocity" />
+    <save label="vorticity" />
+    <save label="totalKineticEnergy" />
+    <save label="viscosityCTS" />
+    <save label="mixture_fraction" />
+    <save label="rxn_extent" />
+    <save label="residence_time" />
+    <save label="temperature" table_lookup="true" />
+    
+    <save label="pH" table_lookup="true" />
+    <save label="S" table_lookup="true" />
+    <save label="Eq-CaCO3" table_lookup="true" />
+    <save label="Vtest1" table_lookup="true" />
+    <save label="Vtest2" table_lookup="true" />
+    <save label="cellType" />
+    <checkpoint cycle="2" interval="0.002" />
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -83,7 +81,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="x+" name="x+ wall">
+      <Face name="x+ wall" side="x+">
         <BCType label="outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -97,7 +95,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y-" name="y- wall">
+      <Face name="y- wall" side="y-">
         <BCType label="Press y-" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -111,7 +109,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y+" name="y+ wall">
+      <Face name="y+ wall" side="y+">
         <BCType label="Press y+" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -125,7 +123,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="z-" name="z- wall">
+      <Face name="z- wall" side="z-">
         <BCType label="Press z-" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -139,7 +137,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="z+" name="z+ wall">
+      <Face name="z+ wall" side="z+">
         <BCType label="Press z+" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -164,16 +162,16 @@
   </PhysicalConstants>
 
   <CFD>
-<!-- ARCHES specification -->
+
     <ARCHES>
 
-<!-- TIME INTEGRATOR -->
+
       <TimeIntegrator>
-        <ExplicitIntegrator order="second"/>
+        <ExplicitIntegrator order="second" />
       </TimeIntegrator>
 
 
-<!-- TIME INTEGRATOR: Specifics of Explicit Solver including Pressure -->
+
       <ExplicitSolver>
         <initial_dt> 0.01 </initial_dt>
         <restartOnNegativeDensityGuess> false </restartOnNegativeDensityGuess>
@@ -191,24 +189,24 @@
         </MomentumSolver>
 
       </ExplicitSolver>
-<!-- TURBULENCE Specification -->
+
       <Turbulence model="smagorinsky">
         <cf> 0.17 </cf>
         <fac_mesh> 1.0 </fac_mesh>
         <filterl> 0.000001 </filterl>
       </Turbulence>
 
-<!-- TABLE and Properties -->
+
       <Properties>
-        <ClassicTable>
+        <table label="a_user_generated_label" type="classic"><ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/AcidBaseTable2D.mix.gz</inputfile>
           <cold_flow> true </cold_flow>
-          <acidbase f_label="mixture_fraction" extent_label="rxn_extent"/>
-          <reference_state f="0.0" extent="0.0"/>
+          <acidbase extent_label="rxn_extent" f_label="mixture_fraction" />
+          <reference_state extent="0.0" f="0.0" />
         </ClassicTable>
-      </Properties>
+      </table></Properties>
 
-<!-- EXTRA SCALARS -->
+
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff> true </doDiff>
@@ -226,7 +224,7 @@
           <initialization type="constant">
             <constant> 0.0 </constant>
           </initialization>
-          <src label="rxn_extent_src"/>
+          <src label="rxn_extent_src" />
         </Eqn>
 
         <Eqn label="residence_time" type="CCscalar">
@@ -236,7 +234,7 @@
           <initialization type="constant">
             <constant> 0.0 </constant>
           </initialization>
-          <src label="residence_time_src"/>
+          <src label="residence_time_src" />
         </Eqn>
 
         <Sources>
@@ -250,9 +248,9 @@
 
       </TransportEqns>
 
-<!-- BOUNDARY Specification -->
+
       <BoundaryConditions>
-        <suppress_corner_recirculation/>
+        <suppress_corner_recirculation />
       </BoundaryConditions>
 
     </ARCHES>

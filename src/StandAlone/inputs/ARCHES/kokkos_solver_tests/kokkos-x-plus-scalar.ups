@@ -1,14 +1,11 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
-<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Test of 1D transport of kokkos-ized scalars - Pure convection </title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
 
   <Time>
     <maxTime>100.</maxTime>
@@ -23,16 +20,16 @@
   <DataArchiver>
     <filebase>x-plus-scalar-kokkos-test.uda</filebase>
     <outputInterval>0.1</outputInterval>
-    <outputInitTimestep/>
-    <save label="cc_phi_upwind"/>
-    <save label="cc_phi_vanleer"/>
-    <save label="cc_phi_superbee"/>
-    <save label="cc_phi_central"/>
-    <save label="fc_phi_upwind"/>
-    <save label="fc_phi_vanleer"/>
-    <save label="fc_phi_superbee"/>
-    <save label="fc_phi_central"/>
-    <checkpoint cycle="2" interval=".3"/>
+    <outputInitTimestep />
+    <save label="cc_phi_upwind" />
+    <save label="cc_phi_vanleer" />
+    <save label="cc_phi_superbee" />
+    <save label="cc_phi_central" />
+    <save label="fc_phi_upwind" />
+    <save label="fc_phi_vanleer" />
+    <save label="fc_phi_superbee" />
+    <save label="fc_phi_central" />
+    <checkpoint cycle="2" interval=".3" />
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -50,158 +47,158 @@
     <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
       <Face side="x+">
-        <BCType var="Dirichlet" label="cc_phi_upwind">
+        <BCType label="cc_phi_upwind" var="Dirichlet">
           <value>2</value>
         </BCType>
-        <BCType var="Dirichlet" label="cc_phi_vanleer">
+        <BCType label="cc_phi_vanleer" var="Dirichlet">
           <value>2</value>
         </BCType>
-        <BCType var="Dirichlet" label="cc_phi_superbee">
+        <BCType label="cc_phi_superbee" var="Dirichlet">
           <value>2</value>
         </BCType>
-        <BCType var="Dirichlet" label="cc_phi_central">
+        <BCType label="cc_phi_central" var="Dirichlet">
           <value>0</value>
         </BCType>
-        <BCType var="Dirichlet" label="fc_phi_upwind">
+        <BCType label="fc_phi_upwind" var="Dirichlet">
           <value>2</value>
         </BCType>
-        <BCType var="Dirichlet" label="fc_phi_vanleer">
+        <BCType label="fc_phi_vanleer" var="Dirichlet">
           <value>2</value>
         </BCType>
-        <BCType var="Dirichlet" label="fc_phi_superbee">
+        <BCType label="fc_phi_superbee" var="Dirichlet">
           <value>2</value>
         </BCType>
-        <BCType var="Dirichlet" label="fc_phi_central">
+        <BCType label="fc_phi_central" var="Dirichlet">
           <value>0</value>
         </BCType>
       </Face>
       <Face side="x-">
-        <BCType var="Neumann" label="cc_phi_upwind">
+        <BCType label="cc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_vanleer">
+        <BCType label="cc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_superbee">
+        <BCType label="cc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_central">
+        <BCType label="cc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_upwind">
+        <BCType label="fc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_vanleer">
+        <BCType label="fc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_superbee">
+        <BCType label="fc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_central">
+        <BCType label="fc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType var="Neumann" label="cc_phi_upwind">
+        <BCType label="cc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_vanleer">
+        <BCType label="cc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_superbee">
+        <BCType label="cc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_central">
+        <BCType label="cc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_upwind">
+        <BCType label="fc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_vanleer">
+        <BCType label="fc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_superbee">
+        <BCType label="fc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_central">
+        <BCType label="fc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType var="Neumann" label="cc_phi_upwind">
+        <BCType label="cc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_vanleer">
+        <BCType label="cc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_superbee">
+        <BCType label="cc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_central">
+        <BCType label="cc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_upwind">
+        <BCType label="fc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_vanleer">
+        <BCType label="fc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_superbee">
+        <BCType label="fc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_central">
+        <BCType label="fc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType var="Neumann" label="cc_phi_upwind">
+        <BCType label="cc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_vanleer">
+        <BCType label="cc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_superbee">
+        <BCType label="cc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_central">
+        <BCType label="cc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_upwind">
+        <BCType label="fc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_vanleer">
+        <BCType label="fc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_superbee">
+        <BCType label="fc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_central">
+        <BCType label="fc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="Neumann" label="cc_phi_upwind">
+        <BCType label="cc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_vanleer">
+        <BCType label="cc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_superbee">
+        <BCType label="cc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="cc_phi_central">
+        <BCType label="cc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_upwind">
+        <BCType label="fc_phi_upwind" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_vanleer">
+        <BCType label="fc_phi_vanleer" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_superbee">
+        <BCType label="fc_phi_superbee" var="Neumann">
           <value>0.</value>
         </BCType>
-        <BCType var="Neumann" label="fc_phi_central">
+        <BCType label="fc_phi_central" var="Neumann">
           <value>0.</value>
         </BCType>
       </Face>
@@ -218,81 +215,79 @@
     <ARCHES>
 
       <TimeIntegrator order="1">
-        <ExplicitIntegrator order="first"/>
+        <ExplicitIntegrator order="first" />
       </TimeIntegrator>
 
       <VarID>
-        <var role="uvelocity" label="uVel"/>
-        <var role="vvelocity" label="vVel"/>
-        <var role="wvelocity" label="wVel"/>
-        <var role="total_viscosity" label="gamma"/>
-        <var role="density"   label="density"/>
+        <var label="uVel" role="uvelocity" />
+        <var label="vVel" role="vvelocity" />
+        <var label="wVel" role="wvelocity" />
+        <var label="gamma" role="total_viscosity" />
+        <var label="density" role="density" />
       </VarID>
 
       <Properties>
-        <ConstantProps>
+        <table label="a_user_generated_label" type="constant"><ConstantProps>
           <temperature>298.</temperature>
           <density>298.</density>
         </ConstantProps>
-      </Properties>
+      </table></Properties>
 
       <PropertyModelsV2>
         <model label="density" type="constant_property">
-          <grid type="CC"/>
+          <grid type="CC" />
           <value>1.</value>
         </model>
         <model label="gamma" type="constant_property">
-          <grid type="CC"/>
+          <grid type="CC" />
           <value>1.e-4</value>
         </model>
         <model label="uVel" type="constant_property">
-          <grid type="FX"/>
+          <grid type="FX" />
           <value>-0.9</value>
         </model>
         <model label="vVel" type="constant_property">
-          <grid type="FY"/>
+          <grid type="FY" />
           <value>0.</value>
         </model>
         <model label="wVel" type="constant_property">
-          <grid type="FZ"/>
+          <grid type="FZ" />
           <value>0.</value>
         </model>
       </PropertyModelsV2>
 
       <KScalarTransport>
 
-        <eqn_group label="CCFields"
-                   type="CC">
+        <eqn_group label="CCFields" type="CC">
 
           <eqn label="cc_phi_upwind">
-            <convection scheme="upwind"/>
+            <convection scheme="upwind" />
           </eqn>
           <eqn label="cc_phi_vanleer">
-            <convection scheme="vanleer"/>
+            <convection scheme="vanleer" />
           </eqn>
           <eqn label="cc_phi_superbee">
-            <convection scheme="superbee"/>
+            <convection scheme="superbee" />
           </eqn>
           <eqn label="cc_phi_central">
-            <convection scheme="central"/>
+            <convection scheme="central" />
           </eqn>
 
         </eqn_group>
 
-        <eqn_group label="FXFields"
-                   type="FX">
+        <eqn_group label="FXFields" type="FX">
 
           <eqn label="fc_phi_upwind">
-            <convection scheme="upwind"/>
+            <convection scheme="upwind" />
           </eqn>
           <eqn label="fc_phi_vanleer">
-            <convection scheme="vanleer"/>
+            <convection scheme="vanleer" />
           </eqn>
           <eqn label="fc_phi_superbee">
-            <convection scheme="superbee"/>
+            <convection scheme="superbee" />
           </eqn>
           <eqn label="fc_phi_central">
-            <convection scheme="central"/>
+            <convection scheme="central" />
           </eqn>
 
         </eqn_group>
@@ -300,104 +295,66 @@
       </KScalarTransport>
 
       <Initialization>
-        <task task_label="cc_phi_initialize"
-              variable_label="cc_phi_upwind"
-              type="wave">
+        <task task_label="cc_phi_initialize" type="wave" variable_label="cc_phi_upwind">
               <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX" type="CC"/>
-                <square min="0.0"
-                        max="1.0"
-                        f="1.0"
-                        offset="0.5"/>
+                <grid type="CC" />
+                <independent_variable label="gridX" type="CC" />
+                <square f="1.0" max="1.0" min="0.0" offset="0.5" />
               </wave>
         </task>
-        <task task_label="cc_phi_sb_initialize"
-              variable_label="cc_phi_superbee"
-              type="wave">
+        <task task_label="cc_phi_sb_initialize" type="wave" variable_label="cc_phi_superbee">
               <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX" type="CC"/>
-                <square min="0.0"
-                        max="1.0"
-                        f="1.0"
-                        offset="0.5"/>
+                <grid type="CC" />
+                <independent_variable label="gridX" type="CC" />
+                <square f="1.0" max="1.0" min="0.0" offset="0.5" />
               </wave>
         </task>
-        <task task_label="cc_phi_vl_initialize"
-              variable_label="cc_phi_vanleer"
-              type="wave">
+        <task task_label="cc_phi_vl_initialize" type="wave" variable_label="cc_phi_vanleer">
               <wave type="square">
-                <grid type="CC"/>
-                <independent_variable label="gridX" type="CC"/>
-                <square min="0.0"
-                        max="1.0"
-                        f="1.0"
-                        offset="0.5"/>
+                <grid type="CC" />
+                <independent_variable label="gridX" type="CC" />
+                <square f="1.0" max="1.0" min="0.0" offset="0.5" />
               </wave>
         </task>
-        <task task_label="cc_phi_cen_initialize"
-              variable_label="cc_phi_central"
-              type="wave">
+        <task task_label="cc_phi_cen_initialize" type="wave" variable_label="cc_phi_central">
               <wave type="sine">
-                <grid type="CC"/>
-                <independent_variable label="gridX" type="CC"/>
-                <sine A="1.0"
-                      f="1.0"
-                      offset="0."/>
+                <grid type="CC" />
+                <independent_variable label="gridX" type="CC" />
+                <sine A="1.0" f="1.0" offset="0." />
               </wave>
         </task>
-        <task task_label="fc_phi_up_initialize"
-              variable_label="fc_phi_upwind"
-              type="wave">
+        <task task_label="fc_phi_up_initialize" type="wave" variable_label="fc_phi_upwind">
               <wave type="square">
-                <grid type="FX"/>
-                <independent_variable label="gridX" type="CC"/>
-                <square min="0.0"
-                        max="1.0"
-                        f="1.0"
-                        offset="0.5"/>
+                <grid type="FX" />
+                <independent_variable label="gridX" type="CC" />
+                <square f="1.0" max="1.0" min="0.0" offset="0.5" />
               </wave>
         </task>
-        <task task_label="fc_phi_vl_initialize"
-              variable_label="fc_phi_vanleer"
-              type="wave">
+        <task task_label="fc_phi_vl_initialize" type="wave" variable_label="fc_phi_vanleer">
               <wave type="square">
-                <grid type="FX"/>
-                <independent_variable label="gridX" type="CC"/>
-                <square min="0.0"
-                        max="1.0"
-                        f="1.0"
-                        offset="0.5"/>
+                <grid type="FX" />
+                <independent_variable label="gridX" type="CC" />
+                <square f="1.0" max="1.0" min="0.0" offset="0.5" />
               </wave>
         </task>
-        <task task_label="fc_phi_sb_intialize"
-              variable_label="fc_phi_superbee"
-              type="wave">
+        <task task_label="fc_phi_sb_intialize" type="wave" variable_label="fc_phi_superbee">
               <wave type="square">
-                <grid type="FX"/>
-                <independent_variable label="gridX" type="CC"/>
-                <square min="0.0"
-                        max="1.0"
-                        f="1.0"
-                        offset="0.5"/>
+                <grid type="FX" />
+                <independent_variable label="gridX" type="CC" />
+                <square f="1.0" max="1.0" min="0.0" offset="0.5" />
               </wave>
         </task>
-        <task task_label="fc_phi_cen_initialize"
-              variable_label="fc_phi_central"
-              type="wave">
+        <task task_label="fc_phi_cen_initialize" type="wave" variable_label="fc_phi_central">
               <wave type="sine">
-                <grid type="FX"/>
-                <independent_variable label="gridX" type="CC"/>
-                <sine   A="1.0"
-                        f="1.0"
-                        offset="0."/>
+                <grid type="FX" />
+                <independent_variable label="gridX" type="CC" />
+                <sine A="1.0" f="1.0" offset="0." />
               </wave>
         </task>
       </Initialization>
 
       <BoundaryConditions>
-        <force_area_calc/>
+        <force_area_calc />
       </BoundaryConditions>
 
       <KokkosSolver>

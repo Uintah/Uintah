@@ -1,14 +1,11 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
-<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Arches "2D" Periodic Box Constant MMS with Scalars and DQMOM</title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
   <Time>
     <maxTime>100</maxTime>
     <initTime>0.0</initTime>
@@ -21,27 +18,25 @@
   <DataArchiver>
     <filebase>time_verification.uda</filebase>
     <outputInterval>0.01</outputInterval>
-    <save label="totalKineticEnergy"/>
-    <save label="totalummsLnError"/>
-    <save label="totalummsExactSol"/>
-    <save label="pressurePS"/>
-    <save label="scalarSP"/>
-    <save label="CCVelocity"/>
-    <save label="uVelocitySPBC"/>
-    <save label="vVelocitySPBC"/>
-    <save label="wVelocitySPBC"/>
-    <save label="densityCP"/>
-    <save label="viscosityCTS"/>
-    <save label="continuityResidual"/>
-    <save label="velocityDivergence"/>
-    <save label="ummsLnError"/>
-<!-- ===================================
-          Scalar Variables
-     ==================================-->
-    <save label="scalar_superbee"/>
-    <save label="scalar_upwind"/>
-    <save label="scalar_constant"/>
-    <checkpoint cycle="2" interval="0.05"/>
+    <save label="totalKineticEnergy" />
+    <save label="totalummsLnError" />
+    <save label="totalummsExactSol" />
+    <save label="pressurePS" />
+    <save label="scalarSP" />
+    <save label="CCVelocity" />
+    <save label="uVelocitySPBC" />
+    <save label="vVelocitySPBC" />
+    <save label="wVelocitySPBC" />
+    <save label="densityCP" />
+    <save label="viscosityCTS" />
+    <save label="continuityResidual" />
+    <save label="velocityDivergence" />
+    <save label="ummsLnError" />
+
+    <save label="scalar_superbee" />
+    <save label="scalar_upwind" />
+    <save label="scalar_constant" />
+    <checkpoint cycle="2" interval="0.05" />
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -65,7 +60,7 @@
   </PhysicalConstants>
 
   <CFD>
-<!-- ARCHES specification -->
+
     <ARCHES>
 
       <MMS whichMMS="constantMMS">
@@ -80,9 +75,9 @@
         </constantMMS>
       </MMS>
 
-<!-- TIME INTEGRATOR -->
+
       <TimeIntegrator>
-        <ExplicitIntegrator order="third"/>
+        <ExplicitIntegrator order="third" />
       </TimeIntegrator>
 
 
@@ -95,8 +90,7 @@
       </Turbulence>
 
       <TransportEqns>
-<!-- this scalar variable tests the step function initialization mechanism 
-                  when step function location is based on physical location -->
+
         <Eqn label="scalar_superbee" type="CCscalar">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -109,8 +103,7 @@
           </initialization>
         </Eqn>
 
-<!-- this scalar variable tests the step function initialization mechanism
-                  when step function location is based on cell location -->
+
         <Eqn label="scalar_upwind" type="CCscalar">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
@@ -123,7 +116,7 @@
           </initialization>
         </Eqn>
 
-<!-- this scalar variable tests the constant initialization mechanism -->
+
         <Eqn label="scalar_constant" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -134,16 +127,13 @@
             <step_start>0</step_start>
             <step_end>.25</step_end>
           </initialization>
-<!--initialization type="constant">
-                    <constant>3.0</constant>
-                </initialization-->
+
         </Eqn>
 
       </TransportEqns>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
+        <table label="a_user_generated_label" type="coldflow"><ColdFlowMixingModel>
           <Stream>
             <density>1.00</density>
             <temperature>298</temperature>
@@ -153,13 +143,10 @@
             <temperature>298</temperature>
           </Stream>
         </ColdFlowMixingModel>
-      </Properties>
+      </table><table label="a_user_generated_label" type="coldflow"><use_mixing_model>false</use_mixing_model>
+        </table></Properties>
 
-<!--
-      <BoundaryConditions>
-      </BoundaryConditions>
 
--->
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
         <variable_dt>true</variable_dt>

@@ -1,4 +1,3 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_specification>
   <Meta>
     <title>Laminar he base case</title>
@@ -17,27 +16,27 @@
    <DataArchiver>
         <filebase>helium_HI_Base.uda</filebase>
         <outputInterval>0.01</outputInterval>
-        <save label = "totalKineticEnergy"/>
-        <save label = "pressurePS"/>
-        <save label = "CCVelocity"/>        
-        <save label = "uVelocitySPBC"/>
-        <save label = "vVelocitySPBC"/>
-        <save label = "wVelocitySPBC"/>
-        <save label = "densityCP"/>
-        <save label = "viscosityCTS"/>
-        <save label = "cellType"/>
-        <save label = "temperature" table_lookup="true"/>
-        <save label = "MixtureFraction"/>
-        <save label = "laminar_viscosity"/>
+        <save label="totalKineticEnergy" />
+        <save label="pressurePS" />
+        <save label="CCVelocity" />        
+        <save label="uVelocitySPBC" />
+        <save label="vVelocitySPBC" />
+        <save label="wVelocitySPBC" />
+        <save label="densityCP" />
+        <save label="viscosityCTS" />
+        <save label="cellType" />
+        <save label="temperature" table_lookup="true" />
+        <save label="MixtureFraction" />
+        <save label="laminar_viscosity" />
 
-        <checkpoint cycle = "2" walltimeStart = "0" walltimeInterval = "1800"/>
-        <outputDoubleAsFloat/>
+        <checkpoint cycle="2" walltimeInterval="1800" walltimeStart="0" />
+        <outputDoubleAsFloat />
         <compression>gzip</compression>
    </DataArchiver>
 
     <Grid>
         <Level>
-            <Box label = "1">
+            <Box label="1">
                 <lower>[0,0,0]</lower>
                 <upper>[0.138,0.138,0.138]</upper>
                 <resolution>[100,100,100]</resolution>
@@ -126,19 +125,19 @@
 
         <ARCHES>
 
-            <!-- TIME INTEGRATOR -->
+            
             <TimeIntegrator>
-                <ExplicitIntegrator order="second"/>
+                <ExplicitIntegrator order="second" />
             </TimeIntegrator>
 
-            <!-- EXTRA SCALARS -->
+            
             <TransportEqns>
-              <Eqn label="MixtureFraction" type = "CCscalar">
+              <Eqn label="MixtureFraction" type="CCscalar">
                 <doDiff>true</doDiff>
                 <doConv>true</doConv>
-                <determines_properties/>
+                <determines_properties />
                 <conv_scheme>super_bee</conv_scheme>
-                <D_mol_constant value=".0001"/> <!-- VALUE may need to be adjusted --> 
+                <D_mol_constant value=".0001" />  
                 <Clipping>
                   <low>0.0</low>
                   <high>1.0</high>
@@ -149,7 +148,7 @@
               </Eqn>
             </TransportEqns>
 
-            <!-- turn off turbulence model by setting the coefficient to zero (cf=0)-->
+            
             <Turbulence model="smagorinsky">
               <cf>0.0</cf>
               <fac_mesh>1.0</fac_mesh>
@@ -157,12 +156,12 @@
             </Turbulence>
 
             <Properties>
-                <ColdFlow>
-                  <mixture_fraction label="MixtureFraction"/>
-                  <stream_0 density="0.159849" temperature="305.15"/>
-                  <stream_1 density="1.15218" temperature="305.15"/>
+                <table label="a_user_generated_label" type="coldflow"><ColdFlow>
+                  <mixture_fraction label="MixtureFraction" />
+                  <stream_0 density="0.159849" temperature="305.15" />
+                  <stream_1 density="1.15218" temperature="305.15" />
                 </ColdFlow> 
-            </Properties>
+            </table></Properties>
 
             <ExplicitSolver>
                 <PressureSolver>
@@ -184,4 +183,3 @@
 
     </CFD>
 </Uintah_specification>
-

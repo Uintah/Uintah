@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
    </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
   <Time>
     <max_Timesteps> 15 </max_Timesteps>
     <maxTime>         1.0        </maxTime>
@@ -16,21 +15,21 @@
   </Time>
 
   <DataArchiver>
-    <outputInitTimestep/>
+    <outputInitTimestep />
     <filebase> ChannelDigitalFilter.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="totalKineticEnergy"/>
-    <save label="pressurePS"/>
-    <save label="CCVelocity"/>
-    <save label="densityCP"/>
-    <save label="viscosityCTS"/>
-    <save label="cellType"/>
+    <save label="totalKineticEnergy" />
+    <save label="pressurePS" />
+    <save label="CCVelocity" />
+    <save label="densityCP" />
+    <save label="viscosityCTS" />
+    <save label="cellType" />
     <save label="uVelocitySPBC" />
     <save label="vVelocitySPBC" />
     <save label="wVelocitySPBC" />
 
- <!--save label="mixture_fraction"/-->    
-    <checkpoint cycle="2" interval="0.001"/>
+     
+    <checkpoint cycle="2" interval="0.001" />
   </DataArchiver>
 
   <Grid>
@@ -44,15 +43,13 @@
       </Face>
 
 
-      <!--Face side="x-"-->
-    <Face rectangle="x-" lower="0 0 0" upper="0 0.1 0.1">
-        <!--BCType  label = "inletx" var = "VelocityInlet">
-          <value> [1,0,0] </value>
-        </BCType-->
-        <BCType label="Turb_In" var = "TurbulentInlet">
+      
+    <Face lower="0 0 0" rectangle="x-" upper="0 0.1 0.1">
+        
+        <BCType label="Turb_In" var="TurbulentInlet">
           <inputfile> inputs/ARCHES/DigitalFilter/DFGChannel.txt.gz </inputfile>
-          <!--period> 34 </period-->
-          <period> 5 </period> <!-- smaller than norm so it changes in short RT -->
+          
+          <period> 5 </period> 
           <value> [1,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
@@ -61,7 +58,7 @@
       </Face>
 
       <Face side="x+">
-        <BCType  label = "outletx" var = "OutletBC">
+        <BCType label="outletx" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -70,7 +67,7 @@
       </Face>
 
         <Face side="y-">
-        <BCType  label = "ymwall" var = "WallBC">
+        <BCType label="ymwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -79,7 +76,7 @@
       </Face>
 
       <Face side="y+">
-        <BCType  label = "ypwall" var = "WallBC">
+        <BCType label="ypwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -88,7 +85,7 @@
       </Face>
 
       <Face side="z-">
-        <BCType  label = "zmwall" var = "WallBC">
+        <BCType label="zmwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -97,7 +94,7 @@
       </Face>
 
       <Face side="z+">
-        <BCType  label = "zpwall" var = "WallBC">
+        <BCType label="zpwall" var="WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -115,7 +112,7 @@
         <extraCells>  [1,1,1]   </extraCells>
         <patches>     [6,1,1]   </patches>
       </Box>
-<!--periodic> [0,1,0] </periodic-->
+
     </Level>
   </Grid>
 
@@ -129,20 +126,20 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="first"/>
+        <ExplicitIntegrator order="first" />
       </TimeIntegrator>
 
-      <Turbulence model="compdynamicprocedure"/>
+      <Turbulence model="compdynamicprocedure" />
 
       <Properties>
-        <ConstantProps>
+        <table label="a_user_generated_label" type="constant"><ConstantProps>
           <density>1.18</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </Properties>
+      </table></Properties>
 
       <BoundaryConditions>
-        <suppress_corner_recirculation/>
+        <suppress_corner_recirculation />
       </BoundaryConditions>
 
       <TransportEqns>
@@ -159,7 +156,7 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-<!--__________________________________-->
+
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>

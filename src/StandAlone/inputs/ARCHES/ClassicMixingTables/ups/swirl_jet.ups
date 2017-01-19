@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Swirled Jet Case</title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
   <Time>
     <maxTime>2.50</maxTime>
     <max_Timesteps>50</max_Timesteps>
@@ -20,27 +18,27 @@
   <DataArchiver>
     <filebase>swirled_jet.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
-    <outputInitTimestep/>
-    <save label="passive_scalar"/>
-<!-- Table Variables -->
-<!-- iv's -->
-    <save label="normalizedScalarVar"/>
-    <save label="mixture_fraction"/>
-    <save label="heat_loss"/>
-    <save label="uVelocitySPBC"/>
-    <save label="vVelocitySPBC"/>
-    <save label="wVelocitySPBC"/>
-    <save label="enthalpy"/>
-    <save label="cellType"/>
-    <save label="volFraction"/>
-<!-- dv's -->
-    <save label="CH4" table_lookup="true"/>
-    <save label="O2" table_lookup="true"/>
-    <save label="CO2" table_lookup="true"/>
-    <save label="H2O" table_lookup="true"/>
-    <save label="NO" table_lookup="true"/>
-    <save label="CO" table_lookup="true"/>
-    <checkpoint cycle="2" interval="0.02"/>
+    <outputInitTimestep />
+    <save label="passive_scalar" />
+
+
+    <save label="normalizedScalarVar" />
+    <save label="mixture_fraction" />
+    <save label="heat_loss" />
+    <save label="uVelocitySPBC" />
+    <save label="vVelocitySPBC" />
+    <save label="wVelocitySPBC" />
+    <save label="enthalpy" />
+    <save label="cellType" />
+    <save label="volFraction" />
+
+    <save label="CH4" table_lookup="true" />
+    <save label="O2" table_lookup="true" />
+    <save label="CO2" table_lookup="true" />
+    <save label="H2O" table_lookup="true" />
+    <save label="NO" table_lookup="true" />
+    <save label="CO" table_lookup="true" />
+    <checkpoint cycle="2" interval="0.02" />
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -76,7 +74,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face circle="x-" origin="0 1.5 1.5" radius="1.0" name="circleinlet">
+      <Face circle="x-" name="circleinlet" origin="0 1.5 1.5" radius="1.0">
         <BCType label="a swirl inlet" var="Swirl">
           <value>1.0</value>
           <swirl_no>10.0</swirl_no>
@@ -98,7 +96,7 @@
           <value>adiabaticenthalpy</value>
         </BCType>
       </Face>
-      <Face side="x+" name="x+ wall">
+      <Face name="x+ wall" side="x+">
         <BCType label="an-outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -118,7 +116,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y-" name="y- wall">
+      <Face name="y- wall" side="y-">
         <BCType label="pressure-y-" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -138,7 +136,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y+" name="y+ wall">
+      <Face name="y+ wall" side="y+">
         <BCType label="pressure-y+" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -158,7 +156,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="z-" name="z- wall">
+      <Face name="z- wall" side="z-">
         <BCType label="pressure-z-" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -178,7 +176,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="z+" name="z+ wall">
+      <Face name="z+ wall" side="z+">
         <BCType label="pressure-z+" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -209,18 +207,18 @@
   </PhysicalConstants>
 
   <CFD>
-<!-- ARCHES specification -->
+
     <ARCHES>
 
-      <BoundaryConditions/>
+      <BoundaryConditions />
 
-<!-- TIME INTEGRATOR -->
+
       <TimeIntegrator>
-        <ExplicitIntegrator order="second"/>
+        <ExplicitIntegrator order="second" />
       </TimeIntegrator>
 
 
-<!-- SCALARS -->
+
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -252,18 +250,18 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
-          <determines_properties/>
+          <determines_properties />
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
-          <src label="divQ"/>
+          <src label="divQ" />
         </Eqn>
 
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
-            <abskg label="abskg"/>
+            <abskg label="abskg" />
             <DORadiationModel>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -278,22 +276,22 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
+        <model label="abskg" type="radiation_properties">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
           <calculator type="hottel_sarofim">
-            <abskg label="gas_abskg"/>
+            <abskg label="gas_abskg" />
             <opl>3.0</opl>
           </calculator>
         </model>
-        <model type="heat_loss" label="heat_loss">
+        <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
-        <model type="scalsim_variance" label="normalizedScalarVar">
+        <model label="normalizedScalarVar" type="scalsim_variance">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -301,7 +299,7 @@
           <density_label>density</density_label>
           <variance_coefficient>0.1</variance_coefficient>
         </model>
-        <model type="cc_constant" label="soot">
+        <model label="soot" type="cc_constant">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -309,15 +307,15 @@
         </model>
       </PropertyModels>
 
-      <Turbulence model="compdynamicprocedure"/>
+      <Turbulence model="compdynamicprocedure" />
 
       <Properties>
-        <ClassicTable>
+        <table label="a_user_generated_label" type="classic"><ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
-          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar"/>
-          <reference_state f="0.0" hl="0.0" var="0.0"/>
+          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar" />
+          <reference_state f="0.0" hl="0.0" var="0.0" />
         </ClassicTable>
-      </Properties>
+      </table></Properties>
 
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>

@@ -1,14 +1,11 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
-<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Convection of a one-dimensional pulse of mixture fraction</title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
   <Time>
     <maxTime>200.</maxTime>
     <initTime>0.0</initTime>
@@ -21,17 +18,17 @@
   <DataArchiver>
     <filebase>pulse.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
-    <save label="totalKineticEnergy"/>
-    <save label="pressurePS"/>
-    <save label="CCVelocity"/>
-    <save label="uVelocitySPBC"/>
-    <save label="vVelocitySPBC"/>
-    <save label="wVelocitySPBC"/>
-    <save label="continuityResidual"/>
-    <save label="velocityDivergence"/>
-    <save label="density"/>
-    <save label="f"/>
-    <checkpoint cycle="2" interval="0.05"/>
+    <save label="totalKineticEnergy" />
+    <save label="pressurePS" />
+    <save label="CCVelocity" />
+    <save label="uVelocitySPBC" />
+    <save label="vVelocitySPBC" />
+    <save label="wVelocitySPBC" />
+    <save label="continuityResidual" />
+    <save label="velocityDivergence" />
+    <save label="density" />
+    <save label="f" />
+    <checkpoint cycle="2" interval="0.05" />
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -55,13 +52,13 @@
   </PhysicalConstants>
 
   <CFD>
-<!-- ARCHES specification -->
+
     <ARCHES>
 
-      <BoundaryConditions/>
+      <BoundaryConditions />
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="second"/>
+        <ExplicitIntegrator order="second" />
       </TimeIntegrator>
 
       <TransportEqns>
@@ -79,16 +76,16 @@
       </TransportEqns>
 
       <Properties>
-        <ColdFlow>
-          <mixture_fraction label="f"/>
-          <stream_0 density="1.0" temperature="298"/>
-          <stream_1 density="5.0" temperature="298"/>
+        <table label="a_user_generated_label" type="coldflow"><ColdFlow>
+          <mixture_fraction label="f" />
+          <stream_0 density="1.0" temperature="298" />
+          <stream_1 density="5.0" temperature="298" />
         </ColdFlow>
-      </Properties>
+      </table></Properties>
 
       <ExplicitSolver>
         <PressureSolver>
-          <enforce_solvability/>
+          <enforce_solvability />
           <Parameters>
             <solver>           cg     </solver>
             <preconditioner>  pfmg    </preconditioner>

@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
     <title>Arches Periodic Box</title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
   <Time>
     <maxTime>     0.67   </maxTime>
     <initTime>    0.0     </initTime>
@@ -16,27 +15,27 @@
     <timestep_multiplier>0.25</timestep_multiplier>
   </Time>
 
-<!--__________________________________-->
+
   <DataArchiver>
     <filebase>isotropic-turbulence-decay.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <outputInitTimestep/>
+    <outputInitTimestep />
     
-    <save label="totalKineticEnergy"/>
-    <save label="pressurePS"/>
-    <save label="CCVelocity"/>
-    <save label="uVelocitySPBC"/>    
-    <save label="vVelocitySPBC"/>    
-    <save label="wVelocitySPBC"/>            
-    <save label="densityCP"/>
-    <save label="viscosityCTS"/>
-    <save label="continuityResidual"/>
-    <save label="cellType"/>
-    <checkpoint cycle="2" timestepInterval="0.001"/>
+    <save label="totalKineticEnergy" />
+    <save label="pressurePS" />
+    <save label="CCVelocity" />
+    <save label="uVelocitySPBC" />    
+    <save label="vVelocitySPBC" />    
+    <save label="wVelocitySPBC" />            
+    <save label="densityCP" />
+    <save label="viscosityCTS" />
+    <save label="continuityResidual" />
+    <save label="cellType" />
+    <checkpoint cycle="2" timestepInterval="0.001" />
     <compression>gzip</compression>
   </DataArchiver>
 
-<!--__________________________________-->
+
   <Grid>
     <Level>
       <Box label="1">
@@ -55,22 +54,22 @@
     <viscosity> 1.184344e-5  </viscosity>
   </PhysicalConstants>
 
-<!--__________________________________-->
+
   <CFD>
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="second"/>
+        <ExplicitIntegrator order="second" />
       </TimeIntegrator>
 
-      <Turbulence model="compdynamicprocedure"/>
+      <Turbulence model="compdynamicprocedure" />
 
       <Properties>
-        <ConstantProps>
+        <table label="a_user_generated_label" type="constant"><ConstantProps>
           <density>1.0</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </Properties>
+      </table></Properties>
 
      <BoundaryConditions>
     </BoundaryConditions>

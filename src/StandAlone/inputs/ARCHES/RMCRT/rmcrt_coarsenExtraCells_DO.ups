@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!-- @version: -->
 <Uintah_specification>
 
   <Meta>
     <title>"rmcrt benchmark 1 "</title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
-  <Solver type="hypre"/>
+  <SimulationComponent type="arches" />
+  <Solver type="hypre" />
 
   <Time>
     <maxTime>       5.0     </maxTime>
@@ -22,263 +20,263 @@
      <useLockStep> true </useLockStep>
   </AMR>
   
-  <!--__________________________________-->
+  
   <DataArchiver>
     <filebase>rmcrt_coarsenExtraCells_DO.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="divQ"              levels="-1"/>
+    <save label="divQ" levels="-1" />
     
-    <save label="RMCRTboundFlux"    levels="-1"/>
-    <save label="radiationFluxE"    levels="-1"/>
-    <save label="radiationFluxW"    levels="-1"/>
-    <save label="radiationFluxN"    levels="-1"/>
-    <save label="radiationFluxS"    levels="-1"/>
-    <save label="radiationFluxT"    levels="-1"/>
-    <save label="radiationFluxB"    levels="-1"/>
+    <save label="RMCRTboundFlux" levels="-1" />
+    <save label="radiationFluxE" levels="-1" />
+    <save label="radiationFluxW" levels="-1" />
+    <save label="radiationFluxN" levels="-1" />
+    <save label="radiationFluxS" levels="-1" />
+    <save label="radiationFluxT" levels="-1" />
+    <save label="radiationFluxB" levels="-1" />
     
-    <save label="radiation_temperature"  levels="-1"/>
-    <save label="radiationVolq"          levels="-1"/>
+    <save label="radiation_temperature" levels="-1" />
+    <save label="radiationVolq" levels="-1" />
     <save label="abskg" />
     <save label="sigmaT4" />
     <save label="cellType" />
     
-    <checkpoint cycle = "2" timestepInterval = "2"/>
+    <checkpoint cycle="2" timestepInterval="2" />
   </DataArchiver>
   
-  <!--__________________________________-->
+  
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-      <Face side="x-" name="X-">
-        <BCType     label="x- wall"        var="WallBC">
+      <Face name="X-" side="x-">
+        <BCType label="x- wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>100.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <Face circle="x-" origin="0.0 0.5 0.5 " radius="0.2" >
-        <BCType     label="x- wall"        var="WallBC">
+      <Face circle="x-" origin="0.0 0.5 0.5 " radius="0.2">
+        <BCType label="x- wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>50.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <!--__________________________________-->
       
-      <Face side="x+" name="X+">
-        <BCType     label="x+ wall"         var="WallBC">
+      
+      <Face name="X+" side="x+">
+        <BCType label="x+ wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"       var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"        var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>110.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <Face circle="x+" origin="1.0 0.5 0.5 " radius="0.2" >
-        <BCType     label="x+ wall"        var="WallBC">
+      <Face circle="x+" origin="1.0 0.5 0.5 " radius="0.2">
+        <BCType label="x+ wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>50.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <!--__________________________________-->
       
-      <Face side="y-" name="Y-">
-        <BCType     label="y- wall"         var="WallBC">
+      
+      <Face name="Y-" side="y-">
+        <BCType label="y- wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"       var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"        var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value> 120.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <Face circle="y-" origin="0.5 0.0 0.5 " radius="0.2" >
-        <BCType     label="y- wall"        var="WallBC">
+      <Face circle="y-" origin="0.5 0.0 0.5 " radius="0.2">
+        <BCType label="y- wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>50.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <!--__________________________________-->
       
-      <Face side="y+" name="Y+">
-        <BCType     label="y+ wall"         var="WallBC">
+      
+      <Face name="Y+" side="y+">
+        <BCType label="y+ wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"       var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"        var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>130.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <Face circle="y+" origin="0.5 1.0 0.5 " radius="0.2" >
-        <BCType     label="y+ wall"        var="WallBC">
+      <Face circle="y+" origin="0.5 1.0 0.5 " radius="0.2">
+        <BCType label="y+ wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>50.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <!--__________________________________-->
       
-      <Face side="z-" name="Z-">
-        <BCType     label="z- wall"         var="WallBC">
+      
+      <Face name="Z-" side="z-">
+        <BCType label="z- wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"       var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"        var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value> 140.0</value>
         </BCType>
-        <BCType     label="abskg"         var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <Face circle="z-" origin="0.5 0.5 0.0 " radius="0.2" >
-        <BCType     label="z- wall"        var="WallBC">
+      <Face circle="z-" origin="0.5 0.5 0.0 " radius="0.2">
+        <BCType label="z- wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>50.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <!--__________________________________-->
       
-      <Face side="z+" name="Z+">
-        <BCType     label="z+ wall"       var="WallBC">
+      
+      <Face name="Z+" side="z+">
+        <BCType label="z+ wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"     var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value> 150.0</value>
         </BCType>
-        <BCType     label="abskg"         var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
-      <Face circle="z+" origin="0.5 0.5 1.0 " radius="0.2" >
-        <BCType     label="z+ wall"        var="WallBC">
+      <Face circle="z+" origin="0.5 0.5 1.0 " radius="0.2">
+        <BCType label="z+ wall" var="WallBC">
                         <value>0</value>
         </BCType>
-        <BCType     label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <BCType     label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
                         <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType     label="radiation_temperature" var="Dirichlet">
+        
+        <BCType label="radiation_temperature" var="Dirichlet">
                         <value>50.0</value>
         </BCType>
-        <BCType     label="abskg"           var="ForcedDirichlet">
+        <BCType label="abskg" var="ForcedDirichlet">
                         <value>1.0</value>
         </BCType>
       </Face>
     </BoundaryConditions>
 
     <Level>
-      <Box label = "0">           <!-- coarse Level -->                     
+      <Box label="0">                                
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>   
          <resolution> [20,20,20]  </resolution>    
@@ -288,7 +286,7 @@
     </Level>
     
     <Level>
-      <Box label = "1">           <!-- fine Level -->                               
+      <Box label="1">                                          
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
          <resolution> [40,40,40]  </resolution>    
@@ -298,7 +296,7 @@
     </Level>
   </Grid>
   
-  <!--__________________________________-->
+  
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
@@ -306,19 +304,19 @@
   </PhysicalConstants>
 
 
-  <!--__________________________________-->
+  
   <CFD>
-    <!-- ARCHES specification -->
+    
     <ARCHES>
     
-      <BoundaryConditions/>
+      <BoundaryConditions />
 
-      <!-- TIME INTEGRATOR -->
+      
       <TimeIntegrator>
-        <ExplicitIntegrator order="second"/>
+        <ExplicitIntegrator order="second" />
       </TimeIntegrator>
 
-      <!-- SCALARS -->
+      
       <TransportEqns>
         <Eqn label="mixture_f" type="CCscalar">
           <doDiff>true</doDiff>
@@ -340,7 +338,7 @@
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
-          <src label="divQ"/>
+          <src label="divQ" />
         </Eqn>
 
         <Sources>
@@ -355,12 +353,12 @@
               <solveBoundaryFlux> true       </solveBoundaryFlux>
               <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
 
-              <algorithm type='dataOnion'>
+              <algorithm type="dataOnion">
                 <coarsenExtraCells>   true     </coarsenExtraCells>
                 <haloCells>           [4,4,4]  </haloCells> 
-          <!--  <haloLength>          .1       </haloLength>  --> 
+           
 
-                <ROI_extents type='patch_based'/> 
+                <ROI_extents type="patch_based" /> 
               </algorithm>
                 
             </RMCRT>
@@ -369,22 +367,22 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
+        <model label="abskg" type="radiation_properties">
           <initialization type="constant">
             <constant>1.0</constant>
           </initialization>
           <calculator type="burns_christon">
-            <abskg label="gas_abskg"/>
+            <abskg label="gas_abskg" />
           </calculator>
         </model>
       </PropertyModels>
 
       <Properties>
-        <ConstantProps>
+        <table label="a_user_generated_label" type="constant"><ConstantProps>
           <density>1.18</density>
           <temperature>10</temperature>
         </ConstantProps>
-      </Properties>
+      </table></Properties>
 
       <ExplicitSolver>
 

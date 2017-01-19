@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
     <title>CQMOM particle jet 5D with radius and mass</title>
   </Meta>
 
-  <SimulationComponent type="arches"/>
+  <SimulationComponent type="arches" />
 
-  <Solver type="hypre"/>
+  <Solver type="hypre" />
   <Time>
     <max_Timesteps> 5 </max_Timesteps>
     <maxTime>         2.0        </maxTime>
@@ -17,10 +16,10 @@
   </Time>
 
   <DataArchiver>
-    <outputInitTimestep/>
+    <outputInitTimestep />
     <filebase> CQMOM_5D.uda </filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="cellType"/>
+    <save label="cellType" />
     
     <save label="m_00000" />
     <save label="m_10000" />
@@ -53,8 +52,8 @@
     <save label="mass_1" />
     <save label="mass_2" />
     <save label="mass_3" />
- <!--save label="mixture_fraction"/-->    
-    <checkpoint cycle="2" timestepInterval="1"/>
+     
+    <checkpoint cycle="2" timestepInterval="1" />
   </DataArchiver>
 
   <Grid>
@@ -70,7 +69,7 @@
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType  label = "xm" var = "WallBC">
+        <BCType label="xm" var="WallBC">
           <value> 0.0 </value>
         </BCType>
 <BCType label="m_00000" var="ForcedDirichlet">
@@ -141,8 +140,8 @@
         </BCType>
       </Face>
 
-      <Face rectangle="x-" lower="0 .2 .2" upper="0 .4 .4">
-        <BCType  label = "inletx" var = "VelocityInlet">
+      <Face lower="0 .2 .2" rectangle="x-" upper="0 .4 .4">
+        <BCType label="inletx" var="VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="m_00000" var="ForcedDirichlet">
@@ -214,7 +213,7 @@
       </Face>
 
       <Face side="x+">
-        <BCType  label = "outletx" var = "OutletBC">
+        <BCType label="outletx" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00000" var="Neumann">
@@ -286,7 +285,7 @@
       </Face>
 
       <Face side="y-">
-        <BCType  label = "ymout" var = "OutletBC">
+        <BCType label="ymout" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
                 <BCType label="m_00000" var="Neumann">
@@ -358,7 +357,7 @@
       </Face>
 
       <Face side="y+">
-        <BCType  label = "ypout" var = "OutletBC">
+        <BCType label="ypout" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00000" var="Neumann">
@@ -430,7 +429,7 @@
       </Face>
 
       <Face side="z-">
-        <BCType  label = "zmout" var = "OutletBC">
+        <BCType label="zmout" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00000" var="Neumann">
@@ -502,7 +501,7 @@
       </Face>
 
       <Face side="z+">
-        <BCType  label = "zpout" var = "OutletBC">
+        <BCType label="zpout" var="OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00000" var="Neumann">
@@ -587,26 +586,26 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="first"/>
+        <ExplicitIntegrator order="first" />
       </TimeIntegrator>
 
-      <Turbulence model="none"/>
+      <Turbulence model="none" />
 
       <Properties>
-        <ConstantProps>
+        <table label="a_user_generated_label" type="constant"><ConstantProps>
           <density>1.0</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </Properties>
+      </table></Properties>
 
       <BoundaryConditions>
-        <suppress_corner_recirculation/>
+        <suppress_corner_recirculation />
       </BoundaryConditions>
 
       <TransportEqns>
 
       </TransportEqns>
-<!--__________________________________-->
+
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
@@ -626,7 +625,7 @@
       </ExplicitSolver>
       
       <CQMOM partvel="true">
-        <!-- base information-->
+        
         <NumberInternalCoordinates> 5 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2,1,1,1] </QuadratureNodes>
         <InternalCoordinate name="partUVel" type="uVel">
@@ -657,15 +656,15 @@
         <Adaptive> true </Adaptive>
         <WeightRatio> 1.0e-2 </WeightRatio>
         <AbscissaRatio> 1.0e-2 </AbscissaRatio>
-<!--OperatorSplitting> true </OperatorSplitting-->
-        <!--transport-->
+
+        
         <doDiff> false </doDiff>
         <doConv> true  </doConv>
         <conv_scheme> first </conv_scheme>
         <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
         <molecular_diffusivity> 0.0 </molecular_diffusivity>
         
-        <!-- moment eqns-->
+        
         <Moment> <m> [0,0,0,0,0] </m> </Moment>
         <Moment> <m> [1,0,0,0,0] </m> </Moment>
         <Moment> <m> [2,0,0,0,0] </m> </Moment>
