@@ -28,11 +28,10 @@ endif
 
 SRCS += \
       $(SRCDIR)/TabPropsInterface.cc      \
-      \
+      $(SRCDIR)/TableLookup.cc            \
       $(SRCDIR)/ClassicTableInterface.cc  \
       $(SRCDIR)/ColdFlow.cc               \
       $(SRCDIR)/MixingRxnModel.cc         \
-      \
       $(SRCDIR)/ConstantProps.cc         
 
 PSELIBS := $(PSELIBS) Core/IO

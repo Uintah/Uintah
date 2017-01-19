@@ -28,7 +28,6 @@
 #define Uintah_Components_Arches_ArchesLabel_h
 
 #include <Core/Grid/SimulationStateP.h>
-#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Util/Handle.h>
@@ -39,18 +38,18 @@
 /**************************************
 CLASS
    ArchesLabel
-   
+
    Class ArchesLabel creates and stores the VarLabels that are used in Arches
 
 GENERAL INFORMATION
    ArchesLabel.h - declaration of the class
-   
+
    Author: Biswajit Banerjee (bbanerje@crsim.utah.edu)
-   
+
    Creation Date:   July 18, 2000
-   
-   C-SAFE 
-   
+
+   C-SAFE
+
 
 KEYWORDS
 
@@ -73,20 +72,20 @@ namespace Uintah {
       void setSharedState(SimulationStateP& sharedState);
       void problemSetup( const ProblemSpecP& db );
 
-      typedef std::map<VARID,const std::string> RLMAP; 
+      typedef std::map<VARID,const std::string> RLMAP;
 
       /** @brief Retrieve a label based on its CFD role **/
       const VarLabel* getVarlabelByRole( VARID role );
 
-      /** @brief Set a label to have a specific role **/ 
+      /** @brief Set a label to have a specific role **/
       void setVarlabelToRole( const std::string label, const std::string role );
 
       const std::string getRoleString( VARID role );
-     
+
       SimulationStateP d_sharedState;
 
       // recompile task graph flag
-      bool recompile_taskgraph; 
+      bool recompile_taskgraph;
 
       // material subset for stencils
       MaterialSubset* d_stencilMatl;
@@ -101,12 +100,12 @@ namespace Uintah {
 
       // Cell type
       const VarLabel* d_cellTypeLabel;//computed for old_dw in cellTypeInit
-     
+
       // Labels for inlet and flow rate
       const VarLabel* d_totalflowINLabel;
       const VarLabel* d_totalflowOUTLabel;
       const VarLabel* d_netflowOUTBCLabel;
-      
+
       // net outlet area, mass balance, and overall outlet velocity
       const VarLabel* d_totalAreaOUTLabel;
       const VarLabel* d_denAccumLabel;
@@ -122,7 +121,7 @@ namespace Uintah {
       // Viscosity Labels
       // for old_dw in computeTurbModel
       const VarLabel* d_viscosityCTSLabel;
-      const VarLabel* d_turbViscosLabel; 
+      const VarLabel* d_turbViscosLabel;
 
       // Pressure Labels
 
@@ -145,7 +144,7 @@ namespace Uintah {
       const VarLabel* d_vVelocitySPBCLabel;
       // W-Velocity Labels
       const VarLabel* d_wVelocitySPBCLabel;
-      
+
       // UMom Labels
       const VarLabel* d_uMomLabel;
       // VMom Labels
@@ -161,7 +160,7 @@ namespace Uintah {
       const VarLabel* d_stressTensorCompLabel;
       const VarLabel* d_stressSFCXdivLabel;
       const VarLabel* d_stressSFCYdivLabel;
-      const VarLabel* d_stressSFCZdivLabel;      
+      const VarLabel* d_stressSFCZdivLabel;
       const VarLabel* d_stressCCXdivLabel;
       const VarLabel* d_stressCCYdivLabel;
       const VarLabel* d_stressCCZdivLabel;
@@ -179,7 +178,7 @@ namespace Uintah {
       const VarLabel* d_alphaalphaLabel;
       const VarLabel* d_CsLabel;
       const VarLabel* d_deltaCsLabel;
-      
+
       //odt model
       const VarLabel* d_odtDataLabel;
 
@@ -210,7 +209,7 @@ namespace Uintah {
       const VarLabel* d_uVelRhoHatLabel;
       const VarLabel* d_vVelRhoHatLabel;
       const VarLabel* d_wVelRhoHatLabel;
-      
+
       const VarLabel* d_uVelRhoHat_CCLabel;
       const VarLabel* d_vVelRhoHat_CCLabel;
       const VarLabel* d_wVelRhoHat_CCLabel;
@@ -234,11 +233,11 @@ namespace Uintah {
       const VarLabel* d_radiationFluxTINLabel;
       const VarLabel* d_radiationFluxBINLabel;
       const VarLabel* d_radiationVolqINLabel;
- 
+
       // runge-kutta 3d order properties labels
       const VarLabel* d_refDensityInterm_label;
       const VarLabel* d_refPressureInterm_label;
-      
+
       // runge-kutta 3d order pressure and momentum labels
       const VarLabel* d_pressureIntermLabel;
       const VarLabel* d_velocityDivergenceLabel;
@@ -258,13 +257,13 @@ namespace Uintah {
       const VarLabel* d_densityLagInterm_label;
       const VarLabel* d_densityLagAfterAverage_label;
       const VarLabel* d_densityLagAfterIntermAverage_label;
-      
+
       // kinetic energy
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
-      
+
       const VarLabel* d_oldDeltaTLabel;
-       
+
        // test filtered terms for variable density dynamic Smagorinsky model
       const VarLabel* d_filterRhoULabel;
       const VarLabel* d_filterRhoVLabel;
@@ -277,7 +276,7 @@ namespace Uintah {
       const VarLabel* d_filterEnthalpyGradientCompLabel;
       const VarLabel* d_filterReactScalarGradientCompLabel;
       const VarLabel* d_filterStrainTensorCompLabel;
-      const VarLabel* d_filterVolumeLabel; 
+      const VarLabel* d_filterVolumeLabel;
       const VarLabel* d_ShFLabel;
       const VarLabel* d_ShELabel;
       const VarLabel* d_ShRFLabel;
@@ -296,46 +295,26 @@ namespace Uintah {
       typedef std::vector<int> MomentVector;
       typedef std::map<const MomentVector, const VarLabel* > MomentMap;
       MomentMap DQMOMMoments;
-      
+
       //CQMOM Variables:
       typedef std::map<int, const VarLabel* > WeightMap;
       WeightMap CQMOMWeights;
-      
+
       typedef std::map<int, const VarLabel* > AbscissaMap;
       AbscissaMap CQMOMAbscissas;
 
-      const VarLabel* d_areaFractionLabel; 
-      const VarLabel* d_areaFractionFXLabel; 
-      const VarLabel* d_areaFractionFYLabel; 
-      const VarLabel* d_areaFractionFZLabel; 
-      const VarLabel* d_volFractionLabel; 
+      const VarLabel* d_areaFractionLabel;
+      const VarLabel* d_areaFractionFXLabel;
+      const VarLabel* d_areaFractionFYLabel;
+      const VarLabel* d_areaFractionFZLabel;
+      const VarLabel* d_volFractionLabel;
 
-      std::vector<std::string> model_req_species;
-      std::vector<std::string> model_req_old_species;
+    private:
 
-      inline void add_species( std::string s ) { 
-        model_req_species.push_back( s ); };
-
-      inline void add_species_struct( ChemHelper::TableLookup* s ) { 
-
-        std::map<std::string,ChemHelper::TableLookup::STATE>::iterator iter = s->lookup.begin(); 
-        for ( ; iter != s->lookup.end(); iter++ ){ 
-          if ( iter->second == ChemHelper::TableLookup::OLD ){ 
-            model_req_old_species.push_back( iter->first );
-          } else { 
-            model_req_species.push_back( iter->first );
-          }
-        }
-
-      };
-
-    private: 
-
-      RLMAP d_r_to_l; 
+      RLMAP d_r_to_l;
 
     }; // End class ArchesLabel
 } // End namespace Uintah
 
 
 #endif
-

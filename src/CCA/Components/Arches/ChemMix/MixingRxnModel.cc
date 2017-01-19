@@ -58,10 +58,32 @@ using namespace std;
 using namespace Uintah;
 
 //---------------------------------------------------------------------------
-MixingRxnModel::MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlab ):
-  d_lab(labels), d_MAlab(MAlab)
+MixingRxnModel::MixingRxnModel( SimulationStateP& sharedState ) :
+m_sharedState(sharedState)
 {
   d_does_post_mixing = false;
+
+  m_matl_index = 0;
+
+  //resolve some common labels:
+  m_denRefArrayLabel = VarLabel::find("denRefArray");
+  m_densityLabel     = VarLabel::find("densityCP");
+  m_volFractionLabel = VarLabel::find("volFraction");
+  m_cellTypeLabel    = VarLabel::find("cellType");
+
+  if ( m_denRefArrayLabel == NULL ){
+    throw InvalidValue("Error: ref density label not resolved by the table.", __FILE__, __LINE__ );
+  }
+  if ( m_densityLabel == NULL ){
+    throw InvalidValue("Error: density label not resolved by the table.", __FILE__, __LINE__ );
+  }
+  if ( m_volFractionLabel == NULL ){
+    throw InvalidValue("Error: vol fraction label not resolved by the table.", __FILE__, __LINE__ );
+  }
+  if ( m_cellTypeLabel == NULL ){
+    throw InvalidValue("Error: cell type label not resolved by the table.", __FILE__, __LINE__ );
+  }
+
 }
 
 //---------------------------------------------------------------------------
@@ -296,7 +318,7 @@ MixingRxnModel::sched_checkTableBCs( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "MixingRxnModel::checkTableBCs";
   Task* tsk = scinew Task(taskname, this, &MixingRxnModel::checkTableBCs);
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials()  );
 }
 void
 MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
@@ -310,7 +332,6 @@ MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
     //Ghost::GhostType gn = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
@@ -323,7 +344,7 @@ MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
       Patch::FaceType face = *bf_iter;
       IntVector insideCellDir = patch->faceDirection(face);
 
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(m_matl_index);
       for (int child = 0; child < numChildren; child++){
 
         // look to make sure every variable has a BC set:
@@ -338,14 +359,14 @@ MixingRxnModel::checkTableBCs( const ProcessorGroup* pc,
           std::string face_name;
           Iterator bound_ptr;
 
-          getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name );
+          getBCKind( patch, face, child, variable_name, m_matl_index, bc_kind, face_name );
 
           if ( bc_kind == "FromFile" ){
             foundIterator =
-              getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr );
+              getIteratorBCValue<std::string>( patch, face, child, variable_name, m_matl_index, bc_s_value, bound_ptr );
           } else {
             foundIterator =
-              getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr );
+              getIteratorBCValue<double>( patch, face, child, variable_name, m_matl_index, bc_value, bound_ptr );
           }
           if ( !foundIterator ){
             throw InvalidValue( "Error: Table Independent variable missing a boundary condition spec: "+variable_name+" on face: "+face_name, __FILE__, __LINE__);

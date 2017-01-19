@@ -5,6 +5,7 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -188,12 +189,13 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   // Ensure the following species are populated from table
   // (this is expensive and should be avoided, if a species isn't needed)
-  d_fieldLabels->add_species("temperature");
-  d_fieldLabels->add_species("O2");
-  d_fieldLabels->add_species("CO2");
-  d_fieldLabels->add_species("H2O");
-  d_fieldLabels->add_species("N2");
-  d_fieldLabels->add_species("mixture_molecular_weight");
+  ChemHelper& helper = ChemHelper::self();
+  helper.add_lookup_species("temperature");
+  helper.add_lookup_species("O2");
+  helper.add_lookup_species("CO2");
+  helper.add_lookup_species("H2O");
+  helper.add_lookup_species("N2");
+  helper.add_lookup_species("mixture_molecular_weight");
 
 }
 

@@ -389,11 +389,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
                 SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
                 a_src.problemSetup( found_src_db );
 
-                //Add any table lookup species to the table lookup list:
-                ChemHelper::TableLookup*  tbl_lookup = a_src.get_tablelookup_species();
-                if ( tbl_lookup != nullptr )
-                  d_lab->add_species_struct( tbl_lookup );
-
               }
             }
           }

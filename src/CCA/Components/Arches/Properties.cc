@@ -123,21 +123,24 @@ Properties::problemSetup(const ProblemSpecP& params)
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
 
+  SimulationStateP& sharedState = d_lab->d_sharedState;
+
   if (mixModel == "ClassicTable") {
+
     // New Classic interface
-    d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab );
+    d_mixingRxnTable = scinew ClassicTableInterface( sharedState );
     d_mixingRxnTable->problemSetup( db );
   } else if (mixModel == "ColdFlow") {
-    d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab );
+    d_mixingRxnTable = scinew ColdFlow( sharedState );
     d_mixingRxnTable->problemSetup( db );
   } else if (mixModel == "ConstantProps" ) {
-    d_mixingRxnTable = scinew ConstantProps( d_lab, d_MAlab );
+    d_mixingRxnTable = scinew ConstantProps( sharedState );
     d_mixingRxnTable->problemSetup( db );
   }
 #if HAVE_TABPROPS
   else if (mixModel == "TabProps") {
     // New TabPropsInterface stuff...
-    d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
+    d_mixingRxnTable = scinew TabPropsInterface( sharedState );
     d_mixingRxnTable->problemSetup( db );
   }
 #endif
@@ -499,8 +502,9 @@ Properties::sched_checkTableBCs( const LevelP& level,
 void
 Properties::addLookupSpecies( ){
 
+  ChemHelper& helper = ChemHelper::self();
   std::vector<std::string> sps;
-  sps = d_lab->model_req_species;
+  sps = helper.model_req_species;
 
   if ( mixModel == "ClassicTable"  || mixModel == "TabProps"
       || "ColdFlow" || "ConstantProps" ) {
@@ -510,7 +514,7 @@ Properties::addLookupSpecies( ){
   }
 
   std::vector<std::string> old_sps;
-  old_sps = d_lab->model_req_old_species;
+  old_sps = helper.model_req_old_species;
   if ( mixModel == "ClassicTable"  || mixModel == "TabProps"
       || "ColdFlow" || "ConstantProps") {
     for ( vector<string>::iterator i = old_sps.begin(); i != old_sps.end(); i++ ){

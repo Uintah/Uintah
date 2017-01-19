@@ -71,10 +71,10 @@ std::mutex enthalpy_map_mutex{};
 //---------------------------------------------------------------------------
 // Default Constructor
 //---------------------------------------------------------------------------
-ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels )
-  : MixingRxnModel( labels, MAlabels )
+ClassicTableInterface::ClassicTableInterface( SimulationStateP& sharedState )
+  : MixingRxnModel( sharedState )
 {
-  _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() );
+  _boundary_condition = scinew BoundaryCondition_new( m_matl_index );
 }
 
 //---------------------------------------------------------------------------
@@ -229,9 +229,6 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   if (!d_coldflow)
     getEnthalpyIndexInfo();
 
-  //setting varlabels to roles:
-  d_lab->setVarlabelToRole( "temperature", "temperature" );
-
   problemSetupCommon( db_classic, this );
 
   d_hl_upper_bound = 1;
@@ -270,10 +267,8 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   //Automatically adding density_old to the table lookup because this
   //is needed for scalars that aren't solved on stage 1:
-  ChemHelper::TableLookup* extra_lookup = scinew ChemHelper::TableLookup;
-  extra_lookup->lookup.insert(std::make_pair("density",ChemHelper::TableLookup::OLD));
-  d_lab->add_species_struct( extra_lookup );
-  delete extra_lookup;
+  ChemHelper& helper = ChemHelper::self();
+  helper.add_lookup_species( "density", ChemHelper::OLD );
 
   proc0cout << "\n --- End Classic Arches table information --- " << endl;
   proc0cout << endl;
@@ -321,7 +316,7 @@ ClassicTableInterface::sched_getState( const LevelP& level,
       tsk->computes( i->second );
       MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
-        if ( d_lab->d_sharedState->getCurrentTopLevelTimeStep() != 0 ){
+        if ( m_sharedState->getCurrentTopLevelTimeStep() != 0 ){
           tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
         }
       }
@@ -330,9 +325,6 @@ ClassicTableInterface::sched_getState( const LevelP& level,
     for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
       tsk->computes( i->second );
     }
-
-    if (d_MAlab)
-      tsk->computes( d_lab->d_densityMicroLabel );
 
   } else {
 
@@ -343,27 +335,23 @@ ClassicTableInterface::sched_getState( const LevelP& level,
       tsk->modifies( i->second );
     }
 
-    if (d_MAlab)
-      tsk->modifies( d_lab->d_densityMicroLabel );
-
   }
 
   // other variables
-  tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
+  tsk->modifies( m_densityLabel );  // lame .... fix me
 
   if ( modify_ref_den ){
     if ( time_substep == 0 ){
-      tsk->computes( d_lab->d_denRefArrayLabel );
+      tsk->computes( m_denRefArrayLabel );
     }
   } else {
     if ( time_substep == 0 ){
-      tsk->computes( d_lab->d_denRefArrayLabel );
-      tsk->requires( Task::OldDW, d_lab->d_denRefArrayLabel, Ghost::None, 0);
+      tsk->computes( m_denRefArrayLabel );
+      tsk->requires( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
     }
   }
 
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 );
-  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 );
+  tsk->requires( Task::NewDW, m_volFractionLabel, gn, 0 );
 
   // for inert mixing
   for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){
@@ -371,7 +359,7 @@ ClassicTableInterface::sched_getState( const LevelP& level,
     tsk->requires( Task::NewDW, label, gn, 0 );
   }
 
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
 }
 
 //---------------------------------------------------------------------------
@@ -392,13 +380,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     Ghost::GhostType gn = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int m_matl_index = m_matl_index;
 
     constCCVariable<double> eps_vol;
-    constCCVariable<int> cell_type;
-    new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 );
-    new_dw->get( cell_type, d_lab->d_cellTypeLabel, matlIndex, patch, gn, 0 );
-
+    new_dw->get( eps_vol, m_volFractionLabel, m_matl_index, patch, gn, 0 );
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage;
 
@@ -408,7 +393,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] );
 
       constCCVariable<double> the_var;
-      new_dw->get( the_var, ivar->second, matlIndex, patch, gn, 0 );
+      new_dw->get( the_var, ivar->second, m_matl_index, patch, gn, 0 );
       indep_storage.push_back( the_var );
 
     }
@@ -422,7 +407,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         DepVarCont storage;
 
         storage.var = scinew CCVariable<double>;
-        new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch );
+        new_dw->allocateAndPut( *storage.var, i->second, m_matl_index, patch );
         (*storage.var).initialize(0.0);
 
         IndexMap::iterator i_index = d_depVarIndexMap.find( i->first );
@@ -439,8 +424,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             //copy from old DW
             constCCVariable<double> old_t_value;
             CCVariable<double> old_tpdt_value;
-            old_dw->get( old_t_value, i->second, matlIndex, patch, gn, 0 );
-            new_dw->allocateAndPut( old_tpdt_value, i_old->second, matlIndex, patch );
+            old_dw->get( old_t_value, i->second, m_matl_index, patch, gn, 0 );
+            new_dw->allocateAndPut( old_tpdt_value, i_old->second, m_matl_index, patch );
 
             old_tpdt_value.copy( old_t_value );
 
@@ -448,16 +433,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
             //just allocated it because this is the Arches::Initialize
             CCVariable<double> old_tpdt_value;
-            new_dw->allocateAndPut( old_tpdt_value, i_old->second, matlIndex, patch );
+            new_dw->allocateAndPut( old_tpdt_value, i_old->second, m_matl_index, patch );
             old_tpdt_value.initialize(0.0);
 
           }
         }
-      }
-
-      if (d_MAlab) {
-        new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch );
-        mpmarches_denmicro.initialize(0.0);
       }
 
     } else {
@@ -467,7 +447,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         DepVarCont storage;
 
         storage.var = scinew CCVariable<double>;
-        new_dw->getModifiable( *storage.var, i->second, matlIndex, patch );
+        new_dw->getModifiable( *storage.var, i->second, m_matl_index, patch );
 
         IndexMap::iterator i_index = d_depVarIndexMap.find( i->first );
         storage.index = i_index->second;
@@ -480,15 +460,12 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         if ( i_old != d_oldDvVarMap.end() ){
           //copy current value into old
           CCVariable<double> old_value;
-          new_dw->getModifiable( old_value, i_old->second, matlIndex, patch );
+          new_dw->getModifiable( old_value, i_old->second, m_matl_index, patch );
           old_value.copy( *storage.var );
         }
 
       }
 
-      // others:
-      if (d_MAlab)
-        new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch );
     }
 
     // for inert mixing
@@ -497,7 +474,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){
       const VarLabel* label = VarLabel::find( iter->first );
       constCCVariable<double> variable;
-      new_dw->get( variable, label, matlIndex, patch, gn, 0 );
+      new_dw->get( variable, label, m_matl_index, patch, gn, 0 );
       ConstVarContainer container;
       container.var = variable;
 
@@ -506,7 +483,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     }
 
     CCVariable<double> arches_density;
-    new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch );
+    new_dw->getModifiable( arches_density, m_densityLabel, m_matl_index, patch );
 
     std::vector<double> iv1(nIndVars);
     std::vector<int> depVarIndexes(d_nDepVars);
@@ -574,9 +551,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           arches_density(i,j,k) = depVarValues[depVarCount];
 
-          if (d_MAlab)
-            mpmarches_denmicro(i,j,k) = depVarValues[depVarCount];
-
         }
         depVarCount++;
       }
@@ -594,7 +568,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       Patch::FaceType face = *bf_iter;
       IntVector insideCellDir = patch->faceDirection(face);
 
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(m_matl_index);
       for (int child = 0; child < numChildren; child++){
 
         std::vector<double> iv;
@@ -611,13 +585,13 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         std::string bc_s_value = "NA";
         std::string face_name;
 
-        getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name );
+        getBCKind( patch, face, child, variable_name, m_matl_index, bc_kind, face_name );
 
         if ( bc_kind == "FromFile" ){
-            getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr );
+            getIteratorBCValue<std::string>( patch, face, child, variable_name, m_matl_index, bc_s_value, bound_ptr );
           counter++;
         } else {
-            getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr );
+            getIteratorBCValue<double>( patch, face, child, variable_name, m_matl_index, bc_value, bound_ptr );
           counter++;
         }
 
@@ -681,9 +655,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             (*i->second.var)[c] = ghost_value;
             //(*i->second.var)[c] = table_value;
 
-            if (d_MAlab)
-              mpmarches_denmicro[c] = ghost_value;
-
             if (i->first == "density")
               arches_density[c] = ghost_value;
             depVarCount++;
@@ -711,7 +682,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
       if ( time_substep == 0 ){
         CCVariable<double> den_ref_array;
-        new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
+        new_dw->allocateAndPut(den_ref_array, m_denRefArrayLabel, m_matl_index, patch );
 
         for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){
           IntVector c = *iter;
@@ -726,8 +697,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       if ( time_substep == 0 ){
         CCVariable<double> den_ref_array;
         constCCVariable<double> old_den_ref_array;
-        new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
-        old_dw->get(old_den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch, Ghost::None, 0 );
+        new_dw->allocateAndPut(den_ref_array, m_denRefArrayLabel, m_matl_index, patch );
+        old_dw->get(old_den_ref_array, m_denRefArrayLabel, m_matl_index, patch, Ghost::None, 0 );
         den_ref_array.copyData( old_den_ref_array );
       }
     }
@@ -1034,7 +1005,7 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
 #else
           table[kk][j + mm*size2] = v;
 #endif
- 
+
         }
       }
       if ( read_assign ) { read_assign = false; }

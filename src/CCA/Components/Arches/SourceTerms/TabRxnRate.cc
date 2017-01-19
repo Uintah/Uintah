@@ -8,13 +8,13 @@
 //===========================================================================
 
 using namespace std;
-using namespace Uintah; 
+using namespace Uintah;
 
 TabRxnRate::TabRxnRate( std::string src_name, SimulationStateP& shared_state,
-                            vector<std::string> req_label_names, std::string type ) 
+                            vector<std::string> req_label_names, std::string type )
 : SourceTermBase(src_name, shared_state, req_label_names, type)
 {
-  _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
+  _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
 }
 
 TabRxnRate::~TabRxnRate()
@@ -22,51 +22,52 @@ TabRxnRate::~TabRxnRate()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-void 
+void
 TabRxnRate::problemSetup(const ProblemSpecP& inputdb)
 {
 
-  ProblemSpecP db = inputdb; 
+  ProblemSpecP db = inputdb;
 
-  db->require("rxn_rate",_rxn_rate); 
+  db->require("rxn_rate",_rxn_rate);
 
-  _source_grid_type = CC_SRC; 
+  _source_grid_type = CC_SRC;
 
-  _table_lookup_species->lookup.insert(std::make_pair(_rxn_rate, ChemHelper::TableLookup::NEW)); 
+  ChemHelper& helper = ChemHelper::self();
+  helper.add_lookup_species( _rxn_rate );
 
 }
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the source term 
+// Method: Schedule the calculation of the source term
 //---------------------------------------------------------------------------
-void 
+void
 TabRxnRate::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "TabRxnRate::eval";
   Task* tsk = scinew Task(taskname, this, &TabRxnRate::computeSource, timeSubStep);
 
-  if (timeSubStep == 0) { 
+  if (timeSubStep == 0) {
 
     tsk->computes(_src_label);
   } else {
-    tsk->modifies(_src_label); 
+    tsk->modifies(_src_label);
   }
 
-  const VarLabel* the_label = VarLabel::find(_rxn_rate); 
-  tsk->requires( Task::OldDW, the_label, Ghost::None, 0 ); 
+  const VarLabel* the_label = VarLabel::find(_rxn_rate);
+  tsk->requires( Task::OldDW, the_label, Ghost::None, 0 );
 
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 //---------------------------------------------------------------------------
-// Method: Actually compute the source term 
+// Method: Actually compute the source term
 //---------------------------------------------------------------------------
 void
-TabRxnRate::computeSource( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
+TabRxnRate::computeSource( const ProcessorGroup* pc,
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw,
                    int timeSubStep )
 {
   //patch loop
@@ -74,23 +75,23 @@ TabRxnRate::computeSource( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
 
-    CCVariable<double> rateSrc; 
+    CCVariable<double> rateSrc;
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( rateSrc, _src_label, matlIndex, patch ); 
+      new_dw->getModifiable( rateSrc, _src_label, matlIndex, patch );
       rateSrc.initialize(0.0);
     } else {
       new_dw->allocateAndPut( rateSrc, _src_label, matlIndex, patch );
-    } 
+    }
 
-    constCCVariable<double> rxn_rate; 
-    const VarLabel* the_label = VarLabel::find(_rxn_rate); 
-    old_dw->get( rxn_rate, the_label, matlIndex, patch, Ghost::None, 0 ); 
+    constCCVariable<double> rxn_rate;
+    const VarLabel* the_label = VarLabel::find(_rxn_rate);
+    old_dw->get( rxn_rate, the_label, matlIndex, patch, Ghost::None, 0 );
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-      rateSrc[c] = rxn_rate[c]; 
+      IntVector c = *iter;
+      rateSrc[c] = rxn_rate[c];
     }
   }
 }
@@ -101,24 +102,24 @@ TabRxnRate::computeSource( const ProcessorGroup* pc,
 void
 TabRxnRate::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "TabRxnRate::initialize"; 
+  string taskname = "TabRxnRate::initialize";
 
   Task* tsk = scinew Task(taskname, this, &TabRxnRate::initialize);
 
   tsk->computes(_src_label);
 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter); 
+    tsk->computes(*iter);
   }
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
-void 
-TabRxnRate::initialize( const ProcessorGroup* pc, 
-                        const PatchSubset* patches, 
-                        const MaterialSubset* matls, 
-                        DataWarehouse* old_dw, 
+void
+TabRxnRate::initialize( const ProcessorGroup* pc,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
                         DataWarehouse* new_dw )
 {
   //patch loop
@@ -126,19 +127,18 @@ TabRxnRate::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
 
 
     CCVariable<double> src;
 
-    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch );
 
-    src.initialize(0.0); 
+    src.initialize(0.0);
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-      CCVariable<double> tempVar; 
-      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
+      CCVariable<double> tempVar;
+      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch );
     }
   }
 }
-

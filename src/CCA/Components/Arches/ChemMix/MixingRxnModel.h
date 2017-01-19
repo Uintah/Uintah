@@ -31,10 +31,9 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
@@ -71,8 +70,6 @@ namespace Uintah {
   // setenv SCI_DEBUG TABLE_DEBUG:+
   static DebugStream cout_tabledbg("TABLE_DEBUG",false);
 
-  class ArchesLabel;
-  class TimeIntegratorLabel;
   class MixingRxnModel{
 
   public:
@@ -89,7 +86,7 @@ namespace Uintah {
     };
     typedef std::map<std::string, ConstVarContainer> StringToCCVar;
 
-    MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+    MixingRxnModel( SimulationStateP& sharedState );
 
     virtual ~MixingRxnModel();
 
@@ -153,7 +150,8 @@ namespace Uintah {
     /** @brief Returns a boolean regarding if post mixing is used or not **/
     inline bool doesPostMix(){ return d_does_post_mixing; };
 
-    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
+    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap),
+                which maps strings to VarLabels */
     inline void insertIntoMap( const std::string var_name ){
 
       VarMap::iterator i = d_dvVarMap.find( var_name );
@@ -169,7 +167,8 @@ namespace Uintah {
       return;
     };
 
-    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
+    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap),
+                which maps strings to VarLabels */
     inline void insertOldIntoMap( const std::string var_name ){
 
       VarMap::iterator i = d_oldDvVarMap.find( var_name );
@@ -1489,12 +1488,16 @@ namespace Uintah {
 
     };
 
-
     VarMap d_dvVarMap;         ///< Dependent variable map
     VarMap d_oldDvVarMap;      ///< Dependent variable map from previous lookup
     VarMap d_ivVarMap;         ///< Independent variable map
     doubleMap d_constants;     ///< List of constants in table header
     InertMasterMap d_inertMap; ///< List of inert streams for post table lookup mixing
+
+    const VarLabel* m_denRefArrayLabel;
+    const VarLabel* m_densityLabel;
+    const VarLabel* m_volFractionLabel;
+    const VarLabel* m_cellTypeLabel;
 
     /** @brief Sets the mixing table's dependent variable list. */
     void setMixDVMap( const ProblemSpecP& root_params );
@@ -1502,8 +1505,8 @@ namespace Uintah {
     /** @brief Common problem setup work */
     void problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* const model );
 
-    ArchesLabel* d_lab;                     ///< Arches labels
-    const MPMArchesLabel* d_MAlab;          ///< MPMArches labels
+    SimulationStateP& m_sharedState;        ///< Shared state
+    int m_matl_index;                       ///< Arches material index
 
     bool d_coldflow;                        ///< Will not compute heat loss and will not initialized ethalpy
     bool d_adiabatic;                       ///< Will not compute heat loss

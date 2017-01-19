@@ -5,20 +5,21 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/SootMassBalance.h>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <cmath>
 
 //===========================================================================
 
 using namespace std;
-using namespace Uintah; 
+using namespace Uintah;
 
 SootMassBalance::SootMassBalance( std::string src_name, ArchesLabel* field_labels,
-                                                    vector<std::string> req_label_names, std::string type ) 
+                                                    vector<std::string> req_label_names, std::string type )
 : SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
 {
 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() );
-  _source_grid_type = CC_SRC; 
+  _source_grid_type = CC_SRC;
 
 }
 
@@ -28,11 +29,11 @@ SootMassBalance::~SootMassBalance()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-void 
+void
 SootMassBalance::problemSetup(const ProblemSpecP& inputdb)
 {
 
-  ProblemSpecP db = inputdb; 
+  ProblemSpecP db = inputdb;
 
   db->getWithDefault("mix_mol_weight_label", _mix_mol_weight_name,   "mixture_molecular_weight");
   db->getWithDefault("tar_label",            _tar_name,              "Tar");
@@ -43,18 +44,19 @@ SootMassBalance::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("density_label",        _rho_name,              "density");
   db->getWithDefault("temperature_label",    _temperature_name,      "radiation_temperature");
 
-  _field_labels->add_species( _o2_name ); 
-  _field_labels->add_species( _co2_name );
-  _field_labels->add_species( _rho_name );
+  ChemHelper& helper = ChemHelper::self();
+  helper.add_lookup_species( _o2_name ); 
+  helper.add_lookup_species( _co2_name );
+  helper.add_lookup_species( _rho_name );
   //_field_labels->add_species( _temperature_name );
 
-  _source_grid_type = CC_SRC; 
+  _source_grid_type = CC_SRC;
 
 }
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the source term 
+// Method: Schedule the calculation of the source term
 //---------------------------------------------------------------------------
-void 
+void
 SootMassBalance::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "SootMassBalance::eval";
@@ -86,37 +88,37 @@ SootMassBalance::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   tsk->requires( which_dw, temperature_label,                  Ghost::None, 0 );
   tsk->requires( which_dw, rho_label,                          Ghost::None, 0 );
 
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
 //---------------------------------------------------------------------------
-// Method: Actually compute the source term 
+// Method: Actually compute the source term
 //---------------------------------------------------------------------------
 void
-SootMassBalance::computeSource( const ProcessorGroup* pc, 
-                                   const PatchSubset*    patches, 
-                                   const MaterialSubset* matls, 
-                                         DataWarehouse*  old_dw, 
-                                         DataWarehouse*  new_dw, 
+SootMassBalance::computeSource( const ProcessorGroup* pc,
+                                   const PatchSubset*    patches,
+                                   const MaterialSubset* matls,
+                                         DataWarehouse*  old_dw,
+                                         DataWarehouse*  new_dw,
                                          int             timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
-    
+
 
     Ghost::GhostType  gn  = Ghost::None;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
 
-    CCVariable<double> rate; 
+    CCVariable<double> rate;
 
     constCCVariable<double> mix_mol_weight;
     constCCVariable<double> Tar;
     constCCVariable<double> Ysoot;
     constCCVariable<double> Ns;
     constCCVariable<double> O2;
-    constCCVariable<double> CO2; 
+    constCCVariable<double> CO2;
     constCCVariable<double> rho;
     constCCVariable<double> temperature;
     const VarLabel* mix_mol_weight_label  = VarLabel::find( _mix_mol_weight_name);
@@ -126,8 +128,8 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
     const VarLabel* o2_label              = VarLabel::find( _o2_name);
     const VarLabel* co2_label		  = VarLabel::find( _co2_name);
     const VarLabel* temperature_label     = VarLabel::find( _temperature_name);
-    const VarLabel* rho_label             = VarLabel::find( _rho_name);    
-                                                                                       
+    const VarLabel* rho_label             = VarLabel::find( _rho_name);
+
     DataWarehouse* which_dw;
     if ( timeSubStep == 0 ){
         which_dw = old_dw;
@@ -137,7 +139,7 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
         which_dw = new_dw;
         new_dw->getModifiable( rate, _src_label, matlIndex, patch );
     }
-                                                                                       
+
     which_dw->get( mix_mol_weight , mix_mol_weight_label , matlIndex , patch , gn, 0 );
     which_dw->get( Tar         , tar_label            , matlIndex , patch , gn, 0 );
     which_dw->get( Ysoot          , Ysoot_label          , matlIndex , patch , gn, 0 );
@@ -151,7 +153,7 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
     old_dw->get(DT, _shared_state->get_delt_label());
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        
+
       IntVector c = *iter;
       double delta_t = DT;
       double XO2 = 0.0;
@@ -178,8 +180,8 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
                  rate[c]
                 );
        //if (c==IntVector(75,75,75)){
-       //  cout << "Ns: " << Ns[c] << " " << rho[c]  << " " << nd << endl; 
-       //  cout << "nd: " << temperature[c] << " " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
+       //  cout << "Ns: " << Ns[c] << " " << rho[c]  << " " << nd << endl;
+       //  cout << "nd: " << temperature[c] << " " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl;
        //}
 
     }
@@ -188,7 +190,7 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 // Method: Coal Soot Source Terms
 //---------------------------------------------------------------------------
-                                                                                       
+
 /** Soot source terms
 *
 * Alex Brown and Tom Fletcher, Energy and Fuels, Vol 12, No 4 1998, 745-757
@@ -209,8 +211,8 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
 * @param S_N         \output Soot number density (#/m3*s)
 * @param S_Ys        \output Soot number density (kg/m3*s)
 */
-                                                                                
-void SootMassBalance::coalSootRR(const double P, 
+
+void SootMassBalance::coalSootRR(const double P,
                                           const double T,
 					  const double XCO2,
                                           const double XO2,
@@ -221,7 +223,7 @@ void SootMassBalance::coalSootRR(const double P,
 					  const double dt,
 				            double &Off_Gas
                                          ) {
-    
+
 double Aos = 108500;           ///< preexponential: soot oxidation: (K^0.5)*kg/m2/atm/s
 double Eos = 164.5E6;         ///< Ea: soot oxidation, J/kmol
 
@@ -238,37 +240,37 @@ double Rgas = 8314.46;        ///< Gas constant: J/kmol*K
 double rhos = 1950.;          ///< soot density kg/m3
 
 //-------------------------------------
-                                                                                           
-                                                                                           
+
+
 double SA   = M_PI*pow( abs(6./M_PI*rhoYs/rhos), 2./3. )*pow(abs(nd),1./3.);  ///< m2/m3: pi*pow() = SA/part; pi*pow()*nd = SA/part*part/m3 = SA/Vol
-                                                                                           
+
 //-------------------------------------
 
 double rgs = rhos*pow(abs(XCO2),0.54)*Ags*exp(-Egs/Rgas/T);	      ///< soot gasification rate kg/m3*s
 double ros = SA*P/101325.0*abs(XO2)/sqrt(abs(T))*Aos*exp(-Eos/Rgas/T);  ///< soot oxidation rate (kg/m3*s)
-                              
+
 double rgt = abs(rhoYt)*Agt*exp(-Egt/Rgas/T);                    ///< tar gasification rate (kg/m3*s)
 double rot = abs(rhoYt*rhoYO2)*Aot*exp(-Eot/Rgas/T);             ///< tar oxidation rate (kg/m3*s)
 //-------------------------------------
-                                                                                          
+
 Off_Gas = rgs + ros + rgt + rot ;                                      ///< #/m3*s
-    
+
 /// Check if the rate is consuming all the soot and tar in the system, and clip it if it is so the soot/tar never go negative.
 Off_Gas = std::min( rhoYs/dt + rhoYt/dt , Off_Gas);
-                                                            
+
 return;
-    
+
 }
-                                                                                       
-                                                                                       
-                                                                                       
+
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
 SootMassBalance::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "SootMassBalance::initialize"; 
+  string taskname = "SootMassBalance::initialize";
 
   Task* tsk = scinew Task(taskname, this, &SootMassBalance::initialize);
 
@@ -277,11 +279,11 @@ SootMassBalance::sched_initialize( const LevelP& level, SchedulerP& sched )
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
-void 
-SootMassBalance::initialize( const ProcessorGroup* pc, 
-                                      const PatchSubset* patches, 
-                                      const MaterialSubset* matls, 
-                                      DataWarehouse* old_dw, 
+void
+SootMassBalance::initialize( const ProcessorGroup* pc,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
                                       DataWarehouse* new_dw )
 {
   //patch loop
@@ -289,12 +291,12 @@ SootMassBalance::initialize( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> src;
-    new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
+    new_dw->allocateAndPut( src, _src_label, matlIndex, patch );
 
-    src.initialize(0.0); 
+    src.initialize(0.0);
 
     }
   }

@@ -30,6 +30,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Containers/StaticArray.h>
@@ -48,7 +49,7 @@
 #include <sci_defs/visit_defs.h>
 #define SQUARE(x) x*x
 #define CUBE(x) x*x*x
-using namespace Uintah; 
+using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
@@ -70,12 +71,12 @@ ModelBase* CharOxidationSmithBuilder::build() {
 // End Builder
 //---------------------------------------------------------------------------
 
-CharOxidationSmith::CharOxidationSmith( std::string modelName, 
+CharOxidationSmith::CharOxidationSmith( std::string modelName,
                                         SimulationStateP& sharedState,
                                         ArchesLabel* fieldLabels,
                                         std::vector<std::string> icLabelNames,
                                         std::vector<std::string> scalarLabelNames,
-                                        int qn ) 
+                                        int qn )
 : CharOxidation(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Set constants
@@ -87,9 +88,9 @@ CharOxidationSmith::CharOxidationSmith( std::string modelName,
   // ideal gas constants
   _R_cal = 1.9872036; // [cal/ (K mol) ]
   _R = 8.314; // [J/ (K mol) ]
-  
+
   _char_birth_label = nullptr;
-  _rawcoal_birth_label = nullptr; 
+  _rawcoal_birth_label = nullptr;
 
 }
 
@@ -103,7 +104,7 @@ CharOxidationSmith::~CharOxidationSmith()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-void 
+void
 CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 {
 
@@ -113,25 +114,25 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
-    std::string particleType;  
+    std::string particleType;
     db_coal_props->getAttribute("type",particleType);
     if (particleType != "coal"){
       throw InvalidValue("ERROR: CharOxidationSmith: Can't use particles of type: "+particleType,__FILE__,__LINE__);
     }
-  
+
   if (params_root->findBlock("PhysicalConstants")) {
     ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
     db_phys->require("viscosity", _dynamic_visc);
   } else {
     throw InvalidValue("Error: Missing <PhysicalConstants> section in input file required for Smith Char Oxidation model.",__FILE__,__LINE__);
   }
-  
-  // create raw coal mass var label 
+
+  // create raw coal mass var label
   std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
   std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
   std::string rcmassqn_name = ParticleTools::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
- 
+
   // check for char mass and get scaling constant
   std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
   std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
@@ -144,48 +145,47 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   std::string ic_RHS = charqn_name+"_RHS";
   _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
-  //CHAR get the birth term if any: 
-  const std::string char_birth_name = char_eqn.get_model_by_type( "SimpleBirth" ); 
-  std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode); 
-  if ( char_birth_name != "NULLSTRING" ){ 
-    _char_birth_label = VarLabel::find( char_birth_qn_name ); 
+  //CHAR get the birth term if any:
+  const std::string char_birth_name = char_eqn.get_model_by_type( "SimpleBirth" );
+  std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode);
+  if ( char_birth_name != "NULLSTRING" ){
+    _char_birth_label = VarLabel::find( char_birth_qn_name );
   }
 
   EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
   DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
-  _RC_scaling_constant  = rcmass_eqn.getScalingConstant(d_quadNode)  ;   
-  std::string RC_RHS = rcmassqn_name + "_RHS";  
+  _RC_scaling_constant  = rcmass_eqn.getScalingConstant(d_quadNode)  ;
+  std::string RC_RHS = rcmassqn_name + "_RHS";
   _RC_RHS_source_varlabel = VarLabel::find(RC_RHS);
 
-  //RAW COAL get the birth term if any: 
-  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" ); 
+  //RAW COAL get the birth term if any:
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" );
   std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
-  if ( rawcoal_birth_name != "NULLSTRING" ){ 
-    _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name ); 
+  if ( rawcoal_birth_name != "NULLSTRING" ){
+    _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name );
   }
 
-  // check for particle temperature 
-  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature"); 
-  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode ); 
+  // check for particle temperature
+  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature");
+  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode );
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
-    throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__); 
+    throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__);
   }
- 
-  // check for length  
-  _nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM); 
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size"); 
-  for (int i=0; i<_nQn_part;i++ ){ 
-    std::string length_name = ParticleTools::append_env( length_root, i ); 
+
+  // check for length
+  _nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM);
+  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
+  for (int i=0; i<_nQn_part;i++ ){
+    std::string length_name = ParticleTools::append_env( length_root, i );
     _length_varlabel.push_back(  VarLabel::find(length_name));
   }
-  
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode); 
-  for (int i=0; i<_nQn_part;i++ ){ 
-  std::string weight_name = ParticleTools::append_env("w", i); 
-    _weight_varlabel.push_back( VarLabel::find(weight_name) ); 
+  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode);
+  for (int i=0; i<_nQn_part;i++ ){
+  std::string weight_name = ParticleTools::append_env("w", i);
+    _weight_varlabel.push_back( VarLabel::find(weight_name) );
   }
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
@@ -193,10 +193,10 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
   std::string number_density_name = ParticleTools::parse_for_role_to_label(db, "total_number_density");
-  _number_density_varlabel = VarLabel::find(number_density_name); 
+  _number_density_varlabel = VarLabel::find(number_density_name);
 
   // get Char source term label and devol label from the devolatilization model
-  CoalModelFactory& modelFactory = CoalModelFactory::self(); 
+  CoalModelFactory& modelFactory = CoalModelFactory::self();
   DevolModelMap devolmodels_ = modelFactory.retrieve_devol_models();
   for( DevolModelMap::iterator iModel = devolmodels_.begin(); iModel != devolmodels_.end(); ++iModel ) {
     int modelNode = iModel->second->getquadNode();
@@ -207,29 +207,29 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 
   // Ensure the following species are populated from table
   // (this is expensive and should be avoided, if a species isn't needed)
-  d_fieldLabels->add_species("temperature");
-  d_fieldLabels->add_species("mixture_molecular_weight");
-  
-  
-  // model global constants 
+  ChemHelper& helper = ChemHelper::self();
+  helper.add_lookup_species("temperature");
+  helper.add_lookup_species("mixture_molecular_weight");
+
+  // model global constants
   // get model coefficients
   std::string oxidizer_name;
-  double oxidizer_MW; // 
-  double a; // 
-  double e; // 
-  double phi; // 
+  double oxidizer_MW; //
+  double a; //
+  double e; //
+  double phi; //
   if (db_coal_props->findBlock("SmithChar")) {
     ProblemSpecP db_Smith = db_coal_props->findBlock("SmithChar");
-    db_Smith->getWithDefault("use_simple_inversion",_use_simple_invert,false); 
-    db_Smith->getWithDefault("char_MW",_Mh,12.0); // kg char / kmole char 
+    db_Smith->getWithDefault("use_simple_inversion",_use_simple_invert,false);
+    db_Smith->getWithDefault("char_MW",_Mh,12.0); // kg char / kmole char
     db_Smith->getWithDefault("surface_area_mult_factor",_S,1.0);
-    _NUM_species = 0; 
+    _NUM_species = 0;
     for ( ProblemSpecP db_species = db_Smith->findBlock( "species" ); db_species != 0; db_species = db_species->findNextBlock( "species" ) ){
-      std::string new_species; 
-      new_species = db_species->getNodeValue(); 
-      d_fieldLabels->add_species(new_species);
-      _species_names.push_back(new_species); 
-      _NUM_species += 1; 
+      std::string new_species;
+      new_species = db_species->getNodeValue();
+      helper.add_lookup_species(new_species);
+      _species_names.push_back(new_species);
+      _NUM_species += 1;
     }
     _NUM_reactions = 0;
     for ( ProblemSpecP db_reaction = db_Smith->findBlock( "reaction" ); db_reaction != 0; db_reaction = db_reaction->findNextBlock( "reaction" ) ){
@@ -245,12 +245,12 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
       _e_l.push_back(e);
       _phi_l.push_back(phi);
       std::string rate_name = "char_reaction";
-      std::stringstream str_l; 
-      str_l << _NUM_reactions; 
+      std::stringstream str_l;
+      str_l << _NUM_reactions;
       rate_name += str_l.str();
-      std::stringstream str_qn; 
+      std::stringstream str_qn;
       rate_name += "_qn";
-      str_qn << d_quadNode; 
+      str_qn << d_quadNode;
       rate_name += str_qn.str();
       VarLabel* _reaction_rate_varlabel_temp = VarLabel::create( rate_name, CCVariable<double>::getTypeDescription() );
       _reaction_rate_varlabels.push_back(_reaction_rate_varlabel_temp);
@@ -277,7 +277,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
         check_species = false;
       }
     }
-    if (check_species ) { 
+    if (check_species ) {
       throw ProblemSetupException("Error: Species specified in SmithChar oxidation species, not found in SmithChar data-base (please add it).", __FILE__, __LINE__);
     }
   }
@@ -285,29 +285,29 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   for (int i=0; i<_NUM_species; i++) {
     temp_v.clear();
     _MW_species.push_back(binary_diff_terms.MW_sp[specified_indices[i]]);
-    d_fieldLabels->add_species(_species_names[i]); // request all indicated species from table 
+    helper.add_lookup_species(_species_names[i]); // request all indicated species from table
     for (int j=0; j<_NUM_species; j++) {
       temp_v.push_back(binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]]);
     }
     _D_mat.push_back(temp_v);
   }
   // find index of the oxidizers.
-  for (int reac=0; reac<_NUM_reactions; reac++) { 
+  for (int reac=0; reac<_NUM_reactions; reac++) {
     for (int spec=0; spec<_NUM_species; spec++) {
       if (_oxid_l[reac] == _species_names[spec]){
         _oxidizer_indices.push_back(spec);
-      } 
+      }
     }
   }
   // find index of the other species.
   for (int spec=0; spec<_NUM_species; spec++) {
     if(std::find(_oxidizer_indices.begin(), _oxidizer_indices.end(), spec) != _oxidizer_indices.end()){
-        // spec is in _oxidizer_indices    
+        // spec is in _oxidizer_indices
     } else {
-      _other_indices.push_back(spec); 
+      _other_indices.push_back(spec);
     }
   }
-  
+
 
 #ifdef HAVE_VISIT
   static bool initialized = false;
@@ -347,7 +347,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 //---------------------------------------------------------------------------
 // Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
-void 
+void
 CharOxidationSmith::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "CharOxidationSmith::initVars";
@@ -369,25 +369,25 @@ CharOxidationSmith::sched_initVars( const LevelP& level, SchedulerP& sched )
 // Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
 void
-CharOxidationSmith::initVars( const ProcessorGroup * pc, 
-                              const PatchSubset    * patches, 
-                              const MaterialSubset * matls, 
-                              DataWarehouse        * old_dw, 
+CharOxidationSmith::initVars( const ProcessorGroup * pc,
+                              const PatchSubset    * patches,
+                              const MaterialSubset * matls,
+                              DataWarehouse        * old_dw,
                               DataWarehouse        * new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> char_rate;
-    CCVariable<double> gas_char_rate; 
+    CCVariable<double> gas_char_rate;
     CCVariable<double> particle_temp_rate;
     CCVariable<double> surface_rate;
     CCVariable<double> PO2surf_;
     StaticArray< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
-    
+
     new_dw->allocateAndPut( char_rate, d_modelLabel, matlIndex, patch );
     char_rate.initialize(0.0);
     new_dw->allocateAndPut( gas_char_rate, d_gasLabel, matlIndex, patch );
@@ -398,7 +398,7 @@ CharOxidationSmith::initVars( const ProcessorGroup * pc,
     surface_rate.initialize(0.0);
     new_dw->allocateAndPut(PO2surf_, d_PO2surfLabel, matlIndex, patch );
     PO2surf_.initialize(0.0);
-    for (int l=0; l<_NUM_reactions;l++ ){ 
+    for (int l=0; l<_NUM_reactions;l++ ){
       new_dw->allocateAndPut( reaction_rate_l[l], _reaction_rate_varlabels[l], matlIndex, patch );
       reaction_rate_l[l].initialize(0.0);
     }
@@ -408,20 +408,20 @@ CharOxidationSmith::initVars( const ProcessorGroup * pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the Model 
+// Method: Schedule the calculation of the Model
 //---------------------------------------------------------------------------
-void 
+void
 CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
 
 
-  // get gas phase temperature label 
+  // get gas phase temperature label
   if (VarLabel::find("temperature")) {
     _gas_temperature_varlabel = VarLabel::find("temperature");
   } else {
     throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase temperature.",__FILE__,__LINE__);
   }
-  // get species labels 
+  // get species labels
   for (int l=0; l<_NUM_species; l++) {
     if (VarLabel::find(_species_names[l])) {
       VarLabel * _species_varlabel_temp = VarLabel::find(_species_names[l]);
@@ -430,7 +430,7 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
       throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase oxidizer.",__FILE__,__LINE__);
     }
   }
-  // get gas phase mixture_molecular_weight label 
+  // get gas phase mixture_molecular_weight label
   if (VarLabel::find("mixture_molecular_weight")) {
     _MW_varlabel = VarLabel::find("mixture_molecular_weight");
   } else {
@@ -443,9 +443,9 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
 
   Ghost::GhostType  gn  = Ghost::None;
 
-  Task::WhichDW which_dw; 
+  Task::WhichDW which_dw;
 
-  if (timeSubStep == 0 ) { 
+  if (timeSubStep == 0 ) {
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
     tsk->computes(d_particletempLabel);
@@ -454,30 +454,30 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
       tsk->computes(*iter);
     }
-    which_dw = Task::OldDW; 
+    which_dw = Task::OldDW;
   } else {
     tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
+    tsk->modifies(d_gasLabel);
     tsk->modifies(d_particletempLabel);
     tsk->modifies(d_surfacerateLabel);
     tsk->modifies(d_PO2surfLabel);
     for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
       tsk->modifies(*iter);
     }
-    which_dw = Task::NewDW; 
+    which_dw = Task::NewDW;
   }
 
   for (std::vector<const VarLabel*>::iterator iter = _reaction_rate_varlabels.begin(); iter != _reaction_rate_varlabels.end(); iter++) {
     tsk->requires( which_dw, *iter, gn, 0 );
   }
-  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 ); 
-  tsk->requires( Task::NewDW, _number_density_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _rcmass_varlabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 );
+  tsk->requires( Task::NewDW, _number_density_varlabel, gn, 0 );
+  tsk->requires( which_dw, _rcmass_varlabel, gn, 0 );
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
 
-  for (int i=0; i<_nQn_part;i++ ){ 
-  tsk->requires( which_dw, _length_varlabel[i], gn, 0 ); 
-  tsk->requires( which_dw, _weight_varlabel[i], gn, 0 ); 
+  for (int i=0; i<_nQn_part;i++ ){
+  tsk->requires( which_dw, _length_varlabel[i], gn, 0 );
+  tsk->requires( which_dw, _weight_varlabel[i], gn, 0 );
   }
 
   // require particle velocity
@@ -489,28 +489,28 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     tsk->requires( which_dw, _species_varlabels[l], gn, 0 );
   }
   tsk->requires( which_dw, _MW_varlabel, gn, 0 );
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
-  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
-  tsk->requires( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 ); 
-  
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label());
+  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 );
+  tsk->requires( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 );
+
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
   tsk->requires( Task::NewDW, _devolRCLabel, gn, 0);
   if ( _char_birth_label != nullptr )
-    tsk->requires( Task::NewDW, _char_birth_label, gn, 0 ); 
-  if ( _rawcoal_birth_label != nullptr ) 
-    tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 ); 
+    tsk->requires( Task::NewDW, _char_birth_label, gn, 0 );
+  if ( _rawcoal_birth_label != nullptr )
+    tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 );
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
 //---------------------------------------------------------------------------
-// Method: Actually compute the source term 
+// Method: Actually compute the source term
 //---------------------------------------------------------------------------
 void
-CharOxidationSmith::computeModel( const ProcessorGroup * pc, 
-                                  const PatchSubset    * patches, 
-                                  const MaterialSubset * matls, 
-                                  DataWarehouse        * old_dw, 
+CharOxidationSmith::computeModel( const ProcessorGroup * pc,
+                                  const PatchSubset    * patches,
+                                  const MaterialSubset * matls,
+                                  DataWarehouse        * old_dw,
                                   DataWarehouse        * new_dw,
                                   const int timeSubStep )
 {
@@ -520,26 +520,26 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    Vector Dx = patch->dCell(); 
-    double vol = Dx.x()* Dx.y()* Dx.z(); 
-    
+    Vector Dx = patch->dCell();
+    double vol = Dx.x()* Dx.y()* Dx.z();
+
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT;
 
     CCVariable<double> char_rate;
-    CCVariable<double> gas_char_rate; 
+    CCVariable<double> gas_char_rate;
     CCVariable<double> particle_temp_rate;
     CCVariable<double> surface_rate;
     CCVariable<double> PO2surf_;
     StaticArray< CCVariable<double> > reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
 
     DenseMatrix* dfdrh = scinew DenseMatrix(_NUM_reactions,_NUM_reactions);
-     
-    DataWarehouse* which_dw; 
-    if ( timeSubStep == 0 ){ 
+
+    DataWarehouse* which_dw;
+    if ( timeSubStep == 0 ){
       which_dw = old_dw;
       new_dw->allocateAndPut( char_rate, d_modelLabel, matlIndex, patch );
       char_rate.initialize(0.0);
@@ -551,41 +551,41 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
       surface_rate.initialize(0.0);
       new_dw->allocateAndPut(PO2surf_, d_PO2surfLabel, matlIndex, patch );
       PO2surf_.initialize(0.0);
-      for (int l=0; l<_NUM_reactions;l++ ){ 
+      for (int l=0; l<_NUM_reactions;l++ ){
         new_dw->allocateAndPut( reaction_rate_l[l], _reaction_rate_varlabels[l], matlIndex, patch );
         reaction_rate_l[l].initialize(0.0);
       }
-    } else { 
+    } else {
       which_dw = new_dw;
-      new_dw->getModifiable( char_rate, d_modelLabel, matlIndex, patch ); 
-      new_dw->getModifiable( gas_char_rate, d_gasLabel, matlIndex, patch ); 
+      new_dw->getModifiable( char_rate, d_modelLabel, matlIndex, patch );
+      new_dw->getModifiable( gas_char_rate, d_gasLabel, matlIndex, patch );
       new_dw->getModifiable( particle_temp_rate, d_particletempLabel, matlIndex, patch );
       new_dw->getModifiable( surface_rate, d_surfacerateLabel, matlIndex, patch );
       new_dw->getModifiable( PO2surf_, d_PO2surfLabel, matlIndex, patch );
-      for (int l=0; l<_NUM_reactions;l++ ){ 
+      for (int l=0; l<_NUM_reactions;l++ ){
         new_dw->getModifiable( reaction_rate_l[l], _reaction_rate_varlabels[l], matlIndex, patch );
       }
     }
 
     StaticArray< constCCVariable<double> > old_reaction_rate_l(_NUM_reactions); // char reaction rate for lth reaction.
-    for (int l=0; l<_NUM_reactions;l++ ){ 
+    for (int l=0; l<_NUM_reactions;l++ ){
       which_dw->get( old_reaction_rate_l[l], _reaction_rate_varlabels[l], matlIndex, patch, gn, 0 );
     }
-    
+
     constCCVariable<Vector> gasVel;
     which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
     constCCVariable<double> den;
-    which_dw->get( den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
+    which_dw->get( den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> temperature;
     which_dw->get( temperature , _gas_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_temperature;
     new_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
-    StaticArray< constCCVariable<double> > length(_nQn_part); 
+    StaticArray< constCCVariable<double> > length(_nQn_part);
     StaticArray< constCCVariable<double> > weight(_nQn_part);
-    for (int i=0; i<_nQn_part;i++ ){ 
+    for (int i=0; i<_nQn_part;i++ ){
       which_dw->get( length[i], _length_varlabel[i], matlIndex, patch, gn, 0 );
       which_dw->get( weight[i], _weight_varlabel[i], matlIndex, patch, gn, 0 );
     }
@@ -593,13 +593,13 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     which_dw->get( rawcoal_mass, _rcmass_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> char_mass;
     which_dw->get( char_mass, _char_varlabel, matlIndex, patch, gn, 0 );
-    constCCVariable<double> RHS_source; 
+    constCCVariable<double> RHS_source;
     new_dw->get( RHS_source , _RHS_source_varlabel , matlIndex , patch , gn , 0 );
-    constCCVariable<double> RC_RHS_source; 
+    constCCVariable<double> RC_RHS_source;
     new_dw->get( RC_RHS_source , _RC_RHS_source_varlabel , matlIndex , patch , gn , 0 );
-    constCCVariable<double> number_density; 
+    constCCVariable<double> number_density;
     new_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
-    StaticArray< constCCVariable<double> > species(_NUM_species); 
+    StaticArray< constCCVariable<double> > species(_NUM_species);
     for (int l=0; l<_NUM_species; l++) {
       which_dw->get( species[l], _species_varlabels[l], matlIndex, patch, gn, 0 );
     }
@@ -608,21 +608,21 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> devolRC;
     new_dw->get( devolRC, _devolRCLabel, matlIndex, patch, gn, 0 );
 
-    constCCVariable<double> rawcoal_birth; 
-    constCCVariable<double> char_birth; 
-    bool add_rawcoal_birth = false; 
-    bool add_char_birth = false; 
-    if ( _rawcoal_birth_label != nullptr ){ 
-      add_rawcoal_birth = true; 
-      new_dw->get( rawcoal_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
+    constCCVariable<double> rawcoal_birth;
+    constCCVariable<double> char_birth;
+    bool add_rawcoal_birth = false;
+    bool add_char_birth = false;
+    if ( _rawcoal_birth_label != nullptr ){
+      add_rawcoal_birth = true;
+      new_dw->get( rawcoal_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 );
     }
-    if ( _char_birth_label != nullptr ){ 
-      add_char_birth = true; 
-      new_dw->get( char_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
+    if ( _char_birth_label != nullptr ){
+      add_char_birth = true;
+      new_dw->get( char_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 );
     }
 
-    // initialize all temporary variables which are use in the cell loop.  
-    int count; 
+    // initialize all temporary variables which are use in the cell loop.
+    int count;
     double relative_velocity;
     double CO_CO2_ratio;
     double gas_rho;
@@ -638,10 +638,10 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     double r_devol_ns;
     double RHS;
     double RHS_v;
-    double Re_p; 
-    double cg; 
-    double residual; 
-    double char_mass_rate; 
+    double Re_p;
+    double cg;
+    double residual;
+    double char_mass_rate;
     double AreaSum;
     double surfaceAreaFraction;
     double sum_x_D;
@@ -663,7 +663,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
     Uintah::parallel_for(range,  [&]( int i,  int j, int k){
- 
+
       if (weight[d_quadNode](i,j,k)/_weight_scaling_constant < _weight_small) {
         char_rate(i,j,k) = 0.0;
         gas_char_rate(i,j,k) = 0.0;
@@ -698,9 +698,9 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           rh_l[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
           rh_l_new[l]=old_reaction_rate_l[l](i,j,k);// [kg/m^3/s]
           // These variables are all set downstream.
-          //F[l]=0.0;// [kg/m^3/s]  
-          //F_delta[l]=0.0;// [kg/m^3/s] 
-          //rh_l_delta[l]=0.0;// [kg/m^3/s] 
+          //F[l]=0.0;// [kg/m^3/s]
+          //F_delta[l]=0.0;// [kg/m^3/s]
+          //rh_l_delta[l]=0.0;// [kg/m^3/s]
           //Sc[l]=0.0;// [-]
           //Sh[l]=0.0;// [-]
           //_D_oxid_mix_l[l]=0.0;// [m^2/s]
@@ -714,21 +714,21 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         for (int l2=0; l2<_NUM_species; l2++) {
           species_mass_frac[l2]=species[l2](i,j,k);// [mass fraction]
         }
-        
+
         // update the rate
-        AreaSum = 0.0; 
-        for (int ix=0; ix<_nQn_part;ix++ ){ 
+        AreaSum = 0.0;
+        for (int ix=0; ix<_nQn_part;ix++ ){
           AreaSum+=  weight[ix](i,j,k)*length[ix](i,j,k)*length[ix](i,j,k); // [#/m]
         }
         surfaceAreaFraction=w*p_diam*p_diam/AreaSum; // [-] this is the weighted area fraction for the current particle size.
         CO_CO2_ratio = 200.*exp(-9000./(_R_cal*p_T)); // [ kg CO / kg CO2]
         CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
-        relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) + 
+        relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) +
                                          ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
-                                         ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() )  );// [m/s]  
+                                         ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() )  );// [m/s]
         Re_p  = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
-        
-        cg = 101325. / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration 
+
+        cg = 101325. / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
         p_area = M_PI * p_diam*p_diam; // particle surface area [m^2]
         // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
         for (int l=0; l<_NUM_reactions; l++) {
@@ -748,7 +748,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           k_r[l] = ( 10.0 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000.0) / ( _Mh * _phi_l[l] * 101325. ); // [m / s]
         }
         // Newton-Raphson solve for rh_l.
-        // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n) 
+        // rh_(n+1) = rh_(n) - (dF_(n)/drh_(n))^-1 * F_(n)
         count=0;
         for (int it=0; it<100; it++) {
           count=count+1;
@@ -756,22 +756,22 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             rh_l[l]=rh_l_new[l];
           }
           // get F and Jacobian -> dF/drh
-          root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+          root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );
           for (int j=0; j<_NUM_reactions; j++) {
             for (int k=0; k<_NUM_reactions; k++) {
               rh_l_delta[k] = rh_l[k];
             }
             rh_l_delta[j] = rh_l[j]+delta;
-            root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+            root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );
             for (int l=0; l<_NUM_reactions; l++) {
               (*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
             }
           }
-          // invert Jacobian -> (dF_(n)/drh_(n))^-1 
+          // invert Jacobian -> (dF_(n)/drh_(n))^-1
           if (_use_simple_invert){
-            invert_2_2(dfdrh); // simple matrix inversion for a 2x2 matrix. 
+            invert_2_2(dfdrh); // simple matrix inversion for a 2x2 matrix.
           } else {
-            dfdrh->invert(); // Lapack matrix inversion. 
+            dfdrh->invert(); // Lapack matrix inversion.
           }
           // get rh_(n+1)
           for (int l=0; l<_NUM_reactions; l++) {
@@ -779,7 +779,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
               rh_l_new[l]-=(*dfdrh)[l][var]*F[var];
             }
           }
-          residual = 0.0; 
+          residual = 0.0;
           for (int l=0; l<_NUM_reactions; l++) {
             residual += std::abs(F[l]);
           }
@@ -819,9 +819,9 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           char_mass_rate = std::max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w) );// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle.
         }
         // check to see if reaction rate is fuel limited.
-        if ( add_rawcoal_birth && add_char_birth ){ 
+        if ( add_rawcoal_birth && add_char_birth ){
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] equation assumes RC_scaling=Char_scaling
-        } else { 
+        } else {
           char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] equation assumes RC_scaling=Char_scaling
         }
         char_mass_rate = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
@@ -833,12 +833,12 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
       } // else statement
     }); //end cell loop
-  // delete scinew DenseMatrix 
-  delete dfdrh; 
+  // delete scinew DenseMatrix
+  delete dfdrh;
   } //end patch loop
 }
 
-inline void 
+inline void
 CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l ){
 
   double rh = 0.0;
@@ -852,13 +852,13 @@ CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &
     Bjm = std::min( 80.0 , (rh + r_devol)/w/( 2. * M_PI * _D_oxid_mix_l[l] * p_diam * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
     Fac = ( Bjm >= 1e-7 ) ?  Bjm/(exp(Bjm)-1.) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
     mtc_r = (Sh[l] * _D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
-    numerator =  SQUARE(p_area * w) * _Mh * MW * _phi_l[l] * k_r[l] * mtc_r * _S * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)] 
+    numerator =  SQUARE(p_area * w) * _Mh * MW * _phi_l[l] * k_r[l] * mtc_r * _S * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)]
     denominator = MW * p_area * w *cg * (k_r[l] * _S + mtc_r); // [(kg-mix #) / (m^3 s)]
     F[l] = rh_l[l] - numerator / ( denominator + rh  + r_devol); // [kg-char/m^3/s]
-  } 
+  }
 }
 
-inline void 
+inline void
 CharOxidationSmith::invert_2_2( DenseMatrix* &dfdrh ){
   double a11=(*dfdrh)[0][0];
   double a12=(*dfdrh)[0][1];

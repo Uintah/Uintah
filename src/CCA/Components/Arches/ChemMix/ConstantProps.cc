@@ -43,73 +43,67 @@
 using namespace std;
 using namespace Uintah;
 
-//--------------------------------------------------------------------------- 
-// Default Constructor 
-//--------------------------------------------------------------------------- 
-ConstantProps::ConstantProps( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
-  MixingRxnModel( labels, MAlabels )
+//---------------------------------------------------------------------------
+// Default Constructor
+//---------------------------------------------------------------------------
+ConstantProps::ConstantProps( SimulationStateP& sharedState ) :
+  MixingRxnModel( sharedState )
 {}
 
-//--------------------------------------------------------------------------- 
+//---------------------------------------------------------------------------
 // Default Destructor
-//--------------------------------------------------------------------------- 
+//---------------------------------------------------------------------------
 ConstantProps::~ConstantProps()
 {}
 
-//--------------------------------------------------------------------------- 
+//---------------------------------------------------------------------------
 // Problem Setup
-//--------------------------------------------------------------------------- 
+//---------------------------------------------------------------------------
   void
 ConstantProps::problemSetup( const ProblemSpecP& propertiesParameters )
 {
   // Create sub-ProblemSpecP object
   ProblemSpecP db_coldflow = propertiesParameters->findBlock("ConstantProps");
-  ProblemSpecP db_properties_root = propertiesParameters; 
+  ProblemSpecP db_properties_root = propertiesParameters;
 
   // Need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
-  const ProblemSpecP db_root = db_coldflow->getRootNode(); 
-  db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
+  const ProblemSpecP db_root = db_coldflow->getRootNode();
+  db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);
 
-  db_coldflow->require( "density", _density ); 
+  db_coldflow->require( "density", _density );
   insertIntoMap("density");
- 
 
-  //Automatically adding density_old to the table lookup because this 
-  //is needed for scalars that aren't solved on stage 1: 
-  ChemHelper::TableLookup* extra_lookup = scinew ChemHelper::TableLookup;
-  extra_lookup->lookup.insert(std::make_pair("density",ChemHelper::TableLookup::OLD));
-  d_lab->add_species_struct( extra_lookup );
-  delete extra_lookup; 
+
+  //Automatically adding density_old to the table lookup because this
+  //is needed for scalars that aren't solved on stage 1:
+  ChemHelper& helper = ChemHelper::self();
+  helper.add_lookup_species( "density", ChemHelper::OLD );
 
   proc0cout << "   ------ Using constant density and temperature -------   " << endl;
 
-  //setting varlabels to roles: 
-  d_lab->setVarlabelToRole( "density", "density" ); 
-
-  problemSetupCommon( db_coldflow, this ); 
+  problemSetupCommon( db_coldflow, this );
 
 
   _includeTemp=false;
   if(db_coldflow->findBlock("temperature")) {
-    db_coldflow->require( "temperature", _temperature ); 
-    insertIntoMap("temperature"); 
+    db_coldflow->require( "temperature", _temperature );
+    insertIntoMap("temperature");
     _includeTemp=true;
-    d_lab->setVarlabelToRole( "temperature", "temperature" ); 
   }
 
 }
 
-//--------------------------------------------------------------------------- 
+//---------------------------------------------------------------------------
 // schedule get State
-//--------------------------------------------------------------------------- 
-  void 
-ConstantProps::sched_getState( const LevelP& level, 
-    SchedulerP& sched, 
-    const int time_substep, 
+//---------------------------------------------------------------------------
+  void
+ConstantProps::sched_getState( const LevelP& level,
+    SchedulerP& sched,
+    const int time_substep,
     const bool initialize_me,
     const bool modify_ref_den )
 {
-  string taskname = "ConstantProps::getState"; 
+  string taskname = "ConstantProps::getState";
   Ghost::GhostType  gn = Ghost::None;
 
   Task* tsk = scinew Task(taskname, this, &ConstantProps::getState, time_substep, initialize_me, modify_ref_den );
@@ -117,156 +111,142 @@ ConstantProps::sched_getState( const LevelP& level,
   if ( initialize_me ) {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->computes( i->second ); 
+      tsk->computes( i->second );
 
-      MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old"); 
+      MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old");
       if ( check_iter != d_oldDvVarMap.end() ){
-        if ( d_lab->d_sharedState->getCurrentTopLevelTimeStep() != 0 ){ 
-          tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
+        if ( m_sharedState->getCurrentTopLevelTimeStep() != 0 ){
+          tsk->requires( Task::OldDW, i->second, Ghost::None, 0 );
         }
       }
     }
 
     for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
-      tsk->computes( i->second ); 
+      tsk->computes( i->second );
     }
-
-    if (d_MAlab)
-      tsk->computes( d_lab->d_densityMicroLabel ); 
 
   } else {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->modifies( i->second ); 
+      tsk->modifies( i->second );
     }
     for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
-      tsk->modifies( i->second ); 
+      tsk->modifies( i->second );
     }
-
-    if (d_MAlab)
-      tsk->modifies( d_lab->d_densityMicroLabel ); 
 
   }
 
   if ( modify_ref_den ){
-    if ( time_substep == 0 ){ 
-      tsk->computes( d_lab->d_denRefArrayLabel ); 
-    } 
-  } else { 
-    if ( time_substep == 0 ){ 
-      tsk->computes( d_lab->d_denRefArrayLabel ); 
-      tsk->requires( Task::OldDW, d_lab->d_denRefArrayLabel, Ghost::None, 0); 
-    } 
+    if ( time_substep == 0 ){
+      tsk->computes( m_denRefArrayLabel );
+    }
+  } else {
+    if ( time_substep == 0 ){
+      tsk->computes( m_denRefArrayLabel );
+      tsk->requires( Task::OldDW, m_denRefArrayLabel, Ghost::None, 0);
+    }
   }
 
-  // other variables 
-  tsk->modifies( d_lab->d_densityCPLabel );  
+  // other variables
+  tsk->modifies( m_densityLabel );
 
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, m_volFractionLabel, gn, 0 );
 
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), m_sharedState->allArchesMaterials() );
 }
 
-//--------------------------------------------------------------------------- 
+//---------------------------------------------------------------------------
 // get State
-//--------------------------------------------------------------------------- 
-  void 
-ConstantProps::getState( const ProcessorGroup* pc, 
-    const PatchSubset* patches, 
-    const MaterialSubset* matls, 
-    DataWarehouse* old_dw, 
-    DataWarehouse* new_dw, 
-    const int time_substep, 
-    const bool initialize_me, 
+//---------------------------------------------------------------------------
+  void
+ConstantProps::getState( const ProcessorGroup* pc,
+    const PatchSubset* patches,
+    const MaterialSubset* matls,
+    DataWarehouse* old_dw,
+    DataWarehouse* new_dw,
+    const int time_substep,
+    const bool initialize_me,
     const bool modify_ref_den )
 {
   for (int p=0; p < patches->size(); p++){
 
-    Ghost::GhostType gn = Ghost::None; 
-    const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Ghost::GhostType gn = Ghost::None;
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
 
-    constCCVariable<double> eps_vol; 
-    new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
+    constCCVariable<double> eps_vol;
+    new_dw->get( eps_vol, m_volFractionLabel, m_matl_index, patch, gn, 0 );
 
     // dependent variables
-    CCVariable<double> mpmarches_denmicro; 
+    CCVariable<double> mpmarches_denmicro;
 
-    DepVarMap depend_storage; 
+    DepVarMap depend_storage;
     if ( initialize_me ) {
 
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
 
         DepVarCont storage;
 
-        storage.var = new CCVariable<double>; 
-        new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch ); 
+        storage.var = new CCVariable<double>;
+        new_dw->allocateAndPut( *storage.var, i->second, m_matl_index, patch );
         (*storage.var).initialize(0.0);
 
         depend_storage.insert( make_pair( i->first, storage ));
-        std::string name = i->first+"_old"; 
-        VarMap::iterator i_old = d_oldDvVarMap.find(name); 
+        std::string name = i->first+"_old";
+        VarMap::iterator i_old = d_oldDvVarMap.find(name);
 
-        if ( i_old != d_oldDvVarMap.end() ){ 
+        if ( i_old != d_oldDvVarMap.end() ){
           if ( old_dw != 0 ){
 
             //copy from old DW
-            constCCVariable<double> old_t_value; 
-            CCVariable<double> old_tpdt_value; 
-            old_dw->get( old_t_value, i->second, matlIndex, patch, gn, 0 ); 
-            new_dw->allocateAndPut( old_tpdt_value, i_old->second, matlIndex, patch ); 
+            constCCVariable<double> old_t_value;
+            CCVariable<double> old_tpdt_value;
+            old_dw->get( old_t_value, i->second, m_matl_index, patch, gn, 0 );
+            new_dw->allocateAndPut( old_tpdt_value, i_old->second, m_matl_index, patch );
 
-            old_tpdt_value.copy( old_t_value ); 
+            old_tpdt_value.copy( old_t_value );
 
-          } else { 
+          } else {
 
             //just allocated it because this is the Arches::Initialize
-            CCVariable<double> old_tpdt_value; 
-            new_dw->allocateAndPut( old_tpdt_value, i_old->second, matlIndex, patch ); 
-            old_tpdt_value.initialize(0.0); 
+            CCVariable<double> old_tpdt_value;
+            new_dw->allocateAndPut( old_tpdt_value, i_old->second, m_matl_index, patch );
+            old_tpdt_value.initialize(0.0);
 
           }
         }
       }
 
-      if (d_MAlab) {
-        new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
-        mpmarches_denmicro.initialize(0.0);
-      }
-
-    } else { 
+    } else {
 
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
 
         DepVarCont storage;
 
-        storage.var = new CCVariable<double>; 
-        new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
+        storage.var = new CCVariable<double>;
+        new_dw->getModifiable( *storage.var, i->second, m_matl_index, patch );
 
         depend_storage.insert( make_pair( i->first, storage ));
 
-        std::string name = i->first+"_old"; 
-        VarMap::iterator i_old = d_oldDvVarMap.find(name); 
+        std::string name = i->first+"_old";
+        VarMap::iterator i_old = d_oldDvVarMap.find(name);
 
-        if ( i_old != d_oldDvVarMap.end() ){ 
+        if ( i_old != d_oldDvVarMap.end() ){
           //copy current value into old
-          CCVariable<double> old_value; 
-          new_dw->getModifiable( old_value, i_old->second, matlIndex, patch ); 
-          old_value.copy( *storage.var ); 
+          CCVariable<double> old_value;
+          new_dw->getModifiable( old_value, i_old->second, m_matl_index, patch );
+          old_value.copy( *storage.var );
         }
 
       }
 
-      if (d_MAlab) 
-        new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }
 
-    std::map< std::string, int> iter_to_index;  
+    std::map< std::string, int> iter_to_index;
     for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-      // this just maps the iterator to an index so that density and temperature can be 
-      // easily identified: 
+      // this just maps the iterator to an index so that density and temperature can be
+      // easily identified:
       if ( i->first == "density" )
         iter_to_index.insert( make_pair( i->first, 0 ));
       else if ( i->first == "temperature" && _includeTemp )
@@ -275,35 +255,35 @@ ConstantProps::getState( const ProcessorGroup* pc,
     }
 
 
-    CCVariable<double> arches_density; 
-    new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch ); 
+    CCVariable<double> arches_density;
+    new_dw->getModifiable( arches_density, m_densityLabel, m_matl_index, patch );
 
 
     for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
-      if ( i->first == "density" ){ 
-        (*i->second.var).initialize(_density); 
-        arches_density.copyData( (*i->second.var) ); 
-      } else if ( i->first == "temperature" && _includeTemp){ 
-        (*i->second.var).initialize(_temperature); 
-      } 
+      if ( i->first == "density" ){
+        (*i->second.var).initialize(_density);
+        arches_density.copyData( (*i->second.var) );
+      } else if ( i->first == "temperature" && _includeTemp){
+        (*i->second.var).initialize(_temperature);
+      }
     }
 
     // Go through the patch and populate the requested state variables
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
 
-      IntVector c = *iter; 
+      IntVector c = *iter;
 
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-        std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
+        std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first );
 
-        if ( i->first == "density" ){ 
-          (*i->second.var)[c] *= eps_vol[c]; 
+        if ( i->first == "density" ){
+          (*i->second.var)[c] *= eps_vol[c];
           arches_density[c] = (*i->second.var)[c];
-        } else if ( i->first == "temperature" && _includeTemp){ 
-          (*i->second.var)[c] = _temperature * eps_vol[c]; 
-        } 
+        } else if ( i->first == "temperature" && _includeTemp){
+          (*i->second.var)[c] = _temperature * eps_vol[c];
+        }
 
       }
     }
@@ -312,30 +292,30 @@ ConstantProps::getState( const ProcessorGroup* pc,
       delete i->second.var;
     }
 
-    // reference density modification 
+    // reference density modification
     if ( modify_ref_den ) {
 
-      //actually modify the reference density value: 
-      if ( time_substep == 0 ){ 
-        CCVariable<double> den_ref_array; 
-        new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
+      //actually modify the reference density value:
+      if ( time_substep == 0 ){
+        CCVariable<double> den_ref_array;
+        new_dw->allocateAndPut(den_ref_array, m_denRefArrayLabel, m_matl_index, patch );
 
-        for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
-          IntVector c = *iter; 
+        for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){
+          IntVector c = *iter;
           den_ref_array[c] = _density;
         }
 
       }
 
-    } else { 
+    } else {
 
-      //just carry forward: 
-      if ( time_substep == 0 ){ 
-        CCVariable<double> den_ref_array; 
-        constCCVariable<double> old_den_ref_array; 
-        new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
-        old_dw->get(old_den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch, Ghost::None, 0 ); 
-        den_ref_array.copyData( old_den_ref_array ); 
+      //just carry forward:
+      if ( time_substep == 0 ){
+        CCVariable<double> den_ref_array;
+        constCCVariable<double> old_den_ref_array;
+        new_dw->allocateAndPut(den_ref_array, m_denRefArrayLabel, m_matl_index, patch );
+        old_dw->get(old_den_ref_array, m_denRefArrayLabel, m_matl_index, patch, Ghost::None, 0 );
+        den_ref_array.copyData( old_den_ref_array );
       }
     }
   }
@@ -344,20 +324,20 @@ ConstantProps::getState( const ProcessorGroup* pc,
 double ConstantProps::getTableValue( std::vector<double> iv, std::string variable )
 {
 
-  if ( variable == "density" ){ 
+  if ( variable == "density" ){
 
-    return _density; 
+    return _density;
 
-  } else if ( variable == "temperature" && _includeTemp) { 
+  } else if ( variable == "temperature" && _includeTemp) {
 
-    return _temperature; 
+    return _temperature;
 
-  } else { 
+  } else {
 
     // a bit dangerous?
     //
     double value = 0;
-    return value; 
+    return value;
 
   }
 }

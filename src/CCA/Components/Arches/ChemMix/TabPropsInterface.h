@@ -28,11 +28,7 @@
 #define Uintah_Component_Arches_TabPropsInterface_h
 
 #include <tabprops/StateTable.h>
-
 #include <tabprops/Archive.h>
-#include <CCA/Components/Arches/ArchesMaterial.h>
-#include <CCA/Components/Arches/TimeIntegratorLabel.h>
-
 
 /**
  * @class  TabPropsInterface
@@ -90,7 +86,7 @@ class TabPropsInterface : public MixingRxnModel {
 
 public:
 
-  TabPropsInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+  TabPropsInterface( SimulationStateP& sharedState );
 
   ~TabPropsInterface();
 
@@ -162,7 +158,7 @@ public:
 
   double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions ){return -99;};
 
-  int findIndex( std::string ){return 0; }; 
+  int findIndex( std::string ){return 0; };
 
 protected :
 

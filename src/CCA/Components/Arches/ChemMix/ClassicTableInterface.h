@@ -27,8 +27,6 @@
 #ifndef Uintah_Component_Arches_ClassicTableInterface_h
 #define Uintah_Component_Arches_ClassicTableInterface_h
 
-#include <CCA/Components/Arches/ArchesMaterial.h>
-//#include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/IO/UintahZlibUtil.h>
 #include <sstream>
@@ -56,10 +54,10 @@
 
 namespace Uintah {
 #ifdef UINTAH_ENABLE_KOKKOS
-typedef Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tempTableContainer; 
+typedef Kokkos::View<double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tempTableContainer;
 typedef Kokkos::View<const double**, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::RandomAccess> > tableContainer ;
 #else
-typedef std::vector<std::vector<double> > tempTableContainer; 
+typedef std::vector<std::vector<double> > tempTableContainer;
 typedef const std::vector<std::vector<double> >& tableContainer ;
 #endif
 
@@ -74,7 +72,7 @@ class ClassicTableInterface : public MixingRxnModel {
 
 public:
 
-  ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+  ClassicTableInterface( SimulationStateP& sharedState );
 
   ~ClassicTableInterface();
 
@@ -943,7 +941,7 @@ private:
   //previous Arches specific variables:
   std::vector<std::vector<double> > i1;
 
-#ifdef UINTAH_ENABLE_KOKKOS 
+#ifdef UINTAH_ENABLE_KOKKOS
   // magic of kokkos, don't pass by reference and when an object goes out of scope it isn't necessarily deleted
 #else
   tempTableContainer table;

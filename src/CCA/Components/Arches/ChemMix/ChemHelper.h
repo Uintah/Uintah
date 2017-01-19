@@ -4,27 +4,36 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
 
-namespace Uintah { 
+namespace Uintah {
 
-  class ChemHelper { 
-  
-    public: 
+  class ChemHelper {
 
-      ChemHelper(){}; 
-      ~ChemHelper(){}; 
+    public:
 
-      struct TableLookup{ 
+      ChemHelper(){};
+      ~ChemHelper(){};
 
-        enum STATE { NEW, OLD };
+      enum STATE { NEW, OLD };
 
-        std::map<std::string, STATE> lookup;  
-      
-      };
+      static ChemHelper& self(){
+        static ChemHelper s;
+        return s;
+      }
 
+      inline void add_lookup_species( std::string name, STATE state=NEW ) {
 
-    private: 
-  
+        if ( state == NEW ){
+          model_req_species.push_back( name );
+        } else {
+          model_req_old_species.push_back( name );
+        }
+
+      }
+
+      std::vector<std::string> model_req_species;
+      std::vector<std::string> model_req_old_species;
+
   }; // Class ChemHelper
-} // Uintah namespace 
+} // Uintah namespace
 
-#endif 
+#endif

@@ -27,10 +27,6 @@
 #ifndef Uintah_Component_Arches_ConstantProps_h
 #define Uintah_Component_Arches_ConstantProps_h
 
-#include <CCA/Components/Arches/ArchesMaterial.h>
-#include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Core/Util/DebugStream.h>
-
 #include   <string>
 
 /**
@@ -43,11 +39,11 @@
  * @todo
  *
  * @details
- * This class computes the density and temperature for two non-reacting 
- * streams. 
- 
+ * This class computes the density and temperature for two non-reacting
+ * streams.
+
 This code checks for the following tags/attributes in the input file:
-The UPS interface is: 
+The UPS interface is:
 
 \code
 <ColdFlow                       spec="OPTIONAL NO_DATA" >
@@ -63,7 +59,7 @@ The UPS interface is:
 </ColdFlow>
 \endcode
 
- * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a 
+ * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a
  * report of what is going on in the table reader.
  *
  *
@@ -73,55 +69,55 @@ The UPS interface is:
 namespace Uintah {
 
 
-class ArchesLabel; 
-class MPMArchesLabel; 
-class TimeIntegratorLabel; 
+class ArchesLabel;
+class MPMArchesLabel;
+class TimeIntegratorLabel;
 class ConstantProps : public MixingRxnModel {
 
 public:
 
-  ConstantProps( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+  ConstantProps( SimulationStateP& sharedState );
 
   ~ConstantProps();
 
   void problemSetup( const ProblemSpecP& params );
-  
-  /** @brief Gets the thermochemical state for a patch 
-      @param initialize         Tells the method to allocateAndPut 
-      @param modify_ref_den     Tells the method to modify the reference density */
-  void sched_getState( const LevelP& level, 
-                       SchedulerP& sched, 
-                       const int time_substep, 
-                       const bool initialize,
-                       const bool modify_ref_den ); 
 
-  /** @brief Gets the thermochemical state for a patch 
-      @param initialize         Tells the method to allocateAndPut 
+  /** @brief Gets the thermochemical state for a patch
+      @param initialize         Tells the method to allocateAndPut
       @param modify_ref_den     Tells the method to modify the reference density */
-  void getState( const ProcessorGroup* pc, 
-                 const PatchSubset* patches, 
-                 const MaterialSubset* matls, 
-                 DataWarehouse* old_dw, 
-                 DataWarehouse* new_dw, 
-                 const int time_substep, 
-                 const bool initialize, 
+  void sched_getState( const LevelP& level,
+                       SchedulerP& sched,
+                       const int time_substep,
+                       const bool initialize,
+                       const bool modify_ref_den );
+
+  /** @brief Gets the thermochemical state for a patch
+      @param initialize         Tells the method to allocateAndPut
+      @param modify_ref_den     Tells the method to modify the reference density */
+  void getState( const ProcessorGroup* pc,
+                 const PatchSubset* patches,
+                 const MaterialSubset* matls,
+                 DataWarehouse* old_dw,
+                 DataWarehouse* new_dw,
+                 const int time_substep,
+                 const bool initialize,
                  const bool modify_ref_den );
 
   enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
   struct DepVarCont {
 
-    CCVariable<double>* var; 
-    //int index; 
+    CCVariable<double>* var;
+    //int index;
 
-  }; 
+  };
 
   typedef std::map<std::string, DepVarCont >       DepVarMap;
   typedef std::map<std::string, int >               IndexMap;
 
   void tableMatching(){};
 
-  double getTableValue( std::vector<double>, std::string ); 
+  double getTableValue( std::vector<double>, std::string );
 
   double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c){ return -99;};
 
@@ -133,11 +129,11 @@ private:
 
   IntVector d_ijk_den_ref;                ///< Reference density location
 
-  double _density; 
-  double _temperature; 
+  double _density;
+  double _temperature;
   bool _includeTemp;
 }; // end class ConstantProps
-  
+
 } // end namespace Uintah
 
 #endif
