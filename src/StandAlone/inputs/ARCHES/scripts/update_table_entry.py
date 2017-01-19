@@ -1,10 +1,11 @@
 import sys
 import os
-import xml.etree.ElementTree as ET
+from lxml import etree
 
 def fix_ups(filename):
 
-  tree = ET.parse(filename)
+  parser = etree.XMLParser(remove_comments=False, remove_blank_text=True)
+  tree = etree.parse(filename, parser)
   root = tree.getroot()
 
   CFD = root.find('CFD')
@@ -22,23 +23,24 @@ def fix_ups(filename):
     elif ( n.tag == "ClassicTable"):
       mytype='classic'
       found_one = 1
-    elif ( n.tag == "ColdFlow" ): 
+    elif ( n.tag == "ColdFlow" ):
       mytype='coldflow'
       found_one = 1
 
-    if ( found_one == 1 ): 
-      newTab = ET.Element('table')
+    if ( found_one == 1 ):
+      newTab = etree.Element('table')
       newTab.attrib['label'] = 'a_user_generated_label'
       newTab.attrib['type'] = mytype
-      for m in n: 
+      for m in n:
         newTab.insert(0,m)
       Properties.insert(0,newTab)
-    else: 
+    else:
       Properties.insert(0,n)
 
   os.system('cp '+filename+' '+filename+'.orig_ups')
 
-  tree.write(filename)
+  tree.write(filename, pretty_print=True, encoding="ISO-8859-1")
+
 
 #------------------------------------------------------------
 
@@ -68,27 +70,24 @@ if args[1] == '--help': usage()
 if args[1] == '-help': usage()
 
 
-if args[1] == '--do_all_ups_files': 
+if args[1] == '--do_all_ups_files':
   for filename in os.listdir('.'):
-  
+
     if filename.endswith('.ups'):
-  
+
       print 'Fixing file: ', filename
-  
+
       fix_ups(filename)
-elif args[1] == '--do_all_xml_files': 
+elif args[1] == '--do_all_xml_files':
   for filename in os.listdir('.'):
-  
+
     if filename.endswith('.xml'):
-  
+
       print 'Fixing file: ', filename
-  
+
       fix_ups(filename)
-else: 
+else:
     print 'Fixing file: ', args[1]
     fix_ups(args[1])
 
 print 'Done. The original UPS file is saved with the extension *.orig_ups'
-
-
-
