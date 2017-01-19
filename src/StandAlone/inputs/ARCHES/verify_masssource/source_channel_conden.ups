@@ -1,9 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>verify_masssource/conden</title>
   </Meta>
-  <SimulationComponent type="arches" />
-  <Solver type="hypre" />
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
   <Time>
     <maxTime>3</maxTime>
     <initTime>0.0</initTime>
@@ -14,29 +16,29 @@
   </Time>
   <DataArchiver>
     <filebase>source_channel_conden.uda</filebase>
-    <outputInitTimestep />
+    <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>
-    <save label="CCVelocity" />
-    <save label="uVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="wVelocitySPBC" />
-    
-    <save label="v-martin" />
-    
-    
-    <save label="mixture_fraction" />
-    <save label="mixture_fraction_Fdiff" />
-    <save label="mixture_fraction_Fconv" />
-    <save label="mixture_fraction_RHS" />
-    
-    <save label="density" table_lookup="false" />
-    <checkpoint cycle="2" interval="0.02" />
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <!--save label="cellType"/-->
+    <save label="v-martin"/>
+    <!-- Table Variables -->
+    <!-- iv's -->
+    <save label="mixture_fraction"/>
+    <save label="mixture_fraction_Fdiff"/>
+    <save label="mixture_fraction_Fconv"/>
+    <save label="mixture_fraction_RHS"/>
+    <!-- dv's -->
+    <save label="density" table_lookup="false"/>
+    <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-      <Face name="x- face" side="x-">
+      <Face side="x-" name="x- face">
         <BCType label="x-wall" var="VelocityInlet">
           <value>[10.0, 0.0, 0.0]</value>
         </BCType>
@@ -46,14 +48,14 @@
         <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="Velocity" var="Dirichlet">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType label="Temperature" var="Dirichlet">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
-      <Face name="x+ out" side="x+">
+      <Face side="x+" name="x+ out">
         <BCType label="x+wall" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -63,14 +65,14 @@
         <BCType label="testscalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="Velocity" var="Dirichlet">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType label="Temperature" var="Dirichlet">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
-      <Face name="y- wall" side="y-">
+      <Face side="y-" name="y- wall">
         <BCType label="y-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -80,14 +82,14 @@
         <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="Velocity" var="Dirichlet">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType label="Temperature" var="Dirichlet">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
-      <Face name="y+ wall" side="y+">
+      <Face side="y+" name="y+ wall">
         <BCType label="y+ wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -97,14 +99,14 @@
         <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="Velocity" var="Dirichlet">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType label="Temperature" var="Dirichlet">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
-      <Face name="z- wall" side="z-">
+      <Face side="z-" name="z- wall">
         <BCType label="z-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -114,14 +116,14 @@
         <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="Velocity" var="Dirichlet">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType label="Temperature" var="Dirichlet">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
-      <Face name="z+ wall" side="z+">
+      <Face side="z+" name="z+ wall">
         <BCType label="z+wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -131,10 +133,10 @@
         <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="Velocity" var="Dirichlet">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType label="Temperature" var="Dirichlet">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
@@ -155,19 +157,19 @@
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
   <CFD>
-    
+    <!-- ARCHES specification -->
     <ARCHES>
-      
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="second" />
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-      
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="constant">
             <constant>0.0</constant>
@@ -176,9 +178,9 @@
             <low>-0.05</low>
             <high>1.05</high>
           </Clipping>
-          <src label="v-martin" />
+          <src label="v-martin"/>
         </Eqn>
-        
+        <!-- define source terms here-->
         <Sources>
           <src label="v-martin" type="constant_src">
             <constant>10</constant>
@@ -191,13 +193,13 @@
         <filterl>0.000001</filterl>
       </Turbulence>
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.0</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
       <BoundaryConditions>
-        <suppress_corner_recirculation />
+        <suppress_corner_recirculation/>
       </BoundaryConditions>
       <ExplicitSolver>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
@@ -208,7 +210,7 @@
             <preconditioner>  pfmg  </preconditioner>
             <maxiterations>   250   </maxiterations>
           </Parameters>
-          <src label="v-martin" />
+          <src label="v-martin"/>
         </PressureSolver>
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>

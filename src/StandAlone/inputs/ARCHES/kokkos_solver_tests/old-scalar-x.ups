@@ -1,12 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- @version: -->
 <Uintah_specification>
 
   <Meta>
     <title>Scalar Test, -x inlet</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
 
   <Time>
     <maxTime>5.0</maxTime>
@@ -18,21 +20,21 @@
   </Time>
 
   <DataArchiver>
-    <save label="phi-up" />
-    <save label="phi-sb" />
-    <save label="phi-vl" />
-    <save label="phi-roe" />
+    <save label="phi-up"/>
+    <save label="phi-sb"/>
+    <save label="phi-vl"/>
+    <save label="phi-roe"/>
     <filebase>xminus_scalar_test.uda</filebase>
-    <outputInitTimestep />
+    <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>
-    <checkpoint cycle="2" interval="0.02" />
+    <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
 
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-      <Face name="inlet" side="x-">
+      <Face side="x-" name="inlet">
         <BCType label="velocity inlet" var="VelocityInlet">
           <value>[1,0,0]</value>
         </BCType>
@@ -46,7 +48,7 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      <Face name="outlet" side="x+">
+      <Face side="x+" name="outlet">
         <BCType label="the outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -83,29 +85,29 @@
 
   <CFD>
 
-    
+    <!-- ARCHES specification -->
     <ARCHES>
 
-      <BoundaryConditions />
+      <BoundaryConditions/>
 
-      
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator order="1">
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-      
+      <!-- SCALARS -->
 
-      <Turbulence model="none" />
+      <Turbulence model="none"/>
 
       <TransportEqns>
         <Eqn label="phi-up" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          
-          
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
           <conv_scheme>upwind</conv_scheme>
-          
-          <determines_properties />
+          <!--<conv_scheme>vanleer</conv_scheme>-->
+          <determines_properties/>
           <initialization type="constant">
             <constant>1.0</constant>
           </initialization>
@@ -118,10 +120,10 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
-          
-          
-          
-          <determines_properties />
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>upwind</conv_scheme>-->
+          <!--<conv_scheme>vanleer</conv_scheme>-->
+          <determines_properties/>
           <initialization type="constant">
             <constant>1.0</constant>
           </initialization>
@@ -133,11 +135,11 @@
         <Eqn label="phi-vl" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          
-          
-          
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>upwind</conv_scheme>-->
           <conv_scheme>vanleer</conv_scheme>
-          <determines_properties />
+          <determines_properties/>
           <initialization type="constant">
             <constant>1.0</constant>
           </initialization>
@@ -149,11 +151,11 @@
         <Eqn label="phi-roe" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          
+          <!--<conv_scheme>super_bee</conv_scheme>-->
           <conv_scheme>roe_minmod</conv_scheme>
-          
-          
-          <determines_properties />
+          <!--<conv_scheme>upwind</conv_scheme>-->
+          <!--<conv_scheme>vanleer</conv_scheme>-->
+          <determines_properties/>
           <initialization type="constant">
             <constant>1.0</constant>
           </initialization>
@@ -165,11 +167,11 @@
       </TransportEqns>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.18</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <ExplicitSolver>
 

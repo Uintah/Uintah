@@ -1,11 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>PC Transport Test</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <maxTime>0.1</maxTime>
     <initTime>0.0</initTime>
@@ -17,16 +20,16 @@
   <DataArchiver>
     <filebase>pc_transport.uda</filebase>
     <outputInterval>0.01</outputInterval>
-     
-    <save label="pc_0" />
-    <save label="pc_1" />
-    <save label="pc_2" />
-     
-    <save label="pc_src_0" />
-    <save label="pc_src_1" />
-    <save label="pc_src_2" />
+    <!-- transported variables --> 
+    <save label="pc_0"/>
+    <save label="pc_1"/>
+    <save label="pc_2"/>
+    <!-- sources --> 
+    <save label="pc_src_0"/>
+    <save label="pc_src_1"/>
+    <save label="pc_src_2"/>
 
-    <checkpoint cycle="2" interval="0.05" />
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -50,11 +53,11 @@
   </PhysicalConstants>
 
   <CFD>
-
+<!-- ARCHES specification -->
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
       <TransportEqns>
@@ -62,7 +65,7 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
-          <determines_properties />
+          <determines_properties/>
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -79,7 +82,7 @@
           <initialization type="constant">
             <constant>1.0</constant>
           </initialization>
-          <src label="pc_src_0" />
+          <src label="pc_src_0"/>
         </Eqn>
         <Eqn label="pc_1" type="CCscalar">
           <doDiff>true</doDiff>
@@ -88,7 +91,7 @@
           <initialization type="constant">
             <constant>2.0</constant>
           </initialization>
-          <src label="pc_src_1" />
+          <src label="pc_src_1"/>
         </Eqn>
         <Eqn label="pc_2" type="CCscalar">
           <doDiff>true</doDiff>
@@ -97,7 +100,7 @@
           <initialization type="constant">
             <constant>3.0</constant>
           </initialization>
-          <src label="pc_src_2" />
+          <src label="pc_src_2"/>
         </Eqn>
 
         <Sources>
@@ -109,9 +112,9 @@
             <n_sts>1</n_sts>
             <n_ind>2</n_ind>
             <n_tot>3</n_tot>
-            <pc label="pc_0" score_number="0" />
-            <pc label="pc_1" score_number="1" />
-            <pc label="pc_2" score_number="2" />
+            <pc label="pc_0" score_number="0"/>
+            <pc label="pc_1" score_number="1"/>
+            <pc label="pc_2" score_number="2"/>
           </src>
           <src label="pc_src_1" type="pc_transport">
             <pc_scal_file>string_1</pc_scal_file>
@@ -121,9 +124,9 @@
             <n_sts>1</n_sts>
             <n_ind>2</n_ind>
             <n_tot>3</n_tot>
-            <pc label="pc_0" score_number="0" />
-            <pc label="pc_1" score_number="1" />
-            <pc label="pc_2" score_number="2" />
+            <pc label="pc_0" score_number="0"/>
+            <pc label="pc_1" score_number="1"/>
+            <pc label="pc_2" score_number="2"/>
           </src>
           <src label="pc_src_2" type="pc_transport">
             <pc_scal_file>string_1</pc_scal_file>
@@ -133,20 +136,20 @@
             <n_sts>1</n_sts>
             <n_ind>2</n_ind>
             <n_tot>3</n_tot>
-            <pc label="pc_0" score_number="0" />
-            <pc label="pc_1" score_number="1" />
-            <pc label="pc_2" score_number="2" />
+            <pc label="pc_0" score_number="0"/>
+            <pc label="pc_1" score_number="1"/>
+            <pc label="pc_2" score_number="2"/>
           </src>
         </Sources>
 
       </TransportEqns>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.0</density>
           <temperature>298.0</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <ExplicitSolver>
         <PressureSolver>

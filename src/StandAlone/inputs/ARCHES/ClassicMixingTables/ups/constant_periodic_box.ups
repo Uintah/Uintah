@@ -1,11 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Periodic box with constant properties as dictated from the table lookup</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <maxTime>0.1</maxTime>
     <initTime>0.0</initTime>
@@ -17,21 +20,21 @@
   <DataArchiver>
     <filebase>constant_periodic_box.uda</filebase>
     <outputInterval>0.01</outputInterval>
-    <save label="CCVelocity" />
-
-
-    <save label="scalarVarSP" />
-    <save label="mixture_fraction" />
-    <save label="heat_loss" />
-
-    <save label="mixture_molcular_weight" table_lookup="true" />
-    <save label="CH4" table_lookup="true" />
-    <save label="O2" table_lookup="true" />
-    <save label="CO2" table_lookup="true" />
-    <save label="H2O" table_lookup="true" />
-    <save label="NO" table_lookup="true" />
-    <save label="CO" table_lookup="true" />
-    <checkpoint cycle="2" interval="0.05" />
+    <save label="CCVelocity"/>
+<!-- Table Variables -->
+<!-- iv's -->
+    <save label="scalarVarSP"/>
+    <save label="mixture_fraction"/>
+    <save label="heat_loss"/>
+<!-- dv's -->
+    <save label="mixture_molcular_weight" table_lookup="true"/>
+    <save label="CH4" table_lookup="true"/>
+    <save label="O2" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <save label="NO" table_lookup="true"/>
+    <save label="CO" table_lookup="true"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -56,20 +59,20 @@
 
   <CFD>
 
-
+<!-- ARCHES specification -->
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-
+<!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
-          <determines_properties />
+          <determines_properties/>
           <initialization type="constant">
             <constant>.10</constant>
           </initialization>
@@ -83,11 +86,11 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <determines_properties />
+          <determines_properties/>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
-          <src label="divQ" />
+          <src label="divQ"/>
         </Eqn>
 
         <Sources>
@@ -107,13 +110,25 @@
                 </property_calculator>
             </RMCRT>
           </src>
-          
+          <!--src label="divQ" type="do_radiation">
+            <calc_frequency>5</calc_frequency>
+            <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <DORadiationModel>
+              <opl>3.0</opl>
+              <LinearSolver type="hypre">
+                <res_tol>1.0e-10</res_tol>
+                <ksptype>gmres</ksptype>
+                <pctype>jacobi</pctype>
+                <max_iter>75</max_iter>
+              </LinearSolver>
+            </DORadiationModel>
+          </src-->
         </Sources>
 
       </TransportEqns>
 
       <PropertyModels>
-        <model label="heat_loss" type="heat_loss">
+        <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -121,13 +136,13 @@
         </model>
       </PropertyModels>
 
-      <Turbulence model="compdynamicprocedure" />
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <table label="a_user_generated_label" type="classic"><ClassicTable>
+        <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
         </ClassicTable>
-      </table></Properties>
+      </Properties>
 
       <ExplicitSolver>
         <initial_dt>1</initial_dt>

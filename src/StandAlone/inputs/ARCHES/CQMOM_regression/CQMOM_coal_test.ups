@@ -1,11 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
     <title>CQMOM Coal Test</title>
   </Meta>
-  
-  <SimulationComponent type="arches" />
+  <!-- required transported moment tags and inlet moment tags/values generated using 
+   the python script StandAlone/inputs/ARCHES/CQMOM_regression/makeCQMOMCoalInlet.py -->
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <max_Timesteps> 5 </max_Timesteps>
     <maxTime>       1.0       </maxTime>
@@ -16,14 +18,14 @@
   </Time>
 
   <DataArchiver>
-    <outputInitTimestep />
+    <outputInitTimestep/>
     <filebase> CQMOM_coal_test.uda </filebase>
     <outputTimestepInterval> 1 </outputTimestepInterval>
 
-    <save label="CCVelocity" />
-    <save label="CCUVelocity" />
-    <save label="CCVVelocity" />
-    <save label="CCWVelocity" />
+    <save label="CCVelocity"/>
+    <save label="CCUVelocity"/>
+    <save label="CCVVelocity"/>
+    <save label="CCWVelocity"/>
     
     <save label="m_0000000" />
     <save label="m_1000000" />
@@ -34,14 +36,14 @@
     <save label="m_0000010" />
     <save label="m_0000001" />
 
-    <save label="dragx_0" />
-    <save label="gas_dragx_0" />
-    <save label="dragx_1" />
-    <save label="gas_dragx_1" />
-    <save label="dragx_2" />
-    <save label="gas_dragx_2" />
-    <save label="dragx_3" />
-    <save label="gas_dragx_3" />
+    <save label="dragx_0"/>
+    <save label="gas_dragx_0"/>
+    <save label="dragx_1"/>
+    <save label="gas_dragx_1"/>
+    <save label="dragx_2"/>
+    <save label="gas_dragx_2"/>
+    <save label="dragx_3"/>
+    <save label="gas_dragx_3"/>
 
     <save label="w_0" />
     <save label="w_1" />
@@ -63,86 +65,86 @@
     <save label="partWVel_2" />
     <save label="partWVel_3" />
     
-    <save label="diameter_0" />
-    <save label="diameter_1" />
-    <save label="diameter_2" />
-    <save label="diameter_3" />
+    <save label="diameter_0"/>
+    <save label="diameter_1"/>
+    <save label="diameter_2"/>
+    <save label="diameter_3"/>
     
-    <save label="charMass_0" />
-    <save label="charMass_1" />
-    <save label="charMass_2" />
-    <save label="charMass_3" />
+    <save label="charMass_0"/>
+    <save label="charMass_1"/>
+    <save label="charMass_2"/>
+    <save label="charMass_3"/>
     
-    <save label="rawCoal_0" />
-    <save label="rawCoal_1" />
-    <save label="rawCoal_2" />
-    <save label="rawCoal_3" />
+    <save label="rawCoal_0"/>
+    <save label="rawCoal_1"/>
+    <save label="rawCoal_2"/>
+    <save label="rawCoal_3"/>
     
-    <save label="partE_0" />
-    <save label="partE_1" />
-    <save label="partE_2" />
-    <save label="partE_3" />
+    <save label="partE_0"/>
+    <save label="partE_1"/>
+    <save label="partE_2"/>
+    <save label="partE_3"/>
     
-    <save label="partTemp_0" />
-    <save label="partTemp_1" />
-    <save label="partTemp_2" />
-    <save label="partTemp_3" />
+    <save label="partTemp_0"/>
+    <save label="partTemp_1"/>
+    <save label="partTemp_2"/>
+    <save label="partTemp_3"/>
     
-    <save label="partRho_0" />
-    <save label="partRho_1" />
-    <save label="partRho_2" />
-    <save label="partRho_3" />
+    <save label="partRho_0"/>
+    <save label="partRho_1"/>
+    <save label="partRho_2"/>
+    <save label="partRho_3"/>
     
-    <save label="FOWY_0" />
-    <save label="FOWY_1" />
-    <save label="FOWY_2" />
-    <save label="FOWY_3" />
+    <save label="FOWY_0"/>
+    <save label="FOWY_1"/>
+    <save label="FOWY_2"/>
+    <save label="FOWY_3"/>
     
-    <save label="CharOx_0" />
-    <save label="CharOx_1" />
-    <save label="CharOx_2" />
-    <save label="CharOx_3" />
+    <save label="CharOx_0"/>
+    <save label="CharOx_1"/>
+    <save label="CharOx_2"/>
+    <save label="CharOx_3"/>
     
-    <save label="shadE_0" />
-    <save label="shadE_1" />
-    <save label="shadE_2" />
-    <save label="shadE_3" />
+    <save label="shadE_0"/>
+    <save label="shadE_1"/>
+    <save label="shadE_2"/>
+    <save label="shadE_3"/>
     
-    <save label="eta_source1" />
-    <save label="eta_source2" />
-    <save label="eta_source3" />
-    <save label="heat_source" />
-    <save label="pressurePS" />
-    <save label="coal_gas_mix_frac_RHS" />
-    <save label="coal_gas_mix_frac_Fdiff" />
-    <save label="coal_gas_mix_frac_Fconv" />
-    <save label="radiationVolq" />
-    <save label="abskg" />
-    <save label="gas_abskg" />
-    <save label="Julien_abskp" />
-    <save label="divQ" />
-    <save label="enthalpy" />
+    <save label = "eta_source1"/>
+    <save label = "eta_source2"/>
+    <save label = "eta_source3"/>
+    <save label = "heat_source"/>
+    <save label = "pressurePS"/>
+    <save label = "coal_gas_mix_frac_RHS"/>
+    <save label = "coal_gas_mix_frac_Fdiff"/>
+    <save label = "coal_gas_mix_frac_Fconv"/>
+    <save label = "radiationVolq"/>
+    <save label = "abskg"/>
+    <save label = "gas_abskg"/>
+    <save label = "Julien_abskp"/>
+    <save label = "divQ"/>
+    <save label = "enthalpy"/>
 
 
-    <save label="radiation_temperature" />
-    
-    <save label="mixture_fraction_2" />
-    <save label="heat_loss" />
-    <save label="coal_gas_mix_frac" />
-    <save label="test_scalar" />
-    <save label="temperature" table_lookup="true" />
-    <save label="density" table_lookup="true" />
-    <save label="CO" table_lookup="true" />
-    <save label="CO2" table_lookup="true" />
-    <save label="H2O" table_lookup="true" />
-    <save label="OH" table_lookup="true" />
-    
-    <save label="O2" table_lookup="true" />
-    <save label="sensibleenthalpy" table_lookup="true" />
-    <save label="adiabaticenthalpy" table_lookup="true" />
-    <save label="N2" table_lookup="true" />
-    <save label="mixture_molecular_weight" table_lookup="true" />
-    <checkpoint cycle="2" interval="0.0002" />
+    <save label = "radiation_temperature"/>
+    <!-- Table Variables -->
+    <save label = "mixture_fraction_2"/>
+    <save label = "heat_loss"/>
+    <save label = "coal_gas_mix_frac"/>
+    <save label = "test_scalar"/>
+    <save label = "temperature" table_lookup = "true"/>
+    <save label = "density"     table_lookup = "true"/>
+    <save label = "CO"          table_lookup = "true"/>
+    <save label = "CO2"         table_lookup = "true"/>
+    <save label = "H2O"         table_lookup = "true"/>
+    <save label = "OH"          table_lookup = "true"/>
+    <!--save label = "CH4"         table_lookup = "true"/-->
+    <save label = "O2"          table_lookup = "true"/>
+    <save label = "sensibleenthalpy" table_lookup = "true"/>
+    <save label = "adiabaticenthalpy"   table_lookup = "true"/>
+    <save label = "N2"          table_lookup = "true"/>
+    <save label = "mixture_molecular_weight" table_lookup = "true"/>
+    <checkpoint cycle="2" interval="0.0002"/>
   </DataArchiver>
 
   <Grid>
@@ -157,11 +159,13 @@
     </Level>
     <BoundaryConditions>
      <DefaultMaterial>0</DefaultMaterial>
-     <Face name="velinlet" side="x-">
+     <Face side="x-" name="velinlet">
         <BCType label="secondaryflow" var="VelocityInlet">
           <value>[10.0, 0, 0]</value>
         </BCType>
-        
+        <!--BCType label="enthalpy" var="Dirichlet">
+          <value>-4.930e6</value>
+        </BCType-->
         <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -183,10 +187,10 @@
         <BCType label="radiation_temperature" var="Tabulated">
           <value>temperature</value>
         </BCType>
-        <BCType id="0" label="abskg" var="ForcedDirichlet">
+        <BCType id="0" label= "abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-
+<!-- moment inlet values -->
         <BCType label="m_0000000" var="ForcedDirichlet">
           <value> 2.26053655674010e+11 </value>
         </BCType>
@@ -304,10 +308,10 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType id="0" label="abskg" var="ForcedDirichlet">
+        <BCType id="0" label= "abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        
+        <!-- transported moments -->
         <BCType label="m_0000000" var="Neumann">
           <value> 0.0 </value>
         </BCType>
@@ -400,7 +404,7 @@
         </BCType>
       </Face>
 
-      <Face name="y- wall" side="y-">
+      <Face side="y-" name="y- wall">
         <BCType label="y-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -425,10 +429,10 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>1200.0</value>
         </BCType>
-        <BCType id="0" label="abskg" var="ForcedDirichlet">
+        <BCType id="0" label= "abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        
+        <!-- transported moments -->
         <BCType label="m_0000000" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
@@ -521,14 +525,14 @@
         </BCType>
       </Face>
 
-      <Face name="y+ wall" side="y+">
+      <Face side="y+" name="y+ wall">
         <BCType label="y+ wall" var="WallBC">
           <value>0.0</value>
         </BCType>
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0" label="abskg" var="ForcedDirichlet">
+        <BCType id="0" label= "abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -549,7 +553,7 @@
         <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        
+        <!-- transported mooments -->
         <BCType label="m_0000000" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
@@ -642,14 +646,14 @@
         </BCType>
       </Face>
 
-      <Face name="z- wall" side="z-">
+      <Face side="z-" name="z- wall">
 	    <BCType label="z-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0" label="abskg" var="ForcedDirichlet">
+        <BCType id="0" label= "abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -670,7 +674,7 @@
         <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        
+        <!-- transported moments -->
         <BCType label="m_0000000" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
@@ -763,14 +767,14 @@
         </BCType>
       </Face>
 
-      <Face name="z+ wall" side="z+">
+      <Face side="z+" name="z+ wall">
 	    <BCType label="z+wall" var="WallBC">
           <value>0.0</value>
         </BCType>
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0" label="abskg" var="ForcedDirichlet">
+        <BCType id="0" label= "abskg" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
         <BCType label="enthalpy" var="Neumann">
@@ -791,7 +795,7 @@
         <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        
+        <!-- transported moments -->
         <BCType label="m_0000000" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
@@ -898,19 +902,19 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-      <Turbulence model="compdynamicprocedure" />
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <table label="a_user_generated_label" type="classic"><ClassicTable>
-          <enthalpy_label>enthalpy</enthalpy_label>   
+        <ClassicTable>
+          <enthalpy_label>enthalpy</enthalpy_label>   <!-- NON Adiabatic case-->
           <inputfile>inputs/ARCHES/ClassicMixingTables/coal/DQMOM_coal.mix.gz</inputfile>
-          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss" />
-          <reference_state eta="0.0" fp="0.0" hl="0.0" />
+          <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac" hl_label="heat_loss"/>
+          <reference_state fp="0.0" eta="0.0" hl="0.0"/>
         </ClassicTable>
-      </table></Properties>
+      </Properties>
 
       <BoundaryConditions>
       </BoundaryConditions>
@@ -921,13 +925,13 @@
           <doConv>true</doConv>
           <stage value="0" /> 
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
-          <src label="divQ" />
-          <extra_src label="heat_source" />
+          <src label="divQ"/>
+          <extra_src label="heat_source"/>
         </Eqn>
 
         <Eqn label="mixture_fraction_2" type="CCscalar">
@@ -935,7 +939,7 @@
           <doConv>true</doConv>
           <stage value="0" /> 
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="constant">
             <constant>0.0000</constant>
@@ -951,7 +955,7 @@
           <doConv>true</doConv>
           <stage value="0" /> 
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="constant">
             <constant>0.04</constant>
@@ -960,15 +964,16 @@
             <low>0.0</low>
             <high>1.0</high>
           </Clipping>
-          
-          <src label="eta_source3" />
+          <!--src label="eta_source1"/>
+          <src label="eta_source2"/-->
+          <src label="eta_source3"/>
         </Eqn>
 
         <Eqn label="test_scalar" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="constant">
             <constant>0.04</constant>
@@ -977,15 +982,15 @@
             <low>0.0</low>
             <high>1.0</high>
           </Clipping>
-          <extra_src label="eta_source1" />
-          <extra_src label="eta_source2" />
-          
+          <extra_src label="eta_source1"/>
+          <extra_src label="eta_source2"/>
+          <!--src label="eta_source3"/-->
         </Eqn>
         
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
-            <abskg label="abskg" />
+            <abskg label="abskg"/>
             <DORadiationModel>
                 <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -1011,28 +1016,28 @@
       </TransportEqns>
       
       <PropertyModels>
-        <model label="abskg" type="radiation_properties">
+        <model type="radiation_properties" label="abskg">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
           <calculator type="hottel_sarofim">
             <opl>.432</opl>
-            <abskg label="gas_abskg" />
+            <abskg label="gas_abskg"/>
             <particles type="basic">
-              <abskp label="Julien_abskp" />
+              <abskp label="Julien_abskp"/>
               <part_temp_label> partTemp </part_temp_label>
               <part_size_label> diameter </part_size_label>
             </particles>
           </calculator>
         </model>
-        <model label="heat_loss" type="heat_loss">
+        <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
           <constant>0</constant>
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
-        <model label="soot" type="cc_constant">
-          <initialization type="constant">
+        <model type="cc_constant" label="soot">
+          <initialization type ="constant">
             <constant>0.0</constant>
           </initialization>
           <constant>0.0</constant>
@@ -1049,8 +1054,9 @@
             <preconditioner>  pfmg  </preconditioner>
             <maxiterations>   500   </maxiterations>
           </Parameters>
-          
-          <src label="eta_source3" />
+          <!--src label="eta_source1"/>
+          <src label="eta_source2"/-->
+          <src label="eta_source3"/>
         </PressureSolver>
 
         <MomentumSolver>
@@ -1062,42 +1068,42 @@
  
       <ParticleModels>
          <model label="gravityx" type="gravity">
-           <grid dependent_type="CC" independent_type="CC" />
+           <grid dependent_type="CC" independent_type="CC"/>
            <IC> partUVel </IC>
            <direction> x </direction>
          </model>
 
         <model label="dragx" type="drag">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partUVel </IC>
           <direction> x </direction>
         </model>
  
         <model label="dragy" type="drag">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partVVel </IC>
           <direction> y </direction>
         </model>
         
         <model label="dragz" type="drag">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partWVel </IC>
           <direction> z </direction>
         </model>
 
         <model label="FOWY" type="fowy_devolatilization">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> rawCoal </IC>
           <gas_source_name> eta_source1 </gas_source_name>
         </model>
     
         <model label="charProd" type="constant">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant> [0.0, 0.0, 0.0, 0.0] </constant>
         </model>
 
         <model label="CharOx" type="shaddix_oxidation">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> charMass </IC>
           <char_production_label> charProd </char_production_label>
           <gas_source_name> eta_source2 </gas_source_name>
@@ -1108,14 +1114,14 @@
         </model>
 
         <model label="shadE" type="shaddix_enthalpy">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partE </IC>
           <char_temprate_label> temp_rate_CharOx </char_temprate_label>
           <surf_rate_label> surf_rate_CharOx </surf_rate_label>
           <char_gas_label> gas_CharOx </char_gas_label>
           <devol_gas_label> gas_FOWY </devol_gas_label>
           <gas_source_name> heat_source </gas_source_name>
-          
+          <!--noRadiation/-->
         </model>
 
         <model label="partRho" type="coal_density">
@@ -1127,13 +1133,13 @@
      <include href="inputs/ARCHES/Coal/CoalDB/SUFCO.xml" section="ParticleProperties" />
       <EulerianParticles>
         <ParticleVariables>
-          <variable label="rawCoal" role="raw_coal" />
+          <variable label="rawCoal"  role="raw_coal" />
           <variable label="charMass" role="char" />
-          <variable label="partE" role="enthalpy" />
+          <variable label="partE"    role="enthalpy" />
           <variable label="diameter" role="size" />
-          <variable label="partRho" role="density" />
+          <variable label="partRho"  role="density" />
           <variable label="partTemp" role="temperature" />
-          <variable label="dTdt" role="dTdt" />
+          <variable label="dTdt"     role="dTdt" />
           <variable label="partUVel" role="uvel" />
           <variable label="partVVel" role="vvel" />
           <variable label="partWVel" role="wvel" />
@@ -1142,7 +1148,7 @@
       </EulerianParticles>
 
       <CQMOM partvel="true">
-        
+        <!-- base information-->
         <UseLapack> false </UseLapack>
         <NumberInternalCoordinates> 7 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2,1,1,1,1,1] </QuadratureNodes>
@@ -1194,14 +1200,14 @@
         <WeightRatio> 1.0e-3 </WeightRatio>
         <AbscissaRatio> .1 </AbscissaRatio>
 
-        
+        <!--transport-->
         <doDiff> false </doDiff>
         <doConv> true  </doConv>
         <conv_scheme> second </conv_scheme>
         <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
         <molecular_diffusivity> 0.0 </molecular_diffusivity>
         
-        
+        <!-- moment eqns-->
         <Moment> <m> [0,0,0,0,0,0,0] </m> </Moment>
         <Moment> <m> [1,0,0,0,0,0,0] </m> </Moment>
         <Moment> <m> [2,0,0,0,0,0,0] </m> </Moment>

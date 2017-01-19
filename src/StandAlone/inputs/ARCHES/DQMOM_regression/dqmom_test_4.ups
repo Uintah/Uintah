@@ -1,11 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>DQMOM/Scalar Test #4</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <maxTime>0.20</maxTime>
     <initTime>0.0</initTime>
@@ -17,31 +20,31 @@
   <DataArchiver>
     <filebase>dqmom_test_4.uda</filebase>
     <outputInterval>0.01</outputInterval>
-    <outputInitTimestep />
-
-    <save label="pressurePS" />
-    <save label="CCVelocity" />
-    <save label="uVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="continuityResidual" />
-    <save label="velocityDivergence" />
-
-    <save label="scalar_0" />
-    <save label="scalar_1" />
-
-    <save label="length_qn0" />
-    <save label="length_qn1" />
-    <save label="length_0" />
-    <save label="length_qn0_src" />
-    <save label="mass_qn0" />
-    <save label="mass_qn1" />
-    <save label="mass_1" />
-    <save label="mass_qn1_src" />
-    <save label="temp_qn0" />
-    <save label="temp_qn1" />
-    <save label="temp_1" />
-    <save label="temp_qn1_src" />
-    <checkpoint cycle="2" interval="0.05" />
+    <outputInitTimestep/>
+<!--    <save label="totalKineticEnergy"/>  FIXME, RT fails with this enabled-->
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+<!-- EXTRA SCALARS -->
+    <save label="scalar_0"/>
+    <save label="scalar_1"/>
+<!-- DQMOM Vars -->
+    <save label="length_qn0"/>
+    <save label="length_qn1"/>
+    <save label="length_0"/>
+    <save label="length_qn0_src"/>
+    <save label="mass_qn0"/>
+    <save label="mass_qn1"/>
+    <save label="mass_1"/>
+    <save label="mass_qn1_src"/>
+    <save label="temp_qn0"/>
+    <save label="temp_qn1"/>
+    <save label="temp_1"/>
+    <save label="temp_qn1_src"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -65,12 +68,12 @@
   </PhysicalConstants>
 
   <CFD>
-
+<!-- ARCHES specification -->
     <ARCHES>
 
-
+<!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="second" />
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
       <EulerianParticles>
@@ -84,24 +87,24 @@
 
       <ParticleModels>
         <model label="ux" type="constant">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.0,1.0,1.0]</constant>
         </model>
         <model label="uy" type="constant">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.0,1.0,1.0]</constant>
         </model>
         <model label="uz" type="constant">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.0,1.0,1.0]</constant>
         </model>
       </ParticleModels>
 
 
-
+<!-- EXTRA SCALARS -->
       <TransportEqns>
         <Eqn label="scalar_0" type="CCscalar">
-
+<!-- diffusive scalar -->
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
@@ -114,7 +117,7 @@
         </Eqn>
 
         <Eqn label="scalar_1" type="CCscalar">
-
+<!-- non-diffusive scalar -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
@@ -128,7 +131,7 @@
 
       </TransportEqns>
 
-
+<!-- DQMOM -->
       <DQMOM type="weightedAbs">
         <number_quad_nodes>2</number_quad_nodes>
         <save_moments>false</save_moments>
@@ -139,7 +142,7 @@
             <Optimal_abscissas>[-1,1,1,1,1,-1]</Optimal_abscissas>
           </Optimization>
         </LinearSolver>
-
+<!-- particle models -->
         <VelModel type="Dragforce">
         </VelModel>
 
@@ -152,9 +155,9 @@
           </model>
         </Models>
 
-
+<!-- Weights test the uniform constant initialization mechanism -->
         <Weights>
-
+<!-- w [=] #/m^3 -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
@@ -165,7 +168,7 @@
         </Weights>
 
         <Ic label="length">
-
+<!-- l [=] m -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
@@ -173,17 +176,17 @@
             <step_direction>x</step_direction>
             <step_start>0.</step_start>
             <step_end>.5</step_end>
-            <env_step_value qn="0" value="1.0" />
-            <env_step_value qn="1" value=".50" />
-            <env_step_value qn="2" value=".25" />
+            <env_step_value qn="0" value="1.0"/>
+            <env_step_value qn="1" value=".50"/>
+            <env_step_value qn="2" value=".25"/>
           </initialization>
-          <model label="grow" />
+          <model label="grow"/>
           <nominal_values>[1, 0.5, 0.25]</nominal_values>
           <scaling_const>[1,1]</scaling_const>
         </Ic>
 
         <Ic label="mass">
-
+<!-- l [=] kg -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
@@ -191,17 +194,17 @@
             <step_direction>x</step_direction>
             <step_start>0.</step_start>
             <step_end>.5</step_end>
-            <env_step_value qn="0" value="1.0" />
-            <env_step_value qn="1" value=".50" />
-            <env_step_value qn="2" value=".25" />
+            <env_step_value qn="0" value="1.0"/>
+            <env_step_value qn="1" value=".50"/>
+            <env_step_value qn="2" value=".25"/>
           </initialization>
-          <model label="shrink" />
+          <model label="shrink"/>
           <nominal_values>[1, 0.5, 0.25]</nominal_values>
           <scaling_const>[1,1]</scaling_const>
         </Ic>
 
         <Ic label="temp">
-
+<!-- l [=] K -->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
@@ -209,11 +212,11 @@
             <step_direction>x</step_direction>
             <step_start>0.</step_start>
             <step_end>.5</step_end>
-            <env_step_value qn="0" value="1.0" />
-            <env_step_value qn="1" value=".50" />
-            <env_step_value qn="2" value=".25" />
+            <env_step_value qn="0" value="1.0"/>
+            <env_step_value qn="1" value=".50"/>
+            <env_step_value qn="2" value=".25"/>
           </initialization>
-          <model label="grow" />
+          <model label="grow"/>
           <nominal_values>[1, 0.5, 0.25]</nominal_values>
           <scaling_const>[1,1]</scaling_const>
         </Ic>
@@ -252,14 +255,14 @@
 
       </DQMOM>
 
-      <Turbulence model="none" />
+      <Turbulence model="none"/>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.0</density>
           <temperature>298.0</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <BoundaryConditions>
       </BoundaryConditions>

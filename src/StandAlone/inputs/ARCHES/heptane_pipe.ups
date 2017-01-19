@@ -1,11 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Pipe Emitting Heptane</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <maxTime>2.0</maxTime>
     <initTime>0.0</initTime>
@@ -18,44 +20,44 @@
   <DataArchiver>
     <filebase>heptane_pipe.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
-    <save label="uVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="wVelocitySPBC" />
-    <save label="enthalpy" />
-    <save label="volFraction" />
-    <save label="cellType" />
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="enthalpy"/>
+    <save label="volFraction"/>
+    <save label="cellType"/>
+<!-- Table Variables -->
+<!-- iv's -->
+    <save label="mixture_fraction"/>
+    <save label="scalar_var"/>
+    <save label="heat_loss"/>
+<!-- dv's -->
+    <save label="radiation_temperature"/>
+    <save label="density" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="O2" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <save label="CO" table_lookup="true"/>
+    <save label="NC7H16" table_lookup="true"/>
+    <save label="sensibleenthalpy" table_lookup="true"/>
+    <save label="adiabaticenthalpy" table_lookup="true"/>
 
+    <save label="surf_out_normX"/>
+    <save label="surf_out_normY"/>
+    <save label="surf_out_normZ"/>
 
-    <save label="mixture_fraction" />
-    <save label="scalar_var" />
-    <save label="heat_loss" />
+    <save label="surf_in_normX"/>
+    <save label="surf_in_normY"/>
+    <save label="surf_in_normZ"/>
 
-    <save label="radiation_temperature" />
-    <save label="density" table_lookup="true" />
-    <save label="CO2" table_lookup="true" />
-    <save label="O2" table_lookup="true" />
-    <save label="H2O" table_lookup="true" />
-    <save label="CO" table_lookup="true" />
-    <save label="NC7H16" table_lookup="true" />
-    <save label="sensibleenthalpy" table_lookup="true" />
-    <save label="adiabaticenthalpy" table_lookup="true" />
-
-    <save label="surf_out_normX" />
-    <save label="surf_out_normY" />
-    <save label="surf_out_normZ" />
-
-    <save label="surf_in_normX" />
-    <save label="surf_in_normY" />
-    <save label="surf_in_normZ" />
-
-    <checkpoint cycle="2" interval="0.02" />
+    <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
 
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-      <Face name="floor" side="x-">
+      <Face side="x-" name="floor">
         <BCType label="bottom wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -77,11 +79,11 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
-      <Face name="x+ wall" side="x+">
+      <Face side="x+" name="x+ wall">
         <BCType label="top" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -103,11 +105,11 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
-      <Face name="y- wall" side="y-">
+      <Face side="y-" name="y- wall">
         <BCType label="y-pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -129,11 +131,11 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
-      <Face name="y+ wall" side="y+">
+      <Face side="y+" name="y+ wall">
         <BCType label="y+pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -155,11 +157,11 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
-      <Face name="z- wall" side="z-">
+      <Face side="z-" name="z- wall">
         <BCType label="z-pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -181,11 +183,11 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
-      <Face name="z+ wall" side="z+">
+      <Face side="z+" name="z+ wall">
         <BCType label="z+pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -207,7 +209,7 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>298</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
@@ -231,21 +233,21 @@
   </PhysicalConstants>
 
   <CFD>
-
+<!-- ARCHES specification -->
     <ARCHES>
 
-
+<!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-
+<!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <determines_properties />
+          <determines_properties/>
           <initialization type="geometry_fill">
             <geom_object>
               <cylinder label="cylinder_fill">
@@ -266,18 +268,18 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <determines_properties />
+          <determines_properties/>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
-          <src label="divQ" />
+          <src label="divQ"/>
         </Eqn>
 
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
-            <abskg label="abskg" />
+            <abskg label="abskg"/>
             <DORadiationModel>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -292,22 +294,22 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model label="abskg" type="radiation_properties">
+        <model type="radiation_properties" label="abskg">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
           <calculator type="hottel_sarofim">
-            <abskg label="gas_abskg" />
+            <abskg label="gas_abskg"/>
             <opl>3.0</opl>
           </calculator>
         </model>
-        <model label="heat_loss" type="heat_loss">
+        <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0</constant>
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
-        <model label="scalar_var" type="scalsim_variance">
+        <model type="scalsim_variance" label="scalar_var">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -315,7 +317,7 @@
           <density_label>density</density_label>
           <variance_coefficient>0.14</variance_coefficient>
         </model>
-        <model label="soot" type="cc_constant">
+        <model type="cc_constant" label="soot">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -330,15 +332,15 @@
       </Turbulence>
 
       <Properties>
-        <table label="a_user_generated_label" type="classic"><ClassicTable>
+        <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/heptane/C7H16_flmlt_nonadiabatic.mix.gz</inputfile>
-          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="scalar_var" />
-          <reference_state f="0.0" hl="0.0" var="0.0" />
+          <standard_flamelet f_label="mixture_fraction" var_label="scalar_var" hl_label="heat_loss"/>
+          <reference_state f="0.0" var="0.0" hl="0.0"/>
         </ClassicTable>
-      </table></Properties>
+      </Properties>
 
       <BoundaryConditions>
-        <suppress_corner_recirculation />
+        <suppress_corner_recirculation/>
         <intrusions>
           <intrusion label="flare">
             <geom_object>

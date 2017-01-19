@@ -1,11 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
     <title>CQMOM Polydisperse Particle Jet</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <max_Timesteps> 5 </max_Timesteps>
     <maxTime>         3.0        </maxTime>
@@ -16,14 +17,14 @@
   </Time>
 
   <DataArchiver>
-    <outputInitTimestep />
+    <outputInitTimestep/>
     <filebase> singleJet_poly.uda </filebase>
     <outputTimestepInterval> 1 </outputTimestepInterval>
 
-    <save label="CCVelocity" />
-    <save label="CCUVelocity" />
-    <save label="CCVVelocity" />
-    <save label="CCWVelocity" />
+    <save label="CCVelocity"/>
+    <save label="CCUVelocity"/>
+    <save label="CCVVelocity"/>
+    <save label="CCWVelocity"/>
     
     <save label="m_0000" />
     <save label="m_1000" />
@@ -33,19 +34,19 @@
     <save label="m_2000" />
     <save label="m_0001" />
 
-    <save label="dragx_0" />
-    <save label="gas_dragx_0" />
-    <save label="dragx_1" />
-    <save label="gas_dragx_1" />
-    <save label="dragx_2" />
-    <save label="gas_dragx_2" />
-    <save label="dragx_3" />
-    <save label="gas_dragx_3" />
+    <save label="dragx_0"/>
+    <save label="gas_dragx_0"/>
+    <save label="dragx_1"/>
+    <save label="gas_dragx_1"/>
+    <save label="dragx_2"/>
+    <save label="gas_dragx_2"/>
+    <save label="dragx_3"/>
+    <save label="gas_dragx_3"/>
 
-    <save label="mom_src" />
-    <save label="m_1000_dragx_src" />
-    <save label="m_0100_dragx_src" />
-    <save label="m_0010_dragx_src" />
+    <save label="mom_src"/>
+    <save label="m_1000_dragx_src"/>
+    <save label="m_0100_dragx_src"/>
+    <save label="m_0010_dragx_src"/>
     
     <save label="w_0" />
     <save label="w_1" />
@@ -57,14 +58,22 @@
     <save label="partUVel_2" />
     <save label="partUVel_3" />
 
+    <!--save label="partVVel_0" />
+    <save label="partVVel_1" />
+    <save label="partVVel_2" />
+    <save label="partVVel_3" />
+  
+    <save label="partWVel_0" />
+    <save label="partWVel_1" />
+    <save label="partWVel_2" />
+    <save label="partWVel_3" /-->
     
+    <save label="diameter_0"/>
+    <save label="diameter_1"/>
+    <save label="diameter_2"/>
+    <save label="diameter_3"/>
     
-    <save label="diameter_0" />
-    <save label="diameter_1" />
-    <save label="diameter_2" />
-    <save label="diameter_3" />
-    
-    <checkpoint cycle="2" interval="0.0002" />
+    <checkpoint cycle="2" interval="0.0002"/>
   </DataArchiver>
 
   <Grid>
@@ -80,7 +89,7 @@
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType label="wallxm" var="WallBC">
+        <BCType  label = "wallxm" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
@@ -142,9 +151,15 @@
         </BCType>
       </Face>
 
-      
+      <!--Face circle="x-" origin="0 .14 .14" radius="0.007112">
+        <BCType  label="inletx" var="TurbulentInlet">
+          <value> [11.6,0,0] </value>
+          <inputfile> circle_25.txt </inputfile>
+          <timeperiod> 8.05e-5  </timeperiod>
+        </BCType>
+      </Face-->
 
-     
+     <!--Face circle="x-" origin="0 0.14 0.14" radius="0.007112"-->
      <Face circle="x-" origin="0 0.14 0.14" radius="0.02">
        <BCType label="inletx" var="VelocityInlet">
          <value> [11.6,0.0,0.0] </value>
@@ -209,13 +224,13 @@
       </Face> 
           
       <Face side="x+">
-        <BCType label="outletx" var="OutletBC">
+        <BCType  label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        
+        <!-- transported moments -->
         <BCType label="m_0000" var="Neumann">
           <value> 0.0 </value>
         </BCType>
@@ -273,7 +288,7 @@
       </Face>
 
         <Face side="y-">
-        <BCType label="ymout" var="PressureBC">
+        <BCType  label = "ymout" var = "PressureBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -336,7 +351,7 @@
       </Face>
 
       <Face side="y+">
-        <BCType label="ypout" var="PressureBC">
+        <BCType  label = "ypout" var = "PressureBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -399,7 +414,7 @@
       </Face>
 
       <Face side="z-">
-        <BCType label="zmout" var="PressureBC">
+        <BCType  label = "zmout" var = "PressureBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -462,7 +477,7 @@
       </Face>
 
       <Face side="z+">
-        <BCType label="zpout" var="PressureBC">
+        <BCType  label = "zpout" var = "PressureBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -538,20 +553,20 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="second" />
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
-      <Turbulence model="compdynamicprocedure" />
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.0</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <BoundaryConditions>
-        
+        <!--suppress_corner_recirculation/-->
       </BoundaryConditions>
 
       <TransportEqns>
@@ -579,7 +594,7 @@
         </Sources>
 
       </TransportEqns>
-
+<!--__________________________________-->
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
@@ -602,7 +617,7 @@
       <EulerianParticles>
         <ParticleVariables>
           <variable label="diameter" role="size" />
-          <variable label="partRho" role="density" />
+          <variable label="partRho"  role="density" />
           <variable label="partUVel" role="uvel" />
           <variable label="partVVel" role="vvel" />
           <variable label="partWVel" role="wvel" />
@@ -611,37 +626,37 @@
 
       <ParticleModels>
          <model label="gravityx" type="gravity">
-           <grid dependent_type="CC" independent_type="CC" />
+           <grid dependent_type="CC" independent_type="CC"/>
            <IC> partUVel </IC>
            <direction> x </direction>
          </model>
 
         <model label="dragx" type="drag">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partUVel </IC>
           <direction> x </direction>
         </model>
  
         <model label="dragy" type="drag">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partVVel </IC>
           <direction> y </direction>
         </model>
         
         <model label="dragz" type="drag">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <IC> partWVel </IC>
           <direction> z </direction>
         </model>
          
         <model label="partRho" type="constant">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant> [2500.0, 2500.0, 2500.0, 2500.0] </constant>
         </model>
       </ParticleModels>
 
       <CQMOM partvel="true">
-        
+        <!-- base information-->
         <UseLapack> false </UseLapack>
         <NumberInternalCoordinates> 4 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2,1,1] </QuadratureNodes>
@@ -685,14 +700,14 @@
         <WeightRatio> 1.0e-2 </WeightRatio>
         <AbscissaRatio> .1 </AbscissaRatio>
 
-        
+        <!--transport-->
         <doDiff> false </doDiff>
         <doConv> true  </doConv>
         <conv_scheme> second </conv_scheme>
         <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
         <molecular_diffusivity> 0.0 </molecular_diffusivity>
         
-        
+        <!-- moment eqns-->
         <Moment> <m> [0,0,0,0] </m> </Moment>
         <Moment> <m> [1,0,0,0] </m> </Moment>
         <Moment> <m> [2,0,0,0] </m> </Moment>

@@ -1,3 +1,5 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- @version: -->
 <Uintah_specification>
     
     <Meta>
@@ -19,41 +21,41 @@
     <DataArchiver>
         <filebase>intrusion_test.uda</filebase>
         <outputTimestepInterval>1</outputTimestepInterval>
-        <save label="uVelocitySPBC" />  
-        <save label="uvelRhoHat" />
-        <save label="vVelocitySPBC" />  
-        <save label="wVelocitySPBC" />  
-        <save label="cellType" />
-        <save label="areaFraction" />
-        <save label="CCVelocity" />
-        <save label="pressurePS" />
-        <save label="cellType" />
-         
-         
-        <save label="mixture_fraction" />
-        <save label="mixture_fraction_Fconv" />
-         
-        <save label="density" table_lookup="true" />
-        <save label="temperature" table_lookup="true" />
+        <save label = "uVelocitySPBC"/>  
+        <save label = "uvelRhoHat"/>
+        <save label = "vVelocitySPBC"/>  
+        <save label = "wVelocitySPBC"/>  
+        <save label = "cellType"/>
+        <save label = "areaFraction"/>
+        <save label = "CCVelocity"/>
+        <save label = "pressurePS"/>
+        <save label = "cellType"/>
+        <!-- Table Variables --> 
+        <!-- iv's --> 
+        <save label = "mixture_fraction"/>
+        <save label = "mixture_fraction_Fconv"/>
+        <!-- dv's --> 
+        <save label = "density" table_lookup = "true"/>
+        <save label = "temperature" table_lookup = "true"/>
 
-        <save label="surf_out_normX" />
-        <save label="surf_out_normY" />
-        <save label="surf_out_normZ" />
+        <save label = "surf_out_normX"/>
+        <save label = "surf_out_normY"/>
+        <save label = "surf_out_normZ"/>
 
-        <save label="surf_in_normX" />
-        <save label="surf_in_normY" />
-        <save label="surf_in_normZ" />
+        <save label = "surf_in_normX"/>
+        <save label = "surf_in_normY"/>
+        <save label = "surf_in_normZ"/>
 
-        <save label="volFraction" />
+        <save label = "volFraction"/>
 
-        <checkpoint cycle="2" interval="0.0001" />
+        <checkpoint cycle = "2" interval = "0.0001"/>
         <compression>gzip</compression>
     </DataArchiver>
     
     <Grid>
         <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-            <Face name="x- wall" side="x-">
+            <Face side="x-" name="x- wall">
                 <BCType label="bottom_wall" var="WallBC">
                   <value>0.0</value>
                 </BCType>
@@ -61,7 +63,7 @@
                     <value>0.0</value>
                 </BCType>
             </Face>
-            <Face name="x+ wall" side="x+">
+            <Face side="x+" name="x+ wall">
                 <BCType label="outlet" var="OutletBC">
                   <value>0.0</value>
                 </BCType>
@@ -70,7 +72,7 @@
                 </BCType>
             </Face>
             
-            <Face name="y- wall" side="y-">
+            <Face side="y-" name="y- wall">
                 <BCType label="y-pressure" var="PressureBC">
                     <value>0.0</value>
                 </BCType>
@@ -79,7 +81,7 @@
                 </BCType>
             </Face>
             
-            <Face name="y+ wall" side="y+">
+            <Face side="y+" name="y+ wall">
                 <BCType label="y+pressure" var="PressureBC">
                     <value>0.0</value>
                 </BCType>
@@ -88,7 +90,7 @@
                 </BCType>
             </Face>
             
-            <Face name="z- wall" side="z-">
+            <Face side="z-" name="z- wall">
                 <BCType label="z-pressure" var="PressureBC">
                     <value>0.0</value>
                 </BCType>
@@ -97,7 +99,7 @@
                 </BCType>
             </Face>
             
-            <Face name="z+ wall" side="z+">
+            <Face side="z+" name="z+ wall">
                 <BCType label="z+pressure" var="PressureBC">
                     <value>0.0</value>
                 </BCType>
@@ -109,7 +111,7 @@
         </BoundaryConditions>
         
         <Level>
-            <Box label="1">
+            <Box label = "1">
                 <lower>[0,0,0]</lower>
                 <upper>[3,3,3]</upper>
                 <resolution>[15,15,15]</resolution>
@@ -126,19 +128,19 @@
    </PhysicalConstants>
     
     <CFD>
-        
+        <!-- ARCHES specification -->
 
         <ARCHES>
-            
+            <!-- TIME INTEGRATOR -->
             <TimeIntegrator>
-                <ExplicitIntegrator order="third" />
+                <ExplicitIntegrator order="third"/>
             </TimeIntegrator>
             
-            
+            <!-- SCALARS -->
             <TransportEqns>
-                <Eqn label="mixture_fraction" type="CCscalar">
+                <Eqn label="mixture_fraction" type = "CCscalar">
              
-                    <determines_properties />
+                    <determines_properties/>
                     <doDiff>true</doDiff>
                     <doConv>true</doConv>
                     <conv_scheme>super_bee</conv_scheme>
@@ -146,8 +148,8 @@
                     <initialization type="constant">
                         <geom_object>
                           <difference>
-                          <cylinder label="outer cylinder" />
-                          <cylinder label="inner cylinder" />
+                          <cylinder label = "outer cylinder"/>
+                          <cylinder label = "inner cylinder"/>
                           </difference>
                         </geom_object>
                         <constant>0.0</constant>
@@ -159,36 +161,36 @@
                 </Eqn>
               </TransportEqns>
 
-              <Turbulence model="compdynamicprocedure" />
+              <Turbulence model="compdynamicprocedure"/>
             
             <Properties>
-              <table label="a_user_generated_label" type="coldflow"><ColdFlow>
-                <mixture_fraction label="mixture_fraction" />
-                <stream_0 density="0.1" temperature="1000" />
-                <stream_1 density="1.18" temperature="298" />
-                <reference_density value="1.18" />
+              <ColdFlow>
+                <mixture_fraction label="mixture_fraction"/>
+                <stream_0 density="0.1" temperature="1000"/>
+                <stream_1 density="1.18" temperature="298"/>
+                <reference_density value="1.18"/>
               </ColdFlow>
-            </table></Properties>
+            </Properties>
             
             <BoundaryConditions>
 
-              
+              <!--<WallHT>-->
+                <!--<region>-->
+                  <!--<k>.1</k>-->
+                  <!--<wall_thickness>.1</wall_thickness>-->
+                  <!--<tube_side_T>400</tube_side_T>-->
+                  <!--<max_TW>1200</max_TW>-->
+                  <!--<min_TW>298</min_TW>-->
+                  <!--<relaxation_coef>.1</relaxation_coef>-->
+                  <!--<geom_object>-->
+                    <!--<box>-->
+                      <!--<min>[1.5,-1,1]</min>-->
+                      <!--<max>[2.5,1,3]</max>-->
+                    <!--</box>-->
+                  <!--</geom_object>-->
+                <!--</region>-->
                 
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                    
-                      
-                      
-                    
-                  
-                
-                
-              
+              <!--</WallHT>-->
 
                 <intrusions>
                   <intrusion label="the stack">
@@ -228,7 +230,7 @@
                         <constant>0.0</constant>
                       </scalar>
                     </scalars>
-                    <constant_temperature T="600" />
+                    <constant_temperature T="600"/>
                   </intrusion>
                 </intrusions>
 
@@ -255,3 +257,4 @@
         </ARCHES>
     </CFD>
 </Uintah_specification>
+

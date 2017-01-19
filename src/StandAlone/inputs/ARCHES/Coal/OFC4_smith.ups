@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <Uintah_specification>
   <Meta>
     <title>OFC_Utah_SUFCO</title>
   </Meta>
-  <SimulationComponent type="arches" />
-  <Solver type="hypre" />
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
   <Time>
     <maxTime>100</maxTime>
     <max_Timesteps>10</max_Timesteps>
@@ -15,141 +16,141 @@
   <DataArchiver>
     <filebase>OFC4_smith.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="residence_time" />
-    <save label="res_source" />
-    <save label="coal_gas_momentum" />
-    <save label="eta_source1" />
-    <save label="eta_source2" />
-    <save label="heat_source" />
-    <save label="pressurePS" />
-    <save label="CCVelocity" />
-    <save label="uVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="wVelocitySPBC" />
-    <save label="cellType" />
-    <save label="radiationVolq" />
-    <save label="radiation_temperature" />
-    <save label="radiationFluxN" />
-    <save label="radiationFluxS" />
-    <save label="radiationFluxB" />
-    <save label="radiationFluxT" />
-    <save label="radiationFluxE" />
-    <save label="radiationFluxW" />
-    <save label="divQ" />
-    <save label="abskp" />
-    <save label="abskg" />
-    <save label="gas_abskg" />
-    <save label="enthalpy" />
-    <save label="length_0" />
-    <save label="length_1" />
-    <save label="length_2" />
-    <save label="w_0" />
-    <save label="w_1" />
-    <save label="w_2" />
-    <save label="w_qn0" />
-    <save label="w_qn1" />
-    <save label="w_qn2" />
-    <save label="ux_0" />
-    <save label="ux_1" />
-    <save label="ux_2" />
-    <save label="uy_0" />
-    <save label="uy_1" />
-    <save label="uy_2" />
-    <save label="uz_0" />
-    <save label="uz_1" />
-    <save label="uz_2" />
-    <save label="ux_qn1" />
-    <save label="ux_qn2" />
-    <save label="uy_qn0" />
-    <save label="uy_qn1" />
-    <save label="uy_qn2" />
-    <save label="uz_qn0" />
-    <save label="uz_qn1" />
-    <save label="uz_qn2" />
-    <save label="RCmass_0" />
-    <save label="RCmass_1" />
-    <save label="RCmass_2" />
-    <save label="RCmass_qn0" />
-    <save label="RCmass_qn1" />
-    <save label="RCmass_qn2" />
-    <save label="char_qn0_surfacerate" />
-    <save label="char_qn1_surfacerate" />
-    <save label="char_qn2_surfacerate" />
-    <save label="char_reaction0_qn0" />
-    <save label="char_reaction0_qn1" />
-    <save label="char_reaction0_qn2" />
-    <save label="char_reaction1_qn0" />
-    <save label="char_reaction1_qn1" />
-    <save label="char_reaction1_qn2" />
-    <save label="devol_qn0" />
-    <save label="devol_qn1" />
-    <save label="devol_qn2" />
-    <save label="char_qn0_PO2surf" />
-    <save label="char_qn1_PO2surf" />
-    <save label="char_qn2_PO2surf" />
-    <save label="vorticity" />
-    <save label="temperature_coal_0" />
-    <save label="temperature_coal_1" />
-    <save label="temperature_coal_2" />
-    <save label="Charmass_qn0" />
-    <save label="Charmass_qn1" />
-    <save label="Charmass_qn2" />
-    <save label="Charmass_0" />
-    <save label="Charmass_1" />
-    <save label="Charmass_2" />
-    <save label="vorticity" />
-    <save label="heat_qn0_Qconv" />
-    <save label="heat_qn0_Qrad" />
-    <save label="heat_qn1_Qconv" />
-    <save label="heat_qn1_Qrad" />
-    <save label="heat_qn2_Qconv" />
-    <save label="heat_qn2_Qrad" />
-    <save label="pE_0" />
-    <save label="pE_1" />
-    <save label="pE_2" />
-    <save label="pE_qn0" />
-    <save label="pE_qn1" />
-    <save label="pE_qn2" />
-    <save label="mixture_fraction_2" />
-    <save label="heat_loss" />
-    <save label="coal_gas_mix_frac" />
-    <save label="dTdt_0" />
-    <save label="dTdt_1" />
-    <save label="dTdt_2" />
-    <save label="RCmass_os_src_qn0" />
-    <save label="RCmass_os_src_qn1" />
-    <save label="RCmass_os_src_qn2" />
-    <save label="Charmass_os_src_qn0" />
-    <save label="Charmass_os_src_qn1" />
-    <save label="Charmass_os_src_qn2" />
-    <save label="pE_os_src_qn0" />
-    <save label="pE_os_src_qn1" />
-    <save label="pE_os_src_qn2" />
-    <save label="ux_os_src_qn0" />
-    <save label="ux_os_src_qn1" />
-    <save label="ux_os_src_qn2" />
-    <save label="uy_os_src_qn0" />
-    <save label="uy_os_src_qn1" />
-    <save label="uy_os_src_qn2" />
-    <save label="uz_os_src_qn0" />
-    <save label="uz_os_src_qn1" />
-    <save label="uz_os_src_qn2" />
-    <save label="weight_os_src_qn0" />
-    <save label="weight_os_src_qn1" />
-    <save label="weight_os_src_qn2" />
-    <save label="temperature" table_lookup="true" />
-    <save label="density" table_lookup="true" />
-    <save label="H2" table_lookup="true" />
-    <save label="CO" table_lookup="true" />
-    <save label="CO2" table_lookup="true" />
-    <save label="H2O" table_lookup="true" />
-    <save label="OH" table_lookup="true" />
-    <save label="O2" table_lookup="true" />
-    <save label="sensibleenthalpy" table_lookup="true" />
-    <save label="adiabaticenthalpy" table_lookup="true" />
-    <save label="N2" table_lookup="true" />
-    <save label="mixture_molecular_weight" table_lookup="true" />
-    <checkpoint cycle="2" interval="0.003" />
+    <save label="residence_time"/>
+    <save label="res_source"/>
+    <save label="coal_gas_momentum"/>
+    <save label="eta_source1"/>
+    <save label="eta_source2"/>
+    <save label="heat_source"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="cellType"/>
+    <save label="radiationVolq"/>
+    <save label="radiation_temperature"/>
+    <save label="radiationFluxN"/>
+    <save label="radiationFluxS"/>
+    <save label="radiationFluxB"/>
+    <save label="radiationFluxT"/>
+    <save label="radiationFluxE"/>
+    <save label="radiationFluxW"/>
+    <save label="divQ"/>
+    <save label="abskp"/>
+    <save label="abskg"/>
+    <save label="gas_abskg"/>
+    <save label="enthalpy"/>
+    <save label="length_0"/>
+    <save label="length_1"/>
+    <save label="length_2"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_qn0"/>
+    <save label="w_qn1"/>
+    <save label="w_qn2"/>
+    <save label="ux_0"/>
+    <save label="ux_1"/>
+    <save label="ux_2"/>
+    <save label="uy_0"/>
+    <save label="uy_1"/>
+    <save label="uy_2"/>
+    <save label="uz_0"/>
+    <save label="uz_1"/>
+    <save label="uz_2"/>
+    <save label="ux_qn1"/>
+    <save label="ux_qn2"/>
+    <save label="uy_qn0"/>
+    <save label="uy_qn1"/>
+    <save label="uy_qn2"/>
+    <save label="uz_qn0"/>
+    <save label="uz_qn1"/>
+    <save label="uz_qn2"/>
+    <save label="RCmass_0"/>
+    <save label="RCmass_1"/>
+    <save label="RCmass_2"/>
+    <save label="RCmass_qn0"/>
+    <save label="RCmass_qn1"/>
+    <save label="RCmass_qn2"/>
+    <save label="char_qn0_surfacerate"/>
+    <save label="char_qn1_surfacerate"/>
+    <save label="char_qn2_surfacerate"/>
+    <save label="char_reaction0_qn0"/>
+    <save label="char_reaction0_qn1"/>
+    <save label="char_reaction0_qn2"/>
+    <save label="char_reaction1_qn0"/>
+    <save label="char_reaction1_qn1"/>
+    <save label="char_reaction1_qn2"/>
+    <save label="devol_qn0"/>
+    <save label="devol_qn1"/>
+    <save label="devol_qn2"/>
+    <save label="char_qn0_PO2surf"/>
+    <save label="char_qn1_PO2surf"/>
+    <save label="char_qn2_PO2surf"/>
+    <save label="vorticity"/>
+    <save label="temperature_coal_0"/>
+    <save label="temperature_coal_1"/>
+    <save label="temperature_coal_2"/>
+    <save label="Charmass_qn0"/>
+    <save label="Charmass_qn1"/>
+    <save label="Charmass_qn2"/>
+    <save label="Charmass_0"/>
+    <save label="Charmass_1"/>
+    <save label="Charmass_2"/>
+    <save label="vorticity"/>
+    <save label="heat_qn0_Qconv"/>
+    <save label="heat_qn0_Qrad"/>
+    <save label="heat_qn1_Qconv"/>
+    <save label="heat_qn1_Qrad"/>
+    <save label="heat_qn2_Qconv"/>
+    <save label="heat_qn2_Qrad"/>
+    <save label="pE_0"/>
+    <save label="pE_1"/>
+    <save label="pE_2"/>
+    <save label="pE_qn0"/>
+    <save label="pE_qn1"/>
+    <save label="pE_qn2"/>
+    <save label="mixture_fraction_2"/>
+    <save label="heat_loss"/>
+    <save label="coal_gas_mix_frac"/>
+    <save label="dTdt_0"/>
+    <save label="dTdt_1"/>
+    <save label="dTdt_2"/>
+    <save label="RCmass_os_src_qn0"/>
+    <save label="RCmass_os_src_qn1"/>
+    <save label="RCmass_os_src_qn2"/>
+    <save label="Charmass_os_src_qn0"/>
+    <save label="Charmass_os_src_qn1"/>
+    <save label="Charmass_os_src_qn2"/>
+    <save label="pE_os_src_qn0"/>
+    <save label="pE_os_src_qn1"/>
+    <save label="pE_os_src_qn2"/>
+    <save label="ux_os_src_qn0"/>
+    <save label="ux_os_src_qn1"/>
+    <save label="ux_os_src_qn2"/>
+    <save label="uy_os_src_qn0"/>
+    <save label="uy_os_src_qn1"/>
+    <save label="uy_os_src_qn2"/>
+    <save label="uz_os_src_qn0"/>
+    <save label="uz_os_src_qn1"/>
+    <save label="uz_os_src_qn2"/>
+    <save label="weight_os_src_qn0"/>
+    <save label="weight_os_src_qn1"/>
+    <save label="weight_os_src_qn2"/>
+    <save label="temperature" table_lookup="true"/>
+    <save label="density" table_lookup="true"/>
+    <save label="H2" table_lookup="true"/>
+    <save label="CO" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <save label="OH" table_lookup="true"/>
+    <save label="O2" table_lookup="true"/>
+    <save label="sensibleenthalpy" table_lookup="true"/>
+    <save label="adiabaticenthalpy" table_lookup="true"/>
+    <save label="N2" table_lookup="true"/>
+    <save label="mixture_molecular_weight" table_lookup="true"/>
+    <checkpoint cycle="2" interval="0.003"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
@@ -761,9 +762,9 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      
-      
-      <Face circle="x-" name="secondary_air" origin="0.0 0.3 0.3" radius="0.1">
+      <!-- originalOFC -->
+      <!-- <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.008"><BCType label="mass_inlet_primary_air" var="MassFlowInlet"> -->
+      <Face circle="x-" radius="0.1" name="secondary_air" origin="0.0 0.3 0.3">
         <BCType label="mass_inlet_primary_air" var="MassFlowInlet">
           <value>0.001828154</value>
         </BCType>
@@ -864,8 +865,8 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      
-      
+      <!-- originalOFC -->
+      <!-- <Face annulus="x-" inner_radius="0.012" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.018"><BCType label="mass_inlet_secondary_air" var="MassFlowInlet"> -->
       <Face annulus="x-" inner_radius="0.1" name="primary_air" origin="0.0 0.3 0.3" outer_radius="0.2">
         <BCType label="mass_inlet_secondary_air" var="MassFlowInlet">
           <value>0.002078968</value>
@@ -1396,9 +1397,9 @@
           </initialization>
           <calculator type="hottel_sarofim">
             <opl>0.2647</opl>
-            <abskg label="gas_abskg" />
+            <abskg label="gas_abskg"/>
             <particles type="constantCIF">
-              <abskp label="abskp" />
+              <abskp label="abskp"/>
               <radiateAtGasTemp>false</radiateAtGasTemp>
               <model_type>planck</model_type>
               <part_temp_label>temperature_coal</part_temp_label>
@@ -1427,13 +1428,13 @@
       </PropertyModels>
         <ParticleProperties type="coal">
           <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
-          
-          
-          
+          <!-- [m] -->
+          <!--particle_weights>[0.574,0.263,0.163]</particle_weights-->
+          <!-- [mass fractions of each particle size] -->
           <density>1300.0</density>
-          
+          <!-- [kg/m^3] -->
           <temperature>300.0</temperature>
-          
+          <!-- initial particle temperature [K] -->
           <ultimate_analysis>
             <C>0.6674982537</C>
             <H>0.0450054885</H>
@@ -1445,20 +1446,20 @@
             <H2O>0.0578784552</H2O>
           </ultimate_analysis>
           <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy>
-          
+          <!-- raw coal enthalpy (at 298.15 K) [J/kg] -->
           <char_enthalpy>0.0</char_enthalpy>
-          
+          <!-- char enthalpy (at inlet conditions) [J/kg] -->
           <ash_enthalpy>-9.5686e7</ash_enthalpy>
-          
+          <!-- ash enthalpy (at inlet conditions) [J/kg] -->
           <Yamamoto_coefficients>[1.75e10,2.592280258e5,0.53,16.26759,-39.1322,61.04079,-38.3719,0.108926,0.032302]</Yamamoto_coefficients>
-          
-          
+          <!-- Yamamto 1 step rate coefficients in the following order:  -->
+          <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
           <KobayashiSarofim_coefficients>[8.7e7, 1.2e14, 25632.3, 49873.7, 0.357, 0.504]</KobayashiSarofim_coefficients>
-          
-          
+          <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
+          <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  -->
           <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
-          
-          
+          <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
+          <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
           <FOWYDevol>
             <v_hiT>6.641e-01</v_hiT>
             <Tig>590</Tig>
@@ -1503,38 +1504,38 @@
         </ParticleProperties>
       <EulerianParticles>
         <ParticleVariables>
-          <variable label="RCmass" role="raw_coal" />
-          <variable label="Charmass" role="char" />
-          <variable label="pE" role="enthalpy" />
-          <variable label="length" role="size" />
-          <variable label="rho_coal" role="density" />
-          <variable label="temperature_coal" role="temperature" />
-          <variable label="dTdt" role="dTdt" />
-          <variable label="ux" role="uvel" />
-          <variable label="uy" role="vvel" />
-          <variable label="uz" role="wvel" />
-          <variable label="number_density" role="total_number_density" />
+          <variable label="RCmass" role="raw_coal"/>
+          <variable label="Charmass" role="char"/>
+          <variable label="pE" role="enthalpy"/>
+          <variable label="length" role="size"/>
+          <variable label="rho_coal" role="density"/>
+          <variable label="temperature_coal" role="temperature"/>
+          <variable label="dTdt" role="dTdt"/>
+          <variable label="ux" role="uvel"/>
+          <variable label="uy" role="vvel"/>
+          <variable label="uz" role="wvel"/>
+          <variable label="number_density" role="total_number_density"/>
         </ParticleVariables>
       </EulerianParticles>
       <ParticleModels>
-        <model label="rho_coal" type="coal_density" />
-        <model label="temperature_coal" type="coal_temperature" />
-        <model label="number_density" type="total_number_density" />
+        <model label="rho_coal" type="coal_density"/>
+        <model label="temperature_coal" type="coal_temperature"/>
+        <model label="number_density" type="total_number_density"/>
         <model label="length" type="constant">
-          <grid dependent_type="CC" independent_type="CC" />
+          <grid dependent_type="CC" independent_type="CC"/>
           <constant>[1.5e-05,5.0e-05,1.5e-04]</constant>
         </model>
       </ParticleModels>
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
       <TransportEqns>
         <Eqn label="residence_time" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <stage value="1" />
+          <stage value="1"/>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="constant">
             <constant>0.0</constant>
@@ -1547,16 +1548,16 @@
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <stage value="0" />
+          <stage value="0"/>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="tabulated">
             <depend_varname>table_enthalpy</depend_varname>
           </initialization>
-          
-          
-          
+          <!--<src label="divQ">-->
+          <!--<weight>-1.0</weight>-->
+          <!--</src>-->
           <src label="divQ">
             <weight>1</weight>
           </src>
@@ -1568,9 +1569,9 @@
         <Eqn label="mixture_fraction_2" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <stage value="0" />
+          <stage value="0"/>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="constant">
             <constant>0.4241027</constant>
@@ -1585,9 +1586,9 @@
         <Eqn label="coal_gas_mix_frac" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <stage value="0" />
+          <stage value="0"/>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <D_mol_constant value="5e-5" />
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="constant">
             <constant>0.1603310</constant>
@@ -1613,29 +1614,29 @@
               <NewDW_only>true</NewDW_only>
             </multiply_by_variable>
           </src>
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
+          <!--<src label="divQ" type="rmcrt_radiation">-->
+          <!--<calc_frequency>3</calc_frequency>-->
+          <!--<abskg label = "abskg" />-->
+          <!--<RMCRT>-->
+          <!--<randomSeed>         true     </randomSeed>-->
+          <!--<nDivQRays>          24         </nDivQRays>-->
+          <!--<nFluxRays>          24         </nFluxRays>-->
+          <!--<Threshold>         0.05       </Threshold>-->
+          <!--<solveBoundaryFlux> true       </solveBoundaryFlux>-->
+          <!--<StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>-->
+          <!--<CCRays>true</CCRays>-->
+          <!--[><ReflectOn>false</ReflectOn>[> reflections are off by default.<]<]-->
+          <!--<allowReflect>false </allowReflect> -->
+          <!--</RMCRT>-->
+          <!--</src>-->
           <src label="divQ" type="do_radiation">
-            
-            
+            <!-- originalOFC -->
+            <!-- <calc_frequency>20<calc_frequency> -->
             <calc_frequency>3</calc_frequency>
-            <abskg label="abskg" />
+            <abskg label="abskg"/>
             <DORadiationModel>
-              
-              
+              <!-- originalOFC -->
+              <!-- <ordinates>8<ordinates> -->
               <ordinates>2</ordinates>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-8</res_tol>
@@ -1666,16 +1667,17 @@
         <filter_cs_squared>false</filter_cs_squared>
       </Turbulence>
       <Properties>
-        <table label="a_user_generated_label" type="classic">
-          <ClassicTable>
-            <enthalpy_label>enthalpy</enthalpy_label>
-            <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC.mix.gz</inputfile>
-            <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss" />
-            <cold_flow>false</cold_flow>
-            <temperature_label_name>temperature</temperature_label_name>
-            <reference_state eta="0.1603310" fp="0.4241027" hl="0.764" />
-          </ClassicTable>
-        </table>
+        <ClassicTable>
+          <enthalpy_label>enthalpy</enthalpy_label>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC.mix.gz</inputfile>
+          <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+          <cold_flow>false</cold_flow>
+          <temperature_label_name>temperature</temperature_label_name>
+          <reference_state eta="0.1603310" fp="0.4241027" hl="0.764"/>
+        </ClassicTable>
+        <filter_drhodt>false</filter_drhodt>
+        <first_order_drhodt>true</first_order_drhodt>
+        <inverse_density_average>false</inverse_density_average>
       </Properties>
       <DQMOM type="weightedAbs">
         <LinearSolver>
@@ -1697,50 +1699,50 @@
           <model label="zdragforce" type="Drag">
             <direction>z</direction>
           </model>
-          <model label="devol" type="FOWYDevol" />
+          <model label="devol" type="FOWYDevol"/>
           <model label="heat" type="EnthalpyShaddix">
             <low_clip>9.9999999999999995e-07</low_clip>
             <high_clip>999999</high_clip>
           </model>
-          <model label="char" type="CharOxidationSmith"> 
+          <model label="char" type="CharOxidationSmith">
           </model>
           <model label="RCmass_os_src" type="SimpleBirth">
-            <abscissa label="RCmass" />
+            <abscissa label="RCmass"/>
             <small_weight>1e-15</small_weight>
           </model>
           <model label="Charmass_os_src" type="SimpleBirth">
-            <abscissa label="Charmass" />
+            <abscissa label="Charmass"/>
             <small_weight>1e-15</small_weight>
           </model>
           <model label="pE_os_src" type="SimpleBirth">
-            <abscissa label="pE" />
+            <abscissa label="pE"/>
             <small_weight>1e-15</small_weight>
           </model>
           <model label="ux_os_src" type="SimpleBirth">
-            <abscissa label="ux" />
+            <abscissa label="ux"/>
             <small_weight>1e-15</small_weight>
           </model>
           <model label="uy_os_src" type="SimpleBirth">
-            <abscissa label="uy" />
+            <abscissa label="uy"/>
             <small_weight>1e-15</small_weight>
           </model>
           <model label="uz_os_src" type="SimpleBirth">
-            <abscissa label="uz" />
+            <abscissa label="uz"/>
             <small_weight>1e-15</small_weight>
           </model>
           <model label="weight_os_src" type="SimpleBirth">
             <small_weight>1e-15</small_weight>
-            <is_weight />
+            <is_weight/>
           </model>
         </Models>
         <Weights>
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <model label="weight_os_src" />
+          <model label="weight_os_src"/>
           <initialization type="env_constant">
-            <env_constant qn="0" value="0.000223228684998" />
-            <env_constant qn="1" value="2.76157995152e-06" />
-            <env_constant qn="2" value="6.33907241371e-08" />
+            <env_constant qn="0" value="0.000223228684998"/>
+            <env_constant qn="1" value="2.76157995152e-06"/>
+            <env_constant qn="2" value="6.33907241371e-08"/>
           </initialization>
           <scaling_const>[  2.23228685e+11   2.76157995e+09   6.33907241e+07]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
@@ -1755,11 +1757,11 @@
         <Ic label="RCmass">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <model label="RCmass_os_src" />
-          <model label="devol" />
+          <model label="RCmass_os_src"/>
+          <model label="devol"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="2.1055446616e-12"> </env_constant>
-            <env_constant qn="1" value="7.79831356148e-11" />
+            <env_constant qn="1" value="7.79831356148e-11"/>
             <env_constant qn="2" value="2.1055446616e-09"> </env_constant>
           </initialization>
           <nominal_values>[ 0.  0.  0.]</nominal_values>
@@ -1771,12 +1773,12 @@
         <Ic label="Charmass">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <model label="char" />
-          <model label="Charmass_os_src" />
+          <model label="char"/>
+          <model label="Charmass_os_src"/>
           <initialization type="env_constant">
-            <env_constant qn="0" value="0.0" />
-            <env_constant qn="1" value="0.0" />
-            <env_constant qn="2" value="0.0" />
+            <env_constant qn="0" value="0.0"/>
+            <env_constant qn="1" value="0.0"/>
+            <env_constant qn="2" value="0.0"/>
           </initialization>
           <nominal_values>[ 0.  0.  0.]</nominal_values>
           <scaling_const>[  2.10554466e-12   7.79831356e-11   2.10554466e-09]</scaling_const>
@@ -1787,11 +1789,11 @@
         <Ic label="pE">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <model label="heat" />
-          <model label="pE_os_src" />
+          <model label="heat"/>
+          <model label="pE_os_src"/>
           <initialization type="env_constant">
-            <env_constant qn="0" value="-2.05841476071e-05" />
-            <env_constant qn="1" value="-0.000762375837302" />
+            <env_constant qn="0" value="-2.05841476071e-05"/>
+            <env_constant qn="1" value="-0.000762375837302"/>
             <env_constant qn="2" value="-0.0205841476071">  </env_constant>
           </initialization>
           <nominal_values>[ -1.83470363e-05  -6.79519864e-04  -1.83470363e-02]</nominal_values>
@@ -1803,12 +1805,12 @@
         <Ic label="ux">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <model label="xdragforce" />
-          <model label="ux_os_src" />
+          <model label="xdragforce"/>
+          <model label="ux_os_src"/>
           <initialization type="env_constant">
-            <env_constant qn="0" value="0.0" />
-            <env_constant qn="1" value="0.0" />
-            <env_constant qn="2" value="0.0" />
+            <env_constant qn="0" value="0.0"/>
+            <env_constant qn="1" value="0.0"/>
+            <env_constant qn="2" value="0.0"/>
           </initialization>
           <nominal_values>[ 0.  0.  0.]</nominal_values>
           <scaling_const>[ 1.  1.  1.]</scaling_const>
@@ -1819,12 +1821,12 @@
         <Ic label="uy">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <model label="ydragforce" />
-          <model label="uy_os_src" />
+          <model label="ydragforce"/>
+          <model label="uy_os_src"/>
           <initialization type="env_constant">
-            <env_constant qn="0" value="0.0" />
-            <env_constant qn="1" value="0.0" />
-            <env_constant qn="2" value="0.0" />
+            <env_constant qn="0" value="0.0"/>
+            <env_constant qn="1" value="0.0"/>
+            <env_constant qn="2" value="0.0"/>
           </initialization>
           <nominal_values>[ 0.  0.  0.]</nominal_values>
           <scaling_const>[ 1.  1.  1.]</scaling_const>
@@ -1835,12 +1837,12 @@
         <Ic label="uz">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <model label="zdragforce" />
-          <model label="uz_os_src" />
+          <model label="zdragforce"/>
+          <model label="uz_os_src"/>
           <initialization type="env_constant">
-            <env_constant qn="0" value="0.0" />
-            <env_constant qn="1" value="0.0" />
-            <env_constant qn="2" value="0.0" />
+            <env_constant qn="0" value="0.0"/>
+            <env_constant qn="1" value="0.0"/>
+            <env_constant qn="2" value="0.0"/>
           </initialization>
           <nominal_values>[ 0.  0.  0.]</nominal_values>
           <scaling_const>[ 1.  1.  1.]</scaling_const>
@@ -1855,7 +1857,7 @@
         <wall_csmag>0.0</wall_csmag>
         <intrusions>
           <intrusion label="FurnaceWall">
-            <constant_temperature T="1250.0" />
+            <constant_temperature T="1250.0"/>
             <geom_object>
               <difference>
                 <cylinder label="furnace_out">
@@ -1973,10 +1975,10 @@
                       <max>[1.71, 0.7, 0.7]</max>
                     </box>
                     <union>
-                      <box label="glass1-1" />
-                      <box label="glass1-2" />
-                      <box label="glass3-1" />
-                      <box label="glass3-2" />
+                      <box label="glass1-1"/>
+                      <box label="glass1-2"/>
+                      <box label="glass3-1"/>
+                      <box label="glass3-2"/>
                     </union>
                   </difference>
                 </union>
@@ -1990,7 +1992,7 @@
       </BoundaryConditions>
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
-        <print_total_ke />
+        <print_total_ke/>
         <PressureSolver>
           <Parameters>
             <tolerance>1.0e-10</tolerance>
@@ -2005,14 +2007,14 @@
             <npost>1</npost>
             <logging>0</logging>
           </Parameters>
-          <src label="eta_source1" />
-          <src label="eta_source2" />
+          <src label="eta_source1"/>
+          <src label="eta_source2"/>
           <normalize_pressure>false</normalize_pressure>
           <do_only_last_projection>false</do_only_last_projection>
         </PressureSolver>
         <MomentumSolver>
           <convection_scheme>wall_upwind</convection_scheme>
-          <src label="coal_gas_momentum" />
+          <src label="coal_gas_momentum"/>
           <Re_limit>2</Re_limit>
           <filter_divergence_constraint>false</filter_divergence_constraint>
         </MomentumSolver>

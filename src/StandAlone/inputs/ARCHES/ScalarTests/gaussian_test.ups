@@ -1,12 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- @version: -->
 <Uintah_specification>
 
   <Meta>
     <title>Scalar Test, -x inlet</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
 
   <Time>
     <maxTime>5.0</maxTime>
@@ -19,29 +21,29 @@
 
   <DataArchiver>
     <filebase>gaussian_test.uda</filebase>
-    <outputInitTimestep />
+    <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="uVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="wVelocitySPBC" />
-    <save label="uvelRhoHat" />
-    <save label="vvelRhoHat" />
-    <save label="wvelRhoHat" />
-    <save label="mixture_fraction_sb" />    
-    <save label="mixture_fraction_roe" />   
-    <save label="mixture_fraction_up" />    
-    <save label="mixture_fraction_gaussian" />
-    <save label="density" />
-    <save label="pressurePS" />
-    <save label="continuityResidual" />
-    <checkpoint cycle="2" interval="0.02" />
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="uvelRhoHat"/>
+    <save label="vvelRhoHat"/>
+    <save label="wvelRhoHat"/>
+    <save label="mixture_fraction_sb"/>   <!-- Super Bee flux lim. --> 
+    <save label="mixture_fraction_roe"/>  <!-- Roe Min/Mod flux lim. --> 
+    <save label="mixture_fraction_up"/>   <!-- Upwind --> 
+    <save label="mixture_fraction_gaussian"/>
+    <save label="density"/>
+    <save label="pressurePS"/>
+    <save label="continuityResidual"/>
+    <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
 
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-      <Face name="inlet" side="x-">
+      <Face side="x-" name="inlet">
         <BCType label="velocity inlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -58,7 +60,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face name="outlet" side="x+">
+      <Face side="x+" name="outlet">
         <BCType label="the outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -98,15 +100,15 @@
 
   <CFD>
 
-    
+    <!-- ARCHES specification -->
     <ARCHES>
 
-      
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-      
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction_sb" type="CCscalar">
           <doDiff>true</doDiff>
@@ -164,13 +166,13 @@
       </TransportEqns>
 
       <Properties>
-        <table label="a_user_generated_label" type="coldflow"><ColdFlow>
-          <mixture_fraction label="mixture_fraction_gaussian" />
-          <stream_0 density="1.18" temperature="298" />
-          <stream_1 density="0.0118" temperature="298" />
-          <reference_density value="1.18" />
+        <ColdFlow>
+          <mixture_fraction label="mixture_fraction_gaussian"/>
+          <stream_0 density="1.18" temperature="298"/>
+          <stream_1 density="0.0118" temperature="298"/>
+          <reference_density value="1.18"/>
         </ColdFlow>
-      </table></Properties>
+      </Properties>
 
       <BoundaryConditions>
       </BoundaryConditions>

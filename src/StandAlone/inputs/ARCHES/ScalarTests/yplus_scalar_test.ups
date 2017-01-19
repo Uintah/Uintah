@@ -1,12 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- @version: -->
 <Uintah_specification>
 
   <Meta>
     <title>Scalar Test, +y inlet</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
 
   <Time>
     <maxTime>5.0</maxTime>
@@ -19,22 +21,22 @@
 
   <DataArchiver>
     <filebase>yplus_scalar_test.uda</filebase>
-    <outputInitTimestep />
+    <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>
-    <save label="uVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="wVelocitySPBC" />
-    <save label="mixture_fraction_sb" />    
-    <save label="mixture_fraction_roe" />   
-    <save label="mixture_fraction_up" />    
-    <checkpoint cycle="2" interval="0.02" />
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="mixture_fraction_sb"/>   <!-- Super Bee flux lim. --> 
+    <save label="mixture_fraction_roe"/>  <!-- Roe Min/Mod flux lim. --> 
+    <save label="mixture_fraction_up"/>   <!-- Upwind --> 
+    <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
 
   <Grid>
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-      <Face name="inlet" side="y+">
+      <Face side="y+" name="inlet">
         <BCType label="velocity inlet" var="VelocityInlet">
           <value>[0,-1,0]</value>
         </BCType>
@@ -48,7 +50,7 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      <Face name="outlet" side="y-">
+      <Face side="y-" name="outlet">
         <BCType label="the outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -85,17 +87,17 @@
 
   <CFD>
 
-    
+    <!-- ARCHES specification -->
     <ARCHES>
 
-      <BoundaryConditions />
+      <BoundaryConditions/>
 
-      
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="second" />
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
-      
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction_sb" type="CCscalar">
           <doDiff>true</doDiff>
@@ -135,14 +137,14 @@
         </Eqn>
       </TransportEqns>
 
-      <Turbulence model="none" />
+      <Turbulence model="none"/>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.18</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <ExplicitSolver>
 

@@ -1,11 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>One Dimensional Test Case</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <maxTime>.50</maxTime>
     <max_Timesteps>25</max_Timesteps>
@@ -18,14 +20,14 @@
   <DataArchiver>
     <filebase>OneDimTable.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
-
-
-    <save label="mixture_fraction" />
-
-    <save label="temperature" table_lookup="true" />
-    <save label="linear_test" table_lookup="true" />
-    <save label="density" table_lookup="true" />
-    <checkpoint cycle="2" interval="0.02" />
+<!-- Table Variables -->
+<!-- iv's -->
+    <save label="mixture_fraction"/>
+<!-- dv's -->
+    <save label="temperature" table_lookup="true"/>
+    <save label="linear_test" table_lookup="true"/>
+    <save label="density" table_lookup="true"/>
+    <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -57,7 +59,7 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      <Face name="x+ wall" side="x+">
+      <Face side="x+" name="x+ wall">
         <BCType label="Outlet x+" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -65,7 +67,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face name="y- wall" side="y-">
+      <Face side="y-" name="y- wall">
         <BCType label="Press y-" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -73,7 +75,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face name="y+ wall" side="y+">
+      <Face side="y+" name="y+ wall">
         <BCType label="Press y+" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -81,7 +83,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face name="z- wall" side="z-">
+      <Face side="z-" name="z- wall">
         <BCType label="Press z-" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -89,7 +91,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face name="z+ wall" side="z+">
+      <Face side="z+" name="z+ wall">
         <BCType label="Press z+" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -108,16 +110,16 @@
   </PhysicalConstants>
 
   <CFD>
-
+<!-- ARCHES specification -->
     <ARCHES>
 
-
+<!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="second" />
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
 
-
+<!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -134,19 +136,19 @@
 
       </TransportEqns>
 
-      <Turbulence model="compdynamicprocedure" />
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <table label="a_user_generated_label" type="classic"><ClassicTable>
+        <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/MixTable1D.mix.gz</inputfile>
           <cold_flow>true</cold_flow>
-          <single_iv iv_label="mixture_fraction" />
-          <reference_state iv="0.0" />
+          <single_iv iv_label="mixture_fraction"/>
+          <reference_state iv="0.0"/>
         </ClassicTable>
-      </table></Properties>
+      </Properties>
 
       <BoundaryConditions>
-        <suppress_corner_recirculation />
+        <suppress_corner_recirculation/>
       </BoundaryConditions>
 
       <ExplicitSolver>

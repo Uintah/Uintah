@@ -1,36 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
     <title>Arches Decay of Isotropic Turbulence - Dynamic Model: dynamicprocedure - 64x64x64</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <maxTime>     0.67   </maxTime>
     <initTime>    0.0     </initTime>
     <delt_min>    1e-3 </delt_min>
     <delt_max>    1e-3     </delt_max>
-
+<!-- 
+    <max_Timesteps> 5 </max_Timesteps>
+ -->
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
-
+<!--__________________________________-->
   <DataArchiver>
     <filebase>dyn-64.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
-    <outputInitTimestep />    
-    <save label="totalKineticEnergy" />
-    <save label="uVelocitySPBC" />    
-    <save label="vVelocitySPBC" />    
-    <save label="wVelocitySPBC" />            
-    <save label="continuityResidual" />    
-
-    <checkpoint cycle="2" timestepInterval="0.001" />
+    <outputInitTimestep/>    
+    <save label="totalKineticEnergy"/>
+    <save label="uVelocitySPBC"/>    
+    <save label="vVelocitySPBC"/>    
+    <save label="wVelocitySPBC"/>            
+    <save label="continuityResidual"/>    
+<!-- 
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="scalarSP"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="cellType"/>
+ -->
+    <checkpoint cycle="2" timestepInterval="0.001"/>
     <compression>gzip</compression>
   </DataArchiver>
 
-
+<!--__________________________________-->
   <Grid>
     <Level>
       <Box label="1">
@@ -49,22 +59,22 @@
     <viscosity> 1e-5  </viscosity>
   </PhysicalConstants>
 
-
+<!--__________________________________-->
   <CFD>
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-      <Turbulence model="dynamicprocedure" />
+      <Turbulence model="dynamicprocedure"/>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>     1.0   </density>
           <temperature> 298     </temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <BoundaryConditions>
     </BoundaryConditions>

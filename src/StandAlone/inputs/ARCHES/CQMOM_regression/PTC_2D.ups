@@ -1,11 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
     <title> CQMOM 2D Particle Trajectory Crossing with angled distribution inlet</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <max_Timesteps> 5 </max_Timesteps>
     <maxTime>         2.0        </maxTime>
@@ -16,15 +17,15 @@
   </Time>
 
   <DataArchiver>
-    <outputInitTimestep />
+    <outputInitTimestep/>
     <filebase> 2D_PTC.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
 
-    <save label="cellType" />
+    <save label="cellType"/>
     <save label="m_00" />
-    <save label="m_00_Fconv" />
-    <save label="m_00_FconvX" />
-    <save label="m_00_FconvY" />
+    <save label="m_00_Fconv"/>
+    <save label="m_00_FconvX"/>
+    <save label="m_00_FconvY"/>
     <save label="m_10" />
     <save label="m_01" />
     <save label="m_03" />
@@ -43,7 +44,7 @@
     <save label="partVVel_2" />
     <save label="partVVel_3" />
 
-    <checkpoint cycle="2" interval="0.001" />
+    <checkpoint cycle="2" interval="0.001"/>
   </DataArchiver>
 
   <Grid>
@@ -89,15 +90,15 @@
         </BCType>
       </Face>
 
-      <Face lower="0 0.2 0" rectangle="x-" upper="0 0.4 .2">
-        <BCType label="inletx" var="VelocityInlet">
+      <Face rectangle="x-" lower="0 0.2 0" upper="0 0.4 .2">
+        <BCType  label = "inletx" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
         
-        
+        <!-- transported moments -->
         <BCType label="m_00" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
@@ -130,14 +131,14 @@
         </BCType>
       </Face>
 
-      <Face lower="0 0.8 0" rectangle="x-" upper="0 1.0 .2">
-        <BCType label="inletx2" var="VelocityInlet">
+      <Face rectangle="x-" lower="0 0.8 0" upper="0 1.0 .2">
+        <BCType  label = "inletx2" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
-        
+        <!-- transported moments -->
         <BCType label="m_00" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
@@ -171,13 +172,13 @@
       </Face>
 
       <Face side="x+">
-        <BCType label="outletx" var="OutletBC">
+        <BCType  label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        
+        <!-- transported moments -->
         <BCType label="m_00" var="Neumann">
           <value> 0.0 </value>
         </BCType>
@@ -211,7 +212,7 @@
       </Face>
 
       <Face side="y-">
-        <BCType label="ymwall" var="OutletBC">
+        <BCType  label = "ymwall" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -250,7 +251,7 @@
       </Face>
 
       <Face side="y+">
-        <BCType label="ypwall" var="OutletBC">
+        <BCType  label = "ypwall" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -312,20 +313,20 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-      <Turbulence model="none" />
+      <Turbulence model="none"/>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.0</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <BoundaryConditions>
-        <suppress_corner_recirculation />
+        <suppress_corner_recirculation/>
       </BoundaryConditions>
 
       <TransportEqns>
@@ -342,7 +343,7 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
-
+<!--__________________________________-->
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <PressureSolver>
@@ -362,22 +363,22 @@
       </ExplicitSolver>
       
       <CQMOM partvel="true">
-        
+        <!-- base information-->
         <NumberInternalCoordinates> 2 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2] </QuadratureNodes>
         <CutOff> 1.0e-5 </CutOff>
         <Adaptive> true </Adaptive>
-        <InternalCoordinate name="partUVel" type="uVel" />
-        <InternalCoordinate name="partVVel" type="vVel" />
+        <InternalCoordinate name="partUVel" type="uVel"/>
+        <InternalCoordinate name="partVVel" type="vVel"/>
 
-        
+        <!--transport-->
         <doDiff> false </doDiff>
         <doConv> true  </doConv>
         <conv_scheme> first </conv_scheme>
         <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
         <molecular_diffusivity> 0.0 </molecular_diffusivity>
         
-        
+        <!-- moment eqns-->
         <Moment> <m> [0,0] </m> </Moment>
         
         <Moment> <m> [1,0] </m> </Moment>

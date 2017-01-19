@@ -1,11 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Arches "2D" Periodic Box Almgren MMS </title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
@@ -17,14 +20,14 @@
   <DataArchiver>
     <filebase>yz_almgren.uda</filebase>
     <outputInterval>0.01</outputInterval>
-    <save label="totalKineticEnergy" />
-    <save label="pressurePS" />
-    <save label="CCVelocity" />
-    <save label="wVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="continuityResidual" />
-    <save label="velocityDivergence" />
-    <checkpoint cycle="2" interval="0.05" />
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="wVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -48,19 +51,19 @@
   </PhysicalConstants>
 
   <CFD>
-
+<!-- ARCHES specification -->
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="second" />
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.0</density>
           <temperature>298</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <ExplicitSolver>
         <PressureSolver>

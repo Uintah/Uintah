@@ -1,11 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
 <Uintah_specification>
   <Meta>
     <title>Arches "3d" Periodic Box Taylor-Green</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
+  <SimulationComponent type="arches"/>
 
-  <Solver type="hypre" />
+  <Solver type="hypre"/>
   <Time>
     <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
@@ -18,15 +21,15 @@
   <DataArchiver>
     <filebase>taylor-green-vortex.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
-    <outputInitTimestep />
-    <save label="pressurePS" />
-    <save label="CCVelocity" />
-    <save label="uVelocitySPBC" />
-    <save label="vVelocitySPBC" />
-    <save label="wVelocitySPBC" />
-    <save label="continuityResidual" />
-    <save label="velocityDivergence" />
-    <checkpoint cycle="2" interval="0.05" />
+    <outputInitTimestep/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -50,18 +53,18 @@
   </PhysicalConstants>
 
   <CFD>
-
+<!-- ARCHES specification -->
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="first" />
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
       <TransportEqns>
-        <Eqn label="mixture_fraction" type="CCscalar">
+        <Eqn label="mixture_fraction" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <determines_properties /> 
+          <determines_properties/> 
           <conv_scheme>upwind</conv_scheme>
           <initialization type="constant">
             <constant>0.0</constant>
@@ -73,14 +76,14 @@
         </Eqn>
       </TransportEqns>
 
-      <BoundaryConditions />
+      <BoundaryConditions/>
 
       <Properties>
-        <table label="a_user_generated_label" type="constant"><ConstantProps>
+        <ConstantProps>
           <density>1.0</density>
           <temperature>298.0</temperature>
         </ConstantProps>
-      </table></Properties>
+      </Properties>
 
       <ExplicitSolver>
         <PressureSolver>
