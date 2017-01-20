@@ -1870,6 +1870,7 @@ validateFilename( const string & filename, const xmlNode * parent )
 
     if( !validFile( fullFilename ) ) {
       filenameIsBad = true;
+      errorMsg += "Bad filename: '" + fullFilename + "'\n";
     }
   }
 
