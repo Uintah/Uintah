@@ -173,7 +173,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_8or27 = d_mpm->flags->d_8or27; 
   if(d_8or27==8){
     NGN=1;
-  } else if(d_8or27==27){
+  } else{
     NGN=2;
   }
 
@@ -1264,9 +1264,10 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
         double press = 0.;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx], ni, S,psize[idx],deformationGradient[idx]);
+        int NN = interpolator->findCellAndWeights(px[idx], ni,
+                                         S,psize[idx],deformationGradient[idx]);
 
-        for (int k = 0; k < d_8or27; k++) {
+        for (int k = 0; k < NN; k++) {
           press += pressNC[ni[k]] * S[k];
         }
         pPressure[idx] = press-p_ref;
