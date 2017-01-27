@@ -34,9 +34,6 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////
 //              J I M 2   O P T I O N
-// Reads in particle mass and velocity, and compiles mean velocity magnitude
-// and total kinetic energy for all particles of a specified material within
-// the range of timesteps specified
 
 void
 Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
@@ -61,7 +58,7 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
 
   ostringstream fnum;
-  string filename("time_meanvel_KE.dat");
+  string filename("time_rho_pressure.dat");
   ofstream outfile(filename.c_str());
 
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
@@ -69,40 +66,33 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
     cout << "time = " << time << endl;
     GridP grid = da->queryGrid(t);
 
-    Vector mean_vel(0.,0.,0.);
-    double KE = 0.;
-    double total_mass=0.;
       LevelP level = grid->getLevel(grid->numLevels()-1);
-      cout << "Level: " << grid->numLevels() - 1 <<  endl;
       for(Level::const_patch_iterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
         int matl = clf.matl;
         //__________________________________
         //   P A R T I C L E   V A R I A B L E
-        ParticleVariable<Point> value_pos;
-        ParticleVariable<Vector> value_vel;
-        ParticleVariable<double> value_mass;
-        da->query(value_pos, "p.x",        matl, patch, t);
-        da->query(value_vel, "p.velocity", matl, patch, t);
-        da->query(value_mass,"p.mass",     matl, patch, t);
+        ParticleVariable<Point> pos;
+        ParticleVariable<Matrix3> stress;
+        ParticleVariable<double> mass, volume;
+        da->query(pos,   "p.x",        matl, patch, t);
+        da->query(volume,"p.volume",   matl, patch, t);
+        da->query(mass,  "p.mass",     matl, patch, t);
+        da->query(stress,"p.stress",   matl, patch, t);
 
-        ParticleSubset* pset = value_pos.getParticleSubset();
+        ParticleSubset* pset = pos.getParticleSubset();
         if(pset->numParticles() > 0){
           ParticleSubset::iterator piter = pset->begin();
           for(;piter != pset->end(); piter++){
-            double vel_mag_sq = value_vel[*piter].length2();
-            mean_vel+=value_vel[*piter]*value_mass[*piter];
-            KE+=value_mass[*piter]*vel_mag_sq;
-            total_mass+=value_mass[*piter];
+            double rho = mass[*piter]/volume[*piter];
+            outfile << time << " " << rho << " " 
+                    << (-1.0/3.0)*stress[*piter].Trace() << endl; 
           } // for
         }  //if
       }  // for patches
-    mean_vel/=total_mass;
-    KE*=.5;
 
-   outfile.precision(15);
-   outfile << time << " " << mean_vel.y() << " " << total_mass << " " << KE << endl; 
+//   outfile.precision(15);
 
   }
 } // end jim2()
