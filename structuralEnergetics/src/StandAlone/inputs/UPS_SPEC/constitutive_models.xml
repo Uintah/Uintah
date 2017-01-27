@@ -139,7 +139,7 @@
     <ve_deviatoric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
     <EoverR                        spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
     <equation_of_state             spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'default_hyper, default_hypo, mie_gruneisen, mie_gruneisen_energy'" >
+                                     attribute1="type REQUIRED STRING 'default_hyper, default_hypo, three_region_mie_gruneisen, mie_gruneisen, mie_gruneisen_energy'" >
       <C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
       <Gamma_0                     spec="OPTIONAL DOUBLE" />
       <S_alpha                     spec="OPTIONAL DOUBLE" />
