@@ -127,6 +127,9 @@ namespace Uintah {
     const VarLabel* pEnergyLabel;
     const VarLabel* pDissipatedEnergyLabel;
     const VarLabel* pWorkEnergyLabel;
+    const VarLabel* pHeatBufferLabel;
+    const VarLabel* pReactionProgressLabel;
+    const VarLabel* pLastReactionFlagLabel;
 
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel_preReloc;  
@@ -138,6 +141,9 @@ namespace Uintah {
     const VarLabel* pEnergyLabel_preReloc;
     const VarLabel* pDissipatedEnergyLabel_preReloc;
     const VarLabel* pWorkEnergyLabel_preReloc;
+    const VarLabel* pHeatBufferLabel_preReloc;
+    const VarLabel* pReactionProgressLabel_preReloc;
+    const VarLabel* pLastReactionFlagLabel_preReloc;
 
   protected:
 
@@ -149,6 +155,7 @@ namespace Uintah {
     double d_tol;
     double d_initialMaterialTemperature;
     double d_isothermal;
+    double d_dHFusion;
     bool   d_doIsothermal;
     bool   d_useModifiedEOS;
     bool   d_evolvePorosity;
@@ -178,6 +185,10 @@ namespace Uintah {
     // Prevent copying of this class
     // copy constructor
     ReactiveEP& operator=(const ReactiveEP &cm);
+
+    double d_meltingColor;
+    double d_meltedColor;
+    double d_reactedColor;
 
   public:
 
