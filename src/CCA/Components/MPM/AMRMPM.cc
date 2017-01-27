@@ -497,6 +497,10 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     t->computes(lb->AccStrainEnergyLabel);
   }
   
+  // JBH - Thermodynamics
+  t->computes(lb->pHeatEnergyLabel);
+  // JBH - Thermodynamics
+
   if(flags->d_artificial_viscosity){
     t->computes(lb->p_qLabel);
   }
@@ -1307,6 +1311,10 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeLabel,                    d_gn);   
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        d_gn);   
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              d_gn);
+  t->requires(Task::OldDW, lb->pHeatEnergyLabel,                d_gn);
+
+  // Some energy may have been added previously due to CM.
+  t->computes(lb->pHeatEnergyLabel_preReloc);
 
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pVelocityLabel_preReloc);
@@ -3751,13 +3759,13 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       new_dw->get(psize,        lb->pSizeLabel_preReloc,             pset);
 
-      new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
-      new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
-      new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
-      new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
-      new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
-      new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
+      new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,    pset);
+      new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,           pset);
+      new_dw->allocateAndPut(pxx,          lb->pXXLabel,                   pset);
+      new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,        pset);
+      new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,        pset);
+      new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc, pset);
+      new_dw->allocateAndPut(pTempPreNew,  lb->pTempPreviousLabel_preReloc,pset);
 
       if(flags->d_doScalarDiffusion){
         old_dw->get(pConcentration,     lb->pConcentrationLabel,     pset);
@@ -3799,6 +3807,13 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         dTdt = dTdt_create;                         // reference created data
       }
 
+      // JBH -- Thermodynamics
+      constParticleVariable<double> pHeatEnergy;
+      old_dw->get(pHeatEnergy,      lb->pHeatEnergyLabel,     pset);
+
+      ParticleVariable<double> pHeatEnergyNew;
+      new_dw->allocateAndPut(pHeatEnergyNew,    lb->pHeatEnergyLabel,     pset);
+
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -3824,6 +3839,9 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           tempRate += (gTemperatureRate[node] + dTdt[node] +
                        fricTempRate)   * S[k];
         }
+        // Add external specific heat flux into particle.
+        pHeatEnergyNew[idx] = pHeatEnergy[idx] +
+                                  tempRate * Cp * delT * pmass[idx];
 
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx]    + vel*delT*move_particles;

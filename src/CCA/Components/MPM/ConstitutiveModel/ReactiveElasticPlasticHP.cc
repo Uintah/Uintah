@@ -62,6 +62,7 @@
 #include <Core/Util/DebugStream.h>
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -79,6 +80,7 @@ ReactiveEP::ReactiveEP(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
+  ps->require("heat_of_fusion",d_dHFusion);
 
   d_initialData.alpha = 0.0; // default is per K.  Only used in implicit code
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
@@ -195,6 +197,10 @@ ReactiveEP::ReactiveEP(ProblemSpecP& ps,MPMFlags* Mflag)
   getInitialDamageData(ps);
   //getSpecificHeatData(ps);
   initializeLocalMPMLabels();
+
+  d_meltingColor = 3.0;
+  d_meltedColor = 4.0;
+  d_reactedColor = 5.0;
 }
 
 ReactiveEP::ReactiveEP(const ReactiveEP* cm) :
@@ -250,7 +256,11 @@ ReactiveEP::ReactiveEP(const ReactiveEP* cm) :
   d_shear   = ShearModulusModelFactory::createCopy(cm->d_shear);
   d_melt    = MeltingTempModelFactory::createCopy(cm->d_melt);
   d_devStress = 0;
-  
+
+  d_meltingColor = cm->d_meltingColor;
+  d_meltedColor = cm->d_meltedColor;
+  d_reactedColor = cm->d_reactedColor;
+
   initializeLocalMPMLabels();
 }
 
@@ -267,6 +277,10 @@ ReactiveEP::~ReactiveEP()
   VarLabel::destroy(pEnergyLabel);
   VarLabel::destroy(pDissipatedEnergyLabel);
   VarLabel::destroy(pWorkEnergyLabel);
+  VarLabel::destroy(pHeatBufferLabel);
+  // JBH -- These two should actually belong to a specific reaction model array
+  VarLabel::destroy(pReactionProgressLabel);
+  VarLabel::destroy(pLastReactionFlagLabel);
 
   VarLabel::destroy(pRotationLabel_preReloc);
   VarLabel::destroy(pStrainRateLabel_preReloc);
@@ -278,6 +292,10 @@ ReactiveEP::~ReactiveEP()
   VarLabel::destroy(pEnergyLabel_preReloc);
   VarLabel::destroy(pDissipatedEnergyLabel_preReloc);
   VarLabel::destroy(pWorkEnergyLabel_preReloc);
+  VarLabel::destroy(pHeatBufferLabel_preReloc);
+  // JBH -- These two should actually belong to a specific reaction model array
+  VarLabel::destroy(pReactionProgressLabel_preReloc);
+  VarLabel::destroy(pLastReactionFlagLabel_preReloc);
 
   delete d_flow;
   delete d_yield;
@@ -302,6 +320,7 @@ void ReactiveEP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   
   cm_ps->appendElement("bulk_modulus",                  d_initialData.Bulk);
   cm_ps->appendElement("shear_modulus",                 d_initialData.Shear);
+  cm_ps->appendElement("heat_of_fusion",                d_dHFusion);
   cm_ps->appendElement("coeff_thermal_expansion",       d_initialData.alpha);
   cm_ps->appendElement("taylor_quinney_coeff",          d_initialData.Chi);
   cm_ps->appendElement("critical_stress",               d_initialData.sigma_crit);
@@ -323,6 +342,13 @@ void ReactiveEP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   d_shear      ->outputProblemSpec(cm_ps);
   d_melt       ->outputProblemSpec(cm_ps);
   d_Cp         ->outputProblemSpec(cm_ps);
+
+  // JBH - FIXME TODO For future guidance/reference
+  //
+//  for (int numRxn = 0; numRxn < d_RxnList.size(); ++numRxn)
+//  {
+//    d_RxnList[numRxn]->outputProblemSpec(cm_ps);
+//  }
 
   cm_ps->appendElement("evolve_porosity",           d_evolvePorosity);
   cm_ps->appendElement("initial_mean_porosity",     d_porosity.f0);
@@ -379,6 +405,13 @@ ReactiveEP::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pWorkEnergyLabel = VarLabel::create("p.workEnergy",
     ParticleVariable<double>::getTypeDescription());
+  pHeatBufferLabel = VarLabel::create("p.HeatBuffer",
+    ParticleVariable<double>::getTypeDescription());
+  // JBH -- These two should actually belong to a specific reaction model array
+  pReactionProgressLabel = VarLabel::create("p.reactionProgress",
+    ParticleVariable<double>::getTypeDescription());
+  pLastReactionFlagLabel = VarLabel::create("p.lastReactionFlag",
+    ParticleVariable<int>::getTypeDescription());
 
   pRotationLabel_preReloc = VarLabel::create("p.rotation+",
     ParticleVariable<Matrix3>::getTypeDescription());
@@ -400,6 +433,13 @@ ReactiveEP::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",
     ParticleVariable<double>::getTypeDescription());
+  pHeatBufferLabel_preReloc = VarLabel::create("p.HeatBuffer+",
+    ParticleVariable<double>::getTypeDescription());
+  // JBH -- These two should actually belong to a specific reaction model array
+  pReactionProgressLabel_preReloc = VarLabel::create("p.reactionProgress+",
+    ParticleVariable<double>::getTypeDescription());
+  pLastReactionFlagLabel_preReloc = VarLabel::create("p.lastReactionFlag+",
+    ParticleVariable<int>::getTypeDescription());
 }
 //______________________________________________________________________
 //
@@ -495,6 +535,9 @@ ReactiveEP::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pEnergyLabel);
   from.push_back(pDissipatedEnergyLabel);
   from.push_back(pWorkEnergyLabel);
+  from.push_back(pHeatBufferLabel);
+  from.push_back(pReactionProgressLabel);
+  from.push_back(pLastReactionFlagLabel);
 
   to.push_back(pRotationLabel_preReloc);
   to.push_back(pStrainRateLabel_preReloc);
@@ -506,6 +549,9 @@ ReactiveEP::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pEnergyLabel_preReloc);
   to.push_back(pDissipatedEnergyLabel_preReloc);
   to.push_back(pWorkEnergyLabel_preReloc);
+  to.push_back(pHeatBufferLabel_preReloc);
+  to.push_back(pReactionProgressLabel_preReloc);
+  to.push_back(pLastReactionFlagLabel_preReloc);
 
   // Add the particle state for the flow & deviatoric stress model
   d_flow     ->addParticleState(from, to);
@@ -530,6 +576,9 @@ ReactiveEP::addInitialComputesAndRequires(Task* task,
   task->computes(pEnergyLabel,                matlset);
   task->computes(pDissipatedEnergyLabel,      matlset);
   task->computes(pWorkEnergyLabel,            matlset);
+  task->computes(pHeatBufferLabel,            matlset);
+  task->computes(pReactionProgressLabel,      matlset);
+  task->computes(pLastReactionFlagLabel,      matlset);
  
   // Add internal evolution variables computed by flow & deviatoric stress model
   d_flow     ->addInitialComputesAndRequires(task, matl, patch);
@@ -537,7 +586,7 @@ ReactiveEP::addInitialComputesAndRequires(Task* task,
 }
 //______________________________________________________________________
 //
-void 
+void
 ReactiveEP::initializeCMData(const Patch          * patch,
                                    const MPMMaterial    * matl,
                                          DataWarehouse  * new_dw)
@@ -564,6 +613,8 @@ ReactiveEP::initializeCMData(const Patch          * patch,
                             pEnergy;
   ParticleVariable<double>  pDissipatedEnergy, pWorkEnergy;
   ParticleVariable<int>     pLocalized;
+  ParticleVariable<double>  pHeatBuffer, pReactionProgress;
+  ParticleVariable<int>     pLastReactionFlag;
 
   new_dw->allocateAndPut(pRotation,          pRotationLabel,              pset);
   new_dw->allocateAndPut(pStrainRate,        pStrainRateLabel,            pset);
@@ -575,6 +626,9 @@ ReactiveEP::initializeCMData(const Patch          * patch,
   new_dw->allocateAndPut(pEnergy,            pEnergyLabel,                pset);
   new_dw->allocateAndPut(pDissipatedEnergy,  pDissipatedEnergyLabel,      pset);
   new_dw->allocateAndPut(pWorkEnergy,        pWorkEnergyLabel,            pset);
+  new_dw->allocateAndPut(pHeatBuffer,        pHeatBufferLabel,            pset);
+  new_dw->allocateAndPut(pReactionProgress,  pReactionProgressLabel,      pset);
+  new_dw->allocateAndPut(pLastReactionFlag,  pLastReactionFlagLabel,      pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++)
   {
@@ -588,6 +642,9 @@ ReactiveEP::initializeCMData(const Patch          * patch,
     pEnergy[*iter] = 0.;
     pDissipatedEnergy[*iter] = 0.;
     pWorkEnergy[*iter] = 0.;
+    pHeatBuffer[*iter] = 0.0;
+    pReactionProgress[*iter] = 0.0;
+    pLastReactionFlag[*iter] = 0;
   }
 
   // Do some extra things if the porosity or the damage distribution
@@ -705,6 +762,9 @@ ReactiveEP::addComputesAndRequires(      Task         * task,
   task->requires(Task::OldDW, lb->pHeatEnergyLabel,       matlset, gnone);
   task->requires(Task::OldDW, pDissipatedEnergyLabel,     matlset, gnone);
   task->requires(Task::OldDW, pWorkEnergyLabel,           matlset, gnone);
+  task->requires(Task::OldDW, pHeatBufferLabel,           matlset, gnone);
+  task->requires(Task::OldDW, pReactionProgressLabel,     matlset, gnone);
+  task->requires(Task::OldDW, pLastReactionFlagLabel,     matlset, gnone);
 
   task->computes(pRotationLabel_preReloc,             matlset);
   task->computes(pStrainRateLabel_preReloc,           matlset);
@@ -716,6 +776,11 @@ ReactiveEP::addComputesAndRequires(      Task         * task,
   task->computes(pEnergyLabel_preReloc,               matlset);
   task->computes(pDissipatedEnergyLabel_preReloc,     matlset);
   task->computes(pWorkEnergyLabel_preReloc,           matlset);
+  task->computes(pHeatBufferLabel_preReloc,           matlset);
+  task->computes(pReactionProgressLabel_preReloc,     matlset);
+  task->computes(pLastReactionFlagLabel_preReloc,     matlset);
+
+  task->modifies(lb->pColorLabel_preReloc,            matlset);
 
 
   // Add internal evolution variables computed by flow model
@@ -761,6 +826,7 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
   double shear = d_initialData.Shear;
   double rho_0 = matl->getInitialDensity();
   double Tm    = matl->getMeltTemperature();
+  double Cp    = matl->getSpecificHeat();
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
   
@@ -768,8 +834,12 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
   double include_AV_heating=0.0;
   if (flag->d_artificial_viscosity_heating)
   {
-    include_AV_heating=1.0;
+    include_AV_heating = 1.0;
   }
+
+  // Get the time increment (delT)
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
   // Loop thru patches
   for(int patchIndex=0; patchIndex<patches->size(); patchIndex++)
@@ -802,8 +872,9 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     constParticleVariable<double> pPlasticStrain, pPlasticStrainRate;
     constParticleVariable<double> pHeatEnergy, pDissipatedEnergy, pWorkEnergy;
     constParticleVariable<double> pEnergy;
+    constParticleVariable<double> pHeatBuffer, pReactionProgress;
 
-    constParticleVariable<int> pLocalized;
+    constParticleVariable<int> pLocalized, pLastReactionFlag;
     constParticleVariable<Matrix3> pRotation;
 
     old_dw->get(pPlasticStrain,     pPlasticStrainLabel,        pset);
@@ -817,14 +888,13 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     old_dw->get(pHeatEnergy,        lb->pHeatEnergyLabel,       pset);
     old_dw->get(pDissipatedEnergy,  pDissipatedEnergyLabel,     pset);
     old_dw->get(pWorkEnergy,        pWorkEnergyLabel,           pset);
+    old_dw->get(pHeatBuffer,        pHeatBufferLabel,           pset);
+    old_dw->get(pReactionProgress,  pReactionProgressLabel,     pset);
+    old_dw->get(pLastReactionFlag,  pLastReactionFlagLabel,     pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
     constParticleVariable<long64> pParticleID; 
-    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
-
-    // Get the time increment (delT)
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+    old_dw->get(pParticleID,        lb->pParticleIDLabel,       pset);
 
     constParticleVariable<Matrix3> pDeformGrad_new, velGrad;
     constParticleVariable<double> pVolume_deformed;
@@ -836,13 +906,13 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     ParticleVariable<Matrix3> pRotation_new;
     ParticleVariable<double>  pPlasticStrain_new, pDamage_new, pPorosity_new; 
     ParticleVariable<double>  pStrainRate_new, pPlasticStrainRate_new;
-    ParticleVariable<int>     pLocalized_new;
+    ParticleVariable<int>     pLocalized_new,pLastReactionFlag_new;
     ParticleVariable<double>  pdTdt, p_q, pEnergy_new;
+    ParticleVariable<double>  pHeatBuffer_new, pReactionProgress_new;
     ParticleVariable<Matrix3> pStress_new;
     
     // Added for thermodynamic tracking
-    ParticleVariable<double>  pDissipatedEnergy_new;
-    ParticleVariable<double>  pHeatEnergy_new, pWorkEnergy_new;
+    ParticleVariable<double>  pDissipatedEnergy_new, pWorkEnergy_new;
 
     new_dw->allocateAndPut(pRotation_new,    
                            pRotationLabel_preReloc,               pset);
@@ -871,9 +941,21 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
     new_dw->allocateAndPut(pWorkEnergy_new, 
                            pWorkEnergyLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pHeatBuffer_new,
+                           pHeatBufferLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pReactionProgress_new,
+                           pReactionProgressLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pLastReactionFlag_new,
+                           pLastReactionFlagLabel_preReloc,       pset);
+
+    ParticleVariable<double> pHeatEnergy_new, pTemperature_new, pColor_new;
     // Particle heat may already have grid based conduction placed onto it.
+    new_dw->getModifiable(pTemperature_new,
+                          lb->pTemperatureLabel_preReloc,         pset);
     new_dw->getModifiable(pHeatEnergy_new,
-                           lb->pHeatEnergyLabel_preReloc,         pset);
+                          lb->pHeatEnergyLabel_preReloc,          pset);
+    new_dw->getModifiable(pColor_new,
+                          lb->pColorLabel_preReloc,               pset);
     // JBH - Thermodynamics
     
     d_flow     ->getInternalVars(pset, old_dw);
@@ -885,19 +967,25 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     //______________________________________________________________________
     // Loop thru particles
     ParticleSubset::iterator iter = pset->begin(); 
+
+//    // JBH -- TOTAL HACK FIXME TODO FIXME
+//    int outputFreq = 1000;
+//    int currStep = d_sharedState->getCurrentTopLevelTimeStep();
+//    if (currStep%outputFreq==1 && dwi==0)
+//    {
+//      std::cerr << "Time: "<< std::fixed << std::setw(12) << std::right << d_sharedState->getElapsedTime();
+//    }
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
+      // Assign zero int. heating by default, modify with appropriate sources
+      // This has units (in MKS) of K/s  (i.e. temperature/time)
+      pdTdt[idx] = 0.0;
 
       // For ease of use, we'll track dissipative process energy additions
       //   via their calculated delta_temp and adjust at the end.
       pDissipatedEnergy_new[idx] = 0.0;
-//      pHeatEnergy_new[idx] = pHeatEnergy[idx];
       pWorkEnergy_new[idx] = pWorkEnergy[idx];
-
-
-      // Assign zero int. heating by default, modify with appropriate sources
-      // This has units (in MKS) of K/s  (i.e. temperature/time)
-      pdTdt[idx] = 0.0;
+      pHeatBuffer_new[idx] = pHeatBuffer[idx];
 
       Matrix3 tensorL=velGrad[idx];
 
@@ -982,15 +1070,15 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
       state->initialShearModulus = shear;
       state->meltingTemp         = Tm ;
       state->initialMeltTemp     = Tm;
-      state->specificHeat        = matl->getSpecificHeat();
+      state->specificHeat        = Cp;
       state->energy              = pEnergy[idx];
       state->storedElasticWork   = pWorkEnergy[idx];
       state->storedHeat          = pHeatEnergy[idx];
       
       // Get or compute the specific heat
       if (d_computeSpecificHeat) {
-        double C_p = d_Cp->computeSpecificHeat(state);
-        state->specificHeat = C_p;
+        Cp = d_Cp->computeSpecificHeat(state);
+        state->specificHeat = Cp;
       }
     
       // Calculate the shear modulus and the melting temperature at the
@@ -1416,6 +1504,155 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
       // JBH - Thermodynamics
       // pHeatEnergy_new[idx] -= pDissipatedEnergy_new[idx];
 
+      // Copy over the reaction (currently melt) progress tracker
+      pReactionProgress_new[idx] = pReactionProgress[idx];
+
+      // JBH -- Logic to deal with phase transitions requiring finite heat of
+      //          transition
+      //
+      //        Calculate projected new temperature
+      // This value determines the maximum amount we "rewind" the temperature if
+      //   we've progressed above the melt temperature.
+      const double maxMeltTempBuffer = 1.0;
+      double newTemp = pTemperature_new[idx] + pdTdt[idx]*delT;
+      double oldTemp = pTemperature[idx];
+
+      double meltOnsetTemp = Tm_cur - maxMeltTempBuffer;
+
+      //double enthalpyTolerance = 1e-12;
+//      if (dwi == 0 && (currStep%outputFreq==1))
+//        std::cerr << std::fixed << std::setw(3) << std::right << idx << " "
+//                  << std::fixed << std::setw(2) << std::right << oldTemp << " ";
+//        std::cerr << "DWI: "<< std::fixed << std::setw(3) << std::right << dwi
+//                  << " Particle: " << std::fixed << std::setw(3) << std::right << idx
+//                  << " Ti: " << std::fixed << std::setw(4) << std::right << oldTemp
+//                  << " Tn: " << std::fixed << std::setw(4) << std::right << newTemp
+//                  << " Tm: " << std::fixed << std::setw(1) << std::right << meltOnsetTemp;
+
+      // Compare the projected temperature to the current melting point
+      // If we want to melt, make sure we have enough enthalpy to do so.
+      double T_clamp = std::max(meltOnsetTemp,pTemperature[idx]);
+      if (newTemp >= T_clamp)
+      {
+        double dH_materialPoint = pMass[idx] * d_dHFusion;
+
+        double thermalMass = Cp*pMass[idx];
+        if (pColor_new[idx] != d_reactedColor)
+        {
+          pColor_new[idx] = d_meltingColor;
+        }
+
+        // Amount of heat which would have gone toward raising the temperature.
+        double Q_in = (newTemp - oldTemp)*thermalMass;
+
+        // Temp change to get from current temperature to clamp value
+        double T_delta = T_clamp - oldTemp;
+//        if (idx < 8  && dwi == 0) std::cerr << " <Doing proper melting> Clamped Temp: " << std::fixed << std::setw(4) << std::right << T_clamp
+//                                << " T_delta_initial: " << std::fixed << std::setw(4) << std::right << T_delta;
+
+        // Heat needed to get T to T_clamp
+        double Q_toClamp = T_delta*thermalMass;
+//        if (idx < 8  && dwi == 0) std::cerr << " Heat to clamp temp: " << std::scientific << std::setw(4) << std::right << Q_toClamp
+//                                << " Initial heat buffer: " << std::scientific << std::setw(4) << std::right << pHeatBuffer[idx];
+
+
+        double Q_remaining = Q_in - Q_toClamp;
+        if (Q_remaining >= 0.0)
+        {
+          // Always true!
+          newTemp = T_clamp;
+          T_delta = 0.0;
+        }
+        else
+        {
+          newTemp = oldTemp + Q_in/thermalMass;
+          Q_remaining = 0.0;
+        }
+        double newQInBuffer = pHeatBuffer[idx] + Q_remaining;
+        pHeatBuffer_new[idx] = newQInBuffer;
+//        if (idx < 8  && dwi == 0) std::cerr << " New Projected buffer: " << std::scientific << std::setw(6) << std::right << newQInBuffer;
+        if (newQInBuffer > dH_materialPoint)
+        {
+          if (pColor_new[idx] != d_reactedColor)
+          {
+            pColor_new[idx] = d_meltedColor;
+          }
+          pHeatBuffer_new[idx] = dH_materialPoint;
+          Q_remaining = newQInBuffer - dH_materialPoint;
+          newTemp = T_clamp + Q_remaining/thermalMass;
+//          if (idx < 8  && dwi == 0) std::cerr << " Heat of Fusion: " << std::fixed << std::setw(6) << std::right << d_dHFusion
+//                                  << " Remaining heat: " << std::fixed << std::setw(6) << std::right << Q_remaining;
+        }
+
+        pdTdt[idx] = (newTemp - pTemperature_new[idx])/delT;
+        pReactionProgress_new[idx] = pHeatBuffer_new[idx]/dH_materialPoint;
+
+//        if (idx < 8  && dwi == 0) std::cerr << " newTemp: " << std::fixed << std::setw(6) << std::right << pTemperature_new[idx] + pdTdt[idx] * delT
+//                                << " new pdTdt: " << std::fixed << std::setw(6) << std::right << pdTdt[idx];
+
+
+      }
+//      if (idx < 8  && dwi == 0) std::cerr << std::endl;
+
+
+//      if (newTemp >= meltOnsetTemp )
+//      {
+//        double thermalMass = Cp*pMass[idx];
+//        // Temperature to hold at while melting
+//        double T_clamp = std::max(meltOnsetTemp,pTemperature[idx]);
+//
+//        // Temperature delta to get to clamp temperature and start melting
+//        double T_delta = std::max(0.0, T_clamp - pTemperature[idx]);
+//        if (idx == 0) std::cerr << " Doing proper melting: Clamped Temp: " << std::setw(6) << std::right << T_clamp
+//                                << " T_delta_initial: " << std::setw(6) << std::right << T_delta;
+//
+//        double projectedQ = 0.0;
+//        double projectedBuffer = pHeatBuffer[idx];
+//        if (T_delta > 0)
+//        {
+//          projectedQ = (newTemp - (oldTemp + T_delta))*thermalMass;
+//        }
+//        // Projected heat to dump into buffer;
+//        double projectedQ = (newTemp - (oldTemp + T_delta))*thermalMass;
+//        double projectedBuffer = pHeatBuffer[idx] + projectedQ;
+//        if (idx == 0) std::cerr << " Remaining heat: " << std::setw(6) << std::right << projectedQ
+//                                << " Initial heat buffer: " << std::setw(6) << std::right << pHeatBuffer[idx]
+//                                << " New Projected buffer: " << std::setw(6) << std::right << projectedBuffer
+//                                << " Heat of Fusion: " << std::setw(6) << std::right << d_dHFusion;
+//
+//        // If projected heat is > 0, we're melting.
+//        if (projectedQ > 0.0 && pColor_new[idx] != d_reactedColor)
+//        {
+//          pColor_new[idx] = d_meltingColor;
+//        }
+//
+//        // Buffer holds either the current amount plus the projected addition,
+//        //   of the heat of fusion.
+//        pHeatBuffer_new[idx] = std::min(projectedBuffer,d_dHFusion);
+//
+//        // Any remnant heat goes back into temperature.
+//        double dQ_remnant = projectedBuffer - pHeatBuffer_new[idx];
+//        T_delta += dQ_remnant/(thermalMass);
+//
+//        // Store normalized melt progress.
+//        pReactionProgress_new[idx] = pHeatBuffer_new[idx]/d_dHFusion;
+//        // If there is remnant heat we're fully melted.
+//        if (dQ_remnant > 0 && pColor_new[idx] != d_reactedColor)
+//        {
+//          pColor_new[idx] = d_meltedColor;
+//        }
+//
+//        // Remnant temperature increase rate is just the increase divided by the
+//        //   current timestep.
+//        pdTdt[idx] = T_delta / delT;
+//        if (idx == 0) std::cerr << " newTemp: " << std::setw(6) << std::right << pTemperature_new[idx] + pdTdt[idx] * delT;
+//      }
+//
+//      if (idx == 0) std::cerr << std::endl;
+      // JBH - All sources of temperature have been included now, back it out
+      //         and determine proper temperature including heat of fusion
+      double delTemp = newTemp - pTemperature[idx];
+
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
@@ -1426,6 +1663,7 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
       delete state;
     }  // end particle loop
 
+//    if (currStep%outputFreq==1 && dwi == 0) std::cerr << std::endl;
     //__________________________________
     //
     WaveSpeed = dx/WaveSpeed;
@@ -1434,32 +1672,34 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
     
     if (flag->d_reductionVars->accStrainEnergy ||
-        flag->d_reductionVars->strainEnergy) {
+        flag->d_reductionVars->strainEnergy)
+    {
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     }
   }
 
-  if (cout_EP.active()) 
-    cout_EP << getpid() << "... End." << endl;
-
+  if (cout_EP.active()) cout_EP << getpid() << "... End." << endl;
 }
 
 //______________________________________________________________________
 //
-bool ReactiveEP::computePlasticStateBiswajit(PlasticityState* state,
-                                                   constParticleVariable<double>& pPlasticStrain,
-                                                   constParticleVariable<double>& pStrainRate,
-                                                   const Matrix3& sigma,
-                                                   const Matrix3& trialS,
-                                                   const Matrix3& tensorEta,
-                                                   Matrix3& tensorS,
-                                                   double& delGamma,
-                                                   double& flowStress,
-                                                   double& porosity,
-                                                   double& mu_cur,
-                                                   const double delT,
-                                                   const MPMMaterial* matl,
-                                                   const int idx)
+bool
+ReactiveEP::computePlasticStateBiswajit(
+                                              PlasticityState               * state,
+                                              constParticleVariable<double> & pPlasticStrain,
+                                              constParticleVariable<double> & pStrainRate,
+                                        const Matrix3                       & sigma,
+                                        const Matrix3                       & trialS,
+                                        const Matrix3                       & tensorEta,
+                                              Matrix3                       & tensorS,
+                                              double                        & delGamma,
+                                              double                        & flowStress,
+                                              double                        & porosity,
+                                              double                        & mu_cur,
+                                        const double                          delT,
+                                        const MPMMaterial                   * matl,
+                                        const int                             idx
+                                       )
 {
   // Using the algorithm from Zocher, Maudlin, Chen, Flower-Maudlin
   // European Congress on Computational Methods in Applied Sciences 

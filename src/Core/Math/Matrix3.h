@@ -74,6 +74,12 @@ namespace Uintah {
     // destructor
     inline ~Matrix3();
 
+    // Create a diagonal matrix with the entries equivalent to a single scalar
+    static inline Matrix3 diagonal(double val);
+
+    // Create a diagonal matrix with the entries taken from a Vector quantity
+    static inline Matrix3 diagonal(Vector vec);
+
     // assign a value to all components of the Matrix3
     inline void set(double val);
 
@@ -317,6 +323,19 @@ namespace Uintah {
       }
     }
 
+  Matrix3 Matrix3::diagonal(double value)
+  {
+    return Matrix3(value,   0.0,    0.0,
+                     0.0, value,    0.0,
+                     0.0,   0.0,  value);
+  }
+
+  Matrix3 Matrix3::diagonal(Vector vec)
+  {
+    return Matrix3(vec[0],       0.0,       0.0,
+                      0.0,    vec[1],       0.0,
+                      0.0,       0.0,    vec[2]);
+  }
 
   inline Matrix3::Matrix3(double a00,double a01,double a02,
                           double a10,double a11,double a12,

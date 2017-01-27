@@ -45,7 +45,8 @@ NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "L
 #                   ("explode2D_amr",         "explode2D_amr.ups",         8,  "Linux", ["startFromCheckpoint","no_dbg"]),\
 
 
-LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),   \
+LOCALTESTS = [   \
+                 ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),   \
                  ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"]),   \
                  ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux", ["exactComparison"]),   \
                  ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),   \
@@ -53,8 +54,17 @@ LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Lin
                  ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"]),   \
                  ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \
                  ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),   \
-                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
-    	       ]
+                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"]),   \
+                 ("massX",                 "massX.ups",                 1,  "darwin", ["exactComparison"]),   \
+                 ("guni2dRT",              "guni2dRT.ups",              4,  "darwin", ["exactComparison"]),   \
+                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "darwin", ["exactComparison"]),   \
+                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "darwin", ["exactComparison"]),   \
+                 ("TRWnoz",                "TRWnoz.ups",                1,  "darwin", ["exactComparison"]),   \
+                 ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "darwin", ["exactComparison"]),   \
+                 ("DDT",                   "DDT.ups",                   1,  "darwin", ["exactComparison","no_dbg"]),    \
+                 ("InductionTime",         "InductionTime.ups",         1  ,"darwin", ["exactComparison","no_dbg"]),   \
+                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"darwin", ["exactComparison","no_dbg"])
+             ]
 DEBUGTESTS =[]
 #__________________________________
 # The following list is parsed by the local RT script
