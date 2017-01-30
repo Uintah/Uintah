@@ -29,41 +29,41 @@ from helpers.runSusTests import runSusTests
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),    \
-                   ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"]),    \
-                   ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux", ["exactComparison"]),    \
-                   ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),    \
-                   ("TRWnoz",                "TRWnoz.ups",                4,  "Linux", ["exactComparison"]),    \
-                   ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"]),    \
-                   ("BurnRate",              "BurnRate.ups",              1.1,"Linux", ["startFromCheckpoint"]), \
-                   ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \
-                   ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),    \
-                   ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
+NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "ALL", ["exactComparison"]),    \
+                   ("guni2dRT",              "guni2dRT.ups",              4,  "ALL", ["exactComparison"]),    \
+                   ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "ALL", ["exactComparison"]),    \
+                   ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "ALL", ["exactComparison"]),    \
+                   ("TRWnoz",                "TRWnoz.ups",                4,  "ALL", ["exactComparison"]),    \
+                   ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "ALL", ["exactComparison"]),    \
+                   ("BurnRate",              "BurnRate.ups",              1.1,"ALL", ["startFromCheckpoint"]), \
+                   ("DDT",                   "DDT.ups",                   1,  "ALL", ["exactComparison","no_dbg"]),    \
+                   ("InductionTime",         "InductionTime.ups",         1  ,"ALL", ["exactComparison","no_dbg"]),    \
+                   ("InductionPropagation",  "InductionPropagation.ups",  1  ,"ALL", ["exactComparison","no_dbg"])
     	       ]
 
 #
-#                   ("explode2D_amr",         "explode2D_amr.ups",         8,  "Linux", ["startFromCheckpoint","no_dbg"]),\
+#                   ("explode2D_amr",         "explode2D_amr.ups",         8,  "ALL", ["startFromCheckpoint","no_dbg"]),\
 
 
 LOCALTESTS = [   \
-                 ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),   \
-                 ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"]),   \
-                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux", ["exactComparison"]),   \
-                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),   \
-                 ("TRWnoz",                "TRWnoz.ups",                1,  "Linux", ["exactComparison"]),   \
-                 ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"]),   \
-                 ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \
-                 ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),   \
-                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"]),   \
-                 ("massX",                 "massX.ups",                 1,  "darwin", ["exactComparison"]),   \
-                 ("guni2dRT",              "guni2dRT.ups",              4,  "darwin", ["exactComparison"]),   \
-                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "darwin", ["exactComparison"]),   \
-                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "darwin", ["exactComparison"]),   \
-                 ("TRWnoz",                "TRWnoz.ups",                1,  "darwin", ["exactComparison"]),   \
-                 ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "darwin", ["exactComparison"]),   \
-                 ("DDT",                   "DDT.ups",                   1,  "darwin", ["exactComparison","no_dbg"]),    \
-                 ("InductionTime",         "InductionTime.ups",         1  ,"darwin", ["exactComparison","no_dbg"]),   \
-                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"darwin", ["exactComparison","no_dbg"])
+                 ("massX",                 "massX.ups",                 1,  "ALL", ["exactComparison"]),   \
+                 ("guni2dRT",              "guni2dRT.ups",              4,  "ALL", ["exactComparison"]),   \
+                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "ALL", ["exactComparison"]),   \
+                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "ALL", ["exactComparison"]),   \
+                 ("TRWnoz",                "TRWnoz.ups",                1,  "ALL", ["exactComparison"]),   \
+                 ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "ALL", ["exactComparison"]),   \
+                 ("DDT",                   "DDT.ups",                   1,  "ALL", ["exactComparison","no_dbg"]),    \
+                 ("InductionTime",         "InductionTime.ups",         1  ,"ALL", ["exactComparison","no_dbg"]),   \
+                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"ALL", ["exactComparison","no_dbg"]),   \
+                 ("massX",                 "massX.ups",                 1,  "ALL", ["exactComparison"]),   \
+                 ("guni2dRT",              "guni2dRT.ups",              4,  "ALL", ["exactComparison"]),   \
+                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "ALL", ["exactComparison"]),   \
+                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "ALL", ["exactComparison"]),   \
+                 ("TRWnoz",                "TRWnoz.ups",                1,  "ALL", ["exactComparison"]),   \
+                 ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "ALL", ["exactComparison"]),   \
+                 ("DDT",                   "DDT.ups",                   1,  "ALL", ["exactComparison","no_dbg"]),    \
+                 ("InductionTime",         "InductionTime.ups",         1  ,"ALL", ["exactComparison","no_dbg"]),   \
+                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"ALL", ["exactComparison","no_dbg"])
              ]
 DEBUGTESTS =[]
 #__________________________________
