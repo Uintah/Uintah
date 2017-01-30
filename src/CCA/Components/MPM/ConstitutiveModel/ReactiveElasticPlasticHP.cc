@@ -1519,7 +1519,7 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
 
       double meltOnsetTemp = Tm_cur - maxMeltTempBuffer;
 
-      //double enthalpyTolerance = 1e-12;
+      double enthalpyTolerance = 1e-12;
 //      if (dwi == 0 && (currStep%outputFreq==1))
 //        std::cerr << std::fixed << std::setw(3) << std::right << idx << " "
 //                  << std::fixed << std::setw(2) << std::right << oldTemp << " ";

@@ -101,8 +101,8 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   contactModel        = 0;
   thermalContactModel = 0;
   heatConductionModel = 0;
-//  NGP     = 1;
-//  NGN     = 1;
+  NGP     = 1;
+  NGN     = 1;
   d_recompile = false;
   dataArchiver = 0;
   d_loadCurveIndex=0;
@@ -3531,14 +3531,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup  * ,
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
 
-//          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
-          nodalFlux = ( gTemperatureRate[node] +
-                        frictionTempRate[node]*flags->d_addFrictionWork ) * S[k];
-          tempRate += (nodalFlux) + dTdt[node]*S[k];
+          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+          tempRate += (gTemperatureRate[node] + dTdt[node] +
+                       fricTempRate)   * S[k];
+          burnFraction += massBurnFrac[node]     * S[k];
+
+          nodalFlux = ( gTemperatureRate[node] + fricTempRate) * S[k];
           particleHeatFlux += nodalFlux;
 //          tempRate += (gTemperatureRate[node] + dTdt[node] +
 //                       fricTempRate)   * S[k];
-          burnFraction += massBurnFrac[node]     * S[k];
         }
 
         // Add external specific heat flux into particle.
