@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+  <Meta>
+      <title>Test the three region Mie-Gruneisen EOS </title>
+  </Meta>
+
+  <SimulationComponent type="mpm" />
+
+  <Time>
+      <maxTime>         0.1     </maxTime>     
+      <initTime>        0.0     </initTime>    
+      <delt_min>        1e-10   </delt_min>    
+      <delt_max>        0.001   </delt_max>    
+      <max_Timesteps>   50000      </max_Timesteps>
+      <timestep_multiplier> 0.1 </timestep_multiplier>
+  </Time>
+
+  <!--__________________________________-->
+  <DataArchiver>
+    <filebase>test3RMG.uda</filebase>
+    <outputInterval>0.005</outputInterval>
+<!--
+    <save label = "g.mass"/>
+    <save label = "g.velocity"/>
+    <save label = "g.velocity_star"/>
+    <save label = "g.acceleration"/>
+    <save label = "g.internalforce"/>
+    <save label = "p.refinedMPM"/>
+-->
+    <save label = "p.x"/>
+    <save label = "p.particleID"/>
+    <save label = "p.mass"/>
+    <save label = "p.volume"/>
+    <save label = "p.size"/>
+    <save label = "p.color"/>
+    <save label = "p.stress"/>
+    <save label = "p.scalefactor"/>
+    <save label = "p.displacement"/>
+    <save label = "p.deformationMeasure"/>
+    <save label = "p.velocity"/>
+    <checkpoint cycle = "2" timestepInterval = "10"/>
+  </DataArchiver>
+
+   <!--__________________________________-->
+   <MPM>
+     <time_integrator>       explicit  </time_integrator>
+     <interpolator>          fast_cpdi      </interpolator>
+     <withColor>             true      </withColor>
+     <UsePrescribedDeformation>    true    </UsePrescribedDeformation>
+     <PrescribedDeformationFile>   ftableTest3RMG.inp </PrescribedDeformationFile>
+     <UseGradientEnhancedVelocityProjection>false</UseGradientEnhancedVelocityProjection>
+   </MPM>
+
+   <PhysicalConstants>
+     <gravity>[0,0,0]</gravity>
+   </PhysicalConstants>
+
+   <!--__________________________________-->
+   <MaterialProperties>
+     <MPM>
+       <material name="something">
+        <density>5164.0</density>
+        <thermal_conductivity>134.</thermal_conductivity>
+        <specific_heat>536.0</specific_heat>
+        <room_temp>294.0</room_temp>
+        <melt_temp>925.0</melt_temp>
+        <constitutive_model type="elastic_plastic">
+         <initial_material_temperature>  294.0   </initial_material_temperature>
+         <shear_modulus>           26.0e9  </shear_modulus>
+         <bulk_modulus>            66.4e9 </bulk_modulus>
+         <coeff_thermal_expansion> 1.76e-5 </coeff_thermal_expansion>
+         <taylor_quinney_coeff>    0.9     </taylor_quinney_coeff>
+
+          <equation_of_state type = "three_region_mie_gruneisen">
+            <R1_C_0>5386</R1_C_0>
+            <R1_Gamma_0>1.99</R1_Gamma_0>
+            <R1_S_alpha>1.339</R1_S_alpha>
+            <R1_S_1>1.339</R1_S_1>
+            <R1_S_2>0.0</R1_S_2>
+
+            <R2_C_0>5386</R2_C_0>
+            <R2_Gamma_0>1.99</R2_Gamma_0>
+            <R2_S_alpha>1.339</R2_S_alpha>
+            <R2_S_2>0.0</R2_S_2>
+            <R2_S_3>0.0</R2_S_3>
+
+            <R3_C_0>5386</R3_C_0>
+            <R3_Gamma_0>1.99</R3_Gamma_0>
+            <R3_S_alpha>1.339</R3_S_alpha>
+            <R3_S_2>0.0</R3_S_2>
+            <R3_S_3>0.0</R3_S_3>
+          </equation_of_state>
+<!--
+          <equation_of_state type = "mie_gruneisen">
+            <C_0>5386</C_0>
+            <Gamma_0>1.99</Gamma_0>
+            <S_alpha>1.339</S_alpha>
+          </equation_of_state>
+-->
+
+          <flow_model type = "johnson_cook">
+            <A>324.0e6</A>
+            <B>114.0e6</B>
+            <C>0.002</C>
+            <n>0.42</n>
+            <m>1.34</m>
+          </flow_model>
+
+          <shear_modulus_model type = "constant_shear"> </shear_modulus_model>
+          <melting_temp_model type = "constant_Tm"> </melting_temp_model>
+          <yield_condition type = "vonMises"> </yield_condition>
+          <stability_check type = "none"> </stability_check>
+          <compute_specific_heat> false </compute_specific_heat>
+          <specific_heat_model type="constant_Cp">
+          </specific_heat_model>
+        </constitutive_model>
+
+         <geom_object>
+            <box label="gp1.2">
+                 <min>[-0.5,-0.5,-0.5 ]</min>
+                 <max>[ 0.5, 0.5, 0.5 ]</max>
+            </box>
+            <res>         [1,1,1]           </res>
+            <velocity>    [0.0,0.0,0.0]     </velocity>
+            <temperature>     294.          </temperature>
+            <color>            0            </color>
+         </geom_object>              
+       </material>
+       <contact>
+         <type>null</type>
+       </contact>
+     </MPM>
+   </MaterialProperties>
+
+   <Grid>
+      <!--__________________________________-->
+      <!--       3D    -->
+      <Level>
+        <Box label = "0">
+          <lower>       [-2.5,-2.5,-2.5]  </lower>
+          <upper>       [ 2.5, 2.5, 2.5]  </upper>
+          <resolution>  [5, 5, 5]         </resolution>
+          <patches>     [1,1,1]           </patches>
+          <extraCells>  [1,1,1]           </extraCells>
+        </Box>
+      </Level>
+      <!--__________________________________-->
+      <BoundaryConditions>
+      <Face side = "x-">
+         <BCType id = "all"   label = "Velocity" var = "Dirichlet">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "x+">
+         <BCType id = "all"   label = "Velocity" var = "Dirichlet">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "y-">
+         <BCType id = "all"   label = "Velocity" var = "Dirichlet">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "y+">
+         <BCType id = "all"   label = "Velocity" var = "Dirichlet">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "z-">
+         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+<!--
+         <BCType id = "all"   label = "Velocity" var = "Dirichlet">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+-->
+      </Face>
+      <Face side = "z+">
+         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+<!--
+         <BCType id = "all"   label = "Velocity" var = "Dirichlet">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+-->
+      </Face>
+      
+      </BoundaryConditions>
+   </Grid>
+   
+</Uintah_specification>
