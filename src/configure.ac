@@ -3957,6 +3957,13 @@ if test "$with_boost" != NOT_SET; then
       AC_MSG_ERROR( You cannot use --with-boost and --with-boost-include/--with-boost-library. )
    elif test "$with_boost" != "/usr"; then
       # Do not put /usr in the path, it is automatically there.
+
+      if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
+         # If configure specifies a boost dir, then ignore the system dirs to avoid 
+         # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
+         ignore_sys_libs="--sysroot=/junk"
+      fi
+
       BOOST_INCLUDE_DIR=$with_boost/include
       BOOST_LIBRARY_DIR=$with_boost/lib
    fi
@@ -3983,7 +3990,7 @@ if test "$with_boost" != NOT_SET -o "$with_boost_library" != NOT_SET; then
 
   _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem boost_date_time"
 
-  SCI_TRY_LINK(BOOST,[boost library (mt version) and include headers],$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
+  SCI_TRY_LINK(BOOST,[boost library (mt version) and include headers],$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,$ignore_sys_libs,,optional)
 
   #if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
   #  if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.a; then

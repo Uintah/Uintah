@@ -38475,6 +38475,13 @@ if test "$with_boost" != NOT_SET; then
       as_fn_error $? "You cannot use --with-boost and --with-boost-include/--with-boost-library. " "$LINENO" 5
    elif test "$with_boost" != "/usr"; then
       # Do not put /usr in the path, it is automatically there.
+
+      if test "$USING_GCC" = "yes" -o "$USING_ICC" = "yes"; then
+         # If configure specifies a boost dir, then ignore the system dirs to avoid
+         # finding the wrong version of boost.  I know that "--sysroot" works with gcc and icc...
+         ignore_sys_libs="--sysroot=/junk"
+      fi
+
       BOOST_INCLUDE_DIR=$with_boost/include
       BOOST_LIBRARY_DIR=$with_boost/lib
    fi
@@ -38540,7 +38547,7 @@ if test "$with_boost" != NOT_SET -o "$with_boost_library" != NOT_SET; then
 ## arg 4 : $BOOST_INCLUDE_DIR
 ## arg 5 : $_boost_libs_mt
 ## arg 6 : $BOOST_LIBRARY_DIR
-## arg 7 :
+## arg 7 : $ignore_sys_libs
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -38764,7 +38771,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs  $LIBS"
+LIBS="$_sci_libs $ignore_sys_libs $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"

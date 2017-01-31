@@ -63,15 +63,15 @@ public:
     if ( which_table == "NA" ){
       auto i = m_tables.begin();
       return i->second;
-    } else {
+    }
+    else {
       return m_tables[which_table];
     }
   }
 
   // HACK:
   // This is needed for the heat loss model in the current code
-  const TABLE_TYPE get_table_type(){ return m_table_type; }
-
+  TABLE_TYPE get_table_type(){ return m_table_type; }
 
 private:
 

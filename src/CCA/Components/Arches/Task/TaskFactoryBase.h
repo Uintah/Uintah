@@ -100,23 +100,20 @@ namespace Uintah{
     }
 
     /** @brief Test to see if a task exists **/
-    const bool has_task( const std::string name ){
+    bool has_task( const std::string name ){
 
-        std::vector<std::string>::const_iterator i_full_tasks
-          = std::find(_active_tasks.begin(), _active_tasks.end(), name);
-        std::vector<std::string>::const_iterator i_atomic_tasks
-          = std::find(_active_atomic_tasks.begin(), _active_atomic_tasks.end(), name);
+        std::vector<std::string>::const_iterator i_full_tasks   = std::find( _active_tasks.begin(), _active_tasks.end(), name );
+        std::vector<std::string>::const_iterator i_atomic_tasks = std::find( _active_atomic_tasks.begin(), _active_atomic_tasks.end(), name );
 
         if ( i_full_tasks == _active_tasks.end() && i_atomic_tasks == _active_atomic_tasks.end() ){
           return false;
         }
 
         return true;
-
     }
 
     virtual void add_task( ProblemSpecP& db ){
-      //The derived class must do this for each specific factory.
+      // The derived class must do this for each specific factory.
       throw InvalidValue("Error: This factory currently cannot add tasks on the fly.", __FILE__,__LINE__);
     }
 
@@ -130,14 +127,13 @@ namespace Uintah{
       for ( auto i = _atomic_tasks.begin(); i != _atomic_tasks.end(); i++ ){
         i->second->set_bcHelper( helper );
       }
-
     }
 
     /** @brief Allow the factory to specify the order of scheduling for its tasks for initialization**/
-    virtual void schedule_initialization( const LevelP& level,
-                                  SchedulerP& sched,
-                                  const MaterialSet* matls,
-                                  bool doing_restart ){
+    virtual void schedule_initialization( const LevelP      & level,
+                                                SchedulerP  & sched,
+                                          const MaterialSet * matls,
+                                                bool          doing_restart ){
       throw InvalidValue("Error: Task factory specific initialization for this factory is not implemented", __FILE__, __LINE__);
     }
 
@@ -160,7 +156,8 @@ namespace Uintah{
       if ( additional_info != "NA" ){
         msg << "     " << std::setw(6) << std::left << "Task: " << std::setw(20) << std::left << name << std::setw(6) << std::left << " Desc: " << std::setw(20) << std::left << type << " Additional Info: " << additional_info << std::endl;
         proc0cout << msg.str();
-      } else {
+      }
+      else {
         msg << "     " << std::setw(6) << std::left << "Task: " << std::setw(20) << std::left << name << std::setw(6) << std::left << " Desc: " << std::setw(20) << std::left << type << std::endl;
         proc0cout << msg.str();
       }
