@@ -31,7 +31,6 @@
 #include "PlasticityModels/YieldCondition.h"
 #include "PlasticityModels/StabilityCheck.h"
 #include "PlasticityModels/FlowModel.h"
-#include "PlasticityModels/DamageModel.h"
 #include "PlasticityModels/MPMEquationOfState.h"
 #include "PlasticityModels/ShearModulusModel.h"
 #include "PlasticityModels/MeltingTempModel.h"
@@ -101,13 +100,6 @@ namespace Uintah {
       std::string porosityDist; /*< Initial porosity distribution*/
     };
 
-    // Create datatype for storing damage parameters
-    struct ScalarDamageData {
-      double D0;     /*< Initial mean scalar damage */
-      double D0_std; /*< Initial standard deviation of scalar damage */
-      double Dc;     /*< Critical scalar damage */
-      std::string scalarDamageDist; /*< Initial damage distrinution */
-    };
 
     // Create a datatype for storing Cp calculation paramaters
     //struct CpData {
@@ -149,7 +141,6 @@ namespace Uintah {
 
     CMData           d_initialData;
     PorosityData     d_porosity;
-    ScalarDamageData d_scalarDam;
     //CpData           d_Cp;
     
     double d_tol;
@@ -159,7 +150,7 @@ namespace Uintah {
     bool   d_doIsothermal;
     bool   d_useModifiedEOS;
     bool   d_evolvePorosity;
-    bool   d_evolveDamage;
+    bool   d_useDamage;
     bool   d_computeSpecificHeat;
     bool   d_checkTeplaFailureCriterion;
     bool   d_doMelting;
@@ -174,7 +165,6 @@ namespace Uintah {
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
     FlowModel*          d_flow;
-    DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
     ShearModulusModel*  d_shear;
     MeltingTempModel*   d_melt;
@@ -291,7 +281,8 @@ namespace Uintah {
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
+                                    ParticleVariable<int>& damage, 
+                                    int dwi,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
 
