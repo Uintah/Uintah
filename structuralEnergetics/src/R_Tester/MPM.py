@@ -50,7 +50,8 @@ NIGHTLYTESTS = [
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "ALL", ["exactComparison"] ),
                   ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_rad_ret.ups",       1,  "ALL", ["exactComparison"] ),
                   ("Charpy",                              "Charpy.ups",                              8,  "ALL", ["exactComparison"] ),
-                    ("NanoPillar", "ARL/NanoPillar2D_FBC_Sym.ups",                                   1,  "ALL", ["no_dbg","exactComparison"] ),
+                  
+#                 ("NanoPillar", "ARL/NanoPillar2D_FBC_Sym.ups",                                   1,  "ALL", ["no_dbg","exactComparison"] ),
                   #("AreniscaTest_01_UniaxialStrainRotate",                  "./Arenisca/AreniscaTest_01_UniaxialStrainRotate.ups",                  1,  "ALL", ["exactComparison"] ),
                   #("AreniscaTest_02_VertexTreatment",                       "./Arenisca/AreniscaTest_02_VertexTreatment.ups",                       1,  "ALL", ["exactComparison"] ),
                   #("AreniscaTest_03a_UniaxialStrain_NoHardening",           "./Arenisca/AreniscaTest_03a_UniaxialStrain_NoHardening.ups",           1,  "ALL", ["exactComparison"] ),
@@ -65,33 +66,6 @@ NIGHTLYTESTS = [
                   #("AreniscaTest_10_PureIsochoricStrainRates",              "./Arenisca/AreniscaTest_10_PureIsochoricStrainRates.ups",              1,  "ALL", ["exactComparison"] ),
                   #("AreniscaTest_11_UniaxialStrainJ2plasticity",            "./Arenisca/AreniscaTest_11_UniaxialStrainJ2plasticity.ups",            1,  "ALL", ["exactComparison"] ),
 
-                  #----------  ALL Tests ---------  #
-                  ("disks_complex",                       "disks_complex.ups",                       4,  "ALL", ["doesTestRun"]    ),
-                  ("heatcond2mat",                        "heatcond2mat.ups",                        1,  "ALL", ["doesTestRun"]    ),
-                  ("inclined_plane_sphere",               "inclined_plane_sphere.ups",               1,  "ALL", ["doesTestRun"]    ),
-                  ("const_test_cmr",                      "const_test_cmr.ups",                      1,  "ALL", ["doesTestRun"]    ),
-                  ("const_test_nhp",                      "const_test_nhp.ups",                      1,  "ALL", ["doesTestRun"]    ),
-                  ("adiCuJC4000s696K",                    "adiCuJC4000s696K.ups",                    1,  "ALL", ["doesTestRun"]    ),
-                  ("adiCuMTS4000s696K",                   "adiCuMTS4000s696K.ups",                   1,  "ALL", ["doesTestRun"]    ),
-                  ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",                   1,  "ALL", ["doesTestRun"]    ),
-                  ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",                   1,  "ALL", ["doesTestRun"]    ),
-                  ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "ALL", ["doesTestRun"]    ),
-                  ("test_cyl_pene_no_ero",                "test_cyl_pene_no_ero.ups",                1,  "ALL", ["doesTestRun"]    ),
-                  ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "ALL", ["doesTestRun"]    ),
-
-                  #("AreniscaTest_01_UniaxialStrainRotate",                  "./Arenisca/AreniscaTest_01_UniaxialStrainRotate.ups",                  1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_02_VertexTreatment",                       "./Arenisca/AreniscaTest_02_VertexTreatment.ups",                       1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_03a_UniaxialStrain_NoHardening",           "./Arenisca/AreniscaTest_03a_UniaxialStrain_NoHardening.ups",           1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_03b_UniaxialStrain_wIsotropicHardening",   "./Arenisca/AreniscaTest_03b_UniaxialStrain_wIsotropicHardening.ups",   1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_03c_UniaxialStrain_wKinematicHardening",   "./Arenisca/AreniscaTest_03c_UniaxialStrain_wKinematicHardening.ups",   1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_04_CurvedYieldSurface",                    "./Arenisca/AreniscaTest_04_CurvedYieldSurface.ups",                    1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_05_HydrostaticCompressionFixedCap",        "./Arenisca/AreniscaTest_05_HydrostaticCompressionFixedCap.ups",        1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_06_UniaxialStrainCapEvolution",            "./Arenisca/AreniscaTest_06_UniaxialStrainCapEvolution.ups",            1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_07_HydrostaticCompressionCapEvolution",    "./Arenisca/AreniscaTest_07_HydrostaticCompressionCapEvolution.ups",    1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_08_LoadingUnloading",                      "./Arenisca/AreniscaTest_08_LoadingUnloading.ups",                      1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_09_FluidFilledPoreSpace",                  "./Arenisca/AreniscaTest_09_FluidFilledPoreSpace.ups",                  1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_10_PureIsochoricStrainRates",              "./Arenisca/AreniscaTest_10_PureIsochoricStrainRates.ups",              1,  "ALL", ["exactComparison"] ),
-                  #("AreniscaTest_11_UniaxialStrainJ2plasticity",            "./Arenisca/AreniscaTest_11_UniaxialStrainJ2plasticity.ups",            1,  "ALL", ["exactComparison"] ),
             ]
 
 AMRTESTS = [
@@ -123,9 +97,12 @@ ARENATESTS = [
 
 
 # Tests that are run during local regression testing
+LOCALTESTS   = NIGHTLYTESTS
+
 NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS
 
-LOCALTESTS = NIGHTLYTESTS
+
+
 DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "ALL", ["exactComparison"] ),
              ("test_cyl_pene_no_ero",  "test_cyl_pene_no_ero.ups",    4,  "ALL", ["exactComparison"] ),
             ]
