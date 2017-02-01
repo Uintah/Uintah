@@ -17,7 +17,7 @@
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>const_test_brittle_damage.uda</filebase>
+        <filebase>const_test_brittle_damage.GS.uda</filebase>
        <outputInterval>1.0e-4</outputInterval>
 <!--
         <save label = "NTractionZMinus"/>

@@ -120,24 +120,36 @@ ARENATESTS = [
                    "Linux", 
                    ["exactComparison"] ),
             ]
-
+            
+              #__________________________________
+              # Tests that exercise the damage models
+DAMAGETESTS = [   ("const_test_brittle_damage", "const_test_brittle_damage.ups",        1,  "Linux", ["exactComparison"] ),
+                  ("PressSmoothCylCBDI",        "PressSmoothCylCBDI.ups",               16, "Linux", ["exactComparison"] ),
+                  ("disks_complex",             "disks_complex.ups",                    4,  "Linux", ["exactComparison"] ),
+                  ("halfSpaceUCNH_EP_JWLMPM",   "ONR-MURI/halfSpaceUCNH_EP_JWLMPM.ups", 16, "Linux", ["exactComparison"] ),
+              ]
+                  
 
 # Tests that are run during local regression testing
 NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS
 
 LOCALTESTS = NIGHTLYTESTS
-DEBUGTESTS =[]
+DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "Linux", ["exactComparison"] ),
+             ("test_cyl_pene_no_ero",  "test_cyl_pene_no_ero.ups",    4,  "Linux", ["exactComparison"] ),
+            ]
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS
+#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS
 #__________________________________
 
 # returns the list
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
+  elif me == "DAMAGETESTS":
+    TESTS = DAMAGETESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
