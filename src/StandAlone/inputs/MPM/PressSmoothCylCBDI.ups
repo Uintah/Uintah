@@ -11,11 +11,12 @@
    <SimulationComponent type="mpm" />
 
    <Time>
-       <maxTime>            50.0         </maxTime>
+       <maxTime>            50.0        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
-       <delt_max>           0.01724        </delt_max>
+       <delt_max>           0.01724     </delt_max>
        <delt_init>          1.0e-9      </delt_init>
+       <max_Timesteps>        500       </max_Timesteps>
        <timestep_multiplier>0.5         </timestep_multiplier>
    </Time>    
 
