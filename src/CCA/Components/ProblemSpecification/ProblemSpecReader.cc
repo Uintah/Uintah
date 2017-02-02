@@ -648,10 +648,14 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   vector<char> separators;
   separators.push_back( '\'' );
 
-  vector<string> specs = split_string( specStr, separators );
+  // remove leading and tailing blanks, tabs, \n, \r
+  string specStr_clean = specStr;
+  collapse( specStr_clean );
+  
+  vector<string> specs = split_string( specStr_clean, separators );
 
   if( specs.size() < 1 || specs.size() > 2 ) {
-    throw ProblemSetupException( "Error in getNeedAndTypeAndValidValues()...", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error in getNeedAndTypeAndValidValues()...(" + specStr_clean + ")", __FILE__, __LINE__ );
   }
 
   separators.clear();
@@ -982,6 +986,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         else if( attrName.find( "need_applies_to") == 0 ) {  // attribute string begins with "children"
 
           string attrStr = (const char *)( child->children->content );
+          
           vector<string> strings;
           vector<char> separators;
 
@@ -1022,7 +1027,8 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
             }
 
             if( !attribute->validateString( value ) ) {
-              throw ProblemSetupException( value + " is not a valid value for attribute " + attribute->getCompleteName(),
+              throw ProblemSetupException( "("+ value + ") is not a valid value for attribute " + attribute->getCompleteName() +
+                                           "\nIf the value is wrapped in ' (single quotes) remove them.",  
                                            __FILE__, __LINE__ );
             }
 
