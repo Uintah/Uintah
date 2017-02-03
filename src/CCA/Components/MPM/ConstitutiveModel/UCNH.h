@@ -137,8 +137,6 @@ namespace Uintah {
     const VarLabel* pYieldStressLabel_preReloc;
       
   protected:
-    // Flags indicating if damage and/or plasticity should be used
-    bool d_useDamage;
     bool d_usePlasticity;
       
     // Basic Requirements //
@@ -149,6 +147,9 @@ namespace Uintah {
       
     // Damage Requirments //
     ////////////////////////
+    enum DamageAlgo { threshold, brittle, none };
+    DamageAlgo d_damageType;
+    bool d_useDamage;
     YieldDistribution d_yield;
     FailureStressOrStrainData d_epsf;
     BrittleDamageData d_brittle_damage;
@@ -158,7 +159,6 @@ namespace Uintah {
     bool d_allowNoTension;  /* retain compressive mean stress after failue*/
     bool d_allowNoShear;    /* retain mean stress after failure - no deviatoric stress */
                             /* i.e., no deviatoric stress */
-    bool d_brittleDamage;   /* use brittle damage with mesh size control*/
 
     std::string d_failure_criteria; /* Options are:  "MaximumPrincipalStrain" */
                                     /* "MaximumPrincipalStress", "MohrColoumb"*/
@@ -319,8 +319,10 @@ namespace Uintah {
     void setFailureStressOrStrainData(const UCNH* cm);      
 
     void setBrittleDamageData(const UCNH* cm);
-      
-    void initializeLocalMPMLabels();
+    
+    void createDamageLabels();
+    
+    void createPlasticityLabels();
       
     void setErosionAlgorithm();
       
