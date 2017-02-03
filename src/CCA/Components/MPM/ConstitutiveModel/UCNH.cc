@@ -378,7 +378,6 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   cm_ps->appendElement("shear_modulus",            d_initialData.tauDev);
   cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
   cm_ps->appendElement("usePlasticity",            d_usePlasticity);
-  cm_ps->appendElement("useDamage",                d_useDamage);
 
   // Plasticity
   if(d_usePlasticity) {
