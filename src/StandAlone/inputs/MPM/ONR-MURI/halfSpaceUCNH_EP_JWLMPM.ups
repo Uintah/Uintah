@@ -27,7 +27,8 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>halfSpaceUCNH_EP_JWLMPM.uda</filebase>
-      <outputTimestepInterval> 20 </outputTimestepInterval>
+<!--  <outputTimestepInterval> 20 </outputTimestepInterval>  -->
+      <outputTimestepInterval> 2 </outputTimestepInterval>
       <save label = "g.mass"/>
       <save label = "g.stressFS"/>
       <save label = "p.x"/>
@@ -54,8 +55,8 @@
       <save label = "delP_MassX"/>
       <save label = "p.localized"/>
 -->
-
-      <checkpoint cycle = "2" timestepInterval = "100"/>
+      <checkpoint cycle = "2" timestepInterval = "2"/>
+<!--  <checkpoint cycle = "2" timestepInterval = "100"/>  -->
    </DataArchiver>
 
     <!--____________________________________________________________________-->

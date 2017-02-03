@@ -36,7 +36,8 @@
        <save label = "p.particleID"/>
        <save label = "g.mass"/>
        <save label = "g.stressFS"/>
-       <checkpoint cycle = "2" interval = "0.1"/>
+<!--   <checkpoint cycle = "2" interval = "0.1"/> -->
+       <checkpoint cycle = "2" interval = "1.0e-4"/>
    </DataArchiver>
 
     <MPM>
