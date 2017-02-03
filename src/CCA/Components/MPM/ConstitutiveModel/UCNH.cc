@@ -1692,6 +1692,8 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
   Matrix3 Identity, zero(0.0); Identity.Identity();
 
   // Find if the particle has failed  
+  pLocalized_new = pLocalized;
+  pTimeOfLoc_new = pTimeOfLoc;
   if (pLocalized == 0){
     if(d_failure_criteria=="MaximumPrincipalStress"){
       double maxEigen=0.,medEigen=0.,minEigen=0.;
