@@ -72,24 +72,50 @@
     <check_max_stress_failure      spec="OPTIONAL BOOLEAN" />
     <check_TEPLA_failure_criterion spec="OPTIONAL BOOLEAN" />
     <check_failure                 spec="OPTIONAL BOOLEAN" />
-    <failure_variable_mean         spec="OPTIONAL DOUBLE" />
-    <failure_variable_std          spec="OPTIONAL DOUBLE" />
-    <failure_variable_distrib      spec="OPTIONAL STRING" />
-    <failure_criteria              spec="OPTIONAL STRING" /> <!-- Options are: MaximumPrincipalStress, MaximumPrincipalStrain and MohrColoumb -->
-    <!-- The following three are for UCNH with failureCriteria of MohrColoumb-->
-    <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE" /> <!-- Range from 0 to infinity -->
-    <friction_angle                spec="OPTIONAL DOUBLE" /> <!-- In degrees -->
+    <failure_variable_mean         spec="OPTIONAL DOUBLE"/>
+    <failure_variable_std          spec="OPTIONAL DOUBLE"/>
+    <failure_variable_distrib      spec="OPTIONAL STRING"/>
+    
+    <!--__________________________________-->
+    <!-- Damage models -->
+    <damage                        spec="OPTIONAL NO_DATA"
+                                     attribute1="type REQUIRED STRING 'Brittle,Threshold'" >
+           
+           <!-- Threshold     -->      
+      <failure_mean         spec="REQUIRED DOUBLE 'positive'"     need_applies_to="type Threshold"/>
+      <failure_std          spec="OPTIONAL DOUBLE 'positive'"     need_applies_to="type Threshold"/>
+      <failure_distrib      spec="REQUIRED STRING 'constant, weibull, gauss'" 
+                                                                  need_applies_to="type Threshold"/>
+      <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrColoumb'" 
+                                                                  need_applies_to="type Threshold"/> 
+      <friction_angle       spec="OPTIONAL DOUBLE"                need_applies_to="type Threshold"/> 
+      <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
+                                                                  need_applies_to="type Threshold"/> 
 
- <!-- BrittleDamage in UCNH for cnh_damage -->
-      <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE" />
-      <brittle_damage_fracture_energy    spec="OPTIONAL DOUBLE" />
-      <brittle_damage_constant_D         spec="OPTIONAL DOUBLE" />
-      <brittle_damage_max_damage_increment  spec="OPTIONAL DOUBLE" />
-      <brittle_damage_allowRecovery      spec="OPTIONAL BOOLEAN" />
-      <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE" />
-      <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN" />
+           <!-- Brittle       -->
+      <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+      <brittle_damage_fracture_energy    spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+      <brittle_damage_constant_D         spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+      <brittle_damage_max_damage_increment  spec="OPTIONAL DOUBLE"  need_applies_to="type Brittle"/>
+      <brittle_damage_allowRecovery      spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
+      <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+      <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
 
-
+    </damage>
+    
+    <!-- Biswajits Model -->
+    <damage_model                  spec="OPTIONAL NO_DATA"
+                                     attribute1="type REQUIRED STRING 'hancock_mackenzie, johnson_cook, none'" >
+      <Dc                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: what are these for? -->
+      <D0                          spec="OPTIONAL DOUBLE" />
+      <D1                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is tihs?  is it really optional? -->
+      <D2                          spec="OPTIONAL DOUBLE" />
+      <D3                          spec="OPTIONAL DOUBLE" />
+      <D4                          spec="OPTIONAL DOUBLE" />
+      <D5                          spec="OPTIONAL DOUBLE" />
+    </damage_model>
+    <!--__________________________________-->
+    
     <Chi                           spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? -->
     <coeff_thermal_expansion       spec="OPTIONAL DOUBLE" />
     <CoeffThermalExpansion         spec="OPTIONAL DOUBLE" />
@@ -103,17 +129,7 @@
     <critical_scalar_damage        spec="OPTIONAL DOUBLE" />
     <critical_stress               spec="OPTIONAL DOUBLE" />
     <damage_cutoff                 spec="OPTIONAL DOUBLE" />
-    <damage_model                  spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'hancock_mackenzie, johnson_cook, none'" >
-      <Dc                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: what are these for? -->
-      <D0                          spec="OPTIONAL DOUBLE" />
-      <D1                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is tihs?  is it really optional? -->
-      <D2                          spec="OPTIONAL DOUBLE" />
-      <D3                          spec="OPTIONAL DOUBLE" />
-      <D4                          spec="OPTIONAL DOUBLE" />
-      <D5                          spec="OPTIONAL DOUBLE" />
-    </damage_model>
-
+    
     <deviatoric_stress_model       spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'hypoElastic, hypoViscoElastic'"
                                         need_applies_to="type elastic_plastic elastic_plastic_hp rf_elastic_plastic" >
@@ -377,7 +393,6 @@
     <t6                            spec="OPTIONAL DOUBLE" />
     <taylor_quinney_coeff          spec="OPTIONAL DOUBLE" />
     <tolerance                     spec="OPTIONAL DOUBLE" />
-    <useDamage                     spec="OPTIONAL BOOLEAN" />
     <useJWLEOS                     spec="OPTIONAL BOOLEAN" />
     <useJWLCEOS                    spec="OPTIONAL BOOLEAN" />
     <useMurnaghanEOS               spec="OPTIONAL BOOLEAN" />
