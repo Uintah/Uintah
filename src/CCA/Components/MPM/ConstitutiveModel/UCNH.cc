@@ -47,77 +47,14 @@
 using namespace std;
 using namespace Uintah;
 
-// Constructors //
-//////////////////
-UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
-  : ConstitutiveModel(Mflag), ImplicitCM()
-{
-  d_useModifiedEOS = false;
-  ps->require("bulk_modulus",         d_initialData.Bulk);
-  ps->require("shear_modulus",        d_initialData.tauDev);
-  ps->get("useModifiedEOS",           d_useModifiedEOS); 
-  d_8or27=Mflag->d_8or27;
-  
-  //__________________________________
-  // Plasticity
-  ps->getWithDefault("usePlasticity", d_usePlasticity, false);
-  
-  if(d_usePlasticity) {
-    ps->getWithDefault("alpha",       d_initialData.Alpha,0.0);
-    ps->require("yield_stress",       d_initialData.FlowStress);
-    ps->require("hardening_modulus",  d_initialData.K);
-
-    getYieldStressDistribution(ps);
-      
-    createPlasticityLabels();
-  }
-  
-  //__________________________________
-  //  Damage
-  d_useDamage = false;
-  ProblemSpecP damage_ps = ps->findBlock("damage");
-
-  if (damage_ps){  
-    d_useDamage = true;
-  
-    createDamageLabels();
-    
-    string type = "null_ptr";
-    damage_ps->getAttribute("type", type);
-    
-    if ( type  == "Brittle") {
-      getBrittleDamageData( damage_ps );
-      d_damageType = brittle;
-    
-    } else if (type == "Threshold") {
-      getFailureStressOrStrainData( damage_ps );
-      d_damageType = threshold;
-    }
-
-    setErosionAlgorithm();
-  } // End Damage
-  
-  // Initial stress
-  // Fix: Need to make it more general.  Add gravity turn-on option and 
-  //      read from file option etc.
-  ps->getWithDefault("useInitialStress", d_useInitialStress, false);
-  d_init_pressure = 0.0;
-  if (d_useInitialStress) {
-    ps->getWithDefault("initial_pressure", d_init_pressure, 0.0);
-  } 
-
-  // Universal Labels
-  bElBarLabel                = VarLabel::create("p.bElBar",
-                               ParticleVariable<Matrix3>::getTypeDescription());
-  bElBarLabel_preReloc       = VarLabel::create("p.bElBar+",
-                               ParticleVariable<Matrix3>::getTypeDescription());
-}
-
+//______________________________________________________________________
+//
 //______________________________________________________________________
 //
 UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 : ConstitutiveModel(Mflag), ImplicitCM()
 {
+
   d_useModifiedEOS = false;
   ps->require("bulk_modulus",         d_initialData.Bulk);
   ps->require("shear_modulus",        d_initialData.tauDev);
@@ -177,6 +114,7 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
                              ParticleVariable<Matrix3>::getTypeDescription());
   bElBarLabel_preReloc       = VarLabel::create("p.bElBar+",
                              ParticleVariable<Matrix3>::getTypeDescription());
+
 }
 //______________________________________________________________________
 //  Labels needed for damage

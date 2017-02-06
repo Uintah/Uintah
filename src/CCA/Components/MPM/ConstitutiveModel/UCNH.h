@@ -191,8 +191,7 @@ namespace Uintah {
     //friend const TypeDescription* fun_getTypeDescriptiont(StateData*);
 
   public:
-    // constructors
-    UCNH(ProblemSpecP& ps, MPMFlags* flag);
+    // constructor
     UCNH(ProblemSpecP& ps, MPMFlags* flag, bool plas, bool dam);
     UCNH(const UCNH* cm);
 
