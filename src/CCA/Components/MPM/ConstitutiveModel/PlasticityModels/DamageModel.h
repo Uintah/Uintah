@@ -77,6 +77,8 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        const double& tolerance,
                                        const double& damage_old) = 0;
+    virtual void doSomething(){
+    };
 
   };
 } // End namespace Uintah
