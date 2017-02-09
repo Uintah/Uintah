@@ -231,13 +231,13 @@ int fastCpdiInterpolator::findCellAndWeights(const Point& pos,
     fx1 = 1-fx;
     fy1 = 1-fy;
     fz1 = 1-fz;
-   
+
     // grid offset variables so we only have to iterate over 
-    // two closes nodes each time we look at a corner 
+    // two closest nodes each time we look at a corner 
     xM = (int)(ccx[i] - minX);
     yM = (int)(ccy[i] - minY);
     zM = (int)(ccz[i] - minZ);
-   
+
     // Uses a array index system like:
     //       24---25--26
     //      /    /   / |
