@@ -3469,7 +3469,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,       pset);
       pids_new.copyData(pids);
-      psizeNew.copyData(psize);
+//      psizeNew.copyData(psize);
 
       //Carry forward color particle (debugging label)
       if (flags->d_with_color) {
@@ -3558,7 +3558,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
-  
+          psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
+
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
           ke += .5*pmass[idx]*pvelnew[idx].length2();
           CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
@@ -3601,6 +3602,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+          psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
   
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
           ke += .5*pmass[idx]*pvelnew[idx].length2();
@@ -3723,7 +3725,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pVelGrad[idx]+= Identity*((log(J_CC[cell_index]/J))/ThreedelT);
 
           double JOld=pFOld[idx].Determinant();
-          pvolume[idx]=pVolumeOld[idx]*(J/JOld);
+          pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
         }
       } //end of pressureStabilization loop  at the patch level
 
