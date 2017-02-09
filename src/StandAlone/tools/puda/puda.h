@@ -36,8 +36,6 @@ namespace Uintah {
     bool do_listvars;
     bool do_varsummary;
     bool be_brief;
-    bool do_monica1;
-    bool do_monica2;
     bool do_pressure;
     bool do_jacquie;
     bool do_jim1;
@@ -98,8 +96,6 @@ namespace Uintah {
       do_jim2       = false;
       do_PIC        = false;
       do_POL        = false;
-      do_monica1    = false;
-      do_monica2    = false;
       do_pressure   = false;
       do_jacquie    = false;
       do_partvar    = false;
