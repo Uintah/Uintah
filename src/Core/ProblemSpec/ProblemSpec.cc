@@ -1611,6 +1611,21 @@ ProblemSpec::getNextSibling()
 
 //______________________________________________________________________
 //
+ProblemSpecP
+ProblemSpec::getParent() 
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getParent()");
+  xmlNode* d = d_node->parent;
+  if( d ) {
+    return scinew ProblemSpec( d, false );
+  }
+  else {
+    return 0;
+  }
+}
+
+//______________________________________________________________________
+//
 string
 ProblemSpec::getNodeValue() 
 {
