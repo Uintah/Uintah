@@ -22,11 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-
 #include "DamageModelFactory.h"
 #include "NullDamage.h"
 #include "JohnsonCookDamage.h"
 #include "HancockMacKenzieDamage.h"
+#include "ThresholdDamage.h"
+#include "BrittleDamage.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -39,33 +40,42 @@ using namespace std;
 using namespace Uintah;
 //______________________________________________________________________
 //
-DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
+DamageModel* DamageModelFactory::create(ProblemSpecP& ps,
+                                        MPMFlags* flags)
 {
   ProblemSpecP child = ps->findBlock("damage_model");
+//  ProblemSpecP child = ps->findBlock("damage");
   if(!child) {
     proc0cout << "**WARNING** Creating default null damage model" << endl;
-    return(scinew NullDamage());
+    return( scinew NullDamage() );
     //throw ProblemSetupException("Cannot find damage_model tag", __FILE__, __LINE__);
   }
   
-  string mat_type;
-  if(!child->getAttribute("type", mat_type)){
+  string dam_type;
+  if(!child->getAttribute("type", dam_type)){
     throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
   }
   
-  if (mat_type == "johnson_cook"){
-    return(scinew JohnsonCookDamage(child));
+  if (dam_type == "johnson_cook"){
+    return( scinew JohnsonCookDamage(child) );
   }
-  else if (mat_type == "hancock_mackenzie") {
-    return(scinew HancockMacKenzieDamage(child));
+  else if (dam_type == "hancock_mackenzie") {
+    return( scinew HancockMacKenzieDamage(child) );
   }
-  else if (mat_type == "none") {
-    return(scinew NullDamage(child));
+
+  else if (dam_type == "Threshold") {
+    return( scinew ThresholdDamage(child, flags) );
+  }
+  else if (dam_type == "Brittle") {
+    return( scinew BrittleDamage(child) );
+  }
+  else if (dam_type == "none") {
+    return(scinew NullDamage(child) );
   }
   else {
     proc0cout << "**WARNING** Creating default null damage model" << endl;
     return(scinew NullDamage(child));
-    //throw ProblemSetupException("Unknown Damage Model ("+mat_type+")", __FILE__, __LINE__);
+    //throw ProblemSetupException("Unknown Damage Model ("+dam_type+")", __FILE__, __LINE__);
   }
 }
 //______________________________________________________________________

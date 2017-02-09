@@ -46,30 +46,18 @@ namespace Uintah {
   class DamageModel {
   public:
          
+    enum DamageAlgo { threshold, brittle, none };
+    DamageAlgo Algorithm = none;
+
     DamageModel();
     virtual ~DamageModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
          
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Initialize the damage parameter in the calling function
-    */
-    //////////////////////////////////////////////////////////////////////////
     virtual double initialize() = 0;
 
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Determine if damage has crossed cut off
-    */
-    //////////////////////////////////////////////////////////////////////////
     virtual bool hasFailed(double damage) = 0;
     
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Calculate the scalar damage parameter 
-    */
-    //////////////////////////////////////////////////////////////////////////
     virtual double computeScalarDamage(const double& plasticStrainRate,
                                        const Matrix3& stress,
                                        const double& temperature,
@@ -77,9 +65,29 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        const double& tolerance,
                                        const double& damage_old) = 0;
-    virtual void doSomething(){
-    };
+                                       
+    // Modify the stress if particle has failed
+    virtual 
+    void updateFailedParticlesAndModifyStress2(const Matrix3& FF,
+                                               const double& pFailureStrain,
+                                               const int& pLocalized,
+                                               int& pLocalized_new,
+                                               const double& pTimeOfLoc,
+                                               double& pTimeOfLoc_new,
+                                               Matrix3& pStress_new,
+                                               const long64 particleID,
+                                               double time);
 
+    // Modify the stress for brittle damage
+    virtual
+    void updateDamageAndModifyStress2(const Matrix3& FF,
+                                      const double&  pFailureStrain,
+                                      double&        pFailureStrain_new,
+                                      const double&  pVolume,
+                                      const double&  pDamage,
+                                      double&        pDamage_new,
+                                      Matrix3&       pStress_new,
+                                      const long64   particleID);
   };
 } // End namespace Uintah
       

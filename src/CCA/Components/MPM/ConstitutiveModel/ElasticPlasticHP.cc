@@ -146,7 +146,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  d_damage = DamageModelFactory::create(ps);
+  d_damage = DamageModelFactory::create(ps, flag);
   if(!d_damage){
     ostringstream desc;
     desc << "An error occured in the DamageModelFactory that has \n"
