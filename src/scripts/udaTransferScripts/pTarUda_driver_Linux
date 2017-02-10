@@ -5,6 +5,7 @@
 # The orginal directories are not removed.
 #_____________________________________________________________________.
 
+SHELL = /bin/bash
 FILES      := $(shell cat $(PTAR_FILES))
 TAR_FILES  := $(wildcard *.tar)
 
