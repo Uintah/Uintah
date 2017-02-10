@@ -21,19 +21,38 @@ all: $(STAMP_DIR)/stamp $(DESTS)
 $(STAMP_DIR)/stamp:
 	mkdir $@
 
+#__________________________________
+#   CHECKPOINTS
+#
 $(STAMP_DIR)/stamp/./checkpoints/% :
 	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
-	@echo "Tarring checkpoints/`basename $@`"
-	if test -d checkpoints/`basename $@`; then \
-	  ${TAR} cBf checkpoints/`basename $@`.tar checkpoints/`basename $@`;\
+
+	@echo "Working on checkpoints/`basename $@`"
+	if test -a checkpoints/`basename $@`; then 				\
+	  if test ${createExtract} == "create"; then 				\
+	    ${TAR} checkpoints/`basename $@`.tar.gz checkpoints/`basename $@`;	\
+	  fi;									\
+	  if test ${createExtract} == "extract"; then 				\
+	    ${TAR} checkpoints/`basename $@`;					\
+	  fi;									\
 	fi
-	@echo "Finished tarring checkpoints/`basename $@`"
+	@echo "Finished ${createExtract} checkpoints/`basename $@`"
 	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
 
+
+#__________________________________
+#  ALL OTHER DIRS
+#
 $(STAMP_DIR)/stamp/% :
-	@echo "Tarring `basename $@`"
-	if test -d `basename $@`; then \
-	  ${TAR} cBf `basename $@`.tar `basename $@`;\
-	fi
-	@echo "Finished tarring `basename $@`"
+	@echo "  Working on `basename $@`"
+	if test -a `basename $@`; then 			\
+	  if test ${createExtract} == "create"; then 	\
+	   ${TAR} `basename $@`.tar.gz `basename $@`;	\
+	  fi;						\
+          if test ${createExtract} == "extract"; then 	\
+	    ${TAR} `basename $@`;			\
+	  fi;						\
+        fi
+	@echo "Finished ${createExtract} `basename $@`"
 	@touch $(STAMP_DIR)/stamp/`basename $@`
+
