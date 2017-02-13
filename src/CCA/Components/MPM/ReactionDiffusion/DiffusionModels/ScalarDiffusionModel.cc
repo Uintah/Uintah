@@ -22,9 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/BinaryEquation.h>
-#include <CCA/Components/MPM/ReactionDiffusion/FixedEquation.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/BinaryEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/FixedEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
@@ -42,21 +42,32 @@ using namespace Uintah;
 static DebugStream cout_doing("AMRMPM", false);
 
 
-ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS,
-                                           MPMFlags* Mflag, std::string diff_type)
+ScalarDiffusionModel::ScalarDiffusionModel(
+                                           ProblemSpecP     & ps,
+                                           SimulationStateP & sS,
+                                           MPMFlags         * Mflag,
+                                           std::string        diff_type,
+                                           Matrix3            latticeDistortion /* = I */
+                                          ) : d_StrainFreeExpansion(latticeDistortion)
 {
   d_Mflag = Mflag;
   d_sharedState = sS;
 
   d_lb = scinew MPMLabel;
 
-  ps->require("diffusivity", diffusivity);
-  ps->require("max_concentration", max_concentration);
+  ps->require("diffusivity", d_D0);
+  ps->require("max_concentration", d_MaxConcentration);
+  ps->getWithDefault("initial_concentration", d_InitialConcentration, 0.0);
 
-  if(d_Mflag->d_8or27==8){
+  d_InverseMaxConcentration = 1.0/d_MaxConcentration;
+
+  if(d_Mflag->d_8or27==8)
+  {
     NGP=1;
     NGN=1;
-  } else {
+  }
+  else
+  {
     NGP=2;
     NGN=2;
   }
@@ -95,61 +106,43 @@ ScalarDiffusionModel::~ScalarDiffusionModel() {
   }
 }
 
-std::string ScalarDiffusionModel::getDiffusionType(){
+Matrix3 ScalarDiffusionModel::getStressFreeExpansionMatrix() const
+{
+  return d_StrainFreeExpansion;
+}
+
+// Common functions for all diffusion models
+std::string ScalarDiffusionModel::getDiffusionType() const
+{
   return diffusion_type;
 }
 
-double ScalarDiffusionModel::getMaxConcentration(){
-  return max_concentration;
+double ScalarDiffusionModel::getMaxConcentration() const
+{
+  return d_MaxConcentration;
 }
 
 void ScalarDiffusionModel::setIncludeHydroStress(bool value){
   include_hydrostress = value;
 }
 
-void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
-                                                   const MPMMaterial* matl,
-                                                   const PatchSet* patch) const{
-}
-
-void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* new_dw)
-{
-}
-
-void ScalarDiffusionModel::initializeTimeStep(const Patch* patch,
-                                              const MPMMaterial* matl,
-                                              DataWarehouse* new_dw)
+void ScalarDiffusionModel::initializeTimeStep(
+                                              const Patch         * patch,
+                                              const MPMMaterial   * matl,
+                                                    DataWarehouse * new_dw
+                                             )
 {
   Vector dx = patch->dCell();
   double timestep = 1.0e99;
-  timestep = std::min(timestep, computeStableTimeStep(diffusivity, dx));
+  timestep = std::min(timestep, computeStableTimeStep(d_D0, dx));
 
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
 
-void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
-                                            std::vector<const VarLabel*>& to)
-{
-}
-
-void ScalarDiffusionModel::scheduleComputeFlux(Task* task,
-                                               const MPMMaterial* matl, 
-                                               const PatchSet* patch) const
-{
-}
-
-void ScalarDiffusionModel::computeFlux(const Patch* patch,
-                                       const MPMMaterial* matl,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw)
-{
-}
-
-void ScalarDiffusionModel::scheduleComputeDivergence(Task* task, 
-                                                    const MPMMaterial* matl, 
-                                                    const PatchSet* patch) const
+void ScalarDiffusionModel::scheduleComputeDivergence(      Task         * task,
+                                                     const MPMMaterial  * matl,
+                                                     const PatchSet     * patch
+                                                    ) const
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -165,17 +158,19 @@ void ScalarDiffusionModel::scheduleComputeDivergence(Task* task,
   task->computes(d_lb->gConcentrationRateLabel, matlset);
 }
 
-void ScalarDiffusionModel::computeDivergence(const Patch* patch,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* old_dw, 
-                                             DataWarehouse* new_dw)
+void ScalarDiffusionModel::computeDivergence(
+                                             const Patch          * patch,
+                                             const MPMMaterial    * matl,
+                                                   DataWarehouse  * old_dw,
+                                                   DataWarehouse  * new_dw
+                                            )
 {
-  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  Ghost::GhostType  gan = Ghost::AroundNodes;
   int dwi = matl->getDWIndex();
 
-  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
-  std::vector<IntVector> ni(interpolator->size());
-  std::vector<Vector> d_S(interpolator->size());
+  ParticleInterpolator*   interpolator = d_Mflag->d_interpolator->clone(patch);
+  std::vector<IntVector>  ni(interpolator->size());
+  std::vector<Vector>     d_S(interpolator->size());
 
   Vector dx = patch->dCell();
   double oodx[3];
@@ -183,13 +178,14 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
   oodx[1] = 1.0/dx.y();
   oodx[2] = 1.0/dx.z();
 
-  constParticleVariable<Point>  px;
-  constParticleVariable<double> pvol,pMass;
-  constParticleVariable<Matrix3> psize;
-  constParticleVariable<Matrix3> deformationGradient;
-  constParticleVariable<Vector> pFlux;
-  constNCVariable<double> gConc_OldNoBC;
-  NCVariable<double> gConcRate;
+  constParticleVariable<Point>    px;
+  constParticleVariable<double>   pvol;
+  constParticleVariable<double>   pMass;
+  constParticleVariable<Matrix3>  psize;
+  constParticleVariable<Matrix3>  deformationGradient;
+  constParticleVariable<Vector>   pFlux;
+  constNCVariable<double>         gConc_OldNoBC;
+  NCVariable<double>              gConcRate;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
                                                           d_lb->pXLabel);
@@ -232,9 +228,10 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
   } // End of Particle Loop
 }
 
-void ScalarDiffusionModel::scheduleComputeDivergence_CFI(Task* t,
-                                                    const MPMMaterial* matl, 
-                                                    const PatchSet* patch) const
+void ScalarDiffusionModel::scheduleComputeDivergence_CFI(      Task         * t,
+                                                         const MPMMaterial  * matl,
+                                                         const PatchSet     * patch
+                                                        ) const
 {
     Ghost::GhostType  gac  = Ghost::AroundCells;
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
@@ -262,18 +259,21 @@ void ScalarDiffusionModel::scheduleComputeDivergence_CFI(Task* t,
     t->modifies(d_lb->gConcentrationRateLabel, matlset);
 }
 
-void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
-                                                 const MPMMaterial* matl,
-                                                 DataWarehouse* old_dw, 
-                                                 DataWarehouse* new_dw)
+void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset    * finePatches,
+                                                 const MPMMaterial    * matl,
+                                                       DataWarehouse  * old_dw,
+                                                       DataWarehouse  * new_dw
+                                                )
 {
   int dwi = matl->getDWIndex();
 
-  const Level* fineLevel = getLevel(finePatches);
-  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  const Level* fineLevel    = getLevel(finePatches);
+  const Level* coarseLevel  = fineLevel->getCoarserLevel().get_rep();
+
   IntVector refineRatio(fineLevel->getRefinementRatio());
 
-  for(int p=0;p<finePatches->size();p++){
+  for(int p=0; p<finePatches->size(); p++)
+  {
     const Patch* finePatch = finePatches->get(p);
     printTask(finePatches, finePatch,cout_doing,
                         "Doing ScalarDiffusionModel::computeInternalForce_CFI");
@@ -283,7 +283,8 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
 
     //__________________________________
     //          AT CFI
-    if( fineLevel->hasCoarserLevel() &&  finePatch->hasCoarseFaces() ){
+    if( fineLevel->hasCoarserLevel() && finePatch->hasCoarseFaces() )
+    {
       // Determine extents for coarser level particle data
       // Linear Interpolation:  1 layer of coarse level cells
       // Gimp Interpolation:    2 layers
@@ -325,14 +326,15 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
                                                      dwi, finePatch);
 
       // loop over the coarse patches under the fine patches.
-      for(int cp=0; cp<coarsePatches.size(); cp++){
+      for(int cp=0; cp<coarsePatches.size(); cp++)
+      {
         const Patch* coarsePatch = coarsePatches[cp];
 
         // get coarse level particle data 
         ParticleSubset* pset_coarse;
-        constParticleVariable<Point> px_coarse;
+        constParticleVariable<Point>  px_coarse;
         constParticleVariable<Vector> pflux_coarse;
-        constParticleVariable<double>  pmass_coarse;
+        constParticleVariable<double> pmass_coarse;
 
         // coarseLow and coarseHigh cannot lie outside of the coarse patch
         IntVector cl = Max(cl_tmp, coarsePatch->getCellLowIndex());
@@ -342,24 +344,27 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
                                                               d_lb->pXLabel);
 
         // coarse level data
-        old_dw->get(px_coarse,      d_lb->pXLabel,       pset_coarse);
-        old_dw->get(pmass_coarse,   d_lb->pMassLabel,    pset_coarse);
+        old_dw->get(px_coarse,      d_lb->pXLabel,              pset_coarse);
+        old_dw->get(pmass_coarse,   d_lb->pMassLabel,           pset_coarse);
         new_dw->get(pflux_coarse,   d_lb->pFluxLabel_preReloc,  pset_coarse);
 
         for (ParticleSubset::iterator iter = pset_coarse->begin();
-                                      iter != pset_coarse->end();  iter++){
+                                      iter != pset_coarse->end();  iter++)
+        {
           particleIndex idx = *iter;
 
-          std::vector<IntVector> ni;
-          std::vector<double> S;
-          std::vector<Vector> div;
+          std::vector<IntVector>   ni;
+          std::vector<double>       S;
+          std::vector<Vector>     div;
           interpolator->findCellAndWeightsAndShapeDerivatives_CFI(
                                        px_coarse[idx], ni, S, div, zoi_fine);
 
           IntVector fineNode;
-          for(int k = 0; k < (int)ni.size(); k++) {
+          for(int k = 0; k < (int)ni.size(); k++)
+          {
             fineNode = ni[k];
-            if( finePatch->containsNode( fineNode ) ){
+            if( finePatch->containsNode( fineNode ) )
+            {
                double Cdot_cond = Dot(div[k], pflux_coarse[idx])
                                             * pmass_coarse[idx];
 //               double Cdot_cond = Dot(div[k], pflux_coarse[idx]);
@@ -374,30 +379,10 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
   }  // End fine patch loop
 }
 
-void ScalarDiffusionModel::addSplitParticlesComputesAndRequires(Task* task,
-                                                                const MPMMaterial* matl,
-                                                                const PatchSet* patches)
-{
-
-}
-
-void ScalarDiffusionModel::splitSDMSpecificParticleData(const Patch* patch, const int dwi,
-                                              const int nDims, ParticleVariable<int> &prefOld,
-                                              ParticleVariable<int> &pref,
-                                              const unsigned int oldNumPar,
-                                              const int numNewPartNeeded,
-                                              DataWarehouse* old_dw,
-                                              DataWarehouse* new_dw)
-{
-	std::cout << "Fill this in for the model that you are using" << std::endl;
-}
-
-void ScalarDiffusionModel::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
-{
-   std::cout << "Fill this in for the model that you are using." << std::endl;
-}
-
-double ScalarDiffusionModel::computeStableTimeStep(double Dif, Vector dx)
+double ScalarDiffusionModel::computeStableTimeStep(
+                                                   double Dif,
+                                                   Vector dx
+                                                  ) const
 {
   // For a Forward Euler timestep the limiting factor is
   // dt < dx^2 / 2*D.
@@ -406,14 +391,82 @@ double ScalarDiffusionModel::computeStableTimeStep(double Dif, Vector dx)
   return timeStep.minComponent();
 }
 
+bool ScalarDiffusionModel::usesChemicalPotential()
+{
+  // Override if model uses chemical potential.
+  return false;
+}
+
+void ScalarDiffusionModel::addChemPotentialComputesAndRequires(
+                                                                     Task           * task,
+                                                               const MPMMaterial  * matl,
+                                                               const PatchSet     * patches
+                                                              ) const
+{
+ // Don't override if model doesn't use chemical potential.
+//  Ghost::GhostType        gnone   = Ghost::None;
+//  const MaterialSubset  * matlset = matl->thisMaterial();
+//
+//  task->requires(Task::OldDW, d_lb->pChemicalPotentialLabel, matlset, gnone);
+//  task->computes(d_lb->pChemicalPotentialLabel_preReloc, matlset);
+}
+
+void ScalarDiffusionModel::calculateChemicalPotential(
+                                                      const PatchSubset   * patches,
+                                                      const MPMMaterial   * matl,
+                                                            DataWarehouse * old_dw,
+                                                            DataWarehouse * new_dw
+                                                     )
+{
+  // Don't override if model doesn't use chemical potential.
+//  for (int patchIndex = 0; patchIndex < patches->size(); ++patchIndex)
+//  {
+//    const Patch* patch = patches->get(patchIndex);
+//    int dwi = matl->getDWIndex();
+//    ParticleSubset  * pset = old_dw->getParticleSubset(dwi, patch);
+//
+//    constParticleVariable<double> pChemicalPotential;
+//    old_dw->get(pChemicalPotential, d_lb->pChemicalPotentialLabel, pset);
+//    ParticleVariable<double> pChemicalPotential_new;
+//    new_dw->allocateAndPut(pChemicalPotential_new,
+//                           d_lb->pChemicalPotentialLabel_preReloc, pset);
+//
+//    int numParticles = pset->numParticles();
+//    for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
+//    {
+//      pChemicalPotential_new[particleIndex] = pChemicalPotential[particleIndex];
+//    }
+//  }
+
+}
+
 double ScalarDiffusionModel::computeDiffusivityTerm(double concentration, double pressure)
 {
   // This is just a function stub to be tied into the multiscale
   // component. JH, AH, CG
 
-  return diffusivity;
+  return d_D0;
 }
 
 ConductivityEquation* ScalarDiffusionModel::getConductivityEquation(){
   return d_conductivity_equation;
+}
+
+void ScalarDiffusionModel::baseInitializeSDMData(
+                                                 const Patch         * patch,
+                                                 const MPMMaterial   * matl,
+                                                       DataWarehouse * NewDW
+                                                )
+{
+  ParticleVariable<double> pConcentration;
+
+
+  ParticleSubset* pset = NewDW->getParticleSubset(matl->getDWIndex(), patch);
+  NewDW->getModifiable(pConcentration, d_lb->pConcentrationLabel, pset);
+
+  for (int pIndex = 0; pIndex < pset->numParticles(); ++pIndex)
+    {
+      pConcentration[pIndex] = d_InitialConcentration;
+    }
+
 }

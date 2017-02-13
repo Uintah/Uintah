@@ -128,6 +128,9 @@ namespace Uintah {
       const VarLabel* MinConcLabel;
       const VarLabel* pAvgConcLabel;
       const VarLabel* pESPotential;
+      const VarLabel* pESGradPotential;
+      const VarLabel* pChemicalPotentialLabel;
+      const VarLabel* pChemicalPotentialGradientLabel;
       
       // For fixing Mie-Gruneison EOS - JBH
 //      const VarLabel* pDissipatedEnergyLabel;

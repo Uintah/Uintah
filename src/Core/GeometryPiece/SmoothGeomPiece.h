@@ -109,9 +109,14 @@ namespace Uintah {
     std::vector<double>* getTemperature();
     
     //////////////////////////////////////////////////////////////////////
-    /*! Returns the vector containing the set of particle temperatures */
+    /*! Returns the vector containing the set of particle concentration */
     //////////////////////////////////////////////////////////////////////
     std::vector<double>* getConcentration();
+
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle chemical potential */
+    //////////////////////////////////////////////////////////////////////
+    std::vector<double>* getChemicalPotential();
 
     //////////////////////////////////////////////////////////////////////
     /*! Returns the vector containing the set of particle colors        */
@@ -208,6 +213,7 @@ namespace Uintah {
     std::vector<double> d_volume;// CPDI or CPTI
     std::vector<double> d_temperature;
     std::vector<double> d_concentration;
+    std::vector<double> d_chemicalpotential;
     std::vector<double> d_color;
     std::vector<Vector> d_forces;
     std::vector<Vector> d_fiberdirs;

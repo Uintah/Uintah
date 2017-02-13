@@ -101,8 +101,8 @@ void EllipsoidGeometryPiece::outputHelper( ProblemSpecP & ps ) const
   ps->appendElement("origin",d_origin);
   if(xyzAligned) { // only need to output radii
     ps->appendElement("rx",    d_r1);
-    ps->appendElement("ry",    d_r1);
-    ps->appendElement("rz",    d_r1);
+    ps->appendElement("ry",    d_r2);
+    ps->appendElement("rz",    d_r3);
   } else {
     ps->appendElement("v1",    d_v1);
     ps->appendElement("v2",    d_v2);

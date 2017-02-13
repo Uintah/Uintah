@@ -22,11 +22,13 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
-#include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
-#include <CCA/Components/MPM/ReactionDiffusion/NonLinearDiff1.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ConstantRate.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/JGConcentrationDiffusion.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/RFConcDiffusion1MPM.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/NonLinearDiff1.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/NonLinearDiff2.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ConstantRate.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/BazantModel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -55,8 +57,14 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
   else if (diffusion_type == "non_linear1")
     return(scinew NonLinearDiff1(child, ss, flags, diffusion_type));
 
+  else if (diffusion_type == "non_linear2")
+    return(scinew NonLinearDiff2(child, ss, flags, diffusion_type));
+
   else if (diffusion_type == "constant_rate")
     return(scinew ConstantRate(child, ss, flags, diffusion_type));
+
+  else if (diffusion_type == "bazant")
+    return(scinew BazantDiffusion(child, ss, flags, diffusion_type));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);
