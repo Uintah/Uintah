@@ -1,4 +1,10 @@
 /*
+ * ReactionModelInterface.h
+ *
+ *  Created on: Feb 9, 2017
+ *      Author: jbhooper
+ *
+ *
  * The MIT License
  *
  * Copyright (c) 1997-2016 The University of Utah
@@ -22,32 +28,41 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/FixedEquation.h>
+#ifndef SRC_CCA_COMPONENTS_MPM_CONSTITUTIVEMODEL_REACTIONMODEL_REACTIONMODELINTERFACE_H_
+#define SRC_CCA_COMPONENTS_MPM_CONSTITUTIVEMODEL_REACTIONMODEL_REACTIONMODELINTERFACE_H_
 
-#include <iostream>
-
-using namespace Uintah;
-
-FixedEquation::FixedEquation(ProblemSpecP& ps) :
-  ConductivityEquation(ps)
+namespace Uintah
 {
-  ps->require("conductivity", d_conductivity);
+  class ReactionModel
+  {
+    public:
+               ReactionModel();
+      virtual ~ReactionModel();
+
+      VarLabel* getReactionProgressLabel()
+      {
+        return reactionProgressLabel;
+      }
+      VarLabel* getReactionInterfaceLabel()
+      {
+        return reactionInterfaceLabel;
+      }
+      int       getOtherReactantDWI()
+      {
+        return otherReactantDWI;
+      }
+
+    private:
+      VarLabel* reactionProgressLabel;
+      VarLabel* reactionInterfaceLabel;
+      double    d_dH_Rxn;
+      bool      d_continuousReaction; // Add incremental dH or wait until entire MP is reacted?
+      int       otherReactantDWI;
+      // Holds the varlabels necessary to calculate reaction here.
+      std::vector<VarLabel*>  otherReactantLabels;
+  };
 }
 
-FixedEquation::~FixedEquation()
-{
 
-}
 
-double FixedEquation::computeConductivity(double concentration)
-{
-  return d_conductivity;
-}
-
-void FixedEquation::outputProblemSpec(ProblemSpecP& ps)
-{
-  ProblemSpecP eq_ps;
-  eq_ps = ps->appendChild("conductivity_equation");
-  eq_ps->setAttribute("type", "fixed");
-  eq_ps->appendElement("conductivity", d_conductivity);
-}
+#endif /* SRC_CCA_COMPONENTS_MPM_CONSTITUTIVEMODEL_REACTIONMODEL_REACTIONMODELINTERFACE_H_ */

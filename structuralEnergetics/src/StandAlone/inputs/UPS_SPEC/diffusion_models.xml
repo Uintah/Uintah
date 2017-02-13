@@ -3,33 +3,68 @@
 
   <diffusion_model         spec="OPTIONAL NO_DATA"
                            attribute1="type REQUIRED STRING 'jg, rf1,
-                                       non_linear1, constant_rate'">
-    <diffusivity           spec="OPTIONAL DOUBLE" />
-    <boltzmann_const       spec="OPTIONAL DOUBLE" />
-    <operating_temp        spec="OPTIONAL DOUBLE" />
-    <max_concentration     spec="OPTIONAL DOUBLE" />
-    <partial_atomic_vol    spec="OPTIONAL DOUBLE" />
-    <init_conc             spec="OPTIONAL DOUBLE" />
-    <tuning1               spec="OPTIONAL DOUBLE" />
-    <tuning2               spec="OPTIONAL DOUBLE" />
-    <tuning3               spec="OPTIONAL DOUBLE" />
-    <tuning4               spec="OPTIONAL DOUBLE" />
-    <tuning5               spec="OPTIONAL DOUBLE" />
-    <ramp_time             spec="OPTIONAL DOUBLE" />
-    <use_pressure          spec="OPTIONAL BOOLEAN" />
-    <diff_curve            spec="OPTIONAL NO_DATA" >
+                                       non_linear1, non_linear2, constant_rate, bazant'">
+    <diffusivity           spec="REQUIRED DOUBLE" />
+    <max_concentration     spec="REQUIRED DOUBLE" />
+    <initial_concentration spec="OPTIONAL DOUBLE" />
+    
+    <!-- Variables specific to the Bazant model (for now) -->
+    <Boltzmann             spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <solutionEnergy        spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <penaltyCahnHilliard   spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <sitesPerVolume        spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <volPerIntercSite      spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <initialChemicalPotential spec = "OPTIONAL DOUBLE" />
+    <mismatchStrain        spec="OPTIONAL NO_DATA" >
+      <v1                  spec="REQUIRED VECTOR" />
+      <v2                  spec="REQUIRED VECTOR" />
+      <v3                  spec="REQUIRED VECTOR" />
+    </mismatchStrain>
+    <!-- Bazant model variables -->
+
+    <!-- Required for constant_rate model -->
+    <constant_rate         spec="REQUIRED DOUBLE" need_applies_to="type constant_rate" />
+    
+    <!-- Required for non-linear diffusion models -->
+    <tuning1               spec="REQUIRED DOUBLE" need_applies_to="type non_linear1, non_linear2" />
+    <tuning2               spec="REQUIRED DOUBLE" need_applies_to="type non_linear1, non_linear2" />
+
+    <!-- Non_linear1 implemented only -->
+    <use_pressure          spec="OPTIONAL NO_DATA" >
+      <tuning3               spec="REQUIRED DOUBLE"   />
+      <tuning4               spec="REQUIRED DOUBLE"   />
+      <tuning5               spec="REQUIRED DOUBLE"   />
+    </use_pressure>
+    
+    <!-- Diff curves only implemented for type non_linear1 -->
+    <diff_curve            spec="OPTIONAL NO_DATA" need_applies_to="type non_linear1" >
       <time_point          spec="MULTIPLE NO_DATA" >
         <time              spec="REQUIRED DOUBLE" />
         <flux_direction    spec="REQUIRED STRING 'in, out, transition'" />
       </time_point>
     </diff_curve>
-    <constant_rate         spec="OPTIONAL DOUBLE" />
+
+    <!-- non-linear diffusion models -->
+    
+    
+    
+    <!-- Tags not currently used -->
+    <ramp_time             spec="OPTIONAL DOUBLE" />
+    <operating_temp        spec="OPTIONAL DOUBLE" />
+    <partial_atomic_vol    spec="OPTIONAL DOUBLE" />
+    <init_conc             spec="OPTIONAL DOUBLE" />
+
+    
     <conductivity_equation   spec="OPTIONAL NO_DATA"
                              attribute1="type REQUIRED STRING 'fixed, binary'">
-      <min_conc              spec="OPTIONAL DOUBLE" />
-      <conductivity          spec="OPTIONAL DOUBLE" />
-      <min_conductivity      spec="OPTIONAL DOUBLE" />
-      <max_conductivity      spec="OPTIONAL DOUBLE" />
+      <!-- For fixed conductivity model -->
+      <conductivity          spec="REQUIRED DOUBLE" need_applies_to="type fixed" />
+      
+      <!-- For binary conductivity model -->
+      <min_conc              spec="REQUIRED DOUBLE" need_applies_to="type binary" />
+      <max_conc              spec="REQUIRED DOUBLE" need_applies_to="type binary" />
+      <min_conductivity      spec="REQUIRED DOUBLE" need_applies_to="type binary" />
+      <max_conductivity      spec="REQUIRED DOUBLE" need_applies_to="type binary" />
     </conductivity_equation>
   </diffusion_model>
 </Uintah_Include>

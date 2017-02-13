@@ -738,8 +738,12 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // else
       //   conc_rate = -1.0;
 
-      if(flag->d_doScalarDiffusion){
-        tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
+      if(flag->d_doScalarDiffusion)
+      {
+        ScalarDiffusionModel* sdm = matl->getScalarDiffusionModel();
+        Matrix3 expansionCoeff = sdm->getStressFreeExpansionMatrix();
+        expansionCoeff *= vol_exp_coeff;
+        tensorD = tensorD - expansionCoeff * (conc_rate);
         //cout << "Concentration Rate: " << conc_rate << ", delT: " << delT << endl;
       }
       //********** Concentration Component****************************

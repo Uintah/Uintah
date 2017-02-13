@@ -44,6 +44,13 @@ MPMLabel::MPMLabel()
 
   // Particle Variables
 
+  // Diffusion related variables
+  pChemicalPotentialLabel = VarLabel::create ("p.chemPotential",
+      ParticleVariable<double>::getTypeDescription() );
+
+  pChemicalPotentialGradientLabel = VarLabel::create ("p.gradChemPotential",
+      ParticleVariable<Vector>::getTypeDescription() );
+
   //non PermanentParticleState
   pPressureLabel  = VarLabel::create( "p.pressure",
 			ParticleVariable<double>::getTypeDescription() );
@@ -217,6 +224,9 @@ MPMLabel::MPMLabel()
 
   pESPotential = VarLabel::create( "p.esPotential",
       ParticleVariable<double>::getTypeDescription());
+
+  pESGradPotential = VarLabel::create ("p.esGradPotential",
+      ParticleVariable<Vector>::getTypeDescription());
 
   pFiberDirLabel  = VarLabel::create( "p.fiberdir",
                         ParticleVariable<Vector>::getTypeDescription() );
@@ -877,6 +887,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(MinConcLabel);
   VarLabel::destroy(pAvgConcLabel);
   VarLabel::destroy(pESPotential);
+  VarLabel::destroy(pESGradPotential);
+  VarLabel::destroy(pChemicalPotentialLabel);
+  VarLabel::destroy(pChemicalPotentialGradientLabel);
   VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pDiffusivityLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/CommonIFConcDiff.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Grid/Task.h>
 
@@ -55,25 +55,31 @@ void CommonIFConcDiff::addComputesAndRequiresInterpolated(SchedulerP & sched,
   sched->addTask(task, patches, matls);
 }
 
-void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup*,
-                                             const PatchSubset* patches,
-                                             const MaterialSubset* matls,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw)
+void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
+                                               const PatchSubset    * patches,
+                                               const MaterialSubset * matls,
+                                                     DataWarehouse  * old_dw,
+                                                     DataWarehouse  * new_dw
+                                              )
 {
   int num_matls = d_shared_state->getNumMPMMatls();
-  for(int p = 0; p < patches->size(); p++){
+  for(int p = 0; p < patches->size(); p++)
+  {
     const Patch* patch = patches->get(p);
 
     StaticArray<constNCVariable<double> > gmass(num_matls);
-    StaticArray<NCVariable<double> > gconcentration(num_matls);
-    for(int m = 0; m < num_matls; m++){
+    StaticArray<NCVariable<double> >      gconcentration(num_matls);
+    for(int m = 0; m < num_matls; m++)
+    {
       int dwi = matls->get(m);
-      new_dw->get(gmass[m], d_mpm_lb->gMassLabel, dwi, patch, Ghost::AroundNodes, 1);
-      new_dw->getModifiable(gconcentration[m], d_mpm_lb->gConcentrationLabel, dwi, patch);
+      new_dw->get(gmass[m], d_mpm_lb->gMassLabel, dwi, patch,
+                  Ghost::AroundNodes, 1);
+      new_dw->getModifiable(gconcentration[m], d_mpm_lb->gConcentrationLabel,
+                            dwi, patch);
     }
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
+    {
       IntVector c = *iter;
 
       double g_sum_mass = 0;
@@ -86,7 +92,8 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup*,
 
       double g_conc = g_sum_concmass / g_sum_mass;
 
-      for(int m = 0; m < d_materials_list.size(); m++){
+      for(unsigned int m = 0; m < d_materials_list.size(); m++)
+      {
         int mat_idx = d_materials_list[m];
         if(mat_idx >= 0 && mat_idx < num_matls)
           gconcentration[mat_idx][c] = g_conc;

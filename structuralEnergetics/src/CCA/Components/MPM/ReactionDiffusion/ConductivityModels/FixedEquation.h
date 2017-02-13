@@ -22,44 +22,37 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_RD_RFCONCDIFFUSION1MPM_H
-#define UINTAH_RD_RFCONCDIFFUSION1MPM_H
+#ifndef UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
+#define UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H
 
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/ConductivityEquation.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Uintah {
+namespace Uintah{
+/*************************************************
+ *
+ * CLASS
+ *   FixedEquation
+ *
+ *   This class returns a fixed conductivity value.
+ *
+ *
+ *************************************************/
 
-  class Task;
-  class MPMFlags;
-  class MPMLabel;
-  class MPMMaterial;
-  class DataWarehouse;
-  class ProcessorGroup;
 
-  
-  class RFConcDiffusion1MPM : public ScalarDiffusionModel {
-  public:
-    
-    RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
-                        std::string diff_type);
-    ~RFConcDiffusion1MPM();
+  class FixedEquation : public ConductivityEquation {
+    public:
+      FixedEquation(ProblemSpecP& ps);
 
-    virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
-		                                      const PatchSet* patch) const;
+      virtual ~FixedEquation();
 
-    virtual void computeFlux(const Patch* patch, const MPMMaterial* matl,
-                             DataWarehouse* old_dw, DataWarehouse* new_dw);
+      virtual double computeConductivity(double conductivity);
 
-    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
+      virtual void outputProblemSpec(ProblemSpecP& ps);
 
-  private:
-    double init_potential;
+    private:
+      double d_conductivity;
 
-    RFConcDiffusion1MPM(const RFConcDiffusion1MPM&);
-    RFConcDiffusion1MPM& operator=(const RFConcDiffusion1MPM&);
   };
-} // end namespace Uintah
-#endif
+}
+#endif // End of UINTAH_CCA_COMPONENTS_MPMFVM_FIXEDEQUATION_H

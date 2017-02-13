@@ -35,6 +35,7 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <Core/Geometry/Point.h>
@@ -51,7 +52,6 @@ namespace Uintah {
  class ConstitutiveModel;
  class MPMLabel;
  class ParticleCreator;
- class ScalarDiffusionModel;
 
       
 /**************************************

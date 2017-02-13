@@ -40,10 +40,10 @@
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <iostream>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 /*  This code is a bit tough to follow.  Here's the basic order of operations.
 
@@ -169,7 +169,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Matrix3>* psizes        = 0;
     vector<Vector>*  pareas        = 0;
 
-    if (sgp){
+    if (sgp) {
       volumes      = sgp->getVolume();
       temperatures = sgp->getTemperature();
       pforces      = sgp->getForces();
@@ -964,14 +964,14 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
   }
 
+  if (d_flags->d_doScalarDiffusion) {
+    particle_state.push_back(d_lb->pAreaLabel);
+    particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
+  }
+
   if (d_flags->d_AMR) {
     particle_state.push_back(d_lb->pLastLevelLabel);
     particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
-
-    if (d_flags->d_doScalarDiffusion) {
-      particle_state.push_back(d_lb->pAreaLabel);
-      particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
-    }
   }
 
   if (d_computeScaleFactor) {

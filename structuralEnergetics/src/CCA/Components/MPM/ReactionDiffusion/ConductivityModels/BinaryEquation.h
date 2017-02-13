@@ -25,10 +25,11 @@
 #ifndef UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_BINARYEQUATION_H
 #define UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_BINARYEQUATION_H
 
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityEquation.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/ConductivityEquation.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Uintah{
+namespace Uintah
+{
 /*************************************************
  *
  * CLASS
@@ -55,7 +56,8 @@ namespace Uintah{
       virtual void outputProblemSpec(ProblemSpecP& ps);
 
     private:
-      double d_min_concentration;
+      double d_min_conc;
+      double d_max_conc;
       double d_min_conductivity;
       double d_max_conductivity;
       double d_slope;

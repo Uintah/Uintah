@@ -329,6 +329,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
              go_type == "affineTransformation_A1" ||
              go_type == "affineTransformation_A2" ||
              go_type == "affineTransformation_b"  ||
+             go_type == "chemical_potential"       ||
              go_type == "volumeFraction" )  {
       // Ignoring. 
       continue;    // restart loop to avoid accessing name of empty object

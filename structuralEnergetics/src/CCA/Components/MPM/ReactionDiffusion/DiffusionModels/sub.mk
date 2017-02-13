@@ -27,15 +27,14 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/MPM/ReactionDiffusion
+SRCDIR   := CCA/Components/MPM/ReactionDiffusion/DiffusionModels
 
 SRCS     += \
-	$(SRCDIR)/ScalarDiffusionModelFactory.cc \
-	$(SRCDIR)/SDInterfaceModelFactory.cc
+	$(SRCDIR)/ConstantRate.cc \
+	$(SRCDIR)/JGConcentrationDiffusion.cc \
+	$(SRCDIR)/NonLinearDiff1.cc \
+	$(SRCDIR)/NonLinearDiff2.cc \
+	$(SRCDIR)/RFConcDiffusion1MPM.cc \
+	$(SRCDIR)/BazantModel.cc \
+	$(SRCDIR)/ScalarDiffusionModel.cc
 	
-SUBDIRS := \
-        $(SRCDIR)/ConductivityModels \
-        $(SRCDIR)/DiffusionInterfaces \
-        $(SRCDIR)/DiffusionModels
-        
-include $(SCIRUN_SCRIPTS)/recurse.mk
