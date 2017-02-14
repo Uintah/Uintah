@@ -249,7 +249,7 @@ double rfs = abs(rhoYt)*Afs*exp(-Efs/Rgas/T);                 ///< soot formatio
 Ysoot_source = rfs - ros - rgs;                                      ///< kg/m3*s
 
 /// Check if the rate is consuming all the soot in the system, and clip it if it is so the soot never goes negative in the system.
-Ysoot_source = std::min( rhoYs/dt , Ysoot_source );
+Ysoot_source = ( Ysoot_source < 0.0 ) ? std::max( -rhoYs/dt, Ysoot_source ) : Ysoot_source; 
 
 return;
 

@@ -220,7 +220,7 @@ double rot = -abs(rhoYt*rhoYO2)*Aot*exp(-Eot/Rgas/T);             ///< tar oxida
 Ytar_source = rfs + rgt + rot;                                      ///< kg/m3*s
 
 /// Check if the rate is consuming all the soot in the system, and clip it if it is so the tar never goes negative in the system.
-Ytar_source = std::min( rhoYt/dt , Ytar_source);
+Ytar_source = std::max( -rhoYt/dt , Ytar_source);
 
 return;
 

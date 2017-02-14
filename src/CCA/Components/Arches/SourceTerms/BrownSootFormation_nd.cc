@@ -253,7 +253,7 @@ double ran = 2.0*Ca*pow(6.0*MWc/M_PI/rhos, 1.0/6.0) *         ///< Aggregation r
 Ns_source  = rfn - ran;                                      ///< #/m3*s
 
 /// Check if the rate is consuming all the soot in the system, and clip it if it is so the soot never goes negative in the system.
-Ns_source = std::min( nd/dt, Ns_source );
+Ns_source = ( Ns_source < 0.0 ) ? std::max( -nd/dt, Ns_source ) : Ns_source; 
 
 return;
 
