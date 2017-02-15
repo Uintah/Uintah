@@ -72,7 +72,7 @@ GeometryPieceFactory::foundInsidePoints(const std::string geomPieceName,
                                         const int patchID)
 {
   typedef std::map<int,vector<Point> > PatchIDInsidePointsMapT;
-  typedef std::map<std::string, PatchIDInsidePointsMapT > GeomNameInsidePtsMapT;
+//typedef std::map<std::string, PatchIDInsidePointsMapT > GeomNameInsidePtsMapT;
   if (insidePointsMap_.find(geomPieceName) != insidePointsMap_.end()  ) {
     // we found this geometry, lets see if we find this patch
     PatchIDInsidePointsMapT& thisPatchIDInsidePoints = insidePointsMap_[geomPieceName];
@@ -89,7 +89,7 @@ const std::vector<Point>&
 GeometryPieceFactory::getInsidePoints(const Uintah::Patch* const patch)
 {
   typedef std::map<std::string,GeometryPieceP> NameGeomPiecesMapT;
-  typedef std::map<int,vector<Point> > PatchIDInsidePointsMapT;
+//  typedef std::map<int,vector<Point> > PatchIDInsidePointsMapT;
   const int patchID = patch->getID();
   if (allInsidePointsMap_.find(patchID) != allInsidePointsMap_.end()) return allInsidePointsMap_[patchID];
   // loop over all geometry objects
@@ -111,9 +111,9 @@ GeometryPieceFactory::getInsidePoints(const Uintah::Patch* const patch)
 const std::vector<Point>&
 GeometryPieceFactory::getInsidePoints(const std::string geomPieceName, const Uintah::Patch* const patch)
 {
-  typedef std::map<std::string,GeometryPieceP> NameGeomPiecesMapT;
+//typedef std::map<std::string,GeometryPieceP> NameGeomPiecesMapT;
   typedef std::map<int,vector<Point> > PatchIDInsidePointsMapT;
-  typedef std::map<std::string, PatchIDInsidePointsMapT > GeomNameInsidePtsMapT;
+//typedef std::map<std::string, PatchIDInsidePointsMapT > GeomNameInsidePtsMapT;
 
   const int patchID = patch->getID();
   dbg << "computing points for patch " << patchID << std::endl;

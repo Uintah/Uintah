@@ -51,7 +51,7 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   readPoints(d_file);
   readTri(d_file);
   makePlanes();
-  makeTriBoxes();
+//  makeTriBoxes();
   
   // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
@@ -71,7 +71,7 @@ TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
   d_points = copy.d_points;
   d_tri = copy.d_tri;
   d_planes = copy.d_planes;
-  d_boxes = copy.d_boxes;
+//  d_boxes = copy.d_boxes;
 
   d_grid = scinew UniformGrid(*copy.d_grid);
 
@@ -87,7 +87,7 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
   d_points.clear();
   d_tri.clear();
   d_planes.clear();
-  d_boxes.clear();
+//  d_boxes.clear();
 
   delete d_grid;
 
@@ -96,7 +96,7 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
   d_points = rhs.d_points;
   d_tri = rhs.d_tri;
   d_planes = rhs.d_planes;
-  d_boxes = rhs.d_boxes;
+//  d_boxes = rhs.d_boxes;
 
   d_grid = scinew UniformGrid(*rhs.d_grid);
 
@@ -296,6 +296,7 @@ TriGeometryPiece::makePlanes()
   }
 }
 
+#if 0
 void
 TriGeometryPiece::makeTriBoxes()
 {
@@ -311,6 +312,7 @@ TriGeometryPiece::makeTriBoxes()
     d_boxes.push_back(box);
   }
 }
+#endif
 
 void
 TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,

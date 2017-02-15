@@ -115,7 +115,7 @@ WARNING
          void readPoints(const std::string& file);
          void readTri(const std::string& file);
          void makePlanes();
-         void makeTriBoxes();
+//         void makeTriBoxes();
          void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
          
          std::string d_file;
@@ -123,7 +123,7 @@ WARNING
          std::vector<Point>     d_points;
          std::vector<IntVector> d_tri;
          std::vector<Plane>     d_planes;
-         std::vector<Box>       d_boxes;
+//         std::vector<Box>       d_boxes;
 
          UniformGrid* d_grid;
          
