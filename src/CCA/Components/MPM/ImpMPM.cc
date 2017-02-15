@@ -158,6 +158,7 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
 
   ProblemSpecP mpm_ps = 0;
   ProblemSpecP restart_mat_ps = 0;
+  bool isRestart = false;
 
   ProblemSpecP prob_spec_mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
   if (prob_spec_mat_ps) {
@@ -165,6 +166,7 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   }
   else if (restart_prob_spec) {
     restart_mat_ps = restart_prob_spec;
+    isRestart = true;
   }
   else {
     restart_mat_ps = prob_spec;
@@ -254,7 +256,7 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
     }
   }
 
-  materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+  materialProblemSetup(restart_mat_ps, d_sharedState,flags, isRestart);
    
   if (flags->d_solver_type == "petsc") {
     d_solver = scinew MPMPetscSolver();

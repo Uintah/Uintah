@@ -147,12 +147,15 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP prob_spec_mat_ps =
     prob_spec->findBlockWithOutAttribute("MaterialProperties");
 
-  if (prob_spec_mat_ps)
+  bool isRestart = false;
+  if (prob_spec_mat_ps){
     restart_mat_ps = prob_spec;
-  else if (restart_prob_spec)
+  } else if (restart_prob_spec){
+    isRestart = true;
     restart_mat_ps = restart_prob_spec;
-  else
+  } else{
     restart_mat_ps = prob_spec;
+  }
 
   ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
   if (!mpm_soln_ps){
@@ -264,7 +267,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
 
-  materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+  materialProblemSetup(restart_mat_ps, d_sharedState,flags, isRestart);
 
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
 

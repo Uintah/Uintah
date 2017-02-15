@@ -89,7 +89,8 @@ WARNING
    MPMMaterial();
 
    // Standard MPM Material Constructor
-   MPMMaterial(ProblemSpecP&, SimulationStateP& ss, MPMFlags* flags);
+   MPMMaterial(ProblemSpecP&, SimulationStateP& ss, MPMFlags* flags,
+               const bool isRestart);
          
    ~MPMMaterial();
 
@@ -190,7 +191,8 @@ WARNING
    //
    // The standard set of initialization actions except particlecreator
    //
-   void standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMFlags* flags);
+   void standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
+                               MPMFlags* flags, const bool isRestart);
  };
 
 } // End namespace Uintah

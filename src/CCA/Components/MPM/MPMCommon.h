@@ -46,7 +46,7 @@ namespace Uintah {
 
     virtual void materialProblemSetup(const ProblemSpecP& prob_spec,
                                       SimulationStateP& sharedState,
-                                      MPMFlags* flags);
+                                      MPMFlags* flags, bool isRestart);
 
     virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
                                           SimulationStateP& sharedState,

@@ -53,12 +53,13 @@ using namespace std;
 using namespace Uintah;
 
 // Standard Constructor
-MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags,
+                         const bool isRestart)
   : Material(ps), d_cm(0),  d_particle_creator(0)
 {
   d_lb = scinew MPMLabel();
   // The standard set of initializations needed
-  standardInitialization(ps,ss,flags);
+  standardInitialization(ps,ss,flags,isRestart);
   
   d_cm->setSharedState(ss.get_rep());
 
@@ -67,7 +68,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
 }
 
 void
-MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMFlags* flags)
+MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
+                                    MPMFlags* flags, const bool isRestart)
 
 {
   // Follow the layout of the input file
@@ -142,9 +144,8 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMF
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A2",GeometryObject::Vector));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_b", GeometryObject::Vector));
   geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction",         GeometryObject::Double));
-
   if(flags->d_with_color){
-    geom_obj_data.push_back(GeometryObject::DataItem("color", GeometryObject::Double));
+    geom_obj_data.push_back(GeometryObject::DataItem("color",                GeometryObject::Double));
   } 
 
   // ReactiveFlow Diffusion Component
@@ -152,24 +153,28 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMF
     geom_obj_data.push_back(GeometryObject::DataItem("concentration", GeometryObject::Double));
   }
 
-  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
-       geom_obj_ps != 0; 
-       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  if(!isRestart){
+    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
+         geom_obj_ps != 0; 
+         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-    vector<GeometryPieceP> pieces;
-    GeometryPieceFactory::create(geom_obj_ps, pieces);
+     vector<GeometryPieceP> pieces;
+     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-    GeometryPieceP mainpiece;
-    if(pieces.size() == 0){
-      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
-      mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
-      mainpiece = pieces[0];
+     GeometryPieceP mainpiece;
+     if(pieces.size() == 0){
+       throw ParameterNotFound("No piece specified in geom_object",
+                                __FILE__, __LINE__);
+     } else if(pieces.size() > 1){
+       mainpiece = scinew UnionGeometryPiece(pieces);
+     } else {
+       mainpiece = pieces[0];
+     }
+
+     //    piece_num++;
+     d_geom_objs.push_back(scinew GeometryObject(mainpiece, 
+                           geom_obj_ps, geom_obj_data));
     }
-
-    //    piece_num++;
-    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
   }
 }
 

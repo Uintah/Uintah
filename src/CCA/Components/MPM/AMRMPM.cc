@@ -212,9 +212,11 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("AMRMPM:couldn't get output port", __FILE__, __LINE__);
   }
 
+  bool isRestart = false;
   ProblemSpecP mat_ps = 0;
   if (restart_prob_spec){
     mat_ps = restart_prob_spec;
+    isRestart = true;
   } else{
     mat_ps = prob_spec;
   }
@@ -395,7 +397,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
-  materialProblemSetup(mat_ps, d_sharedState,flags);
+  materialProblemSetup(mat_ps, d_sharedState,flags, isRestart);
 
   if(flags->d_doScalarDiffusion){
     d_sdInterfaceModel = SDInterfaceModelFactory::create(mat_ps, d_sharedState, flags, lb);

@@ -70,9 +70,11 @@ protected:
   /*! Setup problem -- material parameters specific to shell */
   //
   ///////////////////////////////////////////////////////////////////////////
+#if 0
   virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
                                     SimulationStateP& sharedState,
                                     MPMLabel* lb, MPMFlags* flags);
+#endif
          
   ///////////////////////////////////////////////////////////////////////////
   //
