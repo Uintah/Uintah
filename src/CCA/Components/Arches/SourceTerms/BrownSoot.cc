@@ -121,11 +121,11 @@ BrownSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
 //---------------------------------------------------------------------------
 void
 BrownSoot::computeSource( const ProcessorGroup* pc,
-                                   const PatchSubset*    patches,
-                                   const MaterialSubset* matls,
-                                         DataWarehouse*  old_dw,
-                                         DataWarehouse*  new_dw,
-                                         int             timeSubStep )
+                          const PatchSubset*    patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse*  old_dw,
+                          DataWarehouse*  new_dw,
+                          int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -258,11 +258,11 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
 */
 
 void BrownSoot::coalSootTar( const double P,
-                                          const double T,
-                                          const double rhoYO2,
-                                          const double rhoYt,
-					                                const double dt,
-                                          double &Ytar_source ) {
+                             const double T,
+                             const double rhoYO2,
+                             const double rhoYt,
+                             const double dt,
+                             double &Ytar_source ) {
 
 double Afs = 5.02E8;          ///< preexponential: soot formation (1/s)
 double Efs = 198.9E6;         ///< Ea: soot formation, J/kmol
@@ -318,14 +318,14 @@ return;
 */
 
 void BrownSoot::coalSootND( const double P,
-                                        const double T,
-                                        const double XCO2,
-                                        const double XO2,
-                                        const double rhoYt,
-                                        const double rhoYs,
-                                        const double nd,
-                                        const double dt,
-                                        double &Ns_source ) {
+                            const double T,
+                            const double XCO2,
+                            const double XO2,
+                            const double rhoYt,
+                            const double rhoYs,
+                            const double nd,
+                            const double dt,
+                            double &Ns_source ) {
 
 double Afs = 5.02E8;          ///< preexponential: soot formation (1/s)
 double Efs = 198.9E6;         ///< Ea: soot formation, J/kmol
@@ -386,14 +386,14 @@ return;
 */
 
 void BrownSoot::coalSootMassSrc( const double P,
-                                                const double T,
-                                                const double XCO2,
-                                                const double XO2,
-                                                const double rhoYt,
-                                                const double rhoYs,
-                                                const double nd,
-                                                const double dt,
-                                                double &Ysoot_source ) {
+                                 const double T,
+                                 const double XCO2,
+                                 const double XO2,
+                                 const double rhoYt,
+                                 const double rhoYs,
+                                 const double nd,
+                                 const double dt,
+                                 double &Ysoot_source ) {
 
 double Afs = 5.02E8;          ///< preexponential: soot formation (1/s)
 double Efs = 198.9E6;         ///< Ea: soot formation, J/kmol
@@ -454,15 +454,15 @@ return;
 */
 
 void BrownSoot::coalGasSootSrc( const double P,
-                                             const double T,
-                                             const double XCO2,
-                                             const double XO2,
-                                             const double rhoYt,
-                                             const double rhoYs,
-                                             const double nd,
-                                             const double rhoYO2,
-                                             const double dt,
-                                             double &Off_Gas ) {
+                                const double T,
+                                const double XCO2,
+                                const double XO2,
+                                const double rhoYt,
+                                const double rhoYs,
+                                const double nd,
+                                const double rhoYO2,
+                                const double dt,
+                                double &Off_Gas ) {
 
 double Aos = 108500;           ///< preexponential: soot oxidation: (K^0.5)*kg/m2/atm/s
 double Eos = 164.5E6;         ///< Ea: soot oxidation, J/kmol
@@ -522,10 +522,10 @@ BrownSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
 }
 void
 BrownSoot::initialize( const ProcessorGroup* pc,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* matls,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw )
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
