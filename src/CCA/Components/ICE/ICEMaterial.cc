@@ -47,7 +47,8 @@ using namespace Uintah;
 
 // Constructor
 ICEMaterial::ICEMaterial(ProblemSpecP& ps,
-                         SimulationStateP& sharedState): Material(ps)
+                         SimulationStateP& sharedState,
+                          const bool isRestart): Material(ps)
 {
   //__________________________________
   //  Create the different Models for this material
@@ -94,23 +95,25 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
    {}
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
 
-  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");geom_obj_ps != 0;
-       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  if(!isRestart){
+    for (ProblemSpecP geom_obj_ps=ps->findBlock("geom_object");geom_obj_ps != 0;
+         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-    vector<GeometryPieceP> pieces;
-    GeometryPieceFactory::create(geom_obj_ps, pieces);
+      vector<GeometryPieceP> pieces;
+      GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-    GeometryPieceP mainpiece;
-    if(pieces.size() == 0){
-      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
-      mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
-      mainpiece = pieces[0];
+      GeometryPieceP mainpiece;
+      if(pieces.size() == 0){
+        throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+      } else if(pieces.size() > 1){
+        mainpiece = scinew UnionGeometryPiece(pieces);
+      } else {
+        mainpiece = pieces[0];
+      }
+
+      piece_num++;
+      d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
     }
-
-    piece_num++;
-    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
   }
 }
 //__________________________________

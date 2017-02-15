@@ -394,10 +394,12 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   // Pull out Initial Conditions
   ProblemSpecP mat_ps = 0;
 
+  bool isRestart=false;
   if( prob_spec->findBlockWithOutAttribute("MaterialProperties") ) {
     mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }
   else if ( restart_prob_spec ){
+    isRestart=true;
     mat_ps = restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }
   
@@ -424,7 +426,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     //cout_norm << "Material attribute = " << index_val << endl;
 
     // Extract out the type of EOS and the associated parameters
-    ICEMaterial *mat = scinew ICEMaterial(ps, sharedState);
+    ICEMaterial *mat = scinew ICEMaterial(ps, sharedState, isRestart);
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
     // ALWAYS have an index number as in <material index = "0">.
