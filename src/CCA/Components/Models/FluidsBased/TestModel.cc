@@ -67,7 +67,7 @@ TestModel::~TestModel()
 
 //______________________________________________________________________
 void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
-                             ModelSetup* )
+                             ModelSetup*, const bool isRestart )
 {
   d_sharedState = sharedState;
   ProblemSpecP test_ps = params->findBlock("Test");

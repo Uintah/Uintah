@@ -67,7 +67,7 @@ MassMomEng_src::~MassMomEng_src()
 
 //______________________________________________________________________
 void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
-                                  ModelSetup* )
+                                  ModelSetup*, const bool isRestart )
 {
   d_sharedState = sharedState;
   ProblemSpecP src_ps = params->findBlock("MassMomEng_src");

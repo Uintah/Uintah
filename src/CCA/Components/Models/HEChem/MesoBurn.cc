@@ -120,7 +120,7 @@ MesoBurn::~MesoBurn(){
 //______________________________________________________________________
 void MesoBurn::problemSetup(GridP&, 
                             SimulationStateP& sharedState, 
-                            ModelSetup*){
+                            ModelSetup*, const bool isRestart){
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");  

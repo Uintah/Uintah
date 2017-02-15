@@ -87,7 +87,7 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup);
+                              ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level,

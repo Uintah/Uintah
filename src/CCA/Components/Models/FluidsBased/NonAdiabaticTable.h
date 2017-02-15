@@ -73,7 +73,7 @@ WARNING
     virtual ~NonAdiabaticTable();
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-                              ModelSetup* setup);
+                              ModelSetup* setup, const bool isRestart);
     
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level,

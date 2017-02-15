@@ -94,7 +94,7 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
 //__________________________________
 void LightTime::problemSetup(GridP&, 
                              SimulationStateP& sharedState,
-                             ModelSetup*)
+                             ModelSetup*, const bool isRestart)
 {
   d_sharedState = sharedState;
   ProblemSpecP lt_ps = params->findBlock("LightTime");

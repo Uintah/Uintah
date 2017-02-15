@@ -185,7 +185,7 @@ void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
-                        ModelSetup* setup)
+                                  ModelSetup* setup, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
   d_sharedState = in_state;
@@ -307,7 +307,8 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   }
   //__________________________________
   //  Read in the geometry objects for the scalar
-  for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
+  if(!isRestart){
+   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
     geom_obj_ps != 0;
     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
     vector<GeometryPieceP> pieces;
@@ -323,8 +324,9 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
     }
 
     d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+   }
   }
-  if(d_scalar->regions.size() == 0) {
+  if(d_scalar->regions.size() == 0 && !isRestart) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions", __FILE__, __LINE__);
   }
 

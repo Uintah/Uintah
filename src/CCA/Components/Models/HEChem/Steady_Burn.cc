@@ -93,7 +93,7 @@ Steady_Burn::~Steady_Burn(){
 }
 
 //______________________________________________________________________
-void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*){
+void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart){
   d_sharedState = sharedState;
   
   ProblemSpecP SB_ps = d_params->findBlock("Steady_Burn");

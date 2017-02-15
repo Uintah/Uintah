@@ -102,7 +102,7 @@ void Mixing::outputProblemSpec(ProblemSpecP& ps)
 }
 
 void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
-                          ModelSetup* setup)
+                          ModelSetup* setup, const bool isRestart)
 {
   matl = sharedState->parseAndLookupMaterial(params, "material");
 

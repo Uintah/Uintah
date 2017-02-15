@@ -124,7 +124,7 @@ DDT0::~DDT0()
 //______________________________________________________________________
 //
 void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup*)
+			     ModelSetup*, const bool isRestart)
 {
   d_sharedState = sharedState;
   ProblemSpecP ddt_ps = d_params->findBlock("DDT0");

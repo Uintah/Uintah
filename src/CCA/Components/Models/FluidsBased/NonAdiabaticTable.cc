@@ -118,7 +118,7 @@ NonAdiabaticTable::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 void
 NonAdiabaticTable::problemSetup( GridP &,
                                  SimulationStateP & shared_state,
-                                 ModelSetup       * setup )
+                                 ModelSetup       * setup , const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
   d_sharedState = shared_state;
@@ -255,7 +255,8 @@ NonAdiabaticTable::problemSetup( GridP &,
                                       cumulativeEnergyReleased_src_CCLabel);
   //__________________________________
   //  Read in the geometry objects for the scalar
-  for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
+  if(!isRestart){
+   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
     geom_obj_ps != 0;
     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
     vector<GeometryPieceP> pieces;
@@ -271,8 +272,9 @@ NonAdiabaticTable::problemSetup( GridP &,
     }
 
     d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+   }
   }
-  if(d_scalar->regions.size() == 0) {
+  if(d_scalar->regions.size() == 0 && !isRestart) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions", __FILE__, __LINE__);
   }
 

@@ -84,7 +84,7 @@ ZeroOrder::~ZeroOrder()
 }
 //______________________________________________________________________
 //
-void ZeroOrder::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
+void ZeroOrder::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart)
 {
   d_sharedState = sharedState;
   ProblemSpecP ZO_ps = d_params->findBlock("ZeroOrder");

@@ -535,7 +535,7 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     // problem setup for each model  
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
        iter != d_models.end(); iter++){
-      (*iter)->problemSetup(grid, sharedState, d_modelSetup);
+      (*iter)->problemSetup(grid, sharedState, d_modelSetup,isRestart);
     }
     
     //bullet proofing each transported variable must have a boundary condition.

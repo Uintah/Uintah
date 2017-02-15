@@ -98,7 +98,7 @@ Unsteady_Burn::~Unsteady_Burn(){
 
 //______________________________________________________________________
 //
-void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*){
+void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart){
   d_sharedState = sharedState;
 
   ProblemSpecP USB_ps = d_params->findBlock("Unsteady_Burn");

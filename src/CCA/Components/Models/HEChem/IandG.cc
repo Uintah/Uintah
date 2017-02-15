@@ -76,7 +76,7 @@ IandG::~IandG()
 }
 
 void IandG::problemSetup(GridP&, SimulationStateP& sharedState,
-                             ModelSetup*)
+                             ModelSetup*, const bool isRestart)
 {
   ProblemSpecP IG_ps = params->findBlock("IandG");
   d_sharedState = sharedState;

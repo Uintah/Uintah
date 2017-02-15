@@ -108,8 +108,8 @@ void SolidReactionModel::outputProblemSpec(ProblemSpecP& ps)
     rateModel->outputProblemSpec(model_ps); 
 }
 
-void SolidReactionModel::problemSetup(GridP& grid, SimulationStateP& sharedState,
-                                      ModelSetup* setup)
+void SolidReactionModel::problemSetup(GridP& grid,SimulationStateP& sharedState,
+                                      ModelSetup* setup, const bool isRestart)
 {  
     d_sharedState = sharedState;
 

@@ -144,7 +144,7 @@ PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
-                        ModelSetup* setup)
+                        ModelSetup* setup, const bool isRestart)
 {
   cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
   d_sharedState = in_state;
@@ -209,7 +209,8 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   //__________________________________
   //  Initialization: Read in the geometry objects for the scalar
   ProblemSpecP init_ps = child->findBlock("initialization");
-  for (ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); geom_obj_ps != 0; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  if(!isRestart){
+   for (ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); geom_obj_ps != 0; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
     vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
@@ -223,9 +224,10 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
     }
 
     d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+   }
   }
   
-  if(d_scalar->regions.size() == 0) {
+  if(d_scalar->regions.size() == 0 && !isRestart) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions", __FILE__, __LINE__);
   }
   

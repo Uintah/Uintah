@@ -83,7 +83,7 @@ JWLpp::~JWLpp()
 }
 //______________________________________________________________________
 //
-void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
+void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart)
 {
   d_sharedState = sharedState;
   ProblemSpecP JWL_ps = d_params->findBlock("JWLpp");

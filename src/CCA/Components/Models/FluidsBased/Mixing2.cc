@@ -92,7 +92,7 @@ Mixing2::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 }
 
 void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
-                           ModelSetup* setup)
+                           ModelSetup* setup, const bool isRestart)
 {
   sharedState = in_state;
   matl = sharedState->parseAndLookupMaterial(params, "material");
@@ -164,7 +164,8 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
     if(iter == names.end())
       throw ProblemSetupException("Stream "+name+" species not found", __FILE__, __LINE__);
     Stream* stream = iter->second;
-    for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
+    if(!isRestart){
+     for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
          geom_obj_ps != 0;
          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
       
@@ -181,8 +182,9 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
       }
 
       stream->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+     }
     }
-    if(stream->regions.size() == 0)
+    if(stream->regions.size() == 0 && !isRestart)
       throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions",
                                   __FILE__, __LINE__);
 

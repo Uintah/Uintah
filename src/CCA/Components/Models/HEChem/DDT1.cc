@@ -157,7 +157,7 @@ bool DDT1::isDoubleEqual(double a, double b){
   return ( fabs(a-b) < DBL_EPSILON);
 }
 
-void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
+void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, const bool isRestart)
 {
   d_sharedState = sharedState;
   

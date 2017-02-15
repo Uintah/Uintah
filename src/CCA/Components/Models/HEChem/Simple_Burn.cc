@@ -98,7 +98,7 @@ Simple_Burn::~Simple_Burn()
 //______________________________________________________________________
 //
 void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
-                               ModelSetup*)
+                               ModelSetup*, const bool isRestart)
 {
   d_sharedState = sharedState;
   
