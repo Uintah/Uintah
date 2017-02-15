@@ -65,10 +65,12 @@
   #include <Core/Grid/Variables/GPUStencil7.h>
 #endif
 
+#include <climits>
 #include <cstdio>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <mutex>
 #include <string>
 #include <sstream>
@@ -98,7 +100,6 @@ using namespace Uintah;
 
 // Debug: Used to sync cerr/cout so it is readable when output by multiple threads
 extern std::mutex cerrLock;
-extern std::mutex coutLock;
 
 #ifdef HAVE_CUDA
   extern DebugStream simulate_multiple_gpus;
@@ -1238,17 +1239,16 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType& subsetDB,
                                     const VarLabel*   pos_var,
                                           bool        exact )
 {
-
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::queryPSetDB");
-  ParticleSubset* subset=0;
-
+  ParticleSubset* subset = nullptr;
 
   psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
-  int best_volume = INT_MAX;
+  int best_volume = std::numeric_limits<int>::max();
   int target_volume = Region::getVolume(low,high);
 
+
   {
-    psetDB_monitor psetDB_read_lock{ Uintah::CrowdMonitor<psetDB_tag>::READER };
+    psetDB_monitor psetDB_write_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
 
     std::pair<psetDBType::const_iterator, psetDBType::const_iterator> ret = subsetDB.equal_range(key);
 
@@ -1276,24 +1276,26 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType& subsetDB,
         }
       }
     }
-  } // end psetDB_read_lock{ Uintah::CrowdMonitor<psetDB_tag>::READER }
+  } // end psetDB_write_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER }
+
 
   if( exact && best_volume != target_volume ) {
-    return 0;
+    return nullptr;
   }
 
   //if we don't need to filter or we already have an exact match just return this subset
-  if( pos_var == 0 || best_volume == target_volume ) {
+  if( pos_var == nullptr || best_volume == target_volume ) {
     return subset;
   }
 
   //otherwise filter out particles that are not within this range
   constParticleVariable<Point> pos;
 
-  ASSERT(subset!=0);
+  ASSERT(subset != nullptr);
+
   get(pos, pos_var, subset);
 
-  ParticleSubset* newsubset=scinew ParticleSubset(0, matlIndex, patch->getRealPatch(),low,high);
+  ParticleSubset* newsubset = scinew ParticleSubset(0, matlIndex, patch->getRealPatch(),low,high);
 
   for(ParticleSubset::iterator iter = subset->begin();iter != subset->end(); iter++){
     particleIndex idx = *iter;
