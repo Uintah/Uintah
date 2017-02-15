@@ -151,10 +151,6 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   }
 
-
-  SourceTermFactory& factory = SourceTermFactory::self();
-  factory.commonSrcProblemSetup( db );
-
   // Source terms:
   if (db->findBlock("src")){
 
@@ -383,11 +379,17 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
   tsk->requires(Task::NewDW, d_prNo_label, Ghost::None, 0);
 
   // srcs
-  SourceTermFactory& src_factory = SourceTermFactory::self();
   for (vector<SourceContainer>::iterator iter = d_sources.begin();
        iter != d_sources.end(); iter++){
-    SourceTermBase& temp_src = src_factory.retrieve_source_term( iter->name );
-    tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 );
+
+    iter->label = VarLabel::find( iter->name );
+
+    if ( iter->label == 0 ){
+      throw InvalidValue("Error: Source Label not found: "+iter->name, __FILE__, __LINE__);
+    }
+
+    tsk->requires( Task::NewDW, iter->label, Ghost::None, 0 );
+
   }
 
   //extra sources
@@ -491,11 +493,9 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch);
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
     vector<constCCVarWrapper> sourceVars;
-    SourceTermFactory& src_factory = SourceTermFactory::self();
     for (vector<SourceContainer>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
       constCCVarWrapper temp_var;  // Outside of this scope src is no longer available
-      SourceTermBase& temp_src = src_factory.retrieve_source_term( src_iter->name );
-      new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+      new_dw->get(temp_var.data, src_iter->label, matlIndex, patch, gn, 0);
       temp_var.sign = (*src_iter).weight;
       sourceVars.push_back(temp_var);
     }

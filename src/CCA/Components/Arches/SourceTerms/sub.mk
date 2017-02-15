@@ -10,7 +10,7 @@ SRCDIR   := CCA/Components/Arches/SourceTerms
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=               
+CUDA_ENABLED_SRCS :=
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -33,17 +33,14 @@ SRCS += \
          $(SRCDIR)/CoalGasMomentum.cc          \
          $(SRCDIR)/CoalGasOxi.cc               \
          $(SRCDIR)/CoalGasOxiMom.cc            \
-         $(SRCDIR)/HTConvection.cc            \
+         $(SRCDIR)/HTConvection.cc             \
          $(SRCDIR)/DORadiation.cc              \
          $(SRCDIR)/MomentumDragSrc.cc          \
          $(SRCDIR)/RMCRT.cc                    \
          $(SRCDIR)/SourceTermFactory.cc        \
          $(SRCDIR)/UnweightedSrcTerm.cc        \
-         \
          $(SRCDIR)/BowmanNOx.cc                \
-         $(SRCDIR)/BrownSootFormation_Tar.cc   \
-         $(SRCDIR)/BrownSootFormation_nd.cc    \
-         $(SRCDIR)/BrownSootFormation_rhoYs.cc \
+         $(SRCDIR)/BrownSoot.cc                \
          $(SRCDIR)/ConstSrcTerm.cc             \
          $(SRCDIR)/DissipationSource.cc        \
          $(SRCDIR)/Inject.cc                   \
@@ -54,10 +51,9 @@ SRCS += \
          $(SRCDIR)/SecondMFMoment.cc           \
          $(SRCDIR)/ShunnMoinMMSCont.cc         \
          $(SRCDIR)/ShunnMoinMMSMF.cc           \
-         $(SRCDIR)/SootMassBalance.cc          \
          $(SRCDIR)/SourceTermBase.cc           \
          $(SRCDIR)/TabRxnRate.cc               \
-         $(SRCDIR)/WestbrookDryer.cc           
+         $(SRCDIR)/WestbrookDryer.cc
 
 ########################################################################
 #

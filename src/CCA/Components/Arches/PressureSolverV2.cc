@@ -268,12 +268,10 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   }
 
   // add access to sources:
-  SourceTermFactory& factory = SourceTermFactory::self();
-  for (vector<std::string>::iterator iter = d_new_sources.begin();
-      iter != d_new_sources.end(); iter++){
-    SourceTermBase& src = factory.retrieve_source_term( *iter );
-    const VarLabel* srcLabel = src.getSrcLabel();
-    tsk->requires( Task::NewDW, srcLabel, gn, 0 );
+  for (auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
+
+    tsk->requires( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
+
   }
 
   //extra sources
@@ -363,15 +361,12 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                           &constVars);
     Vector Dx = patch->dCell();
     double volume = Dx.x()*Dx.y()*Dx.z();
+    
     // Add other source terms to the pressure:
-    SourceTermFactory& factory = SourceTermFactory::self();
-    for (vector<std::string>::iterator iter = d_new_sources.begin();
-        iter != d_new_sources.end(); iter++){
+    for ( auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
 
-      SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
       constCCVariable<double> src_value;
-      new_dw->get( src_value, srcLabel, d_indx, patch, gn, 0 );
+      new_dw->get( src_value, VarLabel::find( *iter ), d_indx, patch, gn, 0 );
 
       double weight = d_source_weights[*iter];
 

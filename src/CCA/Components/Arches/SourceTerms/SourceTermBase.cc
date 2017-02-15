@@ -12,6 +12,7 @@ _src_name(src_name), _type(type), _shared_state( shared_state ), _required_label
 {
   _init_type = "constant";
   _stage = -1;
+  _mult_srcs.clear(); 
 }
 
 SourceTermBase::~SourceTermBase()

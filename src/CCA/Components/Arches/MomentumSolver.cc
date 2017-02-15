@@ -543,13 +543,10 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->modifies(d_lab->d_conv_scheme_z_Label);
 
   // Adding new sources from factory:
-  SourceTermFactory& factor = SourceTermFactory::self();
   for (vector<std::string>::iterator iter = d_new_sources.begin();
       iter != d_new_sources.end(); iter++){
 
-    SourceTermBase& src = factor.retrieve_source_term( *iter );
-    const VarLabel* srcLabel = src.getSrcLabel();
-    tsk->requires(Task::NewDW, srcLabel, gac, 1);
+    tsk->requires(Task::NewDW, VarLabel::find( *iter ), gac, 1);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -890,16 +887,14 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     // Adding new sources from factory:
     SourceTermFactory& factor = SourceTermFactory::self();
-    for (vector<std::string>::iterator iter = d_new_sources.begin();
-       iter != d_new_sources.end(); iter++){
+    for ( auto iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
 
       SourceTermBase& src = factor.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
       SourceTermBase::MY_GRID_TYPE src_type = src.getSourceGridType();
 
       switch (src_type) {
         case SourceTermBase::CCVECTOR_SRC:
-          { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::AroundCells, 1);
+          { new_dw->get( velocityVars.otherVectorSource, VarLabel::find( *iter ), indx, patch, Ghost::AroundCells, 1);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
 
@@ -912,7 +907,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
           }
           break;
         case SourceTermBase::FX_SRC:
-          { new_dw->get( velocityVars.otherFxSource, srcLabel, indx, patch, Ghost::None, 0);
+          { new_dw->get( velocityVars.otherFxSource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
           for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
@@ -921,7 +916,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
           }}
           break;
         case SourceTermBase::FY_SRC:
-          { new_dw->get( velocityVars.otherFySource, srcLabel, indx, patch, Ghost::None, 0);
+          { new_dw->get( velocityVars.otherFySource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
           for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
@@ -930,7 +925,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
           }}
           break;
         case SourceTermBase::FZ_SRC:
-          { new_dw->get( velocityVars.otherFzSource, srcLabel, indx, patch, Ghost::None, 0);
+          { new_dw->get( velocityVars.otherFzSource, VarLabel::find( *iter ), indx, patch, Ghost::None, 0);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
           for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){

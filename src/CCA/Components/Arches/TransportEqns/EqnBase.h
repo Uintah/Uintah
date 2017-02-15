@@ -50,6 +50,7 @@ public:
 
   struct SourceContainer{           ///< Hold the source names for this transport equation and the sign to either add or subtract from rhs.
     std::string name;
+    const VarLabel* label; 
     double      weight;
   };
 

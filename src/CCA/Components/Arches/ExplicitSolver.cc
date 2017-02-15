@@ -368,34 +368,15 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
       SourceTermFactory& src_factory = SourceTermFactory::self();
 
-      for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
-
-        for (ProblemSpecP src_db = eqn_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")) {
-
-          std::string srcname;
-          src_db->getAttribute("label", srcname);
-
-          for ( ProblemSpecP found_src_db = transportEqn_db->findBlock("Sources")->findBlock("src"); found_src_db != 0;
-                found_src_db = found_src_db->findNextBlock("src")) {
-
-            string check_label;
-            found_src_db->getAttribute("label",check_label);
-
-            if ( check_label == srcname ) {
-
-              vector<string>::iterator it = find( used_sources.begin(), used_sources.end(), srcname);
-
-              if ( it == used_sources.end() ) {
-                used_sources.push_back( srcname );
-
-                SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
-                a_src.problemSetup( found_src_db );
-
-              }
-            }
-          }
-        }
+      for ( ProblemSpecP src_db = sources_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src") ){
+        std::string label;
+        src_db->getAttribute("label", label);
+        SourceTermBase& the_src = src_factory.retrieve_source_term( label );
+        the_src.problemSetup( src_db );
       }
+
+      src_factory.commonSrcProblemSetup( sources_db );
+
     }
 
   } else {
@@ -2331,12 +2312,9 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     }
 
     // add access to sources:
-    SourceTermFactory& factory = SourceTermFactory::self();
     for (vector<std::string>::iterator iter = d_mass_sources.begin();
         iter != d_mass_sources.end(); iter++){
-      SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
-      tsk->requires( Task::NewDW, srcLabel, gn, 0 );
+      tsk->requires( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
     }
 
     sched->addTask(tsk, patches, matls);
@@ -2625,14 +2603,11 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     StaticArray<constCCVariable<double> > mass_srcs(d_mass_sources.size());
     // Add other source terms to the continuity
     int m=0;
-    SourceTermFactory& factory = SourceTermFactory::self();
-    for (vector<std::string>::iterator iter = d_mass_sources.begin();
-        iter != d_mass_sources.end(); iter++){
+    for (auto iter = d_mass_sources.begin(); iter != d_mass_sources.end(); iter++){
 
-      SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
-      new_dw->get( mass_srcs[m], srcLabel, indx, patch, gn, 0 );
+      new_dw->get( mass_srcs[m], VarLabel::find(*iter), indx, patch, gn, 0 );
       m++;
+
     }
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
@@ -3005,17 +2980,13 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   // extra mass source terms
   std::vector<std::string> extra_sources;
   extra_sources = d_pressSolver->get_pressure_source_ref();
-  SourceTermFactory& factory = SourceTermFactory::self();
-  for (vector<std::string>::iterator iter = extra_sources.begin();
-      iter != extra_sources.end(); iter++){
 
-    SourceTermBase& src = factory.retrieve_source_term( *iter );
-    const VarLabel* srcLabel = src.getSrcLabel();
+  for ( auto iter = extra_sources.begin(); iter != extra_sources.end(); iter++){
 
     if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
-      tsk->requires( Task::OldDW, srcLabel, gn, 0 );
+      tsk->requires( Task::OldDW, VarLabel::find( *iter ), gn, 0 );
     } else {
-      tsk->requires( Task::NewDW, srcLabel, gn, 0 );
+      tsk->requires( Task::NewDW, VarLabel::find( *iter ), gn, 0 );
     }
   }
 
@@ -3095,17 +3066,14 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     std::vector<constCCVariable<double> > src_values;
     bool have_extra_srcs = false;
 
-    for (std::vector<std::string>::iterator iter = extra_sources.begin();
-        iter != extra_sources.end(); iter++){
+    for ( auto iter = extra_sources.begin(); iter != extra_sources.end(); iter++){
 
-      SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel();
       constCCVariable<double> src_value;
 
       if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
-       old_dw->get( src_value, srcLabel, indx, patch, gn, 0 );
+       old_dw->get( src_value, VarLabel::find( *iter ), indx, patch, gn, 0 );
       } else {
-       new_dw->get( src_value, srcLabel, indx, patch, gn, 0 );
+       new_dw->get( src_value, VarLabel::find( *iter ), indx, patch, gn, 0 );
       }
 
       src_values.push_back( src_value );

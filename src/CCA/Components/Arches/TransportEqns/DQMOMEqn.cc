@@ -727,11 +727,8 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, const
 
   // extra srcs
   if (d_addExtraSources) {
-    SourceTermFactory& src_factory = SourceTermFactory::self();
-    for (vector<std::string>::iterator iter = d_sources.begin();
-         iter != d_sources.end(); iter++){
-      SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter );
-      tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 );
+    for ( auto iter = d_sources.begin(); iter != d_sources.end(); iter++){
+      tsk->requires( Task::NewDW, VarLabel::find(*iter), Ghost::None, 0 );
     }
   }
 
@@ -872,11 +869,9 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
       if (d_addExtraSources) {
 
         // Get the factory of source terms
-        SourceTermFactory& src_factory = SourceTermFactory::self();
-        for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+        for ( auto src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
          //constCCVariable<double> extra_src;
-         SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter );
-         new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+         new_dw->get(extra_src, VarLabel::find( *src_iter ), matlIndex, patch, gn, 0);
 
          // Add to the RHS
          RHS[c] += extra_src[c]*vol;

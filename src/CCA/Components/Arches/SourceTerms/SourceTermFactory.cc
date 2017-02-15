@@ -11,10 +11,7 @@
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
-#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_rhoYs.h>
-#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_nd.h>
-#include <CCA/Components/Arches/SourceTerms/SootMassBalance.h>
-#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_Tar.h>
+#include <CCA/Components/Arches/SourceTerms/BrownSoot.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
@@ -96,7 +93,22 @@ SourceTermFactory::retrieve_source_term( const std::string name )
 {
   const SourceMap::iterator isource= _sources.find( name );
 
-  if( isource != _sources.end() ) return *(isource->second);
+  if( isource != _sources.end() ) {
+    return *(isource->second);
+  } else {
+    // **assuming it has been built upstream**
+    // check for the source by using the multiple_src information
+    // This is slower. If the src hasn't been built, this should
+    // thrown an error when parsing the builders.
+    for ( auto i = _sources.begin(); i != _sources.end(); i++ ){
+      std::vector<std::string>& src_names = i->second->get_all_src_names();
+      for ( auto i_src = src_names.begin(); i_src != src_names.end(); i_src++ ){
+        if ( name == *i_src ){
+          return *(i->second);
+        }
+      }
+    }
+  }
 
   const BuildMap::iterator ibuilder = _builders.find( name );
 
@@ -275,24 +287,12 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         SourceTermBase::Builder* srcBuilder = scinew BowmanNOx::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
-      } else if (src_type == "BrownSootFormation_rhoYs") {
-        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_rhoYs::Builder(src_name, required_varLabels, lab);
-        factory.register_source_term( src_name, srcBuilder );
-
-      } else if (src_type == "BrownSootFormation_nd") {
-        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_nd::Builder(src_name, required_varLabels, lab);
-        factory.register_source_term( src_name, srcBuilder );
-
-      } else if (src_type == "BrownSootFormation_Tar") {
-        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_Tar::Builder(src_name, required_varLabels, lab);
+      } else if (src_type == "brown_soot") {
+        SourceTermBase::Builder* srcBuilder = scinew BrownSoot::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "ht_convection") {
         SourceTermBase::Builder* srcBuilder = scinew HTConvection::Builder(src_name, required_varLabels, lab);
-        factory.register_source_term( src_name, srcBuilder );
-
-      } else if (src_type == "SootMassBalance") {
-        SourceTermBase::Builder* srcBuilder = scinew SootMassBalance::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "mms1"){

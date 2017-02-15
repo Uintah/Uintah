@@ -36,7 +36,7 @@
 namespace Uintah {
 
 class BoundaryCondition;
-class TableLookup; 
+class TableLookup;
 
 class SourceTermBase{
 
@@ -76,10 +76,6 @@ public:
   /** @brief Work to be performed after properties are setup */
   virtual void extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup ){ }
 
-  /** @brief Returns the source label **/
-  inline const VarLabel* getSrcLabel(){
-    return _src_label; }
-
   /** @brief Returns a list of any extra local labels this source may compute **/
   inline const std::vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }
@@ -111,9 +107,15 @@ public:
       std::string _type;
   };
 
+  /** @brief In the case where a source base returns multiple sources, this returns that list.
+              This is a limiting case with the current abstraction. **/
+  std::vector<std::string>& get_all_src_names(){ return _mult_srcs; }
+
+
 protected:
 
   std::string _src_name;                                  ///< User assigned source name
+  std::vector<std::string> _mult_srcs;                    ///< If a source produces multiple labels, this vector holds the name of each.
   std::string _init_type;                                 ///< Initialization type.
   std::string _type;                                      ///< Source type (eg, constant, westbrook dryer, .... )
   bool _compute_me;                                       ///< To indicate if calculating this source is needed or has already been computed.
