@@ -6,13 +6,13 @@
 #
 #  Usage:
 #   pTarUda 
-#            -np:            [int]       Number of processores used.
-#            -allTimesteps:   [y/n]       Tar all timesteps in uda?  If "n" then a vi window will open allowing you to edit the timesteps
-#            -create         blank       create new archives
-#            -extract        blank       extract timestep archieves
-#            -uda            [dir name]  uda name
-#            -help:                      Display this option summary
-#
+#          -np:              [int]        10       Number of processores used.
+#          -allTimesteps:    [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
+#          -create           blank         X       create new archives
+#          -extract          blank                 extract timestep archieves
+#          -continueTarring  blank                 continue tarring if previous attempts failed
+#          -uda              [dir name]            uda name
+#          -help:                                  Display this option summary
 #
 #  It does not delete the original timestep directories. 
 #
@@ -25,10 +25,20 @@
 unalias -a rm
 unalias -a cd
 
+#__________________________________
+# defaults
+nproc="10"
+allTimesteps="Y"
+continueTarring="N"
+MAKE=make
+OS="Linux"
+FIND=find
+
+
 #______________________________________________________________________
 # Parse input
 show_help=0
-if test $# -ne 7; then
+if test $# -lt 2; then
   echo "Wrong number of arguments ($#)."
   show_help=1
 fi
@@ -42,10 +52,8 @@ while [ "$#" -gt 0 ]; do
       ;;
   -allTimesteps|--allTimesteps)
       shift
-      allTimesteps=${1^^}     # upper case trick
-    #  if test "$allTimesteps" != "Y" || "$allTimesteps" != "N" ; then
-    #    show_help=1
-    #  fi 
+      ans=`echo $1 | tr [:lower:] [:upper:]` # upper case trick
+      allTimesteps=$ans
       ;;
   -uda|--uda)
       shift
@@ -56,6 +64,9 @@ while [ "$#" -gt 0 ]; do
       ;;
   -extract|--extract)
       createExtract="extract"
+      ;;
+  -continueTarring|--continueTarring)
+      continueTarring="Y"
       ;;    
   -help|--help|-h)
       show_help=1
@@ -71,20 +82,21 @@ done
 # usage string - exit
 if [ $show_help -ne 0 ]; then
   cat <<EOF
-      It does not delete the original timestep directories. 
+      This script does not delete the original timestep directories. 
 
-      Options:
-          -np:            [int]       Number of processores used.
-          -allTimesteps:   [y/n]      operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
-          -create         blank       create new archives
-          -extract        blank       extract timestep archieves
-          -uda            [dir name]  uda name
-          -help:                      Display this option summary
+      Options:                        default
+          -np:              [int]        10       Number of processores used.
+          -allTimesteps:    [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
+          -create           blank         X       create new archives
+          -extract          blank                 extract timestep archieves
+          -continueTarring  blank                 continue tarring if previous attempts failed
+          -uda              [dir name]            uda name
+          -help:                                  Display this option summary
 EOF
   exit 0
 fi
-#__________________________________
 
+#__________________________________
 pTarfulldir=`readlink -f $0`
 pTardir=`dirname $pTarfulldir`
 
@@ -94,8 +106,8 @@ if test `echo $uda | cut -c1` != "/"; then
 fi
 
 #__________________________________
-#  Form the TAR command
-which pigz >& /dev/null                      # is the parallel version of gzip installed?
+#  Create the TAR command used in the make file
+which pigz >& /dev/null                       # is the parallel version of gzip installed?
 rc=$?
 
 if test $createExtract == "create"; then
@@ -124,6 +136,8 @@ echo "_____________________________________"
 echo "Inputs:"
 echo "	# processors:          $nproc"
 echo "	allDirectories:        $allTimesteps"
+echo "	create/extract:        $createExtract"
+echo "	continueTarring:       $continueTarring"
 echo "	uda:                   $uda"
 echo "	PTAR_FILES:            $PTAR_FILES"
 echo "	pTardir:               $pTardir"
@@ -137,23 +151,30 @@ echo "Bullet proof tests:"
 
 validateTarredFilesDir()
 {
+  continueTarring=$1
+  
   if test -d "$STAMP_DIR"; then
     echo ""
-    echo "  WARNING: It appears that these directories were in the process of being tarred"
-    echo "           but were interrupted.  The list of directories already tarred can"
-    echo "           be found in the $STAMP_DIR/stamp directory."
+    echo "  WARNING: The previous attempt at tarring the directores was interrupted."
+    echo "           The list of directories already tarred can be found at:"
+    echo "                 $STAMP_DIR/stamp"
     echo ""
-    echo "  MORE WARNING: It is possible, though unlikely, that some of the directories listed"
-    echo "                as tarred did not complete successfully."
+    echo "            It is possible, though unlikely, that some of the directories listed"
+    echo "            did not complete successfully."
     echo ""
+    
+    if test "$continueTarring" == "Y"; then
+      return
+    fi
+    
     echo "  Do you wish to continue tarring the remaining directories? (y/n)"
-    echo "     (If not, manually remove the following directory and run this script again:"
-    echo "           $STAMP_DIR)"
+    echo "  If not, manually remove the following directory and run this script again:"
+    echo "           $STAMP_DIR"
     echo ""
     echo -n " Please answer y/n: "
     read answer
     echo ""
-    if test "$answer" != "y"; then
+     if test "$answer" != "y"; then
       echo "Goodbye."
       echo ""
       exit 1
@@ -163,46 +184,35 @@ validateTarredFilesDir()
   fi
 }
 
+#__________________________________
 export STAMP_DIR=$uda/.tarred_files
-validateTarredFilesDir
+validateTarredFilesDir $continueTarring
 
 if test ! -d "$STAMP_DIR"; then
   # Didn't have permissions to make the directory... so place it in tmp
-  echo ""
-  echo "  WARNING: Was not able to create $STAMP_DIR directory (bad permissions?)."
+  printf "\n \t %s \n"  "WARNING: Was not able to create $STAMP_DIR directory (bad permissions?)."
+  
   export STAMP_DIR=/tmp/.tarred_files_`basename $uda`_`whoami`
-  echo "           Placing it in $STAMP_DIR instead."
-  echo ""
-  validateTarredFilesDir
+  
+  printf " \t %s \n"  "Placing it in $STAMP_DIR instead."
+  validateTarredFilesDir $continueTarring
 fi
 
 if test ! -d "$STAMP_DIR"; then
-  echo ""
-  echo "  ERROR: Did not have permissions to create $STAMP_DIR directory.  Goodbye."
-  echo ""
+  printf "\n \t %s \n" "  ERROR: Did not have permissions to create $STAMP_DIR directory.  Goodbye."
 fi
 
 if test "$uda" == "."; then
-  echo ""
-  echo "  ERROR: You can't set the local dir to '.'"
-  echo ""
+  printf "\n \t %s \n" "  ERROR: You can't set the local dir to '.'"
   exit 1
 fi
 
 echo -n "  Testing: does the local folder ($uda) exist... "
 if test ! -e $uda; then
-  echo ""
-  echo ""
-  echo "  ERROR: Local directory '$uda' does not exist"
-  echo ""
+  printf "\n \t %s \n" "  ERROR: Local directory '$uda' does not exist"
   exit 1
 fi
 echo "yes."
-
-#__________________________________
-#  hard wired for now
-MAKE=make
-OS="Linux"
 
 echo "_____________________________________"
 
@@ -222,17 +232,15 @@ fi
 
 echo "--------------------------------" >> $PTAR_RECORD
 echo "Started on `date`."               >> $PTAR_RECORD
-echo "Uda:  $uda"                  >> $PTAR_RECORD
+echo "Uda:  $uda"                       >> $PTAR_RECORD
 echo ""                                 >> $PTAR_RECORD
 
 cd $uda
 
 #-------------------------------
-# make a sorted list of potential files to tar
-# let the user edit that file with vi
+# make a sorted list of directories to tar
+# Let the user edit that file with vi
 /bin/rm -f $PTAR_FILES
-
-FIND=find
 
 if test $createExtract == "create"; then
   $FIND .                -maxdepth 1 -type d  -exec basename {} \; | grep -v "\.\|t[0-9]\|checkpoints\|.tarred_files" >$PTAR_FILES
@@ -264,7 +272,9 @@ if test "$allTimesteps" == "N"; then
 fi
 
 chmod ug+rw $PTAR_FILES 
- 
+
+#______________________________________________________________________ 
+# Now tar the directories
 echo
 echo -n "Starting at: " | tee -a $PTAR_RECORD
 date | tee -a $PTAR_RECORD
