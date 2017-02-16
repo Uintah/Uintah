@@ -132,12 +132,7 @@ void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
   for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
 
     SourceContainer this_src;
-    double weight;
-
     src_db->getAttribute(  "label",  this_src.name   );
-    src_db->getWithDefault("weight", weight, 1.0);    // by default, add the source to the RHS
-
-    this_src.weight = weight;
 
     //which sources are turned on for this equation
     //only add them if they haven't already been added.
