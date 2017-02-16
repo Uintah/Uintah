@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Lucite (PMMA) -->
+<!-- 
+    From: 
+          Steinberg, D.J. Equation of State and Strength Properties of Selected Materials.
+           UCRL-MA-106439: Change 1, Feb. 1996.
+-->
+<Uintah_Include>
+  <equation_of_state type="mie_gruneisen">
+    <C_0> 2180.0   </C_0>
+    <Gamma_0>0.85  </Gamma_0>
+    <S_alpha>2.088 </S_alpha>
+    <S_2>   -1.124 </S_2>
+    <S_3>    0.0   </S_3>
+    <!-- <b>  0.0 </b> -->
+  </equation_of_state>
+</Uintah_Include>

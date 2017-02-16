@@ -1,0 +1,106 @@
+#!/bin/csh -f
+
+set usage = "\
+  Usage:  RMCRT_wrapper\
+                -bm     Benchmark test \
+                -o      output file name\
+                -L      Level index to do comparison on\
+                -plot   true/false to enable intermediate plots\
+                -uda    name of uda to investigate"
+
+#__________________________________
+# This wrapper scripts just calls the RMCRT 
+# 3 times for each direction
+#
+#  Usage:  RMCRT_wrapper  -bm 1 -o out.8.cmp -L 0 -plot false -uda RMCRT_test_1L_8.uda
+#__________________________________
+
+set rootPath = `dirname $0`
+
+if ( -l $0 ) then
+  set rootPath  = `readlink $0 | xargs dirname`  # if you're using a symbolic link to script
+endif
+
+set path = ($rootPath $path)
+setenv TOOLSPATH $rootPath      # this path is used inside of RMCRT.m
+
+# defaults
+set plot = false
+set out  = out
+set bm   = -9
+set uda  = -9
+set L    = 0
+
+
+# parse the input arguments and extract $out and $uda
+while (1)
+  switch($1:q)  # $1 is first argument
+  
+  case -h:
+    shift
+    echo $usage:q
+    exit
+    breaksw;
+  case -o:
+    shift
+    set out = $1
+    breaksw;
+  case -bm:
+    shift
+    set bm = $1
+    breaksw;
+  case -L:
+    shift
+    set L = $1
+    breaksw;
+  case -plot:
+    shift
+    set plot = $1
+    breaksw;
+  case -uda:
+    shift
+    set uda = $1
+    breaksw;
+  default:
+    break;
+  endsw
+  shift
+end
+
+
+
+#__________________________________
+#  bulletproofing
+if ( $bm == -9 || $uda == -9 ) then 
+  echo "Error:  either (-bm) or (-uda) options were not set"
+  echo $usage:q
+  exit
+endif
+
+set out_x = `echo $out`_x
+set out_y = `echo $out`_y
+set out_z = `echo $out`_z
+
+echo "Now running RMCRT scripts in each direction ($out, $uda)"
+echo "X-dir"
+RMCRT.m -bm $bm -L $L -o "$out_x" -uda $uda -pDir 1 -plot $plot
+
+echo "Y-dir"
+RMCRT.m -bm $bm -L $L -o "$out_y" -uda $uda -pDir 2 -plot $plot
+
+echo "Z-dir"
+RMCRT.m -bm $bm -L $L -o "$out_z" -uda $uda -pDir 3 -plot $plot
+
+paste $out_x $out_y $out_z > $out
+
+# __________________________________
+#  combine plots
+
+if ($plot == "true" &&  -e divQ.X.jpg && -e divQ.Y.jpg && -e divQ.Z.jpg ) then
+  mogrify -trim divQ.X.jpg
+  mogrify -trim divQ.Y.jpg
+  mogrify -trim divQ.Z.jpg
+  montage -geometry 740x680 -tile 3x1 divQ.X.jpg divQ.Y.jpg divQ.Z.jpg divQ.all.jpg
+endif
+
+exit

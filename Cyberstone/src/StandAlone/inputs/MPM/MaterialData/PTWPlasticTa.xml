@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Ta - Preston,Tonks,Wallace,JAP,93(1),2003 p.219 -->
+<Uintah_Include>
+  <flow_model type="preston_tonks_wallace">
+    <theta> 0.02 </theta> 
+    <p> 0.0 </p>
+    <s0> 0.012 </s0>
+    <sinf> 0.00325 </sinf>
+    <kappa> 0.6 </kappa>
+    <gamma> 0.00004 </gamma>
+    <y0> 0.01 </y0>
+    <yinf> 0.00125 </yinf>
+    <y1> 0.012 </y1>
+    <y2> 0.4 </y2>
+    <beta> 0.23 </beta> 
+    <M> 180.948 </M>
+    <G0> 722e8 </G0>
+    <alpha> 0.23 </alpha>
+    <alphap> 0.48 </alphap>
+  </flow_model>
+</Uintah_Include>

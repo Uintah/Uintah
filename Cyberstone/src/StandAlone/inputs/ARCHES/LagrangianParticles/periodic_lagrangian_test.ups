@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Arches "2D" Periodic Box Almgren MMS </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>10.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.005</delt_min>
+    <delt_max>0.005</delt_max>
+    <timestep_multiplier>0.5</timestep_multiplier>
+    <max_Timesteps>100</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>lagrangian_test.uda</filebase>
+    <outputInitTimestep/>
+    <!--<outputInterval>0.01</outputInterval>-->
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <save label="p.x"/>
+    <save label="p.u"/>
+    <save label="p.v"/>
+    <save label="p.w"/>
+    <save label="p.px"/>
+    <save label="p.py"/>
+    <save label="p.pz"/>
+    <save label="p.d"/>
+    <save label="p.particleID"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[10,10,10]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <BoundaryConditions/>
+      <!-- NEW STUFF -->
+      <!-- transported scalar -->
+      <ScalarTransport>
+        <eqn label="arches_task_scalar">
+          <diffusion/>
+          <!--<convection scheme="superbee"/>-->
+          <convection scheme="minmod"/>
+        </eqn>
+      </ScalarTransport>
+      <LagrangianParticles>
+        <ParticlesPerCell>100</ParticlesPerCell>
+        <ParticlePosition x="p.px" y="p.py" z="p.pz"/>
+        <ParticleVelocity u="p.u" v="p.v" w="p.w"/>
+        <ParticleSize label="p.d"/>
+        <ParticleVariables>
+        </ParticleVariables>
+      </LagrangianParticles>
+      <Initialization>
+        <task label="my_great_initializer" eqn="arches_task_scalar" type="wave">
+          <!--<wave type="sine">-->
+          <!--<grid dependent_type="svol" independent_type="svol"/>-->
+          <!--<independent_variable label="gridX"/>-->
+          <!--<sine A="1.0" f=".5" offset="0"/>-->
+          <!--</wave>-->
+          <wave type="square">
+            <grid dependent_type="svol" independent_type="svol"/>
+            <independent_variable label="gridX"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.0"/>
+          </wave>
+        </task>
+        <task label="Lx" type="random_lagrangian_particles"/>
+        <task label="Lvel" type="lagrangian_particle_velocity">
+          <velocity_init type="as_gas_velocity"/>
+        </task>
+        <task label="Ld" type="lagrangian_particle_size">
+          <size_init type="random"/>
+          <max_diameter>1e-4</max_diameter>
+        </task>
+      </Initialization>
+      <ParticleModels>
+        <model type="simple_rate" label="my_model">
+          <A>1.0</A>
+          <ER>1.0</ER>
+          <m>1.0</m>
+          <grid dependent_type="svol" independent_type="svol"/>
+          <temperature label="gridX"/>
+          <concentration label="gridY"/>
+          <N>1</N>
+        </model>
+      </ParticleModels>
+      <!-- END NEW STUFF -->
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <ExplicitSolver>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+          <initialization type="almgren">
+            <plane>x-y</plane>
+          </initialization>
+          <!--<initialization type="constant">-->
+          <!--<const_u>1.0</const_u>-->
+          <!--<const_v>1.0</const_v>-->
+          <!--<const_w>1.0</const_w>-->
+          <!--</initialization>-->
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>
