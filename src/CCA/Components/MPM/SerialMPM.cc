@@ -3552,12 +3552,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                        + velSSPSSP)*delT;
           pvelnew[idx]  = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
           pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
-#if 0
-          // PIC, or XPIC(1)
-          pxnew[idx]    = px[idx]    + vel*delT
-                     - 0.5*(acc*delT + (pvelocity[idx] - pvelSSPlus[idx]))*delT;
-          pvelnew[idx]   = pvelSSPlus[idx]    + acc*delT;
-#endif
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
@@ -3579,7 +3573,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           int NN = interpolator->findCellAndWeights(px[idx], ni, S,
                                                     psize[idx], pFOld[idx]);
           Vector vel(0.0,0.0,0.0);
-          Vector velSSPSSP(0.0,0.0,0.0);
           Vector acc(0.0,0.0,0.0);
           double fricTempRate = 0.0;
           double tempRate = 0.0;
@@ -3598,10 +3591,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
 
           // Update the particle's pos and vel using std "FLIP" method
-          pxnew[idx]   = px[idx]        + vel*delT;
-          pdispnew[idx]= pdisp[idx]     + vel*delT;
-          pvelnew[idx] = pvelocity[idx] + acc*delT;
-
+          double alpha = flags->d_PICalpha;
+          pxnew[idx] = px[idx] + (vel-acc*delT*(1.-0.5*alpha)
+                               + 0.5*(1.-alpha)*(vel-pvelocity[idx]))*delT;
+          pvelnew[idx]     = (1.0-alpha)*vel + alpha*(pvelocity[idx]+acc*delT);
+          pdispnew[idx]    = pdisp[idx] + (pxnew[idx]-px[idx]);
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
