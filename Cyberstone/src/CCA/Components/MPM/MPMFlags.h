@@ -84,6 +84,7 @@ namespace Uintah {
     std::string d_erosionAlgorithm; // Algorithm to erode material points
  
     double      d_artificialDampCoeff;
+    double      d_PICalpha;
     double      d_artificialViscCoeff1; // Artificial viscosity coefficient 1
     double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2
     double      d_forceIncrementFactor;
