@@ -1477,7 +1477,6 @@
           <n> 0.18 </n>
         </ShaddixChar>
         <SmithChar>
-          <use_simple_inversion>true</use_simple_inversion>
           <char_MW>12.0</char_MW>
           <surface_area_mult_factor>1.0</surface_area_mult_factor>
           <species>H2</species>

@@ -116,7 +116,54 @@ private:
 
   // UDF's
   inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l);
-  inline void invert_2_2( DenseMatrix* &dfdrh );
+  
+  struct InversionBase {
+    virtual void invert_mat(DenseMatrix* &dfdrh)=0;
+    virtual ~InversionBase(){}
+  };
+  
+  struct invert_2_2 : InversionBase {
+    void invert_mat(DenseMatrix* &dfdrh) {
+      double a11=(*dfdrh)[0][0];
+      double a12=(*dfdrh)[0][1];
+      double a21=(*dfdrh)[1][0];
+      double a22=(*dfdrh)[1][1];
+      double det = a11*a22-a12*a21;
+      double det_inv = 1/det;
+      (*dfdrh)[0][0]=a22*det_inv;
+      (*dfdrh)[0][1]=-a12*det_inv;
+      (*dfdrh)[1][0]=-a21*det_inv;
+      (*dfdrh)[1][1]=a11*det_inv;
+    }
+    ~invert_2_2(){}
+  };
+  
+  struct invert_3_3 : InversionBase {
+    void invert_mat(DenseMatrix* &dfdrh) {
+      double a11=(*dfdrh)[0][0];
+      double a12=(*dfdrh)[0][1];
+      double a13=(*dfdrh)[0][2];
+      double a21=(*dfdrh)[1][0];
+      double a22=(*dfdrh)[1][1];
+      double a23=(*dfdrh)[1][2];
+      double a31=(*dfdrh)[2][0];
+      double a32=(*dfdrh)[2][1];
+      double a33=(*dfdrh)[2][2];
+      double det = a11*a22*a33+a21*a32*a13+a31*a12*a23-a11*a32*a23-a31*a22*a13-a21*a12*a33;
+      double det_inv = 1/det;
+      (*dfdrh)[0][0]=(a22*a33-a23*a32)*det_inv;
+      (*dfdrh)[0][1]=(a13*a32-a12*a33)*det_inv;
+      (*dfdrh)[0][2]=(a12*a23-a13*a22)*det_inv;
+      (*dfdrh)[1][0]=(a23*a31-a21*a33)*det_inv;
+      (*dfdrh)[1][1]=(a11*a33-a13*a31)*det_inv;
+      (*dfdrh)[1][2]=(a13*a21-a11*a23)*det_inv;
+      (*dfdrh)[2][0]=(a21*a32-a22*a31)*det_inv;
+      (*dfdrh)[2][1]=(a12*a31-a11*a32)*det_inv;
+      (*dfdrh)[2][2]=(a11*a22-a12*a21)*det_inv;
+    }
+    ~invert_3_3(){}
+  };
+
 
   // Particle VarLabels
   const VarLabel* _char_varlabel;
@@ -147,7 +194,6 @@ private:
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight
   double _weight_small;   ///< small weight
-  bool _use_simple_invert;
   std::vector<std::string> _oxid_l;
   std::vector<double> _MW_l;
   std::vector<double> _a_l;

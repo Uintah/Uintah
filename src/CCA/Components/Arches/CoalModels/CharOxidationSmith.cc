@@ -220,7 +220,6 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   double phi; //
   if (db_coal_props->findBlock("SmithChar")) {
     ProblemSpecP db_Smith = db_coal_props->findBlock("SmithChar");
-    db_Smith->getWithDefault("use_simple_inversion",_use_simple_invert,false);
     db_Smith->getWithDefault("char_MW",_Mh,12.0); // kg char / kmole char
     db_Smith->getWithDefault("surface_area_mult_factor",_S,1.0);
     _NUM_species = 0;
@@ -660,6 +659,15 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     std::vector<double> rh_l_delta(_NUM_reactions);
     std::vector<double> Sc(_NUM_reactions);
     std::vector<double> Sh(_NUM_reactions);
+     
+    InversionBase* invf;
+    if (_NUM_reactions==2){
+      invf = scinew invert_2_2;
+    } else if (_NUM_reactions==3){
+      invf = scinew invert_3_3;
+    } else {
+      throw InvalidValue("ERROR: CharOxidationSmith: Matrix inversion not implemented for the number of reactions being used.",__FILE__,__LINE__);
+    }
 
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
     Uintah::parallel_for(range,  [&]( int i,  int j, int k){
@@ -768,11 +776,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             }
           }
           // invert Jacobian -> (dF_(n)/drh_(n))^-1
-          if (_use_simple_invert){
-            invert_2_2(dfdrh); // simple matrix inversion for a 2x2 matrix.
-          } else {
-            dfdrh->invert(); // Lapack matrix inversion.
-          }
+          invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
           // get rh_(n+1)
           for (int l=0; l<_NUM_reactions; l++) {
             for (int var=0; var<_NUM_reactions; var++) {
@@ -833,6 +837,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
       } // else statement
     }); //end cell loop
+  delete invf;
   // delete scinew DenseMatrix
   delete dfdrh;
   } //end patch loop
@@ -860,18 +865,4 @@ CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &
     denominator = MW * p_area * w *cg * (k_r[l] * _S + mtc_r); // [(kg-mix #) / (m^3 s)]
     F[l] = rh_l[l] - numerator / ( denominator + rh  + r_devol); // [kg-char/m^3/s]
   }
-}
-
-inline void
-CharOxidationSmith::invert_2_2( DenseMatrix* &dfdrh ){
-  double a11=(*dfdrh)[0][0];
-  double a12=(*dfdrh)[0][1];
-  double a21=(*dfdrh)[1][0];
-  double a22=(*dfdrh)[1][1];
-  double det = a11*a22-a12*a21;
-  double det_inv = 1/det;
-  (*dfdrh)[0][0]=a22*det_inv;
-  (*dfdrh)[0][1]=-a12*det_inv;
-  (*dfdrh)[1][0]=-a21*det_inv;
-  (*dfdrh)[1][1]=a11*det_inv;
 }
