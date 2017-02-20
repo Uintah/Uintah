@@ -59,7 +59,7 @@ Uintah::geocosm( DataArchive * da, CommandLineFlags & clf )
       
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
    int maxMatl = clf.matl;
-   for(int matl=0; matl<=maxMatl; matl++){
+   for(int matl=0; matl<maxMatl; matl++){
     //double time = times[t];
     //cout << "time = " << time << endl;
     GridP grid = da->queryGrid(t);
