@@ -55,7 +55,8 @@
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />
-      <CellBasedSmoothing                 spec="OPTIONAL BOOLEAN" />
+      <containerMaterial                  spec="OPTIONAL INTEGER 'positive'"/>
+      <containerRadius                    spec="OPTIONAL DOUBLE  'positive'"/>
     
       <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />
@@ -69,9 +70,6 @@
       <delT_increase_factor               spec="OPTIONAL DOUBLE" />
       <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE Fracture MPM CODE -->
       <dadx                               spec="OPTIONAL DOUBLE" />
-      <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
-      <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
-      <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
       <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
       <do_scalar_diffusion                spec="OPTIONAL BOOLEAN" />
       <do_auto_cycle_bc                   spec="OPTIONAL BOOLEAN" />

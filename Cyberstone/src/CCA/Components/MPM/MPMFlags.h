@@ -91,6 +91,10 @@ namespace Uintah {
     bool        d_do_contact_friction;
     double      d_addFrictionWork;     // 1 == add , 0 == do not add
 
+    // Cyberstone
+    int         d_containerMaterial;
+    double      d_containerRadius;
+
     int         d_extraSolverFlushes;  // Have PETSc flush more to save memory
     bool        d_doImplicitHeatConduction;
     bool        d_doTransientImplicitHeatConduction;
