@@ -99,6 +99,10 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_with_ice = false;
   d_with_arches = false;
   d_myworld = myworld;
+
+  // Cyberstone
+  d_containerMaterial = -999;
+  d_containerRadius   = 9.e99;
   
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;
@@ -120,7 +124,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 
 
 // MMS
-if(d_mms_type=="AxisAligned"){
+  if(d_mms_type=="AxisAligned"){
     d_mms_type = "AxisAligned";
   } else if(d_mms_type=="GeneralizedVortex"){
     d_mms_type = "GeneralizedVortex";
@@ -238,7 +242,12 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
-//MMS
+
+  // Cyberstone
+  mpm_flag_ps->get("ContainerMaterial", d_containerMaterial);
+  mpm_flag_ps->get("ContainerRadius",   d_containerRadius);
+
+  //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
   // Flag for CPTI interpolator
   if(d_interpolator_type=="cpti"){
@@ -403,6 +412,9 @@ else{
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
+    // Cyberstone
+    dbg << " ContainerMaterial           = " << d_containerMaterial << endl;
+    dbg << " ContainerRadius             = " << d_containerRadius   << endl;
     dbg << "---------------------------------------------------------\n";
   }
 }
@@ -449,7 +461,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
-//MMS
+  //MMS
   ps->appendElement("RunMMSProblem",d_mms_type);
   ps->appendElement("InsertParticles",d_insertParticles);
   if(d_insertParticles){
@@ -466,6 +478,10 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
   ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
+
+  // Cyberstone
+  ps->appendElement("ContainerMaterial", d_containerMaterial);
+  ps->appendElement("ContainerRadius",   d_containerRadius);
 }
 
 
