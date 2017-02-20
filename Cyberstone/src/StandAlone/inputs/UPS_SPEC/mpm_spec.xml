@@ -57,6 +57,7 @@
       <withColor                          spec="OPTIONAL BOOLEAN" />
       <containerMaterial                  spec="OPTIONAL INTEGER 'positive'"/>
       <containerRadius                    spec="OPTIONAL DOUBLE  'positive'"/>
+      <KEMaterial                         spec="OPTIONAL INTEGER 'positive'"/>
     
       <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />

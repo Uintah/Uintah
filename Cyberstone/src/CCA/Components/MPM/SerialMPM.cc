@@ -3426,6 +3426,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
     NC_CCweight_new.copyData(NC_CCweight);
 
+    vector<double> useInKECalc(numMPMMatls);
+    if(flags->d_KEMaterial==-999){
+      for(int m = 0; m < numMPMMatls; m++){
+        useInKECalc[m]=1.0;
+      }
+    } else {
+      for(int m = 0; m < numMPMMatls; m++){
+        useInKECalc[m]=0.0;
+      }
+      useInKECalc[flags->d_KEMaterial]=1.0;
+    }
+
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -3573,7 +3585,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
 
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2();
+          ke += .5*pmass[idx]*pvelnew[idx].length2()*useInKECalc[m];
           CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
@@ -3617,7 +3629,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
   
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2();
+          ke += .5*pmass[idx]*pvelnew[idx].length2()*useInKECalc[m];
           CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
