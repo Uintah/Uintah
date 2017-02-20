@@ -94,6 +94,7 @@ namespace Uintah {
     // Cyberstone
     int         d_containerMaterial;
     double      d_containerRadius;
+    int         d_KEMaterial;
 
     int         d_extraSolverFlushes;  // Have PETSc flush more to save memory
     bool        d_doImplicitHeatConduction;

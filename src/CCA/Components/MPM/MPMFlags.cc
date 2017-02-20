@@ -103,6 +103,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   // Cyberstone
   d_containerMaterial = -999;
   d_containerRadius   = 9.e99;
+  d_KEMaterial = -999;
   
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;
@@ -246,6 +247,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   // Cyberstone
   mpm_flag_ps->get("ContainerMaterial", d_containerMaterial);
   mpm_flag_ps->get("ContainerRadius",   d_containerRadius);
+  mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
 
   //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
@@ -415,6 +417,7 @@ else{
     // Cyberstone
     dbg << " ContainerMaterial           = " << d_containerMaterial << endl;
     dbg << " ContainerRadius             = " << d_containerRadius   << endl;
+    dbg << " KEMaterial                  = " << d_KEMaterial << endl;
     dbg << "---------------------------------------------------------\n";
   }
 }
@@ -482,6 +485,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   // Cyberstone
   ps->appendElement("ContainerMaterial", d_containerMaterial);
   ps->appendElement("ContainerRadius",   d_containerRadius);
+  ps->appendElement("KEMaterial",        d_KEMaterial);
 }
 
 
