@@ -98,12 +98,12 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
           vector<NCVariable<double> > colorother(maxMatl+1);
           vector<NCVariable<Matrix3> > stressother(maxMatl+1);
           for(int mother= mthis+1; mother<=maxMatl; mother++){
-            da->query(massother[mother],   "g.mass",            mother, patch, t);
-            da->query(colorother[mother],  "g.color",           mother, patch, t);
-            da->query(stressother[mother], "g.stressFS",        mother, patch, t);
+            da->query(massother[mother],   "g.mass",          mother, patch, t);
+            da->query(colorother[mother],  "g.color",         mother, patch, t);
+            da->query(stressother[mother], "g.stressFS",      mother, patch, t);
           } // mother
 
-          for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+          for (NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
             IntVector c = *iter;
 
             if(massthis[c]>1.e-6){
