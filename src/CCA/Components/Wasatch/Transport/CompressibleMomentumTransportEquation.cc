@@ -440,10 +440,10 @@ namespace WasatchCore{
         tags[NSCBC::V]       = this->velTags_[1];
         tags[NSCBC::W]       = this->velTags_[2];
         tags[NSCBC::FACEVEL] = this->velTags_[normVelIndex];
-        tags[NSCBC::DVEL]    = dVelTags[normVelIndex];
+        tags[NSCBC::DVELHARDINFLOW]    = dVelTags[normVelIndex];
         tags[NSCBC::T]       = this->temperatureTag_;
         tags[NSCBC::P]       = this->pressureTag_;
-        tags[NSCBC::PFACE]   = dPTags[normVelIndex];
+        tags[NSCBC::DPHARDINFLOW]   = dPTags[normVelIndex];
         tags[NSCBC::RHO]     = this->densityTag_;
         tags[NSCBC::MMW]     = this->mixMWTag_;
         tags[NSCBC::CP]      = tagNames.cp;
