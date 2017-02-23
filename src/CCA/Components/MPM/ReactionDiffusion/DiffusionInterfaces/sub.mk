@@ -31,5 +31,6 @@ SRCDIR   := CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces
 
 SRCS     += \
 	$(SRCDIR)/CommonIFConcDiff.cc \
-	$(SRCDIR)/SDInterfaceModel.cc
+	$(SRCDIR)/SDInterfaceModel.cc \
+	$(SRCDIR)/DiscreteInterface.cc
 	

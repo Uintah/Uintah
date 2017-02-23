@@ -739,6 +739,7 @@ void SerialMPM::scheduleTimeAdvance(const LevelP      & level,
   {
     scheduleComputeFlux(                  sched, patches, matls);
     scheduleComputeDivergence(            sched, patches, matls);
+    scheduleDiffusionInterfaceDiv(        sched, patches, matls);
   }
 
   scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
@@ -926,15 +927,19 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(      SchedulerP   & sched   
     t->requires(Task::OldDW,    lb->pLoadCurveIDLabel,          gan,  NGP);
   }
 
-  t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
+  t->computes(lb->gMassLabel,           d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
-  t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
+  t->computes(lb->gTemperatureLabel,    d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
-  t->computes(lb->gVolumeLabel,      d_sharedState->getAllInOneMatl(),
+  t->computes(lb->gVolumeLabel,         d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
-  t->computes(lb->gVelocityLabel,    d_sharedState->getAllInOneMatl(),
+  t->computes(lb->gVelocityLabel,       d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
-
+  if (flags->d_doScalarDiffusion)
+  {
+    t->computes(lb->gConcentrationLabel,  d_sharedState->getAllInOneMatl(),
+                Task::OutOfDomain);
+  }
   t->computes(lb->gSp_volLabel);
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
@@ -2409,7 +2414,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup *,
     vector<double>     S(interpolator->size());
     string interp_type = flags->d_interpolator_type;
 
-    NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
+    NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal, gconcglobal;
     NCVariable<Vector> gvelglobal;
     new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
@@ -2419,8 +2424,15 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup *,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
+    if (flags->d_doScalarDiffusion)
+    {
+      new_dw->allocateAndPut(gconcglobal, lb->gConcentrationLabel,
+                             d_sharedState->getAllInOneMatl()->get(0), patch);
+    }
+
     gmassglobal.initialize(d_SMALL_NUM_MPM);
     gvolumeglobal.initialize(d_SMALL_NUM_MPM);
+    gconcglobal.initialize(d_SMALL_NUM_MPM);
     gtempglobal.initialize(0.0);
     gvelglobal.initialize(Vector(0.0));
     Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -2719,6 +2731,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup *,
         for (NodeIterator ni=patch->getExtraNodeIterator(); !ni.done(); ++ni)
         {
           IntVector node = *ni;
+          gconcglobal[node]         += gconcentration[node];
           gconcentration[node]      /= gmass[node];
           ghydrostaticstress[node]  /= gmass[node];
           gConcentrationNoBC[node]   = gconcentration[node];
@@ -2747,6 +2760,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup *,
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
       gvelglobal[c] /= gmassglobal[c];
+      if (flags->d_doScalarDiffusion) gconcglobal[c] /= gmassglobal[c];
     }
     delete interpolator;
     delete linear_interpolator;

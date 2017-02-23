@@ -130,7 +130,8 @@ namespace Uintah
     ParticleVariable<Vector> pFluxNew;
     NewDW->allocateAndPut(pFluxNew, d_lb->pFluxLabel_preReloc,        pset);
 
-    double oneOverKb = 1.0;  // THis should be 1/k_b FIXME TODO FIXME JBH
+    double oneOverKb = 1.0/d_unitBoltzmann;
+    // This should be 1/k_b FIXME TODO FIXME JBH
     for (int i = 0; i < pset->numParticles(); ++i )
     {
       // Flux calculation goes here.
@@ -138,8 +139,10 @@ namespace Uintah
       double thermalInv = oneOverKb/pTemperature[i];
       Vector muTerm = thermalInv * pConcentration[i] * pGradChemPotential[i];
       pFluxNew[i] = -d_D0 * (concTerm + muTerm);
-
     }
+
+    double delT_local = computeStableTimeStep(d_D0, dx);
+    NewDW->put(delt_vartype(delT_local), d_lb->delTLabel, patch->getLevel());
   }
 
   void BazantDiffusion::initializeSDMData(

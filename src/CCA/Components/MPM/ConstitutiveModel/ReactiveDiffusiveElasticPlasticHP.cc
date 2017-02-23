@@ -66,50 +66,62 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 
-using namespace std;
 using namespace Uintah;
+//using std::numeric_limits::DBL_MAX;
+//using std::numeric_limits::DBL_MIN;
 
 static DebugStream cout_EP("EP",false);
 static DebugStream cout_EP1("EP1",false);
 static DebugStream CSTi("EPi",false);
 static DebugStream CSTir("EPir",false);
 
-ReactiveEP::ReactiveEP(ProblemSpecP& ps,MPMFlags* Mflag)
-  : ConstitutiveModel(Mflag), ImplicitCM()
+ReactionDiffusionEP::ReactionDiffusionEP(ProblemSpecP & ps    ,
+                                         MPMFlags     * Mflag )
+  : ConstitutiveModel(Mflag),
+    ImplicitCM()
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
-  ps->require("heat_of_fusion",d_dHFusion);
 
+  // Heat of fusion for reaction component
+  ps->require("heat_of_fusion",d_dHFusion);
+  double molarMass; // mass per mol
+  ps->require("molar_mass", molarMass);
+  d_molesPerMass = 1.0/molarMass;
+  // Volume expansion for diffusion component
+  // This should be a per-diffusant quantity, or at least a per material.
+  //   Accurately, this should be a per diffusant per material quantity.
+  //     JBH FIXME TODO
+  if (flag->d_doScalarDiffusion) {
+    ps->require("volume_expansion_coeff", d_initialData.vol_exp_coeff);
+  }
+
+
+  // Coefficient of thermal expansion
   d_initialData.alpha = 0.0; // default is per K.  Only used in implicit code
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
+
   d_initialData.Chi = 0.9;
   ps->get("taylor_quinney_coeff",d_initialData.Chi);
   d_initialData.sigma_crit = 2.0e99; // Make huge to do nothing by default
   ps->get("critical_stress", d_initialData.sigma_crit);
-
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
-
   d_useModifiedEOS = false;
   ps->get("useModifiedEOS",d_useModifiedEOS);
-
   d_initialMaterialTemperature = 294.0;
   ps->get("initial_material_temperature",d_initialMaterialTemperature);
-
   d_checkTeplaFailureCriterion = true;
   ps->get("check_TEPLA_failure_criterion",d_checkTeplaFailureCriterion);
-
   d_doMelting = true;
   ps->get("do_melting",d_doMelting);
-
   d_checkStressTriax = true;
   ps->get("check_max_stress_failure",d_checkStressTriax);
   
   // plasticity convergence Algorithm
   d_plasticConvergenceAlgo = "radialReturn";   // default
   bool usingRR = true;
-  string tmp = "empty";
+  std::string tmp = "empty";
   
   ps->get("plastic_convergence_algo",tmp);
   
@@ -118,9 +130,9 @@ ReactiveEP::ReactiveEP(ProblemSpecP& ps,MPMFlags* Mflag)
     usingRR = false;
   }
   if(tmp != "radialReturn" && tmp != "biswajit" && tmp != "empty"){
-    ostringstream warn;
-    warn << "ReactiveEP:: Invalid plastic_convergence_algo option ("
-         << tmp << ") Valid options are: biswajit, radialReturn" << endl;
+    std::ostringstream warn;
+    warn << "ReactionDiffusionEP:: Invalid plastic_convergence_algo option ("
+         << tmp << ") Valid options are: biswajit, radialReturn" << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
@@ -128,54 +140,56 @@ ReactiveEP::ReactiveEP(ProblemSpecP& ps,MPMFlags* Mflag)
   // 
   d_yield = YieldConditionFactory::create(ps, usingRR );
   if(!d_yield){
-    ostringstream desc;
+    std::ostringstream desc;
     desc << "An error occured in the YieldConditionFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
+         << " Biswajit.  "<< std::endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   d_stable = StabilityCheckFactory::create(ps);
-  if(!d_stable) cerr << "Stability check disabled\n";
+  if(!d_stable) std::cerr << "Stability check disabled\n";
 
   d_flow = FlowStressModelFactory::create(ps);
   if(!d_flow){
-    ostringstream desc;
+    std::ostringstream desc;
     desc << "An error occured in the FlowModelFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
+         << " Biswajit.  "<< std::endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  
   d_eos = MPMEquationOfStateFactory::create(ps);
   d_eos->setBulkModulus(d_initialData.Bulk);
   if(!d_eos){
-    ostringstream desc;
+    std::ostringstream desc;
     desc << "An error occured in the EquationOfStateFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
-         << " Jim.  "<< endl;
+         << " Jim.  "<< std::endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   d_shear = ShearModulusModelFactory::create(ps);
   if (!d_shear) {
-    ostringstream desc;
-    desc << "ReactiveEP::Error in shear modulus model factory" << endl;
+    std::ostringstream desc;
+    desc << "ReactionDiffusionEP::Error in shear modulus model factory"
+         << std::endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
   d_melt = MeltingTempModelFactory::create(ps);
   if (!d_melt) {
-    ostringstream desc;
-    desc << "ReactiveEP::Error in melting temp model factory" << endl;
+    std::ostringstream desc;
+    desc << "ReactionDiffusionEP::Error in melting temp model factory"
+         << std::endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
   d_devStress = DevStressModelFactory::create(ps);
   if (!d_devStress) {
-    ostringstream desc;
-    desc << "ReactiveEP::Error creating deviatoric stress model" << endl;
+    std::ostringstream desc;
+    desc << "ReactionDiffusionEP::Error creating deviatoric stress model"
+         << std::endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
@@ -188,42 +202,44 @@ ReactiveEP::ReactiveEP(ProblemSpecP& ps,MPMFlags* Mflag)
   //getSpecificHeatData(ps);
   initializeLocalMPMLabels();
 
-  d_meltingColor = 3.0;
-  d_meltedColor = 4.0;
-  d_reactedColor = 5.0;
+  d_meltingColor  = 3.0;
+  d_meltedColor   = 4.0;
+  d_reactedColor  = 5.0;
 }
 
-ReactiveEP::ReactiveEP(const ReactiveEP* cm) :
-  ConstitutiveModel(cm), ImplicitCM(cm)
+ReactionDiffusionEP::ReactionDiffusionEP(const ReactionDiffusionEP* cm)
+  : ConstitutiveModel(cm),
+    ImplicitCM(cm)
 {
-  d_initialData.Bulk = cm->d_initialData.Bulk;
-  d_initialData.Shear = cm->d_initialData.Shear;
-  d_initialData.alpha = cm->d_initialData.alpha;
-  d_initialData.Chi = cm->d_initialData.Chi;
-  d_initialData.sigma_crit = cm->d_initialData.sigma_crit;
+  d_initialData.Bulk            = cm->d_initialData.Bulk;
+  d_initialData.Shear           = cm->d_initialData.Shear;
+  d_initialData.alpha           = cm->d_initialData.alpha;
+  d_initialData.Chi             = cm->d_initialData.Chi;
+  d_initialData.sigma_crit      = cm->d_initialData.sigma_crit;
+  d_initialData.vol_exp_coeff   = cm->d_initialData.vol_exp_coeff;
 
-  d_tol = cm->d_tol ;
-  d_useModifiedEOS = cm->d_useModifiedEOS;
+  d_tol                         = cm->d_tol ;
+  d_useModifiedEOS              = cm->d_useModifiedEOS;
 
-  d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
-  d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
-  d_doMelting = cm->d_doMelting;
-  d_checkStressTriax = cm->d_checkStressTriax;
+  d_initialMaterialTemperature  = cm->d_initialMaterialTemperature ;
+  d_checkTeplaFailureCriterion  = cm->d_checkTeplaFailureCriterion;
+  d_doMelting                   = cm->d_doMelting;
+  d_checkStressTriax            = cm->d_checkStressTriax;
 
-  d_setStressToZero = cm->d_setStressToZero;
-  d_allowNoTension = cm->d_allowNoTension;
-  d_allowNoShear = cm->d_allowNoShear;
+  d_setStressToZero             = cm->d_setStressToZero;
+  d_allowNoTension              = cm->d_allowNoTension;
+  d_allowNoShear                = cm->d_allowNoShear;
 
-  d_evolvePorosity = cm->d_evolvePorosity;
-  d_porosity.f0 = cm->d_porosity.f0 ;
-  d_porosity.f0_std = cm->d_porosity.f0_std ;
-  d_porosity.fc = cm->d_porosity.fc ;
-  d_porosity.fn = cm->d_porosity.fn ;
-  d_porosity.en = cm->d_porosity.en ;
-  d_porosity.sn = cm->d_porosity.sn ;
-  d_porosity.porosityDist = cm->d_porosity.porosityDist ;
+  d_evolvePorosity              = cm->d_evolvePorosity;
+  d_porosity.f0                 = cm->d_porosity.f0 ;
+  d_porosity.f0_std             = cm->d_porosity.f0_std ;
+  d_porosity.fc                 = cm->d_porosity.fc ;
+  d_porosity.fn                 = cm->d_porosity.fn ;
+  d_porosity.en                 = cm->d_porosity.en ;
+  d_porosity.sn                 = cm->d_porosity.sn ;
+  d_porosity.porosityDist       = cm->d_porosity.porosityDist ;
 
-  d_computeSpecificHeat = cm->d_computeSpecificHeat;
+  d_computeSpecificHeat         = cm->d_computeSpecificHeat;
   /*
   d_Cp.A = cm->d_Cp.A;
   d_Cp.B = cm->d_Cp.B;
@@ -238,16 +254,17 @@ ReactiveEP::ReactiveEP(const ReactiveEP* cm) :
   d_eos->setBulkModulus(d_initialData.Bulk);
   d_shear   = ShearModulusModelFactory::createCopy(cm->d_shear);
   d_melt    = MeltingTempModelFactory::createCopy(cm->d_melt);
-  d_devStress = 0;
 
-  d_meltingColor = cm->d_meltingColor;
-  d_meltedColor = cm->d_meltedColor;
-  d_reactedColor = cm->d_reactedColor;
+  d_meltingColor  = cm->d_meltingColor;
+  d_meltedColor   = cm->d_meltedColor;
+  d_reactedColor  = cm->d_reactedColor;
+
+  d_devStress = 0;
 
   initializeLocalMPMLabels();
 }
 
-ReactiveEP::~ReactiveEP()
+ReactionDiffusionEP::~ReactionDiffusionEP()
 {
   // Destructor 
   VarLabel::destroy(pRotationLabel);
@@ -262,8 +279,9 @@ ReactiveEP::~ReactiveEP()
   VarLabel::destroy(pWorkEnergyLabel);
   VarLabel::destroy(pHeatBufferLabel);
   // JBH -- These two should actually belong to a specific reaction model array
-  VarLabel::destroy(pReactionProgressLabel);
+  VarLabel::destroy(pMeltProgressLabel);
   VarLabel::destroy(pLastReactionFlagLabel);
+  VarLabel::destroy(pInitialMoles);
 
   VarLabel::destroy(pRotationLabel_preReloc);
   VarLabel::destroy(pStrainRateLabel_preReloc);
@@ -279,6 +297,7 @@ ReactiveEP::~ReactiveEP()
   // JBH -- These two should actually belong to a specific reaction model array
   VarLabel::destroy(pReactionProgressLabel_preReloc);
   VarLabel::destroy(pLastReactionFlagLabel_preReloc);
+  VarLabel::destroy(pInitialMoles_preReloc);
 
   delete d_flow;
   delete d_yield;
@@ -292,7 +311,8 @@ ReactiveEP::~ReactiveEP()
 
 //______________________________________________________________________
 //
-void ReactiveEP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+void ReactionDiffusionEP::outputProblemSpec(ProblemSpecP  & ps            ,
+                                            bool            output_cm_tag )
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
@@ -349,15 +369,15 @@ void ReactiveEP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 }
 
 
-ReactiveEP* ReactiveEP::clone()
+ReactionDiffusionEP* ReactionDiffusionEP::clone()
 {
-  return scinew ReactiveEP(*this);
+  return scinew ReactionDiffusionEP(*this);
 }
 
 //______________________________________________________________________
 //
 void
-ReactiveEP::initializeLocalMPMLabels()
+ReactionDiffusionEP::initializeLocalMPMLabels()
 {
   pRotationLabel = VarLabel::create("p.rotation",
     ParticleVariable<Matrix3>::getTypeDescription());
@@ -382,9 +402,11 @@ ReactiveEP::initializeLocalMPMLabels()
   pHeatBufferLabel = VarLabel::create("p.HeatBuffer",
     ParticleVariable<double>::getTypeDescription());
   // JBH -- These two should actually belong to a specific reaction model array
-  pReactionProgressLabel = VarLabel::create("p.reactionProgress",
+  pMeltProgressLabel = VarLabel::create("p.reactionProgress",
     ParticleVariable<double>::getTypeDescription());
   pLastReactionFlagLabel = VarLabel::create("p.lastReactionFlag",
+    ParticleVariable<int>::getTypeDescription());
+  pInitialMoles = VarLabel::create("p.initialMoles",
     ParticleVariable<int>::getTypeDescription());
 
   pRotationLabel_preReloc = VarLabel::create("p.rotation+",
@@ -414,11 +436,13 @@ ReactiveEP::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pLastReactionFlagLabel_preReloc = VarLabel::create("p.lastReactionFlag+",
     ParticleVariable<int>::getTypeDescription());
+  pInitialMoles_preReloc = VarLabel::create("p.initialMoles+",
+    ParticleVariable<double>::getTypeDescription());
 }
 //______________________________________________________________________
 //
 void 
-ReactiveEP::getInitialPorosityData(ProblemSpecP& ps)
+ReactionDiffusionEP::getInitialPorosityData(ProblemSpecP& ps)
 {
   d_evolvePorosity = true;
   ps->get("evolve_porosity",d_evolvePorosity);
@@ -448,7 +472,7 @@ ReactiveEP::getInitialPorosityData(ProblemSpecP& ps)
 */
 /*
 void 
-ReactiveEP::getSpecificHeatData(ProblemSpecP& ps)
+ReactionDiffusionEP::getSpecificHeatData(ProblemSpecP& ps)
 {
   d_Cp.A = 0.09278;  // Constant A (HY100)
   d_Cp.B = 7.454e-4; // Constant B (HY100)
@@ -463,7 +487,7 @@ ReactiveEP::getSpecificHeatData(ProblemSpecP& ps)
 //______________________________________________________________________
 //
 void 
-ReactiveEP::setErosionAlgorithm()
+ReactionDiffusionEP::setErosionAlgorithm()
 {
   d_setStressToZero = false;
   d_allowNoTension  = false;
@@ -479,9 +503,49 @@ ReactiveEP::setErosionAlgorithm()
 }
 //______________________________________________________________________
 //
+void ReactionDiffusionEP::addComputesAndRequires(      Task         * task,
+                                                 const MPMMaterial  * matl,
+                                                 const PatchSet     * patches,
+                                                 const bool           recurse,
+                                                 const bool           SchedParent)
+const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  addSharedCRForImplicitHypo(task, matlset, true, recurse, SchedParent);
+
+  Ghost::GhostType  gnone = Ghost::None;
+  if(SchedParent)
+  {
+    // For subscheduler
+    task->requires(Task::ParentOldDW, lb->pTempPreviousLabel,  matlset, gnone);
+    task->requires(Task::ParentOldDW, lb->pTemperatureLabel,   matlset, gnone);
+    task->requires(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
+    task->requires(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
+    task->requires(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
+
+    task->computes(pPlasticStrainLabel_preReloc,               matlset);
+    task->computes(pPlasticStrainRateLabel_preReloc,           matlset);
+    task->computes(pPorosityLabel_preReloc,                    matlset);
+  }
+  else
+  {
+    // For scheduleIterate
+    task->requires(Task::OldDW, lb->pTempPreviousLabel,  matlset, gnone);
+    task->requires(Task::OldDW, lb->pTemperatureLabel,   matlset, gnone);
+    task->requires(Task::OldDW, pPlasticStrainLabel,     matlset, gnone);
+    task->requires(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
+    task->requires(Task::OldDW, pPorosityLabel,          matlset, gnone);
+  }
+
+  // Add internal evolution variables computed by flow model
+  d_flow->addComputesAndRequires(task, matl, patches, recurse, SchedParent);
+
+  // Deviatoric Stress Model
+  d_devStress->addComputesAndRequires(task, matl, SchedParent);
+}
 void 
-ReactiveEP::addParticleState(std::vector<const VarLabel*>& from,
-                                   std::vector<const VarLabel*>& to)
+ReactionDiffusionEP::addParticleState(std::vector<const VarLabel*>& from,
+                                      std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
   from.push_back(pRotationLabel);
@@ -495,8 +559,9 @@ ReactiveEP::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pDissipatedEnergyLabel);
   from.push_back(pWorkEnergyLabel);
   from.push_back(pHeatBufferLabel);
-  from.push_back(pReactionProgressLabel);
+  from.push_back(pMeltProgressLabel);
   from.push_back(pLastReactionFlagLabel);
+  from.push_back(pInitialMoles);
 
   to.push_back(pRotationLabel_preReloc);
   to.push_back(pStrainRateLabel_preReloc);
@@ -511,6 +576,7 @@ ReactiveEP::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pHeatBufferLabel_preReloc);
   to.push_back(pReactionProgressLabel_preReloc);
   to.push_back(pLastReactionFlagLabel_preReloc);
+  to.push_back(pInitialMoles_preReloc);
 
   // Add the particle state for the flow & deviatoric stress model
   d_flow     ->addParticleState(from, to);
@@ -518,10 +584,10 @@ ReactiveEP::addParticleState(std::vector<const VarLabel*>& from,
 }
 //______________________________________________________________________
 //
-void 
-ReactiveEP::addInitialComputesAndRequires(Task* task,
-                                              const MPMMaterial* matl,
-                                              const PatchSet* patch) const
+void ReactionDiffusionEP::addInitialComputesAndRequires(      Task        * task  ,
+                                                        const MPMMaterial * matl  ,
+                                                        const PatchSet    * patch )
+const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -536,8 +602,9 @@ ReactiveEP::addInitialComputesAndRequires(Task* task,
   task->computes(pDissipatedEnergyLabel,      matlset);
   task->computes(pWorkEnergyLabel,            matlset);
   task->computes(pHeatBufferLabel,            matlset);
-  task->computes(pReactionProgressLabel,      matlset);
+  task->computes(pMeltProgressLabel,          matlset);
   task->computes(pLastReactionFlagLabel,      matlset);
+  task->computes(pInitialMoles,               matlset);
  
   // Add internal evolution variables computed by flow & deviatoric stress model
   d_flow     ->addInitialComputesAndRequires(task, matl, patch);
@@ -545,10 +612,9 @@ ReactiveEP::addInitialComputesAndRequires(Task* task,
 }
 //______________________________________________________________________
 //
-void
-ReactiveEP::initializeCMData(const Patch          * patch,
-                                   const MPMMaterial    * matl,
-                                         DataWarehouse  * new_dw)
+void ReactionDiffusionEP::initializeCMData(const Patch          * patch  ,
+                                           const MPMMaterial    * matl   ,
+                                                 DataWarehouse  * new_dw )
 {
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
@@ -561,19 +627,21 @@ ReactiveEP::initializeCMData(const Patch          * patch,
 
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  //cout << "Initialize CM Data in ReactiveEP" << endl;
+  //cout << "Initialize CM Data in ReactionDiffusionEP" << endl;
   Matrix3 one, zero(0.); 
   one.Identity();
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
+  constParticleVariable<double> pMass;
+  new_dw->get(pMass, lb->pMassLabel, pset);
+
   ParticleVariable<Matrix3> pRotation;
-  ParticleVariable<double>  pDamage, pPorosity,
-                            pPlasticStrain, pPlasticStrainRate, pStrainRate,
-                            pEnergy;
+  ParticleVariable<double>  pDamage, pPorosity, pPlasticStrain,
+                            pPlasticStrainRate, pStrainRate, pEnergy;
   ParticleVariable<double>  pDissipatedEnergy, pWorkEnergy;
   ParticleVariable<int>     pLocalized;
-  ParticleVariable<double>  pHeatBuffer, pReactionProgress;
+  ParticleVariable<double>  pHeatBuffer, pReactionProgress, pStartingMoles;
   ParticleVariable<int>     pLastReactionFlag;
 
   new_dw->allocateAndPut(pRotation,          pRotationLabel,              pset);
@@ -587,54 +655,54 @@ ReactiveEP::initializeCMData(const Patch          * patch,
   new_dw->allocateAndPut(pDissipatedEnergy,  pDissipatedEnergyLabel,      pset);
   new_dw->allocateAndPut(pWorkEnergy,        pWorkEnergyLabel,            pset);
   new_dw->allocateAndPut(pHeatBuffer,        pHeatBufferLabel,            pset);
-  new_dw->allocateAndPut(pReactionProgress,  pReactionProgressLabel,      pset);
+  new_dw->allocateAndPut(pReactionProgress,  pMeltProgressLabel,          pset);
   new_dw->allocateAndPut(pLastReactionFlag,  pLastReactionFlagLabel,      pset);
+  new_dw->allocateAndPut(pStartingMoles,     pInitialMoles,               pset);
 
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++)
+  for(pSetIter iter = pset->begin();  iter != pset->end();  ++iter)
   {
-    pRotation[*iter] = one;
-    pStrainRate[*iter] = 0.0;
-    pPlasticStrain[*iter] = 0.0;
+    pRotation[*iter]          = one;
+    pStrainRate[*iter]        = 0.0;
+    pPlasticStrain[*iter]     = 0.0;
     pPlasticStrainRate[*iter] = 0.0;
-    pDamage[*iter] = 0.0;
-    pPorosity[*iter] = d_porosity.f0;
-    pLocalized[*iter] = 0;
-    pEnergy[*iter] = 0.;
-    pDissipatedEnergy[*iter] = 0.;
-    pWorkEnergy[*iter] = 0.;
-    pHeatBuffer[*iter] = 0.0;
-    pReactionProgress[*iter] = 0.0;
-    pLastReactionFlag[*iter] = 0;
+    pDamage[*iter]            = 0.0;
+    pPorosity[*iter]          = d_porosity.f0;
+    pLocalized[*iter]         = 0;
+    pEnergy[*iter]            = 0.;
+    pDissipatedEnergy[*iter]  = 0.;
+    pWorkEnergy[*iter]        = 0.;
+    pHeatBuffer[*iter]        = 0.0;
+    pReactionProgress[*iter]  = 0.0;
+    pLastReactionFlag[*iter]  = 0;
+    pStartingMoles[*iter] = pMass[*iter]*d_molesPerMass;
   }
 
   // Do some extra things if the porosity is not uniform.  
   // ** WARNING ** Weibull distribution needs to be implemented.
   //               At present only Gaussian available.
-  if (d_porosity.porosityDist != "constant") {
-
+  if (d_porosity.porosityDist != "constant")
+  {
     Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0, 1, DBL_MAX);
-    ParticleSubset::iterator iter = pset->begin();
-    for(;iter != pset->end();iter++){
-
+    for(pSetIter iter = pset->begin() ;iter != pset->end();iter++)
+    {
       // Generate a Gaussian distributed random number given the mean
       // porosity and the std.
       pPorosity[*iter] = fabs(gaussGen.rand(1.0));
     }
   }
 
-
   // Initialize the data for the flow model
   d_flow->initializeInternalVars(pset, new_dw);
-  
   // Deviatoric Stress Model
   d_devStress->initializeInternalVars(pset, new_dw);
 }
+
 //______________________________________________________________________
 //
 void 
-ReactiveEP::computeStableTimestep(const Patch* patch,
-                                      const MPMMaterial* matl,
-                                      DataWarehouse* new_dw)
+ReactionDiffusionEP::computeStableTimestep(const Patch          * patch   ,
+                                           const MPMMaterial    * matl    ,
+                                                 DataWarehouse  * new_dw  )
 {
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
@@ -658,15 +726,17 @@ ReactiveEP::computeStableTimestep(const Patch* patch,
   double bulk = d_initialData.Bulk;
 
   ParticleSubset::iterator iter = pset->begin(); 
-  for(; iter != pset->end(); iter++){
+  for(pSetIter iter = pset->begin(); iter != pset->end(); ++iter)
+  {
     particleIndex idx = *iter;
-
     // Compute wave speed at each particle, store the maximum
     Vector pvelocity_idx = pVelocity[idx];
-    if(pMass[idx] > 0){
+    if(pMass[idx] > 0)
+    {
       c_dil = sqrt((bulk + 4.0*shear/3.0)*pVolume[idx]/pMass[idx]);
     }
-    else{
+    else
+    {
       c_dil = 0.0;
       pvelocity_idx = Vector(0.0,0.0,0.0);
     }
@@ -681,23 +751,25 @@ ReactiveEP::computeStableTimestep(const Patch* patch,
 }
 //______________________________________________________________________
 //
-void 
-ReactiveEP::addComputesAndRequires(      Task         * task,
-                                         const MPMMaterial  * matl,
-                                         const PatchSet     * patches) const
+void ReactionDiffusionEP::addComputesAndRequires(      Task         * task     ,
+                                                 const MPMMaterial  * matl     ,
+                                                 const PatchSet     * patches  )
+const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
-  if (flag->d_integrator == MPMFlags::Implicit) {
+  if (flag->d_integrator == MPMFlags::Implicit)
+  {
     addSharedCRForImplicitHypo(task, matlset, true);
-  } else {
+  }
+  else
+  {
     addSharedCRForHypoExplicit(task, matlset, patches);
   }
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, lb->pTempPreviousLabel,     matlset, gnone);
   task->requires(Task::OldDW, pRotationLabel,             matlset, gnone);
   task->requires(Task::OldDW, pStrainRateLabel,           matlset, gnone);
   task->requires(Task::OldDW, pPlasticStrainLabel,        matlset, gnone);
@@ -711,8 +783,9 @@ ReactiveEP::addComputesAndRequires(      Task         * task,
   task->requires(Task::OldDW, pDissipatedEnergyLabel,     matlset, gnone);
   task->requires(Task::OldDW, pWorkEnergyLabel,           matlset, gnone);
   task->requires(Task::OldDW, pHeatBufferLabel,           matlset, gnone);
-  task->requires(Task::OldDW, pReactionProgressLabel,     matlset, gnone);
+  task->requires(Task::OldDW, pMeltProgressLabel,         matlset, gnone);
   task->requires(Task::OldDW, pLastReactionFlagLabel,     matlset, gnone);
+  task->requires(Task::OldDW, pInitialMoles,              matlset, gnone);
 
   task->computes(pRotationLabel_preReloc,             matlset);
   task->computes(pStrainRateLabel_preReloc,           matlset);
@@ -727,9 +800,16 @@ ReactiveEP::addComputesAndRequires(      Task         * task,
   task->computes(pHeatBufferLabel_preReloc,           matlset);
   task->computes(pReactionProgressLabel_preReloc,     matlset);
   task->computes(pLastReactionFlagLabel_preReloc,     matlset);
+  task->computes(pInitialMoles_preReloc,              matlset);
 
+  // Required components from outside the constitutive model.
+  task->requires(Task::OldDW, lb->pTempPreviousLabel,     matlset, gnone);
+
+  if (flag->d_doScalarDiffusion) {
+    task->requires(Task::OldDW, lb->pConcentrationLabel,    matlset, gnone);
+    task->requires(Task::OldDW, lb->pConcPreviousLabel,     matlset, gnone);
+  }
   task->modifies(lb->pColorLabel_preReloc,            matlset);
-
 
   // Add internal evolution variables computed by flow model
   d_flow->addComputesAndRequires(task, matl, patches);
@@ -739,16 +819,15 @@ ReactiveEP::addComputesAndRequires(      Task         * task,
 }
 //______________________________________________________________________
 //
-void 
-ReactiveEP::computeStressTensor(const PatchSubset   * patches,
-                                const MPMMaterial   * matl,
-                                      DataWarehouse * old_dw,
-                                      DataWarehouse * new_dw)
+void ReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches  ,
+                                              const MPMMaterial   * matl     ,
+                                                    DataWarehouse * old_dw   ,
+                                                    DataWarehouse * new_dw   )
 {
   if (cout_EP.active())
   {
     cout_EP << getpid() 
-            << " ReactiveEP:ComputeStressTensor:Explicit"
+            << " ReactionDiffusionEP:ComputeStressTensor:Explicit"
             << " Matl = " << matl 
             << " DWI = " << matl->getDWIndex() 
             << " patch = " << (patches->get(0))->getID();
@@ -777,6 +856,12 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
   double Cp    = matl->getSpecificHeat();
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
+
+  // Diffusion related quantities
+  double vol_exp_coeff      = d_initialData.vol_exp_coeff;
+  double concentration      = 0.0;
+  double concentrationPrev  = 0.0;
+  double conc_rate          = 0.0;
   
   double totalStrainEnergy = 0.0;
   double include_AV_heating=0.0;
@@ -790,7 +875,7 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
   old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
   // Loop thru patches
-  for(int patchIndex=0; patchIndex<patches->size(); patchIndex++)
+  for(int patchIndex = 0; patchIndex < patches->size(); ++patchIndex)
   {
     const Patch* patch = patches->get(patchIndex);
 
@@ -802,50 +887,49 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     // Get the particle location,  particle mass, particle volume, etc.
-    constParticleVariable<double> pMass;
-    constParticleVariable<double> pVolume;
-    constParticleVariable<double> pTemperature;
-    constParticleVariable<Vector> pVelocity;
-    constParticleVariable<Matrix3> pDeformGrad;
-    constParticleVariable<Matrix3> pStress;
+    constParticleVariable<double>   pMass, pVolume, pTemperature;
+    constParticleVariable<Vector>   pVelocity;
+    constParticleVariable<Matrix3>  pDeformGrad, pStress;
 
-    old_dw->get(pMass,        lb->pMassLabel,               pset);
-    old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
-    old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
-    old_dw->get(pVelocity,    lb->pVelocityLabel,           pset);
-    old_dw->get(pStress,      lb->pStressLabel,             pset);
-    old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pMass,              lb->pMassLabel,                 pset);
+    old_dw->get(pVolume,            lb->pVolumeLabel,               pset);
+    old_dw->get(pTemperature,       lb->pTemperatureLabel,          pset);
+    old_dw->get(pVelocity,          lb->pVelocityLabel,             pset);
+    old_dw->get(pStress,            lb->pStressLabel,               pset);
+    old_dw->get(pDeformGrad,        lb->pDeformationMeasureLabel,   pset);
 
-    constParticleVariable<double> pDamage, pPorosity, pStrainRate;
-    constParticleVariable<double> pPlasticStrain, pPlasticStrainRate;
-    constParticleVariable<double> pHeatEnergy, pDissipatedEnergy, pWorkEnergy;
-    constParticleVariable<double> pEnergy;
-    constParticleVariable<double> pHeatBuffer, pReactionProgress;
 
-    constParticleVariable<int> pLocalized, pLastReactionFlag;
-    constParticleVariable<Matrix3> pRotation;
+    constParticleVariable<double>   pDamage, pPorosity, pStrainRate;
+    constParticleVariable<double>   pPlasticStrain, pPlasticStrainRate;
+    constParticleVariable<double>   pHeatEnergy, pDissipatedEnergy, pWorkEnergy;
+    constParticleVariable<double>   pEnergy, pStartingMoles;
+    constParticleVariable<double>   pHeatBuffer, pReactionProgress;
 
-    old_dw->get(pPlasticStrain,     pPlasticStrainLabel,        pset);
-    old_dw->get(pDamage,            pDamageLabel,               pset);
-    old_dw->get(pStrainRate,        pStrainRateLabel,           pset);
-    old_dw->get(pPlasticStrainRate, pPlasticStrainRateLabel,    pset);
-    old_dw->get(pPorosity,          pPorosityLabel,             pset);
-    old_dw->get(pEnergy,            pEnergyLabel,               pset);
-    old_dw->get(pLocalized,         pLocalizedLabel,            pset);
-    old_dw->get(pRotation,          pRotationLabel,             pset);
-    old_dw->get(pHeatEnergy,        lb->pHeatEnergyLabel,       pset);
-    old_dw->get(pDissipatedEnergy,  pDissipatedEnergyLabel,     pset);
-    old_dw->get(pWorkEnergy,        pWorkEnergyLabel,           pset);
-    old_dw->get(pHeatBuffer,        pHeatBufferLabel,           pset);
-    old_dw->get(pReactionProgress,  pReactionProgressLabel,     pset);
-    old_dw->get(pLastReactionFlag,  pLastReactionFlagLabel,     pset);
+    constParticleVariable<int>      pLocalized, pLastReactionFlag;
+    constParticleVariable<Matrix3>  pRotation;
+
+    old_dw->get(pPlasticStrain,     pPlasticStrainLabel,            pset);
+    old_dw->get(pDamage,            pDamageLabel,                   pset);
+    old_dw->get(pStrainRate,        pStrainRateLabel,               pset);
+    old_dw->get(pPlasticStrainRate, pPlasticStrainRateLabel,        pset);
+    old_dw->get(pPorosity,          pPorosityLabel,                 pset);
+    old_dw->get(pEnergy,            pEnergyLabel,                   pset);
+    old_dw->get(pLocalized,         pLocalizedLabel,                pset);
+    old_dw->get(pRotation,          pRotationLabel,                 pset);
+    old_dw->get(pHeatEnergy,        lb->pHeatEnergyLabel,           pset);
+    old_dw->get(pDissipatedEnergy,  pDissipatedEnergyLabel,         pset);
+    old_dw->get(pWorkEnergy,        pWorkEnergyLabel,               pset);
+    old_dw->get(pHeatBuffer,        pHeatBufferLabel,               pset);
+    old_dw->get(pReactionProgress,  pMeltProgressLabel,             pset);
+    old_dw->get(pLastReactionFlag,  pLastReactionFlagLabel,         pset);
+    old_dw->get(pStartingMoles,     pInitialMoles,                  pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
-    constParticleVariable<long64> pParticleID; 
-    old_dw->get(pParticleID,        lb->pParticleIDLabel,       pset);
+    constParticleVariable<long64>   pParticleID;
+    old_dw->get(pParticleID,        lb->pParticleIDLabel,           pset);
 
-    constParticleVariable<Matrix3> pDeformGrad_new, velGrad;
-    constParticleVariable<double> pVolume_deformed;
+    constParticleVariable<Matrix3>  pDeformGrad_new, velGrad;
+    constParticleVariable<double>   pVolume_deformed;
     new_dw->get(pDeformGrad_new,  lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,            pset);
     new_dw->get(pVolume_deformed, lb->pVolumeLabel_preReloc,             pset);
@@ -857,6 +941,7 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     ParticleVariable<int>     pLocalized_new,pLastReactionFlag_new;
     ParticleVariable<double>  pdTdt, p_q, pEnergy_new;
     ParticleVariable<double>  pHeatBuffer_new, pReactionProgress_new;
+    ParticleVariable<double>  pStartingMoles_new;
     ParticleVariable<Matrix3> pStress_new;
     
     // Added for thermodynamic tracking
@@ -895,6 +980,8 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
                            pReactionProgressLabel_preReloc,       pset);
     new_dw->allocateAndPut(pLastReactionFlag_new,
                            pLastReactionFlagLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pStartingMoles_new,
+                           pInitialMoles_preReloc,                pset);
 
     ParticleVariable<double> pHeatEnergy_new, pTemperature_new, pColor_new;
     // Particle heat may already have grid based conduction placed onto it.
@@ -906,56 +993,74 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
                           lb->pColorLabel_preReloc,               pset);
     // JBH - Thermodynamics
     
+    ParticleVariable<double>  pReactionHeat_temp;
+    new_dw->allocateTemporary(pReactionHeat_temp, pset);
+
     d_flow     ->getInternalVars(pset, old_dw);
     d_devStress->getInternalVars(pset, old_dw);
     
     d_flow     ->allocateAndPutInternalVars(pset, new_dw);
     d_devStress->allocateAndPutInternalVars(pset, new_dw);
 
+    // These should eventually be converted to be std::vectors of
+    //   constParticleVariables, one for each diffusant possible for the
+    //   current material. -- JBH TODO FIXME
+    constParticleVariable<double> pConcentration, pConcPrevious;
+    if (flag->d_doScalarDiffusion)
+    {
+      old_dw->get(pConcentration,   lb->pConcentrationLabel,        pset);
+      old_dw->get(pConcPrevious,    lb->pConcPreviousLabel,         pset);
+    }
+
     //______________________________________________________________________
     // Loop thru particles
-    ParticleSubset::iterator iter = pset->begin(); 
 
-//    // JBH -- TOTAL HACK FIXME TODO FIXME
-//    int outputFreq = 1000;
-//    int currStep = d_sharedState->getCurrentTopLevelTimeStep();
-//    if (currStep%outputFreq==1 && dwi==0)
-//    {
-//      std::cerr << "Time: "<< std::fixed << std::setw(12) << std::right << d_sharedState->getElapsedTime();
-//    }
-    for( ; iter != pset->end(); iter++){
+    // JBH -- TOTAL HACK FIXME TODO FIXME
+    int outputFreq = 10000;
+    int currStep = d_sharedState->getCurrentTopLevelTimeStep();
+    if (currStep%outputFreq==1 && dwi==0)
+    {
+      std::cerr << "Time: "<< std::fixed << std::setw(12) << std::right << d_sharedState->getElapsedTime();
+    }
+    for(pSetIter iter=pset->begin(); iter != pset->end(); iter++)
+    {
       particleIndex idx = *iter;
       // Assign zero int. heating by default, modify with appropriate sources
       // This has units (in MKS) of K/s  (i.e. temperature/time)
       pdTdt[idx] = 0.0;
+      pStartingMoles_new[idx] = pStartingMoles[idx];  // Track initial moles of material
 
+      double solutionHeat = 0.0;
       // For ease of use, we'll track dissipative process energy additions
       //   via their calculated delta_temp and adjust at the end.
       pDissipatedEnergy_new[idx] = 0.0;
       pWorkEnergy_new[idx] = pWorkEnergy[idx];
       pHeatBuffer_new[idx] = pHeatBuffer[idx];
+      // Carry forward the pLocalized tag for now, alter below
+      pLocalized_new[idx] = pLocalized[idx];
 
       Matrix3 tensorL=velGrad[idx];
 
-      // Carry forward the pLocalized tag for now, alter below
-      pLocalized_new[idx] = pLocalized[idx];
 
       //  Grab the complete current deformation gradient.
       double J = pDeformGrad_new[idx].Determinant();
       tensorF_new=pDeformGrad_new[idx];
 
-      if(!(J > 0.) || J > 1.e5){
-          cerr << "**ERROR** Negative (or huge) Jacobian of deformation gradient."
-               << "  Deleting particle " << pParticleID[idx] << endl;
-          cerr << "l = " << tensorL << endl;
-          cerr << "F_old = " << pDeformGrad[idx] << endl;
-          cerr << "J_old = " << pDeformGrad[idx].Determinant() << endl;
-          cerr << "F_new = " << tensorF_new << endl;
-          cerr << "J = " << J << endl;
-          cerr << "Temp = " << pTemperature[idx] << endl;
-          cerr << "Tm = " << Tm << endl;
-          cerr << "DWI = " << matl->getDWIndex() << endl;
-          cerr << "L.norm()*dt = " << tensorL.Norm()*delT << endl;
+      if(!(J > 0.) || J > 1.e5)
+      {
+          std::cerr << "**ERROR** Negative (or huge) Jacobian"
+                    <<  " of deformation gradient."
+                    << "  Deleting particle " << pParticleID[idx] << std::endl;
+          std::cerr << "l = " << tensorL << std::endl;
+          std::cerr << "F_old = " << pDeformGrad[idx] << std::endl;
+          std::cerr << "J_old = " << pDeformGrad[idx].Determinant()
+                    << std::endl;
+          std::cerr << "F_new = " << tensorF_new << std::endl;
+          std::cerr << "J = " << J << std::endl;
+          std::cerr << "Temp = " << pTemperature[idx] << std::endl;
+          std::cerr << "Tm = " << Tm << std::endl;
+          std::cerr << "DWI = " << matl->getDWIndex() << std::endl;
+          std::cerr << "L.norm()*dt = " << tensorL.Norm()*delT << std::endl;
           pLocalized_new[idx]=-999;
 
           tensorL=zero;
@@ -975,6 +1080,33 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
       // Rotate the total rate of deformation tensor back to the 
       // material configuration
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
+
+      // Account for stress-free adjustement to the deformation tensor due
+      //   to inclusion of diffusants.
+      if (flag->d_doScalarDiffusion)
+      {
+        // Back out expansion due to stress free expansion of the material point
+        //   caused by incorporation of the diffusant.
+        double conc_rate = (pConcentration[idx] - pConcPrevious[idx])/delT;
+        ScalarDiffusionModel* sdm = matl->getScalarDiffusionModel();
+        Matrix3 expansionCoeff = sdm->getStressFreeExpansionMatrix();
+        expansionCoeff *= vol_exp_coeff;
+        tensorD = tensorD - expansionCoeff*(conc_rate);
+        // FIXME TODO FIXME TODO FIXME TODO JBH -- EGREGIOUS HACK
+        // dH_Rxn for Ni + 3Al -> NiAl3
+        // From:  Mat Sci & Eng. A 299, 1-15, 2001 (K. Morsi)
+        // -152 kJ/mol
+        // == -152e6 micrograms mm^2/microsecond^2/mol (consistent units)
+        double dH_Rxn = -152.0e+6;
+        // pReactionHeat_temp is the amount of heat energy generated presuming
+        // 100% conversion of diffusant nickel into NiAl3
+        pReactionHeat_temp[idx] = -dH_Rxn * conc_rate * pStartingMoles[idx];
+        pdTdt[idx] += pReactionHeat_temp[idx] / (Cp * pMass[idx]);
+        if (dwi == 0 && (currStep%outputFreq==1))
+          std::cerr << std::fixed << std::setw(2) << std::right << idx << " "
+                    << std::scientific << std::setw(5) << std::right << pConcentration[idx] << " ";
+
+      }
 
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
@@ -1024,7 +1156,8 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
       state->storedHeat          = pHeatEnergy[idx];
       
       // Get or compute the specific heat
-      if (d_computeSpecificHeat) {
+      if (d_computeSpecificHeat)
+      {
         Cp = d_Cp->computeSpecificHeat(state);
         state->specificHeat = Cp;
       }
@@ -1077,11 +1210,14 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
         // Set the deviatoric stress to zero
         if (d_doMelting){
            tensorS = 0.0;
-        } else {
-           cerr << "The material has exceed the melt temperature, but you haven't turned \n";
-           cerr << "melting on.  ReactiveEP does nonsensical things here.  You should \n";
-           cerr << "probably either set <do_melting>true</do_melting>, or increase the material\n";
-           cerr << "<melt_temp> to a level that won't be exceeded.\n";
+        }
+        else
+        {
+          std::cerr
+          << "The material has exceed the melt temperature, but you haven't turned \n"
+          << "melting on.  ReactionDiffusionEP does nonsensical things here.  You should \n"
+          << "probably either set <do_melting>true</do_melting>, or increase the material\n"
+          << "<melt_temp> to a level that won't be exceeded.\n";
         }
 
         d_flow->updateElastic(idx);
@@ -1092,19 +1228,16 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
         double porosity = pPorosity[idx];
 
         // Evaluate yield condition
-        double traceOfTrialStress = 3.0*pressure + 
-                                        tensorD.Trace()*(2.0*mu_cur*delT);
+        double traceOfTrialStress = 3.0 * pressure
+                                      + tensorD.Trace() * (2.0 * mu_cur * delT);
                                         
         double flow_rule = d_yield->evalYieldCondition(equivStress, flowStress,
                                                        traceOfTrialStress, 
-                                                       porosity, state->yieldStress);
+                                                       porosity,
+                                                       state->yieldStress);
         // Compute the deviatoric stress
-        /*
-        cout << "flow_rule = " << flow_rule << " s_eq = " << equivStress
-             << " s_flow = " << flowStress << endl;
-        */
-
-        if (flow_rule < 0.0) {
+        if (flow_rule < 0.0)
+        {
           // Set the deviatoric stress to the trial stress
           tensorS = trialS;
 
@@ -1114,9 +1247,9 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
           // Update internal Cauchy stresses (only for viscoelasticity)
           Matrix3 dp = zero;
           d_devStress->updateInternalStresses(idx, dp, defState, delT);
-
-        } else {
-
+        }
+        else
+        {
           plastic = true;
 
           double delGamma = 0.0;
@@ -1143,7 +1276,8 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
           
           //__________________________________
           //
-          if (doRadialReturn) {
+          if (doRadialReturn)
+          {
 
             // Compute Stilde using Newton iterations a la Simo
             state->plasticStrainRate = pStrainRate_new[idx];
@@ -1491,14 +1625,9 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
 
         // Temp change to get from current temperature to clamp value
         double T_delta = T_clamp - oldTemp;
-//        if (idx < 8  && dwi == 0) std::cerr << " <Doing proper melting> Clamped Temp: " << std::fixed << std::setw(4) << std::right << T_clamp
-//                                << " T_delta_initial: " << std::fixed << std::setw(4) << std::right << T_delta;
 
         // Heat needed to get T to T_clamp
         double Q_toClamp = T_delta*thermalMass;
-//        if (idx < 8  && dwi == 0) std::cerr << " Heat to clamp temp: " << std::scientific << std::setw(4) << std::right << Q_toClamp
-//                                << " Initial heat buffer: " << std::scientific << std::setw(4) << std::right << pHeatBuffer[idx];
-
 
         double Q_remaining = Q_in - Q_toClamp;
         if (Q_remaining >= 0.0)
@@ -1514,7 +1643,6 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
         }
         double newQInBuffer = pHeatBuffer[idx] + Q_remaining;
         pHeatBuffer_new[idx] = newQInBuffer;
-//        if (idx < 8  && dwi == 0) std::cerr << " New Projected buffer: " << std::scientific << std::setw(6) << std::right << newQInBuffer;
         if (newQInBuffer > dH_materialPoint)
         {
           if (pColor_new[idx] != d_reactedColor)
@@ -1524,75 +1652,11 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
           pHeatBuffer_new[idx] = dH_materialPoint;
           Q_remaining = newQInBuffer - dH_materialPoint;
           newTemp = T_clamp + Q_remaining/thermalMass;
-//          if (idx < 8  && dwi == 0) std::cerr << " Heat of Fusion: " << std::fixed << std::setw(6) << std::right << d_dHFusion
-//                                  << " Remaining heat: " << std::fixed << std::setw(6) << std::right << Q_remaining;
         }
 
         pdTdt[idx] = (newTemp - pTemperature_new[idx])/delT;
         pReactionProgress_new[idx] = pHeatBuffer_new[idx]/dH_materialPoint;
-
-//        if (idx < 8  && dwi == 0) std::cerr << " newTemp: " << std::fixed << std::setw(6) << std::right << pTemperature_new[idx] + pdTdt[idx] * delT
-//                                << " new pdTdt: " << std::fixed << std::setw(6) << std::right << pdTdt[idx];
-
-
       }
-//      if (idx < 8  && dwi == 0) std::cerr << std::endl;
-
-
-//      if (newTemp >= meltOnsetTemp )
-//      {
-//        double thermalMass = Cp*pMass[idx];
-//        // Temperature to hold at while melting
-//        double T_clamp = std::max(meltOnsetTemp,pTemperature[idx]);
-//
-//        // Temperature delta to get to clamp temperature and start melting
-//        double T_delta = std::max(0.0, T_clamp - pTemperature[idx]);
-//        if (idx == 0) std::cerr << " Doing proper melting: Clamped Temp: " << std::setw(6) << std::right << T_clamp
-//                                << " T_delta_initial: " << std::setw(6) << std::right << T_delta;
-//
-//        double projectedQ = 0.0;
-//        double projectedBuffer = pHeatBuffer[idx];
-//        if (T_delta > 0)
-//        {
-//          projectedQ = (newTemp - (oldTemp + T_delta))*thermalMass;
-//        }
-//        // Projected heat to dump into buffer;
-//        double projectedQ = (newTemp - (oldTemp + T_delta))*thermalMass;
-//        double projectedBuffer = pHeatBuffer[idx] + projectedQ;
-//        if (idx == 0) std::cerr << " Remaining heat: " << std::setw(6) << std::right << projectedQ
-//                                << " Initial heat buffer: " << std::setw(6) << std::right << pHeatBuffer[idx]
-//                                << " New Projected buffer: " << std::setw(6) << std::right << projectedBuffer
-//                                << " Heat of Fusion: " << std::setw(6) << std::right << d_dHFusion;
-//
-//        // If projected heat is > 0, we're melting.
-//        if (projectedQ > 0.0 && pColor_new[idx] != d_reactedColor)
-//        {
-//          pColor_new[idx] = d_meltingColor;
-//        }
-//
-//        // Buffer holds either the current amount plus the projected addition,
-//        //   of the heat of fusion.
-//        pHeatBuffer_new[idx] = std::min(projectedBuffer,d_dHFusion);
-//
-//        // Any remnant heat goes back into temperature.
-//        double dQ_remnant = projectedBuffer - pHeatBuffer_new[idx];
-//        T_delta += dQ_remnant/(thermalMass);
-//
-//        // Store normalized melt progress.
-//        pReactionProgress_new[idx] = pHeatBuffer_new[idx]/d_dHFusion;
-//        // If there is remnant heat we're fully melted.
-//        if (dQ_remnant > 0 && pColor_new[idx] != d_reactedColor)
-//        {
-//          pColor_new[idx] = d_meltedColor;
-//        }
-//
-//        // Remnant temperature increase rate is just the increase divided by the
-//        //   current timestep.
-//        pdTdt[idx] = T_delta / delT;
-//        if (idx == 0) std::cerr << " newTemp: " << std::setw(6) << std::right << pTemperature_new[idx] + pdTdt[idx] * delT;
-//      }
-//
-//      if (idx == 0) std::cerr << std::endl;
       // JBH - All sources of temperature have been included now, back it out
       //         and determine proper temperature including heat of fusion
       double delTemp = newTemp - pTemperature[idx];
@@ -1607,7 +1671,7 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
       delete state;
     }  // end particle loop
 
-//    if (currStep%outputFreq==1 && dwi == 0) std::cerr << std::endl;
+    if (currStep%outputFreq==1 && dwi == 0) std::cerr << std::endl;
     //__________________________________
     //
     WaveSpeed = dx/WaveSpeed;
@@ -1622,28 +1686,27 @@ ReactiveEP::computeStressTensor(const PatchSubset   * patches,
     }
   }
 
-  if (cout_EP.active()) cout_EP << getpid() << "... End." << endl;
+  if (cout_EP.active()) cout_EP << getpid() << "... End." << std::endl;
 }
 
 //______________________________________________________________________
 //
-bool
-ReactiveEP::computePlasticStateBiswajit(
-                                              PlasticityState               * state,
-                                              constParticleVariable<double> & pPlasticStrain,
-                                              constParticleVariable<double> & pStrainRate,
-                                        const Matrix3                       & sigma,
-                                        const Matrix3                       & trialS,
-                                        const Matrix3                       & tensorEta,
-                                              Matrix3                       & tensorS,
-                                              double                        & delGamma,
-                                              double                        & flowStress,
-                                              double                        & porosity,
-                                              double                        & mu_cur,
-                                        const double                          delT,
-                                        const MPMMaterial                   * matl,
-                                        const int                             idx
-                                       )
+bool ReactionDiffusionEP::computePlasticStateBiswajit(
+                                                            PlasticityState               * state,
+                                                            constParticleVariable<double> & pPlasticStrain,
+                                                            constParticleVariable<double> & pStrainRate,
+                                                      const Matrix3                       & sigma,
+                                                      const Matrix3                       & trialS,
+                                                      const Matrix3                       & tensorEta,
+                                                            Matrix3                       & tensorS,
+                                                            double                        & delGamma,
+                                                            double                        & flowStress,
+                                                            double                        & porosity,
+                                                            double                        & mu_cur,
+                                                      const double                          delT,
+                                                      const MPMMaterial                   * matl,
+                                                      const int                             idx
+                                                      )
 {
   // Using the algorithm from Zocher, Maudlin, Chen, Flower-Maudlin
   // European Congress on Computational Methods in Applied Sciences 
@@ -1758,20 +1821,20 @@ ReactiveEP::computePlasticStateBiswajit(
 /*! \brief Compute Stilde, epdot, ep, and delGamma using 
   Simo's approach */
 ////////////////////////////////////////////////////////////////////////
-void 
-ReactiveEP::computePlasticStateViaRadialReturn(const Matrix3& trialS,
-                                                     const double& delT,
-                                                     const MPMMaterial* matl,
-                                                     const particleIndex idx,
-                                                     PlasticityState* state,
-                                                     Matrix3& nn,
-                                                     double& delGamma)
+void ReactionDiffusionEP::computePlasticStateViaRadialReturn(
+                                                             const Matrix3          & trialS    ,
+                                                             const double           & delT      ,
+                                                             const MPMMaterial      * matl      ,
+                                                             const particleIndex      idx       ,
+                                                                   PlasticityState  * state     ,
+                                                                   Matrix3          & nn        ,
+                                                                   double           & delGamma  )
 {
   double normTrialS = trialS.Norm();
   
   // Do Newton iteration to compute delGamma and updated 
   // plastic strain, plastic strain rate, and yield stress
-  double tolerance = min(delT, 1.0e-6);
+  double tolerance = std::min(delT, 1.0e-6);
   delGamma = computeDeltaGamma(delT, tolerance, normTrialS, matl, idx, state);
                                
   nn  = trialS/normTrialS;
@@ -1783,12 +1846,12 @@ ReactiveEP::computePlasticStateViaRadialReturn(const Matrix3& trialS,
 //             using Newton iterative root finder */
 ////////////////////////////////////////////////////////////////////////
 double 
-ReactiveEP::computeDeltaGamma(const double& delT,
-                                    const double& tolerance,
-                                    const double& normTrialS,
-                                    const MPMMaterial* matl,
-                                    const particleIndex idx,
-                                    PlasticityState* state)
+ReactionDiffusionEP::computeDeltaGamma(const double           & delT        ,
+                                       const double           & tolerance   ,
+                                       const double           & normTrialS  ,
+                                       const MPMMaterial      * matl        ,
+                                       const particleIndex      idx         ,
+                                             PlasticityState  * state       )
 {
   // Initialize constants
   double twothird  = 2.0/3.0;
@@ -1807,24 +1870,20 @@ ReactiveEP::computeDeltaGamma(const double& delT,
   //__________________________________
   // iterate
   int count = 0;
-  do {
-
+  do
+  {
     ++count;
-
     // Compute the yield stress
-    sigma_y = d_flow->computeFlowStress(state, delT, tolerance, 
-                                           matl, idx);
+    sigma_y = d_flow->computeFlowStress(state, delT, tolerance, matl, idx);
 
     // Compute g
     g = normTrialS - stwothird*sigma_y - twomu*deltaGamma;
 
     // Compute d(sigma_y)/d(epdot)
-    double dsigy_depdot = d_flow->evalDerivativeWRTStrainRate(state,
-                                                                 idx);
+    double dsigy_depdot = d_flow->evalDerivativeWRTStrainRate(state, idx);
 
     // Compute d(sigma_y)/d(ep)
-    double dsigy_dep = d_flow->evalDerivativeWRTPlasticStrain(state,
-                                                                 idx);
+    double dsigy_dep = d_flow->evalDerivativeWRTPlasticStrain(state, idx);
 
     // Compute d(g)/d(deltaGamma)
     Dg = -twothird*(dsigy_depdot/delT + dsigy_dep) - twomu;
@@ -1833,18 +1892,21 @@ ReactiveEP::computeDeltaGamma(const double& delT,
     deltaGammaOld = deltaGamma;
     deltaGamma -= g/Dg;
 
-    if (std::isnan(g) || std::isnan(deltaGamma)) {
-      cout << "idx = " << idx << " iter = " << count 
-           << " g = " << g << " Dg = " << Dg << " deltaGamma = " << deltaGamma 
-           << " sigy = " << sigma_y 
-           << " dsigy/depdot = " << dsigy_depdot << " dsigy/dep= " << dsigy_dep 
-           << " epdot = " << state->plasticStrainRate 
-           << " ep = " << state->plasticStrain << endl;
+    if (std::isnan(g) || std::isnan(deltaGamma))
+    {
+      std::cout << "idx = " << idx << " iter = " << count
+               << " g = " << g << " Dg = " << Dg
+               << " deltaGamma = " << deltaGamma
+               << " sigy = " << sigma_y
+               << " dsigy/depdot = " << dsigy_depdot
+               << " dsigy/dep= " << dsigy_dep
+               << " epdot = " << state->plasticStrainRate
+               << " ep = " << state->plasticStrain << std::endl;
       throw InternalError("nans in computation",__FILE__,__LINE__);
     }
 
     // Update local plastic strain rate
-    double stt_deltaGamma    = max(stwothird*deltaGamma, 0.0);
+    double stt_deltaGamma    = std::max(stwothird*deltaGamma, 0.0);
     state->plasticStrainRate = stt_deltaGamma/delT;
 
     // Update local plastic strain 
@@ -1855,16 +1917,17 @@ ReactiveEP::computeDeltaGamma(const double& delT,
   } while (fabs(g) > sigma_y/1000.);
 
   // Compute the yield stress
-  state->yieldStress = d_flow->computeFlowStress(state, delT, tolerance, 
-                                                    matl, idx);
+  state->yieldStress = d_flow->computeFlowStress(state, delT, tolerance, matl,
+                                                 idx);
 
-  if (std::isnan(state->yieldStress)) {
-    cout << "idx = " << idx << " iter = " << count 
-         << " sig_y = " << state->yieldStress
-         << " epdot = " << state->plasticStrainRate
-         << " ep = " << state->plasticStrain
-         << " T = " << state->temperature 
-         << " Tm = " << state->meltingTemp << endl;
+  if (std::isnan(state->yieldStress))
+  {
+    std::cout << "idx = "     << idx << " iter = " << count
+              << " sig_y = "  << state->yieldStress
+              << " epdot = "  << state->plasticStrainRate
+              << " ep = "     << state->plasticStrain
+              << " T = "      << state->temperature
+              << " Tm = "     << state->meltingTemp << std::endl;
   }
 
   return deltaGamma;
@@ -1872,10 +1935,10 @@ ReactiveEP::computeDeltaGamma(const double& delT,
 //______________________________________________________________________
 //
 void 
-ReactiveEP::computeStressTensorImplicit(const PatchSubset* patches,
-                                            const MPMMaterial* matl,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw)
+ReactionDiffusionEP::computeStressTensorImplicit(const PatchSubset    * patches ,
+                                                 const MPMMaterial    * matl    ,
+                                                       DataWarehouse  * old_dw  ,
+                                                       DataWarehouse  * new_dw  )
 {
   // Constants
   int dwi = matl->getDWIndex();
@@ -1890,7 +1953,8 @@ ReactiveEP::computeStressTensorImplicit(const PatchSubset* patches,
   double Tm = matl->getMeltTemperature();
 
   // Do thermal expansion?
-  if(!flag->d_doThermalExpansion){
+  if(!flag->d_doThermalExpansion)
+  {
     alpha = 0;
   }
 
@@ -2001,7 +2065,8 @@ ReactiveEP::computeStressTensorImplicit(const PatchSubset* patches,
     //__________________________________
     // Special case for rigid materials
     double totalStrainEnergy = 0.0;
-    if (matl->getIsRigid()) {
+    if (matl->getIsRigid())
+    {
       ParticleSubset::iterator iter = pset->begin(); 
       for( ; iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -2054,8 +2119,8 @@ ReactiveEP::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
-        cerr << getpid() 
-             << "**ERROR** Negative Jacobian of deformation gradient" << endl;
+        std::cerr << getpid()
+             << "**ERROR** Negative Jacobian of deformation gradient" << std::endl;
         throw InternalError("Negative Jacobian",__FILE__,__LINE__);
       }
 
@@ -2260,47 +2325,10 @@ ReactiveEP::computeStressTensorImplicit(const PatchSubset* patches,
 }
 //______________________________________________________________________
 //
-void 
-ReactiveEP::addComputesAndRequires(      Task         * task,
-                                         const MPMMaterial  * matl,
-                                         const PatchSet     * patches,
-                                         const bool           recurse,
-                                         const bool           SchedParent) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForImplicitHypo(task, matlset, true, recurse, SchedParent);
-
-  Ghost::GhostType  gnone = Ghost::None;
-  if(SchedParent){
-    // For subscheduler
-    task->requires(Task::ParentOldDW, lb->pTempPreviousLabel,  matlset, gnone); 
-    task->requires(Task::ParentOldDW, lb->pTemperatureLabel,   matlset, gnone);
-    task->requires(Task::ParentOldDW, pPlasticStrainLabel,     matlset, gnone);
-    task->requires(Task::ParentOldDW, pPlasticStrainRateLabel, matlset, gnone);
-    task->requires(Task::ParentOldDW, pPorosityLabel,          matlset, gnone);
-
-    task->computes(pPlasticStrainLabel_preReloc,               matlset);
-    task->computes(pPlasticStrainRateLabel_preReloc,           matlset);
-    task->computes(pPorosityLabel_preReloc,                    matlset);
-  }else{
-    // For scheduleIterate
-    task->requires(Task::OldDW, lb->pTempPreviousLabel,  matlset, gnone); 
-    task->requires(Task::OldDW, lb->pTemperatureLabel,   matlset, gnone);
-    task->requires(Task::OldDW, pPlasticStrainLabel,     matlset, gnone);
-    task->requires(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
-    task->requires(Task::OldDW, pPorosityLabel,          matlset, gnone);
-  }
-
-  // Add internal evolution variables computed by flow model
-  d_flow->addComputesAndRequires(task, matl, patches, recurse, SchedParent);
-  
-  // Deviatoric Stress Model
-  d_devStress->addComputesAndRequires(task, matl, SchedParent);
-}
 //______________________________________________________________________
 //
 void 
-ReactiveEP::computeStressTensorImplicit(const PatchSubset* patches,
+ReactionDiffusionEP::computeStressTensorImplicit(const PatchSubset* patches,
                                               const MPMMaterial* matl,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw,
@@ -2450,8 +2478,8 @@ ReactiveEP::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
-        cerr << getpid() 
-             << "**ERROR** Negative Jacobian of deformation gradient" << endl;
+        std::cerr << getpid()
+             << "**ERROR** Negative Jacobian of deformation gradient" << std::endl;
         throw InternalError("Negative Jacobian",__FILE__,__LINE__);
       }
 
@@ -2619,10 +2647,9 @@ ReactiveEP::computeStressTensorImplicit(const PatchSubset* patches,
 */
 //______________________________________________________________________
 //
-void 
-ReactiveEP::computeElasticTangentModulus(const double& K,
-                                             const double& mu,
-                                             double Ce[6][6])
+void ReactionDiffusionEP::computeElasticTangentModulus(const double& K,
+                                                       const double& mu,
+                                                             double Ce[6][6])
 {
   // Form the elastic tangent modulus tensor
   double twomu = 2.0*mu;
@@ -2657,15 +2684,14 @@ ReactiveEP::computeElasticTangentModulus(const double& K,
   [strain] = [e11 e22 e33 2e12 2e23 2e31] 
   Uses alogorithm for small strain plasticity (Simo 1998, p.124)
 */
-void 
-ReactiveEP::computeEPlasticTangentModulus(const double& K,
-                                              const double& mu,
-                                              const double& delGamma,
-                                              const Matrix3& trialStress,
-                                              const particleIndex idx,
-                                              PlasticityState* state,
-                                              double Cep[6][6],
-                                              bool consistent)
+void ReactionDiffusionEP::computeEPlasticTangentModulus(const double& K,
+                                                        const double& mu,
+                                                        const double& delGamma,
+                                                        const Matrix3& trialStress,
+                                                        const particleIndex idx,
+                                                              PlasticityState* state,
+                                                              double Cep[6][6],
+                                                              bool consistent)
 {
 
   double normTrialS = trialStress.Norm();
@@ -2740,14 +2766,13 @@ ReactiveEP::computeEPlasticTangentModulus(const double& K,
 //______________________________________________________________________
 //
 /*! Compute K matrix */
-void 
-ReactiveEP::computeStiffnessMatrix(const double B[6][24],
-                                       const double Bnl[3][24],
-                                       const double D[6][6],
-                                       const Matrix3& sig,
-                                       const double& vol_old,
-                                       const double& vol_new,
-                                       double Kmatrix[24][24])
+void ReactionDiffusionEP::computeStiffnessMatrix(const double B[6][24],
+                                                 const double Bnl[3][24],
+                                                 const double D[6][6],
+                                                 const Matrix3& sig,
+                                                 const double& vol_old,
+                                                 const double& vol_new,
+                                                 double Kmatrix[24][24])
 {
   // Kmat = B.transpose()*D*B*volold
   double Kmat[24][24];
@@ -2769,9 +2794,9 @@ ReactiveEP::computeStiffnessMatrix(const double B[6][24],
   }
 }
 
-void 
-ReactiveEP::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
-                           double Kgeo[24][24]) const
+void ReactionDiffusionEP::BnlTSigBnl(const Matrix3& sig,
+                                     const double Bnl[3][24],
+                                           double Kgeo[24][24]) const
 {
   double t1, t10, t11, t12, t13, t14, t15, t16, t17;
   double t18, t19, t2, t20, t21, t22, t23, t24, t25;
@@ -3451,13 +3476,13 @@ ReactiveEP::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
 }
 //______________________________________________________________________
 //
-void 
-ReactiveEP::carryForward(const PatchSubset* patches,
-                             const MPMMaterial* matl,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+void ReactionDiffusionEP::carryForward(const PatchSubset    * patches ,
+                                       const MPMMaterial    * matl    ,
+                                             DataWarehouse  * old_dw  ,
+                                             DataWarehouse  * new_dw  )
 {
-  for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++)
+  {
     const Patch* patch = patches->get(p);
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -3532,16 +3557,17 @@ ReactiveEP::carryForward(const PatchSubset* patches,
 //______________________________________________________________________
 //
 void 
-ReactiveEP::addRequiresDamageParameter(Task* task,
-                                       const MPMMaterial* matl,    
-                                       const PatchSet* ) const     
+ReactionDiffusionEP::addRequiresDamageParameter(      Task        * task  ,
+                                                const MPMMaterial * matl  ,
+                                                const PatchSet    *       )
+const
 {
  // To be filled in -Todd
 }
 //______________________________________________________________________
 //
 void 
-ReactiveEP::getDamageParameter(const Patch* patch,
+ReactionDiffusionEP::getDamageParameter(const Patch* patch,
                                    ParticleVariable<int>& damage,
                                    int dwi,
                                    DataWarehouse* old_dw,
@@ -3553,7 +3579,7 @@ ReactiveEP::getDamageParameter(const Patch* patch,
 // Compute the elastic tangent modulus tensor for isotropic
 // materials (**NOTE** can get rid of one copy operation if needed)
 void 
-ReactiveEP::computeElasticTangentModulus(double bulk,
+ReactionDiffusionEP::computeElasticTangentModulus(double bulk,
                                              double shear,
                                              TangentModulusTensor& Ce)
 {
@@ -3577,7 +3603,7 @@ ReactiveEP::computeElasticTangentModulus(double bulk,
 
 // Update the porosity of the material
 double 
-ReactiveEP::updatePorosity(const Matrix3& D,
+ReactionDiffusionEP::updatePorosity(const Matrix3& D,
                                double delT, 
                                double f,
                                double ep)
@@ -3616,7 +3642,7 @@ ReactiveEP::updatePorosity(const Matrix3& D,
 //
 // Calculate the void nucleation factor
 inline double 
-ReactiveEP::voidNucleationFactor(double ep)
+ReactionDiffusionEP::voidNucleationFactor(double ep)
 {
   double temp = (ep - d_porosity.en)/d_porosity.sn;
   double A = d_porosity.fn/(d_porosity.sn*sqrt(2.0*M_PI))*
@@ -3627,7 +3653,7 @@ ReactiveEP::voidNucleationFactor(double ep)
 /* Hardcoded specific heat computation for 4340 steel */
 /*
 double 
-ReactiveEP::computeSpecificHeat(double T)
+ReactionDiffusionEP::computeSpecificHeat(double T)
 {
   // Specific heat model for 4340 steel (SI units)
   double Tc = 1040.0;
@@ -3658,7 +3684,7 @@ ReactiveEP::computeSpecificHeat(double T)
 */
 //______________________________________________________________________
 //
-double ReactiveEP::computeRhoMicroCM(double pressure,
+double ReactionDiffusionEP::computeRhoMicroCM(double pressure,
                                          const double p_ref,
                                          const MPMMaterial* matl, 
                                          double temperature,
@@ -3682,7 +3708,7 @@ double ReactiveEP::computeRhoMicroCM(double pressure,
 }
 //______________________________________________________________________
 //
-void ReactiveEP::computePressEOSCM(double rho_cur,double& pressure,
+void ReactionDiffusionEP::computePressEOSCM(double rho_cur,double& pressure,
                                        double p_ref,  
                                        double& dp_drho, double& tmp,
                                        const MPMMaterial* matl, 
@@ -3708,7 +3734,7 @@ void ReactiveEP::computePressEOSCM(double rho_cur,double& pressure,
 }
 //__________________________________
 //
-double ReactiveEP::getCompressibility()
+double ReactionDiffusionEP::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }

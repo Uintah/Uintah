@@ -67,8 +67,9 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
   {
     const Patch* patch = patches->get(p);
 
-    StaticArray<constNCVariable<double> > gmass(num_matls);
-    StaticArray<NCVariable<double> >      gconcentration(num_matls);
+    StaticArray<constNCVariable<double> >            gmass(num_matls);
+    StaticArray<NCVariable<double> >        gconcentration(num_matls);
+
     for(int m = 0; m < num_matls; m++)
     {
       int dwi = matls->get(m);
@@ -85,7 +86,8 @@ void CommonIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup *,
       double g_sum_mass = 0;
       double g_sum_concmass = 0;
 
-      for(int m = 0; m < num_matls; m++){
+      for(int m = 0; m < num_matls; m++)
+      {
         g_sum_mass += gmass[m][c];
         g_sum_concmass += gconcentration[m][c] * gmass[m][c];
       }
@@ -124,12 +126,14 @@ void CommonIFConcDiff::sdInterfaceDivergence(const ProcessorGroup*,
                                              DataWarehouse* new_dw)
 {
   int num_matls = d_shared_state->getNumMPMMatls();
-    for(int p = 0; p < patches->size(); p++){
+    for(int p = 0; p < patches->size(); p++)
+    {
       const Patch* patch = patches->get(p);
 
       StaticArray<constNCVariable<double> > gmass(num_matls);
       StaticArray<NCVariable<double> > gconc_rate(num_matls);
-      for(int m = 0; m < num_matls; m++){
+      for(int m = 0; m < num_matls; m++)
+      {
         int dwi = matls->get(m);
         new_dw->get(gmass[m], d_mpm_lb->gMassLabel, dwi, patch, Ghost::None, 0);
         new_dw->getModifiable(gconc_rate[m], d_mpm_lb->gConcentrationRateLabel, dwi, patch);

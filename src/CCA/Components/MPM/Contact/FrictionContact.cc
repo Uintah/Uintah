@@ -318,7 +318,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
         // 1. This option uses particle counting
 //        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
-        if((totalNodalVol/cell_vol) > d_vol_const){
+        if((totalNodalVol/cell_vol) > d_vol_const) {
           double scale_factor=1.0;
 
           // 2. This option uses only cell volumes.  The idea is that a cell 

@@ -36,5 +36,7 @@ SRCS     += \
 	$(SRCDIR)/NonLinearDiff2.cc \
 	$(SRCDIR)/RFConcDiffusion1MPM.cc \
 	$(SRCDIR)/BazantModel.cc \
-	$(SRCDIR)/ScalarDiffusionModel.cc
+	$(SRCDIR)/ScalarDiffusionModel.cc \
+	$(SRCDIR)/ActivatedDiffusion.cc \
+	$(SRCDIR)/ActivatedDiffusion2.cc
 	

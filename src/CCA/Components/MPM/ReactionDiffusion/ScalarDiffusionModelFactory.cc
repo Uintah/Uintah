@@ -29,6 +29,8 @@
 #include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/NonLinearDiff2.h>
 #include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ConstantRate.h>
 #include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/BazantModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ActivatedDiffusion.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ActivatedDiffusion2.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -65,6 +67,12 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
 
   else if (diffusion_type == "bazant")
     return(scinew BazantDiffusion(child, ss, flags, diffusion_type));
+
+  else if (diffusion_type == "activated")
+    return(scinew ActivatedDiffusion(child, ss, flags, diffusion_type));
+
+  else if (diffusion_type == "activated2")
+    return(scinew Activated2(child, ss, flags, diffusion_type));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);

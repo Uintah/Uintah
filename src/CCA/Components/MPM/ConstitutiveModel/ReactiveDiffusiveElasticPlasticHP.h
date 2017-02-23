@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __REACTIVE_ELASTIC_PLASTICHP_H__
-#define __REACTIVE_ELASTIC_PLASTICHP_H__
+#ifndef __REACTIVEDIFFUSIVE_ELASTIC_PLASTICHP_H__
+#define __REACTIVEDIFFUSIVE_ELASTIC_PLASTICHP_H__
 
 
 #include "ConstitutiveModel.h"
@@ -50,7 +50,7 @@ namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
-    \class ReactiveEP
+    \class ReactionDiffusionEP
     \brief High-strain rate Hypo-Elastic Plastic Constitutive Model
     \author Biswajit Banerjee \n
     C-SAFE and Department of Mechanical Engineering \n
@@ -77,9 +77,10 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class ReactiveEP : public ConstitutiveModel, public ImplicitCM {
-
-  public:
+  class ReactionDiffusionEP : public ConstitutiveModel,
+                              public ImplicitCM
+  {
+    public:
     // Create datatype for storing model parameters
     struct CMData {
       double Bulk;    /*< Bulk modulus */
@@ -87,6 +88,8 @@ namespace Uintah {
       double alpha;   /*< Coeff. of thermal expansion */
       double Chi;     /*< Taylor-Quinney coefficient */
       double sigma_crit; /*< Critical stress */
+      // --- Diffusion related
+      double vol_exp_coeff; // Volume expansion coefficient
     };   
 
     // Create datatype for storing porosity parameters
@@ -120,8 +123,9 @@ namespace Uintah {
     const VarLabel* pDissipatedEnergyLabel;
     const VarLabel* pWorkEnergyLabel;
     const VarLabel* pHeatBufferLabel;
-    const VarLabel* pReactionProgressLabel;
+    const VarLabel* pMeltProgressLabel;
     const VarLabel* pLastReactionFlagLabel;
+    const VarLabel* pInitialMoles;
 
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel_preReloc;  
@@ -136,6 +140,7 @@ namespace Uintah {
     const VarLabel* pHeatBufferLabel_preReloc;
     const VarLabel* pReactionProgressLabel_preReloc;
     const VarLabel* pLastReactionFlagLabel_preReloc;
+    const VarLabel* pInitialMoles_preReloc;
 
   protected:
 
@@ -174,8 +179,9 @@ namespace Uintah {
   private:
     // Prevent copying of this class
     // copy constructor
-    ReactiveEP& operator=(const ReactiveEP &cm);
+    ReactionDiffusionEP& operator=(const ReactionDiffusionEP &cm);
 
+    double d_molesPerMass;
     double d_meltingColor;
     double d_meltedColor;
     double d_reactedColor;
@@ -185,18 +191,18 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
-    ReactiveEP(ProblemSpecP& ps,MPMFlags* flag);
-    ReactiveEP(const ReactiveEP* cm);
+    ReactionDiffusionEP(ProblemSpecP& ps,MPMFlags* flag);
+    ReactionDiffusionEP(const ReactionDiffusionEP* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */
     ////////////////////////////////////////////////////////////////////////
-    virtual ~ReactiveEP();
+    virtual ~ReactionDiffusionEP();
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
-    ReactiveEP* clone();
+    ReactionDiffusionEP* clone();
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
@@ -476,4 +482,4 @@ namespace Uintah {
 
 } // End namespace Uintah
 
-#endif  // __REACTIVE_ELASTIC_PLASTICHP_H__
+#endif  // __REACTIVEDIFFUSIVE_ELASTIC_PLASTICHP_H__

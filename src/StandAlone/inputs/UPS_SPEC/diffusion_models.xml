@@ -3,7 +3,7 @@
 
   <diffusion_model         spec="OPTIONAL NO_DATA"
                            attribute1="type REQUIRED STRING 'jg, rf1,
-                                       non_linear1, non_linear2, constant_rate, bazant'">
+                                       non_linear1, non_linear2, constant_rate, bazant, activated, activated2'">
     <diffusivity           spec="REQUIRED DOUBLE" />
     <max_concentration     spec="REQUIRED DOUBLE" />
     <initial_concentration spec="OPTIONAL DOUBLE" />
@@ -21,6 +21,11 @@
       <v3                  spec="REQUIRED VECTOR" />
     </mismatchStrain>
     <!-- Bazant model variables -->
+
+    <!-- Activated diffusion model parameters -->
+    <gasConstant           spec="REQUIRED DOUBLE" need_applies_to="type activated" />
+    <activationEnergy      spec="REQUIRED DOUBLE" need_applies_to="type activated" />
+    <!--  Activated diffusion models -->
 
     <!-- Required for constant_rate model -->
     <constant_rate         spec="REQUIRED DOUBLE" need_applies_to="type constant_rate" />
