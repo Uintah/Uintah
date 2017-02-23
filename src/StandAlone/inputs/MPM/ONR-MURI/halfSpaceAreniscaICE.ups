@@ -119,7 +119,7 @@
       <save label = "p.kappa"/>
 
 <!--
-      <save label = "p.localized"/>
+      <save label = "p.localizedMPM"/>
 -->
 
       <checkpoint cycle = "2" timestepInterval = "20"/>

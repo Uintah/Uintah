@@ -114,7 +114,7 @@
       <save label = "delP_Dilatate"/>
       <save label = "delP_MassX"/>
 <!--
-      <save label = "p.localized"/>
+      <save label = "p.localizedMPM"/>
 -->
 
       <checkpoint cycle = "2" timestepInterval = "20"/>

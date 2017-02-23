@@ -38,7 +38,7 @@
       <save label = "p.stress"/>
       <save label = "p.volume"/>
       <save label = "p.deformationMeasure"/>
-      <save label = "p.localized"/>
+      <save label = "p.localizedMPM"/>
       <save label = "p.progressF"/>
       <save label = "p.plasticStrainVol"/>
       <save label = "p.elasticStrainVol"/>
@@ -56,7 +56,7 @@
       <save label = "sp_vol_L_CC"/>
       <save label = "delP_Dilatate"/>
       <save label = "delP_MassX"/>
-      <save label = "p.localized"/>
+      <save label = "p.localizedMPM"/>
 -->
 
       <checkpoint cycle = "2" timestepInterval = "100"/>

@@ -308,7 +308,7 @@
     <save label="p.porosity"/> 
     <save label="p.damage"/> 
     <save label="p.strainRate"/> 
-    <save label="p.localized"/> 
+    <save label="p.localizedMPM"/> 
     <save label="p.velocity"/>
     <save label="modelMass_src"/>
     <save label="modelMom_src"/> 

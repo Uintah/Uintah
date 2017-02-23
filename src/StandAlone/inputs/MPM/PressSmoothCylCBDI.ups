@@ -40,7 +40,7 @@
       <save label = "p.volume"/>
       <save label = "p.temperature"/>
       <save label = "p.epsf"/>
-      <save label = "p.localized"/> 
+      <save label = "p.localizedMPM"/> 
       <save label = "p.stress"/>
       <save label = "p.deformationMeasure"/>
       <save label = "p.velocity"/>

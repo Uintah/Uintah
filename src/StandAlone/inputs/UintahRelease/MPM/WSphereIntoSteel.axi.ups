@@ -41,7 +41,7 @@
     <save label = "p.particleID"/>
     <save label = "p.deformationMeasure"/>
     <save label = "p.temperature"/>
-    <save label = "p.localized"/>
+    <save label = "p.localizedMPM"/>
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>

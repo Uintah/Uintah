@@ -127,7 +127,7 @@
     <save label= "delP_MassX"/>
     <save label= "mom_source_CC"/>
     <save label= "intE_source_CC"/>
-    <save label= "p.localized"/>
+    <save label= "p.localizedMPM"/>
 -->
     <!-- <checkpoint cycle="2" timestepInterval="3000"/> -->
     <checkpoint cycle="2" timestepInterval="20"/>

@@ -40,7 +40,7 @@
     <save label = "p.plasticStrain"/>
     <save label = "p.temperature"/>
     <save label = "p.particleID"/>
-    <save label = "p.localized"/>
+    <save label = "p.localizedMPM"/>
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
     <save label = "g.mass"/>

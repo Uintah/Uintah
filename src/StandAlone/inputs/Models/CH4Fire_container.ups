@@ -295,7 +295,7 @@
       <save label="p.stress"/> 
       <save label="p.plasticStrain"/> 
       <save label="p.strainRate"/> 
-      <save label="p.localized"/> 
+      <save label="p.localizedMPM"/> 
       <save label="p.velocity"/>
       <save label= "modelMass_src"/>
       <save label= "modelMom_src"/> 
