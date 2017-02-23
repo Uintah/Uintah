@@ -71,6 +71,7 @@ namespace Uintah {
 
     MPMLabel* d_mpm_lb;
     SimulationStateP d_shared_state;
+    MPMFlags* d_mpm_flags;
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);
     

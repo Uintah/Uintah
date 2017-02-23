@@ -45,6 +45,8 @@
 
 namespace Uintah {
 
+ typedef ParticleSubset::iterator pSetIter;
+
  class Patch;
  class DataWarehouse;
  class VarLabel;

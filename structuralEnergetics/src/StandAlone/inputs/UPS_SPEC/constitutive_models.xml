@@ -8,7 +8,8 @@
                                                                              elastic_plastic, 
                                                                              hypo_elastic, 
                                                                              elastic_plastic_hp,
-                                                                             reactive_EP, 
+                                                                             reactive_EP,
+                                                                             reactive_diffusive_EP, 
                                                                              ideal_gas,
                                                                              membrane, 
                                                                              murnaghanMPM, 
@@ -408,6 +409,7 @@
     <viscosity                     spec="OPTIONAL DOUBLE" />
     <volfracHE                     spec="OPTIONAL DOUBLE" />
     <volume_expansion_coeff        spec="OPTIONAL DOUBLE" />
+    <molar_mass                    spec="OPTIONAL DOUBLE" />
     <yield_condition               spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'gurson, rousselier, vonMises'" >
       <f_c                         spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->

@@ -24,6 +24,7 @@
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/DiscreteInterface.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -68,6 +69,8 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
     return(scinew CommonIFConcDiff(child, ss, flags, mpm_lb));
   }else if (diff_interface_type == "null"){
     return(scinew SDInterfaceModel(child, ss, flags, mpm_lb));
+  }else if (diff_interface_type == "discrete"){
+    return(scinew DiscreteSDInterface(child, ss, flags, mpm_lb));
   }else{
     throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }
