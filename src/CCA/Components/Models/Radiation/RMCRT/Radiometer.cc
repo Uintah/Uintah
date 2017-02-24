@@ -98,7 +98,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
     rad_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
   } else {
                    // bulletproofing.
-    for( ProblemSpecP n = rad_ps->getFirstChild(); n != 0; n=n->getNextSibling() ){
+    for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
       string me = n->getNodeName();
       if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
         ostringstream warn;
@@ -184,7 +184,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   // positive axis about which the rotation is occurring. d
   for(int d = 0; d<3; d++){
     if(orient[d] == 0){      // WARNING WARNING this conditional only works for integers, not doubles, and should be fixed.
-      orient[d] =1e-16;      // to avoid divide by 0.
+      orient[d] = 1e-16;      // to avoid divide by 0.
     }
   }
 

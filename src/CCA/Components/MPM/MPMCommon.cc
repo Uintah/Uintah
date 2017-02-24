@@ -44,13 +44,11 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
                                      MPMFlags* flags, bool isRestart)
 {
   //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-    string index("");
-    ps->getAttribute("index",index);
+  ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute( "MaterialProperties" );
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock( "MPM" );
+  for( ProblemSpecP ps = mpm_mat_ps->findBlock( "material" ); ps != nullptr; ps = ps->findNextBlock( "material" ) ) {
+    string index( "" );
+    ps->getAttribute( "index",index );
     stringstream id(index);
     const int DEFAULT_VALUE = -1;
     int index_val = DEFAULT_VALUE;
@@ -87,11 +85,9 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
                                          MPMFlags* flags)
 {
   //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("cohesive_zone"); ps != 0;
-       ps = ps->findNextBlock("cohesive_zone") ) {
+  ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute( "MaterialProperties" );
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock( "MPM" );
+  for( ProblemSpecP ps = mpm_mat_ps->findBlock("cohesive_zone"); ps != nullptr; ps = ps->findNextBlock("cohesive_zone") ) {
 
     string index("");
     ps->getAttribute("index",index);

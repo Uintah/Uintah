@@ -183,20 +183,20 @@ SimpleRxn::problemSetup( GridP &,
 
   //__________________________________
   //  Read in the geometry objects for the scalar
-  if(!isRestart){
-   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-    geom_obj_ps != 0;
-    geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  if( !isRestart ){
+   for ( ProblemSpecP geom_obj_ps = child->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
     vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
     GeometryPieceP mainpiece;
-    if(pieces.size() == 0){
-     throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
-     mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
-     mainpiece = pieces[0];
+    if( pieces.size() == 0 ){
+      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+    }
+    else if(pieces.size() > 1){
+      mainpiece = scinew UnionGeometryPiece(pieces);
+    }
+    else {
+      mainpiece = pieces[0];
     }
 
     d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
@@ -216,8 +216,7 @@ SimpleRxn::problemSetup( GridP &,
      
     Vector location = Vector(0,0,0);
     map<string,string> attr;                    
-    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != 0; 
-                      prob_spec = prob_spec->findNextBlock("location")) {
+    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != nullptr; prob_spec = prob_spec->findNextBlock("location")) {
                       
       prob_spec->get(location);
       prob_spec->getAttributes(attr);

@@ -216,8 +216,7 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
     throw ProblemSetupException("ERROR Radiometer: Couldn't find <controlVolume> xml node", __FILE__, __LINE__);
   }
 
-  for (ProblemSpecP face_ps = ma_ps->findBlock("Face");
-      face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
+  for( ProblemSpecP face_ps = ma_ps->findBlock( "Face" ); face_ps != nullptr; face_ps=face_ps->findNextBlock( "Face" ) ) {
 
     map<string,string> faceMap;
     face_ps->getAttributes(faceMap);

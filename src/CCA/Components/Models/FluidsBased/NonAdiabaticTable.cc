@@ -143,8 +143,7 @@ NonAdiabaticTable::problemSetup( GridP &,
   if(useVariance)
     table->addIndependentVariable("Fvar");
   
-  for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
-       child = child->findNextBlock("tableValue")) {
+  for( ProblemSpecP child = params->findBlock("tableValue"); child != nullptr; child = child->findNextBlock("tableValue") ) {
     TableValue* tv = scinew TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
@@ -255,19 +254,19 @@ NonAdiabaticTable::problemSetup( GridP &,
                                       cumulativeEnergyReleased_src_CCLabel);
   //__________________________________
   //  Read in the geometry objects for the scalar
-  if(!isRestart){
-   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-    geom_obj_ps != 0;
-    geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  if( !isRestart ){
+   for( ProblemSpecP geom_obj_ps = child->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
     vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
     GeometryPieceP mainpiece;
     if(pieces.size() == 0){
      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
+    }
+    else if(pieces.size() > 1){
      mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
+    }
+    else {
      mainpiece = pieces[0];
     }
 
@@ -287,8 +286,7 @@ NonAdiabaticTable::problemSetup( GridP &,
      
     Vector location = Vector(0,0,0);
     map<string,string> attr;                    
-    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != 0; 
-                      prob_spec = prob_spec->findNextBlock("location")) {
+    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != nullptr; prob_spec = prob_spec->findNextBlock("location")) {
                       
       prob_spec->get(location);
       prob_spec->getAttributes(attr);
@@ -297,19 +295,20 @@ NonAdiabaticTable::problemSetup( GridP &,
       d_probePts.push_back(location);
       d_probePtsNames.push_back(name);
     }
-  } else {
+  }
+  else {
     d_usingProbePts = false;
   }
 }
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
-void NonAdiabaticTable::scheduleInitialize(SchedulerP& sched,
-                                   const LevelP& level,
-                                   const ModelInfo*)
+void
+NonAdiabaticTable::scheduleInitialize(       SchedulerP & sched,
+                                       const LevelP     & level,
+                                       const ModelInfo  * )
 {
-  cout_doing << "ADIABATIC_TABLE::scheduleInitialize " << endl;
-  Task* t = scinew Task("NonAdiabaticTable::initialize", this, 
-                        &NonAdiabaticTable::initialize);
+  cout_doing << "ADIABATIC_TABLE::scheduleInitialize\n";
+  Task* t = scinew Task("NonAdiabaticTable::initialize", this, &NonAdiabaticTable::initialize);
 
   t->modifies(lb->sp_vol_CCLabel);
   t->modifies(lb->rho_micro_CCLabel);

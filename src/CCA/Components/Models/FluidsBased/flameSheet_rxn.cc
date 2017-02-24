@@ -166,26 +166,26 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
 
   //__________________________________
   //  geom objects
-  if(!isRestart){
-   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-    geom_obj_ps != 0;
-    geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    vector<GeometryPieceP> pieces;
-    GeometryPieceFactory::create(geom_obj_ps, pieces);
+  if( !isRestart ) {
+    for( ProblemSpecP geom_obj_ps = child->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+      vector<GeometryPieceP> pieces;
+      GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-    GeometryPieceP mainpiece;
-    if(pieces.size() == 0){
-     throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
-     mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
-     mainpiece = pieces[0];
+      GeometryPieceP mainpiece;
+      if(pieces.size() == 0){
+        throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+      }
+      else if(pieces.size() > 1){
+        mainpiece = scinew UnionGeometryPiece(pieces);
+      }
+      else {
+        mainpiece = pieces[0];
+      }
+
+      d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
     }
-
-    d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
-   }
   }
-  if(d_scalar->regions.size() == 0 && !isRestart) {
+  if( d_scalar->regions.size() == 0 && !isRestart ) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions", __FILE__, __LINE__);
   }
 }

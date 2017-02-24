@@ -50,32 +50,31 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
   params->require("filename", filename_);
 
   // Parse default values
-  for (ProblemSpecP child = params->findBlock("defaultValue"); child != 0;
-       child = child->findNextBlock("defaultValue")) {
+  for (ProblemSpecP child = params->findBlock("defaultValue"); child != nullptr; child = child->findNextBlock("defaultValue")) {
     DefaultValue* df = scinew DefaultValue;
-    if(!child->getAttribute("name", df->name))
+    if(!child->getAttribute("name", df->name)) {
       throw ProblemSetupException("No name for defaultValue", __FILE__, __LINE__);
+    }
     child->get(df->value);
     defaults.push_back(df);
   }
 
   // Parse constant values
-  for (ProblemSpecP child = params->findBlock("constantValue"); child != 0;
-       child = child->findNextBlock("constantValue")) {
+  for (ProblemSpecP child = params->findBlock("constantValue"); child != nullptr; child = child->findNextBlock("constantValue")) {
     Dep* dep = scinew Dep(Dep::ConstantValue);
-    if(!child->getAttribute("name", dep->name))
+    if(!child->getAttribute("name", dep->name)) {
       throw ProblemSetupException("No name for constantValue", __FILE__, __LINE__);
+    }
     child->get(dep->constantValue);
     deps.push_back(dep);
   }
 
   // Parse derived values
-  for (ProblemSpecP child = params->findBlock("derivedValue"); child != 0;
-       child = child->findNextBlock("derivedValue")) {
+  for (ProblemSpecP child = params->findBlock("derivedValue"); child != nullptr; child = child->findNextBlock("derivedValue")) {
     Dep* dep = scinew Dep(Dep::DerivedValue);
-    if(!child->getAttribute("name", dep->name))
+    if(!child->getAttribute("name", dep->name)) {
       throw ProblemSetupException("No expression for derivedValue", __FILE__, __LINE__);
-
+    }
     child->get(dep->expr_string);
     string expr = dep->expr_string;
     string::iterator beg = expr.begin();

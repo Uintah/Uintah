@@ -202,9 +202,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                      mpm_amr_ps->findBlock("Refinement_Criteria_Thresholds");
     //__________________________________
     // Pull out the refinement threshold criteria 
-    if(refine_ps ){
-      for (ProblemSpecP var_ps = refine_ps->findBlock("Variable");var_ps != 0;
-                        var_ps = var_ps->findNextBlock("Variable")) {
+    if( refine_ps != nullptr ){
+      for( ProblemSpecP var_ps = refine_ps->findBlock( "Variable" ); var_ps != nullptr; var_ps = var_ps->findNextBlock( "Variable" ) ) {
         thresholdVar data;
         string name, value, matl;
 
@@ -304,11 +303,11 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
   ProblemSpecP flags_ps = root->appendChild("MPM");
   flags->outputProblemSpec(flags_ps);
 
-  ProblemSpecP mat_ps = 0;
-  mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
+  ProblemSpecP mat_ps = root->findBlockWithOutAttribute( "MaterialProperties" );
 
-  if (mat_ps == 0)
-    mat_ps = root->appendChild("MaterialProperties");
+  if( mat_ps == nullptr ) {
+    mat_ps = root->appendChild( "MaterialProperties" );
+  }
 
   ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
   for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {
@@ -348,10 +347,10 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 void SerialMPM::scheduleInitialize(const LevelP& level,
                                    SchedulerP& sched)
 {
-  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
     return;
-  Task* t = scinew Task("MPM::actuallyInitialize",
-                        this, &SerialMPM::actuallyInitialize);
+  }
+  Task* t = scinew Task( "MPM::actuallyInitialize", this, &SerialMPM::actuallyInitialize );
 
   const PatchSet* patches = level->eachPatch();
   printSchedule(patches,cout_doing,"MPM::scheduleInitialize");

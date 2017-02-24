@@ -155,7 +155,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
 
   if(!isRestart){
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
-         geom_obj_ps != 0; 
+         geom_obj_ps != nullptr; 
          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
      vector<GeometryPieceP> pieces;
@@ -165,9 +165,11 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
      if(pieces.size() == 0){
        throw ParameterNotFound("No piece specified in geom_object",
                                 __FILE__, __LINE__);
-     } else if(pieces.size() > 1){
+     }
+     else if(pieces.size() > 1){
        mainpiece = scinew UnionGeometryPiece(pieces);
-     } else {
+     }
+     else {
        mainpiece = pieces[0];
      }
 

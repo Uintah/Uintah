@@ -153,17 +153,16 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set = scinew MaterialSet();
   map<string,string> attribute;
     
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
     var_spec->getAttributes(attribute);
    
     int matl = defaultMatl;
-    if (attribute["matl"].empty() == false){
+    if( !attribute["matl"].empty() ) {
       matl = atoi(attribute["matl"].c_str());
     }
     
-    // bulletproofing
-    if(matl < 0 || matl > numMatls){
+    // Bulletproofing
+    if( matl < 0 || matl > numMatls ){
       throw ProblemSetupException("lineExtract: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
     }
     
@@ -188,15 +187,13 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Read in variables label names                
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze")) {
     var_spec->getAttributes(attribute);
     
     string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
-    if(label == nullptr){
-      throw ProblemSetupException("lineExtract: analyze label not found: "
-                           + name , __FILE__, __LINE__);
+    VarLabel* label = VarLabel::find( name );
+    if( label == nullptr ){
+      throw ProblemSetupException("lineExtract: analyze label not found: " + name , __FILE__, __LINE__);
     }
     
     //__________________________________
@@ -249,8 +246,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException("\n ERROR:lineExtract: Couldn't find <lines> tag \n", __FILE__, __LINE__);    
   }        
              
-  for (ProblemSpecP line_spec = lines_ps->findBlock("line"); line_spec != 0; 
-                    line_spec = line_spec->findNextBlock("line")) {
+  for (ProblemSpecP line_spec = lines_ps->findBlock("line"); line_spec != nullptr; line_spec = line_spec->findNextBlock("line")) {
                     
     line_spec->getAttributes(attribute);
     string name = attribute["name"];

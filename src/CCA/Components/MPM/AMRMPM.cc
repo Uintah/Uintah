@@ -263,9 +263,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   // Pull out the refinement threshold criteria 
-  if(refine_ps ){
-    for (ProblemSpecP var_ps = refine_ps->findBlock("Variable");var_ps != 0;
-                      var_ps = var_ps->findNextBlock("Variable")) {
+  if( refine_ps != nullptr ) {
+    for( ProblemSpecP var_ps = refine_ps->findBlock( "Variable" ); var_ps != nullptr; var_ps = var_ps->findNextBlock( "Variable" ) ) {
       thresholdVar data;
       string name, value, matl;
 
@@ -412,13 +411,14 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
   ProblemSpecP root = root_ps->getRootNode();
 
   ProblemSpecP flags_ps = root->appendChild("MPM");
-  flags->outputProblemSpec(flags_ps);
+  flags->outputProblemSpec( flags_ps );
 
-  ProblemSpecP mat_ps = 0;
+  ProblemSpecP mat_ps = nullptr;
   mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
-  if (mat_ps == 0)
+  if( mat_ps == nullptr ) {
     mat_ps = root->appendChild("MaterialProperties");
+  }
 
   ProblemSpecP mpm_ps = mat_ps->appendChild("MPM");
   for (int i = 0; i < d_sharedState->getNumMPMMatls();i++) {

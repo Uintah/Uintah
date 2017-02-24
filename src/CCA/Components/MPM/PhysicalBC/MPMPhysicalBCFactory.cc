@@ -45,35 +45,32 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid, con
     ProblemSpecP current_ps = ps->findBlock("PhysicalBC")->findBlock("MPM");
 
 
-    for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
-        child = child->findNextBlock("force") ) {
+    for( ProblemSpecP child = current_ps->findBlock("force"); child != nullptr; child = child->findNextBlock("force") ) {
        mpmPhysicalBCs.push_back(scinew ForceBC(child));
     }
 
-    for(ProblemSpecP child = current_ps->findBlock("pressure"); child != 0;
-        child = child->findNextBlock("pressure") ) {
+    for( ProblemSpecP child = current_ps->findBlock("pressure"); child != nullptr; child = child->findNextBlock("pressure") ) {
        mpmPhysicalBCs.push_back(scinew PressureBC(child, grid, flags));
     }
 
-    for(ProblemSpecP child = current_ps->findBlock("scalar_flux"); child != 0;
-        child = child->findNextBlock("scalar_flux") ) {
+    for(ProblemSpecP child = current_ps->findBlock("scalar_flux"); child != nullptr; child = child->findNextBlock("scalar_flux") ) {
        mpmPhysicalBCs.push_back(scinew ScalarFluxBC(child, grid, flags));
     }
 
-    for(ProblemSpecP child = current_ps->findBlock("heat_flux"); child != 0;
-        child = child->findNextBlock("heat_flux") ) {
+    for(ProblemSpecP child = current_ps->findBlock("heat_flux"); child != nullptr;  child = child->findNextBlock("heat_flux") ) {
        mpmPhysicalBCs.push_back(scinew HeatFluxBC(child, grid));
     }
-    for(ProblemSpecP child = current_ps->findBlock("arches_heat_flux"); 
-        child != 0; child = child->findNextBlock("arches_heat_flux") ) {
-       mpmPhysicalBCs.push_back(scinew ArchesHeatFluxBC(child,grid));
+    for(ProblemSpecP child = current_ps->findBlock("arches_heat_flux"); child != nullptr; child = child->findNextBlock("arches_heat_flux") ) {
+       mpmPhysicalBCs.push_back( scinew ArchesHeatFluxBC( child, grid ) );
     }
   }
 }
 
-void MPMPhysicalBCFactory::clean()
+void
+MPMPhysicalBCFactory::clean()
 {
-  for (int i = 0; i < static_cast<int>(mpmPhysicalBCs.size()); i++)
+  for( int i = 0; i < static_cast<int>(mpmPhysicalBCs.size()); i++ ) {
     delete mpmPhysicalBCs[i];
+  }
   mpmPhysicalBCs.clear();
 }

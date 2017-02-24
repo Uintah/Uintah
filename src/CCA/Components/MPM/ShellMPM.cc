@@ -83,11 +83,9 @@ ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
                                MPMFlags* flags)
 {
   //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
+  ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
+  for( ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
     MPMMaterial *mat = scinew MPMMaterial(ps, sharedState,flags);
 
     //register as an MPM material

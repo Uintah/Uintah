@@ -114,8 +114,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 
   // Parse the streams
   int index = 0;
-  for (ProblemSpecP child = params->findBlock("stream"); child != 0;
-       child = child->findNextBlock("stream")) {
+  for (ProblemSpecP child = params->findBlock("stream"); child != nullptr; child = child->findNextBlock("stream")) {
     Stream* stream = scinew Stream();
     stream->index = index++;
     child->getAttribute("name", stream->name);
@@ -126,9 +125,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
     stream->props.parse(child);
 
     int count = 0;
-    for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-         geom_obj_ps != 0;
-         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
       
       vector<GeometryPieceP> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
@@ -157,25 +154,30 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
   if(streams.size() == 0)
     throw ProblemSetupException("Mixing specified with no streams!", __FILE__, __LINE__);
 
-  for (ProblemSpecP child = params->findBlock("reaction"); child != 0;
-       child = child->findNextBlock("reaction")) {
+  for (ProblemSpecP child = params->findBlock("reaction"); child != nullptr; child = child->findNextBlock("reaction")) {
     Reaction* rxn = scinew Reaction();
     string from;
     child->require("from", from);
     vector<Stream*>::iterator iter = streams.begin();
-    for(;iter != streams.end(); iter++)
-      if((*iter)->name == from)
+    for(;iter != streams.end(); iter++) {
+      if((*iter)->name == from) {
         break;
-    if(iter == streams.end())
+      }
+    }
+    if(iter == streams.end()) {
       throw ProblemSetupException("Reaction needs stream: "+from+" but not found", __FILE__, __LINE__);
+    }
 
     string to;
     child->require("to", to);
-    for(;iter != streams.end(); iter++)
-      if((*iter)->name == to)
+    for(;iter != streams.end(); iter++) {
+      if((*iter)->name == to) {
         break;
-    if(iter == streams.end())
+      }
+    }
+    if(iter == streams.end()) {
       throw ProblemSetupException("Reaction needs stream: "+to+" but not found", __FILE__, __LINE__);
+    }
     rxn->fromStream = (*iter)->index;
     rxn->toStream = (*iter)->index;
 
@@ -184,31 +186,31 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 
     reactions.push_back(rxn);
   }
-  if(reactions.size() > 1)
+  if(reactions.size() > 1) {
     throw ProblemSetupException("More than one reaction not finished", __FILE__, __LINE__);
-
+  }
 //  setup.registerMixer(matl);
 }
 
-void Mixing::scheduleInitialize(SchedulerP& sched,
-                                const LevelP& level,
-                                const ModelInfo*)
+void
+Mixing::scheduleInitialize(       SchedulerP & sched,
+                            const LevelP     & level,
+                            const ModelInfo  * )
 {
-  Task* t = scinew Task("Mixing::initialize",
-                        this, &Mixing::initialize);
-  for(vector<Stream*>::iterator iter = streams.begin();
-      iter != streams.end(); iter++){
+  Task* t = scinew Task( "Mixing::initialize", this, &Mixing::initialize );
+  for(vector<Stream*>::iterator iter = streams.begin(); iter != streams.end(); iter++){
     Stream* stream = *iter;
     t->computes(stream->massFraction_CCLabel);
   }
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
-void Mixing::initialize(const ProcessorGroup*, 
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse*,
-                        DataWarehouse* new_dw)
+void
+Mixing::initialize( const ProcessorGroup *, 
+                    const PatchSubset    * patches,
+                    const MaterialSubset * matls,
+                          DataWarehouse  *,
+                          DataWarehouse  * new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

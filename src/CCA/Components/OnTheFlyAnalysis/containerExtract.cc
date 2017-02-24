@@ -162,8 +162,7 @@ void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
   }        
     
   /* foreach <geom_object> */
-  for (ProblemSpecP object_spec = objects_ps->findBlock("geom_object"); object_spec != 0; 
-                    object_spec = object_spec->findNextBlock("geom_object")) {
+  for( ProblemSpecP object_spec = objects_ps->findBlock("geom_object"); object_spec != nullptr; object_spec = object_spec->findNextBlock("geom_object")) {
                     
     // put input variables into the global struct
     container* c = scinew container;
@@ -173,8 +172,7 @@ void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
 
     ProblemSpecP var_spec;
     /* foreach <variable> */
-    for (var_spec = object_spec->findBlock("extract"); var_spec != 0;
-         var_spec = var_spec->findNextBlock("extract") ) {
+    for( var_spec = object_spec->findBlock( "extract" ); var_spec != nullptr; var_spec = var_spec->findNextBlock("extract") ) {
       
       var_spec->getAttributes(attribute);                  
       string mode = attribute["mode"];

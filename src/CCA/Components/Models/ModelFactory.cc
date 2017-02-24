@@ -91,8 +91,7 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
   ProblemSpecP m = restart_prob_spec->findBlock("Models");
   if(!m)
     return;
-  for(ProblemSpecP model_ps = m->findBlock("Model"); model_ps != 0;
-      model_ps = model_ps->findNextBlock("Model")){
+  for(ProblemSpecP model_ps = m->findBlock("Model"); model_ps != nullptr; model_ps = model_ps->findNextBlock("Model")){
     string type;
     if(!model_ps->getAttribute("type", type)){
       throw ProblemSetupException("Model does not specify type=\"name\"", __FILE__, __LINE__);
@@ -100,44 +99,62 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
     
 #if !defined( NO_ICE ) && !defined( NO_MPM )
     // ICE and MPM turned on
-    if(type == "SimpleRxn")
+    if(type == "SimpleRxn") {
       d_models.push_back(scinew SimpleRxn(d_myworld, model_ps));
-    else if(type == "AdiabaticTable")
+    }
+    else if(type == "AdiabaticTable") {
       d_models.push_back(scinew AdiabaticTable(d_myworld, model_ps,doAMR));
-    else if(type == "Mixing")
-      d_models.push_back(scinew Mixing(d_myworld, model_ps));
-    else if(type == "Test")
+    }
+    else if(type == "Mixing") {
+      d_models.push_back(scinew Mixing(d_myworld, model_ps)); }
+    else if(type == "Test") {
       d_models.push_back(scinew TestModel(d_myworld, model_ps));
-    else if(type == "flameSheet_rxn")
+    }
+    else if(type == "flameSheet_rxn") {
       d_models.push_back(scinew flameSheet_rxn(d_myworld, model_ps));
-    else if(type == "mass_momentum_energy_src")
+    }
+    else if(type == "mass_momentum_energy_src") {
       d_models.push_back(scinew MassMomEng_src(d_myworld, model_ps));
-    else if(type == "PassiveScalar")
+    }
+    else if(type == "PassiveScalar") {
       d_models.push_back(scinew PassiveScalar(d_myworld, model_ps, doAMR));
-    else if(type == "Simple_Burn")
+    }
+    else if(type == "Simple_Burn") {
       d_models.push_back(scinew Simple_Burn(d_myworld, model_ps, prob_spec));
-    else if(type == "Steady_Burn")
+    }
+    else if(type == "Steady_Burn") {
       d_models.push_back(scinew Steady_Burn(d_myworld, model_ps, prob_spec));
-    else if(type == "Unsteady_Burn")
+    }
+    else if(type == "Unsteady_Burn") {
       d_models.push_back(scinew Unsteady_Burn(d_myworld, model_ps, prob_spec));
-    else if(type == "MesoBurn")
+    }
+    else if(type == "MesoBurn") {
       d_models.push_back(scinew MesoBurn(d_myworld, model_ps, prob_spec));
-    else if(type == "IandG")
+    }
+    else if(type == "IandG") {
       d_models.push_back(scinew IandG(d_myworld, model_ps));
-    else if(type == "JWLpp")
+    }
+    else if(type == "JWLpp") {
       d_models.push_back(scinew JWLpp(d_myworld, model_ps, prob_spec));
-    else if(type == "ZeroOrder")
+    }
+    else if(type == "ZeroOrder") {
       d_models.push_back(scinew ZeroOrder(d_myworld, model_ps, prob_spec));
-    else if(type == "LightTime")
+    }
+    else if(type == "LightTime") {
       d_models.push_back(scinew LightTime(d_myworld, model_ps));
-    else if(type == "DDT0")
+    }
+    else if(type == "DDT0") {
       d_models.push_back(scinew DDT0(d_myworld, model_ps, prob_spec));
-    else if(type == "DDT1")
+    }
+    else if(type == "DDT1") {
       d_models.push_back(scinew DDT1(d_myworld, model_ps, prob_spec));
-    else if(type == "SolidReactionModel")
+    }
+    else if(type == "SolidReactionModel") {
       d_models.push_back(scinew SolidReactionModel(d_myworld, model_ps, prob_spec));
-    else
+    }
+    else {
       throw ProblemSetupException( "Unknown model: " + type, __FILE__, __LINE__ );
+    }
 #else
     // ICE and/or MPM turned off.
     throw ProblemSetupException( type + " not supported in this build", __FILE__, __LINE__ );

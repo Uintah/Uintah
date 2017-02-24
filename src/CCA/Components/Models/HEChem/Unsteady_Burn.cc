@@ -132,9 +132,7 @@ void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSet
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
   ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); 
-       child != 0; 
-       child = child->findNextBlock("save") ){
+  for ( ProblemSpecP child = DA_ps->findBlock("save"); child != nullptr; child = child->findNextBlock("save") ) {
     map<string,string> var_attr;
     child->getAttributes(var_attr);
     if (var_attr["label"] == "totalMassBurned"){
@@ -763,7 +761,7 @@ void Unsteady_Burn::SetInterval(double f, double Ts, IterationVariable *iterVar)
     iterVar->IL = Ts;
   else if(f > 0)
     iterVar->IR = Ts;
-  else if(f ==0){
+  else if(f == 0){
     iterVar->IL = Ts;
     iterVar->IR = Ts; 
   }
@@ -796,19 +794,22 @@ double Unsteady_Burn::BisectionNewton(double Ts, IterationVariable *iterVar){
       }
 
       df_dTs = Deri(Ts, iterVar);
-      if(df_dTs==0) 
+      if(df_dTs == 0) {
         break;
+      }
 
       delta_old = delta_new;
       delta_new = -y/df_dTs; //Newton Step
       Ts += delta_new;
       y = Func(Ts, iterVar);
 
-      if(fabs(y)<EPSILON)
+      if(fabs(y)<EPSILON) {
         return Ts;
+      }
       
-      if(Ts<iterVar->IL || Ts>iterVar->IR || fabs(delta_new)>fabs(delta_old*0.7))
+      if(Ts<iterVar->IL || Ts>iterVar->IR || fabs(delta_new)>fabs(delta_old*0.7)) {
         break;
+      }
 
       iter++; 
       SetInterval(y, Ts, iterVar);  

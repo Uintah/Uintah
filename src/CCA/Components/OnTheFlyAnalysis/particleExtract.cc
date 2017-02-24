@@ -135,14 +135,12 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException("particleExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);    
   } 
   map<string,string> attribute;                    
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
     var_spec->getAttributes(attribute);
-    string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
-    if(label == nullptr){
-      throw ProblemSetupException("particleExtract: analyze label not found: "
-                           + name , __FILE__, __LINE__);
+    string     name  = attribute["label"];
+    VarLabel * label = VarLabel::find(name);
+    if( label == nullptr ){
+      throw ProblemSetupException( "particleExtract: analyze label not found: " + name , __FILE__, __LINE__ );
     }
     
     const TypeDescription* td = label->typeDescription();

@@ -209,17 +209,19 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   //__________________________________
   //  Initialization: Read in the geometry objects for the scalar
   ProblemSpecP init_ps = child->findBlock("initialization");
-  if(!isRestart){
-   for (ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); geom_obj_ps != 0; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  if( !isRestart ){
+   for ( ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
     vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
     GeometryPieceP mainpiece;
     if(pieces.size() == 0){
       throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
+    }
+    else if(pieces.size() > 1){
       mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
+    }
+    else {
       mainpiece = pieces[0];
     }
 
@@ -235,7 +237,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   //  Read in interior geometry objects for injecting a scalar in the domain
   ProblemSpecP srcs_ps = child->findBlock("interiorSources");
   if( srcs_ps ) {
-    for (ProblemSpecP geom_obj_ps = srcs_ps->findBlock("geom_object"); geom_obj_ps != 0; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    for (ProblemSpecP geom_obj_ps = srcs_ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
       vector<GeometryPieceP> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
 

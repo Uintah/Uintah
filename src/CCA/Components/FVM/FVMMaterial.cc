@@ -36,13 +36,12 @@
 
 using namespace Uintah;
 
-FVMMaterial::FVMMaterial(ProblemSpecP& ps, SimulationStateP& shared_state)
+FVMMaterial::FVMMaterial( ProblemSpecP& ps, SimulationStateP& shared_state )
 {
   std::list<GeometryObject::DataItem> geom_obj_data;
   geom_obj_data.push_back(GeometryObject::DataItem("conductivity",GeometryObject::Double));
 
-  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");geom_obj_ps != 0;
-         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  for ( ProblemSpecP geom_obj_ps = ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
     std::vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
@@ -50,9 +49,11 @@ FVMMaterial::FVMMaterial(ProblemSpecP& ps, SimulationStateP& shared_state)
     GeometryPieceP mainpiece;
     if(pieces.size() == 0){
       throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
+    }
+    else if(pieces.size() > 1){
       mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
+    }
+    else {
       mainpiece = pieces[0];
     }
 
@@ -67,7 +68,8 @@ FVMMaterial::~FVMMaterial()
   }
 }
 
-void FVMMaterial::initializeConductivity(CCVariable<double>& conductivity, const Patch* patch)
+void
+FVMMaterial::initializeConductivity(CCVariable<double>& conductivity, const Patch* patch)
 {
   conductivity.initialize(0.0);
 

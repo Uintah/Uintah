@@ -118,9 +118,8 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP fvm_mat_ps = mat_ps->findBlock("FVM");
 
-  if(!d_with_mpm){
-    for (ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != 0;
-        ps = ps->findNextBlock("material") ) {
+  if( !d_with_mpm ) {
+    for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
       FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state);
       d_shared_state->registerFVMMaterial(mat);
@@ -128,15 +127,17 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
   }
 }
 
-void ElectrostaticSolve::outputProblemSpec(ProblemSpecP& ps)
+void
+ElectrostaticSolve::outputProblemSpec(ProblemSpecP& ps)
 {
 
 }
 
 //__________________________________
 // 
-void ElectrostaticSolve::scheduleInitialize(const LevelP& level,
-                               SchedulerP& sched)
+void
+ElectrostaticSolve::scheduleInitialize( const LevelP     & level,
+                                              SchedulerP & sched )
 {
   const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
 

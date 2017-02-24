@@ -60,11 +60,10 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
  
   if (da_ps) {
   
-    for(ProblemSpecP module_ps = da_ps->findBlock("Module"); module_ps != 0;
-                    module_ps = module_ps->findNextBlock("Module")){
+    for( ProblemSpecP module_ps = da_ps->findBlock( "Module" ); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
                         
-      if(!module_ps){
-        throw ProblemSetupException("\nERROR:<DataAnalysis>, could not find find <Module> tag \n",__FILE__, __LINE__);
+      if( !module_ps ) {
+        throw ProblemSetupException( "\nERROR:<DataAnalysis>, could not find find <Module> tag \n", __FILE__, __LINE__ );
       }
       map<string,string> attributes;
       module_ps->getAttributes(attributes);
@@ -72,27 +71,38 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
 
       if ( module == "statistics" ) {
         modules.push_back ( scinew statistics(          module_ps, sharedState, dataArchiver) );
-      } else if ( module == "lineExtract" ) {
+      }
+      else if ( module == "lineExtract" ) {
         modules.push_back (scinew lineExtract(          module_ps, sharedState, dataArchiver ) );
-      } else if ( module == "planeExtract" ) {
+      }
+      else if ( module == "planeExtract" ) {
         modules.push_back ( scinew planeExtract(        module_ps, sharedState, dataArchiver ) );
-      } else if ( module == "containerExtract" ) {
+      }
+      else if ( module == "containerExtract" ) {
         modules.push_back ( scinew containerExtract(    module_ps, sharedState, dataArchiver ) );
-      } else if ( module == "momentumAnalysis" ) {
+      }
+      else if ( module == "momentumAnalysis" ) {
         modules.push_back ( scinew momentumAnalysis(    module_ps, sharedState, dataArchiver ) );
-      } else if ( module == "particleExtract" ) {
+      }
+      else if ( module == "particleExtract" ) {
         modules.push_back ( scinew particleExtract(     module_ps, sharedState, dataArchiver) );
-      } else if ( module == "vorticity" ) {
+      }
+      else if ( module == "vorticity" ) {
         modules.push_back ( scinew vorticity(           module_ps, sharedState, dataArchiver) );
-      } else if ( module == "flatPlate_heatFlux" ) {
+      }
+      else if ( module == "flatPlate_heatFlux" ) {
         modules.push_back ( scinew flatPlate_heatFlux(  module_ps, sharedState, dataArchiver) );
-      } else if ( module == "firstLawThermo" ) {
+      }
+      else if ( module == "firstLawThermo" ) {
         modules.push_back ( scinew FirstLawThermo(      module_ps, sharedState, dataArchiver) );
-      } else if ( module == "minMax" ) {
+      }
+      else if ( module == "minMax" ) {
         modules.push_back ( scinew MinMax(              module_ps, sharedState, dataArchiver) );
-      } else if ( module == "radiometer" ) {
+      }
+      else if ( module == "radiometer" ) {
         modules.push_back ( scinew OnTheFly_radiometer( module_ps, sharedState, dataArchiver) );
-      }else {
+      }
+      else {
         throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }
     } 

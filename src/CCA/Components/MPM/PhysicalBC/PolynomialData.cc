@@ -37,52 +37,51 @@ using namespace std;
 PolynomialData::PolynomialData(ProblemSpecP& ps, const Point& bottom, 
                                const Point& top)
 {
-  ProblemSpecP polyData = ps->findBlock("polynomial_data");
-  if (!polyData)
-    throw ProblemSetupException("**ERROR** No polynomial data specified.",
-                                __FILE__,__LINE__);
-
+  ProblemSpecP polyData = ps->findBlock( "polynomial_data" );
+  if( polyData == nullptr ) {
+    throw ProblemSetupException("**ERROR** No polynomial data specified.", __FILE__,__LINE__);
+  }
   d_endCapName = "";
 
-  for (ProblemSpecP fileData = polyData->findBlock("file"); fileData != 0;
-       fileData = fileData->findNextBlock("file")) {
+  for( ProblemSpecP fileData = polyData->findBlock("file"); fileData != nullptr; fileData = fileData->findNextBlock( "file" ) ) {
     
     string fileName;
     fileData->get(fileName);
 
-    if (fileName.find("endcap") != string::npos) {
+    if ( fileName.find("endcap") != string::npos ) {
       d_endCapName = fileName;
     }
-    else
-      d_fileNames.push_back(fileName);
+    else {
+      d_fileNames.push_back( fileName );
+    }
   }
 
   d_bottom = bottom;
   d_top = top;
               
   loadData();
-
 }
 
 PolynomialData::~PolynomialData()
 {
 }
 
-void PolynomialData::outputProblemSpec(ProblemSpecP& ps)
+void
+PolynomialData::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP pd_ps = ps->appendChild("polynomial_data");
-  for (vector<std::string>::const_iterator itr = d_fileNames.begin(); 
-       itr != d_fileNames.end(); itr++) {
+  for( vector<std::string>::const_iterator itr = d_fileNames.begin(); itr != d_fileNames.end(); itr++ ) {
     pd_ps->appendElement("file",*itr);
   }
-  if (d_endCapName != "")
-    pd_ps->appendElement("file",d_endCapName);
+  if (d_endCapName != "") {
+    pd_ps->appendElement( "file", d_endCapName );
+  }
 
 }
 
-void PolynomialData::loadData()
+void
+PolynomialData::loadData()
 {
-
   for (unsigned int i = 0; i < d_fileNames.size(); i++) {
 
     ifstream polyFile(d_fileNames[i].c_str());

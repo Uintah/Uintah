@@ -162,18 +162,16 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Now loop over all the variables to be analyzed  
     
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for( ProblemSpecP var_spec = vars_ps->findBlock( "analyze" ); var_spec != nullptr; var_spec = var_spec->findNextBlock( "analyze" ) ) {
 
-    var_spec->getAttributes(attribute);
+    var_spec->getAttributes( attribute );
     
     //__________________________________
     // Read in the variable name
     string labelName = attribute["label"];
     VarLabel* label = VarLabel::find(labelName);
-    if(label == nullptr){
-      throw ProblemSetupException("MinMax: analyze label not found: "
-                           + labelName , __FILE__, __LINE__);
+    if( label == nullptr ){
+      throw ProblemSetupException("MinMax: analyze label not found: " + labelName , __FILE__, __LINE__);
     }
     
     // Bulletproofing - The user must specify the matl for single matl

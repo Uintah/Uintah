@@ -263,8 +263,7 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*, cons
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
   ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-                    child = child->findNextBlock("save")) {
+  for (ProblemSpecP child = DA_ps->findBlock("save"); child != nullptr; child = child->findNextBlock("save")) {
     map<string,string> var_attr;
     child->getAttributes(var_attr);
     if (var_attr["label"] == "totalMassBurned"){
@@ -296,7 +295,7 @@ void DDT1::problemSetup_BulletProofing(ProblemSpecP& ps)
   }
 
   ProblemSpecP checkpoint = p->findBlock( "checkpoint" );
-  if( checkpoint != 0 ) {
+  if( checkpoint != nullptr ) {
     map<string, string> attributes;
     
     attributes.clear();

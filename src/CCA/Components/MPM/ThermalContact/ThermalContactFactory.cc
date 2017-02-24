@@ -30,18 +30,18 @@ using std::cerr;
 
 using namespace Uintah;
 
-ThermalContact* ThermalContactFactory::create(const ProblemSpecP& ps,
-                                              SimulationStateP& d_sS, 
-                                              MPMLabel* lb,MPMFlags* flag)
+ThermalContact*
+ThermalContactFactory::create( const ProblemSpecP     & ps,
+                                     SimulationStateP & d_sS, 
+                                     MPMLabel         * lb,
+                                     MPMFlags         * flag )
 {
-   ProblemSpecP mpm_ps = 
-     ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
+   ProblemSpecP mpm_ps = ps->findBlockWithOutAttribute( "MaterialProperties" )->findBlock( "MPM" );
 
-   for( ProblemSpecP child = mpm_ps->findBlock("thermal_contact"); child != 0;
-                child = child->findNextBlock("thermal_contact")) {
+   for( ProblemSpecP child = mpm_ps->findBlock( "thermal_contact" ); child != nullptr; child = child->findNextBlock( "thermal_contact" ) ) {
      return( scinew STThermalContact(child,d_sS,lb,flag) );
    }
 
    ProblemSpecP child; 
-   return( scinew NullThermalContact(child,d_sS,lb,flag) );
+   return( scinew NullThermalContact( child, d_sS, lb, flag ) );
 }

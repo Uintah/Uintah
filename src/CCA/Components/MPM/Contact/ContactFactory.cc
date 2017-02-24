@@ -54,41 +54,38 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    
    CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag);
    
-   for (ProblemSpecP child = mpm_ps->findBlock("contact"); child != 0;
-        child = child->findNextBlock("contact")) {
+   for( ProblemSpecP child = mpm_ps->findBlock( "contact" ); child != nullptr; child = child->findNextBlock( "contact" ) ) {
      
      std::string con_type;
      child->getWithDefault("type",con_type, "null");
      
-      if (con_type == "null")
-        contact_list->add(scinew NullContact(myworld,ss,lb,flag));
-      
-      else if (con_type == "single_velocity")
-        contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag));
-      
-      else if (con_type == "nodal_svf")
-        contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag));
-      
-      else if (con_type == "friction")
-        contact_list->add(scinew FrictionContact(myworld,child,ss,lb,flag));
-      
-      else if (con_type == "approach")
-        contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
-      
-      else if (con_type == "specified_velocity" || con_type == "specified"
-               || con_type == "rigid"  )
-        contact_list->add(scinew SpecifiedBodyContact(myworld,child,ss,lb,
-                                                      flag));
-      
-      else {
-        cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
-        throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type", __FILE__, __LINE__);
-      }
+     if (con_type == "null") {
+       contact_list->add(scinew NullContact(myworld,ss,lb,flag));
+     }
+     else if (con_type == "single_velocity") {
+       contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag));
+     }
+     else if (con_type == "nodal_svf") {
+       contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag));
+     }
+     else if (con_type == "friction") {
+       contact_list->add(scinew FrictionContact(myworld,child,ss,lb,flag));
+     }
+     else if (con_type == "approach") {
+       contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
+     }
+     else if (con_type == "specified_velocity" || con_type == "specified" || con_type == "rigid"  ) {
+       contact_list->add( scinew SpecifiedBodyContact( myworld, child, ss, lb, flag ) );
+     }
+     else {
+       cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
+       throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type", __FILE__, __LINE__);
+     }
    }
    
    // 
-   if(contact_list->size()==0) {
-     proc0cout << "no contact - using null" << endl;
+   if( contact_list->size() == 0 ) {
+     proc0cout << "no contact - using null\n";
      contact_list->add(scinew NullContact(myworld,ss,lb,flag));
    }
    

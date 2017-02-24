@@ -147,8 +147,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set = scinew MaterialSet();
   map<string,string> attribute;
     
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
     var_spec->getAttributes(attribute);
    
     int matl = defaultMatl;
@@ -177,8 +176,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Read in variables label names                
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
     var_spec->getAttributes(attribute);
     
     string name = attribute["label"];
@@ -236,12 +234,11 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Read in planes
   ProblemSpecP planes_ps = d_prob_spec->findBlock("planes"); 
-  if (!planes_ps){
+  if( !planes_ps ) {
     throw ProblemSetupException("\n ERROR:planeExtract: Couldn't find <planes> tag \n", __FILE__, __LINE__);    
   }        
              
-  for (ProblemSpecP plane_spec = planes_ps->findBlock("plane"); plane_spec != 0; 
-                    plane_spec = plane_spec->findNextBlock("plane")) {
+  for( ProblemSpecP plane_spec = planes_ps->findBlock( "plane" ); plane_spec != nullptr; plane_spec = plane_spec->findNextBlock( "plane" ) ) {
                     
     plane_spec->getAttributes(attribute);
     string name = attribute["name"];

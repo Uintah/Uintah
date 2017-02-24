@@ -144,8 +144,7 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   // Loop over each face and find the extents
   ProblemSpecP cv_ps = d_prob_spec->findBlock("controlVolume");
 
-  for (ProblemSpecP face_ps = cv_ps->findBlock("Face");
-      face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
+  for( ProblemSpecP face_ps = cv_ps->findBlock( "Face" ); face_ps != nullptr; face_ps=face_ps->findNextBlock( "Face" ) ) {
  
     map<string,string> faceMap;
     face_ps->getAttributes(faceMap);
@@ -200,9 +199,8 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   int matl = 0;
  
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  if(mpm_mat_ps){
-    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0; 
-         ps = ps->findNextBlock("material") ) {
+  if( mpm_mat_ps ){
+    for( ProblemSpecP ps = mpm_mat_ps->findBlock( "material" ); ps != nullptr; ps = ps->findNextBlock( "material" ) ) {
       double cp;   
       ps->require("specific_heat",cp);
       d_mpm_specificHeat[matl] = cp;
@@ -211,26 +209,29 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   }
 }
 //______________________________________________________________________
-void FirstLawThermo::scheduleInitialize(SchedulerP& sched,
-                                        const LevelP& level)
+
+void
+FirstLawThermo::scheduleInitialize(       SchedulerP & sched,
+                                    const LevelP     & level )
 {
   printSchedule(level,cout_doing,"FirstLawThermo::scheduleInitialize");
   
-  Task* t = scinew Task("FirstLawThermo::initialize",
-                  this, &FirstLawThermo::initialize);
+  Task* t = scinew Task( "FirstLawThermo::initialize", this, &FirstLawThermo::initialize );
   
   t->computes(FL_lb->lastCompTimeLabel);
   t->computes(FL_lb->fileVarsStructLabel, d_zeroMatl); 
   sched->addTask(t, d_zeroPatch, d_zeroMatlSet);
 }
 //______________________________________________________________________
-void FirstLawThermo::initialize(const ProcessorGroup*, 
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw)
+
+void
+FirstLawThermo::initialize( const ProcessorGroup *, 
+                            const PatchSubset    * patches,
+                            const MaterialSubset *,
+                                  DataWarehouse  *,
+                                  DataWarehouse  * new_dw)
 {  
-  for(int p=0;p<patches->size();p++){
+  for( int p = 0; p < patches->size(); p++ ) {
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
     

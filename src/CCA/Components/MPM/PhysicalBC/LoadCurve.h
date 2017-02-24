@@ -131,9 +131,9 @@ WARNING
       if (!loadCurve) 
          throw ProblemSetupException("**ERROR** No load curve specified.", __FILE__, __LINE__);
       loadCurve->require("id", d_id);
-      for (ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
-           timeLoad != 0;
-           timeLoad = timeLoad->findNextBlock("time_point")) {
+      for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
+           timeLoad != nullptr;
+           timeLoad = timeLoad->findNextBlock("time_point") ) {
          double time = 0.0;
          T load;
          timeLoad->require("time", time);

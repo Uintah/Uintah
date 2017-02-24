@@ -273,10 +273,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   // flatPlat_heatFlux analysis module is used.
   //
   // orginal problem spec
-  ProblemSpecP DA_ps = root->findBlock("DataArchiver");
-  if(DA_ps){
-    for(ProblemSpecP label_iter = DA_ps->findBlock("save"); label_iter != 0;
-                     label_iter = label_iter->findNextBlock("save")){
+  ProblemSpecP DA_ps = root->findBlock( "DataArchiver" );
+  if( DA_ps != nullptr ){
+    for( ProblemSpecP label_iter = DA_ps->findBlock( "save" ); label_iter != nullptr; label_iter = label_iter->findNextBlock( "save" ) ) {
       map<string,string> labelName;
 
       label_iter->getAttributes(labelName);
@@ -292,9 +291,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   ProblemSpecP da_ps = root->findBlock("DataAnalysis");
 
   if (da_ps) {
-    for(ProblemSpecP module_ps = da_ps->findBlock("Module"); module_ps != 0;
-                     module_ps = module_ps->findNextBlock("Module")){
-      if(module_ps){
+    for( ProblemSpecP module_ps = da_ps->findBlock("Module"); module_ps != nullptr; module_ps = module_ps->findNextBlock( "Module" ) ) {
+      if( module_ps ){
         map<string,string> attributes;
         module_ps->getAttributes(attributes);
         if ( attributes["name"]== "flatPlate_heatFlux") {

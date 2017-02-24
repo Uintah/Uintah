@@ -182,11 +182,9 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException("statistics: Couldn't find <Variables> tag", __FILE__, __LINE__);
   }
 
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0;
-                    var_spec = var_spec->findNextBlock("analyze")) {
+  for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
     map<string,string> attribute;
     var_spec->getAttributes(attribute);
-
 
     //__________________________________
     //  Read in the optional material index from the variables that may be different
@@ -215,12 +213,11 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     const Uintah::TypeDescription* td = label->typeDescription();
     const Uintah::TypeDescription* subtype = td->getSubType();
 
-    if(td->getType() != TypeDescription::CCVariable  ||
-       ( subtype->getType() != TypeDescription::double_type &&
-         subtype->getType() != TypeDescription::Vector)  ) {
+    if( td->getType() != TypeDescription::CCVariable  ||
+        ( subtype->getType() != TypeDescription::double_type &&
+          subtype->getType() != TypeDescription::Vector ) ) {
       ostringstream warn;
-      warn << "ERROR:AnalysisModule:statisticst: ("<<label->getName() << " "
-           << td->getName() << " ) has not been implemented" << endl;
+      warn << "ERROR:AnalysisModule:statisticst: ("<<label->getName() << " " << td->getName() << " ) has not been implemented\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
 
@@ -531,23 +528,25 @@ void statistics::restartInitialize(const ProcessorGroup*,
 
 //______________________________________________________________________
 //
-void statistics::restartInitialize()
+void
+statistics::restartInitialize()
 {
 }
 
 //______________________________________________________________________
 //  output the starting timestep for each variable
 //  The user can turn add variables on restarts
-void statistics::outputProblemSpec( ProblemSpecP& root_ps)
+void
+statistics::outputProblemSpec( ProblemSpecP& root_ps)
 {
-  if( root_ps == 0){
+  if( root_ps == nullptr ) {
     throw InternalError("ERROR: DataAnalysis Module:statistics::outputProblemSpec:  ProblemSpecP is nullptr", __FILE__, __LINE__);
   }
 
   ProblemSpecP da_ps = root_ps->appendChild("DataAnalysisRestart");
 
   ProblemSpecP m_ps = da_ps->appendChild("Module");
-  m_ps->setAttribute("name","statistics");
+  m_ps->setAttribute( "name","statistics" );
   ProblemSpecP st_ps = m_ps->appendChild("StartTimestep");
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
