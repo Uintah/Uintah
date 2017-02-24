@@ -16,15 +16,14 @@ VariableStats::~VariableStats()
 //--------------------------------------------------------------------------------------------------
 void VariableStats::problemSetup( ProblemSpecP& db ){
 
-  for ( ProblemSpecP var_db = db->findBlock("single_variable"); var_db != 0;
-        var_db = var_db->findNextBlock("single_variable") ){
+  for ( ProblemSpecP var_db = db->findBlock("single_variable"); var_db != nullptr; var_db = var_db->findNextBlock("single_variable") ){
 
     std::string var_name;
     var_db->getAttribute("label", var_name);
 
-    if ( var_name == "uVelocitySPBC"
-        || var_name == "vVelocitySPBC"
-        || var_name == "wVelocitySPBC" ){
+    if ( var_name == "uVelocitySPBC" ||
+         var_name == "vVelocitySPBC" ||
+         var_name == "wVelocitySPBC" ){
       throw InvalidValue("Error: Cannot average velocities. Try a flux variable instead.",__FILE__,__LINE__);
     }
 
@@ -44,8 +43,7 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
 
   bool do_fluxes = false;
 
-  for ( ProblemSpecP var_db = db->findBlock("flux_variable"); var_db != 0;
-        var_db = var_db->findNextBlock("flux_variable") ){
+  for ( ProblemSpecP var_db = db->findBlock("flux_variable"); var_db != nullptr; var_db = var_db->findNextBlock("flux_variable") ){
 
     do_fluxes = true;
 
@@ -107,8 +105,7 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
     _no_flux = true;
   }
 
-  for ( ProblemSpecP var_db = db->findBlock("new_single_variable"); var_db != 0;
-        var_db = var_db->findNextBlock("new_single_variable") ){
+  for ( ProblemSpecP var_db = db->findBlock("new_single_variable"); var_db != nullptr; var_db = var_db->findNextBlock("new_single_variable") ){
 
     std::string name;
     var_db->getAttribute("label", name);
@@ -117,8 +114,7 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
 
   }
 
-  for ( ProblemSpecP var_db = db->findBlock("new_flux_variable"); var_db != 0;
-        var_db = var_db->findNextBlock("new_flux_variable") ){
+  for ( ProblemSpecP var_db = db->findBlock("new_flux_variable"); var_db != nullptr; var_db = var_db->findNextBlock("new_flux_variable") ){
 
     std::string name;
     var_db->getAttribute("label", name);

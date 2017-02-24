@@ -181,7 +181,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     string srcname;
     SourceTermFactory& src_factory = SourceTermFactory::self();
 
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for( ProblemSpecP src_db = db->findBlock( "src" ); src_db != nullptr; src_db = src_db->findNextBlock( "src" ) ) {
       src_db->getAttribute("label", srcname);
       //which sources are turned on for this equation
       d_new_sources.push_back( srcname );
@@ -189,7 +189,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 
       ProblemSpecP db_root = db->getRootNode();
       ProblemSpecP db_sources = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
-      for (ProblemSpecP tmp_src_db = db_sources->findBlock("src"); tmp_src_db != 0; tmp_src_db = tmp_src_db->findNextBlock("src")){
+      for( ProblemSpecP tmp_src_db = db_sources->findBlock( "src" ); tmp_src_db != nullptr; tmp_src_db = tmp_src_db->findNextBlock( "src" ) ) {
         std::string tempSrcName;
         tmp_src_db->getAttribute("label", tempSrcName);
 

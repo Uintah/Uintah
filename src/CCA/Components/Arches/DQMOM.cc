@@ -134,8 +134,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   
   // obtain moment index vectors
   vector<int> temp_moment_index;
-  for ( ProblemSpecP db_moments = db->findBlock("Moment");
-        db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+  for ( ProblemSpecP db_moments = db->findBlock("Moment"); db_moments != nullptr; db_moments = db_moments->findNextBlock("Moment") ) {
     temp_moment_index.resize(0);
     db_moments->get("m", temp_moment_index);
     
@@ -178,7 +177,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   }
 
   N_xi = 0;
-  for (ProblemSpecP db_ic = db->findBlock("Ic"); db_ic != 0; db_ic = db_ic->findNextBlock("Ic") ) {
+  for (ProblemSpecP db_ic = db->findBlock("Ic"); db_ic != nullptr; db_ic = db_ic->findNextBlock("Ic") ) {
     string ic_name;
     vector<string> modelsList;
     db_ic->getAttribute("label", ic_name);

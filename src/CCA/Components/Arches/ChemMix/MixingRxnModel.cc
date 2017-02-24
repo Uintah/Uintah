@@ -187,7 +187,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
     ProblemSpecP db_inert = db->findBlock( "post_mix" );
 
-    for ( ProblemSpecP db_st = db_inert->findBlock("stream"); db_st != 0; db_st = db_st->findNextBlock("stream") ){
+    for ( ProblemSpecP db_st = db_inert->findBlock("stream"); db_st != nullptr; db_st = db_st->findNextBlock("stream") ){
 
       std::string phi;
       db_st->getAttribute("transport_label", phi);
@@ -196,8 +196,8 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
       var_values.clear();
       bool found_vars = false;
 
-      proc0cout << "For inert: " << phi << ", adding species: " << std::endl;
-      for ( ProblemSpecP db_var = db_st->findBlock("var"); db_var != 0; db_var = db_var->findNextBlock("var") ){
+      proc0cout << "For inert: " << phi << ", adding species:\n";
+      for ( ProblemSpecP db_var = db_st->findBlock("var"); db_var != nullptr; db_var = db_var->findNextBlock("var") ){
 
         std::string label;
         double value;
@@ -208,7 +208,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
         doubleMap::iterator iter = var_values.find( label );
         if ( iter == var_values.end() ){
           var_values.insert( std::make_pair( label, value ) );
-          proc0cout << " Adding ---> " << label << ", " << value << std::endl;
+          proc0cout << " Adding ---> " << label << ", " << value << "\n";
           found_vars = true;
         }
 
@@ -225,7 +225,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
       } else {
 
-        proc0cout << "Warning: Intert stream " << phi << " was not added because no species were found in UPS file!" << std::endl;
+        proc0cout << "Warning: Intert stream " << phi << " was not added because no species were found in UPS file!\n";
 
       }
 
@@ -238,9 +238,9 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
         //check if it uses a density guess (which it should)
         //if it isn't set properly, then do it automagically for the user
         if (!eqn.getDensityGuessBool() && !ignoreDensityCheck ){
-          proc0cout << " Warning: For equation named " << phi << endl
-            << "     Density guess must be used for this equation because it determines properties." << endl
-            << "     Automatically setting density guess = true. " << endl;
+          proc0cout << " Warning: For equation named " << phi << "\n"
+            << "     Density guess must be used for this equation because it determines properties.\n"
+            << "     Automatically setting density guess = true.\n";
           eqn.setDensityGuessBool( true );
         }
       } else {
@@ -277,10 +277,9 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 
   if (db_vars) {
 
-    proc0cout << "  The following table variables are requested by the user: " << endl;
+    proc0cout << "  The following table variables are requested by the user:\n";
 
-    for (ProblemSpecP db_dv = db_vars->findBlock("save");
-          db_dv !=0; db_dv = db_dv->findNextBlock("save")){
+    for( ProblemSpecP db_dv = db_vars->findBlock("save"); db_dv != nullptr; db_dv = db_dv->findNextBlock("save") ) {
 
       table_lookup = "false";
       var_name     = "false";
@@ -288,11 +287,10 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
       db_dv->getAttribute( "table_lookup", table_lookup );
       db_dv->getAttribute( "label", var_name );
 
-      if ( table_lookup == "true" ){
+      if ( table_lookup == "true" ) {
         bool test = insertIntoMap( var_name );
-        if ( !test ){
-          throw InvalidValue("Error: Could not insert the following into the table lookup: "+var_name,
-                             __FILE__,__LINE__);
+        if ( !test ) {
+          throw InvalidValue( "Error: Could not insert the following into the table lookup: " + var_name, __FILE__, __LINE__ );
         }
       }
     }
@@ -301,7 +299,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   // Add a few extra variables to the dependent variable map that are required by the algorithm
   // NOTE: These are required FOR NOW by the algorithm while NewStaticMixingTable still lives.
   //       They will be removed once the conversion to TabProps is complete.
-  proc0cout << "    (below required by the CFD algorithm)" << endl;
+  proc0cout << "    (below required by the CFD algorithm)\n";
   var_name = "density";
   bool test = insertIntoMap( var_name );
   if ( !test ){
@@ -336,7 +334,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
     }
   }
 
-  proc0cout << endl;
+  proc0cout << "\n";
 }
 //---------------------------------------------------------------------------
 // Add Additional Table Lookup Variables
@@ -344,7 +342,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 void
 MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 {
-  proc0cout << "  Adding these additional variables for table lookup: " << endl;
+  proc0cout << "  Adding these additional variables for table lookup:\n";
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) {
 
     bool test = insertIntoMap( *ivar );

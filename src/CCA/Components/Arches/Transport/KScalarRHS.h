@@ -151,8 +151,7 @@ private:
   m_total_eqns = 0;
 
   ConvectionHelper* conv_helper = scinew ConvectionHelper();
-  for (ProblemSpecP db = input_db->findBlock("eqn"); db != 0;
-       db = db->findNextBlock("eqn")){
+  for( ProblemSpecP db = input_db->findBlock("eqn"); db != nullptr; db = db->findNextBlock("eqn") ) {
 
     //Equation name
     std::string eqn_name;
@@ -194,13 +193,13 @@ private:
       double value;
       db->findBlock("initialize")->getAttribute("value",value);
       m_init_value.push_back(value);
-    } else {
+    }
+    else {
       m_init_value.push_back(0.0);
     }
 
     std::vector<SourceInfo> eqn_srcs;
-    for ( ProblemSpecP src_db = db->findBlock("src"); src_db != 0;
-          src_db = src_db->findNextBlock("src") ){
+    for ( ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ) {
 
       std::string src_label;
       double weight = 1.0;

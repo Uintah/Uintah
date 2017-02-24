@@ -172,8 +172,7 @@ private:
     }
 
     _eqn_names.clear(); 
-    for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != 0;
-         eqn_db = eqn_db->findNextBlock("eqn")){
+    for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("eqn")){
 
       std::string scalar_name;
 

@@ -130,18 +130,22 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 
   if ( d_convScheme == "upwind" ){
     d_which_limiter = UPWIND;
-  } else if ( d_convScheme == "super_bee" ){
+  }
+  else if ( d_convScheme == "super_bee" ){
     d_which_limiter = SUPERBEE;
-  } else if ( d_convScheme == "vanleer" ){
+  }
+  else if ( d_convScheme == "vanleer" ){
     d_which_limiter = VANLEER;
-  } else if ( d_convScheme == "roe_minmod"){
+  }
+  else if ( d_convScheme == "roe_minmod"){
     d_which_limiter = ROE;
-  } else {
+  }
+  else {
   throw InvalidValue("Error: Limiter choice not recognized for eqn: "+d_eqnName, __FILE__, __LINE__);
   }
 
   // Models (source terms):
-  for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
+  for (ProblemSpecP m_db = db->findBlock("model"); m_db != nullptr; m_db = m_db->findNextBlock("model")){
     string model_name;
     string model_type;
     m_db->getAttribute("label", model_name);
@@ -224,7 +228,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   if (db->findBlock("src")){
     string srcname;
     d_addExtraSources = true;
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
       //which sources are turned on for this equation
       d_sources.push_back( srcname );
@@ -272,7 +276,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 
       // Environment constant: get the value of the constants
       for( ProblemSpecP db_env_constants = db_initialValue->findBlock("env_constant");
-           db_env_constants != 0; db_env_constants = db_env_constants->findNextBlock("env_constant") ) {
+           db_env_constants != nullptr; db_env_constants = db_env_constants->findNextBlock("env_constant") ) {
 
         string s_tempQuadNode;
         db_env_constants->getAttribute("qn", s_tempQuadNode);
@@ -333,7 +337,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
           throw ProblemSetupException(err_msg,__FILE__,__LINE__);
         }
         for( ProblemSpecP db_env_step_value = db_initialValue->findBlock("env_step_value");
-             db_env_step_value != 0; db_env_step_value = db_env_step_value->findNextBlock("env_step_value") ) {
+             db_env_step_value != nullptr; db_env_step_value = db_env_step_value->findNextBlock("env_step_value") ) {
 
           string s_tempQuadNode;
           db_env_step_value->getAttribute("qn", s_tempQuadNode);
@@ -342,12 +346,15 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
           string s_step_value;
           db_env_step_value->getAttribute("value", s_step_value);
           double step_value = atof( s_step_value.c_str() );
-          if( i_tempQuadNode == d_quadNode )
+
+          if( i_tempQuadNode == d_quadNode ) {
             d_step_value = step_value / d_scalingConstant[d_quadNode];
+          }
         }
       }//end step_value init.
 
-    } else if (d_initFunction == "mms1") {
+    }
+    else if (d_initFunction == "mms1") {
       //currently nothing to do here.
 
     // ------------ Other initialization function --------------------

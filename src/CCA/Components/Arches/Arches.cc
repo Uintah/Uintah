@@ -83,29 +83,24 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
 //--------------------------------------------------------------------------------------------------
 Arches::~Arches()
 {
-
   delete m_nlSolver;
   delete m_physicalConsts;
   delete m_particlesHelper;
 
-  if(m_analysis_modules.size() != 0) {
-    std::vector<AnalysisModule*>::iterator iter;
-    for( iter  = m_analysis_modules.begin();
-         iter != m_analysis_modules.end(); iter++) {
+  if( m_analysis_modules.size() != 0 ) {
+    for( std::vector<AnalysisModule*>::iterator iter  = m_analysis_modules.begin(); iter != m_analysis_modules.end(); iter++) {
       delete *iter;
     }
   }
-
   releasePort("solver");
-
 }
 
 //--------------------------------------------------------------------------------------------------
 void
-Arches::problemSetup(const ProblemSpecP& params,
-                     const ProblemSpecP& materials_ps,
-                     GridP& grid,
-                     SimulationStateP& sharedState)
+Arches::problemSetup( const ProblemSpecP     & params,
+                      const ProblemSpecP     & materials_ps,
+                            GridP            & grid,
+                            SimulationStateP & sharedState )
 {
 
   m_sharedState= sharedState;
@@ -347,8 +342,7 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
   int i=0;
   std::string strFaceID;
   std::set<std::string> faceNameSet;
-  for( Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face");
-       faceSpec != 0; faceSpec=faceSpec->findNextBlock("Face"), ++i ) {
+  for( Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face"); faceSpec != nullptr; faceSpec=faceSpec->findNextBlock("Face"), ++i ) {
 
     std::string faceName = "none";
     faceSpec->getAttribute("name",faceName);

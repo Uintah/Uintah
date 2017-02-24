@@ -25,8 +25,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_st = db->findBlock("KScalarTransport");
 
-    for (ProblemSpecP eqn_db = db_st->findBlock("eqn_group"); eqn_db != 0;
-         eqn_db = eqn_db->findNextBlock("eqn_group")){
+    for (ProblemSpecP eqn_db = db_st->findBlock("eqn_group"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("eqn_group")){
 
       std::string group_name = "null";
       std::string type = "null";
@@ -167,8 +166,7 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_st = db->findBlock("KScalarTransport");
 
-    for (ProblemSpecP group_db = db_st->findBlock("eqn_group"); group_db != 0;
-         group_db = group_db->findNextBlock("eqn_group")){
+    for (ProblemSpecP group_db = db_st->findBlock("eqn_group"); group_db != nullptr; group_db = group_db->findNextBlock("eqn_group")){
 
       std::string group_name = "null";
       std::string type = "null";
@@ -201,7 +199,7 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
   ProblemSpecP db_mom = db->findBlock("KMomentum");
 
-  if ( db_mom != 0 ){
+  if ( db_mom != nullptr ){
 
     TaskInterface* tsk = retrieve_task( "x-mom" );
     print_task_setup_info( "x-mom-compute-rhs", "compute rhs");

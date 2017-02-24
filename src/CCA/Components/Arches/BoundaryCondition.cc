@@ -172,7 +172,7 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
     d_check_inlet_obstructions = true;
   }
 
-  if ( db.get_rep() != 0 ) {
+  if ( db != nullptr ) {
 
     //setupBCs( db_params );
 
@@ -221,14 +221,12 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
 
     if ( db_bc ) {
 
-      for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-            db_face = db_face->findNextBlock("Face") ) {
+      for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ) {
 
         std::string face_name = "NA";
         db_face->getAttribute("name", face_name );
 
-        for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-              db_BCType = db_BCType->findNextBlock("BCType") ) {
+        for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ) {
 
           std::string name;
           std::string type;
@@ -1967,9 +1965,11 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
     db_root->findBlock("PhysicalConstants")->require("gravity",grav);
     if ( grav.x() != 0 ) {
       dir_grav = 0;
-    } else if ( grav.y() != 0 ) {
+    }
+    else if ( grav.y() != 0 ) {
       dir_grav = 1;
-    } else if ( grav.z() != 0 ) {
+    }
+    else if ( grav.z() != 0 ) {
       dir_grav = 2;
     }
   }
@@ -1977,22 +1977,26 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
   // Now actually look for the boundary types
   if ( db_bc ) {
-    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-          db_face = db_face->findNextBlock("Face") ) {
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ) {
 
       string which_face;
       int v_index=999;
       if ( db_face->getAttribute("side", which_face)) {
         db_face->getAttribute("side",which_face);
-      } else if ( db_face->getAttribute( "circle", which_face)) {
+      }
+      else if ( db_face->getAttribute( "circle", which_face)) {
         db_face->getAttribute("circle",which_face);
-      } else if ( db_face->getAttribute( "rectangle", which_face)) {
+      }
+      else if ( db_face->getAttribute( "rectangle", which_face)) {
         db_face->getAttribute("rectangle",which_face);
-      } else if ( db_face->getAttribute( "rectangulus", which_face)) {
+      }
+      else if ( db_face->getAttribute( "rectangulus", which_face)) {
         db_face->getAttribute("rectangulus",which_face);
-      } else if ( db_face->getAttribute( "annulus", which_face)) {
+      }
+      else if ( db_face->getAttribute( "annulus", which_face)) {
         db_face->getAttribute("annulus",which_face);
-      } else if ( db_face->getAttribute( "ellipse", which_face)) {
+      }
+      else if ( db_face->getAttribute( "ellipse", which_face)) {
         db_face->getAttribute("ellipse",which_face);
       }
 
@@ -2003,23 +2007,28 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
       //re: the face normal.
       if ( which_face =="x-") {
         v_index = 0;
-      } else if ( which_face =="x+") {
+      }
+      else if ( which_face =="x+") {
         v_index = 0;
-      } else if ( which_face =="y-") {
+      }
+      else if ( which_face =="y-") {
         v_index = 1;
-      } else if ( which_face =="y+") {
+      }
+      else if ( which_face =="y+") {
         v_index = 1;
-      } else if ( which_face =="z-") {
+      }
+      else if ( which_face =="z-") {
         v_index = 2;
-      } else if ( which_face =="z+") {
+      }
+      else if ( which_face =="z+") {
         v_index = 2;
-      } else {
+      }
+      else {
         throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
       }
 
-      int numberOfMomentumBCs=0;
-      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-            db_BCType = db_BCType->findNextBlock("BCType") ) {
+      int numberOfMomentumBCs = 0;
+      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ) {
 
         std::string name;
         std::string type;
@@ -2068,8 +2077,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
             string curr_iv = *iv_iter;
 
-            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
-                  db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
 
               string curr_var;
               db_BCType2->getAttribute("label",curr_var);
@@ -2127,8 +2135,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
             string curr_iv = *iv_iter;
 
-            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
-                  db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
 
               string curr_var;
               db_BCType2->getAttribute("label",curr_var);
@@ -2203,8 +2210,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
 
         if (found_bc) {
-          for ( ProblemSpecP db_BCType1 = db_face->findBlock("BCType"); db_BCType1 != 0;
-              db_BCType1 = db_BCType1->findNextBlock("BCType") ) {
+          for ( ProblemSpecP db_BCType1 = db_face->findBlock("BCType"); db_BCType1 != nullptr; db_BCType1 = db_BCType1->findNextBlock("BCType") ) {
 
             std::string type1;
             db_BCType1->getAttribute("var", type1);
@@ -2230,8 +2236,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
                 // get weight BC
                 double weightScalingConstant = ParticleTools::getScalingConstant(db_BCType,"weight",qn);
                 double weight;
-                for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
-                    db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+                for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                   std::string tempLabelName;
                   db_BCType2->getAttribute("label",tempLabelName);
 
@@ -2241,7 +2246,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
                     break;
                   }
 
-                  if(db_BCType2 == 0  ){
+                  if( db_BCType2 == nullptr ){
                     throw ProblemSetupException("Arches was unable to find weight boundary condition", __FILE__, __LINE__);
                   }
                 }
@@ -2254,17 +2259,16 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
                 if (ParticleTools::getModelValue(db_BCType,sizeLabelName,qn,diameter)== false){
                   double diameterScalingConstant = ParticleTools::getScalingConstant(db_BCType,sizeLabelName,qn);
 
-                  for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
-                      db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+                  for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                     std::string tempLabelName;
                     db_BCType2->getAttribute("label",tempLabelName);
 
                     std::string sizeNode=ParticleTools::append_qn_env(sizeLabelName,qn);
-                    if (tempLabelName == sizeNode){
-                      db_BCType2->require("value",diameter);
+                    if( tempLabelName == sizeNode ){
+                      db_BCType2->require( "value", diameter );
                       break;
                     }
-                    if(db_BCType2 == 0  ){
+                    if( db_BCType2 == nullptr ){
                       throw ProblemSetupException("Arches was unable to find length model or boundary condition", __FILE__, __LINE__);
                     }
                   }
@@ -2604,10 +2608,11 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
     constCCVariable<double> density;
     constCCVariable<double> volFraction;
 
-    if(doing_regrid){
+    if( doing_regrid ){
       old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
       old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
-    }else{
+    }
+    else {
       new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
       new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
     }

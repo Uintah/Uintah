@@ -36,8 +36,7 @@ RadPropertyCalculator::~RadPropertyCalculator(){
 void
 RadPropertyCalculator::problemSetup( const ProblemSpecP& db ){ 
 
-  for ( ProblemSpecP db_pc = db->findBlock("calculator");
-        db_pc != 0; db_pc = db_pc->findNextBlock("calculator") ) {
+  for ( ProblemSpecP db_pc = db->findBlock("calculator"); db_pc != nullptr; db_pc = db_pc->findNextBlock("calculator") ) {
 
     RadPropertyCalculator::PropertyCalculatorBase* calculator;
 
@@ -204,7 +203,8 @@ bool RadPropertyCalculator::BurnsChriston::problemSetup( const ProblemSpecP& db 
   const VarLabel* test_label = VarLabel::find(_abskg_name); 
   if ( test_label == 0 ){ 
     _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
-  } else { 
+  }
+  else { 
     throw ProblemSetupException("Error: Abskg label already used for constant properties: "+_abskg_name,__FILE__, __LINE__);
   }
 
@@ -212,7 +212,8 @@ bool RadPropertyCalculator::BurnsChriston::problemSetup( const ProblemSpecP& db 
   return property_on; 
 }
 
-void RadPropertyCalculator::BurnsChriston::compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
+void
+RadPropertyCalculator::BurnsChriston::compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
   
   BBox domain(_min,_max);
   
@@ -467,7 +468,7 @@ RadPropertyCalculator::RadPropsInterface::RadPropsInterface()
 
 RadPropertyCalculator::RadPropsInterface::~RadPropsInterface() {
     
-  if ( _gg_radprops != 0 ) 
+  if ( _gg_radprops != nullptr ) 
     delete _gg_radprops; 
 }
     
@@ -520,26 +521,24 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
 
   if ( db->findBlock("abskg") ){ 
     db->findBlock("abskg")->getAttribute("label",_abskg_name); 
-  } else { 
+  }
+  else { 
     _abskg_name = "abskg"; 
   }
 
-
-  
-
-
   const VarLabel* test_label = VarLabel::find(_abskg_name); 
-  if ( test_label == 0 ){ 
-    _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
-  } else { 
+  if ( test_label == nullptr ){ 
+    _abskg_label = VarLabel::create( _abskg_name, CCVariable<double>::getTypeDescription() ); 
+  }
+  else { 
     throw ProblemSetupException("Error: Abskg label already in use: "+_abskg_name,__FILE__, __LINE__);
   }
 
   return true; 
-  
 }
     
-void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species,  constCCVariable<double>& mixT, CCVariable<double>& abskg)
+void
+RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species,  constCCVariable<double>& mixT, CCVariable<double>& abskg)
 { 
 
   int N = species.size(); 
@@ -639,13 +638,14 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
   }
   //-----------------------------------------------------------------------------------//
   
- ProblemSpecP db_coal=db->findBlock("particles")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+  ProblemSpecP db_coal=db->findBlock("particles")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
  
- if (db_coal == 0){
-   throw ProblemSetupException("Error: Coal properties not found! Need Optical Coal properties!",__FILE__, __LINE__);
- }else if (db_coal->findBlock("optics")==0){
-   throw ProblemSetupException("Error: Coal properties not found! Need Optical Coal properties!",__FILE__, __LINE__);
- }
+  if ( db_coal == nullptr ){
+    throw ProblemSetupException("Error: Coal properties not found! Need Optical Coal properties!",__FILE__, __LINE__);
+  }
+  else if ( db_coal->findBlock("optics") == nullptr ) {
+    throw ProblemSetupException("Error: Coal properties not found! Need Optical Coal properties!",__FILE__, __LINE__);
+  }
 
   db_coal->findBlock("optics")->require( "RawCoal_real", _rawCoalReal ); 
   db_coal->findBlock("optics")->require( "RawCoal_imag", _rawCoalImag ); 
@@ -658,7 +658,8 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
   if (_rawCoalReal > _ashReal) {
     _HighComplex=std::complex<double> ( _rawCoalReal, _rawCoalImag );  
     _LowComplex=std::complex<double> ( _ashReal, _ashImag );  
-  } else{
+  }
+  else {
     _HighComplex=std::complex<double> ( _ashReal, _ashImag );  
     _LowComplex=std::complex<double>  (_rawCoalReal, _rawCoalImag );  
   }
@@ -670,13 +671,13 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
   _ashAsymm=-1.0;
 
   //
-    _complexIndexReal_label = vector<const VarLabel* >(_nQn_part);
+  _complexIndexReal_label = vector<const VarLabel* >(_nQn_part);
 
-    for (int i=0; i<_nQn_part ; i++ ){
-      std::stringstream out1; 
-      out1 << "complexIndexReal_" << i;
-      _complexIndexReal_label[i]= VarLabel::create(out1.str(), CCVariable<double>::getTypeDescription() ); 
-    }
+  for (int i=0; i<_nQn_part ; i++ ){
+    std::stringstream out1; 
+    out1 << "complexIndexReal_" << i;
+    _complexIndexReal_label[i]= VarLabel::create(out1.str(), CCVariable<double>::getTypeDescription() ); 
+  }
 
   if ( _scatteringOn){
     _scatkt_name = "scatkt";
@@ -757,12 +758,13 @@ bool RadPropertyCalculator::coalOptics::problemSetup(Task* tsk,int time_substep)
 
     for (int i=0; (signed) _compositionLabels.size() < _ncomp*_nQn_part ; i++ ){  // unique loop criteria ensures no label duplicate.
       const VarLabel* temp =  VarLabel::find(_composition_names[i]);
-      if (temp == 0){
+      if (temp == nullptr ){
         proc0cout << "Coal optical-props is unable to find label with name: "<<_composition_names[i] << " \n";
         throw ProblemSetupException("Error: Could not find the label"+_composition_names[i],__FILE__, __LINE__);
       }
-      else
+      else {
         _compositionLabels.push_back( temp);
+      }
     }
 
     for (int i=0; i< _ncomp*_nQn_part ; i++ ){
@@ -975,7 +977,7 @@ RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool sca
     throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
   }
   
-  if ( _nQn_part ==0){
+  if ( _nQn_part == 0){
     construction_success = false;
   }
   _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
@@ -992,7 +994,7 @@ RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool sca
     _asymmetryParam_name="asymmetryParam"; 
     _scatkt_label = VarLabel::create(_scatkt_name,CCVariable<double>::getTypeDescription()); 
     _asymmetryParam_label = VarLabel::create(_asymmetryParam_name,CCVariable<double>::getTypeDescription()); 
-    if (_scatkt_label==0){
+    if( _scatkt_label == nullptr ){
       throw ProblemSetupException("Error: scattering coefficient label not created!!!?",__FILE__, __LINE__);
     } 
   }
@@ -1011,7 +1013,7 @@ RadPropertyCalculator::constantCIF::~constantCIF(){
 
 bool RadPropertyCalculator::constantCIF::problemSetup(Task* tsk,int time_substep){
 
-  if (time_substep ==0) { 
+  if (time_substep == 0) { 
     if (_scatteringOn){
       tsk->computes(  _asymmetryParam_label   );
     }
@@ -1177,7 +1179,7 @@ RadPropertyCalculator::basic::basic(const ProblemSpecP& db, bool scatteringOn){
     throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
   }
   
-  if ( _nQn_part ==0){
+  if ( _nQn_part == 0 ){
     construction_success = false;
   }
   _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 

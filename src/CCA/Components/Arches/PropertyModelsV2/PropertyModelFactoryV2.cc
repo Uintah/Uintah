@@ -51,8 +51,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_m = db->findBlock("PropertyModelsV2");
 
-    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != 0;
-          db_model=db_model->findNextBlock("model")){
+    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != nullptr; db_model=db_model->findNextBlock("model") ){
 
       std::string name;
       std::string type;
@@ -160,7 +159,7 @@ PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_m = db->findBlock("PropertyModelsV2");
 
-    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != 0; db_model=db_model->findNextBlock("model")){
+    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != nullptr; db_model=db_model->findNextBlock("model")){
       std::string name;
       db_model->getAttribute("label", name);
       TaskInterface* tsk = retrieve_task(name);
@@ -187,8 +186,7 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
     ProblemSpecP db_m = db->findBlock("PropertyModelsV2");
 
-    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != 0;
-          db_model=db_model->findNextBlock("model")){
+    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != nullptr; db_model=db_model->findNextBlock("model")){
 
       std::string name;
       std::string type;

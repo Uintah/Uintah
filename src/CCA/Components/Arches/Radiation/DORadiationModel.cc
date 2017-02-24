@@ -95,7 +95,6 @@ DORadiationModel::DORadiationModel(const ArchesLabel* label,
 //****************************************************************************
 DORadiationModel::~DORadiationModel()
 {
-
   delete d_linearSolver;
 
   if(d_perproc_patches && d_perproc_patches->removeReference()){
@@ -144,26 +143,29 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   // Does this system have particles??? Check for particle property models
   ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
   if  (db_prop){
-    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0;
-        db_model = db_model->findNextBlock("model")){
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
       db_model->getAttribute("type", modelName);
       if (modelName=="radiation_properties"){
-        if  (db_model->findBlock("calculator") == 0){
+        if  (db_model->findBlock("calculator") == nullptr ){
           throw ProblemSetupException("Error: <calculator> for DO-radiation node not found.", __FILE__, __LINE__);
           break;
-        }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
+        }
+        else if(db_model->findBlock("calculator")->findBlock("particles") == nullptr){
           _nQn_part = 0;
           break;
-        }else{
+        }
+        else{
           //        db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part );
           bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
           bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
 
           if ( doing_dqmom ){
             _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
-          } else if ( doing_cqmom ){
+          }
+          else if ( doing_cqmom ){
             _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
-          } else {
+          }
+          else {
             throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
           }
 
@@ -174,45 +176,43 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
           break;
         }
       }
-      if  (db_model== 0){
+      if( db_model== nullptr ){
         throw ProblemSetupException("Error: <radiation_properties> for DO-radiation node not found.", __FILE__, __LINE__);
         break;
       }
     }
-  } else{
+  }
+  else {
     _nQn_part =0; // No property model found, so particles do not interact radiatively
   }
 
-    for (int qn=0; qn < _nQn_part; qn++){
-      std::stringstream absorp;
-      std::stringstream temper;
-      absorp <<baseNameAbskp <<"_"<< qn;
-      temper <<baseNameTemperature <<"_"<< qn;
-      _abskp_name_vector.push_back( absorp.str());
-      _temperature_name_vector.push_back( temper.str());
+  for (int qn=0; qn < _nQn_part; qn++){
+    std::stringstream absorp;
+    std::stringstream temper;
+    absorp <<baseNameAbskp <<"_"<< qn;
+    temper <<baseNameTemperature <<"_"<< qn;
+    _abskp_name_vector.push_back( absorp.str());
+    _temperature_name_vector.push_back( temper.str());
+  }
+
+  if (_scatteringOn  && _nQn_part ==0){
+    throw ProblemSetupException("Error: No particle model found in DO-radiation! When scattering is turned on, a particle model is required!", __FILE__, __LINE__);
+  }
+
+  if (db) {
+    bool ordinates_specified =db->findBlock("ordinates");
+    db->getWithDefault("ordinates",d_sn,2);
+    if (ordinates_specified == false){
+      proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
     }
-
-    if (_scatteringOn  && _nQn_part ==0){
-      throw ProblemSetupException("Error: No particle model found in DO-radiation! When scattering is turned on, a particle model is required!", __FILE__, __LINE__);
+    if ((d_sn)%2 || d_sn <2){
+      throw ProblemSetupException("Error:Only positive, even, and non-zero ordinate numbers for discrete-ordinates radiation are permitted.", __FILE__, __LINE__);
     }
-
-
-
-    if (db) {
-      bool ordinates_specified =db->findBlock("ordinates");
-      db->getWithDefault("ordinates",d_sn,2);
-      if (ordinates_specified == false){
-        proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
-      }
-      if ((d_sn)%2 || d_sn <2){
-        throw ProblemSetupException("Error:Only positive, even, and non-zero ordinate numbers for discrete-ordinates radiation are permitted.", __FILE__, __LINE__);
-      }
-
-
-    } else {
-      throw ProblemSetupException("Error: <DORadiation> node not found.", __FILE__, __LINE__);
-    }
-
+  }
+  else {
+    throw ProblemSetupException("Error: <DORadiation> node not found.", __FILE__, __LINE__);
+  }
+  
   //WARNING: Hack -- Hard-coded for now.
   d_lambda      = 1;
 

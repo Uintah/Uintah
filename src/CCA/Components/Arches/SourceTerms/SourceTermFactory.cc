@@ -129,7 +129,7 @@ SourceTermFactory::retrieve_source_term( const std::string name )
 //---------------------------------------------------------------------------
 void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
 {
-  for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+  for (ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
 
     SourceContainer this_src;
     src_db->getAttribute(  "label",  this_src.name   );
@@ -207,7 +207,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
   SimulationStateP& shared_state = (*lab).d_sharedState;
 
   if (srcs_db) {
-    for (ProblemSpecP source_db = srcs_db->findBlock("src"); source_db != 0; source_db = source_db->findNextBlock("src")){
+    for (ProblemSpecP source_db = srcs_db->findBlock("src"); source_db != nullptr; source_db = source_db->findNextBlock("src")){
       std::string src_name;
       source_db->getAttribute("label", src_name);
       std::string src_type;
@@ -223,7 +223,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       if ( var_db ) {
         // You may not have any labels that this source term depends on...hence the 'if' statement
-        for (ProblemSpecP var = var_db->findBlock("variable"); var !=0; var = var_db->findNextBlock("variable")){
+        for (ProblemSpecP var = var_db->findBlock("variable"); var != nullptr; var = var_db->findNextBlock("variable")){
 
           std::string label_name;
           var->getAttribute("label", label_name);

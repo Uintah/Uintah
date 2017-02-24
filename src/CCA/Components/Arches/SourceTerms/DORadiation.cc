@@ -94,8 +94,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   std::string modelName;
   ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
   if  (db_prop){
-    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
-        db_model = db_model->findNextBlock("model")){
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
       db_model->getAttribute("type", modelName);
       if (modelName=="radiation_properties"){
         db_model->getAttribute("label",_abskt_label_name);

@@ -512,11 +512,14 @@ private:
         db->getRootNode()->findBlock("PhysicalConstants")->require("gravity",grav);
         if ( grav.x() != 0 ){
           _dir_grav = 0;
-        } else if ( grav.y() != 0 ){
+        }
+        else if ( grav.y() != 0 ){
           _dir_grav = 1;
-        } else if ( grav.z() != 0 ){
+        }
+        else if ( grav.z() != 0 ){
           _dir_grav = 2;
-        } else {
+        }
+        else {
           throw ProblemSetupException("Error: The specified gravity doesnt indicate a clear up-down direction", __FILE__, __LINE__);
         }
 
@@ -529,20 +532,23 @@ private:
 
         if ( db_bc ) {
 
-          for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-                db_face = db_face->findNextBlock("Face") ){
+          for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ){
 
             std::string which_face;
             int v_index=999;
             if ( db_face->getAttribute("side", which_face)){
               db_face->getAttribute("side",which_face);
-            } else if ( db_face->getAttribute( "circle", which_face)){
+            }
+            else if ( db_face->getAttribute( "circle", which_face)){
               db_face->getAttribute("circle",which_face);
-            } else if ( db_face->getAttribute( "rectangle", which_face)){
+            }
+            else if ( db_face->getAttribute( "rectangle", which_face)){
               db_face->getAttribute("rectangle",which_face);
-            } else if ( db_face->getAttribute( "annulus", which_face)){
+            }
+            else if ( db_face->getAttribute( "annulus", which_face)){
               db_face->getAttribute("annulus",which_face);
-            } else if ( db_face->getAttribute( "ellipse", which_face)){
+            }
+            else if ( db_face->getAttribute( "ellipse", which_face)){
               db_face->getAttribute("ellipse",which_face);
             }
 
@@ -550,22 +556,27 @@ private:
             //re: the face normal.
             if ( which_face =="x-"){
               v_index = 0;
-            } else if ( which_face =="x+"){
+            }
+            else if ( which_face =="x+"){
               v_index = 0;
-            } else if ( which_face =="y-"){
+            }
+            else if ( which_face =="y-"){
               v_index = 1;
-            } else if ( which_face =="y+"){
+            }
+            else if ( which_face =="y+"){
               v_index = 1;
-            } else if ( which_face =="z-"){
+            }
+            else if ( which_face =="z-"){
               v_index = 2;
-            } else if ( which_face =="z+"){
+            }
+            else if ( which_face =="z+"){
               v_index = 2;
-            } else {
+            }
+            else {
               throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
             }
 
-            for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-                db_BCType = db_BCType->findNextBlock("BCType") ){
+            for( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ) {
 
               std::string name = "NA";
               std::string type;

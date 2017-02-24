@@ -36,8 +36,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_init = db->findBlock("Initialization");
 
-    for (ProblemSpecP db_task = db_init->findBlock("task"); db_task != 0;
-        db_task = db_task->findNextBlock("task")){
+    for (ProblemSpecP db_task = db_init->findBlock("task"); db_task != nullptr; db_task = db_task->findNextBlock("task")){
 
       std::string task_name;
       std::string eqn_name;
@@ -120,8 +119,7 @@ InitializeFactory::build_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_init = db->findBlock("Initialization");
 
-    for (ProblemSpecP db_task = db_init->findBlock("task"); db_task != 0;
-        db_task = db_task->findNextBlock("task")){
+    for (ProblemSpecP db_task = db_init->findBlock("task"); db_task != nullptr; db_task = db_task->findNextBlock("task")){
 
       std::string task_name;
       std::string type;

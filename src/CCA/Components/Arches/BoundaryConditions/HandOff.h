@@ -90,11 +90,12 @@ private:
 
     ProblemSpecP db_default = db->findBlock("default");
 
-    if ( db_default != 0 ){
+    if ( db_default != nullptr ){
       db_default->getAttribute("value", m_boundary_info.default_value );
       db_default->getAttribute("type", m_boundary_info.default_type );
       db_default->getAttribute("label", m_default_label );
-    } else {
+    }
+    else {
       throw ProblemSetupException("Error: no default bc found for: "+_task_name, __FILE__, __LINE__);
     }
 

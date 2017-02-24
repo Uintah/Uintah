@@ -74,8 +74,7 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   
   //NOTE: redo this to only have one xml tag here?
   int m = 0;
-  for ( ProblemSpecP db_name = db->findBlock("InternalCoordinate");
-       db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+  for ( ProblemSpecP db_name = db->findBlock("InternalCoordinate"); db_name != nullptr; db_name = db_name->findNextBlock("InternalCoordinate") ) {
     string coordName;
     string varType;
     db_name->getAttribute("name",coordName);
@@ -133,8 +132,7 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   nMoments = 0;
   // obtain moment index vectors
   vector<int> temp_moment_index;
-  for ( ProblemSpecP db_moments = db->findBlock("Moment");
-       db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+  for ( ProblemSpecP db_moments = db->findBlock("Moment"); db_moments != nullptr; db_moments = db_moments->findNextBlock("Moment") ) {
     temp_moment_index.resize(0);
     db_moments->get("m", temp_moment_index);
     

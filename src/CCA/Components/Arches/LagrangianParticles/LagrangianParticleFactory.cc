@@ -51,8 +51,7 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_lp = db->findBlock("LagrangianParticles");
 
-    for ( ProblemSpecP db_pv = db_lp->findBlock("ParticleVariables")->findBlock("variable");
-          db_pv != 0; db_pv = db_pv->findNextBlock("variable") ) {
+    for ( ProblemSpecP db_pv = db_lp->findBlock("ParticleVariables")->findBlock("variable"); db_pv != nullptr; db_pv = db_pv->findNextBlock("variable") ) {
 
       std::string label;
       db_pv->getAttribute("label", label);

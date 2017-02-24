@@ -54,8 +54,7 @@ HeatTransfer::HeatTransfer( std::string modelName,
 
 HeatTransfer::~HeatTransfer()
 {
-  for (vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
-       iter != _extra_local_labels.end(); iter++) {
+  for (vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++) {
     VarLabel::destroy( *iter );
   }
 }
@@ -114,12 +113,11 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
     
     _radiateAtGasTemp=true; // this flag is arbitrary for no radiation 
     ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
-        db_model = db_model->findNextBlock("model")){
-      db_model->getAttribute("type", modelName);
-      if (modelName=="radiation_properties"){
-        if  (db_model->findBlock("calculator") == 0){
-          if(qn ==0) {
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
+      db_model->getAttribute( "type", modelName );
+      if ( modelName=="radiation_properties" ) {
+        if ( db_model->findBlock("calculator") == nullptr ) {
+          if( qn == 0 ) {
             proc0cout <<"\n///-------------------------------------------///\n";
             proc0cout <<"WARNING: No radiation particle properties computed!\n";
             proc0cout <<"Particles will not interact with radiation!\n";
@@ -127,7 +125,8 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
           }
           d_radiation = false;
           break;
-        }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
+        }
+        else if( db_model->findBlock("calculator")->findBlock("particles") == nullptr ){
           if(qn ==0) {
             proc0cout <<"\n///-------------------------------------------///\n";
             proc0cout <<"WARNING: No radiation particle properties computed!\n";
@@ -141,13 +140,13 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
         db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true ); 
         break;
       }
-      if  (db_model== 0){
-          if(qn ==0) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
+      if ( db_model == nullptr ){
+        if( qn == 0 ) {
+          proc0cout <<"\n///-------------------------------------------///\n";
+          proc0cout <<"WARNING: No radiation particle properties computed!\n";
+          proc0cout <<"Particles will not interact with radiation!\n";
+          proc0cout <<"///-------------------------------------------///\n";
+        }
         d_radiation = false;
         break;
       }

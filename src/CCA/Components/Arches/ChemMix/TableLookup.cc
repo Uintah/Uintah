@@ -62,8 +62,7 @@ TableLookup::problemSetup( const ProblemSpecP& params )
 
     ProblemSpecP db = params->findBlock("Properties");
 
-    for ( ProblemSpecP db_tabs = db->findBlock("table"); db_tabs != 0;
-          db_tabs = db_tabs->findNextBlock("table")){
+    for ( ProblemSpecP db_tabs = db->findBlock("table"); db_tabs != nullptr; db_tabs = db_tabs->findNextBlock("table")){
 
       std::string type;
       std::string label;

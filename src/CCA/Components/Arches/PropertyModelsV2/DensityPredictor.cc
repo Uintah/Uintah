@@ -20,7 +20,7 @@ DensityPredictor::problemSetup( ProblemSpecP& db ){
   if (db->findBlock("use_exact_guess")){
     m_use_exact_guess = true;
     ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ColdFlow");
-    if ( db_prop == 0 ){
+    if ( db_prop == nullptr ){
       throw InvalidValue("Error: For the density predictor, you must be using cold flow model when computing the exact rho/rhof relationship.", __FILE__, __LINE__);
     }
     db_prop->findBlock("stream_0")->getAttribute("density",m_rho0);
@@ -35,7 +35,7 @@ DensityPredictor::problemSetup( ProblemSpecP& db ){
   ProblemSpecP press_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("PressureSolver");
   if (press_db->findBlock("src")){
     std::string srcname;
-    for (ProblemSpecP src_db = press_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for (ProblemSpecP src_db = press_db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
       m_mass_sources.push_back( srcname );
     }

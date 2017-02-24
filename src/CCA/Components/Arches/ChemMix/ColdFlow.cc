@@ -103,7 +103,7 @@ ColdFlow::problemSetup( const ProblemSpecP& db )
   }
 
   // allow speciation
-  for ( ProblemSpecP db_sp = db_str1->findBlock("species"); db_sp != 0; db_sp = db_sp->findNextBlock("species") ){
+  for ( ProblemSpecP db_sp = db_str1->findBlock("species"); db_sp != nullptr; db_sp = db_sp->findNextBlock("species") ){
 
     double value;
     string label;
@@ -119,10 +119,9 @@ ColdFlow::problemSetup( const ProblemSpecP& db )
       throw InvalidValue("Error: Could not insert the following into the table lookup: "+label,
                          __FILE__,__LINE__);
     }
-
   }
 
-  for ( ProblemSpecP db_sp = db_str2->findBlock("species"); db_sp != 0; db_sp = db_sp->findNextBlock("species") ){
+  for ( ProblemSpecP db_sp = db_str2->findBlock("species"); db_sp != nullptr; db_sp = db_sp->findNextBlock("species") ){
 
     double value;
     string label;

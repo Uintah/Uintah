@@ -200,8 +200,7 @@ private:
     }
 
     std::vector<SourceInfo> eqn_srcs;
-    for ( ProblemSpecP src_db = db->findBlock("src"); src_db != 0;
-          src_db = src_db->findNextBlock("src") ){
+    for ( ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ){
 
       std::string src_label;
       double weight = 1.0;

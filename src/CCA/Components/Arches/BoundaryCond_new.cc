@@ -36,14 +36,12 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions");
 
   if ( db_bc ) {
-    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-          db_face = db_face->findNextBlock("Face") ){
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ){
 
       std::string face_name = "NA";
       db_face->getAttribute("name", face_name );
 
-      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-          db_BCType = db_BCType->findNextBlock("BCType") ){
+      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
         std::string name;
         std::string type;
@@ -107,13 +105,11 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
 
   if ( db_bc ) {
 
-    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-          db_face = db_face->findNextBlock("Face") ){
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ){
 
       //first check to see if there are any tabulated BCs on this face//
       bool has_tabulated_bc = false;
-      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-          db_BCType = db_BCType->findNextBlock("BCType") ){
+      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
           std::string type;
           db_BCType->getAttribute("var", type);
@@ -139,8 +135,7 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
 
           std::string iv_name = allIndepVarNames[i];
 
-          for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-              db_BCType = db_BCType->findNextBlock("BCType") ){
+          for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
             std::string name;
             std::string type;
@@ -177,8 +172,7 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
         MixingRxnModel::InertMasterMap master_inert_map = table->getInertMap();
         for ( MixingRxnModel::InertMasterMap::iterator iter = master_inert_map.begin(); iter != master_inert_map.end(); iter++ ){
 
-          for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-              db_BCType = db_BCType->findNextBlock("BCType") ){
+          for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
             std::string name;
             std::string type;
@@ -204,8 +198,7 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
 
         DoubleMap bc_name_to_value;
 
-        for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-            db_BCType = db_BCType->findNextBlock("BCType") ){
+        for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
           std::string name;
           std::string type;
@@ -599,8 +592,7 @@ void BoundaryCondition_new::FromFile::setupBC( ProblemSpecP& db, const std::stri
   //reparsing the BCType because the abstraction requires that we pass the <Face> node
   //into the setupBC method because there is no "getParentNode" method needed for
   //things like TabulatedBC
-  for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-                                 db_BCType = db_BCType->findNextBlock("BCType") ){
+  for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
     std::string name;
     std::string type;
@@ -724,8 +716,7 @@ void BoundaryCondition_new::Tabulated::extra_setupBC( ProblemSpecP& db, std::str
 
   if ( db_bc ) {
 
-    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-          db_face = db_face->findNextBlock("Face") ){
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ){
 
       bool has_tabulated = false;
       std::string face_name = "NOTSET";
@@ -736,8 +727,7 @@ void BoundaryCondition_new::Tabulated::extra_setupBC( ProblemSpecP& db, std::str
         throw ProblemSetupException("Error: When using Tabulated BCs you must name each <Face>.", __FILE__, __LINE__);
       }
 
-      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-                                     db_BCType = db_BCType->findNextBlock("BCType") ){
+      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
         std::string name;
         std::string type;
         db_BCType->getAttribute("label", name);
@@ -759,8 +749,7 @@ void BoundaryCondition_new::Tabulated::extra_setupBC( ProblemSpecP& db, std::str
         std::vector<std::string> allIndepVarNames = table->getAllIndepVars();
 
         for ( int i = 0; i < (int) allIndepVarNames.size(); i++ ){
-          for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-                                         db_BCType = db_BCType->findNextBlock("BCType") ){
+          for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
             std::string iv_name = allIndepVarNames[i];
             std::string name;
@@ -789,8 +778,7 @@ void BoundaryCondition_new::Tabulated::extra_setupBC( ProblemSpecP& db, std::str
         MixingRxnModel::InertMasterMap master_inert_map = table->getInertMap();
         for ( MixingRxnModel::InertMasterMap::iterator iter = master_inert_map.begin(); iter != master_inert_map.end(); iter++ ){
 
-          for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-              db_BCType = db_BCType->findNextBlock("BCType") ){
+          for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
             std::string name;
             std::string type;
@@ -818,8 +806,7 @@ void BoundaryCondition_new::Tabulated::extra_setupBC( ProblemSpecP& db, std::str
         db_face->getAttribute("name", face_name );
         DoubleMap bc_name_to_value;
 
-        for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
-            db_BCType = db_BCType->findNextBlock("BCType") ){
+        for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != nullptr; db_BCType = db_BCType->findNextBlock("BCType") ){
 
           std::string name;
           std::string type;

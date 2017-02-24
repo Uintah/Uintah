@@ -223,7 +223,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     db_Smith->getWithDefault("char_MW",_Mh,12.0); // kg char / kmole char
     db_Smith->getWithDefault("surface_area_mult_factor",_S,1.0);
     _NUM_species = 0;
-    for ( ProblemSpecP db_species = db_Smith->findBlock( "species" ); db_species != 0; db_species = db_species->findNextBlock( "species" ) ){
+    for ( ProblemSpecP db_species = db_Smith->findBlock( "species" ); db_species != nullptr; db_species = db_species->findNextBlock( "species" ) ){
       std::string new_species;
       new_species = db_species->getNodeValue();
       helper.add_lookup_species(new_species);
@@ -231,7 +231,7 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
       _NUM_species += 1;
     }
     _NUM_reactions = 0;
-    for ( ProblemSpecP db_reaction = db_Smith->findBlock( "reaction" ); db_reaction != 0; db_reaction = db_reaction->findNextBlock( "reaction" ) ){
+    for ( ProblemSpecP db_reaction = db_Smith->findBlock( "reaction" ); db_reaction != nullptr; db_reaction = db_reaction->findNextBlock( "reaction" ) ){
       //get reaction rate params
       db_reaction->require("oxidizer_name",oxidizer_name);
       db_reaction->require("oxidizer_MW",oxidizer_MW);

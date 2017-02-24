@@ -395,8 +395,7 @@ namespace Uintah { namespace ArchesCore{
 
       if ( db_bc ){
 
-        for ( Uintah::ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-              db_face = db_face->findNextBlock("Face") ){
+        for ( Uintah::ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ){
 
           std::string face_name = "NOT_NAMED";
           db_face->getAttribute( "name", face_name );
@@ -405,8 +404,7 @@ namespace Uintah { namespace ArchesCore{
             throw ProblemSetupException("Error: You must have a name attribute for all Face boundary conditions.", __FILE__, __LINE__);
           }
 
-          for ( Uintah::ProblemSpecP db_bc_type = db_face->findBlock("BCType"); db_bc_type != 0;
-                db_bc_type = db_bc_type->findNextBlock("BCType") ){
+          for ( Uintah::ProblemSpecP db_bc_type = db_face->findBlock("BCType"); db_bc_type != nullptr; db_bc_type = db_bc_type->findNextBlock("BCType") ){
 
             std::string type;
             std::string varname;

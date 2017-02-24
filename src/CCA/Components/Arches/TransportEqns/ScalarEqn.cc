@@ -155,7 +155,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   if (db->findBlock("src")){
 
     string srcname;
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
 
       SourceContainer this_src;
       double weight;
@@ -173,7 +173,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   //extra src terms which only require a VarLabel
   if ( db->findBlock("extra_src") ) {
-    for (ProblemSpecP src_db = db->findBlock("extra_src"); src_db != 0; src_db = src_db->findNextBlock("extra_src")){
+    for (ProblemSpecP src_db = db->findBlock("extra_src"); src_db != nullptr; src_db = src_db->findNextBlock("extra_src")){
       string srcname;
       src_db->getAttribute("label", srcname );
 

@@ -125,22 +125,23 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
 
   //get internal coordinate indexes for each direction
   int m = 0;
-  for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
-       db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+  for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate"); db_name != nullptr; db_name = db_name->findNextBlock("InternalCoordinate") ) {
     string varType;
     db_name->getAttribute("type",varType);
     if (varType == "uVel") {
       uVelIndex = m;
-    } else if (varType == "vVel") {
+    }
+    else if (varType == "vVel") {
       vVelIndex = m;
-    } else if (varType == "wVel") {
+    }
+    else if (varType == "wVel") {
       wVelIndex = m;
     }
     m++;
   }
 
   string name = "m_";
-  for (int i = 0; i<M ; i++) {
+  for( int i = 0; i < M ; i++ ) {
     string node;
     std::stringstream out;
     out << momentIndex[i];
@@ -160,7 +161,7 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   // Models (source terms):
   if ( models_db ) {
     d_addSources = true;
-    for (ProblemSpecP m_db = models_db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
+    for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != nullptr; m_db = m_db->findNextBlock("model")){
       //parse the model blocks for var label
       std::string model_name;
       std::string source_label;
@@ -171,8 +172,7 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
         m_db->get("IC",ic_name);
         m = 0;
 
-        for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
-             db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+        for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate"); db_name != nullptr; db_name = db_name->findNextBlock("InternalCoordinate") ) {
           std::string var_name;
           db_name->getAttribute("name",var_name);
           if ( var_name == ic_name) {

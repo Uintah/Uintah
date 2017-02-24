@@ -34,7 +34,7 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
 
   //<Utilities>
   if ( db_all_util ){
-    for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != 0;
+    for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != nullptr;
           db_util = db_util->findNextBlock("utility")){
 
       std::string name;
@@ -45,34 +45,38 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
       if ( type == "variable_math" ){
 
         std::string grid_type="NA";
-        if ( db_util->findBlock("grid").get_rep() != 0 ){
+        if ( db_util->findBlock("grid") != nullptr ){
           db_util->findBlock("grid")->getAttribute("type", grid_type);
-        } else {
+        }
+        else {
           throw InvalidValue("Error: variable_math must specify a grid variable type", __FILE__, __LINE__);
         }
 
         TaskInterface::TaskBuilder* tsk;
         if ( grid_type == "CC" ){
           tsk = scinew TaskAlgebra<CCVariable<double> >::Builder(name, 0);
-        } else if ( grid_type == "FX" ){
+        }
+        else if ( grid_type == "FX" ){
           tsk = scinew TaskAlgebra<SFCXVariable<double> >::Builder(name, 0);
-        } else if ( grid_type == "FY" ){
+        }
+        else if ( grid_type == "FY" ){
           tsk = scinew TaskAlgebra<SFCYVariable<double> >::Builder(name, 0);
-        } else if ( grid_type == "FZ" ){
+        }
+        else if ( grid_type == "FZ" ){
           tsk = scinew TaskAlgebra<SFCZVariable<double> >::Builder(name, 0);
-        } else {
+        }
+        else {
           throw InvalidValue("Error: grid_type not recognized.",__FILE__,__LINE__);
         }
         register_task(name, tsk);
 
-      } else {
+      }
+      else {
 
         throw InvalidValue("Error: Utility type not recognized.",__FILE__,__LINE__);
-
       }
 
       assign_task_to_type_storage(name, type);
-
     }
   }
 }
@@ -84,8 +88,7 @@ UtilityFactory::add_task( ProblemSpecP& db ){
 
   //<Utilities>
   if ( db_all_util ){
-    for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != 0;
-          db_util = db_util->findNextBlock("utility")){
+    for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != nullptr; db_util = db_util->findNextBlock("utility")){
 
       std::string name;
       std::string type;
@@ -95,34 +98,37 @@ UtilityFactory::add_task( ProblemSpecP& db ){
       if ( type == "variable_math" ){
 
         std::string grid_type="NA";
-        if ( db_util->findBlock("grid").get_rep() != 0 ){
+        if ( db_util->findBlock("grid") != nullptr ){
           db_util->findBlock("grid")->getAttribute("type", grid_type);
-        } else {
+        }
+        else {
           throw InvalidValue("Error: variable_math must specify a grid variable type", __FILE__, __LINE__);
         }
 
         TaskInterface::TaskBuilder* tsk;
         if ( grid_type == "CC" ){
           tsk = scinew TaskAlgebra<CCVariable<double> >::Builder(name, 0);
-        } else if ( grid_type == "FX" ){
+        }
+        else if ( grid_type == "FX" ){
           tsk = scinew TaskAlgebra<SFCXVariable<double> >::Builder(name, 0);
-        } else if ( grid_type == "FY" ){
+        }
+        else if ( grid_type == "FY" ){
           tsk = scinew TaskAlgebra<SFCYVariable<double> >::Builder(name, 0);
-        } else if ( grid_type == "FZ" ){
+        }
+        else if ( grid_type == "FZ" ){
           tsk = scinew TaskAlgebra<SFCZVariable<double> >::Builder(name, 0);
-        } else {
+        }
+        else {
           throw InvalidValue("Error: grid_type not recognized.",__FILE__,__LINE__);
         }
         register_task(name, tsk);
 
-      } else {
-
+      }
+      else {
         throw InvalidValue("Error: Utility type not recognized.",__FILE__,__LINE__);
-
       }
 
       assign_task_to_type_storage(name, type);
-
     }
   }
 }
@@ -152,8 +158,7 @@ UtilityFactory::build_all_tasks( ProblemSpecP& db )
   //<Utilities>
   ProblemSpecP db_all_util = db->findBlock("Utilities");
   if ( db_all_util ){
-    for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != 0;
-          db_util = db_util->findNextBlock("utility")){
+    for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != nullptr; db_util = db_util->findNextBlock("utility")){
       std::string name;
       std::string type;
       db_util->getAttribute("label", name);

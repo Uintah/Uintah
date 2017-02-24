@@ -1,23 +1,49 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2016 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
+
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
-#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <Core/Parallel/Parallel.h>
-#include <iostream>
-#include <iomanip>
 
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <iomanip>
+#include <iostream>
 
 using namespace std;
 using namespace Uintah;
@@ -145,12 +171,11 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   if (d_radiation ) {
     ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0;
-        db_model = db_model->findNextBlock("model")){
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
       db_model->getAttribute("type", modelName);
-      if (modelName=="radiation_properties"){
-        if  (db_model->findBlock("calculator") == 0){
-          if(qn ==0) {
+      if( modelName == "radiation_properties" ) {
+        if( db_model->findBlock( "calculator" ) == nullptr ) {
+          if( qn == 0 ) {
             proc0cout <<"\n///-------------------------------------------///\n";
             proc0cout <<"WARNING: No radiation particle properties computed!\n";
             proc0cout <<"Particles will not interact with radiation!\n";
@@ -158,8 +183,9 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
           }
           d_radiation = false;
           break;
-        }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
-          if(qn ==0) {
+        }
+        else if(db_model->findBlock("calculator")->findBlock("particles") == nullptr){
+          if( qn == 0 ) {
             proc0cout <<"\n///-------------------------------------------///\n";
             proc0cout <<"WARNING: No radiation particle properties computed!\n";
             proc0cout <<"Particles will not interact with radiation!\n";
@@ -171,8 +197,8 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
         db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
         break;
       }
-      if  (db_model== 0){
-          if(qn ==0) {
+      if( db_model == nullptr ) {
+          if( qn == 0 ) {
             proc0cout <<"\n///-------------------------------------------///\n";
             proc0cout <<"WARNING: No radiation particle properties computed!\n";
             proc0cout <<"Particles will not interact with radiation!\n";
@@ -182,9 +208,10 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
         break;
       }
     }
-    if (VarLabel::find("radiationVolq")) {
+    if( VarLabel::find("radiationVolq") ) {
       _volq_varlabel  = VarLabel::find("radiationVolq");
-    } else {
+    }
+    else {
       throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find radiationVolq.",__FILE__,__LINE__);
     }
     std::string abskp_string = ParticleTools::append_env(baseNameAbskp, d_quadNode);
@@ -339,7 +366,8 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
     tsk->computes(d_qconvLabel);
     tsk->computes(d_qradLabel);
     which_dw = Task::OldDW;
-  } else {
+  }
+  else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);
     tsk->modifies(d_qconvLabel);
@@ -413,7 +441,8 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       qconv.initialize(0.0);
       new_dw->allocateAndPut( qrad, d_qradLabel, matlIndex, patch );
       qrad.initialize(0.0);
-    } else {
+    }
+    else {
       which_dw = new_dw;
       new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch );
       new_dw->getModifiable( gas_heat_rate, d_gasLabel, matlIndex, patch );

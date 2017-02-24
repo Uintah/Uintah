@@ -361,8 +361,7 @@ namespace Uintah{
             std::string inputfile;
             db->require("input_file",inputfile);
 
-            for ( ProblemSpecP db_flux = db_intrusion->findBlock("flux_dir");
-                db_flux != 0; db_flux = db_flux->findNextBlock("flux_dir") ){
+            for ( ProblemSpecP db_flux = db_intrusion->findBlock("flux_dir"); db_flux != nullptr; db_flux = db_flux->findNextBlock("flux_dir") ){
 
               std::string my_dir;
               my_dir = db_flux->getNodeValue();
@@ -667,8 +666,7 @@ namespace Uintah{
 
             int num_flux_dir = 0; // Only allow for ONE flux direction
 
-            for ( ProblemSpecP db_flux = db->findBlock("flux_dir");
-                db_flux != 0; db_flux = db_flux->findNextBlock("flux_dir") ){
+            for ( ProblemSpecP db_flux = db->findBlock("flux_dir"); db_flux != nullptr; db_flux = db_flux->findNextBlock("flux_dir") ){
 
               std::string my_dir;
               my_dir = db_flux->getNodeValue();

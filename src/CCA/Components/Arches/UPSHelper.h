@@ -59,12 +59,10 @@ namespace Uintah{ namespace ArchesCore {
 
     std::string role = role_enum_to_string( role_enum );
 
-    ProblemSpecP db_varid =
-      db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("VarID");
+    ProblemSpecP db_varid = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("VarID");
 
     if ( db_varid ){
-      for ( ProblemSpecP db_id = db_varid->findBlock("var"); db_id != 0;
-            db_id = db_id->findNextBlock("var") ){
+      for ( ProblemSpecP db_id = db_varid->findBlock("var"); db_id != nullptr; db_id = db_id->findNextBlock("var") ){
 
         std::string label="NotFound";
         std::string ups_role;
@@ -79,7 +77,6 @@ namespace Uintah{ namespace ArchesCore {
     }
 
     return mydefault;
-
   }
 
 }} // end Uintah::ArchesCore

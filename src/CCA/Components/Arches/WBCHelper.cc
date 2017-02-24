@@ -498,11 +498,9 @@ void WBCHelper::parse_boundary_conditions(const int ilvl)
   // store information here per patch.
 
   if ( db_bc ) {
-    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
-          db_face = db_face->findNextBlock("Face") ) {
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ) {
       bool found_mass_flux = false;
-      for ( ProblemSpecP db_bc = db_face->findBlock("BCType"); db_bc != 0;
-            db_bc = db_bc->findNextBlock("BCType") ) {
+      for ( ProblemSpecP db_bc = db_face->findBlock("BCType"); db_bc != nullptr; db_bc = db_bc->findNextBlock("BCType") ) {
         std::string var;
         db_bc->getAttribute("var", var );
         if ( var == "MassFlowInlet" || var == "Swirl" ){

@@ -1,16 +1,43 @@
-#include <CCA/Components/Arches/CoalModels/Deposition.h>
-#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
-#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2016 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
-#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <CCA/Components/Arches/CoalModels/Deposition.h>
+
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/CCVariable.h>
+
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 //===========================================================================
 
@@ -21,17 +48,18 @@ using namespace Uintah;
 // Builder:
 
 DepositionBuilder::DepositionBuilder( const std::string         & modelName,
-                                        const vector<std::string> & reqICLabelNames,
-                                        const vector<std::string> & reqScalarLabelNames,
-                                        ArchesLabel         * fieldLabels,
-                                        SimulationStateP          & sharedState,
-                                        int qn ) :
+                                      const vector<std::string> & reqICLabelNames,
+                                      const vector<std::string> & reqScalarLabelNames,
+                                            ArchesLabel         * fieldLabels,
+                                            SimulationStateP    & sharedState,
+                                            int                   qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
 {}
 
 DepositionBuilder::~DepositionBuilder(){}
 
-ModelBase* DepositionBuilder::build(){
+ModelBase*
+DepositionBuilder::build(){
   return scinew Deposition( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 
@@ -39,11 +67,11 @@ ModelBase* DepositionBuilder::build(){
 //---------------------------------------------------------------------------
 
 Deposition::Deposition( std::string           modelName,
-                          SimulationStateP    & sharedState,
-                          ArchesLabel   * fieldLabels,
-                          vector<std::string>   icLabelNames,
-                          vector<std::string>   scalarLabelNames,
-                          int qn )
+                        SimulationStateP    & sharedState,
+                        ArchesLabel         * fieldLabels,
+                        vector<std::string>   icLabelNames,
+                        vector<std::string>   scalarLabelNames,
+                        int                   qn )
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Create a label for this model
@@ -60,11 +88,10 @@ Deposition::Deposition( std::string           modelName,
 Deposition::~Deposition()
 {}
 
-
-
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
+
 void
 Deposition::problemSetup(const ProblemSpecP& inputdb, int qn)
 {
@@ -105,7 +132,7 @@ Deposition::problemSetup(const ProblemSpecP& inputdb, int qn)
   bool missing_rate_depostion = true;
   const ProblemSpecP params_root = db->getRootNode();
   ProblemSpecP db_PM = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
-  for ( ProblemSpecP db_var = db_PM->findBlock("model"); db_var != 0; db_var = db_var->findNextBlock("model")){
+  for( ProblemSpecP db_var = db_PM->findBlock("model"); db_var != nullptr; db_var = db_var->findNextBlock("model") ) {
 
     std::string type;
     std::string role_found;

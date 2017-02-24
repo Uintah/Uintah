@@ -1,11 +1,35 @@
 #ifndef Uintah_Component_Arches_TaskAlgebra_h
 #define Uintah_Component_Arches_TaskAlgebra_h
 
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2016 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/GridTools.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-namespace Uintah{
+namespace Uintah {
 
   //IT is the independent variable type
   //DT is the dependent variable type
@@ -113,7 +137,7 @@ private:
   template <typename T>
   void TaskAlgebra<T>::problemSetup( ProblemSpecP& db ){
 
-    for ( ProblemSpecP op_db=db->findBlock("op"); op_db != 0; op_db=op_db->findNextBlock("op") ){
+    for ( ProblemSpecP op_db=db->findBlock("op"); op_db != nullptr; op_db=op_db->findNextBlock("op") ){
 
       Operation new_op;
 
@@ -152,21 +176,29 @@ private:
 
       if ( value == "ADD" ) {
         new_op.expression_type = ADD;
-      } else if ( value == "SUBTRACT" ){
+      }
+      else if ( value == "SUBTRACT" ){
         new_op.expression_type = SUBTRACT;
-      } else if ( value == "MULTIPLY" ){
+      }
+      else if ( value == "MULTIPLY" ){
         new_op.expression_type = MULTIPLY;
-      } else if ( value == "DIVIDE" ){
+      }
+      else if ( value == "DIVIDE" ){
         new_op.expression_type = DIVIDE;
-      } else if ( value == "DIVIDE_CONST_VARIABLE"){
+      }
+      else if ( value == "DIVIDE_CONST_VARIABLE"){
         new_op.expression_type = DIVIDE_CONST_VARIABLE;
-      } else if ( value == "DIVIDE_VARIABLE_CONST"){
+      }
+      else if ( value == "DIVIDE_VARIABLE_CONST"){
         new_op.expression_type = DIVIDE_VARIABLE_CONST;
-      } else if ( value =="POW" ){
+      }
+      else if ( value =="POW" ){
         new_op.expression_type = POW;
-      } else if ( value == "EXP" ){
+      }
+      else if ( value == "EXP" ){
         new_op.expression_type = EXP;
-      } else {
+      }
+      else {
         throw InvalidValue("Error: expression type not recognized",__FILE__,__LINE__);
       }
 
@@ -176,11 +208,10 @@ private:
     }
 
     ProblemSpecP db_order = db->findBlock("exe_order");
-    if ( db_order == 0 ){
+    if ( db_order == nullptr ){
       throw ProblemSetupException("Error: must specify an order of operations.",__FILE__,__LINE__);
     }
-    for ( ProblemSpecP db_oneop = db_order->findBlock("op"); db_oneop !=  0;
-          db_oneop = db_oneop->findNextBlock("op")){
+    for ( ProblemSpecP db_oneop = db_order->findBlock("op"); db_oneop !=  nullptr; db_oneop = db_oneop->findNextBlock("op")){
 
       std::string label;
       db_oneop->getAttribute("label", label);

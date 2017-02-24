@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2016 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -65,8 +89,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 
     ProblemSpecP sources_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
 
-    for (ProblemSpecP src_db = sources_db->findBlock("src");
-         src_db !=0; src_db = src_db->findNextBlock("src")){
+    for( ProblemSpecP src_db = sources_db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ) {
 
       string type;
       src_db->getAttribute("type", type);
@@ -92,7 +115,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 
   do_coal_region = false;
 
-  for ( ProblemSpecP db_model = db->findBlock( "model" ); db_model != 0; db_model = db_model->findNextBlock( "model" ) ){
+  for ( ProblemSpecP db_model = db->findBlock( "model" ); db_model != nullptr; db_model = db_model->findNextBlock( "model" ) ){
 
     std::string type = "not_assigned";
 
@@ -567,8 +590,7 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
   db->getWithDefault( "initial_tol", _init_tol, 1e-3 );
   db->getWithDefault( "tol", _tol, 1e-5 );
 
-  for (ProblemSpecP r_db = db->findBlock("region");
-       r_db !=0; r_db = r_db->findNextBlock("region")){
+  for( ProblemSpecP r_db = db->findBlock("region"); r_db != nullptr; r_db = r_db->findNextBlock("region") ) {
 
     WallInfo info;
     ProblemSpecP geometry_db = r_db->findBlock("geom_object");
@@ -826,8 +848,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   db->getWithDefault( "initial_tol", _init_tol, 1e-3 );
   db->getWithDefault( "tol", _tol, 1e-5 );
 
-  for (ProblemSpecP r_db = db->findBlock("coal_region");
-       r_db !=0; r_db = r_db->findNextBlock("coal_region")){
+  for ( ProblemSpecP r_db = db->findBlock("coal_region"); r_db != nullptr; r_db = r_db->findNextBlock("coal_region") ) {
 
     WallInfo info;
     ProblemSpecP geometry_db = r_db->findBlock("geom_object");

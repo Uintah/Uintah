@@ -143,9 +143,9 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
   ProblemSpecP db = params; //<IntrusionBC>
 
   // The main <intrusion> block lookup
-  if ( db->findBlock("intrusion") ){
+  if( db->findBlock("intrusion") ) {
 
-    for ( ProblemSpecP db_intrusion = db->findBlock("intrusion"); db_intrusion != 0; db_intrusion = db_intrusion->findNextBlock("intrusion") ){
+    for( ProblemSpecP db_intrusion = db->findBlock( "intrusion" ); db_intrusion != nullptr; db_intrusion = db_intrusion->findNextBlock( "intrusion" ) ) {
 
       Boundary intrusion;
 
@@ -205,8 +205,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
       ProblemSpecP db_scalars = db_intrusion->findBlock("scalars");
       if ( db_scalars ){
 
-        for ( ProblemSpecP db_single_scalar = db_scalars->findBlock("scalar");
-            db_single_scalar != 0; db_single_scalar = db_single_scalar->findNextBlock("scalar") ){
+        for ( ProblemSpecP db_single_scalar = db_scalars->findBlock("scalar"); db_single_scalar != nullptr; db_single_scalar = db_single_scalar->findNextBlock("scalar") ){
 
           std::string scalar_type;
           std::string scalar_label;
@@ -250,7 +249,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
       GeometryPieceFactory::create( geometry_db, intrusion.geometry );
 
       //labels
-      for ( ProblemSpecP db_labels = db_intrusion->findBlock("variable"); db_labels != 0; db_labels = db_labels->findNextBlock("variable") ){
+      for ( ProblemSpecP db_labels = db_intrusion->findBlock("variable"); db_labels != nullptr; db_labels = db_labels->findNextBlock("variable") ){
 
         std::string label_name;
         double label_value;
@@ -272,8 +271,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
 
       if ( intrusion.type == IntrusionBC::INLET ) {
 
-        for ( ProblemSpecP db_ds = db_intrusion->findBlock("flux_dir");
-            db_ds != 0; db_ds = db_ds->findNextBlock("flux_dir") ){
+        for ( ProblemSpecP db_ds = db_intrusion->findBlock("flux_dir"); db_ds != nullptr; db_ds = db_ds->findNextBlock("flux_dir") ){
           std::string my_dir;
           my_dir = db_ds->getNodeValue();
           if ( my_dir == "x-" || my_dir == "X-"){

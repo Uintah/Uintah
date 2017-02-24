@@ -222,11 +222,11 @@ namespace Uintah {
 
         private: 
 
-          RadProps::GreyGas* _gg_radprops;
-          std::vector<std::string> _species;               // to match the Arches varlabels
+          RadProps::GreyGas*                      _gg_radprops;
+          std::vector<std::string>                _species;               // to match the Arches varlabels
           std::vector<RadProps::RadiativeSpecies> _radprops_species; // for rad props
-          std::string _mix_mol_weight_name; 
-          std::vector<double> _sp_mw; 
+          std::string                             _mix_mol_weight_name; 
+          std::vector<double>                     _sp_mw; 
 
       }; 
 #endif

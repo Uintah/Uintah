@@ -25,7 +25,7 @@ namespace Uintah{
 
             const ProblemSpecP db_pvar = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("EulerianParticles")->findBlock("ParticleVariables");
 
-            for ( ProblemSpecP db_var = db_pvar->findBlock("variable"); db_var != 0; db_var = db_var->findNextBlock("variable")){ 
+            for( ProblemSpecP db_var = db_pvar->findBlock("variable"); db_var != nullptr; db_var = db_var->findNextBlock("variable")){ 
 
               std::string label;
               std::string role_found; 
@@ -160,7 +160,7 @@ namespace Uintah{
 
           const ProblemSpecP db_models = arches_root->findBlock("DQMOM")->findBlock("Models"); 
 
-          for ( ProblemSpecP m_db = db_models->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model") ) {
+          for ( ProblemSpecP m_db = db_models->findBlock("model"); m_db != nullptr; m_db = m_db->findNextBlock("model") ) {
 
             std::string curr_model_name;
             std::string curr_model_type; 
@@ -171,7 +171,8 @@ namespace Uintah{
               return curr_model_type; 
             }
           }
-        } else { 
+        }
+        else { 
           throw InvalidValue("Error: Not yet implemented for this particle method.",__FILE__,__LINE__); 
         }
         return "nullptr"; 
@@ -189,16 +190,14 @@ namespace Uintah{
               std::vector<double> scaling_const;
               params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Weights")->require("scaling_const",scaling_const);
               return scaling_const[qn];
-
-
-            } else { 
-
-              throw ProblemSetupException("Error: cannot find <weights> block in inupt file.",__FILE__,__LINE__);      
-
             }
-          } else {
-            for ( ProblemSpecP IcBlock =params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Ic"); IcBlock != 0;
-                IcBlock = IcBlock->findNextBlock("Ic") ) {
+            else { 
+              throw ProblemSetupException("Error: cannot find <weights> block in inupt file.",__FILE__,__LINE__);      
+            }
+          }
+          else {
+            for(  ProblemSpecP IcBlock =params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Ic"); IcBlock != nullptr;
+                  IcBlock = IcBlock->findNextBlock("Ic") ) {
 
               std::string tempLabelname;
               IcBlock->getAttribute("label",tempLabelname);
@@ -208,14 +207,11 @@ namespace Uintah{
                 return scaling_const[qn];
               }
             }
-
             throw ProblemSetupException("Error: couldn't find internal coordinate or weight with name: "+labelName , __FILE__, __LINE__); 
           } 
-
-        }else { 
-
+        }
+        else { 
           throw ProblemSetupException("Error: DQMOM section not found in input file.",__FILE__,__LINE__);      
-
         }
       }
 
@@ -225,7 +221,7 @@ namespace Uintah{
         const ProblemSpecP params_root = db->getRootNode();
         if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels") ){
           const ProblemSpecP params_particleModels = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
-          for ( ProblemSpecP modelBlock =params_particleModels->findBlock("model"); modelBlock != 0;
+          for ( ProblemSpecP modelBlock =params_particleModels->findBlock("model"); modelBlock != nullptr;
               modelBlock = modelBlock->findNextBlock("model") ) {
 
             std::string tempLabelName;
@@ -255,17 +251,15 @@ namespace Uintah{
         double density;
         params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("density",density);
         return density;
-        } else{
+        }
+        else {
           throw ProblemSetupException("Error: cannot find <ParticleProperties> in arches block.",__FILE__,__LINE__);      
         }
 
         return false;
       }
 
-
-
     private: 
-
   
   }; 
 

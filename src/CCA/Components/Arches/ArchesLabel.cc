@@ -260,30 +260,31 @@ ArchesLabel::ArchesLabel()
 //****************************************************************************
 ArchesLabel::~ArchesLabel()
 {
-  if (d_stencilMatl->removeReference())
+  if (d_stencilMatl->removeReference()) {
     delete d_stencilMatl;
+  }
 
-  if (d_vectorMatl->removeReference())
+  if (d_vectorMatl->removeReference()) {
     delete d_vectorMatl;
+  }
 
-  if (d_tensorMatl->removeReference())
+  if (d_tensorMatl->removeReference()) {
     delete d_tensorMatl;
+  }
 
-  if (d_symTensorMatl->removeReference())
+  if (d_symTensorMatl->removeReference()) {
     delete d_symTensorMatl;
- for( ArchesLabel::MomentMap::iterator iMoment = DQMOMMoments.begin();
-       iMoment != DQMOMMoments.end(); ++iMoment ) {
-  VarLabel::destroy(iMoment->second);
- }
+  }
+  for( ArchesLabel::MomentMap::iterator iMoment = DQMOMMoments.begin(); iMoment != DQMOMMoments.end(); ++iMoment ) {
+    VarLabel::destroy(iMoment->second); 
+  }
 
-  //get rid of cqmom var labels
-  for( ArchesLabel::WeightMap::iterator iW = CQMOMWeights.begin();
-      iW != CQMOMWeights.end(); ++iW ) {
+  // Get rid of cqmom var labels
+  for( ArchesLabel::WeightMap::iterator iW = CQMOMWeights.begin(); iW != CQMOMWeights.end(); ++iW ) {
     VarLabel::destroy(iW->second);
   }
 
-  for( ArchesLabel::AbscissaMap::iterator iA = CQMOMAbscissas.begin();
-      iA != CQMOMAbscissas.end(); ++iA ) {
+  for( ArchesLabel::AbscissaMap::iterator iA = CQMOMAbscissas.begin(); iA != CQMOMAbscissas.end(); ++iA ) {
     VarLabel::destroy(iA->second);
   }
 
@@ -408,22 +409,22 @@ ArchesLabel::~ArchesLabel()
   for (PartVelMap::iterator i = partVel.begin(); i != partVel.end(); i++){
     VarLabel::destroy(i->second);
   }
-
 }
 
-void ArchesLabel::setSharedState(SimulationStateP& sharedState)
+void
+ArchesLabel::setSharedState(SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
 }
 
-void ArchesLabel::problemSetup( const ProblemSpecP& db )
+void
+ArchesLabel::problemSetup( const ProblemSpecP& db )
 {
-
   ProblemSpecP db_lab = db->findBlock("VarID");
 
   if ( db_lab ){
 
-    for ( ProblemSpecP d = db_lab->findBlock("var"); d != 0; d = d->findNextBlock("var") ){
+    for ( ProblemSpecP d = db_lab->findBlock("var"); d != nullptr; d = d->findNextBlock("var") ){ 
 
       std::string label;
       std::string role;
@@ -431,13 +432,13 @@ void ArchesLabel::problemSetup( const ProblemSpecP& db )
       d->getAttribute("label",label);
 
       setVarlabelToRole( label, role );
-
     }
   }
 }
 /** @brief Retrieve a label based on its CFD role **/
-const VarLabel* ArchesLabel::getVarlabelByRole( VARID role ){
-
+const VarLabel *
+ArchesLabel::getVarlabelByRole( VARID role )
+{
    RLMAP::iterator i = d_r_to_l.find(role);
    const VarLabel* the_label;
 
@@ -466,34 +467,37 @@ const VarLabel* ArchesLabel::getVarlabelByRole( VARID role ){
    }
 };
 
-/** @brief Set a label to have a specific role **/
-void ArchesLabel::setVarlabelToRole( const std::string label, const std::string role ){
+/** @brief Set a label to have a specific role **/ 
+void
+ArchesLabel::setVarlabelToRole( const std::string label, const std::string role ){ 
 
-  //first make sure that the role is allowed:
-  //allowed roles are defined in the constructor of this class.
-  bool found_role = false;
+  // First make sure that the role is allowed:
+  // Allowed roles are defined in the constructor of this class.
+  bool found_role = true;
   VARID which_var;
   if ( role == "temperature" ) {
-    found_role = true;
     which_var = TEMPERATURE;
-  } else if ( role == "density" ) {
-    found_role = true;
+  }
+  else if ( role == "density" ) {
     which_var = DENSITY;
-  } else if ( role == "enthalpy" ) {
-    found_role = true;
+  }
+  else if ( role == "enthalpy" ) {
     which_var = ENTHALPY;
-  } else if ( role == "co2" ) {
-    found_role = true;
+  }
+  else if ( role == "co2" ) {
     which_var = CO2;
-  } else if ( role == "h2o" ) {
-    found_role = true;
+  }
+  else if ( role == "h2o" ) {
     which_var = H2O;
-  } else if ( role == "co2" ) {
-    found_role = true;
+  }
+  else if ( role == "co2" ) {
     which_var = CO2;
-  } else if ( role == "soot" ) {
-    found_role = true;
+  }
+  else if ( role == "soot" ) {
     which_var = SOOT;
+  }
+  else {
+    found_role = false;
   }
 
   if ( !found_role ){
@@ -512,7 +516,8 @@ void ArchesLabel::setVarlabelToRole( const std::string label, const std::string 
       std::string msg = "Error: Trying to specify "+label+" for role "+role+" which already has the label"+i->second+"\n";
       throw InvalidValue(msg, __FILE__,__LINE__);
     } // else the variable is already identified with its role so no need to do anything...
-  } else {
+  }
+  else {
     //not found...so insert it
     d_r_to_l.insert(std::make_pair(which_var,label));
   }
@@ -522,26 +527,34 @@ void ArchesLabel::setVarlabelToRole( const std::string label, const std::string 
 const string
 ArchesLabel::getRoleString( VARID role )
 {
-  std::string name;
-  if ( role == TEMPERATURE ){
-    name = "temperature";
-  } else if ( role == DENSITY ){
-    name = "density";
-  } else if ( role == ENTHALPY ){
-    name = "enthalpy";
-  } else if ( role == SOOT ){
-    name = "soot";
-  } else if ( role == CO2 ){
-    name = "co2";
-  } else if ( role == H2O ){
-    name = "h2o";
-  } else if ( role == SPECIFICHEAT ){
-    name = "specific_heat";
-  } else if ( role == MIXTUREFRACTION ){
-    name = "mixture_fraction";
-  } else {
+  std::string name; 
+  if ( role == TEMPERATURE ){ 
+    name = "temperature"; 
+  }
+  else if ( role == DENSITY ){ 
+    name = "density"; 
+  }
+  else if ( role == ENTHALPY ){ 
+    name = "enthalpy"; 
+  }
+  else if ( role == SOOT ){ 
+    name = "soot"; 
+  }
+  else if ( role == CO2 ){ 
+    name = "co2"; 
+  }
+  else if ( role == H2O ){ 
+    name = "h2o"; 
+  }
+  else if ( role == SPECIFICHEAT ){ 
+    name = "specific_heat"; 
+  }
+  else if ( role == MIXTUREFRACTION ){ 
+    name = "mixture_fraction"; 
+  }
+  else { 
     std::string msg = "Error: Role not recognized!\n";
-    throw InvalidValue(msg, __FILE__,__LINE__);
+    throw InvalidValue( msg, __FILE__, __LINE__ );
   }
   return name;
 }

@@ -107,8 +107,7 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
 
     //------------ check to see if scattering is turned on --//
     ProblemSpecP db_source = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ;
-    for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != 0;
-        db_src = db_src->findNextBlock("src")){
+    for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
       std::string radiation_model;
       db_src->getAttribute("type", radiation_model);
       if (radiation_model == "do_radiation"){
@@ -210,14 +209,15 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
 
     for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
       const VarLabel* label = VarLabel::find(*iter);
-      if ( label != 0 ){
+      if ( label != nullptr ){
         tsk->requires(Task::OldDW, label, Ghost::None, 0 );
-      } else {
+      }
+      else {
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
     }
-
-  } else {
+  }
+  else {
 
     tsk->modifies( _prop_label );
     tsk->modifies( _calc->get_abskg_label() );
@@ -238,9 +238,10 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
 
     for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
       const VarLabel* label = VarLabel::find(*iter);
-      if ( label != 0 ){
+      if ( label != nullptr ){
         tsk->requires( Task::NewDW, label, Ghost::None, 0 );
-      } else {
+      }
+      else {
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
     }
@@ -259,28 +260,31 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
 
       // requires size
       const VarLabel* label_s = VarLabel::find( label_name_s );
-      if ( label_s != 0 ){
+      if ( label_s != nullptr ){
         tsk->requires( Task::OldDW, label_s , Ghost::None, 0 );
         tsk->requires( Task::NewDW, label_s , Ghost::None, 0 );
-      } else {
+      }
+      else {
         throw ProblemSetupException("Error: Could not find labels for:"+label_name_s,__FILE__, __LINE__);
       }
 
       // requires temperature  (not all particle models need temperature, add if statement?)
       const VarLabel* label_t = VarLabel::find( label_name_t );
-      if ( label_t != 0 ){
+      if ( label_t != nullptr ){
         tsk->requires( Task::OldDW, label_t  , Ghost::None, 0 );
         tsk->requires( Task::NewDW, label_t  , Ghost::None, 0 );
-      } else {
+      }
+      else {
         throw ProblemSetupException("Error: Could not find labels for:"+label_name_t,__FILE__, __LINE__);
       }
 
       // requires weights
       const VarLabel* label_w = VarLabel::find( label_name_w );
-      if ( label_w != 0 ){
+      if ( label_w != nullptr ){
         tsk->requires( Task::OldDW, label_w  , Ghost::None, 0 );
         tsk->requires( Task::NewDW, label_w  , Ghost::None, 0 );
-      } else {
+      }
+      else {
         throw ProblemSetupException("Error: Could not find labels for:"+label_name_w,__FILE__, __LINE__);
       }
 

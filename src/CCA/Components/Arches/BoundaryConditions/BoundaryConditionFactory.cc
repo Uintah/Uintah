@@ -12,15 +12,14 @@ BoundaryConditionFactory::~BoundaryConditionFactory()
 {}
 
 void
-BoundaryConditionFactory::register_all_tasks( ProblemSpecP& db )
+BoundaryConditionFactory::register_all_tasks( ProblemSpecP & db )
 {
 
-  if ( db->findBlock("BoundaryConditions")){
+  if ( db->findBlock( "BoundaryConditions" ) ) {
 
-    ProblemSpecP db_m = db->findBlock("BoundaryConditions");
+    ProblemSpecP db_m = db->findBlock( "BoundaryConditions" );
 
-    for ( ProblemSpecP db_bc = db_m->findBlock("bc"); db_bc != 0;
-          db_bc = db_bc->findNextBlock("bc")){
+    for( ProblemSpecP db_bc = db_m->findBlock("bc"); db_bc != nullptr; db_bc = db_bc->findNextBlock("bc") ) {
 
       std::string name;
       std::string type;
@@ -32,14 +31,12 @@ BoundaryConditionFactory::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew HandOff<CCVariable<double> >::Builder( name, 0 );
         register_task( name, tsk );
 
-      } else {
-
+      }
+      else {
         throw InvalidValue("Error: Property model not recognized: "+type,__FILE__,__LINE__);
-
       }
 
       assign_task_to_type_storage(name, type);
-
     }
   }
 }
@@ -52,7 +49,7 @@ BoundaryConditionFactory::build_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_m = db->findBlock("BoundaryConditions");
 
-    for ( ProblemSpecP db_bc = db_m->findBlock("bc"); db_bc != 0; db_bc=db_bc->findNextBlock("bc")){
+    for ( ProblemSpecP db_bc = db_m->findBlock("bc"); db_bc != nullptr; db_bc=db_bc->findNextBlock("bc") ) {
 
       std::string name;
       std::string type;
@@ -71,12 +68,11 @@ void
 BoundaryConditionFactory::add_task( ProblemSpecP& db )
 {
 
-  if ( db->findBlock("BoundaryConditions")){
+  if ( db->findBlock( "BoundaryConditions" ) ) {
 
-    ProblemSpecP db_m = db->findBlock("BoundaryConditions");
+    ProblemSpecP db_m = db->findBlock( "BoundaryConditions" );
 
-    for ( ProblemSpecP db_bc = db_m->findBlock("bc"); db_bc != 0;
-          db_bc=db_bc->findNextBlock("bc")){
+    for ( ProblemSpecP db_bc = db_m->findBlock("bc"); db_bc != nullptr; db_bc=db_bc->findNextBlock("bc") ) {
 
       std::string name;
       std::string type;
@@ -91,22 +87,25 @@ BoundaryConditionFactory::add_task( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk;
         if ( grid_type == "CC" ){
           tsk = scinew HandOff<CCVariable<double> >::Builder( name, 0 );
-        } else if ( grid_type == "FX" ){
+        }
+        else if ( grid_type == "FX" ){
           tsk = scinew HandOff<SFCXVariable<double> >::Builder( name, 0 );
-        } else if ( grid_type == "FY" ){
+        }
+        else if ( grid_type == "FY" ){
           tsk = scinew HandOff<SFCYVariable<double> >::Builder( name, 0 );
-        } else if ( grid_type == "FZ" ){
+        }
+        else if ( grid_type == "FZ" ){
           tsk = scinew HandOff<SFCZVariable<double> >::Builder( name, 0 );
-        } else {
+        }
+        else {
           throw InvalidValue("Error: Grid type not recognized for bc labeled: "+name, __FILE__, __LINE__ );
         }
 
         register_task( name, tsk );
 
-      } else {
-
+      }
+      else {
         throw InvalidValue("Error: Property model not recognized.",__FILE__,__LINE__);
-
       }
 
       assign_task_to_type_storage(name, type);
@@ -115,7 +114,6 @@ BoundaryConditionFactory::add_task( ProblemSpecP& db )
       TaskInterface* tsk = retrieve_task(name);
       tsk->problemSetup(db_bc);
       tsk->create_local_labels();
-
     }
   }
 }

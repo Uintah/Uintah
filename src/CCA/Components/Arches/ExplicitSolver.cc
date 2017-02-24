@@ -347,7 +347,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     // Go through eqns and intialize all defined eqns and call their respective
     // problem setup
     EqnFactory& eqn_factory = EqnFactory::self();
-    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
+    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("Eqn")) {
 
       std::string eqnname;
       eqn_db->getAttribute("label", eqnname);
@@ -368,7 +368,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
       SourceTermFactory& src_factory = SourceTermFactory::self();
 
-      for ( ProblemSpecP src_db = sources_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src") ){
+      for ( ProblemSpecP src_db = sources_db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ){
         std::string label;
         src_db->getAttribute("label", label);
         SourceTermBase& the_src = src_factory.retrieve_source_term( label );
@@ -379,7 +379,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     }
 
-  } else {
+  }
+  else {
 
     proc0cout << "No defined transport equations found." << endl;
 
@@ -390,8 +391,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     ProblemSpecP propmodels_db = db->findBlock("PropertyModels");
     PropertyModelFactory& prop_factory = PropertyModelFactory::self();
     ExplicitSolver::registerPropertyModels( propmodels_db );
-    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model");
-          prop_db != 0; prop_db = prop_db->findNextBlock("model") ) {
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); prop_db != nullptr; prop_db = prop_db->findNextBlock("model") ) {
 
       std::string model_name;
       prop_db->getAttribute("label", model_name);
@@ -557,7 +557,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     }
 
     // loop for all ic's
-    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")) {
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != nullptr; ic_db = ic_db->findNextBlock("Ic")) {
       std::string ic_name;
       ic_db->getAttribute("label", ic_name);
       //loop for all quad nodes for this internal coordinate
@@ -581,7 +581,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     // their respective problemSetup
     ProblemSpecP models_db = dqmom_db->findBlock("Models");
     if (models_db) {
-      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")) {
+      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != nullptr; m_db = m_db->findNextBlock("model")) {
         std::string model_name;
         m_db->getAttribute("label", model_name);
         for (int iqn = 0; iqn < numQuadNodes; iqn++) {
@@ -628,8 +628,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     int M;
     cqmom_db->get("NumberInternalCoordinates",M);
     vector<int> temp_moment_index;
-    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment");
-          db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment"); db_moments != nullptr; db_moments = db_moments->findNextBlock("Moment") ) {
       temp_moment_index.resize(0);
       db_moments->get("m", temp_moment_index);
       proc0cout << "Index " << temp_moment_index << " ";
@@ -755,8 +754,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   db_time_int->findBlock("ExplicitIntegrator")->getAttribute("order", t_order);
 
   ProblemSpecP db_vars  = params_root->findBlock("DataArchiver");
-  for (ProblemSpecP db_dv = db_vars->findBlock("save");
-        db_dv !=0; db_dv = db_dv->findNextBlock("save")){
+  for( ProblemSpecP db_dv = db_vars->findBlock("save"); db_dv != nullptr; db_dv = db_dv->findNextBlock("save") ){
 
     std::string var_name;
     db_dv->getAttribute( "label", var_name );
@@ -769,11 +767,14 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   //translate order to the older code:
   if ( t_order == "first" ){
     d_timeIntegratorType = "FE";
-  } else if ( t_order == "second" ){
+  }
+  else if ( t_order == "second" ){
     d_timeIntegratorType = "RK2SSP";
-  } else if ( t_order == "third" ) {
+  }
+  else if ( t_order == "third" ) {
     d_timeIntegratorType = "RK3SSP";
-  } else {
+  }
+  else {
     throw InvalidValue("Error: <ExplicitIntegrator> order attribute must be one of: first, second, third!  Please fix input file.",__FILE__, __LINE__);
   }
 
@@ -842,7 +843,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   if (db_es->findBlock("PressureSolver")->findBlock("src")){
     ProblemSpecP db_p = db_es->findBlock("PressureSolver");
     string srcname;
-    for (ProblemSpecP src_db = db_p->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for (ProblemSpecP src_db = db_p->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
       d_mass_sources.push_back( srcname );
     }
@@ -976,7 +977,7 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             double tmp_time;
 
 //            if (d_MAlab) {
-            int flag = 1;
+            int flag = true;
             int colXm = colX - 1;
             int colXp = colX + 1;
             int colYm = colY - 1;
@@ -1002,13 +1003,13 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             if (den[xMinusCell] < 1.0e-12) uvel=uVelocity[xPlusCell];
             if (den[yMinusCell] < 1.0e-12) vvel=vVelocity[yPlusCell];
             if (den[zMinusCell] < 1.0e-12) wvel=wVelocity[zPlusCell];
-            if (den[currCell] < 1.0e-12) flag = 0;
-            if ((den[xMinusCell] < 1.0e-12)&&(den[xPlusCell] < 1.0e-12)) flag = 0;
-            if ((den[yMinusCell] < 1.0e-12)&&(den[yPlusCell] < 1.0e-12)) flag = 0;
-            if ((den[zMinusCell] < 1.0e-12)&&(den[zPlusCell] < 1.0e-12)) flag = 0;
+            if (den[currCell] < 1.0e-12) flag = false;
+            if ((den[xMinusCell] < 1.0e-12)&&(den[xPlusCell] < 1.0e-12)) flag = false;
+            if ((den[yMinusCell] < 1.0e-12)&&(den[yPlusCell] < 1.0e-12)) flag = false;
+            if ((den[zMinusCell] < 1.0e-12)&&(den[zPlusCell] < 1.0e-12)) flag = false;
 
             tmp_time=1.0;
-            if (flag != 0) {
+            if (flag != false) {
               tmp_time=Abs(uvel)/(DX.x())+
                         Abs(vvel)/(DX.y())+
                         Abs(wvel)/(DX.z())+
@@ -1072,9 +1073,9 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
 }
 
 void
-ExplicitSolver::initialize( const LevelP& level,
-                            SchedulerP& sched,
-                            const bool doing_restart )
+ExplicitSolver::initialize( const LevelP     & level,
+                                  SchedulerP & sched,
+                            const bool         doing_restart )
 {
 
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -1136,7 +1137,7 @@ ExplicitSolver::initialize( const LevelP& level,
       i->second->schedule_init(level, sched, matls, is_restart );
     }
 
-    sched_scalarInit(level, sched);
+    sched_scalarInit( level, sched );
 
     //property models
     all_tasks.clear();
@@ -1589,7 +1590,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //copy the temperature into a radiation temperature variable:
   d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, true );
 
-  if ( d_wall_ht_models != 0 ){
+  if ( d_wall_ht_models != nullptr ){
     d_wall_ht_models->sched_doWallHT( level, sched, 0 );
   }
 
@@ -1918,7 +1919,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    if ( hl_model != 0 )
+    if ( hl_model != nullptr )
       hl_model->sched_computeProp( level, sched, curr_level );
 
     //======= NEW TASK STUFF =======
@@ -2029,9 +2030,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         }
 
       }
-      if ( hl_model != 0 )
+      if ( hl_model != nullptr ) {
         hl_model->sched_computeProp( level, sched, curr_level );
-
+      }
       //TABLE LOOKUP #2
       bool initialize_it  = false;
       bool modify_ref_den = false;
@@ -2039,8 +2040,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_tabulated_properties->sched_getState( level, sched, initialize_it, modify_ref_den, curr_level );
 
       // Property models after table lookup
-      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-            iprop != all_prop_models.end(); iprop++){
+      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); iprop != all_prop_models.end(); iprop++){
 
         PropertyModelBase* prop_model = iprop->second;
         if ( !prop_model->beforeTableLookUp() )
@@ -2120,26 +2120,22 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   } // END OF RK LOOP
 
-  if ( d_wall_ht_models != 0 ){
+  if ( d_wall_ht_models != nullptr ){
     d_wall_ht_models->sched_copyWallTintoT( level, sched );
   }
 
   //variable math:
-  const std::vector<std::string> math_tasks =
-    i_util->second->retrieve_tasks_by_type("variable_math");
+  const std::vector<std::string> math_tasks = i_util->second->retrieve_tasks_by_type("variable_math");
 
-  for (std::vector<std::string>::const_iterator i = math_tasks.begin();
-       i != math_tasks.end(); i++ ){
+  for( std::vector<std::string>::const_iterator i = math_tasks.begin(); i != math_tasks.end(); i++ ) {
     TaskInterface* tsk = i_util->second->retrieve_task(*i);
     //time substep??
     tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 0 );
   }
 
   //Property Models before starting over
-  std::vector<std::string> final_prop_tasks
-    = i_property_models->second->retrieve_task_subset("final_property_models");
-  for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin();
-        itsk != final_prop_tasks.end(); itsk++ ){
+  std::vector<std::string> final_prop_tasks = i_property_models->second->retrieve_task_subset("final_property_models");
+  for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin(); itsk != final_prop_tasks.end(); itsk++ ){
 
     TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
     //passing in curr_level > 0 because we are at the end of the time step
@@ -2148,10 +2144,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   }
 
   //Variable stats stuff
-  std::vector<std::string> stats_tasks
-    = i_property_models->second->retrieve_task_subset("variable_stat_models");
-  for ( std::vector<std::string>::iterator itsk = stats_tasks.begin();
-        itsk != stats_tasks.end(); itsk++ ){
+  std::vector<std::string> stats_tasks = i_property_models->second->retrieve_task_subset("variable_stat_models");
+  for ( std::vector<std::string>::iterator itsk = stats_tasks.begin(); itsk != stats_tasks.end(); itsk++ ){
 
     TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
     //passing in curr_level > 0 because we are at the end of the time step
@@ -2188,23 +2182,20 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
-
-  return(0);
-
+  return 0;
 }
 
 // ****************************************************************************
 // Schedule initialize
 // ****************************************************************************
 void
-ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls)
+ExplicitSolver::sched_setInitialGuess(       SchedulerP  & sched,
+                                       const PatchSet    * patches,
+                                       const MaterialSet * matls )
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this,
-                           &ExplicitSolver::setInitialGuess);
+  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this, &ExplicitSolver::setInitialGuess);
 
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,      gn, 0);
@@ -2876,7 +2867,7 @@ ExplicitSolver::printTotalKE( const ProcessorGroup* ,
   new_dw->get( tke, d_lab->d_totalKineticEnergyLabel );
   double total_kin_energy = tke;
 
-  proc0cout << "Total kinetic energy: " << total_kin_energy << std::endl;
+  proc0cout << "Total kinetic energy: " << total_kin_energy << "\n";
 
 }
 
@@ -3866,15 +3857,15 @@ ExplicitSolver::momentInit( const ProcessorGroup*,
 //___________________________________________________________________________
 //
 void
-ExplicitSolver::sched_scalarInit( const LevelP& level,
-                          SchedulerP& sched )
+ExplicitSolver::sched_scalarInit( const LevelP     & level,
+                                        SchedulerP & sched )
 {
-  Task* tsk = scinew Task( "ExplicitSolver::scalarInit",
-                           this, &ExplicitSolver::scalarInit);
+  Task* tsk = scinew Task( "ExplicitSolver::scalarInit", this, &ExplicitSolver::scalarInit );
 
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+
+  for( EqnFactory::EqnMap::iterator ieqn = scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++ ) {
 
     EqnBase* eqn = ieqn->second;
 
@@ -3892,9 +3883,9 @@ ExplicitSolver::sched_scalarInit( const LevelP& level,
   //  initialize src terms
   SourceTermFactory& srcFactory = SourceTermFactory::self();
   SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++) {
+  for( SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++ ) {
     SourceTermBase* src = isrc->second;
-    src->sched_initialize(level, sched);
+    src->sched_initialize( level, sched );
   }
 }
 
@@ -3902,13 +3893,14 @@ ExplicitSolver::sched_scalarInit( const LevelP& level,
 //
 void
 ExplicitSolver::scalarInit( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw )
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw )
 {
   coutLock.lock();
-  proc0cout << "Initializing all scalar equations and sources..." << std::endl;
+  proc0cout << "Initializing all scalar equations and sources...\n";
+  coutLock.unlock();
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now
     int archIndex = 0;
@@ -3939,7 +3931,6 @@ ExplicitSolver::scalarInit( const ProcessorGroup*,
 
     }
   }
-  coutLock.unlock();
 }
 
 // ****************************************************************************
@@ -4131,7 +4122,7 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
   //  which would require some kind of map in ArchesLabel.h...)
 
   if (models_db) {
-    for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != 0; model_db = model_db->findNextBlock("model")) {
+    for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != nullptr; model_db = model_db->findNextBlock("model")) {
       std::string model_name;
       model_db->getAttribute("label", model_name);
       std::string model_type;
@@ -4149,8 +4140,7 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
       if ( icvar_db ) {
         proc0cout << "Requires the following internal coordinates: " << endl;
         // These variables are only those that are specifically defined from the input file
-        for (ProblemSpecP var = icvar_db->findBlock("variable");
-             var !=0; var = var->findNextBlock("variable")) {
+        for( ProblemSpecP var = icvar_db->findBlock("variable"); var != nullptr; var = var->findNextBlock("variable") ) {
 
           std::string label_name;
           var->getAttribute("label", label_name);
@@ -4159,7 +4149,8 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
           // This map hold the labels that are required to compute this model term.
           requiredICVarLabels.push_back(label_name);
         }
-      } else {
+      }
+      else {
         proc0cout << "Model does not require any internal coordinates. " << endl;
       }
 
@@ -4172,9 +4163,8 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
       ProblemSpecP scalarvar_db = model_db->findBlock("scalarVars");
 
       if ( scalarvar_db ) {
-        proc0cout << "Requires the following scalar variables: " << endl;
-        for (ProblemSpecP var = scalarvar_db->findBlock("variable");
-             var != 0; var = var->findNextBlock("variable") ) {
+        proc0cout << "Requires the following scalar variables:\n";
+        for (ProblemSpecP var = scalarvar_db->findBlock("variable"); var != nullptr; var = var->findNextBlock("variable") ) {
           std::string label_name;
           var->getAttribute("label", label_name);
 
@@ -4266,9 +4256,9 @@ void ExplicitSolver::registerTransportEqns(ProblemSpecP& db)
   if (eqns_db) {
 
     proc0cout << "\n";
-    proc0cout << "******* Equation Registration ********" << endl;
+    proc0cout << "******* Equation Registration ********\n";
 
-    for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
+    for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("Eqn")) {
       std::string eqn_name;
       eqn_db->getAttribute("label", eqn_name);
       std::string eqn_type;
@@ -4306,10 +4296,9 @@ void ExplicitSolver::registerPropertyModels(ProblemSpecP& db)
   if ( propmodels_db ) {
 
     proc0cout << "\n";
-    proc0cout << "******* Property Model Registration *******" << endl;
+    proc0cout << "******* Property Model Registration *******\n";
 
-    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model");
-          prop_db != 0; prop_db = prop_db->findNextBlock("model") ) {
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); prop_db != nullptr; prop_db = prop_db->findNextBlock("model") ) {
 
       std::string prop_name;
       prop_db->getAttribute("label", prop_name);
@@ -4421,11 +4410,10 @@ void ExplicitSolver::registerCQMOMEqns(ProblemSpecP& db)
     cqmom_db->get("NumberInternalCoordinates",M);
 
     proc0cout << "# IC = " << M << endl;
-    proc0cout << "******* CQMOM Equation Registration ********" << endl;
+    proc0cout << "******* CQMOM Equation Registration ********\n";
     // Make the moment transport equations
     vector<int> temp_moment_index;
-    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment");
-          db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment"); db_moments != nullptr; db_moments = db_moments->findNextBlock("Moment") ) {
       temp_moment_index.resize(0);
       db_moments->get("m", temp_moment_index);
 

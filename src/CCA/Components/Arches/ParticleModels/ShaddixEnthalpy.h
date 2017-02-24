@@ -217,19 +217,19 @@ namespace Uintah{
 
     if (d_radiation ) {
       ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-      for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0;
-           db_model = db_model->findNextBlock("model")){
+      for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
         std::string modelName;
         db_model->getAttribute("type", modelName);
         if (modelName=="radiation_properties"){
-          if  (db_model->findBlock("calculator") == 0){
+          if( db_model->findBlock("calculator") == nullptr ) {
             proc0cout <<"\n///-------------------------------------------///\n";
             proc0cout <<"WARNING: No radiation particle properties computed!\n";
             proc0cout <<"Particles will not interact with radiation!\n";
             proc0cout <<"///-------------------------------------------///\n";
             d_radiation = false;
             break;
-          }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
+          }
+          else if( db_model->findBlock("calculator")->findBlock("particles") == nullptr ){
             proc0cout <<"\n///-------------------------------------------///\n";
             proc0cout <<"WARNING: No radiation particle properties computed!\n";
             proc0cout <<"Particles will not interact with radiation!\n";
@@ -241,7 +241,7 @@ namespace Uintah{
           db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", d_radiateAtGasTemp, true );
           break;
         }
-        if  (db_model== 0){
+        if ( db_model == nullptr ){
           proc0cout <<"\n///-------------------------------------------///\n";
           proc0cout <<"WARNING: No radiation particle properties computed!\n";
           proc0cout <<"Particles will not interact with radiation!\n";
@@ -259,7 +259,8 @@ namespace Uintah{
       if( _visc == 0 ) {
         throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): Zero viscosity specified in <PhysicalConstants> section of input file.",__FILE__,__LINE__);
       }
-    } else {
+    }
+    else {
       throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
     }
 

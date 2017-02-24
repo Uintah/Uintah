@@ -119,7 +119,7 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   // allow for addition of mass source terms
   if (db->findBlock("src")){
     string srcname;
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+    for( ProblemSpecP src_db = db->findBlock( "src" ); src_db != nullptr; src_db = src_db->findNextBlock( "src" ) ) {
       double weight;
       src_db->getAttribute("label", srcname);
       src_db->getWithDefault("weight", weight, 1.0);
@@ -132,7 +132,7 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   //__________________________________
   // allow for addition of mass source terms with VarLabels
   if (db->findBlock("extra_src")){
-    for (ProblemSpecP src_db = db->findBlock("extra_src"); src_db != 0; src_db = src_db->findNextBlock("extra_src")){
+    for( ProblemSpecP src_db = db->findBlock( "extra_src" ); src_db != nullptr; src_db = src_db->findNextBlock( "extra_src" ) ) {
       string srcname;
       src_db->getAttribute("label", srcname );
 
@@ -140,9 +140,10 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
       tempLabel = VarLabel::find( srcname );
       extraSourceLabels.push_back( tempLabel );
 
-      //note: varlabel must be registered prior to problem setup
-      if (tempLabel == 0 )
+      // Note: varlabel must be registered prior to problem setup
+      if (tempLabel == 0 ) {
         throw InvalidValue("Error: Cannot find the VarLabel for the source term: " + srcname, __FILE__, __LINE__);
+      }
     }
   }
   nExtraSources = extraSourceLabels.size();
