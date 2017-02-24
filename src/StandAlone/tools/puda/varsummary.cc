@@ -375,8 +375,11 @@ printMinMax<Vector>( CommandLineFlags & clf,
   if( !clf.be_brief ) {
     cout << "\t\t\t\tmin magnitude: " << minMagnitude << "\n";
     cout << "\t\t\t\tmax magnitude: " << maxMagnitude << "\n";
-    cout << "\t\t\t\tmin location: " << *c_min << " (Occurrences: ~" << minCnt << ")\n";
-    cout << "\t\t\t\tmax location: " << *c_max << " (Occurrences: ~" << maxCnt << ")\n";
+    
+    if( c_min != nullptr && c_max != nullptr ){
+      cout << "\t\t\t\tmin location: " << *c_min << " (Occurrences: ~" << minCnt << ")\n";
+      cout << "\t\t\t\tmax location: " << *c_max << " (Occurrences: ~" << maxCnt << ")\n";
+    }
   }
 } // end printMinMax()
 
