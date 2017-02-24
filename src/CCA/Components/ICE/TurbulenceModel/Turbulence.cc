@@ -41,14 +41,12 @@ Turbulence::Turbulence()
 {
 }
 
-Turbulence::Turbulence(ProblemSpecP& ps, SimulationStateP& sharedState)
+Turbulence::Turbulence( ProblemSpecP & ps, SimulationStateP & sharedState )
   : d_sharedState(sharedState)
 {
-  for (ProblemSpecP child = ps->findBlock("FilterScalar"); child != 0;
-       child = child->findNextBlock("FilterScalar")) {
+  for( ProblemSpecP child = ps->findBlock("FilterScalar"); child != nullptr; child = child->findNextBlock( "FilterScalar" ) ) {
     FilterScalar* s = scinew FilterScalar;
     child->get("name", s->name);
-    
     
     s->matl = sharedState->parseAndLookupMaterial(child, "material");
     vector<int> m(1);

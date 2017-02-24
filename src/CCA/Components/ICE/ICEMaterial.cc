@@ -46,22 +46,23 @@ using namespace std;
 using namespace Uintah;
 
 // Constructor
-ICEMaterial::ICEMaterial(ProblemSpecP& ps,
-                         SimulationStateP& sharedState,
-                          const bool isRestart): Material(ps)
+ICEMaterial::ICEMaterial( ProblemSpecP     & ps,
+                          SimulationStateP & sharedState,
+                          const bool         isRestart ) :
+  Material( ps )
 {
   //__________________________________
   //  Create the different Models for this material
   d_eos = EquationOfStateFactory::create(ps);
-  if(!d_eos) {
+  if( !d_eos ) {
     throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
   }
 
   ProblemSpecP cvModel_ps = ps->findBlock("SpecificHeatModel");
-  d_cvModel = 0;
-  if(cvModel_ps != 0) {
+  d_cvModel = nullptr;
+  if( cvModel_ps != nullptr ) {
     proc0cout << "Creating Specific heat model." << endl;
-    d_cvModel = SpecificHeatFactory::create(ps);
+    d_cvModel = SpecificHeatFactory::create( ps );
   }
   
   //__________________________________
@@ -96,8 +97,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
 
   if(!isRestart){
-    for (ProblemSpecP geom_obj_ps=ps->findBlock("geom_object");geom_obj_ps != 0;
-         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    for (ProblemSpecP geom_obj_ps=ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
       vector<GeometryPieceP> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
@@ -105,9 +105,11 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
       GeometryPieceP mainpiece;
       if(pieces.size() == 0){
         throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-      } else if(pieces.size() > 1){
+      }
+      else if(pieces.size() > 1){
         mainpiece = scinew UnionGeometryPiece(pieces);
-      } else {
+      }
+      else {
         mainpiece = pieces[0];
       }
 
@@ -139,8 +141,8 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   d_eos->outputProblemSpec(ice_ps);
   ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   ice_ps->appendElement("specific_heat",       d_specificHeat);
-  if(d_cvModel != 0){
-    d_cvModel->outputProblemSpec(ice_ps);
+  if( d_cvModel != nullptr ) {
+    d_cvModel->outputProblemSpec( ice_ps );
   }
   ice_ps->appendElement("dynamic_viscosity",   d_viscosity);
   ice_ps->appendElement("gamma",               d_gamma);

@@ -80,16 +80,14 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
   bool usingLODI = false;
   vector<int> matl_index;
   
-  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
-                    face_ps=face_ps->findNextBlock("Face")) {
+  for( ProblemSpecP face_ps = bc_ps->findBlock( "Face" ); face_ps != nullptr; face_ps=face_ps->findNextBlock( "Face" ) ) {
     map<string,string> face;
     face_ps->getAttributes(face);
     bool is_a_Lodi_face = false;
     
-    for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
-                     bc_iter = bc_iter->findNextBlock("BCType")){
+    for( ProblemSpecP bc_iter = face_ps->findBlock( "BCType" ); bc_iter != nullptr; bc_iter = bc_iter->findNextBlock( "BCType" )){
       map<string,string> bc_type;
-      bc_iter->getAttributes(bc_type);
+      bc_iter->getAttributes( bc_type );
       
       //__________________________________
       //  bulletproofing
@@ -177,8 +175,7 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
     //  Save Li Terms?
     global->saveLiTerms = false;
     ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
-    for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-                      child = child->findNextBlock("save")) {
+    for( ProblemSpecP child = DA_ps->findBlock( "save" ); child != nullptr; child = child->findNextBlock( "save" ) ) {
       map<string,string> var_attr;
       child->getAttributes(var_attr);
       if( ( var_attr["label"] == "Li1" ||

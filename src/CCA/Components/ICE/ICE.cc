@@ -403,10 +403,9 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     mat_ps = restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }
   
-  ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
+  ProblemSpecP ice_mat_ps = mat_ps->findBlock("ICE");  
 
-  for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
-    ps = ps->findNextBlock("material") ) {
+  for( ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
     string index("");
     ps->getAttribute("index",index);
     std::stringstream id(index);
@@ -621,30 +620,33 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
                                      SimulationStateP&  sharedState)
 {
   cout << "Updating Ex Coefficients" << endl;
-  ProblemSpecP mat_ps  =  
-    prob_spec->findBlockWithAttribute("MaterialProperties","add");
+  ProblemSpecP mat_ps = prob_spec->findBlockWithAttribute("MaterialProperties","add");
 
   string attr = "";
   mat_ps->getAttribute("add",attr);
   
-  if (attr == "true")
-    d_exchCoeff->problemSetup(mat_ps, sharedState);
+  if (attr == "true") {
+    d_exchCoeff->problemSetup( mat_ps, sharedState );
+  }
 }
+
 /*______________________________________________________________________
  Function~  ICE::outputProblemSpec--
  Purpose~   outputs material state
  _____________________________________________________________________*/
-void ICE::outputProblemSpec(ProblemSpecP& root_ps)
+
+void
+ICE::outputProblemSpec( ProblemSpecP & root_ps )
 {
   cout_doing << d_myworld->myrank() << " Doing ICE::outputProblemSpec " << "\t\t\t ICE" << endl;
 
   ProblemSpecP root = root_ps->getRootNode();
 
-  ProblemSpecP mat_ps = 0;
-  mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
+  ProblemSpecP mat_ps = root->findBlockWithOutAttribute( "MaterialProperties" );
 
-  if (mat_ps == 0)
+  if( mat_ps == nullptr ) {
     mat_ps = root->appendChild("MaterialProperties");
+  }
 
   ProblemSpecP ice_ps = mat_ps->appendChild("ICE");
   for (int i = 0; i < d_sharedState->getNumICEMatls();i++) {

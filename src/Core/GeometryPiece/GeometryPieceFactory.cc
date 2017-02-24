@@ -25,43 +25,41 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Core/GeometryPiece/ConeGeometryPiece.h>
+#include <Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Core/GeometryPiece/DifferenceGeometryPiece.h>
+#include <Core/GeometryPiece/EllipsoidGeometryPiece.h>
+#include <Core/GeometryPiece/FileGeometryPiece.h>
+#include <Core/GeometryPiece/IntersectionGeometryPiece.h>
+#include <Core/GeometryPiece/NaaBoxGeometryPiece.h>
+#include <Core/GeometryPiece/NullGeometryPiece.h>
 #include <Core/GeometryPiece/ShellGeometryFactory.h>
 #include <Core/GeometryPiece/ShellGeometryPiece.h>
-#include <Core/GeometryPiece/BoxGeometryPiece.h>
-#include <Core/GeometryPiece/NaaBoxGeometryPiece.h>
+#include <Core/GeometryPiece/SmoothCylGeomPiece.h>
 #include <Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Core/GeometryPiece/SphereMembraneGeometryPiece.h>
-#include <Core/GeometryPiece/CylinderGeometryPiece.h>
 #include <Core/GeometryPiece/TorusGeometryPiece.h>
-#include <Core/GeometryPiece/EllipsoidGeometryPiece.h>
-#include <Core/GeometryPiece/SmoothCylGeomPiece.h>
-#include <Core/GeometryPiece/ConeGeometryPiece.h>
 #include <Core/GeometryPiece/TriGeometryPiece.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Core/GeometryPiece/DifferenceGeometryPiece.h>
-#include <Core/GeometryPiece/IntersectionGeometryPiece.h>
-#include <Core/GeometryPiece/FileGeometryPiece.h>
-#include <Core/GeometryPiece/NullGeometryPiece.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Parallel/Parallel.h>
-
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/RWS.h>
 
-#include   <iostream>
-#include   <string>
+#include <iostream>
+#include <string>
 
 using namespace std;
 using namespace Uintah;
 
-
 static DebugStream dbg( "GeometryPieceFactory", false );
 
 // Static class variable definition:
-map<string,GeometryPieceP>                     GeometryPieceFactory::namedPieces_    ;
-vector<GeometryPieceP>                         GeometryPieceFactory::unnamedPieces_  ;
+map<string,GeometryPieceP>             GeometryPieceFactory::namedPieces_;
+vector<GeometryPieceP>                 GeometryPieceFactory::unnamedPieces_;
 map<string, map<int, vector<Point> > > GeometryPieceFactory::insidePointsMap_;
 map< int, vector<Point> >              GeometryPieceFactory::allInsidePointsMap_;
 
@@ -95,7 +93,7 @@ GeometryPieceFactory::getInsidePoints(const Uintah::Patch* const patch)
   // loop over all geometry objects
   vector<Point> allInsidePoints;
   NameGeomPiecesMapT::iterator geomIter;
-  for (geomIter=namedPieces_.begin(); geomIter != namedPieces_.end(); ++geomIter)
+  for( geomIter = namedPieces_.begin(); geomIter != namedPieces_.end(); ++geomIter )
   {
     GeometryPieceP geomPiece = geomIter->second;
     const string geomName = geomPiece->getName();
@@ -122,7 +120,7 @@ GeometryPieceFactory::getInsidePoints(const std::string geomPieceName, const Uin
     PatchIDInsidePointsMapT& patchIDInsidePoints = insidePointsMap_[geomPieceName];
     if ( patchIDInsidePoints.find(patchID) == patchIDInsidePoints.end() ) {
       // we did not find this patch. check if there are any points in this patch.
-      GeometryPieceP geomPiece = namedPieces_[geomPieceName];
+      GeometryPieceP geomPiece = namedPieces_[ geomPieceName ];
       vector<Point> insidePoints;
       for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++)
       {
@@ -140,7 +138,7 @@ GeometryPieceFactory::getInsidePoints(const std::string geomPieceName, const Uin
     // if we did not find this geometry piece
     vector<Point> insidePoints;
     map<int, vector<Point> > patchIDInsidePoints;
-    GeometryPieceP geomPiece = namedPieces_[geomPieceName];
+    GeometryPieceP geomPiece = namedPieces_[ geomPieceName ];
     
     for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++)
     {
@@ -170,7 +168,7 @@ GeometryPieceFactory::findInsidePoints(const Uintah::Patch* const patch)
   const int patchID = patch->getID();
   // loop over all geometry objects
   NameGeomPiecesMapT::iterator geomIter;
-  for (geomIter=namedPieces_.begin(); geomIter != namedPieces_.end(); ++geomIter)
+  for( geomIter = namedPieces_.begin(); geomIter != namedPieces_.end(); ++geomIter )
   {
     vector<Point> insidePoints;
     map<int, vector<Point> > patchIDInsidePoints;
@@ -225,7 +223,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       remove_lt_white_space(data);
 
       // Lookup in table to see if this piece has already be named...
-      GeometryPieceP referencedPiece = namedPieces_[go_label];
+      GeometryPieceP referencedPiece = namedPieces_[ go_label ];
 
       // If it has a childBlock or data, then it is not just a reference.
       bool goHasInfo = childBlock || data != "";
@@ -352,8 +350,9 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       newGeomPiece->setName(name);
     }
     if( name != "" ) {
-      namedPieces_[name] = newGeomPiece;
-    } else {
+      namedPieces_[ name ] = newGeomPiece;
+    }
+    else {
       unnamedPieces_.push_back( newGeomPiece );
     }
 

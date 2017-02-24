@@ -1161,10 +1161,9 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
   is_press_BC_set["z-"] = (periodic.z() ==1) ? 1:0;
   is_press_BC_set["z+"] = (periodic.z() ==1) ? 1:0;
   
-  // loop over all boundary conditions for a face
-  // This include circles, rectangles, annulus
-  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
-                    face_ps=face_ps->findNextBlock("Face")) {
+  // Loop over all boundary conditions for a face...
+  // this includes circles, rectangles, annulus
+  for( ProblemSpecP face_ps = bc_ps->findBlock( "Face" ); face_ps != nullptr; face_ps=face_ps->findNextBlock( "Face" ) ) {
   
     map<string,bool>isBC_set;
     isBC_set["Temperature"] =false;
@@ -1199,8 +1198,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     if(side == "z+") tagFace_plus.z(1);
 
     // loop over all BCTypes for that face 
-    for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
-                     bc_iter = bc_iter->findNextBlock("BCType")){
+    for( ProblemSpecP bc_iter = face_ps->findBlock( "BCType" ); bc_iter != nullptr; bc_iter = bc_iter->findNextBlock( "BCType" ) ) {
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
             

@@ -128,8 +128,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
  
   //__________________________________
   // Pull out the refinement threshold criteria 
-  for (ProblemSpecP var_ps = refine_ps->findBlock("Variable");var_ps != 0; 
-                    var_ps = var_ps->findNextBlock("Variable")) {
+  for( ProblemSpecP var_ps = refine_ps->findBlock( "Variable" ); var_ps != nullptr; var_ps = var_ps->findNextBlock( "Variable" ) ) {
     thresholdVar data; 
     string name, value, matl;
         

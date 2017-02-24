@@ -57,13 +57,12 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     //_______________________________________________
     // multiple vortices section
     ProblemSpecP vortices_ps= c_init_ps->findBlock("vortices");    
-    if(vortices_ps) {
+    if( vortices_ps ) {
       cib->vortex_inputs = scinew vortices();
       cib->which = "vortices";
       cib->doesComputePressure = true;
       
-      for (ProblemSpecP vortex_ps = vortices_ps->findBlock("vortex"); vortex_ps != 0;
-                        vortex_ps = vortex_ps->findNextBlock("vortex")) {
+      for( ProblemSpecP vortex_ps = vortices_ps->findBlock( "vortex" ); vortex_ps != nullptr; vortex_ps = vortex_ps->findNextBlock( "vortex" ) ) {
         Point origin;
         double strength;
         double radius;
