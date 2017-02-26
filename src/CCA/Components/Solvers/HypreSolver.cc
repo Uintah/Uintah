@@ -1089,12 +1089,11 @@ namespace Uintah {
     p->state = state;
     bool found=false;
     if(params){
-      for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-          param = param->findNextBlock("Parameters")) {
+      for( ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters")) {
         string variable;
-        if(param->getAttribute("variable", variable) && variable != varname)
+        if( param->getAttribute("variable", variable) && variable != varname ) {
           continue;
-        
+        }
         int sFreq;
         int coefFreq;
         param->getWithDefault ("solver",          p->solvertype,     "smg");      
@@ -1240,10 +1239,12 @@ namespace Uintah {
         ostringstream warn;
         warn << "\nINPUT FILE WARNING: hypre solver: \n"
              << "With periodic boundary conditions the resolution of your grid "<<range<<", in each periodic direction, must be as close to a power of 2 as possible (i.e. M x 2^n).\n";
-        if (dparams->solvertype == "SMG")
+        if (dparams->solvertype == "SMG") {
           throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-        else
+        }
+        else {
           proc0cout << warn.str();
+        }
       }
     }
     

@@ -380,12 +380,12 @@ def generateGS() :
             # openmpi
             rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
             if rc == 0:
-              MPIHEAD="%s %s -x SCI_SIGNALMODE" % (MPIRUN, MALLOC_FLAG)
+              MPIHEAD="%s %s " % (MPIRUN, MALLOC_FLAG)
 
             # mvapich
             rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
             if rc == 0:
-              MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE" % MPIRUN    
+              MPIHEAD="%s -genvlist MALLOC_STATS" % MPIRUN    
       
       
             if np > 1.0 :

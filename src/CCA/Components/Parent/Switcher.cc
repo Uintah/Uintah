@@ -90,7 +90,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 
   //__________________________________
   //  loop over the subcomponents
-  for(; child != 0; child = child->findNextBlock("subcomponent")) {
+  for(; child != nullptr; child = child->findNextBlock("subcomponent")) {
     
     
     //__________________________________
@@ -137,7 +137,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
     //__________________________________
     // Get the variables that will need to be initialized by this subcomponent
     initVars* initVar = scinew initVars;
-    for( ProblemSpecP var = child->findBlock("init"); var != 0; var = var->findNextBlock("init") ) {
+    for( ProblemSpecP var = child->findBlock("init"); var != nullptr; var = var->findNextBlock("init") ) {
 
       std::map<std::string, std::string> attributes;
       var->getAttributes(attributes);
@@ -205,7 +205,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
   
   //__________________________________
   // Get the vars that will need to be carried over 
-  for (ProblemSpecP var = sim_block->findBlock("carry_over"); var != 0; var = var->findNextBlock("carry_over")) {
+  for (ProblemSpecP var = sim_block->findBlock("carry_over"); var != nullptr; var = var->findNextBlock("carry_over")) {
     std::map<std::string, std::string> attributes;
     var->getAttributes(attributes);
     std::string name  = attributes["var"];
@@ -884,54 +884,13 @@ Switcher::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement( "switcherCarryOverMatls", d_sharedState->originalAllMaterials()->getUnion()->size());
   d_sim->outputProblemSpec( ps );
 }
-//______________________________________________________________________
-//
-void
-Switcher::outputPS( Dir& dir )
-{
-#if 0
-  // TURN THIS OFF.  It appears to be working without it.
-  // We can problem remove outputPS from the source tree
-  for (unsigned i = 0; i < d_numComponents; i++) {
-
-    std::stringstream stream;
-    stream << i;
-    std::string inputname = dir.getName() + "/input.xml." + stream.str();
-    std::cout << "switcher:outputing file " << inputname << std::endl;
-    d_master_ups->output(inputname.c_str());
-  }
-
-  std::string inputname = dir.getName()+"/input.xml";
-  ProblemSpecP inputDoc = ProblemSpecReader().readInputFile( inputname );
-
-  int count = 0;
-  ProblemSpecP sim_block = inputDoc->findBlock("SimulationComponent");
-  for (ProblemSpecP child = sim_block->findBlock("subcomponent"); child != 0;
-      child = child->findNextBlock("subcomponent")) {
-
-    ProblemSpecP in_file = child->findBlock("input_file");
-    std::string nodeName = in_file->getNodeName();
-    std::cout << "nodeName = " << nodeName << std::endl;
-
-    if (nodeName == "input_file") {
-      std::stringstream stream;
-      stream << count++;
-      std::string inputname = "input.xml." + stream.str();
-      std::cout << "inputname = " << inputname << std::endl;
-      child->appendElement("input_file",inputname);
-    }
-    child->removeChild(in_file);
-
-  }
-  inputDoc->output( inputname.c_str() );
-#endif
-}
 
 //______________________________________________________________________
 //
+
 void
-Switcher::readSwitcherState(const ProblemSpecP     & spec,
-                                  SimulationStateP & state)
+Switcher::readSwitcherState( const ProblemSpecP     & spec,
+                                   SimulationStateP & state )
 {
   ProblemSpecP ps = (ProblemSpecP)spec;
 

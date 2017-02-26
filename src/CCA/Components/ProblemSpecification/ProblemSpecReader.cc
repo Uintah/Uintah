@@ -718,7 +718,7 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
   vector<string> labelNeedType = split_string( specs[0], separators );
 
   if( labelNeedType.size() != 3 ) {
-    throw ProblemSetupException( "Error: label/need/type did not parse correctly...", __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error: label/need/type did not parse correctly for: '" + specs[0] + "'...", __FILE__, __LINE__ );
   }
 
   label = labelNeedType[ 0 ];
@@ -1950,7 +1950,7 @@ ProblemSpecP
 ProblemSpecReader::readInputFile( const string & filename, const vector<int> & patches, bool validate /* = false */ )
 {
   MALLOC_TRACE_TAG_SCOPE( "ProblemSpecReader::readInputFile" );
-  if( d_xmlData != 0 ) {
+  if( d_xmlData != nullptr ) {
     return d_xmlData;
   }
 

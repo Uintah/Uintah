@@ -78,11 +78,11 @@ AMRSolver::readParameters(ProblemSpecP& params,
 
   /* Scan and set parameters */
   if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-        param = param->findNextBlock("Parameters")) {
+    for(ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters")) {
       string variable;
-      if(param->getAttribute("variable", variable) && variable != varname)
+      if(param->getAttribute("variable", variable) && variable != varname) {
         continue;
+      }
       param->getWithDefault("solver", p->solverTitle, "smg");
       param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
       param->getWithDefault("tolerance", p->tolerance, 1.e-10);
@@ -125,11 +125,11 @@ AMRSolver::readParameters(ProblemSpecP& params,const string& varname)
 
   /* Scan and set parameters */
   if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-        param = param->findNextBlock("Parameters")) {
+    for( ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters") ) {
       string variable;
-      if(param->getAttribute("variable", variable) && variable != varname)
+      if( param->getAttribute("variable", variable) && variable != varname ) {
         continue;
+      }
       param->getWithDefault("solver", p->solverTitle, "smg");
       param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
       param->getWithDefault("tolerance", p->tolerance, 1.e-10);
@@ -145,7 +145,7 @@ AMRSolver::readParameters(ProblemSpecP& params,const string& varname)
   }
 
   /* Default parameter values */
-  if(!found){
+  if( !found ){
     p->solverTitle = "smg";
     p->precondTitle = "diagonal";
     p->tolerance = 1.e-10;

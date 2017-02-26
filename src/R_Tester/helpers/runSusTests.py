@@ -100,7 +100,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   #__________________________________
   # set environmental variables
   environ['PATH']              = "%s%s%s%s%s" % (helperspath, pathsep, toolspath, pathsep, environ['PATH'])
-  environ['SCI_SIGNALMODE']    = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
   environ['MPI_TYPE_MAX']      = '10000'
   environ['outputlinks']       = "0"  #display html links on output
@@ -576,17 +575,17 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   
   # pass in environmental variables to mpirun
   if environ['OS'] == "Linux":
-    MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
+    MPIHEAD="%s %s -np" % (MPIRUN, MALLOCSTATS)
 
                                    # openmpi
   rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
-    MPIHEAD="%s %s -x SCI_SIGNALMODE -np" % (MPIRUN, MALLOCSTATS)
+    MPIHEAD="%s %s -np" % (MPIRUN, MALLOCSTATS)
 
                                    #  mvapich
   rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
-    MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE -np" % MPIRUN
+    MPIHEAD="%s -genvlist MALLOC_STATS -np" % MPIRUN
 
 
   # set where to view the log files
@@ -636,9 +635,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     restart_text = " "
   #________________________________
 
-
-  # set sus to exit upon crashing (and not wait for a prompt)
-  environ['SCI_SIGNALMODE'] = "exit"
 
   if do_memory_test == 1:
 

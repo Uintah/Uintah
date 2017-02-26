@@ -233,9 +233,10 @@ void UdaReducer::sched_readDataArchive(const LevelP& level,
     //__________________________________
     // Computerthe material set and subset 
     MaterialSet* matlSet;
-    if (prevMatlSet != 0 && prevRangeSet == matlsRangeSet) {
+    if (prevMatlSet != nullptr && prevRangeSet == matlsRangeSet) {
       matlSet = prevMatlSet.get_rep();
-    } else {
+    }
+    else {
      
       matlSet = scinew MaterialSet();
       vector<int> matls_vec;
@@ -387,7 +388,7 @@ GridP UdaReducer::getGrid()
 { 
   GridP newGrid = d_dataArchive->queryGrid(d_timeIndex);
   
-  if (d_oldGrid == 0 || !(*newGrid.get_rep() == *d_oldGrid.get_rep())) {
+  if (d_oldGrid == nullptr || !(*newGrid.get_rep() == *d_oldGrid.get_rep())) {
     d_gridChanged = true;
     d_oldGrid = newGrid;
     d_lb->possiblyDynamicallyReallocate(newGrid, true);

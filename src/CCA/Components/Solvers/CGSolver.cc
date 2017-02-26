@@ -944,12 +944,11 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
 
   CGSolverParams* p = new CGSolverParams();
   if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-        param = param->findNextBlock("Parameters")) {
+    for(ProblemSpecP param = params->findBlock("Parameters"); param != nullptr; param = param->findNextBlock("Parameters")) {
       string variable;
-      if(param->getAttribute("variable", variable) && variable != varname)
+      if(param->getAttribute("variable", variable) && variable != varname) {
         continue;
-
+      }
       param->get("initial_tolerance", p->initial_tolerance);
       param->get("tolerance", p->tolerance);
       param->getWithDefault ("maxiterations",   p->maxiterations,  75);

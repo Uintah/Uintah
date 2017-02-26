@@ -314,7 +314,9 @@ class DataWarehouse;
 
        //! Helper for finalizeTimestep - determines if, based on the current
        //! time and timestep, this will be an output or checkpoint timestep.
-       void beginOutputTimestep(double time, double delt, const GridP& grid);
+       void beginOutputTimestep( const double   time,
+                                 const double   delt,
+                                 const GridP  & grid );
 
        //! After a timestep restart (delt adjusted), we need to see if we are 
        //! still an output timestep.
