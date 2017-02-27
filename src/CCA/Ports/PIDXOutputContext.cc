@@ -86,7 +86,7 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
 {
   ProblemSpecP pidx_ps = DA_ps->findBlock( "PIDX" );
 
-  if( pidx_ps != 0 ) {
+  if( pidx_ps != nullptr ) {
   
     string type;
     pidx_ps->getWithDefault( "compressionType",  type, "NONE" );

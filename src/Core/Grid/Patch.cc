@@ -63,11 +63,13 @@ Patch::Patch(const Level* level,
 {
   
   if(d_id == -1){
-    d_id = ids.fetch_add(1, std::memory_order_relaxed);
+    d_id = ids.fetch_add(1, memory_order_relaxed);
 
-  } else {
-    if(d_id >= ids)
-      ids.store(d_id+1, std::memory_order_relaxed);
+  }
+  else {
+    if(d_id >= ids) {
+      ids.store(d_id+1, memory_order_relaxed);
+    }
   }
    
   // DON'T call setBCType here     
@@ -210,19 +212,18 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 }
 
 
-    /**
-     *  \author  Derek Harris
-     *  \date    September, 2015
-     *  Allows a component to add a boundary condition, if it doesn't already exist.
-     */
-  void Patch::possiblyAddBC(const Patch::FaceType face, // face
-                     const int child,   // child (each child is only applicable to one face)
-                     const std::string &desc, // new field label (label) 
-                     int mat_id,        // material 
-                     const double bc_value,   // value of boundary condition
-                     const std::string &bc_kind, // bc type, dirichlet or neumann
-                     const std::string &bcFieldName, // identifier field variable Name (var)
-                     const std::string &faceName)  const  //  
+/**
+ *  Allows a component to add a boundary condition, if it doesn't already exist.
+ */
+void
+Patch::possiblyAddBC( const Patch::FaceType face,             // face
+                      const int             child,            // child (each child is only applicable to one face)
+                      const string        & desc,             // new field label (label) 
+                            int             mat_id,           // material 
+                      const double          bc_value,         // value of boundary condition
+                      const string        & bc_kind,          // bc type, dirichlet or neumann
+                      const string        & bcFieldName,      // identifier field variable Name (var)
+                      const string        & faceName ) const  //  
 {
     // avoid adding duplicate boundary conditions 
   if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,bcFieldName,child)  ){  // avoid adding duplicate boundary conditions 
@@ -239,24 +240,27 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
   }
 }
 
-
-
 /**
  * Returns the position of the node idx in domain coordinates.
  */
-Point Patch::nodePosition(const IntVector& idx) const {
+Point
+Patch::nodePosition(const IntVector& idx) const
+{
   return getLevel()->getNodePosition(idx);
 }
 
 /**
  * Returns the position of the cell idx in domain coordinates.
  */
-Point Patch::cellPosition(const IntVector& idx) const {
+Point
+Patch::cellPosition(const IntVector& idx) const
+{
   return getLevel()->getCellPosition(idx);
 }
 
-void Patch::findCellsFromNode( const IntVector& nodeIndex,
-                               IntVector cellIndex[8]) 
+void
+Patch::findCellsFromNode( const IntVector & nodeIndex,
+                               IntVector    cellIndex[8] )
 {
    int ix = nodeIndex.x();
    int iy = nodeIndex.y();
@@ -272,8 +276,9 @@ void Patch::findCellsFromNode( const IntVector& nodeIndex,
    cellIndex[7] = IntVector(ix-1, iy-1, iz-1);
 }
 
-void Patch::findNodesFromCell( const IntVector& cellIndex,
-                               IntVector nodeIndex[8])
+void
+Patch::findNodesFromCell( const IntVector & cellIndex,
+                                IntVector   nodeIndex[8] )
 {
    int ix = cellIndex.x();
    int iy = cellIndex.y();

@@ -77,13 +77,13 @@ namespace Uintah {
 
      /// Get the boundary condition data for a given material and a given
      /// type for a given child.
-     const BoundCondBase* getBoundCondData(int mat_id,
-                                           const std::string type,
-                                           int ichild) const;
+     const BoundCondBase* getBoundCondData(       int           mat_id,
+                                            const std::string & type,
+                                                  int           ichild ) const;
 
-     bool checkForBoundCondData(int &mat_id,
-                                const std::string type,
-                                int ichild) ;
+     bool checkForBoundCondData(       int         & mat_id,
+                                 const std::string & type,
+                                       int           ichild ) ;
 
      /// Determine the iterator limits for domain boundaries.
      void determineIteratorLimits(Patch::FaceType face, const Patch* patch);

@@ -675,7 +675,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   m_abort = false;
   m_abort_point = 987654;
 
-  if (m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != 0) {
+  if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_pos_label, iteration);
   }
 
@@ -792,7 +792,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
 
   // compute the net timings
-  if (m_shared_state != 0) {
+  if ( m_shared_state != nullptr ) {
 
     computeNetRunTimeStats(m_shared_state->d_runTimeStats);
 

@@ -400,7 +400,7 @@ void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 //------------------------------------------------------------------------------------------------
 
 const BoundCondBase* 
-BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
+BCDataArray::getBoundCondData( int mat_id, const string & type, int ichild ) const
 {
   //  cout << "type = " << type << endl;
   BCData new_bc,new_bc_all;
@@ -439,7 +439,7 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
 }
 
 bool 
-BCDataArray::checkForBoundCondData(int &mat_id, const string type, int ichild) 
+BCDataArray::checkForBoundCondData( int & mat_id, const string & type, int ichild ) 
 {
   BCData new_bc,new_bc_all;
   // Need to check two scenarios -- the given mat_id and the all mat_id (-1)
@@ -470,7 +470,8 @@ BCDataArray::checkForBoundCondData(int &mat_id, const string type, int ichild)
 
 //------------------------------------------------------------------------------------------------
 
-void BCDataArray::getCellFaceIterator(int mat_id, Iterator& b_ptr, int ichild) const
+void
+BCDataArray::getCellFaceIterator( int mat_id, Iterator & b_ptr, int ichild ) const
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {

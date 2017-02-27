@@ -143,26 +143,23 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   std::vector<Point> grid_LoPts; // store the lower bounds of all boxes
   std::vector<Point> grid_HiPts; // store the upper bounds of all boxes
   
-  for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
-      level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
+  for( ProblemSpecP level_ps = grid_ps->findBlock("Level"); level_ps != nullptr; level_ps = level_ps->findNextBlock("Level") ) {
 
      //find upper/lower corner
-     for(ProblemSpecP box_ps = level_ps->findBlock("Box");
-        box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+     for( ProblemSpecP box_ps = level_ps->findBlock("Box"); box_ps != nullptr; box_ps = box_ps->findNextBlock("Box") ) {
        Point lower;
        Point upper;
-       box_ps->require("lower", lower);
-       box_ps->require("upper", upper);
-       grid_LoPts.push_back(lower);
-       grid_HiPts.push_back(upper);       
-       grid_LoPt=Min(lower, grid_LoPt);
-       grid_HiPt=Max(upper, grid_HiPt);
+       box_ps->require( "lower", lower );
+       box_ps->require( "upper", upper );
+       grid_LoPts.push_back( lower );
+       grid_HiPts.push_back( upper );       
+       grid_LoPt = Min( lower, grid_LoPt );
+       grid_HiPt = Max( upper, grid_HiPt );
      }
    }
 
-
   map<string,string> values;
-  face_ps->getAttributes(values);
+  face_ps->getAttributes( values );
       
   // Have three possible types for the boundary condition face:
   // a. side (original -- entire side is one bc)
@@ -543,20 +540,18 @@ BCGeomBase* BoundCondReader::createInteriorBndBoundaryConditionFace(ProblemSpecP
   std::vector<Point> grid_LoPts; // store the lower bounds of all boxes
   std::vector<Point> grid_HiPts; // store the upper bounds of all boxes
   
-  for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
-      level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
+  for( ProblemSpecP level_ps = grid_ps->findBlock("Level"); level_ps != nullptr; level_ps = level_ps->findNextBlock("Level") ) {
     
-    //find upper/lower corner
-    for(ProblemSpecP box_ps = level_ps->findBlock("Box");
-        box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+    // Find upper/lower corner:
+    for( ProblemSpecP box_ps = level_ps->findBlock("Box"); box_ps != nullptr; box_ps = box_ps->findNextBlock("Box") ) {
       Point lower;
       Point upper;
-      box_ps->require("lower", lower);
-      box_ps->require("upper", upper);
-      grid_LoPts.push_back(lower);
-      grid_HiPts.push_back(upper);
-      grid_LoPt=Min(lower, grid_LoPt);
-      grid_HiPt=Max(upper, grid_HiPt);
+      box_ps->require( "lower", lower );
+      box_ps->require( "upper", upper );
+      grid_LoPts.push_back( lower );
+      grid_HiPts.push_back( upper );
+      grid_LoPt = Min( lower, grid_LoPt );
+      grid_HiPt = Max( upper, grid_HiPt );
     }
   }
   
@@ -771,33 +766,35 @@ BoundCondReader::readInteriorBndBCs(ProblemSpecP& bc_ps, const ProblemSpecP& gri
   ProblemSpecP defaultMatSpec = bc_ps->findBlock("DefaultMaterial");
   if(defaultMatSpec) bc_ps->get("DefaultMaterial", defaultMat);
   
-  for (ProblemSpecP face_ps = bc_ps->findBlock("InteriorFace");
-       face_ps != 0; face_ps=face_ps->findNextBlock("InteriorFace")) {
+  for( ProblemSpecP face_ps = bc_ps->findBlock("InteriorFace"); face_ps != nullptr; face_ps=face_ps->findNextBlock("InteriorFace") ) {
     
     Patch::FaceType face_side;
     BCGeomBase* bcGeom = createInteriorBndBoundaryConditionFace(face_ps,grid_ps,face_side, level);
     
     std::string face_label = "none";
     face_ps->getAttribute("name",face_label);
-    BCR_dbg << "Face Label = " << face_label << std::endl;
+    BCR_dbg << "Face Label = " << face_label << "\n";
     
-    BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = "
-    << typeid(*bcGeom).name() << " " << bcGeom << endl;
+    BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " << typeid(*bcGeom).name() << " " << bcGeom << "\n";
     
     std::multimap<int, BoundCondBase*> bctype_data;
     
-    for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
-         child = child->findNextBlock("BCType")) {
+    for( ProblemSpecP child = face_ps->findBlock("BCType"); child != nullptr; child = child->findNextBlock("BCType") ) {
       int mat_id;
       
       map<string,string> bc_attr;
-      child->getAttributes(bc_attr);
+      child->getAttributes( bc_attr );
       bool foundMatlID = ( bc_attr.find("id") != bc_attr.end() );
       
       if (!foundMatlID) {
-        if (defaultMat == "") SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
-        else                  mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
-      } else {
+        if (defaultMat == "") {
+          SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
+        }
+        else {
+          mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+        }
+      }
+      else {
         string id = bc_attr["id"];
         mat_id = (id == "all") ? -1 : atoi(id.c_str());
       }
@@ -974,8 +971,7 @@ BoundCondReader::readDomainBCs(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   ProblemSpecP defaultMatSpec = bc_ps->findBlock("DefaultMaterial");
   if(defaultMatSpec) bc_ps->get("DefaultMaterial", defaultMat);
   
-  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
-      face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
+  for( ProblemSpecP face_ps = bc_ps->findBlock("Face"); face_ps != nullptr; face_ps=face_ps->findNextBlock("Face") ) {
 
     Patch::FaceType face_side;
     BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,grid_ps,face_side);
@@ -989,8 +985,7 @@ BoundCondReader::readDomainBCs(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 
     std::multimap<int, BoundCondBase*> bctype_data;
 
-    for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
-        child = child->findNextBlock("BCType")) {
+    for( ProblemSpecP child = face_ps->findBlock( "BCType" ); child != nullptr; child = child->findNextBlock( "BCType" ) ) {
       int mat_id;
       
       map<string,string> bc_attr;
@@ -998,9 +993,14 @@ BoundCondReader::readDomainBCs(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       bool foundMatlID = ( bc_attr.find("id") != bc_attr.end() );
       
       if (!foundMatlID) {
-        if (defaultMat == "") SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
-        else                  mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
-      } else {
+        if (defaultMat == "") {
+          SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
+        }
+        else {
+          mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+        }
+      }
+      else {
         string id = bc_attr["id"];
         mat_id = (id == "all") ? -1 : atoi(id.c_str());
       }

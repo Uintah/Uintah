@@ -873,12 +873,14 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
   double threshold = 0.0;
   bool spaceCurve = false;
 
-  if (p != 0) {
+  if( p != nullptr ) {
     // if we have DLB, we know the entry exists in the input file...
-    if(!p->get("timestepInterval", timestepInterval))
+    if( !p->get("timestepInterval", timestepInterval) ) {
       timestepInterval = 0;
-    if (timestepInterval != 0 && !p->get("interval", interval))
+    }
+    if( timestepInterval != 0 && !p->get("interval", interval) ) {
       interval = 0.0; // default
+    }
     p->getWithDefault("gainThreshold", threshold, 0.05);
     p->getWithDefault("doSpaceCurve", spaceCurve, true);
     p->getWithDefault("particleCost",d_particleCost, 2);

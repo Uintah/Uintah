@@ -60,22 +60,22 @@ WARNING
   template<class T> class Handle {
   public:
     Handle();
-    Handle(T*);
-    Handle(const Handle<T>&);
+    Handle( T* );
+    Handle( const Handle<T>& );
     
-    Handle<T>& operator=(const Handle<T>& copy) { return operator=(copy.d_rep); }
-    Handle<T>& operator=(T*);
+    Handle<T>& operator=( const Handle<T>& copy ) { return operator=( copy.d_rep ); }
+    Handle<T>& operator=( T* );
     
     ~Handle();
     
     void detach();
     
     inline const T* operator->() const {
-      ASSERT(d_rep != 0);
+      ASSERT( d_rep != nullptr );
       return d_rep;
     }
     inline T* operator->() {
-      ASSERT(d_rep != 0);
+      ASSERT( d_rep != nullptr );
       return d_rep;
     }
     inline T* get_rep() {
@@ -85,40 +85,30 @@ WARNING
       return d_rep;
     }
     inline operator bool() const {
-      return d_rep != 0;
+      return d_rep != nullptr;
     }
-    inline bool operator == (const Handle<T>& a) const {
+    inline bool operator == ( const Handle<T>& a ) const {
       return a.d_rep == d_rep;
     }
-    inline bool operator != (const Handle<T>& a) const {
+    inline bool operator != ( const Handle<T>& a ) const {
       return a.d_rep != d_rep;
     }
-    inline bool operator == (const T* a) const {
+    inline bool operator == ( const T* a ) const {
       return a == d_rep;
     }
-    inline bool operator != (const T* a) const {
+    inline bool operator != ( const T* a ) const {
       return a != d_rep;
     }
-    inline bool operator == (int a) const {
-      ASSERT(a == 0);
-      return d_rep == 0;
-    }
-    inline bool operator != (int a) const {
-      ASSERT(a == 0);
-      return d_rep != 0;
-    }
+
   private:
     T* d_rep;
   }; // end class Handle
   
   template<class T>
-  Handle<T>::Handle()
-    : d_rep(0)
-  {
-  }
+  Handle<T>::Handle() : d_rep( nullptr ) {}
   
   template<class T>
-  Handle<T>::Handle(T* rep)
+  Handle<T>::Handle( T* rep )
     : d_rep(rep)
   {
     if(d_rep){
@@ -127,7 +117,7 @@ WARNING
   }
   
   template<class T>
-  Handle<T>::Handle(const Handle<T>& copy)
+  Handle<T>::Handle( const Handle<T>& copy )
     : d_rep(copy.d_rep)
   {
     if(d_rep){
@@ -136,7 +126,7 @@ WARNING
   }
   
   template<class T>
-  Handle<T>& Handle<T>::operator=(T* copy)
+  Handle<T>& Handle<T>::operator=( T* copy )
   {
     if(d_rep != copy){    
       if(d_rep){
@@ -164,13 +154,13 @@ WARNING
   template<class T>
   void Handle<T>::detach()
   {
-    ASSERT(d_rep != 0);
+    ASSERT( d_rep != nullptr );
     d_rep->lock.lock();
-    if(d_rep->ref_cnt==1){
+    if( d_rep->ref_cnt == 1 ) {
       d_rep->lock.unlock();
       return; // We have the only copy
     }
-    T* oldrep=d_rep;
+    T* oldrep = d_rep;
     d_rep=oldrep->clone();
     oldrep->ref_cnt--;
     oldrep->lock.unlock();

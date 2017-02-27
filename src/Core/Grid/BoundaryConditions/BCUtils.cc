@@ -67,13 +67,12 @@ namespace Uintah {
     
     string defaultMat="";
     ProblemSpecP defMatSpec = bc_ps->findBlock("DefaultMaterial");
-    if (defMatSpec) { 
+    if( defMatSpec ) { 
       bc_ps->get("DefaultMaterial", defaultMat);
     }
     
     // loop over all faces and determine if a BC has been set
-    for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0;
-         face_ps=face_ps->findNextBlock("Face")) {
+    for( ProblemSpecP face_ps = bc_ps->findBlock( "Face" ); face_ps != nullptr; face_ps = face_ps->findNextBlock( "Face" ) ) {
       
       map<string,string> face;
       face_ps->getAttributes(face);
@@ -93,9 +92,8 @@ namespace Uintah {
         }
       }
       
-      // loop over all BCTypes
-      for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
-          bc_iter = bc_iter->findNextBlock("BCType")){
+      // Loop over all BCTypes:
+      for( ProblemSpecP bc_iter = face_ps->findBlock( "BCType" ); bc_iter != nullptr; bc_iter = bc_iter->findNextBlock( "BCType" ) ) {
         map<string,string> bc_type;
         bc_iter->getAttributes(bc_type);
         

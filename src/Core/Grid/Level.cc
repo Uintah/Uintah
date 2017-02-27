@@ -68,25 +68,26 @@ DebugStream rgtimes{ "RGTimes", false };
 Level::Level(       Grid      * grid
             , const Point     & anchor
             , const Vector    & dcell
-            ,       int         index
-            ,       IntVector   refinementRatio
-            ,       int         id /* = -1 */
+            , const int         index
+            , const IntVector   refinementRatio
+            , const int         id /* = -1 */
             )
-  : m_grid(grid)
-  , m_anchor(anchor)
-  , m_dcell(dcell)
-  , m_spatial_range(Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN))
-  , m_int_spatial_range(Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN))
-  , m_index(index)
-  , m_patch_distribution(-1,-1,-1)
-  , m_periodic_boundaries(0, 0, 0)
-  , m_id(id)
-  , m_refinement_ratio(refinementRatio)
+  : m_grid( grid )
+  , m_anchor( anchor )
+  , m_dcell( dcell )
+  , m_spatial_range( Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) )
+  , m_int_spatial_range( Uintah::Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN) )
+  , m_index( index )
+  , m_patch_distribution( -1,-1,-1 )
+  , m_periodic_boundaries( 0, 0, 0 )
+  , m_id( id )
+  , m_refinement_ratio( refinementRatio )
 {
-  if (m_id == -1) {
-    m_id = ids.fetch_add(1, std::memory_order_relaxed);
-  } else if (m_id >= ids) {
-    ids.store(m_id + 1, std::memory_order_relaxed);
+  if( m_id == -1 ) {
+    m_id = ids.fetch_add( 1, std::memory_order_relaxed );
+  }
+  else if( m_id >= ids ) {
+    ids.store( m_id + 1, std::memory_order_relaxed );
   }
 }
 
@@ -1059,9 +1060,9 @@ void
 Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancerPort * lb )
 {
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
-  if (bc_ps == 0) {
-    if (Parallel::getMPIRank() == 0) {
-      static ProgressiveWarning warn("No BoundaryConditions specified", -1);
+  if( bc_ps == nullptr ) {
+    if( Parallel::getMPIRank() == 0 ) {
+      static ProgressiveWarning warn( "No BoundaryConditions specified", -1 );
       warn.invoke();
     }
     return;

@@ -243,7 +243,7 @@ Variable::readPIDX( unsigned char* pidx_buffer,
   // push the istringstream into an Array3 variable
   readNormal(instream, swapBytes);
 
-} // end read()
+} // end readPIDX()
 
 #endif
 //______________________________________________________________________

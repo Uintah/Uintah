@@ -120,16 +120,16 @@ Task::initialize()
 
 //
 void
-Task::setSets(const PatchSet* ps, const MaterialSet* ms)
+Task::setSets( const PatchSet* ps, const MaterialSet* ms )
 {
-  ASSERT(m_patch_set == nullptr);
-  ASSERT(m_matl_set  == nullptr);
+  ASSERT( m_patch_set == nullptr );
+  ASSERT( m_matl_set  == nullptr );
   m_patch_set = ps;
-  if (m_patch_set) {
+  if ( m_patch_set ) {
     m_patch_set->addReference();
   }
   m_matl_set = ms;
-  if (m_matl_set) {
+  if ( m_matl_set ) {
     m_matl_set->addReference();
   }
 }

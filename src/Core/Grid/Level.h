@@ -91,9 +91,9 @@ public:
   Level(       Grid      * grid
        , const Point     & anchor
        , const Vector    & dcell
-       ,       int         index
-       ,       IntVector   refinementRatio
-       ,       int         id = -1
+       , const int         index
+       , const IntVector   refinementRatio
+       , const int         id = -1
        );
 
   virtual ~Level();
@@ -278,8 +278,6 @@ private:
   Level( Level && )                 = delete;
   Level& operator=( Level && )      = delete;
       
-  std::vector<Patch*> m_patches;
-
   Grid    * m_grid;
   Point     m_anchor;
   Vector    m_dcell;

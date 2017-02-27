@@ -210,7 +210,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   mpi_info_.reset( 0 );
 
-  if (m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != 0) {
+  if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);
   }
 
@@ -393,7 +393,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   // compute the net timings
-  if (m_shared_state != 0) {  // subschedulers don't have a sharedState
+  if( m_shared_state != nullptr ) {  // subschedulers don't have a sharedState
     computeNetRunTimeStats(m_shared_state->d_runTimeStats);
   }
 

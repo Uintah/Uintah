@@ -197,11 +197,10 @@ GeometryPieceFactory::findInsidePoints(const Uintah::Patch* const patch)
 //------------------------------------------------------------------
 
 void
-GeometryPieceFactory::create( const ProblemSpecP& ps,
-                              vector<GeometryPieceP>& objs)
+GeometryPieceFactory::create( const ProblemSpecP           & ps,
+                                    vector<GeometryPieceP> & objs )
 {
-  for(ProblemSpecP child = ps->findBlock(); child != 0;
-      child = child->findNextBlock()){
+  for( ProblemSpecP child = ps->findBlock(); child != nullptr; child = child->findNextBlock() ) {
 
     string go_type = child->getNodeName();
     string go_label;

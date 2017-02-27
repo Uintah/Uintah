@@ -592,16 +592,18 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
         OnDemandDataWarehouse* posDW;
 
-        // the load balancer is used to determine where data was in the old dw on the prev timestep
+        // The load balancer is used to determine where data was in the old dw on the prev timestep
         // pass it in if the particle data is on the old dw
         LoadBalancerPort * lb = nullptr;
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-        } else {
-          // on an output task (and only on one) we require particle variables from the NewDW
+        }
+        else {
+          // On an output task (and only on one) we require particle variables from the NewDW
           if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::NewDW)].get_rep();
-          } else {
+          }
+          else {
             posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::OldDW)].get_rep();
             lb = getLoadBalancer();
           }
@@ -612,15 +614,15 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           top = top->m_parent_scheduler;
         }
 
-        dw->recvMPI(batch, mpibuff, posDW, req, lb);
+        dw->recvMPI( batch, mpibuff, posDW, req, lb );
 
-        if (!req->isNonDataDependency()) {
+        if ( !req->isNonDataDependency() ) {
           m_task_graphs[m_current_task_graph]->getDetailedTasks()->setScrubCount(req->m_req, req->m_matl, req->m_from_patch, m_dws);
         }
       }
 
       // Post the receive
-      if (mpibuff.count() > 0) {
+      if ( mpibuff.count() > 0 ) {
 
         ASSERT(batch->m_message_tag > 0);
         double start = Time::currentSeconds();
@@ -788,7 +790,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   DOUT(g_dbg, me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)");
 
-  if (m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != 0) {
+  if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_pos_label, iteration);
   }
 
@@ -808,16 +810,16 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
     DOUT(g_task_begin_end, "Rank-" << me << " Initiating task: " << dtask->getTask()->getName() << "\t" << *dtask);
 
-    if (dtask->getTask()->getType() == Task::Reduction) {
+    if ( dtask->getTask()->getType() == Task::Reduction ) {
       if (!abort) {
-        initiateReduction(dtask);
+        initiateReduction( dtask );
       }
     }
     else {
-      initiateTask(dtask, abort, abort_point, iteration);
-      processMPIRecvs(WAIT_ALL);
-      ASSERT(m_recvs.size() == 0);
-      runTask(dtask, iteration);
+      initiateTask( dtask, abort, abort_point, iteration );
+      processMPIRecvs( WAIT_ALL );
+      ASSERT( m_recvs.size() == 0 );
+      runTask( dtask, iteration );
 
       DOUT(g_task_begin_end, "Rank-" << d_myworld->myrank() << " Completed task: " << dtask->getTask()->getName() << "\t" << *dtask);
     }

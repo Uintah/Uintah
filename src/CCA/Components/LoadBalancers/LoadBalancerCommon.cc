@@ -719,10 +719,10 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
   if (g_neighborhood_dbg) {
     std::ostringstream message;
     for (std::set<const Patch*>::iterator iter = m_neighbors.begin(); iter != m_neighbors.end(); iter++) {
-      message << "Rank-" << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc "
-                << getPatchwiseProcessorAssignment(*iter) << std::endl;
+      message << "Rank-" << d_myworld->myrank() << " Neighborhood: Patch " << (*iter)->getID() << " on Proc "
+                << getPatchwiseProcessorAssignment(*iter) << "\n";
     }
-    DOUT(true, message.str());
+    DOUT( true, message.str() );
   }
 
 } // end createNeighborhood()
@@ -732,12 +732,13 @@ LoadBalancerCommon::createNeighborhood( const GridP & grid, const GridP & oldGri
 bool
 LoadBalancerCommon::inNeighborhood( const PatchSubset * ps )
 {
-  for (int i = 0; i < ps->size(); i++) {
+  for( int i = 0; i < ps->size(); i++ ) {
     const Patch* patch = ps->get(i);
-    if (m_neighbors.find(patch) != m_neighbors.end())
+    if( m_neighbors.find(patch) != m_neighbors.end() ) {
       return true;
+    }
   }
-  // also count a subset with no patches
+  // Also count a subset with no patches
   return ps->size() == 0;
 }
 
@@ -766,7 +767,7 @@ LoadBalancerCommon::problemSetup( ProblemSpecP     & pspec
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   m_output_Nth_proc = 1;
 
-  if (p != 0) {
+  if( p != nullptr ) {
     p->getWithDefault("outputNthProc", m_output_Nth_proc, 1);
   }
 

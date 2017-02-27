@@ -521,9 +521,9 @@ template<class T>
   ParticleVariable<T>::emitNormal(std::ostream& out, const IntVector&,
                                   const IntVector&, ProblemSpecP varnode, bool /*outputDoubleAsFloat*/ )
   {
-    const TypeDescription* td = fun_getTypeDescription((T*)0);
+    const TypeDescription* td = fun_getTypeDescription((T*)nullptr);
 
-    if (varnode->findBlock("numParticles") == 0) {
+    if (varnode->findBlock("numParticles") == nullptr) {
       varnode->appendElement("numParticles", d_pset->numParticles());
     }
     if(!td->isFlat()){
@@ -552,18 +552,19 @@ template<class T>
                                const IntVector& /*h*/, ProblemSpecP varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
-    if (varnode->findBlock("numParticles") == 0) {
-      varnode->appendElement("numParticles", d_pset->numParticles());
+    if ( varnode->findBlock( "numParticles" ) == nullptr ) {
+      varnode->appendElement( "numParticles", d_pset->numParticles() );
     }
-    if(!td->isFlat()){
-      SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
+    if( !td->isFlat() ){
+      SCI_THROW(InternalError( "Cannot yet write non-flat objects!\n", __FILE__, __LINE__) );
     }
     else {
       // emit in runlength encoded format
       RunLengthEncoder<T> rle;
       ParticleSubset::iterator iter = d_pset->begin();
-      for ( ; iter != d_pset->end(); iter++)
+      for ( ; iter != d_pset->end(); iter++) {
         rle.addItem((*this)[*iter]);
+      }
       rle.write(out);
     }
     return true;
