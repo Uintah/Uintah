@@ -317,7 +317,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
   }
 
   for (int i = 0; i < (int)dws.size(); i++) {
-    if (oddws[i] != 0) {
+    if (oddws[i] != nullptr) {
       oddws[i]->pushRunningTask(task, &oddws);
     }
   }
@@ -355,7 +355,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
-    if (oddws[i] != 0) {
+    if (oddws[i] != nullptr) {
       oddws[i]->checkTasksAccesses(patches, matls);
       oddws[i]->popRunningTask();
     }

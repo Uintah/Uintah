@@ -147,11 +147,11 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     //d_PIDX_flags.print();
   }
 
-  d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
+  d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != nullptr;
 
   // set to false if restartSetup is called - we can't do it there
   // as the first timestep doesn't have any tasks
-  d_outputInitTimestep = p->findBlock("outputInitTimestep") != 0;
+  d_outputInitTimestep = p->findBlock("outputInitTimestep") != nullptr;
 
   // problemSetup is called again from the Switcher to reset vars (and frequency) it wants to save
   //   DO NOT get it again.  Currently the directory won't change mid-run, so calling problemSetup
@@ -194,7 +194,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   SaveNameItem saveItem;
   ProblemSpecP save = p->findBlock("save");
 
-  if( save == 0 ) {
+  if( save == nullptr ) {
     // If no <save> labels were specified, make sure that an output time interval is not specified...
     if( d_outputTimestepInterval > 0.0 || d_outputInterval > 0.0 ) {
       throw ProblemSetupException( "You have no <save> labels, but your output interval is non-0.  If you wish to turn off "
@@ -203,7 +203,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     }
   }
 
-  while( save != 0 ) {
+  while( save != nullptr ) {
     attributes.clear();
     save->getAttributes(attributes);
     saveItem.labelName       = attributes["label"];
@@ -276,7 +276,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
                                     (always keeping an older copy for backup) */
 
   ProblemSpecP checkpoint = p->findBlock( "checkpoint" );
-  if( checkpoint != 0 ) {
+  if( checkpoint != nullptr ) {
 
     string interval, timestepInterval, walltimeStart, walltimeInterval, walltimeStartHours, walltimeIntervalHours, cycle;
 
@@ -579,10 +579,10 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
   ProblemSpecP indexDoc = loadDocument(iname);
 
   ProblemSpecP globals = indexDoc->findBlock("globals");
-  if (globals != 0) {
+  if( globals != nullptr ) {
 
     ProblemSpecP variable = globals->findBlock("variable");
-    while (variable != 0) {
+    while( variable != nullptr ) {
       string varname;
 
       if ( !variable->getAttribute("name", varname) ) {
@@ -610,7 +610,7 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
   int timestep = -9;
   int count    = 1;
   
-  while( ts != 0 ) {
+  while( ts != nullptr ) {
     ts->get(timestep);
     d_restartTimestepIndicies[count] = timestep;
     
@@ -648,12 +648,12 @@ DataArchiver::copySection( Dir& fromDir, Dir& toDir, const string & filename, co
   ProblemSpecP myIndexDoc = loadDocument(iname);
   
   ProblemSpecP sectionNode = indexDoc->findBlock(section);
-  if (sectionNode != 0) {
+  if( sectionNode != nullptr ) {
     ProblemSpecP newNode = myIndexDoc->importNode(sectionNode, true);
     
     // replace whatever was in the section previously
     ProblemSpecP mySectionNode = myIndexDoc->findBlock(section);
-    if (mySectionNode != 0) {
+    if( mySectionNode != nullptr ) {
       myIndexDoc->replaceChild(newNode, mySectionNode);
     }
     else {
@@ -675,7 +675,7 @@ DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
 {
    // add restart history to restarts section
    ProblemSpecP restarts = indexDoc->findBlock("restarts");
-   if( restarts == 0 ) {
+   if( restarts == nullptr ) {
      restarts = indexDoc->appendChild("restarts");
    }
 
@@ -704,22 +704,24 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
    ProblemSpecP oldTimesteps = oldIndexDoc->findBlock("timesteps");
 
    ProblemSpecP ts;
-   if (oldTimesteps != 0)
+   if( oldTimesteps != nullptr ) {
      ts = oldTimesteps->findBlock("timestep");
+   }
 
    // while we're at it, add restart information to index.xml
-   if (maxTimestep >= 0)
+   if( maxTimestep >= 0 ) {
      addRestartStamp(indexDoc, fromDir, maxTimestep);
+   }
 
    // create timesteps element if necessary
    ProblemSpecP timesteps = indexDoc->findBlock("timesteps");
-   if (timesteps == 0) {
+   if( timesteps == nullptr ) {
       timesteps = indexDoc->appendChild("timesteps");
    }
    
    // copy each timestep 
    int timestep;
-   while (ts != 0) {
+   while( ts != nullptr ) {
       ts->get(timestep);
       if (timestep >= startTimestep &&
           (timestep <= maxTimestep || maxTimestep < 0)) {
@@ -783,17 +785,18 @@ DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
    ProblemSpecP indexDoc = loadDocument(iname);
 
    ProblemSpecP globals = indexDoc->findBlock("globals");
-   if (globals != 0) {
+   if( globals != nullptr ) {
       ProblemSpecP variable = globals->findBlock("variable");
       // copy data file associated with each variable
-      while (variable != 0) {
+      while( variable != nullptr ) {
          map<string,string> attributes;
          variable->getAttributes(attributes);
 
          string hrefNode = attributes["href"];
 
-         if (hrefNode == "")
+         if (hrefNode == "") {
             throw InternalError("global variable href attribute not found", __FILE__, __LINE__);
+         }
          const char* href = hrefNode.c_str();
 
          ifstream datFile((fromDir.getName()+"/"+href).c_str());
@@ -1299,24 +1302,24 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
       ProblemSpecP indexDoc = loadDocument(iname);
 
       // if this timestep isn't already in index.xml, add it in
-      if (indexDoc == 0) {
+      if( indexDoc == nullptr ) {
         continue; // output timestep but no variables scheduled to be saved.
       }
-      ASSERT(indexDoc != 0);
+      ASSERT( indexDoc != nullptr );
 
       //__________________________________
       // output data pointers
       for (unsigned j = 0; j < savelist.size(); j++) {
         string variableSection = savelist[j] == &d_checkpointReductionLabels ? "globals" : "variables";
         ProblemSpecP vs = indexDoc->findBlock(variableSection);
-        if(vs == 0) {
+        if( vs == nullptr ) {
           vs = indexDoc->appendChild(variableSection.c_str());
         }
         for (unsigned k = 0; k < savelist[j]->size(); k++) {
           const VarLabel* var = (*savelist[j])[k].label;
           bool found=false;
           
-          for(ProblemSpecP n = vs->getFirstChild(); n != 0; n=n->getNextSibling()) {
+          for(ProblemSpecP n = vs->getFirstChild(); n != nullptr; n=n->getNextSibling()) {
             if(n->getNodeName() == "variable") {
               map<string,string> attributes;
               n->getAttributes(attributes);
@@ -1348,12 +1351,12 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
       bool firstCheckpointTimestep = false;
       
       ProblemSpecP ts = indexDoc->findBlock("timesteps");
-      if(ts == 0) {
+      if( ts == nullptr ) {
         ts = indexDoc->appendChild("timesteps");
         firstCheckpointTimestep = (&d_checkpointsDir == baseDirs[i]);
       }
       bool found=false;
-      for(ProblemSpecP n = ts->getFirstChild(); n != 0; n=n->getNextSibling()) {
+      for(ProblemSpecP n = ts->getFirstChild(); n != nullptr; n=n->getNextSibling()) {
         if(n->getNodeName() == "timestep") {
           int readtimestep;
           
@@ -1449,7 +1452,7 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
         ProblemSpecP inputDoc = loadDocument(inputname);
         inputDoc->output((inputname + ".orig").c_str());
 
-        for (ProblemSpecP ps = rootElem->getFirstChild(); ps != 0; ps = ps->getNextSibling()) {
+        for (ProblemSpecP ps = rootElem->getFirstChild(); ps != nullptr; ps = ps->getNextSibling()) {
           string nodeName = ps->getNodeName();
           
           if (nodeName == "Meta" || nodeName == "Time" || nodeName == "Grid" || nodeName == "Data") {
@@ -1458,7 +1461,7 @@ DataArchiver::writeto_xml_files( double delt, const GridP& grid )
           
           // find and replace the node 
           ProblemSpecP removeNode = inputDoc->findBlock(nodeName);
-          if (removeNode != 0) {
+          if (removeNode != nullptr) {
             string comment = "The node " + nodeName + " has been removed.  Its original values are\n"
               "    in input.xml.orig, and values used for restarts are in checkpoints/t*****/timestep.xml";
             ProblemSpecP commentNode = inputDoc->makeComment(comment);
@@ -2300,13 +2303,13 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
       // make sure doc's constructor is called after the lock.
       ProblemSpecP doc = ProblemSpec::createDocument("Uintah_Output");
       // Find the end of the file
-      ASSERT(doc != 0);
+      ASSERT(doc != nullptr);
       ProblemSpecP n = doc->findBlock("Variable");
       
       long cur=0;
-      while(n != 0) {
+      while(n != nullptr) {
         ProblemSpecP endNode = n->findBlock("end");
-        ASSERT(endNode != 0);
+        ASSERT(endNode != nullptr);
         long end = atol(endNode->getNodeValue().c_str());
         
         if(end > cur)
@@ -2496,9 +2499,9 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     //__________________________________
     // create the xml dom for this variable
     ProblemSpecP doc = ProblemSpec::createDocument("Uintah_Output-PIDX");
-    ASSERT(doc != 0);
+    ASSERT(doc != nullptr);
     ProblemSpecP n = doc->findBlock("Variable");
-    while( n != 0 ) {
+    while( n != nullptr ) {
       n = n->findNextBlock("Variable");
     }  
       
@@ -3229,7 +3232,7 @@ DataArchiver::SaveItem::setMaterials(int level,
   // reuse material sets when the same set of materials is used for different
   // SaveItems in a row -- easier than finding all reusable material set, but
   // effective in many common cases.
-  if ((prevMatlSet != 0) && (matls == prevMatls)) {
+  if( (prevMatlSet != nullptr) && (matls == prevMatls) ) {
     matlSet[level] = prevMatlSet;
   }
   else {
@@ -3469,7 +3472,7 @@ DataArchiver::copy_outputProblemSpec( Dir & fromDir, Dir & toDir )
   //  and copy the component related nodes 
   ProblemSpecP inputDoc = loadDocument( fromFile );
 
-  for (ProblemSpecP ps = inputDoc->getFirstChild(); ps != 0; ps = ps->getNextSibling()) {
+  for (ProblemSpecP ps = inputDoc->getFirstChild(); ps != nullptr; ps = ps->getNextSibling()) {
     string nodeName = ps->getNodeName();
 
     if (nodeName == "Meta" || nodeName == "Time" || nodeName == "Grid" || nodeName == "Data") {

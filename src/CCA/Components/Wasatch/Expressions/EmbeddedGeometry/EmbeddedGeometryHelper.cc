@@ -118,7 +118,7 @@ namespace WasatchCore{
       Uintah::ProblemSpecP geomParams = parser->findBlock("CommonGeometry");
       std::vector<Uintah::GeometryPieceP> geomObjects;
       for( Uintah::ProblemSpecP intrusionParams = geomParams->findBlock("geom_object");
-          intrusionParams != 0;
+          intrusionParams != nullptr;
           intrusionParams = intrusionParams->findNextBlock("geom_object") )
       {
         Uintah::GeometryPieceFactory::create(intrusionParams,geomObjects);
@@ -185,7 +185,7 @@ namespace WasatchCore{
         // parse all intrusions
         std::vector<Uintah::GeometryPieceP> geomObjects;
         for( Uintah::ProblemSpecP intrusionParams = geomParams->findBlock("Intrusion");
-            intrusionParams != 0;
+            intrusionParams != nullptr;
             intrusionParams = intrusionParams->findNextBlock("Intrusion") )
         {
           Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);

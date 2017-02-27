@@ -844,7 +844,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
    int levelIndex = 0;
 
-   for( ProblemSpecP level_ps = grid_ps->findBlock("Level"); level_ps != 0; level_ps = level_ps->findNextBlock("Level") ) {
+   for( ProblemSpecP level_ps = grid_ps->findBlock("Level"); level_ps != nullptr; level_ps = level_ps->findNextBlock("Level") ) {
       // Make two passes through the boxes.  The first time, we
       // want to find the spacing and the lower left corner of the
       // problem domain.  Spacing can be specified with a dx,dy,dz
@@ -868,8 +868,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       //__________________________________
       // first pass - find upper/lower corner, find resolution/spacing and extraCells
       IntVector extraCells(0, 0, 0);
-      for(ProblemSpecP box_ps = level_ps->findBlock("Box");
-         box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+      for(ProblemSpecP box_ps = level_ps->findBlock("Box"); box_ps != nullptr; box_ps = box_ps->findNextBlock("Box")){
          
         string boxLabel = "";
         box_ps->getAttribute("label",boxLabel);
@@ -943,8 +942,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       //__________________________________
       // Look for stretched grid info
       vector<StretchSpec> stretch[3];
-      for(ProblemSpecP stretch_ps = level_ps->findBlock("Stretch");
-          stretch_ps != 0; stretch_ps = stretch_ps->findNextBlock("Stretch")){
+      for(ProblemSpecP stretch_ps = level_ps->findBlock("Stretch"); stretch_ps != nullptr; stretch_ps = stretch_ps->findNextBlock("Stretch")){
         string axisName;
         if(!stretch_ps->getAttribute("axis", axisName))
           throw ProblemSetupException("Error, no specified axis for Stretch section: should be x, y, or z", __FILE__, __LINE__);
@@ -969,8 +967,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
         }
         double begin = -DBL_MAX;
-        for(ProblemSpecP region_ps = stretch_ps->findBlock();
-            region_ps != 0; region_ps = region_ps->findNextBlock()){
+        for(ProblemSpecP region_ps = stretch_ps->findBlock(); region_ps != nullptr; region_ps = region_ps->findNextBlock()){
           StretchSpec spec;
           spec.shape = region_ps->getNodeName();
           if(spec.shape != "uniform" && region_ps->getNodeName() != "linear") {
@@ -1204,8 +1201,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         
       //______________________________________________________________________
       // second pass - set up patches and cells
-      for(ProblemSpecP box_ps = level_ps->findBlock("Box");
-        box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+      for(ProblemSpecP box_ps = level_ps->findBlock("Box"); box_ps != nullptr; box_ps = box_ps->findNextBlock("Box")){
          
         string boxLabel="";
         box_ps->getAttribute( "label", boxLabel );

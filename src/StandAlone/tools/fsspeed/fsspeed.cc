@@ -121,9 +121,8 @@ int main(int argc,char *argv[])
   char command[100];
   sprintf(command,"rm -f %s",filename);
   
-  delete buff;
-  if(rank==0)
-  {
+  delete [] buff;
+  if( rank == 0 ) {
     cout << "Writing Total Time: " << finish-start << " seconds" << endl;
     cout << "Writing Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
   
@@ -134,8 +133,7 @@ int main(int argc,char *argv[])
   system(command);
   Uintah::MPI::Barrier(MPI_COMM_WORLD);
   finish=Uintah::MPI::Wtime();
-  if(rank==0)
-  {
+  if( rank == 0 ) {
     cout << "Deleting Total Time: " << finish-start << " seconds" << endl;
     cout << "Deleting Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
   }

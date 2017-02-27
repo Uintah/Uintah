@@ -226,7 +226,7 @@ namespace WasatchCore{
                                    GraphHelper* const gh )
   {
     for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("NameTag");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("NameTag") )
     {
       const Expr::ExpressionID exprID = gh->exprFactory->get_id(parse_nametag(exprParams));
@@ -248,7 +248,7 @@ namespace WasatchCore{
     bool foundExtraCells = false;
     Uintah::ProblemSpecP gridspec = uintahSpec->findBlock("Grid");
     for( Uintah::ProblemSpecP level = gridspec->findBlock("Level");
-         level != 0;
+         level != nullptr;
          level = gridspec->findNextBlock("Level") ){
       nlevels++;
       Uintah::IntVector periodicDirs(0,0,0);
@@ -256,7 +256,7 @@ namespace WasatchCore{
       levelPeriodicityVectors.push_back(periodicDirs);
       
       for( Uintah::ProblemSpecP box = level->findBlock("Box");
-           box != 0;
+           box != nullptr;
            box = level->findNextBlock("Box") )
       {
         // note that a [0,0,0] specification gets added by default,
@@ -321,7 +321,7 @@ namespace WasatchCore{
     std::string strFaceID;
     std::set<std::string> faceNameSet;
     for( Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face");
-         faceSpec != 0; faceSpec=faceSpec->findNextBlock("Face"), ++i ){
+         faceSpec != nullptr; faceSpec=faceSpec->findNextBlock("Face"), ++i ){
       
       std::string faceName = "none";
       faceSpec->getAttribute("name",faceName);
@@ -474,11 +474,11 @@ namespace WasatchCore{
     Uintah::ProblemSpecP bcParams = uintahSpec->findBlock("Grid")->findBlock("BoundaryConditions");
     if( bcParams ){
       for( Uintah::ProblemSpecP faceBCParams=bcParams->findBlock("Face");
-           faceBCParams != 0;
+           faceBCParams != nullptr;
            faceBCParams=faceBCParams->findNextBlock("Face") )
       {
         for( Uintah::ProblemSpecP bcTypeParams=faceBCParams->findBlock("BCType");
-             bcTypeParams != 0;
+             bcTypeParams != nullptr;
              bcTypeParams=bcTypeParams->findNextBlock("BCType") )
         {
           std::string functorName;
@@ -512,7 +512,7 @@ namespace WasatchCore{
     // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = uintahSpec->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
-         saveLabelParams != 0;
+         saveLabelParams != nullptr;
          saveLabelParams=saveLabelParams->findNextBlock("save") )
     {
       std::string iof;
@@ -606,7 +606,7 @@ namespace WasatchCore{
     // appropriate for solution of each transport equation.
     //
     for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
-         transEqnParams != 0;
+         transEqnParams != nullptr;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
       adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
@@ -625,7 +625,7 @@ namespace WasatchCore{
     // Build coupled transport equations scalability test for wasatch.
     //
     for( Uintah::ProblemSpecP scalEqnParams=wasatchSpec_->findBlock("ScalabilityTest");
-         scalEqnParams != 0;
+         scalEqnParams != nullptr;
          scalEqnParams=scalEqnParams->findNextBlock("ScalabilityTest") )
     {
       try{
@@ -647,7 +647,7 @@ namespace WasatchCore{
     // required for solution of each momentum equation.
     //
     for( Uintah::ProblemSpecP momEqnParams=wasatchSpec_->findBlock("MomentumEquations");
-         momEqnParams != 0;
+         momEqnParams != nullptr;
          momEqnParams=momEqnParams->findNextBlock("MomentumEquations") )
     {
       try{
@@ -690,7 +690,7 @@ namespace WasatchCore{
     // required for solution of each momentum equation.
     //
     for( Uintah::ProblemSpecP momEqnParams=wasatchSpec_->findBlock("MomentTransportEquation");
-         momEqnParams != 0;
+         momEqnParams != nullptr;
          momEqnParams=momEqnParams->findNextBlock("MomentTransportEquation") )
     {
       // note - parse_moment_transport_equations returns a vector of equation adaptors
@@ -713,7 +713,7 @@ namespace WasatchCore{
     //
     // Build poisson equations
     for( Uintah::ProblemSpecP poissonEqnParams=wasatchSpec_->findBlock("PoissonEquation");
-         poissonEqnParams != 0;
+         poissonEqnParams != nullptr;
          poissonEqnParams=poissonEqnParams->findNextBlock("PoissonEquation") )
     {
       try{
@@ -743,7 +743,7 @@ namespace WasatchCore{
     // force additional expressions on the graph
     //
     for( Uintah::ProblemSpecP forceOnGraphParams=wasatchSpec_->findBlock("ForceOnGraph");
-         forceOnGraphParams != 0;
+         forceOnGraphParams != nullptr;
          forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") )
     {
       std::vector<std::string> taskListNames;

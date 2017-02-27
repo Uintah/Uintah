@@ -207,12 +207,9 @@ int main(int argc, char *argv[])
       ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
       ProblemSpecP mpm = mp->findBlock("MPM");
       
-      for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
-                        child = child->findNextBlock("material")) {
+      for( ProblemSpecP child = mpm->findBlock("material"); child != nullptr; child = child->findNextBlock("material") ) {
       
-        for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-          geom_obj_ps != 0;
-          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+        for( ProblemSpecP geom_obj_ps = child->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
           fprintf(stderr, "\n--- Reading geometry object --- \n");
 
@@ -234,8 +231,7 @@ int main(int argc, char *argv[])
           double dz = DX.z() / ppc[2];
           fprintf(stderr, "Voxel dimensions : %g, %g, %g\n", dx, dy, dz);
 
-          for(ProblemSpecP child = geom_obj_ps->findBlock(); child != 0;
-                           child = child->findNextBlock()){
+          for( ProblemSpecP child = geom_obj_ps->findBlock(); child != nullptr; child = child->findNextBlock() ){
             std::string go_type = child->getNodeName();
 
             // get the image data
@@ -446,13 +442,11 @@ GridP CreateGrid(ProblemSpecP ups)
 
     // save and remove the extra cells before the problem setup
     ProblemSpecP g = ups->findBlock("Grid");
-    for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != 0;
-         levelspec = levelspec->findNextBlock("Level")) {
-      for (ProblemSpecP box = levelspec->findBlock("Box"); box != 0 ; 
-           box = box->findNextBlock("Box")) {
+    for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != nullptr; levelspec = levelspec->findNextBlock("Level") ) {
+      for( ProblemSpecP box = levelspec->findBlock("Box"); box != nullptr; box = box->findNextBlock("Box") ) {
         
         ProblemSpecP cells = box->findBlock("extraCells");
-        if (cells != 0) {
+        if( cells != nullptr ) {
           box->get("extraCells", extraCells);
           box->removeChild(cells);
         }

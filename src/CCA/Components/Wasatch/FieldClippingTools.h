@@ -181,7 +181,7 @@ namespace WasatchCore{
     //___________________________________
     // parse and clip expressions
     for( Uintah::ProblemSpecP clipParams = parser->findBlock("FieldClipping");
-        clipParams != 0;
+        clipParams != nullptr;
         clipParams = clipParams->findNextBlock("FieldClipping") ){
       
       std::string fieldType, taskListName;      
@@ -200,7 +200,7 @@ namespace WasatchCore{
       GraphHelper* const graphHelper = gc[cat];
       
       for( Uintah::ProblemSpecP fieldParams = clipParams->findBlock("FieldExpression");
-          fieldParams != 0;
+          fieldParams != nullptr;
           fieldParams = fieldParams->findNextBlock("FieldExpression") ){
         double min, max;
         

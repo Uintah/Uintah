@@ -267,8 +267,7 @@ int main(int argc, char *argv[])
     // read in all non unique grain specs and put that in a vector
     vector<intensityMatlMapping> intMatl_Vec;
 
-    for (ProblemSpecP child = raw_ps->findBlock("matl"); child != 0;
-                      child = child->findNextBlock("matl")) {
+    for( ProblemSpecP child = raw_ps->findBlock("matl"); child != nullptr; child = child->findNextBlock("matl") ) {
 
       vector<int> threshold;
       map<string,string> matlIndex;
@@ -420,15 +419,15 @@ int main(int argc, char *argv[])
       ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
       ProblemSpecP mpm = mp->findBlock("MPM");
 
-      for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
-                        child = child->findNextBlock("material")) {
+      for( ProblemSpecP child = mpm->findBlock("material"); child != nullptr; child = child->findNextBlock("material") ) {
 
         matl +=1;
         
         // continue if the matl has been specified in the input file
         bool foundMatl = (find(specifiedMatls.begin(), specifiedMatls.end(), matl) != specifiedMatls.end());
-        if (!foundMatl)
+        if ( !foundMatl ) {
           continue;
+        }
         
         // these points define the extremas of the grid
         Point minP(1.e30,1.e30,1.e30),maxP(-1.e30,-1.e30,-1.e30);
@@ -561,13 +560,11 @@ GridP CreateGrid(ProblemSpecP ups)
 
     // save and remove the extra cells before the problem setup
     ProblemSpecP g = ups->findBlock("Grid");
-    for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != 0;
-         levelspec = levelspec->findNextBlock("Level")) {
-      for (ProblemSpecP box = levelspec->findBlock("Box"); box != 0 ; 
-           box = box->findNextBlock("Box")) {
+    for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != nullptr; levelspec = levelspec->findNextBlock("Level") ) {
+      for( ProblemSpecP box = levelspec->findBlock("Box"); box != nullptr ; box = box->findNextBlock("Box") ) {
         
         ProblemSpecP cells = box->findBlock("extraCells");
-        if (cells != 0) {
+        if( cells != nullptr ) {
           box->get("extraCells", extraCells);
           box->removeChild(cells);
         }

@@ -70,8 +70,7 @@ NonLinearDiff1::NonLinearDiff1(
     d_use_diff_curve = true;
     std::cout << "!!!!!!!!!!!!!!!!!!!using diff curve!!!!!!!!!!!!!!!" << std::endl;
     std::cout << "This is experimental: diff_curve code still needs error checking" << std::endl;
-    for (time_point = diff_curve->findBlock("time_point");
-         time_point != 0; time_point = time_point->findNextBlock("time_point")) {
+    for (time_point = diff_curve->findBlock("time_point"); time_point != nullptr; time_point = time_point->findNextBlock("time_point")) {
 
       time_point->require("time", time);
       time_point->require("flux_direction", flux_direction);

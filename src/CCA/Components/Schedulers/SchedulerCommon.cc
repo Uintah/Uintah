@@ -222,7 +222,7 @@ SchedulerCommon::emitNode( const DetailedTask * dtask
                          ,       double         execution_duration
                          )
 {  
-  if ( m_graph_nodes == 0 ) {
+  if ( m_graph_nodes == nullptr ) {
     return;
   }
 
@@ -324,7 +324,7 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
         proc0cout << "--  Defaulting to printing variable information after task execution.\n";
       }
 
-      for (ProblemSpecP var = track->findBlock("var"); var != 0; var = var->findNextBlock("var")) {
+      for (ProblemSpecP var = track->findBlock("var"); var != nullptr; var = var->findNextBlock("var")) {
         std::map<std::string, std::string> attributes;
         var->getAttributes(attributes);
         std::string name = attributes["label"];
@@ -354,7 +354,7 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
         }
       }
 
-      for (ProblemSpecP task = track->findBlock("task"); task != 0; task = task->findNextBlock("task")) {
+      for (ProblemSpecP task = track->findBlock("task"); task != nullptr; task = task->findNextBlock("task")) {
         std::map<std::string, std::string> attributes;
         task->getAttributes(attributes);
         std::string name = attributes["name"];
@@ -486,18 +486,19 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask, int when )
 
     OnDemandDataWarehouseP dw = m_dws[dtask->getTask()->mapDataWarehouse(m_tracking_dws[i])];
 
-    if (dw == 0) {  // old on initialization timestep
+    if (dw == nullptr) { // old on initialization timestep
       continue;
     }
 
-    // get the level here, as the grid can be different between the old and new DW
+    // Get the level here, as the grid can be different between the old and new DW
     const Grid* grid = dw->getGrid();
 
     int levelnum;
 
     if (m_tracking_level == -1) {
       levelnum = grid->numLevels() - 1;
-    } else {
+    }
+    else {
       levelnum = m_tracking_level;
       if (levelnum >= grid->numLevels()) {
         continue;
@@ -895,11 +896,12 @@ SchedulerCommon::advanceDataWarehouse( const GridP & grid, bool initialization /
   // The last becomes last old, and the rest are new
   m_dws[m_num_old_dws - 1] = m_dws[m_dws.size() - 1];
 
-  if (m_dws.size() == 2 && m_dws[0] == 0) {
+  if( m_dws.size() == 2 && m_dws[0] == nullptr ) {
     // first datawarehouse -- indicate that it is the "initialization" dw.
     int generation = m_generation++;
     m_dws[1] = scinew OnDemandDataWarehouse(d_myworld, this, generation, grid, true /* initialization dw */);
-  } else {
+  }
+  else {
     for (int i = m_num_old_dws; i < static_cast<int>(m_dws.size()); i++) {
       // in AMR initial cases, you can still be in initialization when you advance again
       replaceDataWarehouse(i, grid, initialization);

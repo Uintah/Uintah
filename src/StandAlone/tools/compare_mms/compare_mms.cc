@@ -190,37 +190,37 @@ main( int argc, char *argv[] )
                            ->findBlock("customInitialization"))
                            ->findBlock("manufacturedSolution");
 
-    if( cfdBlock == 0 ) {                                                                                                
+    if( cfdBlock == nullptr ) {                                                                                                
       printf("Failed to find CFD->ICE->customInitialization->manufacturedSolution in input.xml file.\n");             
       exit(1);                                                                                                        
     }                                                                                                                   
-    if(cfdBlock->get( string("A"), A ) == 0 ) {                                                                         
+    if(cfdBlock->get( string("A"), A ) == nullptr ) {                                                                         
       printf("Failed to find A in input.xml file.\n");                                                                 
       exit(1);                                                                                                         
     }                                                                                                                   
                                                                                                                         
     ProblemSpecP phyConsBlock = (docTop->findBlock("PhysicalConstants"));                                               
 
-    if(phyConsBlock == 0 ) {                                                                                            
-      printf("Failed to find PhysicalConstants in input.xml file.\n");                                                 
-      exit(1);                                                                                                         
-    }                                                                                                                   
-    if(phyConsBlock->get( string("reference_pressure"), p_ref ) == 0 ) {                                                
-      printf("Failed to find pressure in input.xml file.\n");                                                          
-      exit(1);                                                                                                         
-    }                                                                                                                   
-                                                                                                                        
-    ProblemSpecP matBlock = ((docTop->findBlockWithOutAttribute("MaterialProperties"))->findBlock("ICE"))->findBlock("material");       
+    if( phyConsBlock == nullptr ) {
+      printf("Failed to find PhysicalConstants in input.xml file.\n");
+      exit(1);
+    }
+    if( phyConsBlock->get( string("reference_pressure"), p_ref ) == nullptr ) {
+      printf("Failed to find pressure in input.xml file.\n");
+      exit(1);
+    }
 
-    if(matBlock == 0 ) {                                                                                                
-      printf("Failed to find MaterialProperties->ICE->material in input.xml file.\n");                                 
-      exit(1);                                                                                                         
-    }                                                                                                                   
+    ProblemSpecP matBlock = ((docTop->findBlockWithOutAttribute("MaterialProperties"))->findBlock("ICE"))->findBlock("material");
 
-    if(matBlock->get( string("dynamic_viscosity"), dyVis ) == 0 ) {                                                     
-      printf("Failed to find dynamic_viscosity in input.xml file.\n");                                                 
-      exit(1);                                                                                                         
-    }                                                                                                                   
+    if( matBlock == nullptr ) {
+      printf("Failed to find MaterialProperties->ICE->material in input.xml file.\n");
+      exit(1);
+    }
+
+    if(matBlock->get( string("dynamic_viscosity"), dyVis ) == nullptr ) {
+      printf("Failed to find dynamic_viscosity in input.xml file.\n");
+      exit(1);
+    }
 
     if(whichMMS=="linear") {                                                                                            
       mms = new LinearMMS(cu, cv, cw, cp, p_ref);                                                                      
@@ -240,12 +240,12 @@ main( int argc, char *argv[] )
     ProblemSpecP mmsBlock = ((docTop->findBlock("CFD"))->findBlock("ARCHES")
                          ->findBlock("MMS"));
 
-    if( mmsBlock == 0 ) {
+    if( mmsBlock == nullptr ) {
       printf("Failed to find CFD->ARCHES->MMS in input.xml file.\n");
       exit(1);
     }
 
-    if(mmsBlock->get( string("whichMMS"), whichMMS ) == 0 ) {
+    if(mmsBlock->get( string("whichMMS"), whichMMS ) == nullptr ) {
       printf("Failed to find A in input.xml file.\n");
       exit(1);
     }
@@ -253,24 +253,24 @@ main( int argc, char *argv[] )
 
     if(whichMMS=="linearMMS") {
       ProblemSpecP mmsSubBlock = mmsBlock->findBlock("linearMMS");
-      if( mmsSubBlock == 0 ) {
+      if( mmsSubBlock == nullptr ) {
         printf("Failed to find CFD->ARCHES->MMS->linearMMS in input.xml file.\n");
         exit(1);
       }
       
-      if(mmsSubBlock->get( string("cu"), cu ) == 0 ) {
+      if(mmsSubBlock->get( string("cu"), cu ) == nullptr ) {
         printf("Failed to find cu in input.xml file.\n");
         exit(1);
       }
-      if(mmsSubBlock->get( string("cv"), cv ) == 0 ) {
+      if(mmsSubBlock->get( string("cv"), cv ) == nullptr ) {
         printf("Failed to find cv in input.xml file.\n");
         exit(1);
       }
-      if(mmsSubBlock->get( string("cw"), cw ) == 0 ) {
+      if(mmsSubBlock->get( string("cw"), cw ) == nullptr ) {
         printf("Failed to find cw in input.xml file.\n");
         exit(1);
       }
-      if(mmsSubBlock->get( string("cp"), cw ) == 0 ) {
+      if(mmsSubBlock->get( string("cp"), cw ) == nullptr ) {
         printf("Failed to find cw in input.xml file.\n");
          exit(1);
       }
@@ -278,37 +278,38 @@ main( int argc, char *argv[] )
     }
     else if(whichMMS=="sineMMS") { 
       ProblemSpecP mmsSubBlock = mmsBlock->findBlock("sineMMS");
-      if( mmsSubBlock == 0 ) {
+      if( mmsSubBlock == nullptr ) {
         printf("Failed to find CFD->ARCHES->MMS->sineMMS in input.xml file.\n");
         exit(1);
       }
       
-      if(mmsSubBlock->get( string("amplitude"), A ) == 0 ) {
+      if(mmsSubBlock->get( string("amplitude"), A ) == nullptr ) {
         printf("Failed to find A in input.xml file.\n");
         exit(1);
       }
-      if(mmsSubBlock->get( string("viscosity"), dyVis ) == 0 ) {
+      if(mmsSubBlock->get( string("viscosity"), dyVis ) == nullptr ) {
         printf("Failed to find viscosity in input.xml file.\n");
         exit(1);
       }
       p_ref=0.0;
       mms = new SineMMS(A, dyVis, p_ref);
-    }else if(whichMMS=="expMMS") { 
+    }
+    else if(whichMMS=="expMMS") { 
       mms = new ExpMMS(A, dyVis, p_ref);
-    }else {  
+    }
+    else {  
       cout << "current MMS not supported\n";
       exit(1);
     }
   }
   
-  ProblemSpecP GridBlock = ((docTop->findBlock("Grid"))->findBlock("Level")
-                          ->findBlock("Box"));
+  ProblemSpecP GridBlock = ((docTop->findBlock("Grid"))->findBlock("Level")->findBlock("Box"));
 
-  if( GridBlock == 0 ) {
+  if( GridBlock == nullptr ) {
     printf("Failed to find Grid->Level->Box in input.xml file.\n");
     exit(1);
   }
-  if( GridBlock->get( string("resolution"), resolution ) == 0 ) {
+  if( GridBlock->get( string("resolution"), resolution ) == nullptr ) {
     printf("Failed to find resolution in input.xml file.\n");
     exit(1);
   }

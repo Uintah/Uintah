@@ -416,7 +416,7 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
   // Check to see if the grid has already been reconstructed and that
   // the cell scaling has not changed. Cell scale check can be removed
   // if SCIRun is no longer used for visualization
-  if (timedata.d_grid != 0  &&  old_cell_scale == d_cell_scale) {
+  if (timedata.d_grid != nullptr  &&  old_cell_scale == d_cell_scale) {
     d_lock.unlock();
     return timedata.d_grid;
   }
@@ -1496,7 +1496,7 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
   // Materials are the same for all patches on a level - only parse them from one file.
   bool addMaterials = levelNum >= 0 && d_matlInfo[levelNum].size() == 0;
 
-  for( ProblemSpecP vnode = top->getFirstChild(); vnode != 0; vnode=vnode->getNextSibling() ){
+  for( ProblemSpecP vnode = top->getFirstChild(); vnode != nullptr; vnode=vnode->getNextSibling() ){
     if(vnode->getNodeName() == "Variable") {
       string varname;
       if( !vnode->get("variable", varname) ) {
@@ -1607,7 +1607,7 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
 void
 DataArchive::TimeData::parsePatch( const Patch * patch )
 {
-  ASSERT( d_grid != 0 );
+  ASSERT( d_grid != nullptr );
 
   if( !patch ) {
     proc0cout << "parsePatch called with null patch....\n";

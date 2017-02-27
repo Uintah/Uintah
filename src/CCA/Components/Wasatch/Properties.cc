@@ -123,7 +123,7 @@ namespace WasatchCore{
     RadSpecMap spMap;
 
     for( Uintah::ProblemSpecP spParams = ggParams->findBlock("SpeciesMoleFraction");
-         spParams != 0;
+         spParams != nullptr;
          spParams = spParams->findNextBlock("SpeciesMoleFraction") ){
       std::string spnam;   spParams->getAttribute("name",spnam);
       spMap[ RadProps::species_enum( spnam ) ] = parse_nametag( spParams->findBlock("NameTag") );
@@ -293,7 +293,7 @@ namespace WasatchCore{
     VarNameMap ivarMap;
 
     for( Uintah::ProblemSpecP ivarParams = params->findBlock("IndependentVariable");
-         ivarParams != 0;
+         ivarParams != nullptr;
          ivarParams = ivarParams->findNextBlock("IndependentVariable") ){
       std::string ivarTableName;
       const Expr::Tag ivarTag = parse_nametag( ivarParams->findBlock("NameTag") );
@@ -322,7 +322,7 @@ namespace WasatchCore{
     // could create an expression that evaluated all required
     // properties at once, since the expression has that capability...
     for( Uintah::ProblemSpecP dvarParams = params->findBlock("ExtractVariable");
-         dvarParams != 0;
+         dvarParams != nullptr;
          dvarParams = dvarParams->findNextBlock("ExtractVariable") ){
 
       //_______________________________________
@@ -511,7 +511,7 @@ namespace WasatchCore{
      * of density at this RK stage
      */
     for( Uintah::ProblemSpecP transEqnParams= params->findBlock("TransportEquation");
-        transEqnParams != 0;
+        transEqnParams != nullptr;
         transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
       std::string solnVarName;
@@ -571,7 +571,7 @@ namespace WasatchCore{
 
     // TabProps
     for( Uintah::ProblemSpecP tabPropsParams = wasatchSpec->findBlock("TabProps");
-         tabPropsParams != 0;
+         tabPropsParams != nullptr;
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") )
     {
       const Category cat = parse_tasklist( tabPropsParams,false);

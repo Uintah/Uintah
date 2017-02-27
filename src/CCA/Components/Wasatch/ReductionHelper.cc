@@ -159,7 +159,7 @@ namespace WasatchCore {
   ReductionHelper::parse_reduction_spec( Uintah::ProblemSpecP wasatchSpec )
   {    
     for( Uintah::ProblemSpecP reductionSpec=wasatchSpec->findBlock("Reduction");
-        reductionSpec != 0;
+        reductionSpec != nullptr;
         reductionSpec=reductionSpec->findNextBlock("Reduction") ) {
       
       const Category cat = parse_tasklist(reductionSpec,true);

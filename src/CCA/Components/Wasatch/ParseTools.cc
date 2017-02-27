@@ -105,7 +105,7 @@ namespace WasatchCore{
     Expr::ExpressionFactory* const factory = graphCat[ADVANCE_SOLUTION]->exprFactory;
 
     for( Uintah::ProblemSpecP cleaveParams = param->findBlock("Cleave");
-        cleaveParams != 0;
+        cleaveParams != nullptr;
         cleaveParams = cleaveParams->findNextBlock("Cleave") ){
 
       const Expr::Tag tag = parse_nametag( cleaveParams->findBlock("NameTag") );
@@ -127,7 +127,7 @@ namespace WasatchCore{
                              GraphCategories& graphCat )
   {
     for( Uintah::ProblemSpecP attachParams = param->findBlock("AttachDependency");
-        attachParams != 0;
+        attachParams != nullptr;
         attachParams = attachParams->findNextBlock("AttachDependency") )
     {
       const Expr::Tag src    = parse_nametag( attachParams->findBlock("Source")->findBlock("NameTag") );

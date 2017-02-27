@@ -108,7 +108,7 @@ namespace WasatchCore {
     bool hasGeom = false;
     bool bounded=false;
     for( ProblemSpecP exprParams = wasatch_->get_wasatch_spec()->findBlock("BasicExpression");
-        exprParams != 0;
+        exprParams != nullptr;
         exprParams = exprParams->findNextBlock("BasicExpression") )
     {
       // look for ParticlePositionIC xml Blocks (initial condition). These specify the kind of

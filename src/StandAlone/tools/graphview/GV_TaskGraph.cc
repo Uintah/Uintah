@@ -36,8 +36,11 @@
 using namespace std;
 using namespace Uintah;
 
-float safePercent(double num, double denom)
-{ return (denom != 0) ? num / denom: 0; }
+float
+safePercent(double num, double denom)
+{
+  return (denom != 0) ? num / denom: 0; 
+}
 
 GV_Task::GV_Task(string name, double duration, GV_TaskGraph* owner)
   : m_name(name), m_duration(duration),
@@ -150,8 +153,7 @@ GV_TaskGraph::GV_TaskGraph()
 void GV_TaskGraph::readNodes(ProblemSpecP xmlDoc)
 {
   ProblemSpecP nodes = xmlDoc->findBlock("Nodes");
-  for (ProblemSpecP node = nodes->findBlock("node"); node != 0;
-       node = node->findNextBlock("node")) {
+  for( ProblemSpecP node = nodes->findBlock("node"); node != nullptr; node = node->findNextBlock("node") ) {
     string task_name;
     double task_duration;
     node->get("name", task_name);
@@ -175,8 +177,7 @@ void GV_TaskGraph::readNodes(ProblemSpecP xmlDoc)
 void GV_TaskGraph::readEdges(ProblemSpecP xmlDoc)
 {
   ProblemSpecP edges = xmlDoc->findBlock("Edges");
-  for (ProblemSpecP node = edges->findBlock("edge"); node != 0;
-       node = node->findNextBlock("edge")) {
+  for( ProblemSpecP node = edges->findBlock("edge"); node != nullptr;  node = node->findNextBlock("edge") ) {
     string source;
     string target;
     node->get("source", source);
