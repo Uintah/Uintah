@@ -191,7 +191,8 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
   int       proc             = -1;
   bool      foundProc        = false;
 
-  IntVector lowIndex, highIndex;
+  IntVector lowIndex;
+  IntVector highIndex;
   bool      foundLowIndex    = false;
   bool      foundHighIndex   = false;
 

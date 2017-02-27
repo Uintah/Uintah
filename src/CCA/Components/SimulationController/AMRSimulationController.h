@@ -57,17 +57,24 @@ namespace Uintah {
       
 ****************************************/
 
-   //! Controls the execution of an AMR Simulation
-   class AMRSimulationController : public SimulationController {
+//! Controls the execution of an AMR Simulation
+class AMRSimulationController : public SimulationController {
+
    public:
-     AMRSimulationController(const ProcessorGroup* myworld, bool doAMR,
-                             ProblemSpecP pspec);
-     virtual ~AMRSimulationController();
+     AMRSimulationController( const ProcessorGroup * myworld
+                            ,       bool             doAMR
+                            ,       ProblemSpecP     pspec
+                            );
+
+     virtual ~AMRSimulationController(){};
      
      virtual void run();
 
+
    protected:
+
      AMRSimulationController( const AMRSimulationController& );
+
      AMRSimulationController& operator=( const AMRSimulationController& );
      
      //! Set up, compile, and execute initial timestep
@@ -85,29 +92,35 @@ namespace Uintah {
      
      void recompile( int totalFine );
 
-     //! recursively schedule refinement, coarsening, and time
-     //! advances for finer levels - compensating for time refinement.
-     //! Builds one taskgraph
-     void subCycleCompile( int startDW, int dwStride,
-                           int numLevel, int step );
+     //! recursively schedule refinement, coarsening, and time advances for finer levels,
+     //! compensating for time refinement. Builds one taskgraph
+     void subCycleCompile( int startDW
+                         , int dwStride
+                         , int numLevel
+                         , int step
+                         );
      
      //! recursively executes taskgraphs, as several were executed.
      //! Similar to subCycleCompile, except that this executes the
      //! recursive taskgraphs, and compile builds one taskgraph (to
      //! exsecute once) recursively.
-     void subCycleExecute( int startDW, int dwStride,
-                           int numLevel, bool rootCycle );
+     void subCycleExecute( int startDW
+                         , int dwStride
+                         , int numLevel
+                         , bool rootCycle
+                         );
      
      void scheduleComputeStableTimestep();
      
-     void reduceSysVar( const ProcessorGroup *,
-                        const PatchSubset    * patches,
-                        const MaterialSubset * /*matls*/,
-                        DataWarehouse  * /*old_dw*/,
-                        DataWarehouse  * new_dw );
+     void reduceSysVar( const ProcessorGroup *
+                      , const PatchSubset    * patches
+                      , const MaterialSubset * /*matls*/
+                      ,       DataWarehouse  * /*old_dw*/
+                      ,       DataWarehouse  * new_dw
+                      );
 
      // Optional flag for scrubbing, defaulted to true.
-     bool d_scrubDataWarehouse;
+     bool d_scrubDataWarehouse{true};
 
      // Barrier timers used when running and regridding.
      Timers::Simple barrierTimer;

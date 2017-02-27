@@ -705,7 +705,7 @@ SchedulerCommon::addTask(       Task        * task
   // for the treat-as-old vars, go through the computes and add them.
   // we can (probably) safely assume that we'll avoid duplicates, since if they were inserted 
   // in the above, they wouldn't need to be marked as such
-  for (const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->m_next) {
+  for (const Task::Dependency* dep = task->getComputes(); dep != nullptr; dep = dep->m_next) {
     m_computed_vars.insert(dep->m_var);
 
     if (m_treat_as_old_vars.find(dep->m_var->getName()) != m_treat_as_old_vars.end()) {
@@ -716,7 +716,7 @@ SchedulerCommon::addTask(       Task        * task
 
   //__________________________________
   // create reduction task if computes included one or more reduction vars
-  for (const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->m_next) {
+  for (const Task::Dependency* dep = task->getComputes(); dep != nullptr; dep = dep->m_next) {
 
     if (dep->m_var->typeDescription()->isReductionVariable()) {
       int levelidx = dep->m_reduction_level ? dep->m_reduction_level->getIndex() : -1;
@@ -746,7 +746,7 @@ SchedulerCommon::addTask(       Task        * task
       dwmap[Task::NewDW] = dw;
       newtask->setMapping(dwmap);
 
-      if (dep->m_matls != 0) {
+      if (dep->m_matls != nullptr) {
         newtask->modifies(dep->m_var, dep->m_reduction_level, dep->m_matls, Task::OutOfDomain);
         for (int i = 0; i < dep->m_matls->size(); i++) {
           int maltIdx = dep->m_matls->get(i);
@@ -764,7 +764,7 @@ SchedulerCommon::addTask(       Task        * task
         }
       }
 
-      m_task_graphs[m_task_graphs.size() - 1]->addTask(newtask, 0, 0);
+      m_task_graphs[m_task_graphs.size() - 1]->addTask(newtask, nullptr, nullptr);
       m_num_tasks++;
     }
   }
@@ -819,7 +819,7 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */
   m_computed_vars.clear();
   m_num_tasks = 0;
 
-  m_max_ghost_cells = 0;
+  m_max_ghost_cells  = 0;
   m_max_level_offset = 0;
 
   m_reduction_tasks.clear();
@@ -837,8 +837,8 @@ SchedulerCommon::setParentDWs( DataWarehouse * parent_old_dw, DataWarehouse * pa
 
   if (parent_old_dw && parent_new_dw) {
 
-    ASSERT(pold != 0);
-    ASSERT(pnew != 0);
+    ASSERT(pold != nullptr);
+    ASSERT(pnew != nullptr);
     ASSERT(m_num_old_dws > 2);
 
     m_dws[0] = pold;
@@ -851,8 +851,8 @@ SchedulerCommon::setParentDWs( DataWarehouse * parent_old_dw, DataWarehouse * pa
 void
 SchedulerCommon::clearMappings()
 {
-  for(int i=0;i<Task::TotalDWs;i++) {
-    m_dwmap[i]=-1;
+  for (int i = 0; i < Task::TotalDWs; i++) {
+    m_dwmap[i] = -1;
   }
 }
 
@@ -930,9 +930,11 @@ SchedulerCommon::replaceDataWarehouse(       int     index
                                      )
 {
   m_dws[index] = scinew OnDemandDataWarehouse(d_myworld, this, m_generation++, grid, initialization);
+
   if (initialization) {
     return;
   }
+
   for (unsigned i = 0; i < m_task_graphs.size(); i++) {
     DetailedTasks* dts = m_task_graphs[i]->getDetailedTasks();
     if (dts) {
@@ -966,8 +968,8 @@ SchedulerCommon::getSuperPatchExtents( const VarLabel         * label
 {
   const SuperPatch* connectedPatchGroup = m_locallyComputedPatchVarMap->getConnectedPatchGroup(patch);
 
-  if (connectedPatchGroup == 0) {
-    return 0;
+  if (connectedPatchGroup == nullptr) {
+    return nullptr;
   }
 
   SuperPatch::Region requestedExtents = connectedPatchGroup->getRegion();
@@ -981,7 +983,8 @@ SchedulerCommon::getSuperPatchExtents( const VarLabel         * label
 
     Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), true);
 
-    IntVector lowOffset = IntVector(0, 0, 0), highOffset = IntVector(0, 0, 0);
+    IntVector lowOffset  = IntVector(0, 0, 0);
+    IntVector highOffset = IntVector(0, 0, 0);
 
     //set requiredLow and requiredHigh as extents without ghost cells
     memberPatch->computeExtents(basis, label->getBoundaryLayer(), lowOffset, highOffset, requiredLow, requiredHigh);
@@ -1097,7 +1100,7 @@ SchedulerCommon::compile()
     DOUT(schedulercommon_dbg, "Rank-" << d_myworld->myrank() << " SchedulerCommon starting compile");
 
     // pass the first to the rest, so we can share the scrubcountTable
-    DetailedTasks* first = 0;
+    DetailedTasks* first = nullptr;
     for (unsigned i = 0; i < m_task_graphs.size(); i++) {
       if (m_task_graphs.size() > 1) {
         DOUT(schedulercommon_dbg, "Rank-" << d_myworld->myrank() << "  Compiling graph#" << i << " of " << m_task_graphs.size());
@@ -1442,7 +1445,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
         const VarLabel* var = iter->first;
         MaterialSubset* matls = iter->second;
 
-        dataTasks.back()->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+        dataTasks.back()->requires(Task::OldDW, var, nullptr, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
         DOUT(schedulercommon_dbg, "  Scheduling modify for var " << *var << " matl " << *matls << " Modifies: " << *refinePatchSets[L].get_rep());
         dataTasks.back()->modifies(var, matls);
       }
@@ -1630,7 +1633,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                 for (unsigned int i = 0; i < varlist.size(); ++i) {
                   v = dynamic_cast<GridVariableBase*>(varlist[i]);
 
-                  ASSERT(v->getBasePointer() != 0);
+                  ASSERT(v->getBasePointer() != nullptr);
 
                   //restrict copy to data range
                   srclow = Max(copyLowIndex, v->getLow());

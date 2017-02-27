@@ -596,10 +596,9 @@ TaskGraph::nullSort( std::vector<Task*> & tasks )
 {
   std::vector<Task*>::iterator iter;
 
-  // No longer going to sort them... let the UnifiedScheduler (threaded) take care
-  // of calling the tasks when all dependencies are satisfied.
-  // Sorting the tasks causes problem because now tasks (actually task
-  // groups) run in different orders on different MPI processes.
+  // No longer going to sort them... let the threaded scheduler take care of calling the tasks
+  // when all dependencies are satisfied. Sorting the tasks causes problem because now tasks
+  // (actually task groups) run in different orders on different MPI processes.
   int n = 0;
   for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
     // For all reduction tasks filtering out the one that is not in ReductionTasksMap 
@@ -710,10 +709,11 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
                               , const GridP         & oldGrid
                               )
 {
-  std::vector<Task*> sorted_tasks;
-
-  // TODO plz leave this commented line alone, APH 01/07/15
+  // plz leave this commented line alone, APH 02/17/16
+  // this is an artifact of the old static graph, serially executed - will prune this all out at some point
   //topologicalSort(sorted_tasks);
+
+  std::vector<Task*> sorted_tasks;
   nullSort(sorted_tasks);
 
   m_reduction_tasks.clear();
