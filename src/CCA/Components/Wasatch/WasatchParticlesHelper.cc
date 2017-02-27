@@ -27,7 +27,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "WasatchParticlesHelper.h"
+#include <CCA/Components/Wasatch/WasatchParticlesHelper.h>
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/Wasatch.h>
@@ -140,7 +140,7 @@ namespace WasatchCore {
           geomBasedSpec->getAttribute("seed",seed);
           // parse all intrusions
           for( ProblemSpecP intrusionParams = geomBasedSpec->findBlock("geom_object");
-              intrusionParams != 0;
+              intrusionParams != nullptr;
               intrusionParams = intrusionParams->findNextBlock("geom_object") )
           {
             GeometryPieceFactory::create(intrusionParams, geomObjects);

@@ -141,9 +141,8 @@ namespace WasatchCore{
 
     if( !isConstDensity_ ){
       for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
-           diffFluxParams != 0;
-           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
-      {
+           diffFluxParams != nullptr;
+           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
         Expr::Tag densityTag, primVarTag;
         if (is_strong_form()) {
           densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
@@ -178,9 +177,8 @@ namespace WasatchCore{
     }
     else{ // constant density
       for( Uintah::ProblemSpecP diffVelParams=params_->findBlock("DiffusiveFlux");
-          diffVelParams != 0;
-          diffVelParams=diffVelParams->findNextBlock("DiffusiveFlux") )
-      {
+           diffVelParams != nullptr;
+           diffVelParams=diffVelParams->findNextBlock("DiffusiveFlux") ) {
         setup_diffusive_velocity_expression<FieldT>( diffVelParams,
                                                      primVarTag_,
                                                      turbDiffTag_,
@@ -199,9 +197,8 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     const Expr::Tag solnVarTag( solnVarName_, Expr::STATE_DYNAMIC );
     for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
-        convFluxParams != 0;
-        convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
-    {
+         convFluxParams != nullptr;
+         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") ) {
       setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, factory, info );
     }
   }
@@ -214,9 +211,8 @@ namespace WasatchCore{
                                                        Expr::TagList& srcTags )
   {
     for( Uintah::ProblemSpecP sourceTermParams=params_->findBlock("SourceTermExpression");
-         sourceTermParams != 0;
-         sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") )
-    {
+         sourceTermParams != nullptr;
+         sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") ) {
       srcTags.push_back( parse_nametag( sourceTermParams->findBlock("NameTag") ) );
     }
   }

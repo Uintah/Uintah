@@ -386,7 +386,7 @@ namespace WasatchCore{
     const Expr::Tag scalarEOSCouplingTag(primVarName + "*_EOS_Coupling", Expr::STATE_NONE);
     
     for( Uintah::ProblemSpecP bcExprParams = wasatchParams->findBlock("BCExpression");
-        bcExprParams != 0;
+        bcExprParams != nullptr;
         bcExprParams = bcExprParams->findNextBlock("BCExpression") )
     {
       if( bcExprParams->findBlock("VarDenMMSMomentum") ){
@@ -601,7 +601,7 @@ namespace WasatchCore{
     std::string bodyForceDir;
     Expr::Tag xBodyForceTag, yBodyForceTag, zBodyForceTag;
     for( Uintah::ProblemSpecP bodyForceParams=momentumSpec->findBlock("BodyForce");
-        bodyForceParams != 0;
+        bodyForceParams != nullptr;
         bodyForceParams=bodyForceParams->findNextBlock("BodyForce") ){
       bodyForceParams->getAttribute("direction", bodyForceDir );
       if (bodyForceDir == "X") xBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
@@ -613,7 +613,7 @@ namespace WasatchCore{
     std::string srcTermDir;
     Expr::Tag xSrcTermTag, ySrcTermTag, zSrcTermTag;
     for( Uintah::ProblemSpecP srcTermParams=momentumSpec->findBlock("SourceTerm");
-        srcTermParams != 0;
+        srcTermParams != nullptr;
         srcTermParams=srcTermParams->findNextBlock("SourceTerm") ){
       srcTermParams->getAttribute("direction", srcTermDir );
       if (srcTermDir == "X") xSrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
@@ -903,7 +903,7 @@ namespace WasatchCore{
     //get the initial moments
     std::vector< double> initialMoments;
     for( Uintah::ProblemSpecP exprParams = wasatchParams->findBlock("MomentInitialization");
-        exprParams != 0;
+        exprParams != nullptr;
         exprParams = exprParams->findNextBlock("MomentInitialization") )
     {
       std::string populationName;

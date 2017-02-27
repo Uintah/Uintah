@@ -80,15 +80,12 @@ namespace WasatchCore{
     
     // pick up the gravity terms
     doGravity_ = false;
-    for( Uintah::ProblemSpecP gravitySpec=pMomSpec->findBlock("Gravity");
-        gravitySpec != 0;
-        gravitySpec=gravitySpec->findNextBlock("Gravity") )
-    {
+    for( Uintah::ProblemSpecP gravitySpec=pMomSpec->findBlock("Gravity"); gravitySpec != nullptr; gravitySpec = gravitySpec->findNextBlock("Gravity") ) {
       std::string gDir;
       gravitySpec->getAttribute("direction",gDir);
-      if      (gDir == "X" && dir_name() == "x") doGravity_ = true;
-      else if (gDir == "Y" && dir_name() == "y") doGravity_ = true;
-      else if (gDir == "Z" && dir_name() == "z") doGravity_ = true;
+      if     ( gDir == "X" && dir_name() == "x" ) { doGravity_ = true; }
+      else if( gDir == "Y" && dir_name() == "y" ) { doGravity_ = true; }
+      else if( gDir == "Z" && dir_name() == "z" ) { doGravity_ = true; }
     }
     
     // check if drag was disabled

@@ -134,9 +134,8 @@ namespace WasatchCore{
         // parse all intrusions
   
         for( Uintah::ProblemSpecP intrusionParams = geomBasedSpec->findBlock("geom_object");
-            intrusionParams != 0;
-            intrusionParams = intrusionParams->findNextBlock("geom_object") )
-        {
+             intrusionParams != nullptr;
+             intrusionParams = intrusionParams->findNextBlock("geom_object") ) {
           Uintah::GeometryPieceFactory::create(intrusionParams,geomObjects);
         }
         builder = scinew typename ParticleGeometryBased::Builder(tag, coord, seed, geomObjects);
@@ -286,9 +285,8 @@ namespace WasatchCore{
       Expr::TagList srcFieldTagList;
       
       for( Uintah::ProblemSpecP exprParams = valParams->findBlock("NameTag");
-          exprParams != 0;
-          exprParams = exprParams->findNextBlock("NameTag") )
-      {
+          exprParams != nullptr;
+          exprParams = exprParams->findNextBlock("NameTag") ) {
         srcFieldTagList.push_back( parse_nametag( exprParams ) );
       }
       
@@ -478,9 +476,8 @@ namespace WasatchCore{
       std::vector<Uintah::GeometryPieceP> geomObjects;
       
       for( Uintah::ProblemSpecP intrusionParams = geomBasedSpec->findBlock("Intrusion");
-          intrusionParams != 0;
-          intrusionParams = intrusionParams->findNextBlock("Intrusion") )
-      {
+          intrusionParams != nullptr;
+          intrusionParams = intrusionParams->findNextBlock("Intrusion") ) {
         std::cout << "intrusion " << std::endl;
         Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);
         double insideValue = 0.0;
@@ -829,7 +826,7 @@ namespace WasatchCore{
       Expr::TagList firstMomentTags;
       //assumes all moment transport eqns are for particles
       for ( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
-           momentParams != 0;
+           momentParams != nullptr;
            momentParams = momentParams->findNextBlock("MomentTransportEquation") ) {
         momentParams ->get("PopulationName",basePhiName);
         if (momentParams->findBlock("MultiEnvMixingModel") ) {
@@ -837,7 +834,8 @@ namespace WasatchCore{
           zerothMomentTags.push_back(momentTag);
           momentTag = Expr::Tag("m_" + basePhiName + "_1_ave", Expr::STATE_NONE);
           firstMomentTags.push_back(momentTag);
-        } else {
+        }
+        else {
           momentTag = Expr::Tag("m_" + basePhiName + "_0", Expr::STATE_N);
           zerothMomentTags.push_back(momentTag);
           momentTag = Expr::Tag("m_" + basePhiName + "_1", Expr::STATE_N);
@@ -895,13 +893,13 @@ namespace WasatchCore{
       }
       
       for( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
-           momentParams != 0;
+           momentParams != nullptr;
            momentParams = momentParams->findNextBlock("MomentTransportEquation") ){
         momentParams->get("MolecVol", molecVol);
         momentParams->get("PopulationName", basePhiName);
         
         for( Uintah::ProblemSpecP growthParams=momentParams->findBlock("GrowthExpression");
-             growthParams != 0;
+             growthParams != nullptr;
              growthParams = growthParams->findNextBlock("GrowthExpression") ){
           molecVolumes.push_back(molecVol);
           growthParams->get("GrowthModel", modelType);
@@ -909,7 +907,7 @@ namespace WasatchCore{
           sourceTagList.push_back(sourceTag);
         }
         for( Uintah::ProblemSpecP birthParams=momentParams->findBlock("BirthExpression");
-             birthParams != 0;
+             birthParams != nullptr;
              birthParams = birthParams->findNextBlock("BirthExpression") ){
           molecVolumes.push_back(molecVol);
           birthParams->get("BirthModel", modelType);
@@ -917,7 +915,7 @@ namespace WasatchCore{
           sourceTagList.push_back(sourceTag);
         }
         for( Uintah::ProblemSpecP deathParams=momentParams->findBlock("Dissolution");
-            deathParams != 0;
+            deathParams != nullptr;
             deathParams = deathParams->findNextBlock("Dissolution") ){
           molecVolumes.push_back(molecVol);
           sourceTag = Expr::Tag( "m_" + basePhiName + "_3_death", Expr::STATE_NONE);
@@ -1101,7 +1099,7 @@ namespace WasatchCore{
     //___________________________________
     // parse and build basic expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("BasicExpression");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("BasicExpression") ){
       
       std::string fieldType;
@@ -1126,7 +1124,7 @@ namespace WasatchCore{
     //________________________________________
     // parse and build Taylor-Green Vortex MMS
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("TaylorVortexMMS");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("TaylorVortexMMS") ){
       
       std::string fieldType;
@@ -1150,7 +1148,7 @@ namespace WasatchCore{
     //___________________________________________________
     // parse and build physical coefficients expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("PrecipitationBasicExpression");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("PrecipitationBasicExpression") ){
       
       std::string fieldType;
@@ -1171,7 +1169,7 @@ namespace WasatchCore{
     //___________________________________________________
     // parse and build post-processing expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("PostProcessingExpression");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("PostProcessingExpression") ){
       
       std::string fieldType;
@@ -1302,7 +1300,7 @@ namespace WasatchCore{
     //___________________________________________________
     // parse and build boundary condition expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("BCExpression");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("BCExpression") ){
       
       std::string fieldType;
@@ -1352,7 +1350,7 @@ namespace WasatchCore{
     
     // This is a special parser for turbulent inlets
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("TurbulentInlet");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("TurbulentInlet") ){
       
       std::string inputFileName, baseName;
@@ -1394,7 +1392,7 @@ namespace WasatchCore{
     //_________________________________________________
     // This is a special parser for variable density MMS
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("VarDenOscillatingMMS");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("VarDenOscillatingMMS") ){
       
       const TagNames& tagNames = TagNames::self();
@@ -1446,7 +1444,7 @@ namespace WasatchCore{
     }
     int nEqs = 2*nEnv; // we need the number of equations so that we only build the necessary number of moments for initialization
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("MomentInitialization");
-         exprParams != 0;
+         exprParams != nullptr;
          exprParams = exprParams->findNextBlock("MomentInitialization") ){
       
       std::string populationName;

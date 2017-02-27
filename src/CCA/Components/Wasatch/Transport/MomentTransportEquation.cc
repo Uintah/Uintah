@@ -491,9 +491,8 @@ namespace WasatchCore {
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
-        diffFluxParams != 0;
-        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
-    {
+        diffFluxParams != nullptr;
+        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
       const Expr::Tag turbDiffTag = Expr::Tag();
       setup_diffusive_velocity_expression<FieldT>( diffFluxParams, solnVarTag_, turbDiffTag, factory, info );
     }
@@ -507,9 +506,8 @@ namespace WasatchCore {
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
-         convFluxParams != 0;
-         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
-    {
+         convFluxParams != nullptr;
+         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") ) {
        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag_, factory, info );
      }
   }
@@ -551,9 +549,8 @@ namespace WasatchCore {
     //____________
     // Growth
     for( Uintah::ProblemSpecP growthParams=params_->findBlock("GrowthExpression");
-        growthParams != 0;
-        growthParams=growthParams->findNextBlock("GrowthExpression") )
-    {
+        growthParams != nullptr;
+        growthParams=growthParams->findNextBlock("GrowthExpression") ) {
       setup_growth_expression <FieldT>( growthParams, baseSolnVarName_, solnVarName_,
                                         momentOrder_, nEqn_,            rhsTags,
                                         weightsTags_, abscissaeTags_,   factory );
@@ -573,9 +570,8 @@ namespace WasatchCore {
     //_________________
     // Birth
     for( Uintah::ProblemSpecP birthParams=params_->findBlock("BirthExpression");
-        birthParams != 0;
-        birthParams = birthParams->findNextBlock("BirthExpression") )
-    {
+        birthParams != nullptr;
+        birthParams = birthParams->findNextBlock("BirthExpression") ) {
       setup_birth_expression <FieldT>( birthParams,  baseSolnVarName_, solnVarName_,
                                        momentOrder_, nEqn_,            rhsTags,
                                        factory );
@@ -593,9 +589,8 @@ namespace WasatchCore {
     //_________________
     // Aggregation
     for( Uintah::ProblemSpecP aggParams=params_->findBlock("AggregationExpression");
-        aggParams != 0;
-        aggParams = aggParams->findNextBlock("AggregationExpression") )
-    {
+        aggParams != nullptr;
+        aggParams = aggParams->findNextBlock("AggregationExpression") ) {
       setup_aggregation_expression <FieldT>( aggParams,    solnVarName_,   populationName_,
                                              momentOrder_, nEnv_,          rhsTags,
                                              weightsTags_, abscissaeTags_, factory );

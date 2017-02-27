@@ -707,9 +707,8 @@ namespace WasatchCore {
 #   endif
     {
       for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
-          diffFluxParams != 0;
-          diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
-      {
+          diffFluxParams != nullptr;
+          diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") ) {
         setup_diffusive_velocity_expression<MyFieldT>( diffFluxParams,
                                                        temperatureTag_,
                                                        turbDiffTag_,
@@ -735,9 +734,8 @@ namespace WasatchCore {
                                                                         ExprAlgebra<MyFieldT>::SUM ) );
 
     for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
-         convFluxParams != 0;
-         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
-    {
+         convFluxParams != nullptr;
+         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") ) {
       setup_convective_flux_expression<MyFieldT>( convFluxParams, combinedVarTag, factory, info );
     }
   }
