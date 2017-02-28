@@ -181,13 +181,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   DetailedTasks* dts = tg->getDetailedTasks();
-
-  if(!dts) {
-    if (d_myworld->myrank() == 0) {
-      DOUT(true, "DynamicMPIScheduler skipping execute, no tasks");
-    }
-    return;
-  }
   
   int ntasks = dts->numLocalTasks();
   dts->initializeScrubs(m_dws, m_dwmap);
@@ -228,7 +221,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   std::map<int, int> phaseTasks;
   std::map<int, int> phaseTasksDone;
   std::map<int,  DetailedTask *> phaseSyncTask;
-  dts->setTaskPriorityAlg(m_task_queue_alg );
+  dts->setTaskPriorityAlg(m_task_queue_alg);
 
   for (int i = 0; i < ntasks; i++) {
     phaseTasks[dts->localTask(i)->getTask()->m_phase]++;
@@ -298,10 +291,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       numTasksDone++;
 
       if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
-        DOUT(true,
-             d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: " << numTasksDone);
+        DOUT(true, d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: " << numTasksDone);
       }
-
       phaseTasksDone[task->getTask()->m_phase]++;
     } 
 
@@ -413,8 +404,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
   //---------------------------------------------------------------------------
 
-  ASSERT(m_sends.size() == 0);
-  ASSERT(m_recvs.size() == 0);
+  ASSERT(m_sends.size() == 0u);
+  ASSERT(m_recvs.size() == 0u);
 
 
   if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {

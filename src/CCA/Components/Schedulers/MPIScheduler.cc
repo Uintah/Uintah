@@ -818,7 +818,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     else {
       initiateTask( dtask, abort, abort_point, iteration );
       processMPIRecvs( WAIT_ALL );
-      ASSERT( m_recvs.size() == 0 );
+      ASSERT( m_recvs.size() == 0u );
       runTask( dtask, iteration );
 
       DOUT(g_task_begin_end, "Rank-" << d_myworld->myrank() << " Completed task: " << dtask->getTask()->getName() << "\t" << *dtask);
@@ -828,7 +828,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
       abort = true;
       abort_point = dtask->getTask()->getSortedOrder();
 
-      DOUT(g_dbg, "Aborting timestep after task: " << *dtask->getTask());
+      DOUT(true, "Aborting timestep after task: " << *dtask->getTask());
     }
   } // end while( numTasksDone < ntasks )
 
@@ -874,8 +874,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   }
   //---------------------------------------------------------------------------
 
-  ASSERT(m_sends.size() == 0);
-  ASSERT(m_recvs.size() == 0);
+  ASSERT(m_sends.size() == 0u);
+  ASSERT(m_recvs.size() == 0u);
 
 
   if (m_restartable && tgnum == static_cast<int>(m_task_graphs.size()) - 1) {

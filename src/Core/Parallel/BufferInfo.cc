@@ -22,138 +22,147 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/BufferInfo.h>
-#include <Core/Util/RefCounted.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/RefCounted.h>
 
 using namespace Uintah;
-using std::vector;
 
-BufferInfo::BufferInfo()
-{
-  d_have_datatype = false;
-  d_free_datatype = false;
-  d_sendlist      = 0;
-}
 
+//_____________________________________________________________________________
+//
 BufferInfo::~BufferInfo()
 {
-  if( d_free_datatype ) {
-    ASSERT(datatype!=MPI_DATATYPE_NULL);
-    ASSERT(datatype!=MPI_INT);
-    ASSERT(datatype!=MPI_DOUBLE);
-    Uintah::MPI::Type_free(&datatype);
-    datatype = MPI_DATATYPE_NULL;
+  if (m_free_datatype) {
+    ASSERT(m_datatype != MPI_DATATYPE_NULL);
+    ASSERT(m_datatype != MPI_INT);
+    ASSERT(m_datatype != MPI_DOUBLE);
+    Uintah::MPI::Type_free(&m_datatype);
+    m_datatype = MPI_DATATYPE_NULL;
   }
 
-  for( unsigned int i = 0; i < d_datatypes.size(); i++ ) {
-    if( d_free_datatypes[i] ) {
-      ASSERT( d_datatypes[i] != MPI_DATATYPE_NULL );
-      ASSERT( d_datatypes[i] != MPI_INT );
-      ASSERT( d_datatypes[i] != MPI_DOUBLE );
-      Uintah::MPI::Type_free( &d_datatypes[i] );
-      d_datatypes[i] = MPI_DATATYPE_NULL;
+  for (unsigned int i = 0; i < m_datatypes.size(); i++) {
+    if (m_free_datatypes[i]) {
+      ASSERT(m_datatypes[i] != MPI_DATATYPE_NULL);
+      ASSERT(m_datatypes[i] != MPI_INT);
+      ASSERT(m_datatypes[i] != MPI_DOUBLE);
+      Uintah::MPI::Type_free(&m_datatypes[i]);
+      m_datatypes[i] = MPI_DATATYPE_NULL;
     }
   }
 
-  if( d_sendlist ) {
-    delete d_sendlist;
-    d_sendlist = 0;
+  if (m_send_list) {
+    delete m_send_list;
+    m_send_list = nullptr;
   }
 }
 
+//_____________________________________________________________________________
+//
 unsigned int
 BufferInfo::count() const
 {
-  return (int)d_datatypes.size();
+  return (int)m_datatypes.size();
 }
 
+//_____________________________________________________________________________
+//
 void
-BufferInfo::add( void*          startbuf,
-                 int            count,
-                 MPI_Datatype   datatype,
-                 bool           free_datatype )
+BufferInfo::add( void         * startbuf
+               , int            count
+               , MPI_Datatype   datatype
+               , bool           free_datatype
+               )
 {
-  ASSERT( !d_have_datatype );
-  d_startbufs.push_back( startbuf );
-  d_counts.push_back( count );
-  d_datatypes.push_back( datatype );
-  d_free_datatypes.push_back( free_datatype );
+  ASSERT( !m_have_datatype );
+  m_start_bufs.push_back( startbuf );
+  m_counts.push_back( count );
+  m_datatypes.push_back( datatype );
+  m_free_datatypes.push_back( free_datatype );
 }
 
+//_____________________________________________________________________________
+//
 void
-BufferInfo::get_type( void*&        out_buf,
-                      int&          out_count,
-                      MPI_Datatype& out_datatype )
+BufferInfo::get_type( void        *& out_buf
+                    , int          & out_count
+                    , MPI_Datatype & out_datatype
+                    )
 {
   ASSERT(count() > 0);
 
-  if( !d_have_datatype ) {
+  if( !m_have_datatype ) {
     if( count() == 1 ) {
-      buf             = d_startbufs[0];
-      cnt             = d_counts[0];
-      datatype        = d_datatypes[0];
-      d_free_datatype = false; // Will get freed with array
+      m_buffer             = m_start_bufs[0];
+      m_count             = m_counts[0];
+      m_datatype        = m_datatypes[0];
+      m_free_datatype = false; // Will get freed with array
     }
     else {
       //MPI_Type_create_struct allows for multiple things to be sent in a single message.  
       std::vector<MPI_Aint> displacements(count());
       displacements[0] = 0; //relative to itself, should always start at zero
-      for( unsigned int i = 1; i < d_startbufs.size(); i++ ) {
-        //Find how far this address is displaced from the first address.
-        //From MPI's point of view, it won't know whether these offsets are from the same array or 
-        //from entirely different variables.  We'll take advantage of that second point.  
-        //It also appears to allow for negative displacements.
-        displacements[i] = (MPI_Aint)((char*)d_startbufs.at(i) - (char*)d_startbufs.at(0));
+      for( unsigned int i = 1; i < m_start_bufs.size(); i++ ) {
+        // Find how far this address is displaced from the first address.
+        // From MPI's point of view, it won't know whether these offsets are from the same array or
+        // from entirely different variables.  We'll take advantage of that second point.
+        // It also appears to allow for negative displacements.
+        displacements[i] = (MPI_Aint)((char*)m_start_bufs.at(i) - (char*)m_start_bufs.at(0));
       }
-      Uintah::MPI::Type_create_struct( count(), &d_counts[0], &displacements[0], &d_datatypes[0], &datatype );
-      Uintah::MPI::Type_commit( &datatype );
-      buf = d_startbufs[0];
-      cnt = 1;
-      d_free_datatype = true;
+      Uintah::MPI::Type_create_struct( count(), &m_counts[0], &displacements[0], &m_datatypes[0], &m_datatype );
+      Uintah::MPI::Type_commit( &m_datatype );
+      m_buffer = m_start_bufs[0];
+      m_count = 1;
+      m_free_datatype = true;
     }
-    d_have_datatype = true;
+    m_have_datatype = true;
   }
-  out_buf      = buf;
-  out_count    = cnt;
-  out_datatype = datatype;
+  out_buf      = m_buffer;
+  out_count    = m_count;
+  out_datatype = m_datatype;
 }
 
+//_____________________________________________________________________________
+//
 Sendlist::~Sendlist()
 {
-  if (obj && obj->removeReference()) {
-    delete obj;
-    obj = 0;
+  if (m_obj && m_obj->removeReference()) {
+    delete m_obj;
+    m_obj = nullptr;
   }
 
   // A little more complicated than normal, so that this doesn't need to be recursive...
-
-  Sendlist* p = next;
+  Sendlist* p = m_next;
   while( p ){
 
-    if( p->obj->removeReference() ) {
-      delete p->obj;
+    if( p->m_obj->removeReference() ) {
+      delete p->m_obj;
     }
-    Sendlist* n = p->next;
-    p->next = 0;  // So that DTOR won't recurse...
-    p->obj = 0;
+    Sendlist* n = p->m_next;
+    p->m_next = nullptr;  // So that DTOR won't recurse...
+    p->m_obj  = nullptr;
     delete p;
     p = n;
   }
 }
 
+//_____________________________________________________________________________
+//
 void
-BufferInfo::addSendlist( RefCounted* obj )
+BufferInfo::addSendlist( RefCounted * obj )
 {
   obj->addReference();
-  d_sendlist = scinew Sendlist( d_sendlist, obj );
+  m_send_list = scinew Sendlist( m_send_list, obj );
 }
 
+//_____________________________________________________________________________
+// This is a nasty contract - taker is now responsible for freeing...
 Sendlist*
 BufferInfo::takeSendlist()
 {
-  Sendlist* rtn = d_sendlist;
-  d_sendlist = 0; // They are now responsible for freeing...
+  Sendlist* rtn = m_send_list;
+  m_send_list = nullptr;
   return rtn;
 }
+

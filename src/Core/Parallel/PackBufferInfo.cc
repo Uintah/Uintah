@@ -23,111 +23,116 @@
  */
 
 #include <Core/Parallel/PackBufferInfo.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Util/RefCounted.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/RefCounted.h>
 
 using namespace Uintah;
 
 #include <iostream>
-#include <zlib.h>
 #include <string.h>
 
-PackBufferInfo::PackBufferInfo() :
-  BufferInfo()
-{
-  packedBuffer = 0;
-}
 
+//_____________________________________________________________________________
+//
+PackBufferInfo::PackBufferInfo() : BufferInfo() {}
+
+//_____________________________________________________________________________
+//
 PackBufferInfo::~PackBufferInfo()
 {
-  if (packedBuffer && packedBuffer->removeReference()) {
-    delete packedBuffer;
-    packedBuffer = 0;
+  if (m_packed_buffer && m_packed_buffer->removeReference()) {
+    delete m_packed_buffer;
+    m_packed_buffer = nullptr;
   }
 }
 
+//_____________________________________________________________________________
+//
 void
-PackBufferInfo::get_type( void*&         out_buf,
-                          int&           out_count,
-                          MPI_Datatype&  out_datatype,
-                          MPI_Comm       comm )
+PackBufferInfo::get_type( void         *& out_buf
+                        , int&            out_count
+                        , MPI_Datatype  & out_datatype
+                        , MPI_Comm        comm
+                        )
 {
-  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::get_type");
   ASSERT(count() > 0);
-  if( !d_have_datatype ) {
+  if (!m_have_datatype) {
     int packed_size;
     int total_packed_size = 0;
-    for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
-      if( d_counts[i] > 0 ) {
-        Uintah::MPI::Pack_size( d_counts[i], d_datatypes[i], comm, &packed_size );
+    for (unsigned int i = 0; i < m_start_bufs.size(); i++) {
+      if (m_counts[i] > 0) {
+        Uintah::MPI::Pack_size(m_counts[i], m_datatypes[i], comm, &packed_size);
         total_packed_size += packed_size;
       }
     }
 
-    packedBuffer = scinew PackedBuffer(total_packed_size);
-    packedBuffer->addReference();
+    m_packed_buffer = scinew PackedBuffer(total_packed_size);
+    m_packed_buffer->addReference();
 
-    datatype = MPI_PACKED;
-    cnt = total_packed_size;
-    buf = packedBuffer->getBuffer();
-    d_have_datatype = true;
+    m_datatype = MPI_PACKED;
+    m_count = total_packed_size;
+    m_buffer = m_packed_buffer->getBuffer();
+    m_have_datatype = true;
   }
 
-  out_buf = buf;
-  out_count = cnt;
-  out_datatype = datatype;
+  out_buf = m_buffer;
+  out_count = m_count;
+  out_datatype = m_datatype;
 }
 
+//_____________________________________________________________________________
+//
 void
-PackBufferInfo::get_type( void*&,
-                          int&,
-                          MPI_Datatype& )
+PackBufferInfo::get_type( void        *&
+                        , int          &
+                        , MPI_Datatype &
+                        )
 {
   // Should use other overload for a PackBufferInfo
   SCI_THROW(Uintah::InternalError("get_type(void*&, int&, MPI_Datatype&) should not be called on PackBufferInfo objects", __FILE__, __LINE__));
 }
 
+//_____________________________________________________________________________
+//
 void
-PackBufferInfo::pack( MPI_Comm   comm,
-                      int&       out_count )
+PackBufferInfo::pack( MPI_Comm comm, int & out_count )
 {
-  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::pack");
-  ASSERT( d_have_datatype );
+  ASSERT(m_have_datatype);
 
   int position = 0;
-  int bufsize = packedBuffer->getBufSize();
+  int bufsize = m_packed_buffer->getBufSize();
   //for each buffer
-  for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
+  for (unsigned int i = 0; i < m_start_bufs.size(); i++) {
     //pack into a contiguous buffer
-    if( d_counts[i] > 0 ) {
-      Uintah::MPI::Pack( d_startbufs[i], d_counts[i], d_datatypes[i], buf, bufsize, &position, comm );
+    if (m_counts[i] > 0) {
+      Uintah::MPI::Pack(m_start_bufs[i], m_counts[i], m_datatypes[i], m_buffer, bufsize, &position, comm);
     }
   }
 
   out_count = position;
 
-  // When it is all packed, only the buffer necessarily needs to be kept
-  // around until after it is sent.
-  delete d_sendlist;
-  d_sendlist = 0;
-  addSendlist( packedBuffer );
+  // When it is all packed, only the buffer necessarily needs to be kept around until after it is sent.
+  delete m_send_list;
+  m_send_list = nullptr;
+  addSendlist(m_packed_buffer);
 }
 
+//_____________________________________________________________________________
+//
 void
-PackBufferInfo::unpack( MPI_Comm     comm,
-                        MPI_Status&  status )
+PackBufferInfo::unpack( MPI_Comm comm, MPI_Status & status )
 {
-  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::unpack");
-  ASSERT( d_have_datatype );
+  ASSERT(m_have_datatype);
 
-  unsigned long bufsize = packedBuffer->getBufSize();
+  unsigned long bufsize = m_packed_buffer->getBufSize();
 
   int position = 0;
-  for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
-    if( d_counts[i] > 0 ) {
-      Uintah::MPI::Unpack( buf, bufsize, &position, d_startbufs[i], d_counts[i], d_datatypes[i], comm );
+  for (unsigned int i = 0; i < m_start_bufs.size(); i++) {
+    if (m_counts[i] > 0) {
+      Uintah::MPI::Unpack(m_buffer, bufsize, &position, m_start_bufs[i], m_counts[i], m_datatypes[i], comm);
     }
   }
 }

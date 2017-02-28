@@ -417,8 +417,7 @@ TaskGraph::addDependencyEdges( Task              * task
           }
 
           if (modifies) {
-            // Add dependency edges to each task that requires the data
-            // before it is modified.
+            // Add dependency edges to each task that requires the data before it is modified.
             for (Task::Edge* otherEdge = comp->m_req_head; otherEdge != nullptr; otherEdge = otherEdge->m_req_next) {
               Task::Dependency* priorReq = const_cast<Task::Dependency*>(otherEdge->m_req);
               if (priorReq != req) {
@@ -429,8 +428,7 @@ TaskGraph::addDependencyEdges( Task              * task
                   req->addComp(edge);
                   priorReq->addReq(edge);
                   if (detaileddbg.active()) {
-                    detaileddbg << m_proc_group->myrank() << " Creating edge from task: " << *priorReq->m_task << " to task: "
-                                << *req->m_task << "\n";
+                    detaileddbg << m_proc_group->myrank() << " Creating edge from task: " << *priorReq->m_task << " to task: " << *req->m_task << "\n";
                     detaileddbg << m_proc_group->myrank() << " Prior Req=" << *priorReq << "\n";
                     detaileddbg << m_proc_group->myrank() << " Modify=" << *req << "\n";
                   }
@@ -712,9 +710,11 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
 {
   std::vector<Task*> sorted_tasks;
 
-  // TODO plz leave this commented line alone, APH 01/07/15
-  // topologicalSort( sorted_tasks );
-  nullSort( sorted_tasks );
+  // plz leave this commented line alone, APH 02/17/16
+  // this is an artifact of the old static graph, serially executed - will prune this all out at some point
+  //  topologicalSort(sorted_tasks);
+
+  nullSort(sorted_tasks);
 
   m_reduction_tasks.clear();
 

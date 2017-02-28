@@ -71,7 +71,7 @@ class DetailedTask;
 
 class Task {
  
-public:
+public: // class Task
 
   enum CallBackEvent
   {
@@ -106,7 +106,6 @@ protected: // class Task
   };
 
 
-
 private: // class Task
 
   // CPU Action constructor
@@ -124,7 +123,7 @@ private: // class Task
       std::tuple<Args...> m_args;
 
 
-public: // class Task
+  public: // class Action
 
     Action( T * ptr
           , void (T::*pmf)( const ProcessorGroup * pg
@@ -161,7 +160,8 @@ public: // class Task
       doit_impl(pg, patches, matls, fromDW, toDW, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
-private: // class Task
+
+  private: // class Action
 
     template<int... S>
     void doit_impl( const ProcessorGroup * pg
@@ -200,7 +200,7 @@ private: // class Task
     std::tuple<Args...> m_args;
 
 
-public: // class Task
+  public: // class ActionDevice
 
     ActionDevice( T * ptr
                 , void (T::*pmf)(       DetailedTask   * dtask
@@ -241,7 +241,7 @@ public: // class Task
       doit_impl(dtask, event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, typename Tuple::gens<sizeof...(Args)>::type());
     }
 
-private : // class Task
+  private : // class ActionDevice
 
     template<int... S>
     void doit_impl(       DetailedTask   * dtask
@@ -351,7 +351,7 @@ public: // class Task
 
   virtual ~Task();
 
-  void hasSubScheduler(bool state = true);
+         void hasSubScheduler(bool state = true);
   inline bool getHasSubScheduler() const { return m_has_subscheduler; }
 
          void usesMPI(bool state);
@@ -364,8 +364,6 @@ public: // class Task
   inline bool usesDevice() const { return m_uses_device; }
 
 
-  void subpatchCapable(bool state = true);
-
   enum MaterialDomainSpec {
       NormalDomain  // <- Normal/default setting
     , OutOfDomain   // <- Require things from all material
@@ -374,7 +372,7 @@ public: // class Task
   enum PatchDomainSpec {
       ThisLevel        // <- Normal/default setting
     , CoarseLevel      // <- AMR :  The data on the coarse level under the range of the fine patches (including extra cells or boundary layers)
-    , FineLevel        // <- AMR :  The data on the fine level under the range of the coarse patches (including extra cells or boundary layers)
+    , FineLevel        // <- AMR :  The data on the fine level over the range of the coarse patches (including extra cells or boundary layers)
     , OtherGridDomain  // for when we copy data to new grid after a regrid.
   };
 
@@ -624,14 +622,14 @@ public: // class Task
 
   inline const std::string & getName() const { return m_task_name; }
 
-  inline const PatchSet* getPatchSet() const { return m_patch_set; }
+  inline const PatchSet * getPatchSet() const { return m_patch_set; }
 
   inline const MaterialSet * getMaterialSet() const { return m_matl_set; }
 
-  int m_phase;                    // synchronized phase id, for dynamic task scheduling
-  int m_comm;                     // task communicator id, for threaded task scheduling
-  int m_max_ghost_cells;          // max ghost cells of this task
-  int m_max_level_offset;         // max level offset of this task
+  int m_phase{-1};                    // synchronized phase id, for dynamic task scheduling
+  int m_comm{-1};                     // task communicator id, for threaded task scheduling
+  int m_max_ghost_cells{0};          // max ghost cells of this task
+  int m_max_level_offset{0};         // max level offset of this task
 
   std::set<Task*> m_child_tasks;
   std::set<Task*> m_all_child_tasks;
@@ -664,8 +662,8 @@ public: // class Task
 
       // in the multi-TG construct, this will signify that the required
       // m_var will be constructed by the old TG
-      int m_num_ghost_cells;
-      int m_level_offset;
+      int m_num_ghost_cells{0};
+      int m_level_offset{0};
 
       int mapDataWarehouse() const { return m_task->mapDataWarehouse(m_whichdw); }
 
@@ -724,21 +722,21 @@ public: // class Task
                               );
   };  // end struct Dependency
 
+
   struct Edge {
-      const Dependency * m_comp;
-      Edge             * m_comp_next;
-      const Dependency * m_req;
-      Edge             * m_req_next;
 
-      inline Edge( const Dependency * comp , const Dependency * req )
-        : m_comp(comp)
-        , m_comp_next(nullptr)
-        , m_req(req)
-        , m_req_next(nullptr)
-      {}
-  };
+     const Dependency * m_comp{nullptr};
+     Edge             * m_comp_next{nullptr};
+     const Dependency * m_req{nullptr};
+     Edge             * m_req_next{nullptr};
 
-  typedef std::multimap<const VarLabel*, Dependency*, VarLabel::Compare> DepMap;
+     inline Edge( const Dependency * comp , const Dependency * req )
+       : m_comp(comp)
+       , m_req(req)
+     {}
+
+  }; // struct Edge
+
 
   const Dependency* getComputes() const { return m_comp_head; }
 
@@ -759,12 +757,12 @@ public: // class Task
                   ) const;
 
   // finds if it requires or modifies var
-  bool hasRequires( const VarLabel        * var
-                  ,       int               matlIndex
-                  , const Patch           * patch
-                  ,       Uintah::IntVector lowOffset
-                  ,       Uintah::IntVector highOffset
-                  ,       WhichDW dw
+  bool hasRequires( const VarLabel          * var
+                  ,       int                 matlIndex
+                  , const Patch             * patch
+                  ,       Uintah::IntVector   lowOffset
+                  ,       Uintah::IntVector   highOffset
+                  ,       WhichDW             dw
                   ) const;
 
   // finds if it modifies var
@@ -802,21 +800,19 @@ public: // class Task
 
 private: // class Task
 
-    Dependency* isInDepMap( const DepMap   & depMap
-                          , const VarLabel * var
-                          ,       int        matlIndex
-                          , const Patch    * patch
-                          ) const;
+  using DepMap = std::multimap<const VarLabel*, Dependency*, VarLabel::Compare>;
 
-    std::string m_task_name;
+  Dependency* isInDepMap( const DepMap   & depMap
+                        , const VarLabel * var
+                        ,       int        matlIndex
+                        , const Patch    * patch
+                        ) const;
 
+  std::string m_task_name;
 
 protected: // class Task
 
-    ActionBase* m_action;
-
-
-private: // class Task
+  ActionBase * m_action{nullptr};
 
   // eliminate copy, assignment and move
   Task( const Task & )            = delete;
@@ -829,31 +825,31 @@ private: // class Task
 
   static MaterialSubset* globalMatlSubset;
 
-  Dependency * m_comp_head;
-  Dependency * m_comp_tail;
-  Dependency * m_req_head;
-  Dependency * m_req_tail;
-  Dependency * m_mod_head;
-  Dependency * m_mod_tail;
+  Dependency * m_comp_head{nullptr};
+  Dependency * m_comp_tail{nullptr};
+  Dependency * m_req_head{nullptr};
+  Dependency * m_req_tail{nullptr};
+  Dependency * m_mod_head{nullptr};
+  Dependency * m_mod_tail{nullptr};
 
   DepMap       m_requires_old_dw;
   DepMap       m_computes;  // also contains modifies
   DepMap       m_requires;  // also contains modifies
   DepMap       m_modifies;
 
-  const PatchSet    * m_patch_set;
-  const MaterialSet * m_matl_set;
+  const PatchSet    * m_patch_set{nullptr};
+  const MaterialSet * m_matl_set{nullptr};
 
-  bool m_uses_mpi;
-  bool m_uses_threads;
-  bool m_uses_device;
-  bool m_subpatch_capable;
-  bool m_has_subscheduler;
+  bool m_uses_mpi{false};
+  bool m_uses_threads{false};
+  bool m_uses_device{false};
+  bool m_subpatch_capable{false};
+  bool m_has_subscheduler{false};
 
   TaskType d_tasktype;
 
   int m_dwmap[TotalDWs];
-  int m_sorted_order;
+  int m_sorted_order{-1};
 
   friend std::ostream & operator <<(std::ostream & out, const Uintah::Task & task);
   friend std::ostream & operator <<(std::ostream & out, const Uintah::Task::TaskType & tt);

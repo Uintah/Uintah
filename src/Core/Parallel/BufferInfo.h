@@ -1,6 +1,3 @@
-#ifndef UINTAH_HOMEBREW_BUFFERINFO_H
-#define UINTAH_HOMEBREW_BUFFERINFO_H
-
 /*
  * The MIT License
  *
@@ -25,6 +22,10 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef CORE_PARALLEL_BUFFERINFO_H
+#define CORE_PARALLEL_BUFFERINFO_H
+
+
 #include <Core/Parallel/UintahMPI.h>
 
 #include <vector>
@@ -35,24 +36,24 @@ class RefCounted;
 class ProcessorGroup;
 
 class AfterCommunicationHandler {
-  public:
-    virtual ~AfterCommunicationHandler()
-    {
-    }
 
-    virtual void finishedCommunication(const ProcessorGroup*,
-                                       MPI_Status& status) = 0;
+  public:
+
+    virtual ~AfterCommunicationHandler() {}
+
+    virtual void finishedCommunication( const ProcessorGroup*, MPI_Status& status) = 0;
 };
 
 class Sendlist : public AfterCommunicationHandler {
 
   public:
-    Sendlist( Sendlist* next, RefCounted* obj ) : next(next), obj(obj) {}
+
+    Sendlist( Sendlist * next, RefCounted * obj ) : m_next(next), m_obj(obj) {}
 
     virtual ~Sendlist();
 
-    Sendlist*   next;
-    RefCounted* obj;
+    Sendlist   * m_next{nullptr};
+    RefCounted * m_obj{nullptr};
 
     // Sendlist is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  The only task
@@ -61,46 +62,59 @@ class Sendlist : public AfterCommunicationHandler {
 
 };
 
+
 class BufferInfo {
 
   public:
-    BufferInfo();
+
+    BufferInfo(){};
 
     virtual ~BufferInfo();
 
     unsigned int count() const;
 
-    void get_type(void*&,
-                  int&,
-                  MPI_Datatype&);
+    void get_type( void         *&
+                 , int           &
+                 , MPI_Datatype  &
+                 );
 
-    void add( void*          startbuf,
-              int            count,
-              MPI_Datatype   datatype,
-              bool           free_datatype );
+    void add( void         * startbuf
+            , int            count
+            , MPI_Datatype   datatype
+            , bool           free_datatype
+            );
 
-    void addSendlist( RefCounted* );
+    void addSendlist( RefCounted * );
 
     Sendlist* takeSendlist();
 
-  private:
-    BufferInfo(const BufferInfo&);
-    BufferInfo& operator=(const BufferInfo&);
 
   protected:
-    Sendlist*                   d_sendlist;
-    std::vector<void*>          d_startbufs;
-    std::vector<int>            d_counts;
-    std::vector<MPI_Datatype>   d_datatypes;
-    std::vector<bool>           d_free_datatypes;
 
-    void*          buf;
-    int            cnt;
-    MPI_Datatype   datatype;
+    Sendlist                  * m_send_list{nullptr};
+    std::vector<void*>          m_start_bufs;
+    std::vector<int>            m_counts;
+    std::vector<MPI_Datatype>   m_datatypes;
+    std::vector<bool>           m_free_datatypes;
 
-    bool d_free_datatype;
-    bool d_have_datatype;
-};
-}
+    void*          m_buffer{nullptr};
+    int            m_count{0};
+    MPI_Datatype   m_datatype{MPI_DATATYPE_NULL};
 
-#endif // UINTAH_HOMEBREW_BUFFERINFO_H
+    bool m_free_datatype{false};
+    bool m_have_datatype{false};
+
+
+  private:
+
+    // eliminate copy, assignment and move
+    BufferInfo( const BufferInfo & )            = delete;
+    BufferInfo& operator=( const BufferInfo & ) = delete;
+    BufferInfo( BufferInfo && )                 = delete;
+    BufferInfo& operator=( BufferInfo && )      = delete;
+
+}; // BufferInfo
+
+} // namespace Uintah
+
+#endif // CORE_PARALLEL_BUFFERINFO_H

@@ -3237,12 +3237,12 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
     new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel, indx, patch);
     if (negativeDensityGuess > 0.0) {
       if (d_restart_on_negative_density_guess) {
-        proc0cout << "NOTICE: Negative density guess(es) occured. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
+        proc0cout << "NOTICE: Negative density guess(es) occurred. Timestep restart has been requested under this condition by the user. Restarting timestep." << endl;
         new_dw->abortTimestep();
         new_dw->restartTimestep();
       }
       else {
-        proc0cout << "NOTICE: Negative density guess(es) occured. Reverting to old density." << endl;
+        proc0cout << "NOTICE: Negative density guess(es) occurred. Reverting to old density." << endl;
         old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel, indx, patch);
       }
     }

@@ -112,8 +112,8 @@ Task::initialize()
   m_phase        = -1;
   m_comm         = -1;
 
-  m_max_ghost_cells      = 0;
-  m_max_level_offset     = 0;
+  m_max_ghost_cells  = 0;
+  m_max_level_offset = 0;
 }
 
 //______________________________________________________________________
@@ -181,14 +181,6 @@ void
 Task::usesDevice(bool state)
 {
   m_uses_device = state;
-}
-
-//______________________________________________________________________
-//
-void
-Task::subpatchCapable(bool state)
-{
-  m_subpatch_capable = state;
 }
 
 //______________________________________________________________________
@@ -993,8 +985,9 @@ Task::display( std::ostream & out ) const
   }
   out << ", DWs: ";
   for (int i = 0; i < TotalDWs; i++) {
-    if (i != 0)
+    if (i != 0) {
       out << ", ";
+    }
     out << m_dwmap[i];
   }
   if (m_patch_set == nullptr) {
@@ -1068,8 +1061,9 @@ operator <<(std::ostream & out,
   out << ", MI: ";
   if (dep.m_matls) {
     for (int i = 0; i < dep.m_matls->size(); i++) {
-      if (i > 0)
+      if (i > 0) {
         out << ",";
+      }
       out << dep.m_matls->get(i);
     }
   }
