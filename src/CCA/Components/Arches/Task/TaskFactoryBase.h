@@ -5,10 +5,13 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/AtomicTaskInterface.h>
 #include <CCA/Components/Arches/WBCHelper.h>
+#include <Core/Util/DebugStream.h>
 #include <string>
 #include <iomanip>
 
 namespace Uintah{
+
+  static DebugStream cout_archestaskdebug("ArchesTaskDBG",false);
 
   class ArchesParticlesHelper;
   class ArchesFieldContainer;
@@ -34,8 +37,8 @@ namespace Uintah{
     virtual void build_all_tasks( ProblemSpecP& db ) = 0;
 
     /** @brief Register tasks in a convenient container **/
-    void register_task(std::string task_name,
-                       TaskInterface::TaskBuilder* builder );
+    void register_task( std::string task_name,
+                        TaskInterface::TaskBuilder* builder );
 
     /** @brief Register tasks in a convenient container **/
     void register_atomic_task( std::string task_name,
@@ -144,15 +147,18 @@ namespace Uintah{
                          const LevelP& level,
                          SchedulerP& sched,
                          const MaterialSet* matls,
-                         const int time_substep=0 );
+                         const int time_substep=0,
+                         const bool reinitialize=false );
 
     /** @brief Public interface for scheduling a set of tasks through the factory **/
     void schedule_task_group( const std::string group_name,
                               TaskInterface::TASK_TYPE type,
+                              const bool pack_tasks, 
                               const LevelP& level,
                               SchedulerP& sched,
                               const MaterialSet* matls,
-                              const int time_substep=0 );
+                              const int time_substep=0,
+                              const bool reinitialize=false );
 
     /** @brief Allow the factory to execute the boundary conditions for each task that it owns **/
     virtual void schedule_applyBCs( const LevelP& level,
@@ -169,7 +175,8 @@ namespace Uintah{
                                 TaskInterface::TASK_TYPE type,
                                 std::vector<TaskInterface*> arches_task,
                                 const std::string task_group_name,
-                                int time_substep );
+                                int time_substep,
+                                const bool reinitialize );
 
     /** @brief Task callback **/
     void do_task ( const ProcessorGroup* pc,
@@ -191,6 +198,8 @@ namespace Uintah{
     std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks
     TypeToTaskMap _type_to_tasks;                  ///< Collects all tasks of a common type
     SimulationStateP _shared_state;                ///< Uintah SharedState
+    std::string _all_tasks_str;                    ///< Common name across all factories indicating _active_tasks
+    std::string _factory_name;                     ///< Name of the factory
 
     WBCHelper* m_bcHelper;
 

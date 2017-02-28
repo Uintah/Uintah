@@ -10,7 +10,9 @@
 using namespace Uintah;
 
 InitializeFactory::InitializeFactory()
-{}
+{
+  _factory_name = "InitializeFactory"; 
+}
 
 InitializeFactory::~InitializeFactory()
 {}

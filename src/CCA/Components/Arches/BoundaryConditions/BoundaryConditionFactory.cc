@@ -6,7 +6,9 @@
 using namespace Uintah;
 
 BoundaryConditionFactory::BoundaryConditionFactory( )
-{}
+{
+  _factory_name = "BoundaryConditionFactory"; 
+}
 
 BoundaryConditionFactory::~BoundaryConditionFactory()
 {}

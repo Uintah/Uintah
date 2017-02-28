@@ -35,6 +35,10 @@ namespace Uintah{
 
         return _var_stats_tasks;
 
+      } else if ( subset == _all_tasks_str ){
+
+        return _active_tasks;
+
       } else {
 
         throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in PropertyModelFactoryV2, which means there is no specific implementation for this factory.",__FILE__,__LINE__);

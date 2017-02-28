@@ -12,7 +12,9 @@
 namespace Uintah{
 
 TransportFactory::TransportFactory()
-{}
+{
+  _factory_name = "TransportFactory";
+}
 
 TransportFactory::~TransportFactory()
 {}

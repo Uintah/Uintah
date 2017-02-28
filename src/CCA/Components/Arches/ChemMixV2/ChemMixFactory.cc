@@ -7,7 +7,9 @@
 using namespace Uintah;
 
 ChemMixFactory::ChemMixFactory( )
-{}
+{
+  _factory_name = "ChemMixFactory"; 
+}
 
 ChemMixFactory::~ChemMixFactory()
 {}
@@ -60,11 +62,11 @@ ChemMixFactory::build_all_tasks( ProblemSpecP& db )
       db_p->getAttribute("label", label);
       db_p->getAttribute("type", type);
 
-      TaskInterface* tsk = retrieve_task( label ); 
-      tsk->problemSetup( db_p ); 
-      tsk->create_local_labels(); 
+      TaskInterface* tsk = retrieve_task( label );
+      tsk->problemSetup( db_p );
+      tsk->create_local_labels();
 
-      m_task_order.push_back( label ); 
+      m_task_order.push_back( label );
 
     }
   }
@@ -92,7 +94,7 @@ void ChemMixFactory::schedule_initialization( const LevelP& level,
 //--------------------------------------------------------------------------------------------------
 void ChemMixFactory::schedule_applyBCs( const LevelP& level,
                                         SchedulerP& sched,
-                                        const MaterialSet* matls, 
+                                        const MaterialSet* matls,
                                         const int time_substep ){
 
   for ( auto i = m_task_order.begin(); i != m_task_order.end(); i++ ){
@@ -102,4 +104,3 @@ void ChemMixFactory::schedule_applyBCs( const LevelP& level,
 
   }
 }
-

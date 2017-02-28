@@ -77,6 +77,19 @@ namespace Uintah {
 
           }
 
+          std::stringstream msg_kill;
+          msg_kill << "Error: The task, " << task_name << ", is attempting to compute a variable: " <<
+                       name << " that is already required for this (or some other if tasks are packed) task." << std::endl;
+          if ( dep == ArchesFieldContainer::COMPUTES && (*i).depend == ArchesFieldContainer::REQUIRES ){
+            throw InvalidValue(msg_kill.str(), __FILE__, __LINE__ );
+          } else if ( dep == ArchesFieldContainer::REQUIRES && (*i).depend == ArchesFieldContainer::COMPUTES ){
+            if ( nGhost > 0 ){
+              throw InvalidValue(msg_kill.str(), __FILE__, __LINE__ );
+            } else {
+              add_variable = false;
+            }
+          }
+
           //A variable is computed and modified
           // resort to a computes
           if ( dep == ArchesFieldContainer::COMPUTES && (*i).depend == ArchesFieldContainer::MODIFIES ){

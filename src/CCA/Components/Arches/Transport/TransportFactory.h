@@ -37,6 +37,8 @@ namespace Uintah{
         return _momentum_compute_psi;
       } else if ( subset == "pressure_eqn" ){
         return _pressure_eqn;
+      } else if ( subset == _all_tasks_str ){
+        return _active_tasks; 
       } else {
         throw InvalidValue("Error: Task subset not recognized for TransportFactory.",__FILE__,__LINE__);
       }

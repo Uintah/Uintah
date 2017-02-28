@@ -314,46 +314,46 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
 {
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
   bool is_restart = false;
+  const bool pack_tasks = true;
+  const bool dont_pack_tasks = false;
 
   // Setup BCs
   setupBCs( level, sched, matls );
 
-  //m_task_factory_map["utility_factory"]->retrieve_task("grid_info")->schedule_init( level, sched, matls, is_restart );
-  m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls ); 
-  //ArchesCore::find_and_schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls, m_task_factory_map ); 
+  //EXAMPLES OF HOW ONE COULD SCHEDULE A TASK:
+  //1) m_task_factory_map["utility_factory"]->retrieve_task("grid_info")->schedule_init( level, sched, matls, is_restart );
+  //2) ArchesCore::find_and_schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls, m_task_factory_map );
+  //3) m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
+
+  // grid spacing etc...
+  m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
 
   // set the volume fractions
-  m_task_factory_map["utility_factory"]->retrieve_task("vol_fraction_calc")->schedule_init( level, sched, matls, is_restart );
+  m_task_factory_map["utility_factory"]->schedule_task( "vol_fraction_calc", TaskInterface::INITIALIZE, level, sched, matls );
 
   //transport factory
-  TaskFactoryBase::TaskMap all_trans_tasks = m_task_factory_map["transport_factory"]->retrieve_all_tasks();
-  m_task_factory_map["transport_factory"]->schedule_initialization( level, sched, matls, doing_restart );
+  m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
   //property factory
-  m_task_factory_map["property_models_factory"]->schedule_initialization( level, sched, matls, doing_restart );
+  m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
 
   // generic field initializer
-  m_task_factory_map["initialize_factory"]->schedule_initialization( level, sched, matls, doing_restart );
+  m_task_factory_map["initialize_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
   // boundary condition factory
-  m_task_factory_map["boundary_condition_factory"]->schedule_initialization( level, sched, matls, doing_restart );
-  TaskFactoryBase::TaskMap all_bc_tasks = m_task_factory_map["boundary_condition_factory"]->retrieve_all_tasks();
+  m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
   // tabulated factory
-  m_task_factory_map["table_factory"]->schedule_initialization( level, sched, matls, doing_restart );
-  m_task_factory_map["table_factory"]->schedule_applyBCs( level, sched, matls, 0 );
+  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, pack_tasks, level, sched, matls );
 
   //Need to apply BC's after everything is initialized
-  for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
-    i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
-  }
-  for ( auto i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
-    i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
-  }
+  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
+  m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
+  m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::BC, pack_tasks, level, sched, matls );
 
   //Recompute velocities from momentum:
   if ( m_task_factory_map["transport_factory"]->has_task("build_pressure_system")){
-    m_task_factory_map["property_models_factory"]->retrieve_task("u_from_rho_u")->schedule_init( level, sched, matls, doing_restart, true );
+    m_task_factory_map["property_models_factory"]->schedule_task( "u_from_rho_u", TaskInterface::INITIALIZE, level, sched, matls, 0, true );
   }
 
 }

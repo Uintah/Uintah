@@ -7,6 +7,7 @@ using namespace Uintah;
 TaskFactoryBase::TaskFactoryBase()
 {
   _matl_index = 0; //Arches material
+  _all_tasks_str = "all_tasks";
 }
 
 TaskFactoryBase::~TaskFactoryBase()
@@ -132,33 +133,49 @@ void TaskFactoryBase::schedule_task( const std::string task_name,
                                      const LevelP& level,
                                      SchedulerP& sched,
                                      const MaterialSet* matls,
-                                     const int time_substep ){
+                                     const int time_substep,
+                                     const bool reinitialize ){
 
   std::vector<TaskInterface*> task_list_dummy(1); //only putting one task in here but still need to pass it as vector
 
   TaskInterface* tsk  = retrieve_task( task_name );
   task_list_dummy[0] = tsk;
 
-  factory_schedule_task( level, sched, matls, type, task_list_dummy, tsk->get_task_name(), time_substep );
+  factory_schedule_task( level, sched, matls, type, task_list_dummy, tsk->get_task_name(), time_substep, reinitialize );
 
 }
 
 void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
                                            TaskInterface::TASK_TYPE type,
+                                           const bool pack_tasks, 
                                            const LevelP& level,
                                            SchedulerP& sched,
                                            const MaterialSet* matls,
-                                           const int time_substep ){
+                                           const int time_substep,
+                                           const bool reinitialize ){
 
   std::vector<std::string> task_names = retrieve_task_subset(task_group_name);
-  std::vector<TaskInterface*> task_list_dummy( task_names.size() );
 
-  for ( int i = 0; i < task_names.size(); i++ ){
-    task_list_dummy[i] = retrieve_task( task_names[i] );
-  }
+  if ( pack_tasks ){ 
 
-  factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep );
+    std::vector<TaskInterface*> task_list_dummy( task_names.size() );
 
+    for ( int i = 0; i < task_names.size(); i++ ){
+      task_list_dummy[i] = retrieve_task( task_names[i] );
+    }
+
+    factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep, reinitialize );
+
+  } else { 
+
+    std::vector<TaskInterface*> task_list_dummy(1);
+    for ( int i = 0; i < task_names.size(); i++ ){
+
+      task_list_dummy[0] = retrieve_task( task_names[i] );
+      factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep, reinitialize );
+
+    }
+  }  
 }
 
 
@@ -168,13 +185,19 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
                                              TaskInterface::TASK_TYPE type,
                                              std::vector<TaskInterface*> arches_tasks,
                                              const std::string task_group_name,
-                                             int time_substep ){
+                                             int time_substep,
+                                             const bool reinitialize ){
 
   ArchesFieldContainer::VariableRegistry variable_registry;
 
+  cout_archestaskdebug << " Scheduling task group with the following tasks: " << std::endl;
+
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 
+    cout_archestaskdebug << "   Task: " << (*i_task)->get_task_name() << std::endl;
+
     switch( type ){
+
       case (TaskInterface::INITIALIZE):
         (*i_task)->register_initialize( variable_registry );
         time_substep = 0;
@@ -195,11 +218,11 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       default:
         throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
         break;
-        
+
     }
   }
 
-  Task* tsk = scinew Task( task_group_name, this, &TaskFactoryBase::do_task, variable_registry,
+  Task* tsk = scinew Task( _factory_name+"::"+task_group_name, this, &TaskFactoryBase::do_task, variable_registry,
                            arches_tasks, type, time_substep );
 
   int counter = 0;
@@ -212,15 +235,24 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     switch(ivar.depend) {
     case ArchesFieldContainer::COMPUTES:
       if ( time_substep == 0 ) {
-        tsk->computes( ivar.label );   //only compute on the zero time substep
+        if ( reinitialize ){
+          cout_archestaskdebug << "      modifying: " << ivar.name << std::endl;
+          tsk->modifies( ivar.label );   // was computed upstream
+        } else {
+          cout_archestaskdebug << "      computing: " << ivar.name << std::endl;
+          tsk->computes( ivar.label );   //only compute on the zero time substep
+        }
       } else {
+        cout_archestaskdebug << "      modifying: " << ivar.name << std::endl;
         tsk->modifies( ivar.label );
       }
       break;
     case ArchesFieldContainer::MODIFIES:
+      cout_archestaskdebug << "      modifying: " << ivar.name << std::endl;
       tsk->modifies( ivar.label );
       break;
     case ArchesFieldContainer::REQUIRES:
+      cout_archestaskdebug << "      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost << std::endl;
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
@@ -231,7 +263,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   }
 
   //other variables:
-    if ( type != TaskInterface::INITIALIZE ){
+  if ( sched->get_dw(0) != NULL ){
     tsk->requires(Task::OldDW, VarLabel::find("delT"));
   }
 
@@ -260,7 +292,7 @@ void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
 
     SchedToTaskInfo info;
 
-    if ( type != TaskInterface::INITIALIZE ){
+    if ( old_dw != NULL ){
       //get the current dt
       delt_vartype DT;
       old_dw->get(DT, VarLabel::find("delT"));

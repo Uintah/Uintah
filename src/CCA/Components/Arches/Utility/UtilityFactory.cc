@@ -8,7 +8,9 @@
 using namespace Uintah;
 
 UtilityFactory::UtilityFactory()
-{}
+{
+  _factory_name = "UtilityFactory";
+}
 
 UtilityFactory::~UtilityFactory()
 {}

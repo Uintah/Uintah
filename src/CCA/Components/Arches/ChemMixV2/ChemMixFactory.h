@@ -18,6 +18,13 @@ namespace Uintah{
     void build_all_tasks( ProblemSpecP& db );
 
     std::vector<std::string> retrieve_task_subset( const std::string subset ) {
+      
+      if ( subset == _all_tasks_str ){
+        return _active_tasks;
+      }
+
+      throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in BoundaryConditionFactory, which means there is no specific implementation for this factory.",__FILE__,__LINE__);
+
     }
 
     void add_task( ProblemSpecP& db );
@@ -30,14 +37,14 @@ namespace Uintah{
     /** @brief Helper to apply BCs to all table evaluators for this factory **/
     void schedule_applyBCs( const LevelP& level,
                             SchedulerP& sched,
-                            const MaterialSet* matls, 
+                            const MaterialSet* matls,
                             const int time_substep );
 
   protected:
 
   private:
 
-    std::vector<std::string> m_task_order; 
+    std::vector<std::string> m_task_order;
 
   };
 }
