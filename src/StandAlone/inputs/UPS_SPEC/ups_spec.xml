@@ -46,7 +46,7 @@
        * need: OPTIONAL, REQUIRED, MULTIPLE   (Probably need MULTIPLE-REQ and MULTIPLE-OPT.
                                              Currently MULTIPLE means 0 or more...)
        * type: DOUBLE, INTEGER, STRING, VECTOR, MULTIPLE_INTEGERS, MULTIPLE_DOUBLES,
-               MULTIPLE_VECTORS, NO_DATA (NO_DATA means the tag doesn't have any
+               MULTIPLE_VECTORS, BOOLEAN, NO_DATA (NO_DATA means the tag doesn't have any
                                           data (text) but can have attributes and/or
                                           sub-tags.)
          - MULTIPLE_INTEGERS:  [ #... ]
@@ -433,30 +433,32 @@
     <timestep_multiplier  spec="REQUIRED DOUBLE  'positive'" />
   </Time>
 
-
-  <doAMR                spec="OPTIONAL BOOLEAN" />  <!-- defaults to TRUE -->
-
   <!-- NOTE: while the DataArchiver section is required, if no 'save' tags are specified,
              then no data will be saved (and no .uda dir will be created). -->
-  <DataArchiver         spec="REQUIRED NO_DATA"
-                          attribute1="type        OPTIONAL STRING 'pidx, PIDX, UDA'"
-                          children1="ONE_OF(CHILD outputInterval, outputTimestepInterval)" >
-      <!-- Checkpoint: interval         - How often (in simulation time - seconds) to save a checkpoint.
-                       cycle            - How many check points to keep around before one is overwritten (to save disk space).
-                       walltimeStart    - Start check pointing after this much real time (seconds) has elapsed (since beginning the simulation).
-                       walltimeInterval - How much real time (in seconds) must pass before the next check point is written.
-      -->
+  <DataArchiver               spec="REQUIRED NO_DATA"
+                                attribute1="type        OPTIONAL STRING 'PIDX, UDA'"
+                                children1="ONE_OF(CHILD outputInterval, outputTimestepInterval)" >
+      <!-- CHECKPOINT attributes:
+              interval              - How often (in simulation time - seconds) to save a checkpoint.
+              cycle                 - How many check points to keep around before one is overwritten (to save disk space).
+              timestepInterval      - Checkpoint after this many timesteps have occurred.
+              walltimeStart         - Start check pointing after this much real time (in seconds) has elapsed (since beginning the simulation).
+              walltimeInterval      - How much real time (in seconds) must pass before the next check point is written.
+              walltimeStartHours    - Start check pointing after this much real time (in hours) has elapsed (since beginning the simulation).
+              walltimeIntervalHorus - How much real time (in hours) must pass before the next check point is written.  -->
       <checkpoint             spec="OPTIONAL NO_DATA"
                                 children1="ONE_OF(ATTRIBUTE interval, walltimeInterval, walltimeIntervalHours, timestepInterval)"
                                 children2="ALL_OR_NONE_OF(ATTRIBUTE walltimeStart, walltimeInterval)"
                                 children3="ALL_OR_NONE_OF(ATTRIBUTE walltimeStartHours, walltimeIntervalHours)"
+
                                 attribute1="interval              OPTIONAL DOUBLE  'positive'"
                                 attribute2="cycle                 REQUIRED INTEGER 'positive'"
                                 attribute3="timestepInterval      OPTIONAL INTEGER 'positive'"
-                                attribute4="walltimeStart         OPTIONAL DOUBLE  'positive'"
-                                attribute5="walltimeInterval      OPTIONAL DOUBLE  'positive'"
+                                attribute4="walltimeStart         OPTIONAL INTEGER 'positive'"
+                                attribute5="walltimeInterval      OPTIONAL INTEGER 'positive'"
                                 attribute6="walltimeStartHours    OPTIONAL DOUBLE  'positive'"
                                 attribute7="walltimeIntervalHours OPTIONAL DOUBLE  'positive'" />
+
       <compression            spec="OPTIONAL STRING 'gzip'" />
       <filebase               spec="REQUIRED STRING" />
       <outputInterval         spec="OPTIONAL DOUBLE 'positive'" />
@@ -485,9 +487,13 @@
     <ARCHES                 spec="OPTIONAL NO_DATA" />
   </InitialConditions>
 
-  <Grid                     spec="REQUIRED NO_DATA">
-    
-    <!--__________________________________-->
+  <!-- Grid Attributes:
+          saveToDisk: If set to true (or left out), then the grid (patch layout) is written to disk as part of the the UDA.
+          doAMR:      If set to true, then Adaptive Mesh Refinement is turned on. Defaults to off. -->
+  <Grid                     spec="REQUIRED NO_DATA"
+                            attribute1="saveToDisk OPTIONAL BOOLEAN"
+                            attribute2="doAMR      OPTIONAL BOOLEAN">
+    <!--____Begin BoundaryConditions section______________________________-->
     <BoundaryConditions     spec="OPTIONAL NO_DATA">
       
       <DefaultMaterial spec="OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"/>
@@ -548,25 +554,24 @@
                               attribute20="outer_upper  OPTIONAL MULTIPLE_DOUBLES"
                               attribute21="rectangulus   OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'">
                                 
-                                <ParticleBC spec="OPTIONAL NO_DATA"
-                                            children1="ONE_OF(CHILD Wall, Inlet)">
-                                        <!-- spec for particle wall boundary -->                                
-                                        <Wall   spec="OPTIONAL NO_DATA"
-                                                                attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
-                                                <Restitution spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
-                                        </Wall>
-                                        <!-- spec for adding particles - Designates that this face injects particles into the domain -->
-                                        <Inlet                  spec="OPTIONAL NO_DATA">
-                                                <ParticlesPerSecond spec="OPTIONAL DOUBLE"/>
-                                        </Inlet>                                                                
-                                </ParticleBC>
+    <ParticleBC spec="OPTIONAL NO_DATA"
+    children1="ONE_OF(CHILD Wall, Inlet)">
+    <!-- spec for particle wall boundary -->                                
+    <Wall   spec="OPTIONAL NO_DATA"
+    attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
+    <Restitution spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
+  </Wall>
+    <!-- spec for adding particles - Designates that this face injects particles into the domain -->
+    <Inlet                  spec="OPTIONAL NO_DATA">
+    <ParticlesPerSecond spec="OPTIONAL DOUBLE"/>
+  </Inlet>                                                                
+  </ParticleBC>
 
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip, Custom, 
-                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, 
-                                                                     MassFlowInlet, PartMassFlowInlet , Swirl, FromFile, ForcedDirichlet,
-                                                                     TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
+                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
+                                                                     Swirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
                               attribute4="type      OPTIONAL STRING 'int, velocity, handoff'" 
                               attribute5="value     OPTIONAL STRING" >
@@ -641,7 +646,7 @@
       
       
     </BoundaryConditions>
-    <!--__________________________________-->
+    <!--____End BoundaryConditions section______________________________-->
     
     <Level              spec="MULTIPLE NO_DATA">
       <Box              spec="MULTIPLE NO_DATA"

@@ -425,7 +425,7 @@ int main(int argc, char *argv[])
         
         // continue if the matl has been specified in the input file
         bool foundMatl = (find(specifiedMatls.begin(), specifiedMatls.end(), matl) != specifiedMatls.end());
-        if ( !foundMatl ) {
+        if( !foundMatl ) {
           continue;
         }
         
@@ -561,7 +561,7 @@ GridP CreateGrid(ProblemSpecP ups)
     // save and remove the extra cells before the problem setup
     ProblemSpecP g = ups->findBlock("Grid");
     for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != nullptr; levelspec = levelspec->findNextBlock("Level") ) {
-      for( ProblemSpecP box = levelspec->findBlock("Box"); box != nullptr ; box = box->findNextBlock("Box") ) {
+      for( ProblemSpecP box = levelspec->findBlock("Box"); box != nullptr; box = box->findNextBlock("Box") ) {
         
         ProblemSpecP cells = box->findBlock("extraCells");
         if( cells != nullptr ) {

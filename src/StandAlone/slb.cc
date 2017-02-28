@@ -325,9 +325,9 @@ main(int argc, char *argv[])
       level->findCellIndexRange(low, high);
       IntVector diff = high-low;
       long cells = diff.x()*diff.y()*diff.z();
-      if(cells != level->totalCells())
+      if(cells != level->totalCells()) {
         throw ProblemSetupException("Currently slb can only handle square grids", __FILE__, __LINE__);
-
+      }
       Uintah::Primes::FactorType factors;
       int n = Uintah::Primes::factorize(nump, factors);
       cerr << nump << ": ";
@@ -354,16 +354,19 @@ main(int argc, char *argv[])
           GeometryPieceP mainpiece;
           if(pieces.size() == 0){
             throw ProblemSetupException("No piece specified in geom_object", __FILE__, __LINE__);
-          } else if(pieces.size() > 1){
+          }
+          else if(pieces.size() > 1){
             mainpiece = scinew UnionGeometryPiece(pieces);
-          } else {
+          }
+          else {
             mainpiece = pieces[0];
           }
           
           for(CellIterator iter(low, high); !iter.done(); iter++){
             Point p = level->getCellPosition(*iter);
-            if(mainpiece->inside(p))
+            if(mainpiece->inside(p)) {
               weights[*iter] = 1;
+            }
           }
         }
       }

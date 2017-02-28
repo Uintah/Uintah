@@ -596,9 +596,10 @@ TaskGraph::nullSort( std::vector<Task*> & tasks )
 {
   std::vector<Task*>::iterator iter;
 
-  // No longer going to sort them... let the threaded scheduler take care of calling the tasks
-  // when all dependencies are satisfied. Sorting the tasks causes problem because now tasks
-  // (actually task groups) run in different orders on different MPI processes.
+  // No longer going to sort them... let the UnifiedScheduler (threaded) take care
+  // of calling the tasks when all dependencies are satisfied.
+  // Sorting the tasks causes problem because now tasks (actually task
+  // groups) run in different orders on different MPI processes.
   int n = 0;
   for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
     // For all reduction tasks filtering out the one that is not in ReductionTasksMap 
@@ -648,7 +649,7 @@ TaskGraph::addTask(       Task        * task
                   , const MaterialSet * matlset
                   )
 {
-  task->setSets(patchset, matlset);
+  task->setSets( patchset, matlset );
   if ((patchset && patchset->totalsize() == 0) || (matlset && matlset->totalsize() == 0)) {
     delete task;
     if (detaileddbg.active()) {
@@ -656,7 +657,7 @@ TaskGraph::addTask(       Task        * task
     }
   }
   else {
-    m_tasks.push_back(task);
+    m_tasks.push_back( task );
 
     // debugging Code
     if (tgdbg.active()) {
@@ -687,7 +688,7 @@ TaskGraph::createDetailedTask(       Task           * task
                              , const MaterialSubset * matls
                              )
 {
-  DetailedTask* dt = scinew DetailedTask(task, patches, matls, m_detailed_tasks);
+  DetailedTask* dt = scinew DetailedTask( task, patches, matls, m_detailed_tasks );
 
   if (task->getType() == Task::Reduction) {
     Task::Dependency* req = task->getModifies();
@@ -709,35 +710,34 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
                               , const GridP         & oldGrid
                               )
 {
-  // plz leave this commented line alone, APH 02/17/16
-  // this is an artifact of the old static graph, serially executed - will prune this all out at some point
-  //topologicalSort(sorted_tasks);
-
   std::vector<Task*> sorted_tasks;
-  nullSort(sorted_tasks);
+
+  // TODO plz leave this commented line alone, APH 01/07/15
+  // topologicalSort( sorted_tasks );
+  nullSort( sorted_tasks );
 
   m_reduction_tasks.clear();
 
-  ASSERT(grid != nullptr);
-  m_load_balancer->createNeighborhood(grid, oldGrid);
+  ASSERT( grid != nullptr );
+  m_load_balancer->createNeighborhood( grid, oldGrid );
 
-  const std::set<int> neighborhood_procs=m_load_balancer->getNeighborhoodProcessors();
+  const std::set<int> neighborhood_procs = m_load_balancer->getNeighborhoodProcessors();
   m_detailed_tasks = scinew DetailedTasks(m_scheduler, m_proc_group, first, this, neighborhood_procs, useInternalDeps );
   
   for (int i = 0; i < (int)sorted_tasks.size(); i++) {
 
     Task* task = sorted_tasks[i];
-    const PatchSet* ps = task->getPatchSet();
-    const MaterialSet* ms = task->getMaterialSet();
+    const PatchSet    * ps = task->getPatchSet();
+    const MaterialSet * ms = task->getMaterialSet();
     if (ps && ms) {
-      //only create OncePerProc tasks and output tasks once on each processor.
+      // Only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc) {
-        //only schedule this task on processors in the neighborhood
+        // Only schedule this task on processors in the neighborhood
         for (std::set<int>::iterator p = neighborhood_procs.begin(); p != neighborhood_procs.end(); p++) {
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
-            createDetailedTask(task, pss, mss);
+            createDetailedTask( task, pss, mss );
           }
         }
       }
@@ -760,11 +760,11 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
       else {
         for (int p = 0; p < ps->size(); p++) {
           const PatchSubset* pss = ps->getSubset(p);
-          // don't make tasks that are not in our neighborhood or tasks that do not have patches
-          if (m_load_balancer->inNeighborhood(pss) && pss->size() > 0) {
+          // Don't make tasks that are not in our neighborhood or tasks that do not have patches
+          if ( m_load_balancer->inNeighborhood( pss ) && pss->size() > 0) {
             for (int m = 0; m < ms->size(); m++) {
               const MaterialSubset* mss = ms->getSubset(m);
-              createDetailedTask(task, pss, mss);
+              createDetailedTask( task, pss, mss );
             }
           }
         }
@@ -825,11 +825,11 @@ TaskGraph::createDetailedDependencies()
 
     if (detaileddbg.active()) {
       detaileddbg << m_proc_group->myrank() << " createDetailedDependencies (collect comps) for:\n";
-      task->task->displayAll(detaileddbg);
+      task->d_task->displayAll(detaileddbg);
     }
 
-    remembercomps(task, task->task->getComputes(), ct);
-    remembercomps(task, task->task->getModifies(), ct);
+    remembercomps( task, task->d_task->getComputes(), ct );
+    remembercomps( task, task->d_task->getModifies(), ct );
   }
 
   // Assign task phase number based on the reduction tasks so a mixed thread/mpi
@@ -838,16 +838,16 @@ TaskGraph::createDetailedDependencies()
   int curr_num_comms = 0;
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
-    task->task->m_phase = currphase;
+    task->d_task->m_phase = currphase;
     if (tgphasedbg.active()) {
       tgphasedbg << "Rank-" << m_proc_group->myrank() << " Task: " << *task << " phase: " << currphase << "\n";
     }
-    if (task->task->getType() == Task::Reduction) {
-      task->task->m_comm = curr_num_comms;
+    if (task->d_task->getType() == Task::Reduction) {
+      task->d_task->m_comm = curr_num_comms;
       curr_num_comms++;
       currphase++;
     }
-    else if (task->task->usesMPI()) {
+    else if (task->d_task->usesMPI()) {
       currphase++;
     }
   }
@@ -858,17 +858,17 @@ TaskGraph::createDetailedDependencies()
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
 
-    if (detaileddbg.active() && (task->task->getRequires() != nullptr)) {
+    if (detaileddbg.active() && (task->d_task->getRequires() != nullptr)) {
       detaileddbg << m_proc_group->myrank() << " Looking at requires of detailed task: " << *task << "\n";
     }
 
-    createDetailedDependencies(task, task->task->getRequires(), ct, false);
+    createDetailedDependencies(task, task->d_task->getRequires(), ct, false);
 
-    if (detaileddbg.active() && (task->task->getModifies() != nullptr)) {
+    if (detaileddbg.active() && (task->d_task->getModifies() != nullptr)) {
       detaileddbg << m_proc_group->myrank() << " Looking at modifies of detailed task: " << *task << "\n";
     }
 
-    createDetailedDependencies(task, task->task->getModifies(), ct, true);
+    createDetailedDependencies(task, task->d_task->getModifies(), ct, true);
   }
 
   if (detaileddbg.active()) {
@@ -903,20 +903,20 @@ TaskGraph::remembercomps( DetailedTask     * task
 
       //if the patch pointer on both the dep and the task have not changed then use the 
       //cached result
-      if (task->patches == cached_task_patches && comp->m_patches == cached_comp_patches) {
+      if ( task->d_patches == cached_task_patches && comp->m_patches == cached_comp_patches ) {
         patches = cached_patches;
       }
       else {
         //compute the intersection 
-        patches = comp->getPatchesUnderDomain(task->patches);
+        patches = comp->getPatchesUnderDomain( task->d_patches );
         //cache the result for the next iteration
         cached_patches = patches;
-        cached_task_patches = task->patches;
+        cached_task_patches = task->d_patches;
         cached_comp_patches = comp->m_patches;
       }
-      constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(task->matls);
+      constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain( task->d_matls );
       if (!patches->empty() && !matls->empty()) {
-        ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep(), m_proc_group);
+        ct.remembercomp( task, comp, patches.get_rep(), matls.get_rep(), m_proc_group );
       }
     }
   }
@@ -1004,12 +1004,12 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
       detaileddbg << m_proc_group->myrank() << "  req: " << *req << "\n";
     }
 
-    constHandle<PatchSubset> patches = req->getPatchesUnderDomain(task->patches);
-    if (req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW(req->mapDataWarehouse())) {
+    constHandle<PatchSubset> patches = req->getPatchesUnderDomain( task->d_patches );
+    if( req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW( req->mapDataWarehouse() ) ) {
       // make sure newdw reduction variable requires link up to the reduction tasks.
       patches = nullptr;
     }
-    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(task->matls);
+    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain( task->d_matls );
 
     bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
 
@@ -1022,7 +1022,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
     if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
       // the requires should have been done with Task::CoarseLevel or FineLevel, with null patches
       // and the task->patches should be size one (so we don't have to worry about overlapping regions)
-      origPatch = task->patches->get(0);
+      origPatch = task->d_patches->get( 0 );
       ASSERT(req->m_patches == nullptr);
       ASSERT(task->patches->size() == 1);
       ASSERT(req->m_level_offset > 0);
@@ -1248,8 +1248,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
                   if (prevReqTask == task) {
                     continue;
                   }
-                  if (prevReqTask->task == task->task) {
-                    if (!task->task->getHasSubScheduler()) {
+                  if (prevReqTask->d_task == task->d_task) {
+                    if (!task->d_task->getHasSubScheduler()) {
                       std::ostringstream message;
                       message << " WARNING - task (" << task->getName()
                               << ") requires with Ghost cells *and* modifies and may not be correct" << std::endl;
@@ -1367,8 +1367,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
       std::ostringstream desc;
       desc << "TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials"
            << " \n Trying to require or modify " << *req << " in Task " << task->getTask()->getName() << "\n\n";
-      if (task->matls) {
-        desc << "task materials:" << *task->matls << "\n";
+      if ( task->d_matls ) {
+        desc << "task materials:" << *task->d_matls << "\n";
       }
       else {
         desc << "no task materials\n";
@@ -1380,8 +1380,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         desc << "no req materials\n";
         desc << "domain materials: " << *matls.get_rep() << "\n";
       }
-      if (task->patches) {
-        desc << "task patches:" << *task->patches << "\n";
+      if( task->d_patches ) {
+        desc << "task patches:" << *task->d_patches << "\n";
       }
       else {
         desc << "no task patches\n";

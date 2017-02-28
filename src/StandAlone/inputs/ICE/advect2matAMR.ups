@@ -11,8 +11,6 @@
    
    <SimulationComponent type="ice" />
 
-   <doAMR>true</doAMR>
-   
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -29,120 +27,120 @@
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-    <Grid>
-    <BoundaryConditions>
-      <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <Face side = "y-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>                  
-      <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <Face side = "z-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <Face side = "z+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-    </BoundaryConditions>
-       <Level>
-           <Box label="1">
-              <lower>        [0,0,0]    </lower>
-              <upper>        [1,1,.05]    </upper>
-              <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [2,2,1]    </patches>
-           </Box>
-           <spacing>         [0.025,0.025,0.05]    </spacing>
-       </Level>
+    <Grid doAMR="true">
+      <BoundaryConditions>
+        <Face side = "x-">
+          <BCType id = "0"   label = "Pressure"     var = "Neumann">
+            <value> 0. </value>
+          </BCType>
+          <BCType id = "all" label = "Velocity"     var = "Neumann">
+            <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" label = "Temperature"  var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "Density"      var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "SpecificVol"  var = "Neumann">
+            <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side = "x+">
+          <BCType id = "0"   label = "Pressure"     var = "Neumann">
+            <value> 0. </value>
+          </BCType>
+          <BCType id = "all" label = "Velocity"     var = "Neumann">
+            <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" label = "Temperature"  var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "Density"      var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "SpecificVol"  var = "Neumann">
+            <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side = "y-">
+          <BCType id = "0"   label = "Pressure"     var = "Neumann">
+            <value> 0. </value>
+          </BCType>
+          <BCType id = "all" label = "Velocity"     var = "Neumann">
+            <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" label = "Temperature"  var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "Density"      var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "SpecificVol"  var = "Neumann">
+            <value> 0.0  </value>
+          </BCType>
+        </Face>                  
+        <Face side = "y+">
+          <BCType id = "0"   label = "Pressure"     var = "Neumann">
+            <value> 0. </value>
+          </BCType>
+          <BCType id = "all" label = "Velocity"     var = "Neumann">
+            <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" label = "Temperature"  var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "Density"      var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "SpecificVol"  var = "Neumann">
+            <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side = "z-">
+          <BCType id = "0"   label = "Pressure"     var = "Neumann">
+            <value> 0. </value>
+          </BCType>
+          <BCType id = "all" label = "Velocity"     var = "Neumann">
+            <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" label = "Temperature"  var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "Density"      var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "SpecificVol"  var = "Neumann">
+            <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side = "z+">
+          <BCType id = "0"   label = "Pressure"     var = "Neumann">
+            <value> 0. </value>
+          </BCType>
+          <BCType id = "all" label = "Velocity"     var = "Neumann">
+            <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" label = "Temperature"  var = "Neumann">
+            <value> 0.0 </value>
+          </BCType>
+          <BCType id = "all" label = "Density"      var = "Neumann">
+            <value> 0.0 </value>       
+          </BCType>
+          <BCType id = "all" label = "SpecificVol"  var = "Neumann">
+            <value> 0.0  </value>
+          </BCType>
+        </Face>
+      </BoundaryConditions>
+      <Level>
+        <Box label="1">
+          <lower>        [0,0,0]    </lower>
+          <upper>        [1,1,.05]    </upper>
+          <extraCells>   [1,1,1]    </extraCells>
+          <patches>      [2,2,1]    </patches>
+        </Box>
+        <spacing>         [0.025,0.025,0.05]    </spacing>
+      </Level>
     </Grid>
 
     <!--____________________________________________________________________-->

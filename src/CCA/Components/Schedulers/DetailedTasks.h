@@ -61,17 +61,14 @@ class DetailedTasks;
 class TaskGraph;
 class SchedulerCommon;
 
-
 using ParticleExchangeVar = std::map<int, std::set<PSPatchMatlGhostRange> >;
 using ScrubCountTable     = FastHashTable<ScrubItem>;
 using DepCommCond         = DetailedDep::CommCondition;
-
 
 enum ProfileType {
     Normal
   , Fine
 };
-
 
 enum QueueAlg {
     FCFS
@@ -89,7 +86,6 @@ enum QueueAlg {
   , PatchOrder
   , PatchOrderRandom
 };
-
 
 struct InternalDependency {
   InternalDependency(       DetailedTask * prerequisiteTask
@@ -156,65 +152,23 @@ public:
 
   std::string getName() const;
 
-  const Task* getTask() const
-  {
-    return task;
-  }
+  const Task*           getTask() const {      return d_task; }
+  const PatchSubset*    getPatches() const {   return d_patches; }
+  const MaterialSubset* getMaterials() const { return d_matls; }
 
-  const PatchSubset* getPatches() const
-  {
-    return patches;
-  }
+  void assignResource( int idx ) { d_resourceIndex = idx; }
+  int  getAssignedResourceIndex() const { return d_resourceIndex; }
 
-  const MaterialSubset* getMaterials() const
-  {
-    return matls;
-  }
+  void assignStaticOrder( int i )  { d_staticOrder = i; }
+  int  getStaticOrder() const { return d_staticOrder; }
 
-  void assignResource(int idx)
-  {
-    resourceIndex = idx;
-  }
+  DetailedTasks* getTaskGroup() const { return d_taskGroup; }
 
-  int getAssignedResourceIndex() const
-  {
-    return resourceIndex;
-  }
+  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return d_reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return d_internal_reqs; }
 
-  void assignStaticOrder(int i)
-  {
-    staticOrder = i;
-  }
-
-  int getStaticOrder() const
-  {
-    return staticOrder;
-  }
-
-  DetailedTasks* getTaskGroup() const
-  {
-    return taskGroup;
-  }
-
-  std::map<DependencyBatch*, DependencyBatch*>& getRequires()
-  {
-    return reqs;
-  }
-
-  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires()
-  {
-    return internal_reqs;
-  }
-
-  DependencyBatch* getComputes() const
-  {
-    return comp_head;
-  }
-
-  DependencyBatch* getInternalComputes() const
-  {
-    return internal_comp_head;
-  }
+  DependencyBatch* getComputes() const { return d_comp_head; }
+  DependencyBatch* getInternalComputes() const { return d_internal_comp_head; }
 
   void findRequiringTasks( const VarLabel * var , std::list<DetailedTask*> & requiringTasks );
 
@@ -234,32 +188,15 @@ public:
   // When it hits 0, we can add it to the  DetailedTasks::mpiCompletedTasks list.
   void resetDependencyCounts();
 
-  void markInitiated()
-  {
-    initiated_.store(true, std::memory_order_seq_cst);
-  }
+  void markInitiated() { initiated_.store( true, std::memory_order_seq_cst ); }
 
-  void incrementExternalDepCount()
-  {
-    externalDependencyCount_.fetch_add(1, std::memory_order_seq_cst);
-  }
-
-  void decrementExternalDepCount()
-  {
-    externalDependencyCount_.fetch_sub(1, std::memory_order_seq_cst);
-  }
+  void incrementExternalDepCount() { externalDependencyCount_.fetch_add( 1, std::memory_order_seq_cst ); }
+  void decrementExternalDepCount() { externalDependencyCount_.fetch_sub( 1, std::memory_order_seq_cst ); }
 
   void checkExternalDepCount();
+  int  getExternalDepCount() { return externalDependencyCount_.load(std::memory_order_seq_cst); }
 
-  int getExternalDepCount()
-  {
-    return externalDependencyCount_.load(std::memory_order_seq_cst);
-  }
-
-  bool areInternalDependenciesSatisfied()
-  {
-    return (numPendingInternalDependencies == 0);
-  }
+  bool areInternalDependenciesSatisfied() { return ( numPendingInternalDependencies == 0 ); }
 
 #ifdef HAVE_CUDA
 
@@ -290,32 +227,17 @@ public:
 
   void deleteTaskGpuDataWarehouses();
 
-  cudaStream_t* getCudaStreamForThisTask( unsigned int deviceNum ) const;
+  cudaStream_t*        getCudaStreamForThisTask( unsigned int deviceNum ) const;
 
-  DeviceGridVariables& getDeviceVars()
-  {
-    return deviceVars;
-  }
+  DeviceGridVariables& getDeviceVars() { return deviceVars; }
 
-  DeviceGridVariables& getTaskVars()
-  {
-    return taskVars;
-  }
+  DeviceGridVariables& getTaskVars() { return taskVars; }
 
-  DeviceGhostCells& getGhostVars()
-  {
-    return ghostVars;
-  }
+  DeviceGhostCells&    getGhostVars() { return ghostVars; }
 
-  DeviceGridVariables& getVarsToBeGhostReady()
-  {
-    return varsToBeGhostReady;
-  }
+  DeviceGridVariables& getVarsToBeGhostReady() { return varsToBeGhostReady; }
 
-  DeviceGridVariables& getVarsBeingCopiedByTask()
-  {
-    return varsBeingCopiedByTask;
-  }
+  DeviceGridVariables& getVarsBeingCopiedByTask() { return varsBeingCopiedByTask; }
 
   void clearPreparationCollections();
 
@@ -327,11 +249,9 @@ public:
 
 #endif
 
-
 protected:
 
   friend class TaskGraph;
-
 
 private:
 
@@ -342,16 +262,16 @@ private:
   DetailedTask& operator=(DetailedTask &&)      = delete;
 
   // called by done()
-  void scrub(std::vector<OnDemandDataWarehouseP> &);
+  void scrub( std::vector<OnDemandDataWarehouseP> & dws );
 
-  Task                                         * task;
-  const PatchSubset                            * patches;
-  const MaterialSubset                         * matls;
-  std::map<DependencyBatch*, DependencyBatch*>   reqs;
-  std::map<DependencyBatch*, DependencyBatch*>   internal_reqs;
-  DependencyBatch                              * comp_head { nullptr };
-  DependencyBatch                              * internal_comp_head { nullptr };
-  DetailedTasks                                * taskGroup;
+  Task                                         * d_task;
+  const PatchSubset                            * d_patches;
+  const MaterialSubset                         * d_matls;
+  std::map<DependencyBatch*, DependencyBatch*>   d_reqs;
+  std::map<DependencyBatch*, DependencyBatch*>   d_internal_reqs;
+  DependencyBatch                              * d_comp_head { nullptr };
+  DependencyBatch                              * d_internal_comp_head { nullptr };
+  DetailedTasks                                * d_taskGroup;
 
   std::atomic<bool> initiated_ { false };
   std::atomic<bool> externallyReady_ { false };
@@ -371,8 +291,8 @@ private:
 
   unsigned long numPendingInternalDependencies { 0 };
 
-  int resourceIndex { -1 };
-  int staticOrder   { -1 };
+  int d_resourceIndex { -1 };
+  int d_staticOrder   { -1 };
 
   bool operator<(const DetailedTask & other);
 

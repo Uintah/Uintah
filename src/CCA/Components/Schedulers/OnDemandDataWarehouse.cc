@@ -139,9 +139,9 @@ bool OnDemandDataWarehouse::d_combineMemory=false;
 //
 OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
                                                     Scheduler*      scheduler,
-                                                    int             generation,
+                                              const int             generation,
                                               const GridP&          grid,
-                                                    bool            isInitializationDW /*=false*/ )
+                                              const bool            isInitializationDW /* = false */ )
     : DataWarehouse( myworld, scheduler, generation ),
       d_finalized( false ),
       d_grid( grid ),
@@ -2927,11 +2927,11 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
 
   if (!d_varDB.exists(label, matlIndex, patch)) {
-    std::cout << d_myworld->myrank() << " unable to find variable '" << label->getName() << " on patch: " << patch->getID() << " matl: "
-              << matlIndex << std::endl;
+    std::cout << d_myworld->myrank() << " unable to find variable '" << label->getName() << " on patch: " << patch->getID() << " matl: " << matlIndex << "\n";
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
   }
-  if (patch->isVirtual()) {
+
+  if ( patch->isVirtual() ) {
     d_varDB.get(label, matlIndex, patch->getRealPatch(), var);
     var.offsetGrid(patch->getVirtualOffset());
   }
@@ -2942,7 +2942,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
   IntVector low = patch->getExtraLowIndex(basis, label->getBoundaryLayer());
   IntVector high = patch->getExtraHighIndex(basis, label->getBoundaryLayer());
 
-  if (gtype == Ghost::None) {
+  if ( gtype == Ghost::None ) {
     if (numGhostCells != 0) {
       SCI_THROW(InternalError("Ghost cells specified with type: None!\n", __FILE__, __LINE__));
     }
@@ -2962,11 +2962,11 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
       patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
     }
     else {
-      neighbors.push_back(patch);
+      neighbors.push_back( patch );
     }
 
     IntVector oldLow = var.getLow(), oldHigh = var.getHigh();
-    if (!var.rewindow(lowIndex, highIndex)) {
+    if ( !var.rewindow( lowIndex, highIndex ) ) {
       // reallocation needed
       // Ignore this if this is the initialization dw in its old state.
       // The reason for this is that during initialization it doesn't
@@ -2975,7 +2975,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
       // more ghost cells from the old datawarehouse).
       static bool warned = false;
       bool ignore = d_isInitializationDW && d_finalized;
-      if (!ignore && !warned) {
+      if ( !ignore && !warned ) {
         //warned = true;
         //static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 100);
         //if (rw.invoke()) {

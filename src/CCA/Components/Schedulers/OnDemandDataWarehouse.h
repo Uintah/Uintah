@@ -97,11 +97,11 @@ class TypeDescription;
 class OnDemandDataWarehouse : public DataWarehouse {
 
   public:
-    OnDemandDataWarehouse(const ProcessorGroup* myworld,
-                          Scheduler* scheduler,
-                          int generation,
-                          const GridP& grid,
-                          bool isInitializationDW = false);
+    OnDemandDataWarehouse( const ProcessorGroup * myworld,
+                                 Scheduler      * scheduler,
+                           const int              generation,
+                           const GridP          & grid,
+                           const bool             isInitializationDW = false );
 
     virtual ~OnDemandDataWarehouse();
 

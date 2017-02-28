@@ -112,10 +112,10 @@
     <DoThermalExpansion>            false    </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
   </MPM>
+
   <!--____________________________________________________________________-->
   <!--     A M R                                                          -->
   <!--____________________________________________________________________--> 
-  <doAMR>true</doAMR>
   <AMR>
     <ICE>
       <do_Refluxing>        false </do_Refluxing>

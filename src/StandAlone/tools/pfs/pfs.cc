@@ -143,8 +143,8 @@ main(int argc, char *argv[])
       ProblemSpecP mpm = mp->findBlock("MPM");
       for( ProblemSpecP child = mpm->findBlock("material"); child != nullptr; child = child->findNextBlock("material") ) {
         for( ProblemSpecP geom_obj_ps = child->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+          for(ProblemSpecP child = geom_obj_ps->findBlock(); child != nullptr; child = child->findNextBlock() ) {
 
-          for( ProblemSpecP child = geom_obj_ps->findBlock(); child != nullptr; child = child->findNextBlock() ) {
             std::string go_type = child->getNodeName();
             
             // Read in points from a file
@@ -154,21 +154,21 @@ main(int argc, char *argv[])
               ifstream source(f_name.c_str());
               int ncols = 0;
               // count number of vars, and their sizes
-              for(ProblemSpecP varblock = child->findBlock("var");
-                  varblock;varblock=varblock->findNextBlock("var")) {
+              for( ProblemSpecP varblock = child->findBlock("var"); varblock != nullptr; varblock = varblock->findNextBlock("var") ) {
                 string next_var_name("");
                 varblock->get(next_var_name);
-                if      (next_var_name=="p.volume")        ncols += 1;
-                else if (next_var_name=="p.temperature")   ncols += 1;
-                else if (next_var_name=="p.color")         ncols += 1;
-                else if (next_var_name=="p.externalforce") ncols += 3;
-                else if (next_var_name=="p.fiberdir")      ncols += 3;
-                else if (next_var_name=="p.velocity")      ncols += 3;  // gcd adds
-                else if (next_var_name=="p.rvec1")         ncols += 3;  // CPDI, CPTI 
-                else if (next_var_name=="p.rvec2")         ncols += 3;  // CPDI, CPTI 
-                else if (next_var_name=="p.rvec3")         ncols += 3;  // CPDI, CPTI 
-                else 
+                if      (next_var_name=="p.volume")        { ncols += 1; }
+                else if (next_var_name=="p.temperature")   { ncols += 1; }
+                else if (next_var_name=="p.color")         { ncols += 1; }
+                else if (next_var_name=="p.externalforce") { ncols += 3; }
+                else if (next_var_name=="p.fiberdir")      { ncols += 3; }
+                else if (next_var_name=="p.velocity")      { ncols += 3; } // gcd adds
+                else if (next_var_name=="p.rvec1")         { ncols += 3; } // CPDI, CPTI 
+                else if (next_var_name=="p.rvec2")         { ncols += 3; } // CPDI, CPTI 
+                else if (next_var_name=="p.rvec3")         { ncols += 3; }  // CPDI, CPTI 
+                else {
                   throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'", __FILE__, __LINE__);
+                }
               }
               
               vector<vector<pair<Point,vector<double> > > > points(level->numPatches());
@@ -195,8 +195,7 @@ main(int argc, char *argv[])
               }
               
               source.close();
-              for(Level::const_patch_iterator iter = level->patchesBegin();
-                  iter != level->patchesEnd(); iter++){
+              for( Level::const_patch_iterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++ ){
                 const Patch* patch = *iter;
                 int pid = patch->getID();
                 

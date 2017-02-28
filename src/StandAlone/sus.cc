@@ -307,6 +307,9 @@ main( int argc, char *argv[], char *env[] )
       usage("", "", argv[0]);
     }
     else if (arg == "-AMR" || arg == "-amr") {
+      if( reduce_uda ) {
+        usage( "You may not use '-amr' and '-reduce_uda' at the same time.", arg, argv[0] );
+      }
       do_AMR = true;
     }
     else if (arg == "-nthreads") {
@@ -412,6 +415,9 @@ main( int argc, char *argv[], char *env[] )
       validateUps = false;
     }
     else if (arg == "-reduce_uda" || arg == "-reduceUda") {
+      if( do_AMR ) {
+        usage( "You may not use '-amr' and '-reduce_uda' at the same time.", arg, argv[0] );
+      }
       reduce_uda = true;
     }
     else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmarches" || arg == "-mpmice"
@@ -682,20 +688,14 @@ main( int argc, char *argv[], char *env[] )
     }
 #endif
 
-    //if the AMR block is defined default to turning amr on
-    if (!do_AMR) {
-      do_AMR = (bool) ups->findBlock("AMR");
+    // If the AMR block is defined default to turning AMR on.
+    if ( !do_AMR ) {
+      ProblemSpecP grid_ps = ups->findBlock( "Grid" );
+      if( grid_ps ) {
+        grid_ps->getAttribute( "doAMR", do_AMR );
+      }
     }
 
-    //if doAMR is defined set do_AMR.
-    if(do_AMR) {
-      ups->get("doAMR",do_AMR);
-    }
-
-    if(reduce_uda){
-      do_AMR = false;
-    }
-    
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
     SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
@@ -707,7 +707,7 @@ main( int argc, char *argv[], char *env[] )
 #endif
 
     RegridderCommon* regridder = nullptr;
-    if(do_AMR) {
+    if( do_AMR ) {
       regridder = RegridderFactory::create( ups, world );
       if ( regridder ) {
         ctl->attachPort( "regridder", regridder );
@@ -729,7 +729,7 @@ main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Component
     // try to make it from the command line first, then look in ups file
-    UintahParallelComponent* comp = ComponentFactory::create(ups, world, do_AMR, udaDir);
+    UintahParallelComponent* comp = ComponentFactory::create( ups, world, do_AMR, udaDir );
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
 
     // set sim. controller flags for reduce uda

@@ -11,6 +11,7 @@
 
    <Time>
        <maxTime>0.2</maxTime>
+       <max_Timesteps>20</max_Timesteps>
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
@@ -31,7 +32,7 @@
        <save label = "g.mass"/>
        <save label = "g.stressFS"/>
 
-       <checkpoint cycle = "2" interval = "0.01"/>
+       <checkpoint cycle = "2" interval = "0.001"/>
    </DataArchiver>
 
     <MPM>

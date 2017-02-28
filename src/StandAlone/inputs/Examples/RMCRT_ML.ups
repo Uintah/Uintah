@@ -17,7 +17,7 @@
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
-  <Grid>
+  <Grid doAMR="true">
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "0"   label = "color"     var = "Dirichlet"> 

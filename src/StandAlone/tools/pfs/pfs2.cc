@@ -231,20 +231,20 @@ int main(int argc, char *argv[])
           double dz = DX.z() / ppc[2];
           fprintf(stderr, "Voxel dimensions : %g, %g, %g\n", dx, dy, dz);
 
-          for( ProblemSpecP child = geom_obj_ps->findBlock(); child != nullptr; child = child->findNextBlock() ){
+          for( ProblemSpecP child = geom_obj_ps->findBlock(); child != nullptr; child = child->findNextBlock() ) {
             std::string go_type = child->getNodeName();
 
             // get the image data
             if (go_type == "image") {
-                child->require("name", imgname);
-                child->require("res", res);
-                child->require("threshold", L);
+              child->require("name", imgname);
+              child->require("res", res);
+              child->require("threshold", L);
                 
-                cout << "Image name : " << imgname << endl;
-                cout << "Resolution : " << res[0] << ", " << res[1] << ", " << res[2] << endl;
-                cout << "Min threshold : " << L[0] << endl;
-                cout << "Max threshold : " << L[1] << endl;
-                ncheck++;
+              cout << "Image name : " << imgname << endl;
+              cout << "Resolution : " << res[0] << ", " << res[1] << ", " << res[2] << endl;
+              cout << "Min threshold : " << L[0] << endl;
+              cout << "Max threshold : " << L[1] << endl;
+              ncheck++;
             }
             
             // Read the output file data
@@ -252,20 +252,20 @@ int main(int argc, char *argv[])
               child->require("name",f_name);
               
               // count number of vars, and their sizes
-              for(ProblemSpecP varblock = child->findBlock("var");
-                  varblock;varblock=varblock->findNextBlock("var")) {
+              for( ProblemSpecP varblock = child->findBlock("var"); varblock != nullptr; varblock = varblock->findNextBlock("var") ) {
                 string next_var_name("");
                 varblock->get(next_var_name);
-                if      (next_var_name=="p.volume")        ncols += 1;
-                else if (next_var_name=="p.temperature")   ncols += 1;
-                else if (next_var_name=="p.color")         ncols += 1;
-                else if (next_var_name=="p.externalforce") ncols += 3;
-                else if (next_var_name=="p.fiberdir")      ncols += 3;
-                else if (next_var_name=="p.rvec1")         ncols += 3;
-                else if (next_var_name=="p.rvec2")         ncols += 3;
-                else if (next_var_name=="p.rvec3")         ncols += 3;
-                else 
+                if      (next_var_name=="p.volume")        { ncols += 1; }
+                else if (next_var_name=="p.temperature")   { ncols += 1; }
+                else if (next_var_name=="p.color")         { ncols += 1; }
+                else if (next_var_name=="p.externalforce") { ncols += 3; }
+                else if (next_var_name=="p.fiberdir")      { ncols += 3; }
+                else if (next_var_name=="p.rvec1")         { ncols += 3; }
+                else if (next_var_name=="p.rvec2")         { ncols += 3; }
+                else if (next_var_name=="p.rvec3")         { ncols += 3; }
+                else {
                   throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'", __FILE__, __LINE__);
+                }
               }
               cout << "Output file name : " << f_name << endl;
               cout << "Nr of additional columns :" << ncols << endl;

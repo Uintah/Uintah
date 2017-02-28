@@ -18,7 +18,6 @@
       <timestep_multiplier> 0.1 </timestep_multiplier>
   </Time>
 
-
   <!--__________________________________-->
   <DataArchiver>
     <filebase>advect_3L_3D.uda</filebase>
@@ -96,7 +95,7 @@
      </MPM>
    </MaterialProperties>
 
-   <Grid>
+   <Grid doAMR="true">
       <!--__________________________________-->
       <!--       3D    -->
       <Level>

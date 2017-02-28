@@ -41,7 +41,7 @@ void
 SimulationInterface::scheduleRefine(const PatchSet*, 
                                     SchedulerP&)
 {
-  throw InternalError("scheduleRefine not implemented for this component\n", __FILE__, __LINE__);
+  throw InternalError( "scheduleRefine not implemented for this component\n", __FILE__, __LINE__ );
 }
 
 void
@@ -49,38 +49,35 @@ SimulationInterface::scheduleRefineInterface(const LevelP&,
                                              SchedulerP&,
                                              bool, bool)
 {
-  throw InternalError("scheduleRefineInterface not implemented for this component\n",
-                      __FILE__, __LINE__);
+  throw InternalError( "scheduleRefineInterface not implemented for this component\n", __FILE__, __LINE__ );
 }
 
 void
 SimulationInterface::scheduleCoarsen(const LevelP&, 
                                      SchedulerP&)
 {
-  throw InternalError("scheduleCoarsen not implemented for this component\n", __FILE__, __LINE__);
+  throw InternalError( "scheduleCoarsen not implemented for this component\n", __FILE__, __LINE__ );
 }
 
 void
 SimulationInterface::scheduleTimeAdvance(const LevelP&,
                                          SchedulerP&)
 {
-  throw InternalError("no simulation implemented?", __FILE__, __LINE__);
+  throw InternalError( "no simulation implemented?", __FILE__, __LINE__ );
 }
 
 void
-SimulationInterface::scheduleErrorEstimate(const LevelP&,
-						SchedulerP&)
+SimulationInterface::scheduleErrorEstimate( const LevelP&,
+                                                  SchedulerP& )
 {
-  throw InternalError("scheduleErrorEstimate not implemented for this component",
-                      __FILE__, __LINE__);
+  throw InternalError( "scheduleErrorEstimate not implemented for this component", __FILE__, __LINE__ );
 }
 
 void
 SimulationInterface::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/,
                                                   SchedulerP& /*sched*/)
 {
-  throw InternalError("scheduleInitialErrorEstimate not implemented for this component",
-                      __FILE__, __LINE__);
+  throw InternalError("scheduleInitialErrorEstimate not implemented for this component", __FILE__, __LINE__);
 }
 
 double
@@ -103,9 +100,18 @@ SimulationInterface::getSubCycleProgress(DataWarehouse* fineDW)
   int fineID = fineDW->getID();  
   int coarseNewID = fineDW->getOtherDataWarehouse(Task::CoarseNewDW)->getID();
   // need to do this check, on init timestep, old DW is nullptr, and getOtherDW will throw exception
-  if (fineID == coarseNewID)
-    return 1.0; 
+  if (fineID == coarseNewID) {
+    return 1.0;
+  }
   int coarseOldID = fineDW->getOtherDataWarehouse(Task::CoarseOldDW)->getID();
   
   return ((double)fineID-coarseOldID) / (coarseNewID-coarseOldID);
 }
+
+void
+SimulationInterface::preGridProblemSetup( const ProblemSpecP     & params, 
+                                                GridP            & grid,
+                                                SimulationStateP & state )
+{
+}
+

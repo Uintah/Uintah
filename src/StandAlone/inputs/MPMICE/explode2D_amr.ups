@@ -5,7 +5,7 @@
     <title>explode</title>
   </Meta>
   <SimulationComponent type="mpmice"/>
-  <doAMR>true</doAMR>
+
   <!--____________________________________________________________________-->
   <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
   <!--____________________________________________________________________-->
@@ -21,7 +21,7 @@
   <!--____________________________________________________________________-->
   <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
   <!--____________________________________________________________________-->
-  <Grid>
+  <Grid doAMR="true">
     <BoundaryConditions>
       <!--______________LEFT____________________-->
       <Face side="x-">
@@ -158,7 +158,7 @@
       <orderOfInterpolation>1        </orderOfInterpolation>
       <ClampSpecificVolume>true</ClampSpecificVolume>
       <Refinement_Criteria_Thresholds>
-        </Refinement_Criteria_Thresholds>
+      </Refinement_Criteria_Thresholds>
       <orderOf_CFI_Interpolation>1</orderOf_CFI_Interpolation>
     </ICE>
     <MPM>

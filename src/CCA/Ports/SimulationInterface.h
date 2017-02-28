@@ -73,24 +73,25 @@ WARNING
       
      //////////
      // Insert Documentation Here:
-     virtual void problemSetup(const ProblemSpecP& params, 
-                               const ProblemSpecP& restart_prob_spec,
-                               GridP& grid, SimulationStateP& state) = 0;
+     virtual void problemSetup( const ProblemSpecP     & params,
+                                const ProblemSpecP     & restart_prob_spec,
+                                      GridP            & grid,
+                                      SimulationStateP & state ) = 0;
 
-     virtual void preGridProblemSetup(const ProblemSpecP& params, 
-                               GridP& grid, SimulationStateP& state) {}
+     virtual void preGridProblemSetup( const ProblemSpecP     & params, 
+                                             GridP            & grid,
+                                             SimulationStateP & state );
 
-     virtual void outputProblemSpec(ProblemSpecP& ps) {}
-     virtual void outputPS(Dir& dir) {}
+     virtual void outputProblemSpec( ProblemSpecP & ps ) {}
       
      //////////
      // Insert Documentation Here:
-     virtual void scheduleInitialize(const LevelP& level,
-                                         SchedulerP&) = 0;
+     virtual void scheduleInitialize( const LevelP     & level,
+                                            SchedulerP & sched ) = 0;
                                  
      // on a restart schedule an initialization task
-     virtual void scheduleRestartInitialize(const LevelP& level,
-                                            SchedulerP&)  = 0;
+     virtual void scheduleRestartInitialize( const LevelP     & level,
+                                                   SchedulerP & sched )  = 0;
 
      //////////
      // restartInitialize() is called once and only once if and when a simulation is restarted.
@@ -99,12 +100,12 @@ WARNING
      // 
      virtual void restartInitialize() {}
 
-     virtual void switchInitialize(const LevelP& level,SchedulerP&) {}
+     virtual void switchInitialize( const LevelP & level, SchedulerP & sched ) {}
       
      //////////
      // Insert Documentation Here:
-     virtual void scheduleComputeStableTimestep(const LevelP& level,
-                                                SchedulerP&) = 0;
+     virtual void scheduleComputeStableTimestep( const LevelP     & level,
+                                                       SchedulerP & sched ) = 0;
       
      //////////
      // Insert Documentation Here:
@@ -112,13 +113,13 @@ WARNING
 
      // this is for wrapping up a timestep when it can't be done in scheduleTimeAdvance.
      virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&) {}
-     virtual void scheduleRefine(const PatchSet* patches, 
-                                 SchedulerP& scheduler);
-     virtual void scheduleRefineInterface(const LevelP& fineLevel, 
-                                          SchedulerP& scheduler,
-                                          bool needCoarseOld, bool needCoarseNew);
-     virtual void scheduleCoarsen(const LevelP& coarseLevel, 
-                                  SchedulerP& scheduler);
+     virtual void scheduleRefine( const PatchSet* patches, SchedulerP& scheduler );
+     virtual void scheduleRefineInterface( const LevelP     & fineLevel, 
+                                                 SchedulerP & scheduler,
+                                                 bool         needCoarseOld,
+                                                 bool         needCoarseNew );
+     virtual void scheduleCoarsen( const LevelP     & coarseLevel, 
+                                         SchedulerP & scheduler );
 
      /// Schedule to mark flags for AMR regridding
      virtual void scheduleErrorEstimate(const LevelP& coarseLevel,

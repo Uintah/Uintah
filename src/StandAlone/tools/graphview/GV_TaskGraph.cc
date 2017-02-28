@@ -174,7 +174,8 @@ void GV_TaskGraph::readNodes(ProblemSpecP xmlDoc)
   }
 }
 
-void GV_TaskGraph::readEdges(ProblemSpecP xmlDoc)
+void
+GV_TaskGraph::readEdges(ProblemSpecP xmlDoc)
 {
   ProblemSpecP edges = xmlDoc->findBlock("Edges");
   for( ProblemSpecP node = edges->findBlock("edge"); node != nullptr;  node = node->findNextBlock("edge") ) {
@@ -194,25 +195,28 @@ void GV_TaskGraph::readEdges(ProblemSpecP xmlDoc)
       }
     }
     else {
-      if (sourceTask == nullptr)
+      if (sourceTask == nullptr) {
 	cerr << "ERROR: Undefined task, '" << source << "'" << endl;
-      if (targetTask == nullptr) 
+      }
+      if (targetTask == nullptr) {
 	cerr << "ERROR: Undefined task, '" << target << "'" << endl;
+      }
     }
   }
 }
 
 GV_TaskGraph::~GV_TaskGraph()
 {
-  for (list<GV_Task*>::iterator iter = m_tasks.begin();
-       iter != m_tasks.end(); iter++)
+  for (list<GV_Task*>::iterator iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
     delete *iter;
-  for (list<Edge*>::iterator iter = m_edges.begin();
-       iter != m_edges.end(); iter++)
+  }
+  for (list<Edge*>::iterator iter = m_edges.begin(); iter != m_edges.end(); iter++) {
     delete *iter;
+  }
 }
 
-void GV_TaskGraph::topologicallySortEdges()
+void
+GV_TaskGraph::topologicallySortEdges()
 {
   list<GV_Task*>::iterator iter;
   for( iter = m_tasks.begin(); iter != m_tasks.end(); iter++ ) {

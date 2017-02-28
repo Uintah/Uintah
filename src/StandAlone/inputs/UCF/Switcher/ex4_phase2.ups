@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<Uintah_specification> 
+
 <!--Please use a consistent set of units, (mks, cgs,...)-->
+
+<Uintah_specification> 
 
   <Meta>
     <title>none</title>
@@ -23,7 +25,7 @@
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <Grid>
+  <Grid doAMR="false">
     <include href="inputs/UCF/Switcher/ex3_BC.xml"/>  <!-- using example 3's BC -->
 
     <Level>
@@ -37,10 +39,10 @@
        </Box>                                                 
     </Level>
   </Grid>
+
   <!--____________________________________________________________________-->
   <!--     A M R                                                          -->
   <!--____________________________________________________________________-->
-  <doAMR>false</doAMR>
   <AMR>
     <MPM>
       <min_grid_level>-1</min_grid_level>

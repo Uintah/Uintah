@@ -6,8 +6,6 @@
 
   <SimulationComponent type="wasatch"/>
 
-  <doAMR>true</doAMR>
-
   <AMR>
     <useLockStep> true </useLockStep>
   </AMR>
@@ -138,7 +136,7 @@
     <save label="phi4 source term"/>
   </DataArchiver>
 
-  <Grid>
+  <Grid doAMR="true">
   
     <Level>
       <Box label="0">

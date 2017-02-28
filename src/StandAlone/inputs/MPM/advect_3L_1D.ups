@@ -102,7 +102,7 @@
      </MPM>
    </MaterialProperties>
 
-   <Grid>
+   <Grid doAMR="true">
       <!--__________________________________-->
       <!--       1D    -->
       <Level>

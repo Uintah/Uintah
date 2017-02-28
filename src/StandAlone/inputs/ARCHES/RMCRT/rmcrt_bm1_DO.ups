@@ -37,7 +37,7 @@
     <checkpoint cycle="2" timestepInterval="2"/>
   </DataArchiver>
   <!--__________________________________-->
-  <Grid>
+  <Grid doAMR="true">
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-" name="X-">

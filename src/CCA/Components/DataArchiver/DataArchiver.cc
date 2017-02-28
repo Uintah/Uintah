@@ -390,8 +390,6 @@ DataArchiver::initializeOutput( const ProblemSpecP & params )
     string inputname = d_dir.getName()+"/input.xml";
     params->output( inputname.c_str() );
 
-    dynamic_cast<SimulationInterface*>( getPort("sim") )->outputPS( d_dir );
-
     /////////////////////////////////////////////////////////
     // Save the original .ups file in the UDA...
     //     FIXME: might want to avoid using 'system' copy which the below uses...

@@ -166,7 +166,7 @@
      </MPM>
    </MaterialProperties>
 
-   <Grid>
+   <Grid doAMR="true">
       <!--__________________________________-->
       <!--       3D    -->
       <Level>
