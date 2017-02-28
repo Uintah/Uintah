@@ -460,7 +460,7 @@ public:
 private:
   const GradOpT*  gradOp_;
   
-  DECLARE_FIELDS(FieldT, p_);
+  DECLARE_FIELDS( FieldT, p_ )
 };
 
 //-------------------------------------------------------------------------------------------------

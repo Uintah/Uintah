@@ -324,7 +324,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 
 #ifdef HAVE_CUDA
   // Determine if task will be executed on CPU or device, e.g. GPU or MIC
-  if ( task->usesDevice() ) {
+  if ( d_task->usesDevice() ) {
     // Run the GPU task.  Technically the engine has structure to run one task on multiple devices if
     // that task had patches on multiple devices.  So run the task once per device.  As often as possible,
     // we want to design tasks so each task runs on only once device, instead of a one to many relationship.
@@ -341,10 +341,10 @@ DetailedTask::doit( const ProcessorGroup                      * pg
       if (host_newtaskdw) {
         device_newtaskdw = host_newtaskdw->getdevice_ptr();
       }
-      task->doit( this, event, pg, patches, matls, dws,
-                  device_oldtaskdw,
-                  device_newtaskdw,
-                  getCudaStreamForThisTask(currentDevice), currentDevice );
+      d_task->doit( this, event, pg, d_patches, d_matls, dws,
+                    device_oldtaskdw,
+                    device_newtaskdw,
+                    getCudaStreamForThisTask(currentDevice), currentDevice );
     }
   }
   else 
