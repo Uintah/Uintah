@@ -1024,7 +1024,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
       // and the task->patches should be size one (so we don't have to worry about overlapping regions)
       origPatch = task->d_patches->get( 0 );
       ASSERT(req->m_patches == nullptr);
-      ASSERT(task->patches->size() == 1);
+      ASSERT(task->d_patches->size() == 1);
       ASSERT(req->m_level_offset > 0);
       const Level* origLevel = origPatch->getLevel();
       if (req->m_patches_dom == Task::CoarseLevel) {
