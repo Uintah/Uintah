@@ -1759,3 +1759,42 @@ ProblemSpec::isLabelSaved(const std::string& name )
   }
   return false;
 }
+
+//______________________________________________________________________
+//   Prints out values relative to this node.
+void
+ProblemSpec::print()
+{
+   ProblemSpecP ps = this;
+  if( ps->isNull() ){
+    throw InternalError( "ERROR: ProblemSpec::print().  nullptr" , __FILE__, __LINE__ );
+  }
+
+  string nodeName    = ps->getNodeName();
+  cout << "\n Node Name:         " << nodeName;
+  
+  // output node attributes
+  map<string,string> attr;
+  ps->getAttributes(attr);
+  
+  for (std::map<string,string>::iterator it=attr.begin(); it!=attr.end(); ++it) {
+    std::cout << "    "<< it->first << " => " << it->second;
+  }
+
+  string nextSibling = "(none)";
+  string parent      = "(none)";
+  string nextBlock   = "(none)";
+  
+  if ( ps->getNextSibling() ){
+    nextSibling = ps->getNextSibling()->getNodeName();
+  }
+  if ( ps->getParent() ){
+    parent      = ps->getParent()->getNodeName();
+  }
+  if ( ps->findNextBlock() ) {
+    nextBlock   = ps->findNextBlock()->getNodeName();
+  }
+   cout<< "\n getNextSibling():  " << nextSibling
+       << "\n getParent():       " << parent
+       << "\n findNextBlock():   " << nextBlock << "\n";
+}

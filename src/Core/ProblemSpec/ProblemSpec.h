@@ -283,7 +283,11 @@ public:
   /*************
      Methods involving node information
   *************/
-      
+  
+  //////////
+  // output values related to this node
+  void print();
+
   //////////
   // return the name of this node
   std::string getNodeName() const;
