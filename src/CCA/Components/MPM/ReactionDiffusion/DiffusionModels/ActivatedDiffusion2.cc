@@ -196,8 +196,8 @@ namespace Uintah
       rdm_ps->setAttribute("type","activated");
     }
     rdm_ps->appendElement("diffusivity", d_D0);
-    rdm_ps->appendElement("gasConstant",d_gasConstant);
-    rdm_ps->appendElement("activationEnergy", d_activationEnergy);
+    rdm_ps->appendElement("max_concentration", d_MaxConcentration);
+
   }
 
 } // namespace Uintah
