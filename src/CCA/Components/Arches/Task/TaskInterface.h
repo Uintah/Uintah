@@ -37,7 +37,8 @@ namespace Uintah{
 
 public:
 
-    enum TASK_TYPE { STANDARD_TASK, BC_TASK };
+    enum TASK_TYPE { STANDARD_TASK, BC_TASK, INITIALIZE, TIMESTEP_INITIALIZE, TIMESTEP_EVAL, BC,
+                     RESTART_INITIALIZE };
 
     typedef std::tuple<ParticleVariable<double>*, ParticleSubset*> ParticleTuple;
 
@@ -53,6 +54,9 @@ public:
     void print_task_name(){
       std::cout << "Task: " << _task_name << std::endl;
     }
+
+    /** @brief Get task name **/
+    const std::string get_task_name(){ return _task_name; }
 
     /** @brief Input file interface **/
     virtual void problemSetup( ProblemSpecP& db ) = 0;
@@ -162,13 +166,6 @@ public:
       m_bcHelper = helper;
     }
 
-protected:
-
-    typedef std::map<std::string, GridVariableBase* > UintahVarMap;
-    typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap;
-
-    WBCHelper* m_bcHelper;
-
     /** @brief The actual work done within the derived class **/
     virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
 
@@ -183,6 +180,14 @@ protected:
 
     /** @brief The actual work done within the derived class for computing the boundary conditions **/
     virtual void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr ) = 0;
+
+
+protected:
+
+    typedef std::map<std::string, GridVariableBase* > UintahVarMap;
+    typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap;
+
+    WBCHelper* m_bcHelper;
 
     std::string                  _task_name;
     const int                    _matl_index;
@@ -222,6 +227,7 @@ protected:
       delete helper;
 
     }
+
   };
 }
 

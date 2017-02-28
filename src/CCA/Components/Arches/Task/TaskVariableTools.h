@@ -142,7 +142,7 @@ namespace Uintah{
                             ArchesFieldContainer::WHICH_DW dw,
                             std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                             const int time_substep,
-                            std::string task_name="Var not registered with task name." );
+                            std::string task_name="(task name not not communicated to this variable registration)");
 
     /** @brief Inteface to register_variable_work -- this function is overloaded. **/
     void register_variable( std::string name,
@@ -150,14 +150,14 @@ namespace Uintah{
                             int nGhost,
                             ArchesFieldContainer::WHICH_DW dw,
                             std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
-                            std::string task_name="Var not registered with task name." );
+                            std::string task_name="(task name not not communicated to this variable registration)");
 
     /** @brief Inteface to register_variable_work -- this function is overloaded.
      *         This version assumes NewDW and zero ghosts. **/
     void register_variable( std::string name,
                             ArchesFieldContainer::VAR_DEPEND dep,
                             std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
-                            std::string task_name="Var not registered with task name." );
+                            std::string task_name="(task name not not communicated to this variable registration)");
 
     /** @brief Inteface to register_variable_work -- this function is overloaded.
      *         This version assumes NewDW and zero ghosts and passes the timesubstep. **/
@@ -165,7 +165,7 @@ namespace Uintah{
                             ArchesFieldContainer::VAR_DEPEND dep,
                             std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                             const int timesubstep,
-                            std::string task_name="Task not registered with task name.");
+                            std::string task_name="(task name not not communicated to this variable registration)");
 
 }
 

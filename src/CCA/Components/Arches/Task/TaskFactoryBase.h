@@ -11,6 +11,7 @@
 namespace Uintah{
 
   class ArchesParticlesHelper;
+  class ArchesFieldContainer;
 
   class TaskFactoryBase{
 
@@ -137,13 +138,49 @@ namespace Uintah{
       throw InvalidValue("Error: Task factory specific initialization for this factory is not implemented", __FILE__, __LINE__);
     }
 
-    /** @brief Allow the factory to execute the boundary conditions for each task that it owns **/ 
+    /** @brief Public interface for scheduling a single task through the factory **/
+    void schedule_task(  const std::string task_name,
+                         TaskInterface::TASK_TYPE type,
+                         const LevelP& level,
+                         SchedulerP& sched,
+                         const MaterialSet* matls,
+                         const int time_substep=0 );
+
+    /** @brief Public interface for scheduling a set of tasks through the factory **/
+    void schedule_task_group( const std::string group_name,
+                              TaskInterface::TASK_TYPE type,
+                              const LevelP& level,
+                              SchedulerP& sched,
+                              const MaterialSet* matls,
+                              const int time_substep=0 );
+
+    /** @brief Allow the factory to execute the boundary conditions for each task that it owns **/
     virtual void schedule_applyBCs( const LevelP& level,
                                     SchedulerP& sched,
                                     const MaterialSet * matls,
-                                    const int time_substep ){ 
+                                    const int time_substep ){
       throw InvalidValue("Error: Task factory specific boundary condition application for this factory is not implemented", __FILE__, __LINE__);
     }
+
+    /** @brief Interface to the Uintah scheduler **/
+    void factory_schedule_task( const LevelP& level,
+                                SchedulerP& sched,
+                                const MaterialSet* matls,
+                                TaskInterface::TASK_TYPE type,
+                                std::vector<TaskInterface*> arches_task,
+                                const std::string task_group_name,
+                                int time_substep );
+
+    /** @brief Task callback **/
+    void do_task ( const ProcessorGroup* pc,
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw,
+                   std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
+                   std::vector<TaskInterface*> arches_task,
+                   TaskInterface::TASK_TYPE type,
+                   int time_substep );
 
   protected:
 
@@ -174,7 +211,9 @@ namespace Uintah{
   private:
 
     ArchesParticlesHelper* _part_helper;          ///< Particle Helper
+    int _matl_index;
 
   };
+
 }
 #endif

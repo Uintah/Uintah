@@ -171,8 +171,9 @@ private:
       throw InvalidValue("Error: <TimeIntegrator> must have value: 1, 2, or 3 (representing the order).",__FILE__, __LINE__);
     }
 
-    _eqn_names.clear(); 
-    for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != nullptr; eqn_db = eqn_db->findNextBlock("eqn")){
+    _eqn_names.clear();
+    for (ProblemSpecP eqn_db = db->findBlock("eqn"); eqn_db != 0;
+         eqn_db = eqn_db->findNextBlock("eqn")){
 
       std::string scalar_name;
 
@@ -212,7 +213,6 @@ private:
       register_variable( *i+"_x_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i+"_y_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i+"_z_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
     }
   }
@@ -233,7 +233,6 @@ private:
 
       T& phi = *(tsk_info->get_uintah_field<T>(*i));
       T& rhs = *(tsk_info->get_uintah_field<T>(*i+"_rhs"));
-      CT& current_phi = *(tsk_info->get_const_uintah_field<CT>(*i, ArchesFieldContainer::NEWDW));
       CT& old_phi = *(tsk_info->get_const_uintah_field<CT>(*i, ArchesFieldContainer::OLDDW));
       CFXT& x_flux = *(tsk_info->get_const_uintah_field<CFXT>(*i+"_x_flux"));
       CFYT& y_flux = *(tsk_info->get_const_uintah_field<CFYT>(*i+"_y_flux"));
@@ -256,7 +255,7 @@ private:
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
 
-          phi(i,j,k) = current_phi(i,j,k) + dt/V * rhs(i,j,k);
+          phi(i,j,k) = phi(i,j,k) + dt/V * rhs(i,j,k);
 
         };
 
@@ -286,7 +285,7 @@ private:
                                       ay * ( y_flux(i,j+1,k) - y_flux(i,j,k) ) +
                                       az * ( z_flux(i,j,k+1) - z_flux(i,j,k) ) );
 
-          phi(i,j,k) = current_phi(i,j,k) + dt/V * rhs(i,j,k);
+          phi(i,j,k) = phi(i,j,k) + dt/V * rhs(i,j,k);
 
           phi(i,j,k) = _alpha[time_substep] * old_phi(i,j,k) + _beta[time_substep] * phi(i,j,k);
 

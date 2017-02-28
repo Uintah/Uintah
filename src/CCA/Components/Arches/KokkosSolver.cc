@@ -31,11 +31,13 @@
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
 //factories
+#include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
 #include <CCA/Components/Arches/ChemMixV2/ChemMixFactory.h>
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
@@ -316,7 +318,9 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   // Setup BCs
   setupBCs( level, sched, matls );
 
-  m_task_factory_map["utility_factory"]->retrieve_task("grid_info")->schedule_init( level, sched, matls, is_restart );
+  //m_task_factory_map["utility_factory"]->retrieve_task("grid_info")->schedule_init( level, sched, matls, is_restart );
+  m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls ); 
+  //ArchesCore::find_and_schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls, m_task_factory_map ); 
 
   // set the volume fractions
   m_task_factory_map["utility_factory"]->retrieve_task("vol_fraction_calc")->schedule_init( level, sched, matls, is_restart );
@@ -337,7 +341,7 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
 
   // tabulated factory
   m_task_factory_map["table_factory"]->schedule_initialization( level, sched, matls, doing_restart );
-  m_task_factory_map["table_factory"]->schedule_applyBCs( level, sched, matls, 0 ); 
+  m_task_factory_map["table_factory"]->schedule_applyBCs( level, sched, matls, 0 );
 
   //Need to apply BC's after everything is initialized
   for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
@@ -438,7 +442,7 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     // ** TABLE LOOKUP **
     for ( auto i = all_table_tasks.begin(); i != all_table_tasks.end(); i++) {
       i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
-      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep); 
+      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep);
     }
 
     // ** MOMENTUM **

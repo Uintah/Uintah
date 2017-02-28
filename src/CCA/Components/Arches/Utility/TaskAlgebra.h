@@ -241,7 +241,7 @@ private:
     for ( auto iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
 
-        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry );
+        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
 
       }
     }
@@ -274,7 +274,7 @@ private:
 
       if ( iter->second.create_new_variable ){
 
-        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry );
+        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry, _task_name );
 
       }
     }
@@ -317,24 +317,24 @@ private:
 
       if ( op_iter->second.create_new_variable ){
         if ( !use_variable(op_iter->second.dep, new_variables)){
-          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry );
+          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
           new_variables.push_back(op_iter->second.dep);
         }
       } else {
         if ( !use_variable(op_iter->second.dep, mod_variables)){
-          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry );
+          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry, _task_name );
           mod_variables.push_back(op_iter->second.dep);
         }
       }
 
       //require from newdw on everything else?
       if ( !use_variable(op_iter->second.ind1, req_variables) ){
-        register_variable( op_iter->second.ind1, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+        register_variable( op_iter->second.ind1, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, _task_name );
         req_variables.push_back(op_iter->second.ind1);
       }
       if ( !op_iter->second.use_constant ){
         if ( !use_variable(op_iter->second.ind2, req_variables) ){
-          register_variable( op_iter->second.ind2, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+          register_variable( op_iter->second.ind2, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, _task_name );
           req_variables.push_back(op_iter->second.ind2);
         }
       }

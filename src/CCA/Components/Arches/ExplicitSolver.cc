@@ -55,6 +55,7 @@
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
 //NEW TASK INTERFACE STUFF
 //factories
+#include <CCA/Components/Arches/Task/TaskFactoryHelper.h>
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Transport/TransportFactory.h>

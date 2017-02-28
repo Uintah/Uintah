@@ -1,10 +1,12 @@
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
+#include <CCA/Components/Arches/Task/FieldContainer.h>
 
 using namespace Uintah;
 
 TaskFactoryBase::TaskFactoryBase()
 {
+  _matl_index = 0; //Arches material
 }
 
 TaskFactoryBase::~TaskFactoryBase()
@@ -122,5 +124,182 @@ TaskFactoryBase::retrieve_atomic_task( const std::string task_name ){
       throw InvalidValue("Error: Cannot find task named: "+task_name,__FILE__,__LINE__);
 
     }
+  }
+}
+
+void TaskFactoryBase::schedule_task( const std::string task_name,
+                                     TaskInterface::TASK_TYPE type,
+                                     const LevelP& level,
+                                     SchedulerP& sched,
+                                     const MaterialSet* matls,
+                                     const int time_substep ){
+
+  std::vector<TaskInterface*> task_list_dummy(1); //only putting one task in here but still need to pass it as vector
+
+  TaskInterface* tsk  = retrieve_task( task_name );
+  task_list_dummy[0] = tsk;
+
+  factory_schedule_task( level, sched, matls, type, task_list_dummy, tsk->get_task_name(), time_substep );
+
+}
+
+void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
+                                           TaskInterface::TASK_TYPE type,
+                                           const LevelP& level,
+                                           SchedulerP& sched,
+                                           const MaterialSet* matls,
+                                           const int time_substep ){
+
+  std::vector<std::string> task_names = retrieve_task_subset(task_group_name);
+  std::vector<TaskInterface*> task_list_dummy( task_names.size() );
+
+  for ( int i = 0; i < task_names.size(); i++ ){
+    task_list_dummy[i] = retrieve_task( task_names[i] );
+  }
+
+  factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep );
+
+}
+
+
+void TaskFactoryBase::factory_schedule_task( const LevelP& level,
+                                             SchedulerP& sched,
+                                             const MaterialSet* matls,
+                                             TaskInterface::TASK_TYPE type,
+                                             std::vector<TaskInterface*> arches_tasks,
+                                             const std::string task_group_name,
+                                             int time_substep ){
+
+  ArchesFieldContainer::VariableRegistry variable_registry;
+
+  for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+
+    switch( type ){
+      case (TaskInterface::INITIALIZE):
+        (*i_task)->register_initialize( variable_registry );
+        time_substep = 0;
+        break;
+      case (TaskInterface::RESTART_INITIALIZE):
+        (*i_task)->register_restart_initialize( variable_registry );
+        time_substep = 0;
+      case (TaskInterface::TIMESTEP_INITIALIZE):
+        (*i_task)->register_timestep_init( variable_registry );
+        time_substep = 0;
+        break;
+      case (TaskInterface::TIMESTEP_EVAL):
+        (*i_task)->register_timestep_eval( variable_registry, time_substep );
+        break;
+      case (TaskInterface::BC):
+        (*i_task)->register_compute_bcs( variable_registry, time_substep );
+        break;
+      default:
+        throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
+        break;
+        
+    }
+  }
+
+  Task* tsk = scinew Task( task_group_name, this, &TaskFactoryBase::do_task, variable_registry,
+                           arches_tasks, type, time_substep );
+
+  int counter = 0;
+  for ( auto pivar = variable_registry.begin(); pivar != variable_registry.end(); pivar++ ){
+
+    counter++;
+
+    ArchesFieldContainer::VariableInformation& ivar = *pivar;
+
+    switch(ivar.depend) {
+    case ArchesFieldContainer::COMPUTES:
+      if ( time_substep == 0 ) {
+        tsk->computes( ivar.label );   //only compute on the zero time substep
+      } else {
+        tsk->modifies( ivar.label );
+      }
+      break;
+    case ArchesFieldContainer::MODIFIES:
+      tsk->modifies( ivar.label );
+      break;
+    case ArchesFieldContainer::REQUIRES:
+      tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+      break;
+    default:
+      throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency. ", __FILE__, __LINE__);
+      break;
+
+    }
+  }
+
+  //other variables:
+    if ( type != TaskInterface::INITIALIZE ){
+    tsk->requires(Task::OldDW, VarLabel::find("delT"));
+  }
+
+  if ( counter > 0 )
+    sched->addTask( tsk, level->eachPatch(), matls );
+  else
+    delete tsk;
+
+}
+
+void TaskFactoryBase::do_task ( const ProcessorGroup* pc,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                std::vector<ArchesFieldContainer::VariableInformation>  variable_registry,
+                                std::vector<TaskInterface*> arches_tasks,
+                                TaskInterface::TASK_TYPE type,
+                                int time_substep ){
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(patch, _matl_index, variable_registry, old_dw, new_dw);
+
+    SchedToTaskInfo info;
+
+    if ( type != TaskInterface::INITIALIZE ){
+      //get the current dt
+      delt_vartype DT;
+      old_dw->get(DT, VarLabel::find("delT"));
+      info.dt = DT;
+      info.time_substep = time_substep;
+    }
+
+    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager( variable_registry, patch, info );
+
+    tsk_info_mngr->set_field_container( field_container );
+
+    for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
+
+      switch( type ){
+        case (TaskInterface::INITIALIZE):
+          (*i_task)->initialize( patch, tsk_info_mngr );
+          break;
+        case (TaskInterface::RESTART_INITIALIZE):
+          (*i_task)->restart_initialize( patch, tsk_info_mngr );
+          break;
+        case (TaskInterface::TIMESTEP_INITIALIZE):
+          (*i_task)->timestep_init( patch, tsk_info_mngr );
+          time_substep = 0;
+          break;
+        case (TaskInterface::TIMESTEP_EVAL):
+          (*i_task)->eval( patch, tsk_info_mngr );
+          break;
+        case (TaskInterface::BC):
+          (*i_task)->compute_bcs( patch, tsk_info_mngr );
+          break;
+        default:
+          throw InvalidValue("Error: TASK_TYPE not recognized.",__FILE__,__LINE__);
+          break;
+      }
+    }
+
+    //clean up
+    delete tsk_info_mngr;
+    delete field_container;
+
   }
 }
