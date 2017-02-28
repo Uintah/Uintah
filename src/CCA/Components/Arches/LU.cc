@@ -2,8 +2,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 
-//comment
-
 #include <float.h>
 #include <iostream>
 #include <iomanip>
