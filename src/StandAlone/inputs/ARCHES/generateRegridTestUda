@@ -29,7 +29,7 @@
 #    appropriately.
 #______________________________________________________________________
 
-set ups = "methane_fire_8patch.ups"
+set ups     = "methane_fire_8patch.ups"
 set patches = "[1,1,1]"
 set uda     = "regridTestArches.uda"
 set SUS     = "mpirun -np 1 ./sus $ups"
@@ -55,7 +55,6 @@ if ( ! -e sus && ! -d inputs ) then
 endif
 
 
-
 #__________________________________
 # Modify the input file
 
@@ -69,11 +68,11 @@ if ( ! -e $ups ) then
 endif
 
 # now change the number of patches
-xmlstarlet ed -u "Uintah_specification/Grid/Level/Box/patches" -v "$patches"  $ups >& tmp
+xmlstarlet ed --update "Uintah_specification/Grid/Level/Box/patches" --value "$patches"  $ups >& tmp
 @ s = $status
 
 # Change the output uda name
-xmlstarlet ed -u "Uintah_specification/DataArchiver/filebase" -v "$uda" tmp >& tmp2
+xmlstarlet ed --update "Uintah_specification/DataArchiver/filebase" --value "$uda" tmp >& tmp2
 @ s = $s + $status
 
 # change the checkpoint output interval
@@ -88,7 +87,7 @@ if( $s ) then
 endif
 
 mv tmp2 $ups
-/bin/rm tmp
+/bin/rm tmp*
 
 #__________________________________
 echo "__________________________________"
@@ -116,7 +115,6 @@ echo ""
 
 cat > spec << fin
   <!--__________________________________-->
-  <doAMR>true</doAMR>
   <AMR>
     <Regridder type="SingleLevel">
       <regrid_once>               true      </regrid_once>
@@ -134,6 +132,11 @@ sed -i.orginal '/<Uintah_specification>/r spec' $uda/input.xml
 
 # change the checkpoint output interval
 sed -i s/timestepInterval=\"3\"/timestepInterval=\"1\"/g $uda/input.xml
+@ s = $s + $status
+
+
+# change the grid spec
+xmlstarlet ed --insert "Uintah_specification/Grid" --type attr -n doAMR --value true $uda/input.xml
 @ s = $s + $status
 
 if( $s ) then
