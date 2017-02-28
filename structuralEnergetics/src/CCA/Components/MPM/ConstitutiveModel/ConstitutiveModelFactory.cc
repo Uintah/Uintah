@@ -50,6 +50,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ReactiveElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ReactiveDiffusiveElasticPlasticHP.h>
+#include <CCA/Components/MPM/ConstitutiveModel/HackedReactiveDiffusiveElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
@@ -225,6 +226,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type == "reactive_diffusive_EP")
     return(scinew ReactionDiffusionEP(child, flags));
+
+  else if (mat_type == "hacked")
+    return(scinew HackedReactive_EP(child, flags));
 
   else if (mat_type ==  "elastic_plastic_hp")
     return(scinew ElasticPlasticHP(child,flags));

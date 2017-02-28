@@ -38,5 +38,6 @@ SRCS     += \
 	$(SRCDIR)/BazantModel.cc \
 	$(SRCDIR)/ScalarDiffusionModel.cc \
 	$(SRCDIR)/ActivatedDiffusion.cc \
-	$(SRCDIR)/ActivatedDiffusion2.cc
+	$(SRCDIR)/ActivatedDiffusion2.cc \
+	$(SRCDIR)/Null.cc
 	
