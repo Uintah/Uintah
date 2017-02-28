@@ -364,40 +364,49 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
                                      SchedulerP& sched )
 {
 
+  const bool pack_tasks = true; 
+  const bool dont_pask_tasks = false; 
+
   const MaterialSet* matls = m_sharedState->allArchesMaterials();
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
 
   // carry forward the grid x,y,z
-  TaskInterface* tsk = i_util_fac->second->retrieve_task("grid_info");
-  tsk->schedule_timestep_init( level, sched, matls );
+  //TaskInterface* tsk = i_util_fac->second->retrieve_task("grid_info");
+  //tsk->schedule_timestep_init( level, sched, matls );
+  m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::TIMESTEP_INITIALIZE, level, sched, matls );
 
   // carry forward volume fraction
-  tsk = i_util_fac->second->retrieve_task("vol_fraction_calc");
-  tsk->schedule_timestep_init( level, sched, matls );
+  //tsk = i_util_fac->second->retrieve_task("vol_fraction_calc");
+  //tsk->schedule_timestep_init( level, sched, matls );
+  m_task_factory_map["utility_factory"]->schedule_task( "vol_fraction_calc", TaskInterface::TIMESTEP_INITIALIZE, level, sched, matls );
 
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
-  TaskFactoryBase::TaskMap all_trans_tasks = i_transport->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++){
-    i->second->schedule_timestep_init(level, sched, matls);
-  }
+  //TaskFactoryBase::TaskMap all_trans_tasks = i_transport->second->retrieve_all_tasks();
+  //for ( TaskFactoryBase::TaskMap::iterator i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++){
+    //i->second->schedule_timestep_init(level, sched, matls);
+  //}
+  m_task_factory_map["transport_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
 
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
-  TaskFactoryBase::TaskMap all_prop_tasks = i_prop_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
-    i->second->schedule_timestep_init(level, sched, matls);
-  }
+  //TaskFactoryBase::TaskMap all_prop_tasks = i_prop_fac->second->retrieve_all_tasks();
+  //for ( TaskFactoryBase::TaskMap::iterator i = all_prop_tasks.begin(); i != all_prop_tasks.end(); i++) {
+    //i->second->schedule_timestep_init(level, sched, matls);
+  //}
+  m_task_factory_map["property_models_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
 
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
-    i->second->schedule_timestep_init(level, sched, matls);
-  }
+  //for ( TaskFactoryBase::TaskMap::iterator i = all_bc_tasks.begin(); i != all_bc_tasks.end(); i++) {
+    //i->second->schedule_timestep_init(level, sched, matls);
+  //}
+  m_task_factory_map["boundary_condition_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
 
   BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
   TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_table_tasks.begin(); i != all_table_tasks.end(); i++) {
-    i->second->schedule_timestep_init(level, sched, matls);
-  }
+  //for ( TaskFactoryBase::TaskMap::iterator i = all_table_tasks.begin(); i != all_table_tasks.end(); i++) {
+    //i->second->schedule_timestep_init(level, sched, matls);
+  //}
+  m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_INITIALIZE, pack_tasks, level, sched, matls );
 
   //RK loop
   for ( int time_substep = 0; time_substep < _rk_order; time_substep++ ){

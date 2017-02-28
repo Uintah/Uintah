@@ -39,24 +39,24 @@ BrownSoot::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("Ysoot_label",          m_Ysoot_name,            "Ysoot");
   db->getWithDefault("Ns_label",             m_Ns_name,               "Ns");
   db->getWithDefault("o2_label",             m_O2_name,               "O2");
-  db->getWithDefault("co2_label",	     m_CO2_name,		     "CO2");
+  db->getWithDefault("co2_label",	           m_CO2_name,		          "CO2");
   db->getWithDefault("density_label",        m_rho_name,              "density");
   db->getWithDefault("temperature_label",    m_temperature_name,      "radiation_temperature");
-  db->getWithDefault("system_pressure", m_sys_pressure, 101325.0); // [Pa]
+  db->getWithDefault("system_pressure",      m_sys_pressure,          101325.0); // [Pa]
 
-  db->findBlock("tar_src")->getAttribute( "label", m_tar_name );
+  db->findBlock("tar_src")->getAttribute( "label", m_tar_src_name );
   db->findBlock("num_density_src")->getAttribute( "label", m_nd_name );
   db->findBlock("soot_mass_src")->getAttribute( "label", m_soot_mass_name );
   db->findBlock("mass_balance_src")->getAttribute( "label", m_balance_name );
 
   // Since we are producing multiple sources, we load each name into this vector
   // so that we can do error checking upon src term retrieval.
-  _mult_srcs.push_back( m_tar_name );
+  _mult_srcs.push_back( m_tar_src_name );
   _mult_srcs.push_back( m_nd_name );
   _mult_srcs.push_back( m_soot_mass_name );
   _mult_srcs.push_back( m_balance_name );
 
-  m_tar_src_label       = VarLabel::create( m_tar_name, CCVariable<double>::getTypeDescription() );
+  m_tar_src_label       = VarLabel::create( m_tar_src_name, CCVariable<double>::getTypeDescription() );
   m_nd_src_label        = VarLabel::create( m_nd_name, CCVariable<double>::getTypeDescription() );
   m_soot_mass_src_label = VarLabel::create( m_soot_mass_name, CCVariable<double>::getTypeDescription() );
   m_balance_src_label   = VarLabel::create( m_balance_name, CCVariable<double>::getTypeDescription() );
@@ -109,7 +109,7 @@ BrownSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   tsk->requires( which_dw, m_Ysoot_label,                        Ghost::None, 0 );
   tsk->requires( which_dw, m_Ns_label,                           Ghost::None, 0 );
   tsk->requires( which_dw, m_o2_label,                           Ghost::None, 0 );
-  tsk->requires( which_dw, m_co2_label,                           Ghost::None, 0 );
+  tsk->requires( which_dw, m_co2_label,                          Ghost::None, 0 );
   tsk->requires( which_dw, m_temperature_label,                  Ghost::None, 0 );
   tsk->requires( which_dw, m_rho_label,                          Ghost::None, 0 );
 
