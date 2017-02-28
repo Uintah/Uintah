@@ -22,7 +22,7 @@
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <Grid>
+  <Grid doAMR="true">
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "0"   label = "color"     var = "Dirichlet"> 
@@ -130,7 +130,7 @@
   <!--__________________________________-->
   <DataArchiver>
   <filebase>RMCRT_DO_perf.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputTimestepInterval>0</outputTimestepInterval>
   </DataArchiver>
   
   
