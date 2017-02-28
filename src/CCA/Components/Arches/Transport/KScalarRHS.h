@@ -293,8 +293,8 @@ private:
 
       double scalar_init_value = m_init_value[ieqn];
 
-      T& phi    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
-      T& rhs    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]));
+      T& rhs    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]+"_rhs"));
+      T& phi    = *(tsk_info->get_uintah_field<T>(_eqn_names[ieqn]));
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
       Uintah::parallel_for( range, [&](int i, int j, int k){
         phi(i,j,k) = scalar_init_value;
@@ -329,14 +329,15 @@ private:
   template <typename T> void
   KScalarRHS<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     const int istart = 0;
     const int iend = _eqn_names.size();
+
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      T& phi = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn] ));
-      T& rhs = *(tsk_info->get_uintah_field<T>( _eqn_names[ieqn]+"_rhs" ));
-      typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>( _eqn_names[ieqn] ));
+      T& phi = tsk_info->get_uintah_field_add<T>( _eqn_names[ieqn] );
+      T& rhs = tsk_info->get_uintah_field_add<T>( _eqn_names[ieqn]+"_rhs" );
+      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( _eqn_names[ieqn] );
 
       phi.copyData(old_phi);
       rhs.initialize(0.0);

@@ -34,6 +34,7 @@
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
+#include <CCA/Components/Arches/ChemMixV2/ChemMixFactory.h>
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
@@ -62,7 +63,7 @@ KokkosSolver::~KokkosSolver(){
   m_bcHelper.clear();
 
   delete m_table_lookup;
-  
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -109,6 +110,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   std::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
   std::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
   std::shared_ptr<BoundaryConditionFactory> BC(scinew BoundaryConditionFactory());
+  std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory());
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -118,6 +120,7 @@ KokkosSolver::problemSetup( const ProblemSpecP& input_db,
   m_task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
   m_task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
   m_task_factory_map.insert(std::make_pair("boundary_condition_factory", BC));
+  m_task_factory_map.insert(std::make_pair("table_factory", TableModels));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -332,6 +335,10 @@ KokkosSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doi
   m_task_factory_map["boundary_condition_factory"]->schedule_initialization( level, sched, matls, doing_restart );
   TaskFactoryBase::TaskMap all_bc_tasks = m_task_factory_map["boundary_condition_factory"]->retrieve_all_tasks();
 
+  // tabulated factory
+  m_task_factory_map["table_factory"]->schedule_initialization( level, sched, matls, doing_restart );
+  m_task_factory_map["table_factory"]->schedule_applyBCs( level, sched, matls, 0 ); 
+
   //Need to apply BC's after everything is initialized
   for ( auto i = all_trans_tasks.begin(); i != all_trans_tasks.end(); i++) {
     i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
@@ -382,6 +389,12 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     i->second->schedule_timestep_init(level, sched, matls);
   }
 
+  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
+  TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_table_tasks.begin(); i != all_table_tasks.end(); i++) {
+    i->second->schedule_timestep_init(level, sched, matls);
+  }
+
   //RK loop
   for ( int time_substep = 0; time_substep < _rk_order; time_substep++ ){
 
@@ -420,6 +433,12 @@ KokkosSolver::nonlinearSolve( const LevelP& level,
     for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+    }
+
+    // ** TABLE LOOKUP **
+    for ( auto i = all_table_tasks.begin(); i != all_table_tasks.end(); i++) {
+      i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, time_substep);
+      i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, time_substep); 
     }
 
     // ** MOMENTUM **

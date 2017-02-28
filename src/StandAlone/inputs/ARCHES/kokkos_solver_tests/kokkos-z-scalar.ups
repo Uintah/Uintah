@@ -219,12 +219,6 @@
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
-      <Properties>
-        <table label="a_user_generated_label" type="constant">
-          <density>298.</density>
-          <temperature>298.</temperature>
-        </table>
-      </Properties>
       <PropertyModelsV2>
         <model label="density" type="constant_property">
           <grid type="CC"/>

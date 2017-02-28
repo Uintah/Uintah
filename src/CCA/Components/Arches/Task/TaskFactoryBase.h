@@ -137,6 +137,14 @@ namespace Uintah{
       throw InvalidValue("Error: Task factory specific initialization for this factory is not implemented", __FILE__, __LINE__);
     }
 
+    /** @brief Allow the factory to execute the boundary conditions for each task that it owns **/ 
+    virtual void schedule_applyBCs( const LevelP& level,
+                                    SchedulerP& sched,
+                                    const MaterialSet * matls,
+                                    const int time_substep ){ 
+      throw InvalidValue("Error: Task factory specific boundary condition application for this factory is not implemented", __FILE__, __LINE__);
+    }
+
   protected:
 
     BuildMap  _builders;                           ///< Builder map

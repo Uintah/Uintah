@@ -561,7 +561,7 @@
 
       </Turbulence>
 
-      <Properties                       spec="REQUIRED NO_DATA">
+      <Properties                       spec="OPTIONAL NO_DATA">
 
         <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
         <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
@@ -717,6 +717,56 @@
         </table>
 
       </Properties>
+
+      <StateProperties                  spec="OPTIONAL NO_DATA">
+
+        <!-- Pick a type of property evalulator
+             label = a unique label for the property evaluator - User defined
+             type = the type of evaluator
+             All StateProperties are cell-centered varaibles.
+        -->
+        <model                          spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'constant, coldflow'">
+          <!-- Constant Properties
+               For each <property> defined, a unique grid variable is generated
+               with the value specified.
+          -->
+          <const_property               spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="value REQUIRED DOUBLE"
+                                        need_applies_to="type constant"/>
+
+          <!-- Cold Flow Properties
+               Cold flow mixing does the following:
+               mixed_value = f * stream_1 + (1 - f) * stream_2
+               where f is the mixture fraction.
+               These properties are assumed on a per mass basis. If the quantity is not
+               per mass (e.g., density), then you must specify the species to be <volumetric/>.
+               For example:
+               (per mass)
+               mix_value = f * stream_0 + ( 1 - f ) * stream_1
+               (per vol)
+               1/mix_value = f/stream_0 + ( 1 - f ) / stream_1
+
+               Note that in the cases of volumetric properties, the resulting grid variable is
+               on a per volume bases (ie, the inversion to get the mix value is done for you)
+          -->
+          <coldflow_property           spec="MULTIPLE NO_DATA"
+                                       attribute1="label REQUIRED STRING"
+                                       attribute2="stream_0 REQUIRED DOUBLE"
+                                       attribute3="stream_1 REQUIRED DOUBLE"
+                                       need_applies_to="type coldflow">
+            <volumetric               spec="OPTIONAL NO_DATA"/>
+          </coldflow_property>
+
+          <mixture_fraction           spec="REQUIRED NO_DATA"
+                                      attribute1="label REQUIRED STRING"
+                                      need_applies_to="type coldflow"/>
+
+        </model>
+
+      </StateProperties>
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" >
 
@@ -1064,6 +1114,10 @@
             <!-- reference a source (defined in the <Sources> block) to add it to the RHS -->
             <src                          spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING"/>
+
+            <!-- by default, the scalar is intialized to zero. Other values may be specified -->
+            <initialize                   spec="OPTIONAL NO_DATA" 
+                                          attribute1="value REQUIRED DOUBLE"/>
           </eqn>
 
           <!--

@@ -220,6 +220,7 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/ParticleModels      \
            $(SRCDIR)/PropertyModels      \
            $(SRCDIR)/PropertyModelsV2    \
+					 $(SRCDIR)/ChemMixV2           \
            $(SRCDIR)/BoundaryConditions  \
            $(SRCDIR)/Radiation           \
            $(SRCDIR)/Radiation/fortran   \

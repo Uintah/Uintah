@@ -3,7 +3,7 @@
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
-    <title>almgren mms </title>
+    <title>constant mms </title>
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
@@ -17,7 +17,7 @@
     <max_Timesteps>50</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>almgren-mms.uda</filebase>
+    <filebase>constant-mms.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="x-mom"/>
@@ -29,6 +29,11 @@
     <save label="gamma"/>
     <save label="pressure"/>
     <save label="b_press"/>
+    <save label="prop1"/>
+    <save label="prop2"/>
+    <save label="prop3"/>
+    <save label="prop4"/>
+    <save label="cc_phi_upwind"/>
     <checkpoint cycle="2" interval=".3"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -37,7 +42,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,1.0]</upper>
-        <resolution>[24,24,24]</resolution>
+        <resolution>[24,24,3]</resolution>
         <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
@@ -63,6 +68,19 @@
         <var role="total_viscosity" label="gamma"/>
         <var role="density" label="density"/>
       </VarID>
+      <StateProperties> 
+        <model label="my_constant_model" type="constant">
+          <const_property label="prop1" value="3.456"/>
+          <const_property label="prop2" value="1.234"/>
+        </model>
+        <model label="my_coldflow_model" type="coldflow">
+          <coldflow_property label="prop3" stream_0="0.0" stream_1=".89"/>
+          <coldflow_property label="prop4" stream_0="0.14" stream_1="1.18">
+            <volumetric/>
+          </coldflow_property>
+          <mixture_fraction label="cc_phi_upwind"/>
+        </model>
+      </StateProperties>
       <PropertyModelsV2>
         <model label="density" type="constant_property">
           <grid type="CC"/>
@@ -73,6 +91,13 @@
           <value>1.e-4</value>
         </model>
       </PropertyModelsV2>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <eqn label="cc_phi_upwind">
+            <convection scheme="upwind"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
       <KMomentum>
         <convection scheme="central"/>
         <inviscid/>
@@ -89,15 +114,12 @@
         </PressureSolver>
       </KMomentum>
       <Initialization>
-        <task task_label="x-mom-init" variable_label="x-mom" type="almgren_mms">
-          <variable type="FX"/>
-          <which_vel>u</which_vel>
-          <coordinates x="ucellX" y="gridY"/>
-        </task>
-        <task task_label="y-mom-init" variable_label="y-mom" type="almgren_mms">
-          <variable type="FY"/>
-          <which_vel>v</which_vel>
-          <coordinates x="gridX" y="vcellY"/>
+        <task task_label="cc_phi_initialize" variable_label="cc_phi_upwind" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A=".5" f="2." offset=".5"/>
+          </wave>
         </task>
       </Initialization>
       <BoundaryConditions>
