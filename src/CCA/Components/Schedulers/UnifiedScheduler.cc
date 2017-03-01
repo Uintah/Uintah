@@ -756,8 +756,8 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   }
   //---------------------------------------------------------------------------
 
-  ASSERT(m_sends.size() == 0);
-  ASSERT(m_recvs.size() == 0);
+  ASSERT(m_sends.size() == 0u);
+  ASSERT(m_recvs.size() == 0u);
 
 
   if (g_queuelength) {

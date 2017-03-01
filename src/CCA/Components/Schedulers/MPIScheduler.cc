@@ -680,7 +680,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 //
 void MPIScheduler::processMPIRecvs( int test_type )
 {
-  if (m_recvs.size() == 0) {
+  if (m_recvs.size() == 0u) {
     return;
   }
 
@@ -694,40 +694,45 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   CommRequestPool::iterator comm_iter;
 
-  switch (test_type) {
+  g_recv_mutex.lock();
+  {
+    switch (test_type) {
 
-    case TEST :
-      comm_iter = m_recvs.find_any(test_request);
-      if (comm_iter) {
-        MPI_Status status;
-        comm_iter->finishedCommunication(d_myworld, status);
-        m_recvs.erase(comm_iter);
-      }
-      break;
+      case TEST :
+        comm_iter = m_recvs.find_any(test_request);
+        if (comm_iter) {
+          MPI_Status status;
+          comm_iter->finishedCommunication(d_myworld, status);
+          m_recvs.erase(comm_iter);
+        }
+        break;
 
-    case WAIT_ONCE :
-      comm_iter = m_recvs.find_any(wait_request);
-      if (comm_iter) {
-        MPI_Status status;
-        comm_iter->finishedCommunication(d_myworld, status);
-        m_recvs.erase(comm_iter);
-      }
-      break;
-
-    case WAIT_ALL :
-      while (m_recvs.size() != 0u) {
+      case WAIT_ONCE :
         comm_iter = m_recvs.find_any(wait_request);
         if (comm_iter) {
           MPI_Status status;
           comm_iter->finishedCommunication(d_myworld, status);
           m_recvs.erase(comm_iter);
         }
-      }
-      break;
+        break;
 
-  }  // end switch
+      case WAIT_ALL :
+        while (m_recvs.size() != 0u) {
+          comm_iter = m_recvs.find_any(wait_request);
+          if (comm_iter) {
+            MPI_Status status;
+            comm_iter->finishedCommunication(d_myworld, status);
+            m_recvs.erase(comm_iter);
+          }
+        }
+        break;
 
-  mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
+    }  // end switch
+
+    mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
+
+  }
+  g_recv_mutex.unlock();
 
 }  // end processMPIRecvs()
 
