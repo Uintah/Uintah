@@ -63,24 +63,28 @@ class SendState {
 public:
 
   SendState()   = default;
+
   ~SendState();
 
-  ParticleSubset* find_sendset(int dest,
-                               const Patch*,
-                               int matl,
-                               IntVector low,
-                               IntVector high,
-                               int dwid = 0) const;
+  ParticleSubset* find_sendset(       int         dest
+                              , const Patch     * patch
+                              ,       int         matl
+                              ,       IntVector   low
+                              ,       IntVector   high
+                              ,       int         dwid = 0
+                              ) const;
 
-  void add_sendset(ParticleSubset* pset,
-                   int dest,
-                   const Patch*,
-                   int matl,
-                   IntVector low,
-                   IntVector high,
-                   int dwid = 0);
+  void add_sendset(       ParticleSubset * pset
+                  ,       int              dest
+                  , const Patch          * patch
+                  ,       int              matl
+                  ,       IntVector        low
+                  ,       IntVector        high
+                  ,       int              dwid = 0
+                  );
 
-  void reset();  // Clears out all sendsets...
+  // Clears out all sendsets..
+  void reset();
 
   void print();
 
@@ -93,8 +97,8 @@ private:
   SendState( SendState && )                 = delete;
   SendState& operator=( SendState && )      = delete;
 
-  typedef std::map<std::pair<PSPatchMatlGhostRange, int>, ParticleSubset*> maptype;
-  maptype sendSubsets;
+  using map_type = std::map<std::pair<PSPatchMatlGhostRange, int>, ParticleSubset*>;
+  map_type sendSubsets;
 
 };
 

@@ -37,7 +37,7 @@ namespace {
 // Tags for each CrowdMonitor
 struct send_subsets_tag{};
 
-using  send_subsets_monitor = Uintah::CrowdMonitor<send_subsets_tag>;
+using send_subsets_monitor = Uintah::CrowdMonitor<send_subsets_tag>;
 
 }
 
@@ -47,7 +47,7 @@ SendState::~SendState()
   {
     send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
 
-    for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
+    for (map_type::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
       if (iter->second->removeReference()) {
         delete iter->second;
       }
@@ -68,7 +68,7 @@ SendState::find_sendset(       int         dest
     send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
 
     ParticleSubset* ret;
-    maptype::const_iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
+    map_type::const_iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
 
     if (iter == sendSubsets.end()) {
       ret = nullptr;
@@ -92,7 +92,7 @@ SendState::add_sendset(       ParticleSubset * sendset
   {
     send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
 
-    maptype::iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
+    map_type::iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
     if (iter != sendSubsets.end()) {
       std::cout << "sendSubset already exists for sendset:" << *sendset << " on patch:"
                 << *patch << " matl:" << matlIndex << std::endl;
@@ -119,7 +119,7 @@ SendState::print()
   {
     send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
 
-    for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
+    for (map_type::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
       std::cout << Parallel::getMPIRank() << ' ' << *(iter->second) << " src/dest: " << iter->first.second << std::endl;
     }
   }

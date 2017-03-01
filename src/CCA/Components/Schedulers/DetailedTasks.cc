@@ -123,7 +123,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
 
   // Create a send old detailed task for every processor in my neighborhood.
   for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
-    DetailedTask* newtask = scinew DetailedTask( stask_, 0, 0, this );
+    DetailedTask* newtask = scinew DetailedTask( stask_, nullptr, nullptr, this );
     newtask->assignResource(*iter);
 
     //use a map because the processors in this map are likely to be sparse
@@ -310,7 +310,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     std::list<InternalDependency>::iterator iter = internalDependencies.begin();
 
     for (int i = 0; iter != internalDependencies.end(); iter++, i++) {
-      message << i << ":    " << *((*iter).prerequisiteTask->getTask()) << "\n";
+      message << i << ":    " << *((*iter).m_prerequisite_task->getTask()) << "\n";
     }
 
     DOUT(true, message.str());
@@ -653,7 +653,7 @@ DetailedTasks::createScrubCounts()
   for (int i = 0; i < (int)localtasks_.size(); i++) {
     DetailedTask* dtask = localtasks_[i];
     const Task* task = dtask->getTask();
-    for (const Task::Dependency* req = task->getRequires(); req != 0; req = req->m_next) {
+    for (const Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
       constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
       constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
       int whichdw = req->m_whichdw;
@@ -675,7 +675,7 @@ DetailedTasks::createScrubCounts()
     }
 
     // determine which variables this task will modify
-    for (const Task::Dependency* req = task->getModifies(); req != 0; req = req->m_next) {
+    for (const Task::Dependency* req = task->getModifies(); req != nullptr; req = req->m_next) {
       constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
       constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
       int whichdw = req->m_whichdw;
@@ -724,7 +724,7 @@ DetailedTask::findRequiringTasks( const VarLabel                 * var
   // find internal requires
   std::map<DetailedTask*, InternalDependency*>::iterator internalDepIter;
   for (internalDepIter = internalDependents.begin(); internalDepIter != internalDependents.end(); ++internalDepIter) {
-    if (internalDepIter->second->vars.find(var) != internalDepIter->second->vars.end()) {
+    if (internalDepIter->second->m_vars.find(var) != internalDepIter->second->m_vars.end()) {
       requiringTasks.push_back(internalDepIter->first);
     }
   }
@@ -926,7 +926,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
   DependencyBatch* batch = from->getComputes();
 
   //find dependency batch that is to the same processor as this dependency
-  for (; batch != 0; batch = batch->m_comp_next) {
+  for (; batch != nullptr; batch = batch->m_comp_next) {
     if (batch->m_to_rank == toresource) {
       break;
     }
@@ -1255,9 +1255,9 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
   for (iter = internalDependents.begin(); iter != internalDependents.end(); iter++) {
     InternalDependency* dep = (*iter).second;
 
-    DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Dependency satisfied between " << *dep->dependentTask << " and " << *this);
+    DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Dependency satisfied between " << *dep->m_dependent_task << " and " << *this);
 
-    dep->dependentTask->dependencySatisfied(dep);
+    dep->m_dependent_task->dependencySatisfied(dep);
   }
 }
 
@@ -1272,15 +1272,15 @@ DetailedTask::dependencySatisfied( InternalDependency * dep )
     unsigned long currentGeneration = d_taskGroup->getCurrentDependencyGeneration();
 
     // if false, then the dependency has already been satisfied
-    ASSERT(dep->satisfiedGeneration < currentGeneration);
+    ASSERT(dep->m_satisfied_generation < currentGeneration);
 
-    dep->satisfiedGeneration = currentGeneration;
+    dep->m_satisfied_generation = currentGeneration;
     numPendingInternalDependencies--;
 
-    DOUT(internaldbg, *(dep->dependentTask->getTask()) << " has " << numPendingInternalDependencies << " left.");
+    DOUT(internaldbg, *(dep->m_dependent_task->getTask()) << " has " << numPendingInternalDependencies << " left.");
 
-    DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->prerequisiteTask << " dep: "
-                              << *dep->dependentTask << " numPending: " << numPendingInternalDependencies);
+    DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->m_prerequisite_task << " dep: "
+                              << *dep->m_dependent_task << " numPending: " << numPendingInternalDependencies);
 
     if (numPendingInternalDependencies == 0) {
       d_taskGroup->internalDependenciesSatisfied( this );
@@ -1718,7 +1718,7 @@ DetailedTask::emitEdges( ProblemSpecP edgesElement )
 
   std::list<InternalDependency>::iterator iter;
   for (iter = internalDependencies.begin(); iter != internalDependencies.end(); iter++) {
-    DetailedTask* fromTask = (*iter).prerequisiteTask;
+    DetailedTask* fromTask = (*iter).m_prerequisite_task;
     if (getTask()->isReductionTask() && fromTask->getTask()->isReductionTask()) {
       // Ignore internal links between reduction tasks because they
       // are only needed for logistic reasons
@@ -1738,35 +1738,34 @@ class PatchIDIterator {
   public:
 
     PatchIDIterator(const std::vector<const Patch*>::const_iterator& iter)
-        : iter_(iter)
-    {
-    }
+        : m_iter(iter)
+    {}
 
     PatchIDIterator& operator=(const PatchIDIterator& iter2)
     {
-      iter_ = iter2.iter_;
+      m_iter = iter2.m_iter;
       return *this;
     }
 
     int operator*()
     {
-      const Patch* patch = *iter_;  //vector<Patch*>::iterator::operator*();
+      const Patch* patch = *m_iter;  //vector<Patch*>::iterator::operator*();
       return patch ? patch->getID() : -1;
     }
 
     PatchIDIterator& operator++()
     {
-      iter_++;
+      m_iter++;
       return *this;
     }
 
     bool operator!=(const PatchIDIterator& iter2)
     {
-      return iter_ != iter2.iter_;
+      return m_iter != iter2.m_iter;
     }
 
   private:
-    std::vector<const Patch*>::const_iterator iter_;
+    std::vector<const Patch*>::const_iterator m_iter;
 };
 
 //_____________________________________________________________________________

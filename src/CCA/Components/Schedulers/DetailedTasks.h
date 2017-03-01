@@ -93,22 +93,22 @@ struct InternalDependency {
                     , const VarLabel     * var
                     ,       long           satisfiedGeneration
                     )
-    : prerequisiteTask(prerequisiteTask)
-    , dependentTask(dependentTask)
-    , satisfiedGeneration(satisfiedGeneration)
+    : m_prerequisite_task(prerequisiteTask)
+    , m_dependent_task(dependentTask)
+    , m_satisfied_generation(satisfiedGeneration)
   {
     addVarLabel(var);
   }
 
   void addVarLabel(const VarLabel* var)
   {
-    vars.insert(var);
+    m_vars.insert(var);
   }
 
-  DetailedTask                                 * prerequisiteTask;
-  DetailedTask                                 * dependentTask;
-  std::set<const VarLabel*, VarLabel::Compare>   vars;
-  unsigned long                                  satisfiedGeneration;
+  DetailedTask                                 * m_prerequisite_task;
+  DetailedTask                                 * m_dependent_task;
+  std::set<const VarLabel*, VarLabel::Compare>   m_vars;
+  unsigned long                                  m_satisfied_generation;
 };
 
 #ifdef HAVE_CUDA
@@ -320,7 +320,7 @@ private:
   DeviceGhostCells ghostVars;      // Holds ghost cell meta data copy information
 
   DeviceGridVariables varsToBeGhostReady;  // Holds a list of vars this task is managing to ensure their ghost cells will be ready.
-                                           // This means this task is the exlusive ghost cell gatherer and ghost cell validator for any
+                                           // This means this task is the exclusive ghost cell gatherer and ghost cell validator for any
                                            // label/patch/matl/level vars it has listed in here
                                            // But it is NOT the exclusive copier.  Because some ghost cells from one patch may be used by
                                            // two or more destination patches.  We only want to copy ghost cells once.

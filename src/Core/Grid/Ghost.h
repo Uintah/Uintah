@@ -32,6 +32,7 @@
 #define ALL_CELLS 268435455 /*= MAX_INT/8*/
 
 namespace Uintah {
+
    /**************************************
      
      CLASS
@@ -93,12 +94,6 @@ namespace Uintah {
 
      static Uintah::IntVector directions[numGhostTypes];
      static std::string names[numGhostTypes];
-#ifdef __GNUG__
-   public:
-      // Keep gcc quiet, to avoid:
-      // warning: all member functions in class `Packages/Uintah::Ghost' are private
-      Ghost(Ghost*);
-#endif
    };
 } // End namespace Uintah
 
