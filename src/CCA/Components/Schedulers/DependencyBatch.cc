@@ -25,6 +25,7 @@
 #include <CCA/Components/Schedulers/DependencyBatch.h>
 #include <Core/Util/DOUT.hpp>
 
+#include <mutex>
 #include <sstream>
 
 
@@ -34,6 +35,8 @@ namespace Uintah {
 namespace {
 
 Dout g_received_dbg( "DependencyBatch", false );
+
+std::mutex g_received_mutex{};
 
 }
 
@@ -55,7 +58,7 @@ DependencyBatch::~DependencyBatch()
 void
 DependencyBatch::reset()
 {
-  m_received.store(         false, std::memory_order_seq_cst);
+  m_received = false;
   m_made_mpi_request.store( false, std::memory_order_seq_cst);
 }
 
@@ -83,34 +86,46 @@ DependencyBatch::makeMPIRequest()
 void
 DependencyBatch::received( const ProcessorGroup * pg )
 {
-  m_received.store(true, std::memory_order_seq_cst);
+  g_received_mutex.lock();
+  {
+    m_received = true;
 
-  if (g_received_dbg) {
-    std::ostringstream message;
-    message << "Received batch message " << m_message_tag << " from task " << *m_from_task << "\n";
-
-    for (DetailedDep* dep = m_head; dep != nullptr; dep = dep->m_next) {
-      message << "\tSatisfying " << *dep << "\n";
+    // set all the toVars to valid, meaning the MPI has been completed
+    for (std::vector<Variable*>::iterator iter = m_to_vars.begin(); iter != m_to_vars.end(); iter++) {
+      (*iter)->setValid();
     }
-    DOUT(true, message.str());
+
+    // prepare for placement into the external ready queue
+    for (std::list<DetailedTask*>::iterator iter = m_to_tasks.begin(); iter != m_to_tasks.end(); iter++) {
+      // if the count is 0, the task will add itself to the external ready queue
+      (*iter)->decrementExternalDepCount();
+      (*iter)->checkExternalDepCount();
+    }
+
+    // clear the variables that have outstanding MPI as they are completed now.
+    m_to_vars.clear();
+
+    // Debug only.
+    if (g_received_dbg) {
+      std::ostringstream message;
+      message << "Received batch message " << m_message_tag << " from task " << *m_from_task << "\n";
+      for (DetailedDep* dep = m_head; dep != nullptr; dep = dep->m_next) {
+        message << "\tSatisfying " << *dep << "\n";
+      }
+      DOUT(true, message.str());
+    }
   }
-
-
-  // set all the toVars to valid, meaning the MPI has been completed
-  for (std::vector<Variable*>::iterator iter = m_to_vars.begin(); iter != m_to_vars.end(); iter++) {
-    (*iter)->setValid();
-  }
-
-  // prepare for placement into the external ready queue
-  for (std::list<DetailedTask*>::iterator iter = m_to_tasks.begin(); iter != m_to_tasks.end(); iter++) {
-    // if the count is 0, the task will add itself to the external ready queue
-    (*iter)->decrementExternalDepCount();
-    (*iter)->checkExternalDepCount();
-  }
-
-  // clear the variables that have outstanding MPI as they are completed now.
-  m_to_vars.clear();
+  g_received_mutex.unlock();
 }
+
+//_____________________________________________________________________________
+// This is called from only one point in the framework - MPIScheduler::postMPIRecvs
+//  from within a mutex-protected critical section. Currently, no lock necessary
+void DependencyBatch::addVar( Variable * var )
+{
+  m_to_vars.push_back(var);
+}
+
 
 } // namespace Uintah
 

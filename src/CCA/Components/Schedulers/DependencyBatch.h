@@ -29,7 +29,6 @@
 
 #include <list>
 #include <map>
-#include <string>
 #include <vector>
 
 namespace Uintah {
@@ -56,34 +55,25 @@ public:
 
   ~DependencyBatch();
 
-  // Initialize receiving information for makeMPIRequest() and received()
-  // so that it can receive again.
+  // Initialize receiving information for makeMPIRequest() and received() so that it can receive again.
   void reset();
 
-  // The first thread calling this will return true, all others
-  // will return false.
+  // The first thread calling this will return true, all others will return false.
   bool makeMPIRequest();
 
   // Tells this batch that it has actually been received and
   // awakens anybody blocked in makeMPIRequest().
   void received( const ProcessorGroup * pg );
 
-  //Add invalid variables to the dependency batch.  These variables will be marked
-  //as valid when MPI completes.
-  void addVar( Variable * var )
-  {
-    m_to_vars.push_back(var);
-  }
+  // Add invalid variables to dep batch. These variables will be marked as valid when MPI completes.
+  void addVar( Variable * var );
 
   DependencyBatch          * m_comp_next{nullptr};
   DetailedTask             * m_from_task;
   DetailedDep              * m_head{nullptr};
   std::list<DetailedTask*>   m_to_tasks;
   int                        m_message_tag{-1};
-  int                        m_to_rank;
-
-  // scratch pad to store wait times for debugging
-  static std::map<std::string,double> waittimes;
+  int                        m_to_rank{-1};
 
 
 private:
@@ -94,7 +84,7 @@ private:
   DependencyBatch( DependencyBatch && )                 = delete;
   DependencyBatch& operator=( DependencyBatch && )      = delete;
 
-  std::atomic<bool> m_received{false};
+  bool m_received{false};
   std::atomic<bool> m_made_mpi_request{false};
 
   std::vector<Variable*> m_to_vars;

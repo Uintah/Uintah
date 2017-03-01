@@ -565,7 +565,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 #endif
 
       // Create the MPI type
-      for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
+      for (DetailedDep* req = batch->m_head; req != nullptr; req = req->m_next) {
 
         OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
         if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0)        ||
@@ -694,45 +694,40 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   CommRequestPool::iterator comm_iter;
 
-  g_recv_mutex.lock();
-  {
-    switch (test_type) {
+  switch (test_type) {
 
-      case TEST :
-        comm_iter = m_recvs.find_any(test_request);
-        if (comm_iter) {
-          MPI_Status status;
-          comm_iter->finishedCommunication(d_myworld, status);
-          m_recvs.erase(comm_iter);
-        }
-        break;
+    case TEST :
+      comm_iter = m_recvs.find_any(test_request);
+      if (comm_iter) {
+        MPI_Status status;
+        comm_iter->finishedCommunication(d_myworld, status);
+        m_recvs.erase(comm_iter);
+      }
+      break;
 
-      case WAIT_ONCE :
+    case WAIT_ONCE :
+      comm_iter = m_recvs.find_any(wait_request);
+      if (comm_iter) {
+        MPI_Status status;
+        comm_iter->finishedCommunication(d_myworld, status);
+        m_recvs.erase(comm_iter);
+      }
+      break;
+
+    case WAIT_ALL :
+      while (m_recvs.size() != 0u) {
         comm_iter = m_recvs.find_any(wait_request);
         if (comm_iter) {
           MPI_Status status;
           comm_iter->finishedCommunication(d_myworld, status);
           m_recvs.erase(comm_iter);
         }
-        break;
+      }
+      break;
 
-      case WAIT_ALL :
-        while (m_recvs.size() != 0u) {
-          comm_iter = m_recvs.find_any(wait_request);
-          if (comm_iter) {
-            MPI_Status status;
-            comm_iter->finishedCommunication(d_myworld, status);
-            m_recvs.erase(comm_iter);
-          }
-        }
-        break;
+  }  // end switch
 
-    }  // end switch
-
-    mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
-
-  }
-  g_recv_mutex.unlock();
+  mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
 
 }  // end processMPIRecvs()
 

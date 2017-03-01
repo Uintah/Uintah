@@ -1251,7 +1251,6 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
     DOUT( true, message.str() );
   }
 
-  int cnt = 1000;
   std::map<DetailedTask*, InternalDependency*>::iterator iter;
   for (iter = internalDependents.begin(); iter != internalDependents.end(); iter++) {
     InternalDependency* dep = (*iter).second;
@@ -1259,7 +1258,6 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
     DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Dependency satisfied between " << *dep->dependentTask << " and " << *this);
 
     dep->dependentTask->dependencySatisfied(dep);
-    cnt++;
   }
 }
 
@@ -1286,12 +1284,12 @@ DetailedTask::dependencySatisfied( InternalDependency * dep )
 
     if (numPendingInternalDependencies == 0) {
       d_taskGroup->internalDependenciesSatisfied( this );
-      // reset for next timestep
-      numPendingInternalDependencies = internalDependencies.size();
+      numPendingInternalDependencies = internalDependencies.size(); // reset for next timestep
     }
   }
   g_internal_dependency_mutex.unlock();
 }
+
 
 namespace Uintah {
 
