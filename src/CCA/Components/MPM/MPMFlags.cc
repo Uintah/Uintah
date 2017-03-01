@@ -245,8 +245,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   }
 
   // Cyberstone
-  mpm_flag_ps->get("ContainerMaterial", d_containerMaterial);
-  mpm_flag_ps->get("ContainerRadius",   d_containerRadius);
+  mpm_flag_ps->get("containerMaterial", d_containerMaterial);
+  mpm_flag_ps->get("containerRadius",   d_containerRadius);
   mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
 
   //MMS
