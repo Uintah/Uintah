@@ -784,11 +784,15 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
            print( "%s" % replace_msg )
            
         elif compUda_RC == 5*256:
-          print( "\t*** ERROR: test (%s) uda comparison aborted (%s)" % (testname, compUda_RC) ) 
+          print( "\t*** ERROR: test (%s) uda comparison aborted (%s)" % (testname, compUda_RC) )
           print compare_msg
         
           if startFrom != "restart":
-           print( "%s" % replace_msg )
+            system("tail -10 compare_sus_runs.log.txt | \
+                    sed --silent /ERROR/,/ERROR/p |     \
+                    sed /'^$'/d | sed /'may not be compared'/,+1d")   # clean out blank lines and cruft from the eror section
+            print( "\n" )
+            #print( "%s" % replace_msg )
 
         elif compUda_RC == 65280: # (-1 return code)
           print( "\tComparison tests passed.  (Note: No dat files to compare.)" )
