@@ -102,13 +102,13 @@
               <constitutive_model type="cnh_damage">
                  <shear_modulus>1.2e6</shear_modulus>
                  <bulk_modulus>3.2e6</bulk_modulus>
-                 <damage type="Threshold">
-                     <failure_mean> 2.0e5       </failure_mean>
-                     <failure_std>  1.0e5       </failure_std>
-                     <failure_distrib>gauss     </failure_distrib>
-                     <failure_criteria>MaximumPrincipalStress</failure_criteria>
-                 </damage>
               </constitutive_model>
+              <damage_model type="Threshold">
+                  <failure_mean> 2.0e5       </failure_mean>
+                  <failure_std>  1.0e5       </failure_std>
+                  <failure_distrib>gauss     </failure_distrib>
+                  <failure_criteria>MaximumPrincipalStress</failure_criteria>
+              </damage_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
 

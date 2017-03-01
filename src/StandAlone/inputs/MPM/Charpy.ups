@@ -49,38 +49,38 @@
         <material>
              <density>7.850</density>
              <constitutive_model type="elastic_plastic_hp">
-  		<shear_modulus>80.0e10</shear_modulus>
-  		<bulk_modulus>173.33e10</bulk_modulus>
+  		  <shear_modulus>80.0e10</shear_modulus>
+  		  <bulk_modulus>173.33e10</bulk_modulus>
                 <yield_condition type="vonMises">
                 </yield_condition>
-  		<flow_model type="zerilli_armstrong">
-    		  <c_0>50e7</c_0>
-    		  <B>1800e7</B>
-    		  <beta_0>0.0015</beta_0>
-    		  <beta_1>0.000045</beta_1>
-    		  <B_0>0.0</B_0>
-    		  <alpha_0>0.0</alpha_0>
-    		  <alpha_1>0.0</alpha_1>
-    		  <K>1200e7</K>
-    		  <n>0.62</n>
- 		</flow_model>
-                <damage_model type="johnson_cook">
+  		  <flow_model type="zerilli_armstrong">
+    		    <c_0>50e7</c_0>
+    		    <B>1800e7</B>
+    		    <beta_0>0.0015</beta_0>
+    		    <beta_1>0.000045</beta_1>
+    		    <B_0>0.0</B_0>
+    		    <alpha_0>0.0</alpha_0>
+    		    <alpha_1>0.0</alpha_1>
+    		    <K>1200e7</K>
+    		    <n>0.62</n>
+ 		  </flow_model>
+                <equation_of_state type="mie_gruneisen">
+    		    <C_0>461000</C_0>
+    		    <Gamma_0>1.67</Gamma_0>
+    		    <S_alpha>1.73</S_alpha>
+                </equation_of_state>
+              </constitutive_model>
+              <damage_model type="johnson_cook">
                   <D1>-0.65</D1>
                   <D2>2.25</D2>
                   <D3>-0.5</D3>
                   <D4>0.004</D4>
                   <D5>0.0</D5>
-                  </damage_model>
-                <equation_of_state type="mie_gruneisen">
-    		  <C_0>461000</C_0>
-    		  <Gamma_0>1.67</Gamma_0>
-    		  <S_alpha>1.73</S_alpha>
-                </equation_of_state>
-             </constitutive_model>
-                <thermal_conductivity>38.0e5</thermal_conductivity> <!-- 1 Watt/(m.Kelvin) = 1 (Kg . m^2 / s^3)/(m.Kelvin) = 10^5 (g. cm^2/ s^3)/(cm.Kelvin)-->
-                <specific_heat>477.0e4</specific_heat> <!-- 1 Joule/(Kg.Kelvin)= 1(Kg m^2/s^2)/Kg.Kelvin = 10^4 (g cm^2/s^2)/g.Kelvin -->
-                <room_temp>298.0</room_temp>
-                <melt_temp>1793.0</melt_temp>
+              </damage_model>
+              <thermal_conductivity>38.0e5</thermal_conductivity> <!-- 1 Watt/(m.Kelvin) = 1 (Kg . m^2 / s^3)/(m.Kelvin) = 10^5 (g. cm^2/ s^3)/(cm.Kelvin)-->
+              <specific_heat>477.0e4</specific_heat> <!-- 1 Joule/(Kg.Kelvin)= 1(Kg m^2/s^2)/Kg.Kelvin = 10^4 (g cm^2/s^2)/g.Kelvin -->
+              <room_temp>298.0</room_temp>
+              <melt_temp>1793.0</melt_temp>
             <geom_object>
               <box label = "target">
                 <min>[-2.75,-0.25, -0.5]</min>

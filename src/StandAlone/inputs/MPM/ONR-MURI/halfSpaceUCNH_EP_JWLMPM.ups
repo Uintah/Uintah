@@ -100,15 +100,13 @@
              <yield_range> 2.0e7 </yield_range>
              <yield_stress> 3.0e7 </yield_stress>
              <hardening_modulus> 1.0e5 </hardening_modulus>
-             
-             <damage type="Threshold">
-                <failure_criteria>MaximumPrincipalStrain</failure_criteria>
-                <failure_mean>    0.5 </failure_mean>
-                <failure_std>     0.3 </failure_std>
-                <failure_distrib>gauss</failure_distrib>    <!-- choices are constant, weibull, gauss -->
-             </damage>
-
            </constitutive_model>
+           <damage_model type="Threshold">
+              <failure_criteria>MaximumPrincipalStrain</failure_criteria>
+              <failure_mean>    0.5 </failure_mean>
+              <failure_std>     0.3 </failure_std>
+              <failure_distrib>gauss</failure_distrib>    <!-- choices are constant, weibull, gauss -->
+           </damage_model>
            <!--
            <constitutive_model type = "comp_neo_hook">
              <shear_modulus>1.3e6</shear_modulus>

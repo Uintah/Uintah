@@ -26,8 +26,12 @@
 #define __THRESHOLD_DAMAGE_MODEL_H__
 
 
-#include "DamageModel.h"
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+
 
 namespace Uintah {
 
@@ -50,20 +54,39 @@ namespace Uintah {
       std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
       int seed;            /* seed for random number distribution generator */
       double t_char;       /* characteristic time for damage to occur */
+      
+      void print(){
+        std::cout << " mean:" << mean << " std: " << std << " exponent: " << exponent
+                  << " refVol: " << refVol << " scaling: " << scaling << " dist: " << dist
+                  << " seed: " << seed << " t_char: " << t_char << std::endl;
+      }
     };
 
-    bool d_useDamage  = false;
     FailureStressOrStrainData d_epsf;
     std::string d_failure_criteria; /* Options are:  "MaximumPrincipalStrain" */
                                     /* "MaximumPrincipalStress", "MohrColoumb"*/
 
     // MohrColoumb options
-    double d_friction_angle;  // Assumed to come in degrees
-    double d_tensile_cutoff;  // Fraction of the cohesion at which
-                              // tensile failure occurs
+    double d_friction_angle;           // Assumed to come in degrees
+    double d_tensile_cutoff;           // Fraction of the cohesion at which
+                                       // tensile failure occurs
 
-    enum erosionAlgo { ZeroStress, AllowNoTension, AllowNoShear, none};
+    enum erosionAlgo { ZeroStress,     // set stress tensor to zero
+                       AllowNoTension, // retain compressive mean stress after failue
+                       AllowNoShear,   // retain mean stress after failure - no deviatoric stress
+                       none };
+
     erosionAlgo d_erosionAlgo = none;
+
+    //__________________________________
+    //  Labels
+    const VarLabel* pTimeOfLocLabel;
+    const VarLabel* pTimeOfLocLabel_preReloc;
+
+    const VarLabel* pFailureStressOrStrainLabel;
+    const VarLabel* pFailureStressOrStrainLabel_preReloc;
+
+    SimulationState* d_sharedState;
 
     // Prevent copying of this class copy constructor
     ThresholdDamage& operator=(const ThresholdDamage &cm);
@@ -74,7 +97,8 @@ namespace Uintah {
   public:
     // constructors
     ThresholdDamage( ProblemSpecP& ps,
-                     MPMFlags* Mflags  );
+                     MPMFlags* Mflags,
+                     SimulationState* sharedState  );
 
     ThresholdDamage(const ThresholdDamage* cm);
 
@@ -87,27 +111,55 @@ namespace Uintah {
 
     bool hasFailed(double damage);
 
-    //////////
-    // Calculate the scalar damage parameter
     virtual
-    double computeScalarDamage(const double& plasticStrainRate,
-                               const Matrix3& stress,
-                               const double& temperature,
-                               const double& delT,
+    double computeScalarDamage(const double   & plasticStrainRate,
+                               const Matrix3  & stress,
+                               const double   & temperature,
+                               const double   & delT,
                                const MPMMaterial* matl,
-                               const double& tolerance,
-                               const double& damage_old);
-    virtual
-    void updateFailedParticlesAndModifyStress2(const Matrix3& FF,
-                                               const double& pFailureStrain,
-                                               const int& pLocalized,
-                                               int& pLocalized_new,
-                                               const double& pTimeOfLoc,
-                                               double& pTimeOfLoc_new,
-                                               Matrix3& pStress_new,
-                                               const long64 particleID,
-                                               double time);
+                               const double   & tolerance,
+                               const double   & damage_old);
 
+    virtual
+    void addComputesAndRequires(Task* task,
+                                const MPMMaterial* matl);
+
+    virtual
+    void  computeSomething( ParticleSubset  * pset,
+                            const int       & dwi,            
+                            const Patch     * patch,          
+                            DataWarehouse   * old_dw,         
+                            DataWarehouse   * new_dw );       
+
+    virtual
+    void carryForward( const PatchSubset* patches,
+                       const MPMMaterial* matl,
+                       DataWarehouse*     old_dw,
+                       DataWarehouse*     new_dw);
+
+    virtual
+    void addParticleState(std::vector<const VarLabel*>& from,
+                          std::vector<const VarLabel*>& to);
+
+    virtual 
+    void addInitialComputesAndRequires(Task* task,
+                                       const MPMMaterial* matl);
+
+    virtual
+    void initializeLabels(const Patch*       patch,
+                          const MPMMaterial* matl,
+                          DataWarehouse*     new_dw);
+
+    virtual
+    void updateFailedParticlesAndModifyStress2(const Matrix3  & defGrad,
+                                               const double   & pFailureStr,
+                                               const int      & pLocalized,
+                                               int            & pLocalized_new,
+                                               const double   & pTimeOfLoc,
+                                               double         & pTimeOfLoc_new,
+                                               Matrix3        & pStress,
+                                               const long64     particleID,
+                                               double           time);
   };
 
 } // End namespace Uintah

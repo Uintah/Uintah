@@ -74,12 +74,15 @@
               <constitutive_model type="elastic_plastic_hp">
                    <tolerance>5.0e-10</tolerance>
                    <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
-          <include href="../MaterialData/VonMisesYield.xml"/>
-          <include href="../MaterialData/NoStabilityCheck.xml"/>
+                   <include href="../MaterialData/VonMisesYield.xml"/>
+                   <include href="../MaterialData/NoStabilityCheck.xml"/>
                    <include href="../MaterialData/MTSPlasticAnnCopper.xml"/>
-                   <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
+
                    <include href="../MaterialData/MieGruneisenEOSAnnCopper.xml"/>
                </constitutive_model>
+
+               <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
+                   
               <geom_object>
                   <cylinder label = "Cylinder">
                       <bottom>[0.0,0.0,0.0]</bottom>

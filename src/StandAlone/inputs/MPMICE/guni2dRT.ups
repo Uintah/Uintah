@@ -196,13 +196,7 @@
           <stability_check type = "drucker_becker">
           </stability_check>
 
-          <damage_model type = "johnson_cook">
-            <D1>0.05</D1>
-            <D2>3.44</D2>
-            <D3>-2.12</D3>
-            <D4>0.002</D4>
-            <D5>0.61</D5>
-          </damage_model>
+
 
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
@@ -217,6 +211,15 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> constant </initial_scalar_damage_distrib>
         </constitutive_model>
+        
+        <damage_model type = "johnson_cook">
+          <D1>0.05</D1>
+          <D2>3.44</D2>
+          <D3>-2.12</D3>
+          <D4>0.002</D4>
+          <D5>0.61</D5>
+        </damage_model>
+        
          <geom_object>
             <difference>
              <cylinder label = "outer cylinder">

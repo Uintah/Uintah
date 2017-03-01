@@ -248,14 +248,6 @@
             <epdot_0> 1.0       </epdot_0>
           </flow_model>
 
-          <damage_model type="johnson_cook">
-            <D1>   0.05    </D1>
-            <D2>   3.44    </D2>
-            <D3>   -2.12   </D3>
-            <D4>   0.002   </D4>
-            <D5>   0.61    </D5>
-          </damage_model>
-
           <initial_mean_porosity>         0.005   </initial_mean_porosity>
           <initial_std_porosity>          0.001   </initial_std_porosity>
           <critical_porosity>             0.3     </critical_porosity>
@@ -269,6 +261,15 @@
           <critical_scalar_damage>        1.0     </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss   </initial_scalar_damage_distrib>
         </constitutive_model>
+        
+        <damage_model type="johnson_cook">
+          <D1>   0.05    </D1>
+          <D2>   3.44    </D2>
+          <D3>   -2.12   </D3>
+          <D4>   0.002   </D4>
+          <D5>   0.61    </D5>
+        </damage_model>
+          
         <geom_object>
           <difference label="SteelShell">
             <cylinder>

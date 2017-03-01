@@ -40,15 +40,23 @@ using namespace std;
 using namespace Uintah;
 //______________________________________________________________________
 //
-DamageModel* DamageModelFactory::create(ProblemSpecP& ps,
-                                        MPMFlags* flags)
+DamageModel* DamageModelFactory::create(ProblemSpecP& matl_ps,
+                                        MPMFlags* flags,
+                                        SimulationState* sharedState)
 {
-  ProblemSpecP child = ps->findBlock("damage_model");
-//  ProblemSpecP child = ps->findBlock("damage");
+  string cm_type = "none";
+
+  matl_ps->print();
+  
+  if ( matl_ps->getNodeName() != "constitutive_model" ) { 
+    ProblemSpecP cm_ps = matl_ps->findBlock("constitutive_model");
+    cm_ps->getAttribute("type", cm_type);
+  }
+   
+  ProblemSpecP child = matl_ps->findBlock("damage_model");
   if(!child) {
     proc0cout << "**WARNING** Creating default null damage model" << endl;
     return( scinew NullDamage() );
-    //throw ProblemSetupException("Cannot find damage_model tag", __FILE__, __LINE__);
   }
   
   string dam_type;
@@ -62,15 +70,18 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& ps,
   else if (dam_type == "hancock_mackenzie") {
     return( scinew HancockMacKenzieDamage(child) );
   }
-
   else if (dam_type == "Threshold") {
-    return( scinew ThresholdDamage(child, flags) );
+    return( scinew ThresholdDamage(child, flags, sharedState) );
   }
   else if (dam_type == "Brittle") {
     return( scinew BrittleDamage(child) );
   }
   else if (dam_type == "none") {
     return(scinew NullDamage(child) );
+  }
+  else if( cm_type == "elastic_plastic_hp" || cm_type == "elastic_plastic"  ){
+    string txt="MPM:  The only damage models that work with elasitc_plastic are johnson_cook and hancock_mackenzie";
+    throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
   else {
     proc0cout << "**WARNING** Creating default null damage model" << endl;

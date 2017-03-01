@@ -93,7 +93,7 @@
           <include href="inputs/MPM/MaterialData/MTSPlasticHY100Steel.xml"/>
           <include href="inputs/MPM/MaterialData/GursonYieldSteel.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
-          <include href="inputs/MPM/MaterialData/HancockDamHY100Steel.xml"/>
+
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <initial_mean_porosity>         0.002 </initial_mean_porosity>
           <initial_std_porosity>          0.002 </initial_std_porosity>
@@ -108,6 +108,9 @@
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
           <plastic_convergence_algo>  biswajit  </plastic_convergence_algo>
         </constitutive_model>
+        
+        <include href="inputs/MPM/MaterialData/HancockDamHY100Steel.xml"/>
+        
         <geom_object>
           <cylinder label = "Cylinder">
             <bottom>[0.0,0.0,0.0]</bottom>

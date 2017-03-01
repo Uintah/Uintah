@@ -161,6 +161,39 @@
         <density                         spec="REQUIRED DOUBLE" />
 
         <include href="constitutive_models.xml" />
+        <!--__________________________________-->
+        <!-- Damage models -->
+        <damage_model                  spec="OPTIONAL NO_DATA"
+                                         attribute1="type REQUIRED STRING 'Brittle,Threshold, hancock_mackenzie, johnson_cook, none'" >
+
+               <!-- Threshold     -->      
+          <failure_mean         spec="REQUIRED DOUBLE 'positive'"     need_applies_to="type Threshold"/>
+          <failure_std          spec="OPTIONAL DOUBLE 'positive'"     need_applies_to="type Threshold"/>
+          <failure_distrib      spec="REQUIRED STRING 'constant, weibull, gauss'" 
+                                                                      need_applies_to="type Threshold"/>
+          <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrColoumb'" 
+                                                                      need_applies_to="type Threshold"/> 
+          <friction_angle       spec="OPTIONAL DOUBLE"                need_applies_to="type Threshold"/> 
+          <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
+                                                                      need_applies_to="type Threshold"/> 
+
+               <!-- Brittle       -->
+          <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+          <brittle_damage_fracture_energy    spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+          <brittle_damage_constant_D         spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+          <brittle_damage_max_damage_increment  spec="OPTIONAL DOUBLE"  need_applies_to="type Brittle"/>
+          <brittle_damage_allowRecovery      spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
+          <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
+          <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
+
+          <Dc                          spec="OPTIONAL DOUBLE"           need_applies_to="type hancock_mackenzie"/>
+          <D0                          spec="OPTIONAL DOUBLE"           need_applies_to="type hancock_mackenzie"/>
+          <D1                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <D2                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <D3                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <D4                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+          <D5                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
+        </damage_model>
 
         <specific_heat                   spec="REQUIRED DOUBLE 'positive'" /> 
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />

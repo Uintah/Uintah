@@ -23,6 +23,7 @@
  */
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
@@ -131,9 +132,10 @@ SerialMPM::~SerialMPM()
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
-                             const ProblemSpecP& restart_prob_spec,GridP& grid,
+                             const ProblemSpecP& restart_prob_spec,
+                             GridP& grid,
                              SimulationStateP& sharedState)
-{
+{ 
   cout_doing<<"Doing MPM::problemSetup\t\t\t\t\t MPM"<<endl;
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
@@ -295,7 +297,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                                    restart_prob_spec,d_sharedState);
   }
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 {
   ProblemSpecP root = root_ps->getRootNode();
@@ -410,6 +413,9 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->addInitialComputesAndRequires(t, mpm_matl);
   }
 
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
@@ -941,16 +947,51 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   }
 
   sched->addTask(t, patches, matls);
-
+  
+  //__________________________________
+  //  Additional tasks
+  scheduleUpdateStress_DamageModel( sched, patches, matls);
+  
+/*`==========TESTING==========*/
+#if 0
   // Schedule update of the erosion parameter
   scheduleUpdateErosionParameter(sched, patches, matls);
-  scheduleFindRogueParticles(sched, patches, matls);
+  scheduleFindRogueParticles(sched, patches, matls); 
+#endif
+/*===========TESTING==========`*/
 
   if (flags->d_reductionVars->accStrainEnergy)
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 
 }
 
+//______________________________________________________________________
+//
+void SerialMPM::scheduleUpdateStress_DamageModel(SchedulerP       & sched,
+                                                const PatchSet    * patches,
+                                                const MaterialSet * matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleUpdateStress_DamageModel");
+
+  Task* t = scinew Task("MPM::updateStress_DamageModel", this, 
+                        &SerialMPM::updateStress_DamageModel);
+                        
+  int numMatls = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    DamageModel* dm       = mpm_matl->getDamageModel();
+    
+    dm->addComputesAndRequires(t, mpm_matl);
+  }
+  
+  sched->addTask(t, patches, matls);
+}
+//______________________________________________________________________
+//
 
 void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
                                                const PatchSet* patches,
@@ -1584,6 +1625,9 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->addInitialComputesAndRequires(t, mpm_matl);
   }
 
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
@@ -1880,6 +1924,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
+      
+      //initialize Damage model
+      mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
+      
     }
   } // patches
 
@@ -2490,7 +2538,34 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 
   }
 }
+//______________________________________________________________________
+//
+void SerialMPM::updateStress_DamageModel(const ProcessorGroup *,
+                                         const PatchSubset    * patches,
+                                         const MaterialSubset * ,
+                                         DataWarehouse        * old_dw,
+                                         DataWarehouse        * new_dw)
+{
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+   
+    printTask(patches, patch,cout_doing,
+              "Doing updateStress_DamageModel");
 
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+    
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      
+      DamageModel* dm = mpm_matl->getDamageModel();
+      dm->computeSomething(pset, dwi, patch, old_dw, new_dw); 
+    }
+  }      
+}
+//______________________________________________________________________
+//
 void SerialMPM::updateErosionParameter(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* ,

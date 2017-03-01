@@ -41,11 +41,11 @@
    </DataArchiver>
 
     <MPM>
-       <time_integrator>explicit</time_integrator>
+      <time_integrator>explicit</time_integrator>
       <interpolator> cpdi </interpolator>
-     <erosion algorithm="BrittleDamage"> </erosion>
-  <artificial_damping_coeff> 5.0 </artificial_damping_coeff>
-     </MPM>
+      <erosion algorithm="BrittleDamage"> </erosion>
+      <artificial_damping_coeff> 5.0 </artificial_damping_coeff>
+   </MPM>
 
     <PhysicalConstants>
        <gravity>[0,0,0]</gravity>
@@ -78,14 +78,13 @@
               <constitutive_model type="cnh_damage">
                 <shear_modulus>3.52e9</shear_modulus>
                 <bulk_modulus>8.9e9</bulk_modulus>
-
-                <damage type="Brittle">
-                    <brittle_damage_initial_threshold>    57.0 </brittle_damage_initial_threshold>
-                    <brittle_damage_fracture_energy>      11.2 </brittle_damage_fracture_energy>
-                    <brittle_damage_constant_D>           0.1  </brittle_damage_constant_D>
-                    <brittle_damage_max_damage_increment> 0.1  </brittle_damage_max_damage_increment>
-                </damage>
               </constitutive_model>
+              <damage_model type="Brittle">
+                  <brittle_damage_initial_threshold>    57.0 </brittle_damage_initial_threshold>
+                  <brittle_damage_fracture_energy>      11.2 </brittle_damage_fracture_energy>
+                  <brittle_damage_constant_D>           0.1  </brittle_damage_constant_D>
+                  <brittle_damage_max_damage_increment> 0.1  </brittle_damage_max_damage_increment>
+              </damage_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>

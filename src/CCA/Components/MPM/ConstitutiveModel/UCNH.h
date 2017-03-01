@@ -90,44 +90,12 @@ namespace Uintah {
       int seed;
     };
 
-    // Damage Requirements //
-    /////////////////////////
-    // Create datatype for failure strains
-    struct FailureStressOrStrainData {
-      double mean;         /* Mean failure stress, strain or cohesion */
-      double std;          /* Standard deviation of failure strain */
-                           /* or Weibull modulus */
-      double exponent;     /* Exponent used in volume scaling of failure crit */
-      double refVol;       /* Reference volume for scaling failure criteria */
-      std::string scaling; /* Volume scaling method: "none" or "kayenta" */
-      std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
-      int seed;            /* seed for random number distribution generator */
-      double t_char;       /* characteristic time for damage to occur */
-    };
-
-    //Create datatype for brittle damage
-    struct BrittleDamageData {
-      double r0b;          /* Initial energy threshold (\sqrt{Pa}) */
-      double Gf;           /* Fracture energy (J/m^3) */
-      double constant_D;   /* Shape factor in softening function */
-      double maxDamageInc; /* Maximum damage increment in a time step */
-      bool allowRecovery;  /* Recovery of stiffness allowed */
-      double recoveryCoeff;  /* Fraction of stiffness to be recovered */
-      bool printDamage;    /* Flag to print damage */
-    };
-
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
-    const VarLabel* pFailureStressOrStrainLabel;
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pDamageLabel;
+
     const VarLabel* pDeformRateLabel;
-    const VarLabel* pTimeOfLocLabel;
-    const VarLabel* pFailureStressOrStrainLabel_preReloc;
-    const VarLabel* pLocalizedLabel_preReloc;
-    const VarLabel* pDamageLabel_preReloc;
     const VarLabel* pDeformRateLabel_preReloc;
-    const VarLabel* pTimeOfLocLabel_preReloc;
+    
 
     // Plasticity Requirements //
     /////////////////////////////
@@ -146,13 +114,7 @@ namespace Uintah {
 
     //__________________________________
     //  Damage
-    enum DamageAlgo { threshold, brittle, none };
-    DamageAlgo d_damageType = none;
-    bool d_useDamage        = false;
-    FailureStressOrStrainData d_epsf;
-    BrittleDamageData d_brittle_damage;
-    std::string d_failure_criteria; /* Options are:  "MaximumPrincipalStrain" */
-                                    /* "MaximumPrincipalStress", "MohrColoumb"*/
+    bool d_useDamage  = false;
 
     // MohrColoumb options
     double d_friction_angle;  // Assumed to come in degrees
@@ -305,21 +267,12 @@ namespace Uintah {
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
 
-
   private:
     // Damage requirements //
     /////////////////////////
     void getYieldStressDistribution(ProblemSpecP& ps);
 
     void setYieldStressDistribution(const UCNH* cm);
-
-    void getFailureStressOrStrainData(ProblemSpecP& ps);
-
-    void getBrittleDamageData(ProblemSpecP& ps);
-
-    void setFailureStressOrStrainData(const UCNH* cm);
-
-    void setBrittleDamageData(const UCNH* cm);
 
     void createDamageLabels();
 
@@ -335,27 +288,6 @@ namespace Uintah {
                                      const MPMMaterial* matl,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
-
-    // Modify the stress if particle has failed
-    void updateFailedParticlesAndModifyStress(const Matrix3& FF,
-                                              const double& pFailureStrain,
-                                              const int& pLocalized,
-                                              int& pLocalized_new,
-                                              const double& pTimeOfLoc,
-                                              double& pTimeOfLoc_new,
-                                              Matrix3& pStress_new,
-                                              const long64 particleID,
-                                              double time);
-
-    // Modify the stress for brittle damage
-    void updateDamageAndModifyStress(const Matrix3& FF,
-                                     const double& pFailureStrain,
-                                     double& pFailureStrain_new,
-                                     const double& pVolume,
-                                     const double& pDamage,
-                                     double& pDamage_new,
-                                     Matrix3& pStress_new,
-                                     const long64 particleID);
 
     /*! Compute tangent stiffness matrix */
     void computeTangentStiffnessMatrix(const Matrix3& sigDev,

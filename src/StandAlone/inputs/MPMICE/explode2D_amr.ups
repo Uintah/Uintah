@@ -264,15 +264,6 @@
             <T_r>298</T_r>
             <T_m>1793</T_m>
           </flow_model>
-          <damage_model type="johnson_cook">
-            <D1>0.050000000000000003</D1>
-            <D2>3.4399999999999999</D2>
-            <D3>-2.1200000000000001</D3>
-            <D4>0.002</D4>
-            <D5>0.60999999999999999</D5>
-            <D0>0</D0>
-            <Dc>0.69999999999999996</Dc>
-          </damage_model>
           <equation_of_state type="mie_gruneisen">
             <C_0>3574</C_0>
             <Gamma_0>1.6899999999999999</Gamma_0>
@@ -305,6 +296,17 @@
           <critical_scalar_damage>1</critical_scalar_damage>
           <initial_scalar_damage_distrib>gauss</initial_scalar_damage_distrib>
         </constitutive_model>
+        
+        <damage_model type="johnson_cook">
+          <D1>0.050000000000000003</D1>
+          <D2>3.4399999999999999</D2>
+          <D3>-2.1200000000000001</D3>
+          <D4>0.002</D4>
+          <D5>0.60999999999999999</D5>
+          <D0>0</D0>
+          <Dc>0.69999999999999996</Dc>
+        </damage_model>
+
         <geom_object>
           <difference>
             <cylinder label="outer steel cylinder 1">

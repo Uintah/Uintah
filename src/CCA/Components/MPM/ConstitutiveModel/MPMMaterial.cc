@@ -27,6 +27,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
@@ -66,7 +68,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags,
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
 }
-
+//______________________________________________________________________
+//
 void
 MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
                                     MPMFlags* flags, const bool isRestart)
@@ -75,16 +78,18 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
   // Follow the layout of the input file
   // Steps:
   // 1.  Determine the type of constitutive model and create it.
-  // 2.  Determine if scalar diffusion is used and the type of
+  // 2.  Create damage model.
+  //
+  // 3.  Determine if scalar diffusion is used and the type of
   //     scalar diffusion model and create it.
   //     Added for reactive flow component.
-  // 3.  Get the general properties of the material such as
+  // 4.  Get the general properties of the material such as
   //     density, thermal_conductivity, specific_heat.
-  // 4.  Loop through all of the geometry pieces that make up a single
+  // 5.  Loop through all of the geometry pieces that make up a single
   //     geometry object.
-  // 5.  Within the geometry object, assign the boundary conditions
+  // 6.  Within the geometry object, assign the boundary conditions
   //     to the object.
-  // 6.  Assign the velocity field.
+  // 7.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
   d_cm = ConstitutiveModelFactory::create(ps,flags);
@@ -95,16 +100,21 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
          << " either Jim, John or Todd "<< endl; 
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
+  
+  // Step 2 -- create the constitutive gmodel.
+  d_damageModel = DamageModelFactory::create(ps,flags,ss.get_rep() );
 
-  // Step 2 -- check if scalar diffusion is used and
+  // Step 3 -- check if scalar diffusion is used and
   // create the scalar diffusion model.
   if(flags->d_doScalarDiffusion){
     d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
   }else{
     d_sdm = nullptr;
   }
+  
+  
 
-  // Step 3 -- get the general material properties
+  // Step 4 -- get the general material properties
 
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
@@ -133,7 +143,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
   d_includeFlowWork = false;
   ps->get("includeFlowWork",d_includeFlowWork);
 
-  // Step 4 -- Loop through all of the pieces in this geometry object
+  // Step 5 -- Loop through all of the pieces in this geometry object
   //int piece_num = 0;
   list<GeometryObject::DataItem> geom_obj_data;
   geom_obj_data.push_back(GeometryObject::DataItem("res",                    GeometryObject::IntVector));
@@ -190,6 +200,7 @@ MPMMaterial::~MPMMaterial()
 {
   delete d_lb;
   delete d_cm;
+  delete d_damageModel;
   delete d_particle_creator;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
@@ -220,6 +231,8 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("is_rigid",d_is_rigid);
   mpm_ps->appendElement("includeFlowWork",d_includeFlowWork);
   d_cm->outputProblemSpec(mpm_ps);
+  d_damageModel->outputProblemSpec(mpm_ps);
+  
   if(getScalarDiffusionModel()){
     d_sdm->outputProblemSpec(mpm_ps);
   }
@@ -256,6 +269,11 @@ ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
   // with this material
 
   return d_cm;
+}
+
+DamageModel* MPMMaterial::getDamageModel() const
+{
+  return d_damageModel;
 }
 
 ScalarDiffusionModel* MPMMaterial::getScalarDiffusionModel() const

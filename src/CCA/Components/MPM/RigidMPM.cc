@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -105,6 +106,9 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->carryForward(patches, mpm_matl, old_dw, new_dw);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->carryForward(patches, mpm_matl, old_dw, new_dw);
   }
 
   new_dw->put(delt_vartype(999.0), lb->delTLabel, getLevel(patches));

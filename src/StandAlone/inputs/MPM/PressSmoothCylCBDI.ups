@@ -83,17 +83,16 @@
 	   <shear_modulus>76.9e4</shear_modulus>
 
 	   <usePlasticity>false</usePlasticity>
-
-          <damage type="Threshold">
-	     <failure_criteria>  MohrColoumb  </failure_criteria>
-	     <friction_angle>    0.0          </friction_angle>
-	     <tensile_cutoff_fraction_of_cohesion>1.e10</tensile_cutoff_fraction_of_cohesion>
-	     <failure_distrib>  constant      </failure_distrib>
-	     <failure_mean>     0.1512e4      </failure_mean>
-            <failure_std>       0.0          </failure_std>
-          </damage>
-
 	 </constitutive_model>
+        <damage_model type="Threshold">
+	   <failure_criteria>  MohrColoumb  </failure_criteria>
+	   <friction_angle>    0.0          </friction_angle>
+	   <tensile_cutoff_fraction_of_cohesion>1.e10</tensile_cutoff_fraction_of_cohesion>
+	   <failure_distrib>  constant      </failure_distrib>
+	   <failure_mean>     0.1512e4      </failure_mean>
+          <failure_std>       0.0          </failure_std>
+        </damage_model>
+          
 	 <thermal_conductivity>1.0</thermal_conductivity>
 	 <specific_heat>5</specific_heat>
          <geom_object>

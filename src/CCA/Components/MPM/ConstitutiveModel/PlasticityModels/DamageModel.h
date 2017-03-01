@@ -26,6 +26,11 @@
 #define __DAMAGE_MODEL_H__
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -36,7 +41,7 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
   /*!
     \class DamageModel
-    \brief Abstract base class for damage models   
+    \brief Abstract base class for damage models
     \author Biswajit Banerjee \n
     C-SAFE and Department of Mechanical Engineering \n
     University of Utah \n
@@ -45,52 +50,84 @@ namespace Uintah {
 
   class DamageModel {
   public:
-         
-    enum DamageAlgo { threshold, brittle, none };
+    
+    enum DamageAlgo { brittle,threshold, hancock_mackenzie, johnson_cook, none };
     DamageAlgo Algorithm = none;
 
     DamageModel();
     virtual ~DamageModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-         
+
     virtual double initialize() = 0;
 
     virtual bool hasFailed(double damage) = 0;
-    
-    virtual double computeScalarDamage(const double& plasticStrainRate,
-                                       const Matrix3& stress,
-                                       const double& temperature,
-                                       const double& delT,
-                                       const MPMMaterial* matl,
-                                       const double& tolerance,
-                                       const double& damage_old) = 0;
-                                       
+
+    virtual
+    double computeScalarDamage(const double   & plasticStrainRate,
+                               const Matrix3  & stress,
+                               const double   & temperature,
+                               const double   & delT,
+                               const MPMMaterial* matl,
+                               const double   & tolerance,
+                               const double   & damage_old) = 0;
+    virtual
+    void addComputesAndRequires(Task* task,
+                                const MPMMaterial* matl);
+
+    virtual
+    void carryForward( const PatchSubset* patches,
+                       const MPMMaterial* matl,
+                       DataWarehouse*     old_dw,
+                       DataWarehouse*     new_dw);
+
+    virtual
+    void addParticleState(std::vector<const VarLabel*>& from,
+                          std::vector<const VarLabel*>& to);
+
+    virtual
+    void addInitialComputesAndRequires(Task* task,
+                                       const MPMMaterial* matl);
+
+    virtual
+    void initializeLabels(const Patch*       patch,
+                          const MPMMaterial* matl,
+                          DataWarehouse*     new_dw);
+                          
+    virtual
+    void computeSomething( ParticleSubset  * pset,
+                           const int       & dwi,
+                           const Patch     * patch,     
+                           DataWarehouse   * old_dw,
+                           DataWarehouse   * new_dw );
+                          
     // Modify the stress if particle has failed
-    virtual 
-    void updateFailedParticlesAndModifyStress2(const Matrix3& FF,
-                                               const double& pFailureStrain,
-                                               const int& pLocalized,
-                                               int& pLocalized_new,
-                                               const double& pTimeOfLoc,
-                                               double& pTimeOfLoc_new,
-                                               Matrix3& pStress_new,
-                                               const long64 particleID,
-                                               double time);
+    virtual
+    void updateFailedParticlesAndModifyStress2(const Matrix3  & defGrad,
+                                               const double   & pFailureStr,
+                                               const int      & pLocalized,
+                                               int            & pLocalized_new,
+                                               const double   & pTimeOfLoc,
+                                               double         & pTimeOfLoc_new,
+                                               Matrix3        & pStress,
+                                               const long64     particleID,
+                                               double           time);
 
     // Modify the stress for brittle damage
     virtual
-    void updateDamageAndModifyStress2(const Matrix3& FF,
-                                      const double&  pFailureStrain,
-                                      double&        pFailureStrain_new,
-                                      const double&  pVolume,
-                                      const double&  pDamage,
-                                      double&        pDamage_new,
-                                      Matrix3&       pStress_new,
-                                      const long64   particleID);
+    void updateDamageAndModifyStress2(const Matrix3 & FF,
+                                      const double  & pFailureStrain,
+                                      double        & pFailureStrain_new,
+                                      const double  & pVolume,
+                                      const double  & pDamage,
+                                      double        & pDamage_new,
+                                      Matrix3       & pStress_new,
+                                      const long64    particleID);
+    protected:
+    MPMLabel* d_lb;
   };
 } // End namespace Uintah
-      
+
 
 
 #endif  // __DAMAGE_MODEL_H__

@@ -39,7 +39,8 @@ namespace Uintah {
   public:
     // this function has a switch for all known mat_types
     static DamageModel* create(ProblemSpecP& ps,
-                               MPMFlags* flags);
+                               MPMFlags* flags,
+                               SimulationState* sharedState);
                                
     static DamageModel* createCopy(const DamageModel* dm);
   };

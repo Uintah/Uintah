@@ -62,19 +62,9 @@ namespace Uintah {
     virtual ~NullDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-         
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Initialize the damage parameter in the calling function
-    */
-    //////////////////////////////////////////////////////////////////////////
+
     double initialize();
 
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Determine if damage has crossed cut off
-    */
-    //////////////////////////////////////////////////////////////////////////
     bool hasFailed(double damage);
     
     //////////
@@ -86,6 +76,17 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        const double& tolerance,
                                        const double& damage_old);
+                                       
+    virtual
+    void addComputesAndRequires(Task* task,
+                                const MPMMaterial* matl);
+
+    virtual
+    void  computeSomething( ParticleSubset  * pset,
+                            const int       & dwi,            
+                            const Patch     * patch,          
+                            DataWarehouse   * old_dw,         
+                            DataWarehouse   * new_dw );
   
   };
 

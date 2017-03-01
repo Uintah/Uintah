@@ -77,44 +77,6 @@
     <failure_variable_distrib      spec="OPTIONAL STRING"/>
     
     <!--__________________________________-->
-    <!-- Damage models -->
-    <damage                        spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'Brittle,Threshold'" >
-           
-           <!-- Threshold     -->      
-      <failure_mean         spec="REQUIRED DOUBLE 'positive'"     need_applies_to="type Threshold"/>
-      <failure_std          spec="OPTIONAL DOUBLE 'positive'"     need_applies_to="type Threshold"/>
-      <failure_distrib      spec="REQUIRED STRING 'constant, weibull, gauss'" 
-                                                                  need_applies_to="type Threshold"/>
-      <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrColoumb'" 
-                                                                  need_applies_to="type Threshold"/> 
-      <friction_angle       spec="OPTIONAL DOUBLE"                need_applies_to="type Threshold"/> 
-      <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
-                                                                  need_applies_to="type Threshold"/> 
-
-           <!-- Brittle       -->
-      <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
-      <brittle_damage_fracture_energy    spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
-      <brittle_damage_constant_D         spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
-      <brittle_damage_max_damage_increment  spec="OPTIONAL DOUBLE"  need_applies_to="type Brittle"/>
-      <brittle_damage_allowRecovery      spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
-      <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
-      <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
-
-    </damage>
-    
-    <!-- Biswajits Model -->
-    <damage_model                  spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'hancock_mackenzie, johnson_cook, none'" >
-      <Dc                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: what are these for? -->
-      <D0                          spec="OPTIONAL DOUBLE" />
-      <D1                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is tihs?  is it really optional? -->
-      <D2                          spec="OPTIONAL DOUBLE" />
-      <D3                          spec="OPTIONAL DOUBLE" />
-      <D4                          spec="OPTIONAL DOUBLE" />
-      <D5                          spec="OPTIONAL DOUBLE" />
-    </damage_model>
-    <!--__________________________________-->
     
     <Chi                           spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? -->
     <coeff_thermal_expansion       spec="OPTIONAL DOUBLE" />

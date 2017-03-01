@@ -16,13 +16,7 @@
                         <n>0.12</n>
                         <m>1.00</m>
                   </flow_model>
-                  <damage_model type="johnson_cook">
-                        <D1>0.00</D1>
-                        <D2>0.33</D2>
-                        <D3>-1.50</D3>
-                        <D4>0.000</D4>
-                        <D5>0.00</D5>
-                  </damage_model>
+
                   <equation_of_state type="mie_gruneisen">
                         <C_0>3992</C_0>
                         <Gamma_0>1.43</Gamma_0>
@@ -30,6 +24,15 @@
                   </equation_of_state>
                   <do_melting>true</do_melting>
                 </constitutive_model>
+
+                <damage_model type="johnson_cook">
+                  <D1>0.00</D1>
+                  <D2>0.33</D2>
+                  <D3>-1.50</D3>
+                  <D4>0.000</D4>
+                  <D5>0.00</D5>
+                </damage_model>
+                
                 <thermal_conductivity>174.0</thermal_conductivity>
                 <specific_heat>135.0</specific_heat>
                 <room_temp>294.0</room_temp>

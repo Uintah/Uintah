@@ -49,6 +49,7 @@ namespace Uintah {
  class VarLabel;
  class GeometryObject;
  class ConstitutiveModel;
+ class DamageModel;
  class MPMLabel;
  class ParticleCreator;
  class ScalarDiffusionModel;
@@ -105,6 +106,8 @@ WARNING
    //////////
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
+   
+   DamageModel* getDamageModel() const;
 
    ScalarDiffusionModel* getScalarDiffusionModel() const;
 
@@ -157,9 +160,10 @@ WARNING
  private:
 
    MPMLabel* d_lb;
-   ConstitutiveModel* d_cm;
-   ScalarDiffusionModel* d_sdm;
-   ParticleCreator* d_particle_creator;
+   ConstitutiveModel*     d_cm;
+   DamageModel*           d_damageModel;
+   ScalarDiffusionModel*  d_sdm;
+   ParticleCreator*       d_particle_creator;
 
    double d_density;
    bool d_includeFlowWork;

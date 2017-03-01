@@ -72,9 +72,10 @@
           <include href="../MaterialData/VonMisesYield.xml"/>
           <include href="../MaterialData/NoStabilityCheck.xml"/>
           <include href="../MaterialData/JohnsonCookPlasticArmcoIron.xml"/>
-          <include href="../MaterialData/JohnsonCookDamageArmcoIron.xml"/>
           <include href="../MaterialData/DefaultHypoEOS.xml"/>
         </constitutive_model>
+        <include href="../MaterialData/JohnsonCookDamageArmcoIron.xml"/>
+        
         <geom_object>
           <box label = "Iron Traget">
           <!--
@@ -143,9 +144,11 @@
           <include href="../MaterialData/IsotropicElasticS7ToolSteel.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>
           <include href="../MaterialData/JohnsonCookPlasticS7ToolSteel.xml"/>
-          <include href="../MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
           <include href="../MaterialData/DefaultHypoEOS.xml"/>
         </constitutive_model>
+        
+        <include href="../MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
+        
         <geom_object>
           <union>
             <cylinder>

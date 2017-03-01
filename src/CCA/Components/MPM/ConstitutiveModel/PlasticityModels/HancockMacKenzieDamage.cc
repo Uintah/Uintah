@@ -30,6 +30,7 @@ using namespace Uintah;
 
 HancockMacKenzieDamage::HancockMacKenzieDamage(ProblemSpecP& ps)
 {
+  Algorithm = DamageModel::hancock_mackenzie;
   d_initialData.D0 = 0.0;
   ps->get("D0",d_initialData.D0);
   ps->require("Dc",d_initialData.Dc);

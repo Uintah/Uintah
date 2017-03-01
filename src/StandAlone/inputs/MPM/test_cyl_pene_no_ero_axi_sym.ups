@@ -87,7 +87,7 @@
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JohnsonCookPlasticArmcoIron.xml"/>
-          <include href="inputs/MPM/MaterialData/JohnsonCookDamageArmcoIron.xml"/>
+
           <include href="inputs/MPM/MaterialData/DefaultHyperEOS.xml"/>
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
@@ -102,6 +102,9 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        
+        <include href="inputs/MPM/MaterialData/JohnsonCookDamageArmcoIron.xml"/>
+          
         <geom_object>
           <box label = "Iron Traget">
             <min>[0.0,-2.0e-2,0.0]</min>
@@ -121,7 +124,6 @@
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JohnsonCookPlasticS7ToolSteel.xml"/>
-          <include href="inputs/MPM/MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
           <include href="inputs/MPM/MaterialData/DefaultHyperEOS.xml"/>
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <initial_mean_porosity>         0.001 </initial_mean_porosity>
@@ -136,6 +138,8 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <include href="inputs/MPM/MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
+        
         <geom_object>
           <union>
             <cylinder>
