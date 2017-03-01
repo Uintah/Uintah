@@ -70,8 +70,6 @@ Dout g_reductions(     "ReductionTasks"         , false );
 Dout g_time_out(       "MPIScheduler_TimingsOut", false );
 Dout g_task_begin_end( "TaskBeginEnd"           , false );
 
-double CurrentWaitTime = 0;
-
 }
 
 // these are used externally, keep them visible outside this unit
@@ -696,46 +694,40 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   CommRequestPool::iterator comm_iter;
 
-  g_recv_mutex.lock();
-  {
-    switch (test_type) {
+  switch (test_type) {
 
-      case TEST :
-        comm_iter = m_recvs.find_any(test_request);
-        if (comm_iter) {
-          MPI_Status status;
-          comm_iter->finishedCommunication(d_myworld, status);
-          m_recvs.erase(comm_iter);
-        }
-        break;
+    case TEST :
+      comm_iter = m_recvs.find_any(test_request);
+      if (comm_iter) {
+        MPI_Status status;
+        comm_iter->finishedCommunication(d_myworld, status);
+        m_recvs.erase(comm_iter);
+      }
+      break;
 
-      case WAIT_ONCE :
+    case WAIT_ONCE :
+      comm_iter = m_recvs.find_any(wait_request);
+      if (comm_iter) {
+        MPI_Status status;
+        comm_iter->finishedCommunication(d_myworld, status);
+        m_recvs.erase(comm_iter);
+      }
+      break;
+
+    case WAIT_ALL :
+      while (m_recvs.size() != 0u) {
         comm_iter = m_recvs.find_any(wait_request);
         if (comm_iter) {
           MPI_Status status;
           comm_iter->finishedCommunication(d_myworld, status);
           m_recvs.erase(comm_iter);
         }
-        break;
+      }
+      break;
 
-      case WAIT_ALL :
-        while (m_recvs.size() != 0u) {
-          comm_iter = m_recvs.find_any(wait_request);
-          if (comm_iter) {
-            MPI_Status status;
-            comm_iter->finishedCommunication(d_myworld, status);
-            m_recvs.erase(comm_iter);
-          }
-        }
-        break;
+  }  // end switch
 
-    }  // end switch
-
-    mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
-    CurrentWaitTime += Time::currentSeconds() - start;
-
-  }
-  g_recv_mutex.unlock();
+  mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
 
 }  // end processMPIRecvs()
 

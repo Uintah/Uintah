@@ -643,22 +643,25 @@ public: // class Task
   struct Edge;
 
   struct Dependency {
-      Dependency           * m_next;
+      Dependency           * m_next{nullptr};
       DepType                m_dep_type;
-      Task                 * m_task;
-      const VarLabel       * m_var;
-      bool                   m_look_in_old_tg;
-      const PatchSubset    * m_patches;
-      const MaterialSubset * m_matls;
-      const Level          * m_reduction_level;
-      Edge                 * m_req_head;   // Used in compiling the task graph.
-      Edge                 * m_req_tail;
-      Edge                 * m_comp_head;
-      Edge                 * m_comp_tail;
-      PatchDomainSpec        m_patches_dom;
-      MaterialDomainSpec     m_matls_dom;
-      Ghost::GhostType       m_gtype;
+      Task                 * m_task{nullptr};
       WhichDW                m_whichdw;  // Used only by Requires
+      const VarLabel       * m_var{nullptr};
+      bool                   m_look_in_old_tg;
+      const Level          * m_reduction_level{nullptr};
+      const PatchSubset    * m_patches{nullptr};
+      const MaterialSubset * m_matls{nullptr};
+
+      // Used in compiling the task graph.
+      Edge                 * m_req_head{nullptr};
+      Edge                 * m_req_tail{nullptr};
+      Edge                 * m_comp_head{nullptr};
+      Edge                 * m_comp_tail{nullptr};
+
+      PatchDomainSpec        m_patches_dom{ThisLevel};
+      MaterialDomainSpec     m_matls_dom;
+      Ghost::GhostType       m_gtype{Ghost::None};
 
       // in the multi-TG construct, this will signify that the required
       // m_var will be constructed by the old TG
