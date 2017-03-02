@@ -41,9 +41,11 @@ def cmdline(command):
     process = Popen(
         args=command,
         stdout=PIPE,
+        stderr=PIPE,
         shell=True
     )
-    return process.communicate()
+    out, err = process.communicate()
+    return (out, err, process.returncode)
     
 #______________________________________________________________________
 # Used by toplevel/generateGoldStandards.py
@@ -97,7 +99,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   print( "Running command to test if sus was compile with CUDA and there is a GPU is active: " + susdir + "/sus -gpucheck" )
   sus = susdir + "/sus"
 
-  (child,rc) = cmdline( "%s -gpucheck" % sus)
+  (stdout,stderr,rc) = cmdline( "%s -gpucheck" % sus)
+
   if rc == 1:
     print( "sus was compiled with CUDA and a GPU is available" )
     has_gpu = 1
@@ -790,10 +793,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         
           if startFrom != "restart":
           
-            (err,rc) = cmdline("tail -10 compare_sus_runs.log.txt | \
-                                sed --silent /ERROR/,/ERROR/p |     \
-                                sed /'^$'/d | sed /'may not be compared'/,+1d")   # clean out blank lines and cruft from the eror section
-            print( "%s" % err )
+            (out,err,rc) = cmdline("tail -10 compare_sus_runs.log.txt | \
+                                    sed --silent /ERROR/,/ERROR/p |     \
+                                    sed /'^$'/d | sed /'may not be compared'/,+1d")   # clean out blank lines and cruft from the eror section
+            print( "%s" % out )
             #print( "%s" % replace_msg )
 
         elif compUda_RC == 65280: # (-1 return code)
