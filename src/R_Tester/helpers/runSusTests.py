@@ -7,10 +7,10 @@ from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
 from commands import getoutput
+from subprocess import PIPE, Popen
 import socket
 import resource
 import re         # regular expressions
-import subprocess #needed to accurately get return codes
 
 #______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
@@ -36,6 +36,15 @@ def userFlags (test):
 def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
     pass
 
+# Use this if you need to capture stdout and the command's return code.  It also prevents the output from becoming scrambled.
+def cmdline(command):
+    process = Popen(
+        args=command,
+        stdout=PIPE,
+        shell=True
+    )
+    return process.communicate()
+    
 #______________________________________________________________________
 # Used by toplevel/generateGoldStandards.py
 
@@ -87,11 +96,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   has_gpu  = 0
   print( "Running command to test if sus was compile with CUDA and there is a GPU is active: " + susdir + "/sus -gpucheck" )
   sus = susdir + "/sus"
-  
-  child = subprocess.Popen( [sus, "-gpucheck"], stdout=subprocess.PIPE)
-  streamdata = child.communicate()[0]
-  rc = child.returncode
-  
+
+  (child,rc) = cmdline( "%s -gpucheck" % sus)
   if rc == 1:
     print( "sus was compiled with CUDA and a GPU is available" )
     has_gpu = 1
@@ -678,9 +684,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     susSuccess = re.findall("Sus: going down successfully", lines)
   except Exception:
     pass
-#  susSuccess  = subprocess.check_output("sed -n /'timestep'/,//p sus.log.txt | grep -c 'Sus: going down successfully'",shell=True);
 
-#  print( "susSuccess %d" %(len(susSuccess)) )
   if exception == 0:
     print( "\t*** An exception was thrown ***" )
     rc = -9
@@ -777,21 +781,19 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
           print( "\t*** Input file(s) differs from the goldstandard" )
 
         elif compUda_RC == 1 * 256:
-          print( "\t*** Warning, test (%s) failed uda comparison, tolerances exceeded (%s)" % (testname, compUda_RC) ) 
+          print( "\t*** ERROR, test (%s) failed uda comparison, tolerances exceeded (%s)" % (testname, compUda_RC) ) 
           print compare_msg
-        
-          if startFrom != "restart":
-           print( "%s" % replace_msg )
            
         elif compUda_RC == 5*256:
           print( "\t*** ERROR: test (%s) uda comparison aborted (%s)" % (testname, compUda_RC) )
           print compare_msg
         
           if startFrom != "restart":
-            system("tail -10 compare_sus_runs.log.txt | \
-                    sed --silent /ERROR/,/ERROR/p |     \
-                    sed /'^$'/d | sed /'may not be compared'/,+1d")   # clean out blank lines and cruft from the eror section
-            print( "\n" )
+          
+            (err,rc) = cmdline("tail -10 compare_sus_runs.log.txt | \
+                                sed --silent /ERROR/,/ERROR/p |     \
+                                sed /'^$'/d | sed /'may not be compared'/,+1d")   # clean out blank lines and cruft from the eror section
+            print( "%s" % err )
             #print( "%s" % replace_msg )
 
         elif compUda_RC == 65280: # (-1 return code)
