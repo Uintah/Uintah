@@ -261,7 +261,6 @@
           <include href="inputs/MPM/MaterialData/JCPlastic4340St.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
-          <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
           <specific_heat_model type="steel_Cp"> </specific_heat_model>
 
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
@@ -277,6 +276,9 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        
+        <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
+        
         <geom_object>                                                
           <difference>                                              
             <cylinder label="outer steel cylinder 1">                    
