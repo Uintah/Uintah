@@ -262,13 +262,7 @@ protected:
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-                                   
-  /*! update the stress field due to damage */
-  void updateStress_DamageModel(const ProcessorGroup  *,
-                                const PatchSubset     * patches,
-                                const MaterialSubset  * ,
-                                DataWarehouse         * old_dw,
-                                DataWarehouse         * new_dw );
+
 
   /*! Update the erosion parameter if mass is to be removed */
   void updateErosionParameter(const ProcessorGroup*,
@@ -445,10 +439,6 @@ protected:
 
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
-  
-  void scheduleUpdateStress_DamageModel(SchedulerP        & sched,
-                                        const PatchSet    * patches,
-                                        const MaterialSet * matls);
 
   void scheduleUpdateErosionParameter(SchedulerP& sched,
                                       const PatchSet* patches,

@@ -35,6 +35,7 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ImplicitCM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
@@ -366,7 +367,6 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pAreaLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
-  t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pCellNAPIDLabel);
@@ -392,6 +392,9 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->addInitialComputesAndRequires(t, mpm_matl);
   }
 
   if (flags->d_useLoadCurves) {
@@ -715,6 +718,10 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                          mpm_matl, new_dw);
+
+      //initialize Damage model
+      mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
+      
       if(!flags->d_doGridReset){
         int indx = mpm_matl->getDWIndex();
         NCVariable<Vector> gDisplacement;
@@ -1166,6 +1173,10 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
   }
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
+  
+  
+  scheduleUpdateStress_DamageModel( sched, patches, matls );  
+
 }
 
 void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,
@@ -1464,7 +1475,6 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pTempPreviousLabel,     Ghost::None);
-  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,one_matl,
@@ -1484,7 +1494,6 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc);
-  t->computes(lb->pLocalizedMPMLabel_preReloc);
   t->computes(lb->pTemperatureGradientLabel_preReloc);
 
   if(flags->d_artificial_viscosity){
@@ -3617,13 +3626,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pqNew.copyData(pq);
       }
       pTempGradNew.copyData(pTempGrad);
-
-      ParticleVariable<int> isLocalized;
-      new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel_preReloc,pset);
-      ParticleSubset::iterator iter = pset->begin();
-      for (; iter != pset->end(); iter++){
-        isLocalized[*iter] = 0;
-      }
 
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
       double Cp=mpm_matl->getSpecificHeat();

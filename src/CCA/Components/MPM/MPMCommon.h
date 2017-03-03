@@ -26,6 +26,7 @@
 #define UINTAH_HOMEBREW_MPM_COMMON_H
 
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -51,8 +52,23 @@ namespace Uintah {
     virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
                                           SimulationStateP& sharedState,
                                           MPMFlags* flags);
+                                          
+    void scheduleUpdateStress_DamageModel(SchedulerP      & sched,
+                                        const PatchSet    * patches,
+                                        const MaterialSet * matls );
+   private:
+    const ProcessorGroup* d_myworld     = nullptr;
+    SimulationStateP      d_sharedState;
+    MPMFlags*             d_flags       = nullptr;
+    
    protected:
-    const ProcessorGroup* d_myworld;
+    /*! update the stress field due to damage */
+    void updateStress_DamageModel(const ProcessorGroup  *,
+                                  const PatchSubset     * patches,
+                                  const MaterialSubset  * ,
+                                  DataWarehouse         * old_dw,
+                                  DataWarehouse         * new_dw );
+
   };
 }
 

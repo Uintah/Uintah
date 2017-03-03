@@ -950,7 +950,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   
   //__________________________________
   //  Additional tasks
-  scheduleUpdateStress_DamageModel( sched, patches, matls);
+  scheduleUpdateStress_DamageModel( sched, patches, matls );
   
 /*`==========TESTING==========*/
 #if 0
@@ -965,31 +965,6 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
 }
 
-//______________________________________________________________________
-//
-void SerialMPM::scheduleUpdateStress_DamageModel(SchedulerP       & sched,
-                                                const PatchSet    * patches,
-                                                const MaterialSet * matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-  printSchedule(patches,cout_doing,"MPM::scheduleUpdateStress_DamageModel");
-
-  Task* t = scinew Task("MPM::updateStress_DamageModel", this, 
-                        &SerialMPM::updateStress_DamageModel);
-                        
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    DamageModel* dm       = mpm_matl->getDamageModel();
-    
-    dm->addComputesAndRequires(t, mpm_matl);
-  }
-  
-  sched->addTask(t, patches, matls);
-}
 //______________________________________________________________________
 //
 
@@ -2505,7 +2480,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
 
 void SerialMPM::computeStressTensor(const ProcessorGroup*,
                                     const PatchSubset* patches,
-                                    const MaterialSubset* ,
+                                    const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
@@ -2538,32 +2513,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 
   }
 }
-//______________________________________________________________________
-//
-void SerialMPM::updateStress_DamageModel(const ProcessorGroup *,
-                                         const PatchSubset    * patches,
-                                         const MaterialSubset * ,
-                                         DataWarehouse        * old_dw,
-                                         DataWarehouse        * new_dw)
-{
-  for (int p = 0; p<patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-   
-    printTask(patches, patch,cout_doing,
-              "Doing updateStress_DamageModel");
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-    
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      
-      DamageModel* dm = mpm_matl->getDamageModel();
-      dm->computeSomething(pset, dwi, patch, old_dw, new_dw); 
-    }
-  }      
-}
 //______________________________________________________________________
 //
 void SerialMPM::updateErosionParameter(const ProcessorGroup*,

@@ -24,11 +24,14 @@
 
 #include <CCA/Components/MPM/MPMCommon.h> 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace std;
 using namespace Uintah;
+
+static DebugStream cout_doing("MPM", false);
 
 MPMCommon::MPMCommon(const ProcessorGroup* myworld)
   : d_myworld(myworld)
@@ -38,11 +41,16 @@ MPMCommon::MPMCommon(const ProcessorGroup* myworld)
 MPMCommon::~MPMCommon()
 {
 }
-
+//______________________________________________________________________
+//
 void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec, 
                                      SimulationStateP& sharedState,
-                                     MPMFlags* flags, bool isRestart)
+                                     MPMFlags* flags, 
+                                     bool isRestart)
 {
+  d_sharedState = sharedState;
+  d_flags = flags;
+  
   //Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute( "MaterialProperties" );
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock( "MPM" );
@@ -79,7 +87,8 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec, 
                                          SimulationStateP& sharedState,
                                          MPMFlags* flags)
@@ -119,6 +128,53 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
     }
     else{
       sharedState->registerCZMaterial(mat);
+    }
+  }
+}
+//______________________________________________________________________
+//
+void MPMCommon::scheduleUpdateStress_DamageModel(SchedulerP       & sched,
+                                                const PatchSet    * patches,
+                                                const MaterialSet * matls )
+{
+  printSchedule(patches,cout_doing,"MPM::scheduleUpdateStress_DamageModel");
+
+  Task* t = scinew Task("MPM::updateStress_DamageModel", this, 
+                        &MPMCommon::updateStress_DamageModel);
+                        
+  int numMatls = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    DamageModel* dm       = mpm_matl->getDamageModel();
+    
+    dm->addComputesAndRequires(t, mpm_matl);
+  }
+  
+  sched->addTask(t, patches, matls);
+}
+//______________________________________________________________________
+//
+void MPMCommon::updateStress_DamageModel(const ProcessorGroup *,
+                                         const PatchSubset    * patches,
+                                         const MaterialSubset * ,
+                                         DataWarehouse        * old_dw,
+                                         DataWarehouse        * new_dw)
+{
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+   
+    printTask(patches, patch,cout_doing,
+              "Doing updateStress_DamageModel");
+
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+    
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      
+      DamageModel* dm = mpm_matl->getDamageModel();
+      dm->computeSomething(pset, dwi, patch, old_dw, new_dw); 
     }
   }
 }
