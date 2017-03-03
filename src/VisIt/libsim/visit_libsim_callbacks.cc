@@ -437,13 +437,27 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
 void visit_MaxTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+  SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  int oldVal = sim->simController->getSimulationTime()->maxTimestep;
-  int newVal = atoi(val);
+  int oldValue = sim->simController->getSimulationTime()->maxTimestep;
+  int newValue = atoi(val);
   
-  sim->simController->getSimulationTime()->maxTimestep = newVal;
+  if( newValue <= sim->cycle )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - the value (" << newValue << ") for "
+	<< "the maximum time step is before the current time step. "
+	<< "Resetting the value.";
+    VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-  visit_VarModifiedMessage( sim, "MaxTimeStep", oldVal, newVal);
+    VisItUI_setValueI("MaxTimeStep",   simTime->maxTimestep, 1);
+  }
+  else
+  {  
+    sim->simController->getSimulationTime()->maxTimestep = newValue;
+    
+    visit_VarModifiedMessage( sim, "MaxTimeStep", oldValue, newValue);
+  }
 }
 
 
@@ -454,13 +468,27 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
 void visit_MaxTimeCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+  SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  float oldVal = sim->simController->getSimulationTime()->maxTime;
-  float newVal = atof(val);
+  float oldValue = sim->simController->getSimulationTime()->maxTime;
+  float newValue = atof(val);
 
-  sim->simController->getSimulationTime()->maxTime = newVal;
+  if( newValue <= sim->time )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - the value (" << newValue << ") for "
+	<< "the maximum simulation time is before the current time. "
+	<< "Resetting the value.";
+    VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
 
-  visit_VarModifiedMessage( sim, "MaxTime", oldVal, newVal);
+    VisItUI_setValueD("MaxTime",       simTime->maxTime, 1);
+  }
+  else
+  {  
+    sim->simController->getSimulationTime()->maxTime = newValue;
+
+    visit_VarModifiedMessage( sim, "MaxTime", oldValue, newValue);
+  }
 }
 
 
@@ -786,7 +814,18 @@ void visit_ImageHeightCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->imageHeight = atoi(val);
+  int newValue = atoi(val);
+
+  if( newValue <= 0 )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - the value (" << newValue << ") for "
+	<< "the image height must be greater than zero. Resetting value.";
+    VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+    VisItUI_setValueI("ImageHeight",   sim->imageHeight, 1);
+  }
+  else
+    sim->imageHeight = newValue;
 }
 
 //---------------------------------------------------------------------
@@ -797,7 +836,18 @@ void visit_ImageWidthCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->imageWidth = atoi(val);
+  int newValue = atoi(val);
+
+  if( newValue <= 0 )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - the value (" << newValue << ") for "
+	<< "the image width must be greater than zero. Resetting value.";
+    VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+    VisItUI_setValueI("ImageWidth",    sim->imageWidth,  1);
+  }
+  else
+    sim->imageWidth = newValue;
 }
 
 //---------------------------------------------------------------------
@@ -819,7 +869,20 @@ void visit_StopAtTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->stopAtTimeStep = atoi(val);
+  int newValue = atoi(val);
+  
+  if( newValue <= sim->cycle )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - the value (" << newValue << ") for "
+	<< "stopping the simulation is before the current time step. "
+	<< "Setting the value to the next time step.";
+    VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+    VisItUI_setValueI("StopAtTimeStep", sim->cycle+1, 1);
+    sim->stopAtTimeStep = sim->cycle+1;
+  }
+  else
+    sim->stopAtTimeStep = newValue;
 }
 
 //---------------------------------------------------------------------
@@ -1000,10 +1063,24 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
   if( column == 1 )
   {
     std::string active( value );
+
+    if( active != "FALSE" && active != "False" && active != "false" &&
+	active != "TRUE"  && active != "True"  && active != "true" && 
+	active != "0" && active != "1" )
+    {
+      std::stringstream msg;
+      msg << "Visit libsim - the value (" << active << ") for "
+	  << simStateP->d_debugStreams[row]->getName()
+	  << " is not 'true' or 'false'. Resetting value.";
+      VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+      visit_SetDebugStreams( sim );
+      return;
+    }
     
     simStateP->d_debugStreams[row]->setActive( active == "TRUE" ||
 					       active == "True" ||
-					       active == "true" );
+					       active == "true" ||
+					       active == "1" );
     
     if( simStateP->d_debugStreams[row]->outstream == nullptr )
     {
