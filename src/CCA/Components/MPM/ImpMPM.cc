@@ -888,6 +888,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     scheduleUpdateTotalDisplacement(      sched, d_perproc_patches,matls);
   }
   scheduleComputeStressTensorImplicit(    sched, d_perproc_patches,matls);
+  scheduleUpdateStress_DamageModel(       sched, d_perproc_patches,matls);
   scheduleComputeAcceleration(            sched, d_perproc_patches,matls);
   scheduleInterpolateToParticlesAndUpdate(sched, d_perproc_patches,matls);
   scheduleInterpolateStressToGrid(        sched, d_perproc_patches,matls);
@@ -1173,10 +1174,6 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
   }
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
-  
-  
-  scheduleUpdateStress_DamageModel( sched, patches, matls );  
-
 }
 
 void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,

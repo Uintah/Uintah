@@ -27,7 +27,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
 using namespace std;
 using namespace Uintah;
 
@@ -137,8 +136,8 @@ void MPMCommon::scheduleUpdateStress_DamageModel(SchedulerP       & sched,
                                                 const PatchSet    * patches,
                                                 const MaterialSet * matls )
 {
-  printSchedule(patches,cout_doing,"MPM::scheduleUpdateStress_DamageModel");
-
+  printSchedule(patches,cout_doing,"MPMCommon::scheduleUpdateStress_DamageModel");
+  
   Task* t = scinew Task("MPM::updateStress_DamageModel", this, 
                         &MPMCommon::updateStress_DamageModel);
                         
