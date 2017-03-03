@@ -207,6 +207,8 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
     var.name     = "Arches-Devol-Ultimate-Yield";
     var.type     = Uintah::TypeDescription::double_type;
     var.value    = (void *) &( _v_hiT);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;

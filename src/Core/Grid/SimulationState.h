@@ -413,10 +413,12 @@ public:
   struct interactiveVar {
     std::string name;
     TypeDescription::Type type;
-    void *  value;
-    bool    modifiable; // If true the variable maybe modified.
-    bool    modified;   // If true the variable was modified by the user.
-    bool    recompile;  // If true and the variable was modified recompile the task graph.
+    void * value;
+    bool   modifiable; // If true the variable maybe modified.
+    bool   modified;   // If true the variable was modified by the user.
+    bool   recompile;  // If true and the variable was modified
+                       // recompile the task graph.
+    double range[2];   // If modifiable min/max range of acceptable values.
   };
   
   // Interactive variables from the UPS problem spec.

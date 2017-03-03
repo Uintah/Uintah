@@ -586,6 +586,8 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     var.name     = "ICE-OrderOfAdvection";
     var.type     = Uintah::TypeDescription::int_type;
     var.value    = (void *) &d_OrderOfAdvection;
+    var.range[0]   = 1;
+    var.range[1]   = 2;
     var.modifiable = true;
     var.recompile  = true;
     var.modified   = false;
@@ -596,6 +598,8 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
     var.name     = "ICE-gravity";
     var.type     = Uintah::TypeDescription::Vector;
     var.value    = (void *) &d_gravity;
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;

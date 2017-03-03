@@ -320,6 +320,8 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     var.name     = "Arches-CharOx-PreExp-Factor-O2";
     var.type     = Uintah::TypeDescription::double_type;
     var.value    = (void *) &(_a_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
@@ -330,6 +332,8 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     var.name     = "Arches-CharOx-Activation-Energy-O2";
     var.type     = Uintah::TypeDescription::double_type;
     var.value    = (void *) &(_e_l[0]);
+    var.range[0]   = -1.0e9;
+    var.range[1]   = +1.0e9;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;

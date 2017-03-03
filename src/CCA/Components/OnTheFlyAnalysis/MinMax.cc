@@ -452,7 +452,7 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 { 
-   // the user may want to restart from an uda that wasn't using the DA module
+  // the user may want to restart from an uda that wasn't using the DA module
   // This logic allows that.
   max_vartype writeTime;
   double lastWriteTime = 0;
@@ -461,7 +461,12 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
+  // delt_vartype delt_var;
+  // old_dw->get( delt_var, d_sharedState->get_delt_label() );
+  // double now = d_sharedState->getElapsedTime() + delt_var;
+
   double now = d_sharedState->getElapsedTime();
+
   if(now < d_startTime || now > d_stopTime){
     return;
   }
@@ -586,8 +591,13 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     lastWriteTime = writeTime;
   }
 
+  // delt_vartype delt_var;
+  // new_dw->get( delt_var, d_sharedState->get_delt_label() );
+  // double now = d_sharedState->getElapsedTime() + delt_var;
+
   double now = d_sharedState->getElapsedTime();
-   if(now < d_startTime || now > d_stopTime){
+
+  if(now < d_startTime || now > d_stopTime){
     new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel);
     return;
   }

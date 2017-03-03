@@ -114,6 +114,8 @@ AMRSimulationController::run()
     var.name     = "Scrub-Data-Warehouse";
     var.type     = Uintah::TypeDescription::bool_type;
     var.value    = (void *) &(d_scrubDataWarehouse);
+    var.range[0] = 0;
+    var.range[1] = 1;
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;

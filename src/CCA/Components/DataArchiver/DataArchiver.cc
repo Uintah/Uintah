@@ -1504,7 +1504,7 @@ DataArchiver::writeto_xml_files( std::map< std::string, std::pair<std::string, s
 	  
     ProblemSpecP iss = indexDoc->findBlock(inSituSection);
 	  
-    if(iss == 0) {
+    if(iss.get_rep() == nullptr) {
       iss = indexDoc->appendChild(inSituSection.c_str());
     }
 	  

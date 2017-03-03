@@ -15,7 +15,8 @@ ColdFlowProperties::~ColdFlowProperties(){
 //--------------------------------------------------------------------------------------------------
 void ColdFlowProperties::problemSetup( ProblemSpecP& db ){
 
-  for ( ProblemSpecP db_prop = db->findBlock("coldflow_property"); db_prop != 0;
+  for ( ProblemSpecP db_prop = db->findBlock("coldflow_property");
+	db_prop.get_rep() != nullptr;
         db_prop = db_prop->findNextBlock("coldflow_property") ){
 
     std::string label;
