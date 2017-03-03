@@ -588,6 +588,8 @@ void visit_Initialize( visit_simulation_data *sim )
 
   VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
   VisItUI_textChanged("MaxTime",     visit_MaxTimeCallback,     (void*) sim);
+  VisItUI_valueChanged("EndOnMaxTime",
+                       visit_EndOnMaxTimeCallback, (void*) sim);
 
   VisItUI_cellChanged("DeltaTVariableTable",
                       visit_DeltaTVariableCallback,          (void*) sim);
@@ -597,6 +599,8 @@ void visit_Initialize( visit_simulation_data *sim )
                       visit_UPSVariableCallback,             (void*) sim);
   VisItUI_cellChanged("OutputIntervalVariableTable",
                       visit_OutputIntervalVariableCallback,  (void*) sim);
+  VisItUI_valueChanged("ClampTimestepsToOutput",
+                       visit_ClampTimestepsToOutputCallback, (void*) sim);
         
   VisItUI_valueChanged("ImageGroupBox",
                        visit_ImageGenerateCallback, (void*) sim);

@@ -59,6 +59,7 @@ namespace Uintah {
 void visit_SimGetCustomUIData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+  SimulationTime* simTime = sim->simController->getSimulationTime();
 
   // Setup the Stripchart names - this should be first so that when
   // values are added to the charts teh names are already set.
@@ -66,6 +67,7 @@ void visit_SimGetCustomUIData(void *cbdata)
 
   // Set the custom UI time values.
   visit_SetTimeValues( sim );
+  VisItUI_setValueI("EndOnMaxTime", simTime->end_on_max_time, 1);
     
   // Set the custom UI delta t values.
   visit_SetDeltaTValues( sim );
@@ -78,6 +80,7 @@ void visit_SimGetCustomUIData(void *cbdata)
 
   // Set the custom UI output variable table
   visit_SetOutputIntervals( sim );
+  VisItUI_setValueI("ClampTimestepsToOutput", simTime->timestep_clamping, 1);
 
   // Set the custom UI optional min/max variable table
   visit_SetAnalysisVars( sim );

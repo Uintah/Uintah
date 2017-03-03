@@ -64,12 +64,14 @@ namespace Uintah {
 
   void visit_MaxTimeStepCallback( char *val, void *cbdata );
   void visit_MaxTimeCallback    ( char *val, void *cbdata );
+  void visit_EndOnMaxTimeCallback( int   val, void *cbdata );
 
   void visit_DeltaTVariableCallback   ( char *val, void *cbdata );
   void visit_WallTimesVariableCallback( char *val, void *cbdata );
  
   void visit_UPSVariableCallback           ( char *val, void *cbdata );
   void visit_OutputIntervalVariableCallback( char *val, void *cbdata );
+  void visit_ClampTimestepsToOutputCallback( int   val, void *cbdata );
 
   void visit_ImageGenerateCallback( int   val, void *cbdata );
   void visit_ImageFilenameCallback( char *val, void *cbdata );

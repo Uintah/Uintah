@@ -88,6 +88,15 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
   VisItUI_setTableValueS("DeltaTVariableTable", 4, 0, "DeltaTMax", 0);
   VisItUI_setTableValueD("DeltaTVariableTable", 4, 1, simTime->delt_max, 1);
 
+  VisItUI_setTableValueS("DeltaTVariableTable", 5, 0, "MaxInitialDelta", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", 5, 1, simTime->max_initial_delt, 1);
+
+  VisItUI_setTableValueS("DeltaTVariableTable", 6, 0, "MaxDeltaIncrease", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", 6, 1, simTime->max_delt_increase, 1);
+
+  VisItUI_setTableValueS("DeltaTVariableTable", 7, 0, "OverrideRestartDelta", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", 7, 1, simTime->override_restart_delt, 1);
+
   visit_SetStripChartValue( sim, "DeltaT", sim->delt );
   visit_SetStripChartValue( sim, "DeltaTNext", sim->delt_next );
 }
@@ -140,6 +149,7 @@ void visit_SetWallTimes( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_SetOutputIntervals( visit_simulation_data *sim )
 {
+  SimulationTime*  simTime    = sim->simController->getSimulationTime();
   SimulationStateP simStateP  = sim->simController->getSimulationStateP();
   Output          *output     = sim->simController->getOutput();
 
@@ -193,6 +203,15 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
                            CheckpointIntervalRow, 0, name.c_str(),  0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            CheckpointIntervalRow, 1, val, 1);
+
+    // This var must be in row specified by ClampTimestepsToOutputRow so
+    // that the callback ClampTimestepsToOutputRow can get it.
+    VisItUI_setTableValueS("OutputIntervalVariableTable",
+                           ClampTimestepsToOutputRow, 0,
+			   "ClampTimestepsToOutput",  0);
+    VisItUI_setTableValueD("OutputIntervalVariableTable",
+                           ClampTimestepsToOutputRow, 1,
+			   simTime->timestep_clamping, 1);    
   }
   else
     VisItUI_setValueS( "OutputIntervalGroupBox", "HIDE_WIDGET", 0);

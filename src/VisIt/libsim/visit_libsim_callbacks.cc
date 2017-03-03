@@ -493,6 +493,19 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
 
 
 //---------------------------------------------------------------------
+// EndOnMaxTimeCallback
+//     Custom UI callback for a check box
+//---------------------------------------------------------------------
+void visit_EndOnMaxTimeCallback(int val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+  SimulationTime* simTime = sim->simController->getSimulationTime();
+
+  simTime->end_on_max_time = val;
+}
+
+
+//---------------------------------------------------------------------
 // DeltaTVariableCallback
 //     Custom UI callback for a table
 //---------------------------------------------------------------------
@@ -591,6 +604,69 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 
       sim->simController->getSimulationTime()->delt_max = newValue;
       visit_VarModifiedMessage( sim, "DeltaTMax", oldValue, newValue );
+    }
+    break;
+  case 5:
+    {
+      double minValue = 1.0e-99;
+      double maxValue = DBL_MAX;
+      oldValue = sim->simController->getSimulationTime()->max_initial_delt;
+      
+      if( newValue < minValue || maxValue < newValue )
+      {
+	std::stringstream msg;
+	msg << "Visit libsim - the value (" << newValue << ") for MaxInitialDelta "
+	    << "is outside the range [" << minValue << ", " << maxValue << "]. "
+	    << "Resetting value.";
+	VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+	visit_SetDeltaTValues( sim );
+	return;
+      }
+
+      sim->simController->getSimulationTime()->max_initial_delt = newValue;
+      visit_VarModifiedMessage( sim, "MaxInitialDelta", oldValue, newValue );
+    }
+    break;
+  case 6:
+    {
+      double minValue = 0;
+      double maxValue = 1.e99;
+      oldValue = sim->simController->getSimulationTime()->max_delt_increase;
+      
+      if( newValue < minValue || maxValue < newValue )
+      {
+	std::stringstream msg;
+	msg << "Visit libsim - the value (" << newValue << ") for MaxDeltaIncrease "
+	    << "is outside the range [" << minValue << ", " << maxValue << "]. "
+	    << "Resetting value.";
+	VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+	visit_SetDeltaTValues( sim );
+	return;
+      }
+
+      sim->simController->getSimulationTime()->max_delt_increase = newValue;
+      visit_VarModifiedMessage( sim, "MaxDeltaIncrease", oldValue, newValue );
+    }
+    break;
+  case 7:
+    {
+      double minValue = 0;
+      double maxValue = 1.0e99;
+      oldValue = sim->simController->getSimulationTime()->override_restart_delt;
+      
+      if( newValue < minValue || maxValue < newValue )
+      {
+	std::stringstream msg;
+	msg << "Visit libsim - the value (" << newValue << ") for OverrideRestartDelta "
+	    << "is outside the range [" << minValue << ", " << maxValue << "]. "
+	    << "Resetting value.";
+	VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+	visit_SetDeltaTValues( sim );
+	return;
+      }
+
+      sim->simController->getSimulationTime()->override_restart_delt = newValue;
+      visit_VarModifiedMessage( sim, "OverrideRestartDelta", oldValue, newValue );
     }
     break;
   }
@@ -754,6 +830,7 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  SimulationTime*  simTime = sim->simController->getSimulationTime();
   Output *output = sim->simController->getOutput();
 
   unsigned int row, column;
@@ -771,7 +848,7 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
     else
       output->updateOutputTimestepInterval( value );
   }
-  
+ 
   // Checkpoint interval.
   else if( row == CheckpointIntervalRow )
   {
@@ -783,6 +860,20 @@ void visit_OutputIntervalVariableCallback(char *val, void *cbdata)
       output->updateCheckpointTimestepInterval( value );
   }
 }
+
+
+//---------------------------------------------------------------------
+// ClampTimestepsToOutputCallback
+//     Custom UI callback for a check box
+//---------------------------------------------------------------------
+void visit_ClampTimestepsToOutputCallback(int val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+  SimulationTime* simTime = sim->simController->getSimulationTime();
+
+  simTime->timestep_clamping = val;
+}
+
 
 //---------------------------------------------------------------------
 // ImageCallback
@@ -896,7 +987,8 @@ void visit_StopAtLastTimeStepCallback(int val, void *cbdata)
   sim->stopAtLastTimeStep = val;
 }
 
-//---------------------------------------------------------------------
+
+  //---------------------------------------------------------------------
 // StateVariableCallback
 //     Custom UI callback for a table
 //---------------------------------------------------------------------
