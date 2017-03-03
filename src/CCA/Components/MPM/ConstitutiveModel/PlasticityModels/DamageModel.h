@@ -100,29 +100,7 @@ namespace Uintah {
                            const Patch     * patch,     
                            DataWarehouse   * old_dw,
                            DataWarehouse   * new_dw );
-                          
-    // Modify the stress if particle has failed
-    virtual
-    void updateFailedParticlesAndModifyStress2(const Matrix3  & defGrad,
-                                               const double   & pFailureStr,
-                                               const int      & pLocalized,
-                                               int            & pLocalized_new,
-                                               const double   & pTimeOfLoc,
-                                               double         & pTimeOfLoc_new,
-                                               Matrix3        & pStress,
-                                               const long64     particleID,
-                                               double           time);
 
-    // Modify the stress for brittle damage
-    virtual
-    void updateDamageAndModifyStress2(const Matrix3 & FF,
-                                      const double  & pFailureStrain,
-                                      double        & pFailureStrain_new,
-                                      const double  & pVolume,
-                                      const double  & pDamage,
-                                      double        & pDamage_new,
-                                      Matrix3       & pStress_new,
-                                      const long64    particleID);
     protected:
     MPMLabel* d_lb;
   };

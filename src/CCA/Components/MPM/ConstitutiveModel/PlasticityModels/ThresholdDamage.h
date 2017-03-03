@@ -150,16 +150,6 @@ namespace Uintah {
                           const MPMMaterial* matl,
                           DataWarehouse*     new_dw);
 
-    virtual
-    void updateFailedParticlesAndModifyStress2(const Matrix3  & defGrad,
-                                               const double   & pFailureStr,
-                                               const int      & pLocalized,
-                                               int            & pLocalized_new,
-                                               const double   & pTimeOfLoc,
-                                               double         & pTimeOfLoc_new,
-                                               Matrix3        & pStress,
-                                               const long64     particleID,
-                                               double           time);
   };
 
 } // End namespace Uintah

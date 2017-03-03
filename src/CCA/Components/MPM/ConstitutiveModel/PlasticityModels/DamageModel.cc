@@ -99,34 +99,3 @@ DamageModel::computeSomething( ParticleSubset  * pset,
                                DataWarehouse   * new_dw )
 {
 }
-//______________________________________________________________________
-//
-void 
-DamageModel::updateDamageAndModifyStress2(const Matrix3 & FF,
-                                          const double  & pFailureStrain,
-                                          double        & pFailureStrain_new,
-                                          const double  & pVolume,
-                                          const double  & pDamage,
-                                          double        & pDamage_new,
-                                          Matrix3       & pStress_new,
-                                          const long64   particleID)
-{
-  // do nothing
-}
-
-//______________________________________________________________________
-//
- void 
- DamageModel::updateFailedParticlesAndModifyStress2(const Matrix3 & FF,
-                                                    const double  & pFailureStrain,
-                                                    const int     & pLocalized,
-                                                    int           & pLocalized_new,
-                                                    const double  & pTimeOfLoc,
-                                                    double        & pTimeOfLoc_new,
-                                                    Matrix3       & pStress_new,
-                                                    const long64    particleID,
-                                                    double          time)    
-{
-  // do nothing
-}
-
