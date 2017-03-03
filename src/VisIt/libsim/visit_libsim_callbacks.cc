@@ -630,6 +630,27 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   case 6:
     {
       double minValue = 0;
+      double maxValue = 1.0e99;
+      oldValue = sim->simController->getSimulationTime()->initial_delt_range;
+      
+      if( newValue < minValue || maxValue < newValue )
+      {
+	std::stringstream msg;
+	msg << "Visit libsim - the value (" << newValue << ") for InitialDeltaRange "
+	    << "is outside the range [" << minValue << ", " << maxValue << "]. "
+	    << "Resetting value.";
+	VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+	visit_SetDeltaTValues( sim );
+	return;
+      }
+
+      sim->simController->getSimulationTime()->initial_delt_range = newValue;
+      visit_VarModifiedMessage( sim, "InitialDeltaRange", oldValue, newValue );
+    }
+    break;
+  case 7:
+    {
+      double minValue = 0;
       double maxValue = 1.e99;
       oldValue = sim->simController->getSimulationTime()->max_delt_increase;
       
@@ -648,7 +669,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "MaxDeltaIncrease", oldValue, newValue );
     }
     break;
-  case 7:
+  case 8:
     {
       double minValue = 0;
       double maxValue = 1.0e99;
