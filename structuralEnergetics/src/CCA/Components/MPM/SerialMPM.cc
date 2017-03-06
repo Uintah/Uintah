@@ -33,9 +33,6 @@
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModelFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/SDInterfaceModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
@@ -71,6 +68,9 @@
 
 #include <iostream>
 #include <fstream>
+#include "Diffusion/DiffusionInterfaces/SDInterfaceModel.h"
+#include "Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+#include "Diffusion/SDInterfaceModelFactory.h"
 
 using namespace Uintah;
 using namespace std;
