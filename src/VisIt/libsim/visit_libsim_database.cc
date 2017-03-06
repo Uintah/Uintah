@@ -67,7 +67,7 @@ void visit_SimGetCustomUIData(void *cbdata)
 
   // Set the custom UI time values.
   visit_SetTimeValues( sim );
-  VisItUI_setValueI("EndOnMaxTime", simTime->end_on_max_time, 1);
+  VisItUI_setValueI("EndAtMaxTime", simTime->end_at_max_time, 1);
     
   // Set the custom UI delta t values.
   visit_SetDeltaTValues( sim );
@@ -80,7 +80,7 @@ void visit_SimGetCustomUIData(void *cbdata)
 
   // Set the custom UI output variable table
   visit_SetOutputIntervals( sim );
-  VisItUI_setValueI("ClampTimestepsToOutput", simTime->timestep_clamping, 1);
+  VisItUI_setValueI("ClampTimeToOutput", simTime->clamp_time_to_output, 1);
 
   // Set the custom UI optional min/max variable table
   visit_SetAnalysisVars( sim );

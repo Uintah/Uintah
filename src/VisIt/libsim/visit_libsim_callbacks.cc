@@ -501,7 +501,7 @@ void visit_EndOnMaxTimeCallback(int val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  simTime->end_on_max_time = val;
+  simTime->end_at_max_time = val;
 }
 
 
@@ -518,7 +518,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   unsigned int row, column;
   double oldValue, newValue;
   
-  getTableCMD( val, row, column, newValue);
+  getTableCMD(val, row, column, newValue);
 
   switch( row )
   {
@@ -567,6 +567,27 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
   case 3:
     {
       double minValue = 0;
+      double maxValue = 1.e99;
+      oldValue = sim->simController->getSimulationTime()->max_delt_increase;
+      
+      if( newValue < minValue || maxValue < newValue )
+      {
+	std::stringstream msg;
+	msg << "Visit libsim - the value (" << newValue << ") for MaxDeltaIncrease "
+	    << "is outside the range [" << minValue << ", " << maxValue << "]. "
+	    << "Resetting value.";
+	VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
+	visit_SetDeltaTValues( sim );
+	return;
+      }
+
+      sim->simController->getSimulationTime()->max_delt_increase = newValue;
+      visit_VarModifiedMessage( sim, "MaxDeltaIncrease", oldValue, newValue );
+    }
+    break;
+  case 4:
+    {
+      double minValue = 0;
       double maxValue = sim->simController->getSimulationTime()->delt_max;
       oldValue = sim->simController->getSimulationTime()->delt_min;
       
@@ -585,7 +606,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "DeltaTMin", oldValue, newValue );
     }
     break;
-  case 4:
+  case 5:
     {
       double minValue = sim->simController->getSimulationTime()->delt_min;
       double maxValue = 1.0e9;
@@ -606,7 +627,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "DeltaTMax", oldValue, newValue );
     }
     break;
-  case 5:
+  case 6:
     {
       double minValue = 1.0e-99;
       double maxValue = DBL_MAX;
@@ -627,7 +648,7 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
       visit_VarModifiedMessage( sim, "MaxInitialDelta", oldValue, newValue );
     }
     break;
-  case 6:
+  case 7:
     {
       double minValue = 0;
       double maxValue = 1.0e99;
@@ -646,27 +667,6 @@ void visit_DeltaTVariableCallback(char *val, void *cbdata)
 
       sim->simController->getSimulationTime()->initial_delt_range = newValue;
       visit_VarModifiedMessage( sim, "InitialDeltaRange", oldValue, newValue );
-    }
-    break;
-  case 7:
-    {
-      double minValue = 0;
-      double maxValue = 1.e99;
-      oldValue = sim->simController->getSimulationTime()->max_delt_increase;
-      
-      if( newValue < minValue || maxValue < newValue )
-      {
-	std::stringstream msg;
-	msg << "Visit libsim - the value (" << newValue << ") for MaxDeltaIncrease "
-	    << "is outside the range [" << minValue << ", " << maxValue << "]. "
-	    << "Resetting value.";
-	VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 1);
-	visit_SetDeltaTValues( sim );
-	return;
-      }
-
-      sim->simController->getSimulationTime()->max_delt_increase = newValue;
-      visit_VarModifiedMessage( sim, "MaxDeltaIncrease", oldValue, newValue );
     }
     break;
   case 8:
@@ -892,7 +892,7 @@ void visit_ClampTimestepsToOutputCallback(int val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
-  simTime->timestep_clamping = val;
+  simTime->clamp_time_to_output = val;
 }
 
 

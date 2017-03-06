@@ -53,7 +53,6 @@ WARNING
 
 #define OutputIntervalRow         0
 #define CheckpointIntervalRow     1
-#define ClampTimestepsToOutputRow 2
 
 class visit_simulation_data;
 

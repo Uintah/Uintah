@@ -71,34 +71,45 @@ void visit_SetDeltaTValues( visit_simulation_data *sim )
 {
   SimulationTime* simTime = sim->simController->getSimulationTime();
 
+  int row = 0;
+
   VisItUI_setTableValueS("DeltaTVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
-  VisItUI_setTableValueS("DeltaTVariableTable", 0, 0, "DeltaT", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 0, 1, sim->delt, 0);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaT", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, sim->delt, 0);
+  ++row;
+  
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTNext", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, sim->delt_next, 1);
+  ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", 1, 0, "DeltaTNext", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 1, 1, sim->delt_next, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTFactor", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_factor, 1);
+  ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", 2, 0, "DeltaTFactor", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 2, 1, simTime->delt_factor, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxDeltaTIncrease", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->max_delt_increase, 1);
+  ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", 3, 0, "DeltaTMin", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 3, 1, simTime->delt_min, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMin", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_min, 1);
+  ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", 4, 0, "DeltaTMax", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 4, 1, simTime->delt_max, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "DeltaTMax", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->delt_max, 1);
+  ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", 5, 0, "MaxInitialDelta", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 5, 1, simTime->max_initial_delt, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "MaxInitialDeltaT", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->max_initial_delt, 1);
+  ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", 6, 0, "InitialDeltaRange", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 6, 1, simTime->initial_delt_range, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "InitialDeltaTRange", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->initial_delt_range, 1);
+  ++row;
 
-  VisItUI_setTableValueS("DeltaTVariableTable", 7, 0, "MaxDeltaIncrease", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 7, 1, simTime->max_delt_increase, 1);
-
-  VisItUI_setTableValueS("DeltaTVariableTable", 8, 0, "OverrideRestartDelta", 0);
-  VisItUI_setTableValueD("DeltaTVariableTable", 8, 1, simTime->override_restart_delt, 1);
+  VisItUI_setTableValueS("DeltaTVariableTable", row, 0, "OverrideRestartDeltaT", 0);
+  VisItUI_setTableValueD("DeltaTVariableTable", row, 1, simTime->override_restart_delt, 1);
+  ++row;
 
   visit_SetStripChartValue( sim, "DeltaT", sim->delt );
   visit_SetStripChartValue( sim, "DeltaTNext", sim->delt_next );
@@ -139,6 +150,7 @@ void visit_SetWallTimes( visit_simulation_data *sim )
   VisItUI_setTableValueD("WallTimesVariableTable", row, 1,
 			 simTime->max_wall_time, 1);
   ++row;
+
   visit_SetStripChartValue( sim, "TimeStep",     walltimers->TimeStep().seconds() );
   visit_SetStripChartValue( sim, "ExpMovingAve", walltimers->ExpMovingAverage().seconds() );
   visit_SetStripChartValue( sim, "InSitu",       walltimers->InSitu().seconds() );
@@ -180,7 +192,7 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
       val = output->getOutputTimestepInterval();
     }
 
-    // This var must be in row specified by CheckpointIntervalRow so
+    // This var must be in row specified by OutputIntervalRow so
     // that the callback OutputIntervalVariableTableCallback can get it.
     VisItUI_setTableValueS("OutputIntervalVariableTable",
                            OutputIntervalRow, 0, name.c_str(),  0);
@@ -206,15 +218,6 @@ void visit_SetOutputIntervals( visit_simulation_data *sim )
                            CheckpointIntervalRow, 0, name.c_str(),  0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
                            CheckpointIntervalRow, 1, val, 1);
-
-    // This var must be in row specified by ClampTimestepsToOutputRow so
-    // that the callback ClampTimestepsToOutputRow can get it.
-    VisItUI_setTableValueS("OutputIntervalVariableTable",
-                           ClampTimestepsToOutputRow, 0,
-			   "ClampTimestepsToOutput",  0);
-    VisItUI_setTableValueD("OutputIntervalVariableTable",
-                           ClampTimestepsToOutputRow, 1,
-			   simTime->timestep_clamping, 1);    
   }
   else
     VisItUI_setValueS( "OutputIntervalGroupBox", "HIDE_WIDGET", 0);

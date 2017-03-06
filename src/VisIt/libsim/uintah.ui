@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>654</width>
-    <height>796</height>
+    <height>837</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>11</x>
       <y>10</y>
       <width>631</width>
-      <height>741</height>
+      <height>781</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -36,7 +36,7 @@
         <x>10</x>
         <y>0</y>
         <width>601</width>
-        <height>91</height>
+        <height>131</height>
        </rect>
       </property>
       <property name="title">
@@ -55,7 +55,7 @@
       <widget class="QLabel" name="MaxTimeLabel">
        <property name="geometry">
         <rect>
-         <x>220</x>
+         <x>230</x>
          <y>60</y>
          <width>100</width>
          <height>20</height>
@@ -101,7 +101,7 @@
       <widget class="QLabel" name="TimeLabel">
        <property name="geometry">
         <rect>
-         <x>220</x>
+         <x>230</x>
          <y>30</y>
          <width>60</width>
          <height>15</height>
@@ -139,12 +139,12 @@
         <rect>
          <x>410</x>
          <y>60</y>
-         <width>181</width>
+         <width>191</width>
          <height>20</height>
         </rect>
        </property>
        <property name="text">
-        <string>End on max time</string>
+        <string>End execution at max time</string>
        </property>
       </widget>
       <widget class="QCheckBox" name="ClampTimestepsToOutput">
@@ -157,7 +157,56 @@
         </rect>
        </property>
        <property name="text">
-        <string>Clamp timesteps to output</string>
+        <string>Clamp time to output</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="StopATimeStepLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>100</y>
+         <width>170</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Stop execution at time step</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="StopAtTimeStep">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>100</y>
+         <width>81</width>
+         <height>20</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="StopAtLastTimeStep">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>100</y>
+         <width>250</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Stop execution at the last time step</string>
+       </property>
+      </widget>
+      <widget class="Line" name="line">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>80</y>
+         <width>581</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
       </widget>
      </widget>
@@ -165,7 +214,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>420</y>
+        <y>460</y>
         <width>240</width>
         <height>131</height>
        </rect>
@@ -198,7 +247,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>550</y>
+        <y>590</y>
         <width>601</width>
         <height>151</height>
        </rect>
@@ -251,7 +300,7 @@
       <property name="geometry">
        <rect>
         <x>260</x>
-        <y>330</y>
+        <y>370</y>
         <width>350</width>
         <height>221</height>
        </rect>
@@ -289,7 +338,7 @@
       <property name="geometry">
        <rect>
         <x>260</x>
-        <y>90</y>
+        <y>130</y>
         <width>350</width>
         <height>241</height>
        </rect>
@@ -322,7 +371,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>260</y>
+        <y>300</y>
         <width>240</width>
         <height>161</height>
        </rect>
@@ -355,7 +404,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>90</y>
+        <y>130</y>
         <width>240</width>
         <height>171</height>
        </rect>
@@ -395,7 +444,7 @@
         <x>10</x>
         <y>0</y>
         <width>600</width>
-        <height>361</height>
+        <height>371</height>
        </rect>
       </property>
       <property name="title">
@@ -407,7 +456,7 @@
          <x>10</x>
          <y>30</y>
          <width>580</width>
-         <height>321</height>
+         <height>331</height>
         </rect>
        </property>
        <column>
@@ -441,6 +490,8 @@
         </property>
        </column>
       </widget>
+      <zorder>RuntimeStatsTable</zorder>
+      <zorder>MPIStatsTable</zorder>
      </widget>
      <widget class="QGroupBox" name="MPIStatsGroupBox">
       <property name="geometry">
@@ -448,7 +499,7 @@
         <x>10</x>
         <y>370</y>
         <width>600</width>
-        <height>331</height>
+        <height>371</height>
        </rect>
       </property>
       <property name="title">
@@ -460,7 +511,7 @@
          <x>10</x>
          <y>30</y>
          <width>580</width>
-         <height>291</height>
+         <height>331</height>
         </rect>
        </property>
        <column>
@@ -653,9 +704,9 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>110</y>
+        <y>80</y>
         <width>600</width>
-        <height>341</height>
+        <height>231</height>
        </rect>
       </property>
       <property name="title">
@@ -665,7 +716,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>130</y>
+         <y>20</y>
          <width>251</width>
          <height>201</height>
         </rect>
@@ -700,7 +751,7 @@
          <x>270</x>
          <y>20</y>
          <width>321</width>
-         <height>311</height>
+         <height>201</height>
         </rect>
        </property>
        <property name="title">
@@ -712,7 +763,7 @@
           <x>10</x>
           <y>30</y>
           <width>301</width>
-          <height>271</height>
+          <height>161</height>
          </rect>
         </property>
         <column>
@@ -732,61 +783,12 @@
         </column>
        </widget>
       </widget>
-      <widget class="QGroupBox" name="TimeStepGroupBox">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>20</y>
-         <width>251</width>
-         <height>101</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Time step options</string>
-       </property>
-       <widget class="QCheckBox" name="StopAtLastTimeStep">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>70</y>
-          <width>250</width>
-          <height>20</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Stop execution at the last time step</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="StopATimeStepLabel">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>30</y>
-          <width>170</width>
-          <height>20</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Stop execution at time step</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="StopAtTimeStep">
-        <property name="geometry">
-         <rect>
-          <x>180</x>
-          <y>30</y>
-          <width>60</width>
-          <height>20</height>
-         </rect>
-        </property>
-       </widget>
-      </widget>
      </widget>
      <widget class="QGroupBox" name="StripChartGroupBox">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>480</y>
+        <y>310</y>
         <width>600</width>
         <height>221</height>
        </rect>
@@ -797,9 +799,9 @@
       <widget class="QTableWidget" name="StripChartTable">
        <property name="geometry">
         <rect>
-         <x>20</x>
+         <x>9</x>
          <y>30</y>
-         <width>560</width>
+         <width>581</width>
          <height>180</height>
         </rect>
        </property>
