@@ -41,7 +41,7 @@
 #include <Core/Geometry/Vector.h>
 
 #include <vector>
-#include "../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 namespace Uintah {
 

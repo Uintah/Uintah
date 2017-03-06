@@ -28,7 +28,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "../../Diffusion/DiffusionModels/Null.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/Null.h>
 
 using namespace Uintah;
 

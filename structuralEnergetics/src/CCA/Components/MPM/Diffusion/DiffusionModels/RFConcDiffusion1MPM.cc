@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "../../Diffusion/DiffusionModels/RFConcDiffusion1MPM.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/RFConcDiffusion1MPM.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Labels/MPMLabel.h>

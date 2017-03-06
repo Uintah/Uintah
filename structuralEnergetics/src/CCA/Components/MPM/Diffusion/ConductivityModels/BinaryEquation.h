@@ -26,7 +26,7 @@
 #define UINTAH_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_BINARYEQUATION_H
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include "../../Diffusion/ConductivityModels/ConductivityEquation.h"
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
 
 namespace Uintah
 {

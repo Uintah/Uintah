@@ -28,7 +28,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "../../Diffusion/DiffusionModels/ActivatedDiffusion2.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ActivatedDiffusion2.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <vector>

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "../../Diffusion/ConductivityModels/BinaryEquation.h"
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/BinaryEquation.h>
 
 #include <iostream>
 

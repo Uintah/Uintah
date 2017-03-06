@@ -859,9 +859,9 @@ void ReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches  ,
 
   // Diffusion related quantities
   double vol_exp_coeff      = d_initialData.vol_exp_coeff;
-  double concentration      = 0.0;
-  double concentrationPrev  = 0.0;
-  double conc_rate          = 0.0;
+//  double concentration      = 0.0;
+//  double concentrationPrev  = 0.0;
+  double dCdt          = 0.0;
   
   double totalStrainEnergy = 0.0;
   double include_AV_heating=0.0;
@@ -1087,24 +1087,12 @@ void ReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches  ,
       {
         // Back out expansion due to stress free expansion of the material point
         //   caused by incorporation of the diffusant.
-        double conc_rate = (pConcentration[idx] - pConcPrevious[idx])/delT;
+        dCdt = (pConcentration[idx] - pConcPrevious[idx])/delT;
         ScalarDiffusionModel* sdm = matl->getScalarDiffusionModel();
         Matrix3 expansionCoeff = sdm->getStressFreeExpansionMatrix();
         expansionCoeff *= vol_exp_coeff;
-        tensorD = tensorD - expansionCoeff*(conc_rate);
-        // FIXME TODO FIXME TODO FIXME TODO JBH -- EGREGIOUS HACK
-        // dH_Rxn for Ni + 3Al -> NiAl3
-        // From:  Mat Sci & Eng. A 299, 1-15, 2001 (K. Morsi)
-        // -152 kJ/mol
-        // == -152e6 micrograms mm^2/microsecond^2/mol (consistent units)
-        double dH_Rxn = -152.0e+6;
-        // pReactionHeat_temp is the amount of heat energy generated presuming
-        // 100% conversion of diffusant nickel into NiAl3
-        pReactionHeat_temp[idx] = -dH_Rxn * conc_rate * pStartingMoles[idx];
-        pdTdt[idx] += pReactionHeat_temp[idx] / (Cp * pMass[idx] * delT);
-//        if (dwi == 0 && (currStep%outputFreq==1))
-//          std::cerr << std::fixed << std::setw(2) << std::right << idx << " "
-//                    << std::scientific << std::setw(5) << std::right << pConcentration[idx] << " ";
+        tensorD = tensorD - expansionCoeff*(dCdt);
+
 
       }
 
@@ -1162,6 +1150,28 @@ void ReactionDiffusionEP::computeStressTensor(const PatchSubset   * patches  ,
         state->specificHeat = Cp;
       }
     
+      if (flag->d_doScalarDiffusion)
+      {
+        // FIXME TODO FIXME TODO FIXME TODO JBH -- EGREGIOUS HACK
+        // dH_Rxn for Ni + 3Al -> NiAl3
+        // From:  Mat Sci & Eng. A 299, 1-15, 2001 (K. Morsi)
+        // -152 kJ/mol
+        // == -152e6 micrograms mm^2/microsecond^2/mol (consistent units)
+        if (dwi == 0)
+        {
+          double dH_Rxn = 152.0e+6;
+          // pReactionHeat_temp is the amount of heat energy generated presuming
+          // 100% conversion of diffusant nickel into NiAl3
+          pReactionHeat_temp[idx] = dH_Rxn * dCdt * pStartingMoles[idx];
+          pdTdt[idx] += pReactionHeat_temp[idx] / (Cp * pMass[idx] * delT);
+  //        if (dwi == 0 && (currStep%outputFreq==1))
+  //          std::cerr << std::fixed << std::setw(2) << std::right << idx << " "
+  //                    << std::scientific << std::setw(5) << std::right << pConcentration[idx] << " ";
+        }
+
+      }
+
+
       // Calculate the shear modulus and the melting temperature at the
       // start of the time step and update the plasticity state
       double Tm_cur = d_melt->computeMeltingTemp(state);

@@ -44,7 +44,7 @@
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <iostream>
 
-#include "../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 /*  This code is a bit tough to follow.  Here's the basic order of operations.
 
