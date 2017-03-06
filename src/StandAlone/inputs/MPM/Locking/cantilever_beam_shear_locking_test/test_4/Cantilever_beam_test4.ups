@@ -43,7 +43,6 @@
        <artificial_viscosity_heating>false</artificial_viscosity_heating>
        <do_contact_friction_heating>false</do_contact_friction_heating>
        <withColor>      true      </withColor>
-       <erosion algorithm = "RemoveMass"/>
     </MPM>
 
     <PhysicalConstants>

@@ -69,7 +69,6 @@
     <axisymmetric>true</axisymmetric>
 <!--
     <erosion algorithm = "AllowNoTension"/>
-    <erosion algorithm = "RemoveMass"/>
 -->
   </MPM>
 

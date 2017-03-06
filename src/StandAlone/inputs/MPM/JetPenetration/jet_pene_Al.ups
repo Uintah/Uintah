@@ -44,7 +44,6 @@
        <withColor>      true      </withColor>
        <InsertParticles>    true   </InsertParticles>
        <InsertParticlesFile>InsertParticles.dat </InsertParticlesFile>
-       <erosion algorithm = "RemoveMass"/>
        <use_load_curves> true </use_load_curves>
     </MPM>
     <PhysicalConstants>

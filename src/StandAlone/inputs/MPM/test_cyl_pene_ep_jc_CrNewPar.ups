@@ -59,7 +59,6 @@
     <erosion algorithm = "AllowNoTension"/>
 <!--
     <erosion algorithm = "none"/>
-    <erosion algorithm = "RemoveMass"/>
     <erosion algorithm = "AllowNoTension"/>
 -->
   </MPM>

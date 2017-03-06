@@ -67,7 +67,6 @@
        <do_contact_friction_heating>false</do_contact_friction_heating>
        <axisymmetric>true</axisymmetric>
        <withColor>      true      </withColor>
-       <erosion algorithm = "RemoveMass"/>
        <use_load_curves> true </use_load_curves>
     </MPM>
 

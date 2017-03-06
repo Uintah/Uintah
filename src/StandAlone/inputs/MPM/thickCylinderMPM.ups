@@ -45,7 +45,6 @@
      <use_load_curves> true </use_load_curves>
      <erosion algorithm = "ZeroStress"/>
 <!--
-     <erosion algorithm = "RemoveMass"/>
      <erosion algorithm = "AllowNoTension"/>
 -->
    </MPM>
