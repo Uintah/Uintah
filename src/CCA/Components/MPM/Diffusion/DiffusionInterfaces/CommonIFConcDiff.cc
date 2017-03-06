@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "../../Diffusion/DiffusionInterfaces/CommonIFConcDiff.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/CommonIFConcDiff.h>
 
 #include <Core/Containers/StaticArray.h>
 #include <Core/Grid/Task.h>

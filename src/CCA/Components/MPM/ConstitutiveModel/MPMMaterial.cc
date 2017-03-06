@@ -43,8 +43,8 @@
 #include   <iostream>
 #include   <list>
 
-#include "../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
-#include "../Diffusion/ScalarDiffusionModelFactory.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/Diffusion/ScalarDiffusionModelFactory.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
 

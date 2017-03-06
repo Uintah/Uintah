@@ -32,7 +32,7 @@
 #define SRC_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_DIFFUSIONMODELS_NULL_H_
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include "../../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 namespace Uintah {
 

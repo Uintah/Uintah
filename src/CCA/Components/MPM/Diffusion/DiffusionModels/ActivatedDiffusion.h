@@ -31,7 +31,7 @@
 #ifndef SRC_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_DIFFUSIONMODELS_ACTIVATEDDIFFUSION_H_
 #define SRC_CCA_COMPONENTS_MPM_REACTIONDIFFUSION_DIFFUSIONMODELS_ACTIVATEDDIFFUSION_H_
 
-#include "../../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 namespace Uintah
 {

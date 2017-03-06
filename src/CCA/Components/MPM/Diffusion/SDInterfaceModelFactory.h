@@ -28,7 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <string>
-#include "../Diffusion/DiffusionInterfaces/SDInterfaceModel.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionInterfaces/SDInterfaceModel.h>
 
 namespace Uintah {
 

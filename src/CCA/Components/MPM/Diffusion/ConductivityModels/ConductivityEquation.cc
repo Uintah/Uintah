@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "../../Diffusion/ConductivityModels/ConductivityEquation.h"
+#include <CCA/Components/MPM/Diffusion/ConductivityModels/ConductivityEquation.h>
 
 #include <iostream>
 

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "../../Diffusion/DiffusionModels/NonLinearDiff1.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/NonLinearDiff1.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>

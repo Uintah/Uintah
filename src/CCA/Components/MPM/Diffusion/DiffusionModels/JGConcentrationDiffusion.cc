@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "../../Diffusion/DiffusionModels/JGConcentrationDiffusion.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/JGConcentrationDiffusion.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>

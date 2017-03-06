@@ -21,22 +21,22 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include "../Diffusion/ScalarDiffusionModelFactory.h"
+#include <CCA/Components/MPM/Diffusion/ScalarDiffusionModelFactory.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <string>
-#include "../Diffusion/DiffusionModels/ActivatedDiffusion.h"
-#include "../Diffusion/DiffusionModels/ActivatedDiffusion2.h"
-#include "../Diffusion/DiffusionModels/BazantModel.h"
-#include "../Diffusion/DiffusionModels/ConstantRate.h"
-#include "../Diffusion/DiffusionModels/JGConcentrationDiffusion.h"
-#include "../Diffusion/DiffusionModels/NonLinearDiff1.h"
-#include "../Diffusion/DiffusionModels/NonLinearDiff2.h"
-#include "../Diffusion/DiffusionModels/Null.h"
-#include "../Diffusion/DiffusionModels/RFConcDiffusion1MPM.h"
-#include "../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ActivatedDiffusion.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ActivatedDiffusion2.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/BazantModel.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ConstantRate.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/JGConcentrationDiffusion.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/NonLinearDiff1.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/NonLinearDiff2.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/Null.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/RFConcDiffusion1MPM.h>
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 using namespace std;
 using namespace Uintah;
