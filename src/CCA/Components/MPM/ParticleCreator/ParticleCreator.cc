@@ -43,7 +43,8 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <iostream>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
+
+#include "../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
 
 /*  This code is a bit tough to follow.  Here's the basic order of operations.
 

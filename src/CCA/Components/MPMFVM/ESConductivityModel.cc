@@ -40,7 +40,8 @@
 
 #include <vector>
 #include <iostream>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
+
+#include "../MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h"
 
 using namespace Uintah;
 

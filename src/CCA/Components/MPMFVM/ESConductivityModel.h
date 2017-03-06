@@ -35,7 +35,8 @@
 #include <Core/Labels/MPMLabel.h>
 
 #include <string>
-#include <CCA/Components/MPM/ReactionDiffusion/ConductivityModels/ConductivityEquation.h>
+
+#include "../MPM/Diffusion/ConductivityModels/ConductivityEquation.h"
 
 namespace Uintah{
 /*************************************************

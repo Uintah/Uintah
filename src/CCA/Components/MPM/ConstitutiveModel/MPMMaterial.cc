@@ -42,8 +42,9 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include   <iostream>
 #include   <list>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
+
+#include "../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+#include "../Diffusion/ScalarDiffusionModelFactory.h"
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
 

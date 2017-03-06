@@ -35,13 +35,13 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
 #include <vector>
+#include "../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
 
 namespace Uintah {
 
