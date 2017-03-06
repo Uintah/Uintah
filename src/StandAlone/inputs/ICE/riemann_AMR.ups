@@ -19,7 +19,7 @@
     <delt_max>           1.0         </delt_max>
     <delt_init>          1.0e-6      </delt_init>
     <timestep_multiplier>1.0         </timestep_multiplier>
-    <end_on_max_time_exactly>true</end_on_max_time_exactly>
+    <end_at_max_time_exactly>true</end_at_max_time_exactly>
   </Time>
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->

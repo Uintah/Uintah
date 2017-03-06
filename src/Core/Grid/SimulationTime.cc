@@ -23,6 +23,8 @@
  */
 
 #include <Core/Grid/SimulationTime.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/StringUtil.h>
@@ -37,7 +39,6 @@ using namespace Uintah;
 SimulationTime::SimulationTime( const ProblemSpecP & params )
 {
   delt_factor = 1.0;
-  override_restart_delt = 0.0;
   
   ProblemSpecP time_ps = params->findBlock( "Time" );
   time_ps->require( "maxTime", maxTime );
@@ -45,7 +46,9 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
   time_ps->require( "delt_min", delt_min );
   time_ps->require( "delt_max", delt_max );
   time_ps->require( "timestep_multiplier", delt_factor );
-  if( !time_ps->get( "delt_init", max_initial_delt) && !time_ps->get("max_initial_delt", max_initial_delt ) ) {
+
+  if( !time_ps->get( "delt_init", max_initial_delt) &&
+      !time_ps->get("max_initial_delt", max_initial_delt ) ) {
     max_initial_delt = DBL_MAX;
   }
   if( !time_ps->get( "initial_delt_range", initial_delt_range ) ) {
@@ -58,25 +61,40 @@ SimulationTime::SimulationTime( const ProblemSpecP & params )
     max_wall_time = 0;
   }
 
-  // use INT_MAX -1, for some reason SGI optimizer doesn't like INT_MAX
+  // Use INT_MAX-1, for some reason SGI optimizer doesn't like INT_MAX
   // in the SimulationController while loop
-  maxTimestep = INT_MAX-1;
-  time_ps->get( "max_Timesteps", maxTimestep );
-
-  time_ps->get( "override_restart_delt", override_restart_delt);
-
-  if ( !time_ps->get( "clamp_timesteps_to_output", timestep_clamping ) ) {
-    timestep_clamping = false;
-  }
-
-  if ( !time_ps->get( "end_on_max_time_exactly", end_on_max_time ) ) {
-    end_on_max_time = false;
-  }
-
-  if( maxTimestep < 1 ) {
-    std::cerr << "Negative maxTimesteps is not allowed.\n";
-    std::cerr << "resetting to INT_MAX time steps\n";
+  if( !time_ps->get( "max_Timesteps", maxTimestep ) ) {
     maxTimestep = INT_MAX-1;
+  }
+  else if( maxTimestep < 1 ) {
+    std::cerr << "Negative maxTimesteps is not allowed.\n";
+    std::cerr << "resetting to INT_MAX-1 time steps\n";
+    maxTimestep = INT_MAX - 1;
+  }
+  
+  if( !time_ps->get( "override_restart_delt", override_restart_delt) ) {
+    override_restart_delt = 0.0;
+  }
+
+  if ( !time_ps->get( "clamp_time_to_output", clamp_time_to_output ) ) {
+    clamp_time_to_output = false;
+  }
+  if ( !time_ps->get( "end_at_max_time_exactly", end_at_max_time ) ) {
+    end_at_max_time = false;
+  }
+
+  if ( time_ps->get( "clamp_timestep_to_output", clamp_time_to_output ) ) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+				"clamp_timestep_to_output has been deprecated "
+				"and has been replaced by clamp_time_to_output.",
+                                __FILE__, __LINE__);
+  }
+
+  if ( time_ps->get( "end_on_max_time_exactly", end_at_max_time ) ) {
+    throw ProblemSetupException("ERROR SimulationTime \n"
+				"end_on_max_time_exactly has been deprecated "
+				"and has been replaced by end_at_max_time_exactly.",
+                                __FILE__, __LINE__);
   }
 }
 
@@ -93,14 +111,15 @@ SimulationTime::problemSetup( const ProblemSpecP & params )
   time_ps->require("delt_max", delt_max);
   time_ps->require("timestep_multiplier", delt_factor);
   
-  if( !time_ps->get("delt_init", max_initial_delt) && !time_ps->get("max_initial_delt", max_initial_delt) ) {
+  if( !time_ps->get("delt_init", max_initial_delt) &&
+      !time_ps->get("max_initial_delt", max_initial_delt) ) {
     max_initial_delt = DBL_MAX;
   }
   if( !time_ps->get("initial_delt_range", initial_delt_range) ) {
     initial_delt_range = 0;
   }
   if( !time_ps->get("max_delt_increase", max_delt_increase) ) {
-    max_delt_increase=1.e99;
+    max_delt_increase = 1.e99;
   }
   
   time_ps->get( "override_restart_delt", override_restart_delt);

@@ -600,10 +600,10 @@ SimulationController::getNextDeltaT( void )
   }
 
   // Clamp delt to match the requested output and/or checkpoint times
-  if( d_timeinfo->timestep_clamping && d_output ) {
+  if( d_timeinfo->clamp_time_to_output && d_output ) {
 
     // Clamp to the output time
-    double nextOutput     = d_output->getNextOutputTime();
+    double nextOutput = d_output->getNextOutputTime();
     if (nextOutput != 0 && d_simTime + d_delt > nextOutput) {
       proc0cout << "WARNING (d): lowering delt from " << d_delt;
 
@@ -626,7 +626,7 @@ SimulationController::getNextDeltaT( void )
   }
   
   // Clamp delt to the max end time,
-  if (d_timeinfo->end_on_max_time &&
+  if (d_timeinfo->end_at_max_time &&
       d_simTime + d_delt > d_timeinfo->maxTime) {
     d_delt = d_timeinfo->maxTime - d_simTime;
   }

@@ -27,7 +27,7 @@
        <delt_init>          1.0e-5      </delt_init>
        <max_delt_increase>  2.0         </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <end_on_max_time_exactly>true</end_on_max_time_exactly>
+       <end_at_max_time_exactly>true</end_at_max_time_exactly>
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->

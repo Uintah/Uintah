@@ -62,27 +62,29 @@ public:
   SimulationTime(const ProblemSpecP& params);
 
   void problemSetup(const ProblemSpecP& params);
-  double maxTime;
-  double initTime;
-  double max_initial_delt;
-  double initial_delt_range;
-  double delt_min;
-  double delt_max;
-  double delt_factor;
-  double max_delt_increase;
-  double override_restart_delt; 
-  double max_wall_time;
 
-  // Explicit number of timesteps to run.  Simulation runs either this
-  // number of time steps, or to maxTime, which ever comes first.
-  // if "max_Timestep" is not specified in the .ups file, then
-  // max_Timestep == INT_MAX.  
-  int    maxTimestep; 
+  // The simulation runs to either the maximum number of time steps
+  // (maxTimestep) or the maximum simulation time (maxTime), which
+  // ever comes first. If the "max_Timestep" is not specified in the .ups
+  // file, then it is set to INT_MAX-1.
+  
+  int    maxTimestep;             // Maximum number of time steps to run.
+  double maxTime;                 // Maximum simulation time
+  double initTime;                // Initial simulation time
+  
+  double max_initial_delt;        // Maximum initial delta T
+  double initial_delt_range;      // Simulation time to use the initial delta T
+  double delt_min;                // Minimum delta T
+  double delt_max;                // Maximum delta T
+  double delt_factor;             // Factor for increasing delta T
+  double max_delt_increase;       // Maximum delta T increase.
+  double override_restart_delt;   // Overirde the restart delta T value
 
-  // Clamp the length of the timestep to the next
-  // output or checkpoint if it will go over
-  bool timestep_clamping;
-  bool end_on_max_time;
+  double max_wall_time;           // Maximum wall time.
+  
+  bool clamp_time_to_output; // Clamp the time to the next output or checkpoint
+  bool end_at_max_time;      // End the simulation at exactly this time.
+  
 private:
   SimulationTime(const SimulationTime&);
   SimulationTime& operator=(const SimulationTime&);
