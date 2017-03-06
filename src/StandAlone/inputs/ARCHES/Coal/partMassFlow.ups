@@ -1185,7 +1185,6 @@
         <model label="temperature_coal" type="coal_temperature">
           <const_size>true</const_size>
         </model>
-        <model label="clip_coal" type="coal_mass_clip"/>
         <model label="number_density" type="total_number_density"/>
         <model label="length" type="constant">
           <grid dependent_type="CC" independent_type="CC"/>

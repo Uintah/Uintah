@@ -1267,7 +1267,6 @@
                                                                         deposition_velocity,
                                                                         coal_temperature_nebo,
                                                                         coal_temperature,
-                                                                        coal_mass_clip,
                                                                         total_number_density,
                                                                         fowy_devolatilization,
                                                                         shaddix_oxidation,

@@ -29,7 +29,6 @@
 // Specific model headers:
 #include <CCA/Components/Arches/ParticleModels/BodyForce.h>
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
-#include <CCA/Components/Arches/ParticleModels/CoalMassClip.h>
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
 #include <CCA/Components/Arches/ParticleModels/Constant.h>
 #include <CCA/Components/Arches/ParticleModels/DepositionVelocity.h>
@@ -217,12 +216,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         _coal_models.push_back(task_name);
         _pre_update_particle_tasks.push_back(task_name);
 
-      } else if ( type == "coal_mass_clip" ) {
-
-        TaskInterface::TaskBuilder* tsk = scinew CoalMassClip::Builder(task_name, 0, N);
-        register_task( task_name, tsk );
-
-        _post_update_coal_tasks.push_back(task_name);
       } else if ( type == "rate_deposition" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew RateDeposition::Builder(task_name,0,N);
@@ -330,7 +323,7 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
       db_model->getAttribute("label",model_name );
       db_model->getAttribute("type", type );
 
-      print_task_setup_info( model_name, type ); 
+      print_task_setup_info( model_name, type );
       TaskInterface* tsk = retrieve_task(model_name);
 
       tsk->problemSetup( db_model );

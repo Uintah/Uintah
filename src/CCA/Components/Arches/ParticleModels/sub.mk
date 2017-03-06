@@ -27,7 +27,6 @@ endif
 # Normal source files:
 
 SRCS +=  \
-         $(SRCDIR)/CoalMassClip.cc         \
          $(SRCDIR)/DepositionVelocity.cc   \
          $(SRCDIR)/RateDeposition.cc       \
          $(SRCDIR)/BodyForce.cc            \
