@@ -26,6 +26,7 @@
 #define CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>

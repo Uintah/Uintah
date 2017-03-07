@@ -23,6 +23,8 @@
  */
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SendState.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>

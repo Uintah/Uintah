@@ -24,6 +24,8 @@
 
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
 
@@ -81,11 +83,11 @@ std::mutex g_lb_lock{};                // load balancer lock
 
 #ifdef HAVE_CUDA
 
-  DebugStream gpu_stats(              "GPUStats"     , false );
+  DebugStream gpu_stats(              "GPUStats"             , false );
   DebugStream simulate_multiple_gpus( "GPUSimulateMultiple"  , false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , false );
 
-  //TODO, should be deallocated
+  // TODO, should be deallocated
   std::map <unsigned int, std::queue<cudaStream_t*> > * UnifiedScheduler::s_idle_streams = new std::map <unsigned int, std::queue<cudaStream_t*> >;
 
   namespace {
@@ -446,7 +448,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   if (mp) {
     ProblemSpecP group = mp->findBlock("ICE");
     if (group) {
-      for (ProblemSpecP child = group->findBlock("material"); child != 0; child = child->findNextBlock("material")) {
+      for (ProblemSpecP child = group->findBlock("material"); child != nullptr; child = child->findNextBlock("material")) {
         ProblemSpecP EOS_ps = child->findBlock("EOS");
         if (!EOS_ps) {
           throw ProblemSetupException("ERROR ICE: Cannot find EOS tag", __FILE__, __LINE__);
@@ -4264,7 +4266,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
 
         // the load balancer is used to determine where data was in the old dw on the prev timestep -
         // pass it in if the particle data is on the old dw
-        LoadBalancerPort * lb = 0;
+        LoadBalancerPort * lb = nullptr;
 
         if (!m_reloc_new_pos_label && m_parent_scheduler) {
           posDW    = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
