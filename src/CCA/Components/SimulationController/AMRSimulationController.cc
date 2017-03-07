@@ -235,23 +235,24 @@ AMRSimulationController::run()
   AllocatorSetDefaultTagLineNumber( d_sharedState->getCurrentTopLevelTimeStep() );
 #endif
 
-  // Setup for PIDX
-  static bool need_to_recompile = false;
-  static bool put_back          = false;
-
 #ifdef HAVE_PIDX
-  static int  requested_nth_output_proc = -1;
+  // Setup for PIDX
+  static bool pidx_need_to_recompile = false;
+  static bool pidx_restore_nth_rank  = false;
+  static int  pidx_requested_nth_rank = -1;
+  
   if( d_output && d_output->savingAsPIDX() ) {
-    if( requested_nth_output_proc == -1 ) {
-      requested_nth_output_proc = d_lb->getNthRank();
+    if( pidx_requested_nth_rank == -1 ) {
+      pidx_requested_nth_rank = d_lb->getNthRank();
 
-      if( requested_nth_output_proc > 1 ) {
+      if( pidx_requested_nth_rank > 1 ) {
         proc0cout << "Input file requests output to be saved by every "
-                  << requested_nth_output_proc << "th processor.\n"
-                  << "  - However, setting output to every process "
-                  << "until we hit a checkpoint\n";
+                  << pidx_requested_nth_rank << "th processor.\n"
+                  << "  - However, setting output to every processor "
+                  << "until a checkpoint is reached." << std::endl;
         d_lb->setNthRank( 1 );
-        d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::regrid );
+        d_lb->possiblyDynamicallyReallocate( d_currentGridP,
+					     LoadBalancerPort::regrid );
         d_output->setSaveAsPIDX();
       }
     }
@@ -289,10 +290,20 @@ AMRSimulationController::run()
     }
 
 #ifdef HAVE_PIDX
-    bool checkpointing = false;
+    bool pidx_checkpointing = false;
+
     if( d_output && d_output->savingAsPIDX() ) {
 
       int currentTimeStep = d_sharedState->getCurrentTopLevelTimeStep();
+
+      // NOTE: When using Wall Clock Time for checkpoints, there is a
+      // sync issue. Here the current wall time may not be greater
+      // than the getNextCheckpointWalltime thus no
+      // checkpoint. Whereas in DataArchiver::beginOutputTimestep the
+      // actual checkpoint determination is made and the walltime may
+      // be greater than the getNextCheckpointWalltime and a
+      // checkpoint is saved. The result is that a checkpoint may not
+      // have the needed xml file.
 
       // When using Wall Clock Time for checkpoints, we need to have
       // rank 0 determine this time and then send it to all other
@@ -307,7 +318,8 @@ AMRSimulationController::run()
         }
         Uintah::MPI::Bcast( &currsecs, 1, MPI_INT, 0, d_myworld->getComm() );
       }
-  
+
+      // Checkpointing
       if( ( d_output->getCheckpointTimestepInterval() > 0 &&
             currentTimeStep == d_output->getNextCheckpointTimestep() ) ||
           ( d_output->getCheckpointInterval() > 0         &&
@@ -315,19 +327,22 @@ AMRSimulationController::run()
           ( d_output->getCheckpointWalltimeInterval() > 0 &&
             ( currsecs >= d_output->getNextCheckpointWalltime() ) ) ) {
 
-        checkpointing = true;
+        pidx_checkpointing = true;
 
-        if( requested_nth_output_proc > 1 ) {
+        if( pidx_requested_nth_rank > 1 ) {
           proc0cout << "This is a checkpoint timestep (" << currentTimeStep
                     << ") - need to recompile with nth proc set to: "
-                    << requested_nth_output_proc << "\n";
+                    << pidx_requested_nth_rank << std::endl;
 
-          d_lb->setNthRank( requested_nth_output_proc );
-          d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::regrid );
+          d_lb->setNthRank( pidx_requested_nth_rank );
+          d_lb->possiblyDynamicallyReallocate( d_currentGridP,
+					       LoadBalancerPort::regrid );
           d_output->setSaveAsUDA();
-          need_to_recompile = true;
+          pidx_need_to_recompile = true;
         }
       }
+
+      // Output
       if( ( d_output->getOutputTimestepInterval() > 0 &&
             currentTimeStep == d_output->getNextOutputTimestep() ) ||
           ( d_output->getOutputInterval() > 0         &&
@@ -335,7 +350,7 @@ AMRSimulationController::run()
 
         proc0cout << "This is an output timestep: " << currentTimeStep << "\n";
 
-        if( need_to_recompile ) { // If this is also a checkpoint time step
+        if( pidx_need_to_recompile ) { // If this is also a checkpoint time step
           proc0cout << "   Postposing as this is also a checkpoint time step...\n";
           d_output->postponeNextOutputTimestep();
         }
@@ -418,7 +433,11 @@ AMRSimulationController::run()
     double old_init_delt = d_timeinfo->max_initial_delt;
     double new_init_delt = 0.;
 
-    bool nr = (needRecompile() || need_to_recompile || put_back);
+    bool nr = needRecompile();
+
+#ifdef HAVE_PIDX
+    nr = (nr || pidx_need_to_recompile || pidx_restore_nth_rank);
+#endif	       
 
     if( nr || first ) {
 
@@ -429,23 +448,30 @@ AMRSimulationController::run()
         d_sharedState->setRecompileTaskGraph( false );
       }
 
-      if( put_back ) {
-        proc0cout << "This is the timestep following a checkpoint - "
-                  << "need to put the task graph back with a recompile - "
-                  << "setting nth output to 1\n";
-        d_lb->setNthRank( 1 );
-        d_lb->possiblyDynamicallyReallocate( d_currentGridP, LoadBalancerPort::regrid );
-        d_output->setSaveAsPIDX();
-        put_back = false;
+#ifdef HAVE_PIDX
+      if( pidx_requested_nth_rank > 1 ) {      
+	if( pidx_restore_nth_rank ) {
+	  proc0cout << "This is the timestep following a checkpoint - "
+		    << "need to put the task graph back with a recompile - "
+		    << "setting nth output to 1\n";
+	  d_lb->setNthRank( 1 );
+	  d_lb->possiblyDynamicallyReallocate( d_currentGridP,
+					       LoadBalancerPort::regrid );
+	  d_output->setSaveAsPIDX();
+	  pidx_restore_nth_rank = false;
+	}
+	
+	if( pidx_need_to_recompile ) {
+	  // Don't need to recompile on the next time step as it will
+	  // happen on this one.  However, the nth rank value will
+	  // need to be restored after this time step, so set
+	  // pidx_restore_nth_rank to true.
+	  pidx_need_to_recompile = false;
+	  pidx_restore_nth_rank = true;
+	}
       }
-
-      if( need_to_recompile ) {
-        // Don't need to recompile on the next time step (as we are about to do it on this one).
-        // However, we will need to put it back after this time step, so set put_back to true.
-        need_to_recompile = false;
-        put_back = true;
-      }
-
+#endif
+      
       new_init_delt = d_timeinfo->max_initial_delt;
        
       if( new_init_delt != old_init_delt ) {
@@ -544,20 +570,21 @@ AMRSimulationController::run()
 
     if( d_output ) {
 #ifdef HAVE_PIDX
-      if ( d_output->savingAsPIDX()) {
-        // Only save timestep.xml if we are checkpointing.  Normal
-        // time step dumps (using PIDX) do not need to write the xml
-        // information.
-        if( checkpointing ) {
-          d_output->writeto_xml_files( d_delt, d_currentGridP );
-        }
-      }
-      else
+      // For PIDX only save timestep.xml when checkpointing.  Normal
+      // time step dumps using PIDX do not need to write the xml
+      // information.
+
+      // Note: d_output->isCheckpointTimestep() should be used instead
+      // of pidx_checkpointing but because of the sync issue when
+      // doing checkpointing based on the wall time use
+      // pidx_checkpointing instead.
+      
+      if ( d_output->savingAsPIDX() && pidx_checkpointing )
 #endif    
       {
-        // If PIDX is not being used write timestep.xml for both
-        // checkpoints and time step dumps.
-        d_output->writeto_xml_files( d_delt, d_currentGridP );
+	// If PIDX is not being used write timestep.xml for both
+	// checkpoints and time step dumps.
+	d_output->writeto_xml_files( d_delt, d_currentGridP );
       }
 
       d_output->findNext_OutputCheckPoint_Timestep( d_delt, d_currentGridP );
