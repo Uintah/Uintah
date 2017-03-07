@@ -4156,7 +4156,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0)
             || (req->m_comm_condition == DetailedDep::SubsequentIterations
                 && iteration == 0)
-            || (notCopyDataVars_.count(req->m_req->m_var->getName()) > 0)) {
+            || (m_no_copy_data_vars.count(req->m_req->m_var->getName()) > 0)) {
           // See comment in DetailedDep about CommCondition
           if (gpu_stats.active()) {
             cerrLock.lock();
@@ -4219,7 +4219,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
         batch = batch->m_comp_next) {
       for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
         if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0) || (req->m_comm_condition == DetailedDep::SubsequentIterations && iteration == 0)
-            || (notCopyDataVars_.count(req->m_req->m_var->getName()) > 0)) {
+            || (m_no_copy_data_vars.count(req->m_req->m_var->getName()) > 0)) {
           // See comment in DetailedDep about CommCondition
           if (gpu_stats.active()) {
             cerrLock.lock();
