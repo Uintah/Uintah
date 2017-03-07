@@ -376,7 +376,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
     for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
 
      if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0) || (req->m_comm_condition == DetailedDep::SubsequentIterations
-         && iteration == 0) || (notCopyDataVars_.count(req->m_req->m_var->getName()) > 0)) {
+         && iteration == 0) || (m_no_copy_data_vars.count(req->m_req->m_var->getName()) > 0)) {
        // See comment in DetailedDep about CommCondition
        DOUT(g_dbg, "Rank-" << me << "   Ignoring conditional send for " << *req);
        continue;
@@ -570,7 +570,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
         if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0)        ||
             (req->m_comm_condition == DetailedDep::SubsequentIterations && iteration == 0) ||
-            (notCopyDataVars_.count(req->m_req->m_var->getName()) > 0)) {
+            (m_no_copy_data_vars.count(req->m_req->m_var->getName()) > 0)) {
 
           // See comment in DetailedDep about CommCondition
           DOUT(g_dbg, "Rank-" << d_myworld->myrank() << "   Ignoring conditional receive for " << *req);

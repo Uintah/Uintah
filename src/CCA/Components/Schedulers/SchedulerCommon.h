@@ -235,11 +235,11 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                          ,       bool          notCheckpoint = false
                                          );
 
-    const std::set<std::string>& getNoScrubVars() { return noScrubVars_;}
+    const std::set<std::string>& getNoScrubVars() { return m_no_scrub_vars;}
 
-    const std::set<std::string>& getCopyDataVars() { return copyDataVars_;}
+    const std::set<std::string>& getCopyDataVars() { return m_copy_data_vars;}
 
-    const std::set<std::string>& getNotCopyDataVars() { return notCopyDataVars_;}
+    const std::set<std::string>& getNotCopyDataVars() { return m_no_copy_data_vars;}
 
     virtual const std::set<std::string>& getNotCheckPointVars() const { return m_no_checkpoint_vars;}
 
@@ -315,14 +315,13 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::vector<Task::WhichDW> m_tracking_dws;
 
     // so we can manually copy vars between AMR levels
-    std::set<std::string> copyDataVars_;
+    std::set<std::string> m_copy_data_vars;
 
     // ignore copying these vars between AMR levels
-    std::set<std::string> notCopyDataVars_;
+    std::set<std::string> m_no_copy_data_vars;
 
-    // vars manually set not to scrub (normally when needed between a normal taskgraph
-    // and the regridding phase)
-    std::set<std::string> noScrubVars_;
+    // vars manually set not to scrub (normally when needed between a normal taskgraph and the regridding phase)
+    std::set<std::string> m_no_scrub_vars;
 
     // treat variable as an "old" var - will be checkpointed, copied, and only scrubbed from an OldDW
     std::set<std::string> m_treat_as_old_vars;
@@ -377,7 +376,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int m_max_level_offset{0};
 
-    // task-graph needs access to redcution task map, etc
+    // task-graph needs access to reduction task map, etc
     friend class TaskGraph;
 
   };

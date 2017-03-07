@@ -269,10 +269,6 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
 {
   m_shared_state = state;
 
-  // Initializing trackingStartTime_ and trackingEndTime_ to default values
-  // so that we do not crash when running MALLOC_STRICT.
-  m_tracking_start_time = 1.0;
-  m_tracking_end_time   = 0.0;
   m_tracking_vars_print_location = PRINT_AFTER_EXEC;
 
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
@@ -281,7 +277,8 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
 
     if (m_use_small_messages) {
       proc0cout << "   Using small, individual MPI messages (no message combining)\n";
-    } else {
+    }
+    else {
       proc0cout << "   Using large, combined MPI messages\n";
     }
 
@@ -319,7 +316,8 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
           m_tracking_vars_print_location |= PRINT_AFTER_EXEC;
           proc0cout << "--  Printing variable information after task execution.\n";
         }
-      } else {
+      }
+      else {
         // "locations" not specified
         proc0cout << "--  Defaulting to printing variable information after task execution.\n";
       }
@@ -333,17 +331,23 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
 
         if (dw == "OldDW") {
           m_tracking_dws.push_back(Task::OldDW);
-        } else if (dw == "NewDW") {
+        }
+        else if (dw == "NewDW") {
           m_tracking_dws.push_back(Task::NewDW);
-        } else if (dw == "CoarseNewDW") {
+        }
+        else if (dw == "CoarseNewDW") {
           m_tracking_dws.push_back(Task::CoarseNewDW);
-        } else if (dw == "CoarseOldDW") {
+        }
+        else if (dw == "CoarseOldDW") {
           m_tracking_dws.push_back(Task::CoarseOldDW);
-        } else if (dw == "ParentOldDW") {
+        }
+        else if (dw == "ParentOldDW") {
           m_tracking_dws.push_back(Task::ParentOldDW);
-        } else if (dw == "ParentOldDW") {
+        }
+        else if (dw == "ParentOldDW") {
           m_tracking_dws.push_back(Task::ParentNewDW);
-        } else {
+        }
+        else {
           // This error message most likely can go away once the .ups validation is put into place:
           printf("WARNING: Hit switch statement default... using NewDW... (This could possibly be"
                  "an error in input file specification.)\n");
@@ -366,7 +370,8 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
       if (d_myworld->myrank() == 0) {
         std::cout << "-----------------------------------------------------------\n\n";
       }
-    } else {  // Tracking not specified
+    }
+    else {  // Tracking not specified
       // This 'else' won't be necessary once the .ups files are validated... but for now.
       if (d_myworld->myrank() == 0) {
         std::cout << "<VarTracker> not specified in .ups file... no variable tracking will take place.\n";
@@ -374,15 +379,16 @@ SchedulerCommon::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP 
     }
   }
 
-  // If small_messages not specified in UP Scheduler block, still report what's used
+  // If small_messages not specified in UPS Scheduler block, still report what's used
   if (m_use_small_messages) {
     proc0cout << "   Using small, individual MPI messages (no message combining)\n";
-  } else {
+  }
+  else {
     proc0cout << "   Using large, combined MPI messages\n";
   }
 
-  noScrubVars_.insert("refineFlag");
-  noScrubVars_.insert("refinePatchFlag");
+  m_no_scrub_vars.insert("refineFlag");
+  m_no_scrub_vars.insert("refinePatchFlag");
 }
 
 //______________________________________________________________________
@@ -1229,14 +1235,14 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid, SimulationInterface 
         bool copyThisVar = dep->m_whichdw == Task::OldDW;
         // override to manually copy a var
         if (!copyThisVar) {
-          if (copyDataVars_.find(dep->m_var->getName()) != copyDataVars_.end()) {
+          if (m_copy_data_vars.find(dep->m_var->getName()) != m_copy_data_vars.end()) {
             copyThisVar = true;
           }
         }
 
         // Overide the logic above.  There are PerPatch variables that cannot/shouldn't be copied to the new grid,
         // for example PerPatch<FileInfo>.
-        if (notCopyDataVars_.count(dep->m_var->getName()) > 0) {
+        if (m_no_copy_data_vars.count(dep->m_var->getName()) > 0) {
           copyThisVar = false;
         }
 
@@ -1835,19 +1841,19 @@ SchedulerCommon::overrideVariableBehavior( const std::string & var
 
   // manually copy variable between AMR levels
   if (copyData) {
-    copyDataVars_.insert(var);
-    noScrubVars_.insert(var);
+    m_copy_data_vars.insert(var);
+    m_no_scrub_vars.insert(var);
   }
 
   // ignore copying this variable between AMR levels
   if (notCopyData) {
-    notCopyDataVars_.insert(var);
+    m_no_copy_data_vars.insert(var);
   }
 
   // set variable not to scrub (normally when needed between a normal taskgraph
   // and the regridding phase)
   if (noScrub) {
-    noScrubVars_.insert(var);
+    m_no_scrub_vars.insert(var);
   }
 
   // do not checkpoint this variable.

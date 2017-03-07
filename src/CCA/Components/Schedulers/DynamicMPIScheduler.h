@@ -80,7 +80,7 @@ class DynamicMPIScheduler : public MPIScheduler {
     DynamicMPIScheduler( DynamicMPIScheduler && )                 = delete;
     DynamicMPIScheduler& operator=( DynamicMPIScheduler && )      = delete;
 
-    QueueAlg m_task_queue_alg;
+    QueueAlg m_task_queue_alg { MostMessages };
 };
 
 } // End namespace Uintah
