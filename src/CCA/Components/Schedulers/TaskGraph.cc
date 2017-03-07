@@ -43,16 +43,9 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#include <sci_defs/config_defs.h>
-
-#include <cstring>
-#include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
-#include <sstream>
-
-#include <unistd.h>
 
 using namespace Uintah;
 
@@ -788,14 +781,12 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
 
   m_load_balancer->assignResources(*m_detailed_tasks);
 
-  // use this, even on a single processor, if for nothing else than to get scrub counts
-  bool doDetailed = Parallel::usingMPI() || useInternalDeps || grid->numLevels() > 1;
-  if (doDetailed) {
-    createDetailedDependencies();
-    if (m_detailed_tasks->getExtraCommunication() > 0 && m_proc_group->myrank() == 0) {
-      std::cout << m_proc_group->myrank() << "  Warning: Extra communication.  This taskgraph on this rank overcommunicates about "
-           << m_detailed_tasks->getExtraCommunication() << " cells\n";
-    }
+  // goes through all detailed tasks and create inter-process dependencies (automated MPI messages)
+  createDetailedDependencies();
+
+  if (m_detailed_tasks->getExtraCommunication() > 0 && m_proc_group->myrank() == 0) {
+    std::cout << m_proc_group->myrank() << "  Warning: Extra communication.  This taskgraph on this rank overcommunicates about "
+              << m_detailed_tasks->getExtraCommunication() << " cells\n";
   }
 
   if (m_proc_group->size() > 1) {
@@ -805,13 +796,8 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
   m_detailed_tasks->computeLocalTasks(m_proc_group->myrank());
   m_detailed_tasks->makeDWKeyDatabase();
 
-  if (!doDetailed) {
-    // the createDetailedDependencies will take care of scrub counts, otherwise do it here.
-    m_detailed_tasks->createScrubCounts();
-  }
-
   return m_detailed_tasks;
-} // end TaskGraph::createDetailedTasks
+}
 
 //______________________________________________________________________
 //
@@ -925,9 +911,8 @@ TaskGraph::remembercomps( DetailedTask     * task
 void
 TaskGraph::remapTaskDWs( int dwmap[] )
 {
-  // the point of this function is for using the multiple taskgraphs.
-  // When you execute a taskgraph a subsequent time, you must rearrange the DWs
-  // to point to the next point-in-time's DWs.  
+  // The point of this function is for using the multiple taskgraphs. When you execute a taskgraph
+  // a subsequent time, you must rearrange the DWs to point to the next point-in-time's DWs.
   int levelmin = 999;
   for (unsigned i = 0; i < m_tasks.size(); i++) {
     m_tasks[i]->setMapping(dwmap);
@@ -989,25 +974,26 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
 {
   int me = m_proc_group->myrank();
 
-  for( ; req != nullptr; req = req->m_next) {
+  for (; req != nullptr; req = req->m_next) {
     
+    // TODO figure if we need this, otherwise delete it - APH 03/06/17
     //if(req->var->typeDescription()->isReductionVariable())
     //  continue;
 
-    if(m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse()+1)) {
+    if (m_scheduler->isOldDW(req->mapDataWarehouse()) && !m_scheduler->isNewDW(req->mapDataWarehouse() + 1)) {
       continue;
     }
-    
-    if(detaileddbg.active()) {
+
+    if (detaileddbg.active()) {
       detaileddbg << m_proc_group->myrank() << "  req: " << *req << "\n";
     }
 
-    constHandle<PatchSubset> patches = req->getPatchesUnderDomain( task->d_patches );
-    if( req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW( req->mapDataWarehouse() ) ) {
+    constHandle<PatchSubset> patches = req->getPatchesUnderDomain(task->d_patches);
+    if (req->m_var->typeDescription()->isReductionVariable() && m_scheduler->isNewDW(req->mapDataWarehouse())) {
       // make sure newdw reduction variable requires link up to the reduction tasks.
       patches = nullptr;
     }
-    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain( task->d_matls );
+    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(task->d_matls);
 
     bool uses_SHRT_MAX = (req->m_num_ghost_cells == SHRT_MAX);
 
@@ -1020,7 +1006,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
     if (req->m_patches_dom == Task::CoarseLevel || req->m_patches_dom == Task::FineLevel) {
       // the requires should have been done with Task::CoarseLevel or FineLevel, with null patches
       // and the task->patches should be size one (so we don't have to worry about overlapping regions)
-      origPatch = task->d_patches->get( 0 );
+      origPatch = task->d_patches->get(0);
 
       ASSERT(req->m_patches == nullptr);
       ASSERT(task->d_patches->size() == 1);
@@ -1049,12 +1035,14 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         otherLevelHigh = origLevel->mapCellToCoarser(otherLevelHigh, req->m_level_offset) + ratio - IntVector(1, 1, 1);
       }
       else {
-        if (uses_SHRT_MAX) {  
+        if (uses_SHRT_MAX) {
           //Finer patches probably shouldn't be using SHRT_MAX ghost cells, but just in case they do, at least compute the low and high correctly...
           origPatch->getLevel()->computeVariableExtents(req->m_var->typeDescription()->getType(), otherLevelLow, otherLevelHigh);
-        } else {
-          origPatch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(), req->m_var->getBoundaryLayer(), req->m_gtype,
-                                          req->m_num_ghost_cells, otherLevelLow, otherLevelHigh);
+        }
+        else {
+          origPatch->computeVariableExtentsWithBoundaryCheck(req->m_var->typeDescription()->getType(),
+                                                             req->m_var->getBoundaryLayer(), req->m_gtype, req->m_num_ghost_cells,
+                                                             otherLevelLow, otherLevelHigh);
         }
         otherLevelLow = origLevel->mapCellToFiner(otherLevelLow);
         otherLevelHigh = origLevel->mapCellToFiner(otherLevelHigh);

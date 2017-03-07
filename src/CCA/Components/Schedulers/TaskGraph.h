@@ -244,8 +244,8 @@ class TaskGraph {
       return m_type;
     }
 
-    /// This will go through the detailed tasks and create the
-    /// dependencies need to communicate data across separate
+    /// This will go through the detailed tasks and creates the
+    /// dependencies needed to communicate data across separate
     /// processors.  Calls the private createDetailedDependencies
     /// for each task as a helper.
     void createDetailedDependencies();
