@@ -446,7 +446,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   if (mp) {
     ProblemSpecP group = mp->findBlock("ICE");
     if (group) {
-      for (ProblemSpecP child = group->findBlock("material"); child != 0; child = child->findNextBlock("material")) {
+      for (ProblemSpecP child = group->findBlock("material"); child != nullptr; child = child->findNextBlock("material")) {
         ProblemSpecP EOS_ps = child->findBlock("EOS");
         if (!EOS_ps) {
           throw ProblemSetupException("ERROR ICE: Cannot find EOS tag", __FILE__, __LINE__);
