@@ -359,6 +359,8 @@ void UCNH::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
+  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matlset, gnone);
+
   // Plasticity
   if(d_usePlasticity) {
   
@@ -604,6 +606,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> velGrad;
     constParticleVariable<Matrix3> pDefGrad, bElBar;
     constParticleVariable<Matrix3> pDefGrad_new;
+    constParticleVariable<int>     pLocalizedOld;
     // New data containers
     ParticleVariable<double>       pPlasticStrain, pYieldStress;
 
@@ -634,6 +637,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(bElBar,              bElBarLabel,                  pset);
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pLocalizedOld,       d_lb->pLocalizedMPMLabel,     pset);
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
     new_dw->get(pVolume_new,         lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(pDefGrad_new,lb->pDeformationMeasureLabel_preReloc,pset);
@@ -727,19 +731,15 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;
 
-
       //__________________________________
       // Compute the strain energy for non-localized particles
-      U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-      W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
-      double e = (U + W)*pVolume_new[idx]/J;
-      se += e;
-/*`==========TESTING==========*/
-// fix me Todd
-//      if(d_useDamage && !(pLocalized_new[idx] == 0)){
-//        se -= e;
-//      } 
-/*===========TESTING==========`*/
+      // Note this calculation is lagging by a timestep.
+      if(pLocalizedOld[idx] == 0){
+        U = .5*bulk*(.5*(J*J - 1.0) - log(J));
+        W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
+        double e = (U + W)*pVolume_new[idx]/J;
+        se += e;
+      }
 
       // Compute the local sound speed (uniaxial strain, p-wave modulus)
       c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
