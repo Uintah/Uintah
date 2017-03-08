@@ -25,7 +25,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #include <CCA/Components/Schedulers/GPUMemoryPool.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUStencil7.h>

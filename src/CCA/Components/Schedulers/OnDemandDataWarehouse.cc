@@ -453,6 +453,7 @@ OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
 int
 OnDemandDataWarehouse::getNumDevices() {
   int numDevices = 0;
+  cudaError_t retVal;
 
   if (Uintah::Parallel::usingDevice()) {
     if (simulate_multiple_gpus.active()) {

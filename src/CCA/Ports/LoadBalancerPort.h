@@ -43,11 +43,11 @@ namespace Uintah {
 
   class Patch;
   class ProcessorGroup;
-  class DetailedTask;
   class DetailedTasks;
   class Scheduler;
   class VarLabel;
   class DataArchive;
+  class DetailedTask;
 
   using SizeList = std::vector<IntVector>;
 

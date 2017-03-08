@@ -25,7 +25,6 @@
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Ports/Scheduler.h>
 

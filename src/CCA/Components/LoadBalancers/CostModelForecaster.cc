@@ -24,50 +24,50 @@
 
 #include <CCA/Components/LoadBalancers/CostModelForecaster.h>
 #include <CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/Mat.h>
 
+using namespace std;
 using namespace Uintah;
    
 namespace Uintah
 {
 static DebugStream stats("ProfileStats", false);
 static DebugStream stats2("ProfileStats2", false);
-
-void CostModelForecaster::addContribution( DetailedTask * dtask, double cost )
+void
+CostModelForecaster::addContribution( DetailedTask *task, double cost )
 {
-  const PatchSubset *patches = dtask->getPatches();
-
-  if (patches == nullptr) {
+  const PatchSubset *patches=task->getPatches();
+  
+  if( patches == 0 ) {
     return;
   }
-
-  //compute cost per cell so the measured time can be distributed proportionally by cells
-  int num_cells = 0;
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    num_cells += patch->getNumExtraCells();
+ 
+  //compute cost per cell so the measured time can be distributed poportionally by cells
+  int num_cells=0;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch=patches->get(p);
+    num_cells+=patch->getNumExtraCells();
   }
-  double cost_per_cell = cost / num_cells;
+  double cost_per_cell=cost/num_cells;
 
   //loop through patches
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch=patches->get(p);
 
-    d_execTimes[patch->getID()] += patch->getNumExtraCells() * cost_per_cell;
+    d_execTimes[patch->getID()] +=patch->getNumExtraCells()*cost_per_cell;
   }
 }
-
 //______________________________________________________________________
 //
 void CostModelForecaster::outputError(const GridP grid) 
 {
   static int iter=0;
   iter++;
-  std::vector<std::vector<int> > num_particles;
-  std::vector<std::vector<double> > costs;
+  vector<vector<int> > num_particles;
+  vector<vector<double> > costs;
   
   d_lb->collectParticles(grid.get_rep(),num_particles);
   getWeights(grid.get_rep(), num_particles,costs);
@@ -96,34 +96,34 @@ void CostModelForecaster::outputError(const GridP grid)
       
       double error = (d_execTimes[patch->getID()] - costs[l][p])/(d_execTimes[patch->getID()] + costs[l][p]);
 
-//      std::cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << d_execTimes[patch->getID()]
-//           << " cost: " << costs[l][p] << " error: " << error << std::endl;
+//      cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << d_execTimes[patch->getID()] 
+//           << " cost: " << costs[l][p] << " error: " << error << endl;
      
       IntVector low(patch->getCellLowIndex());
       IntVector high(patch->getCellHighIndex());
       
       if(stats2.active()){
-        std::cout << "PROFILESTATS: " << iter << " " << fabs(error) << " " << l << " "
-            << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << std::endl;
+        cout << "PROFILESTATS: " << iter << " " << fabs(error) << " " << l << " " 
+            << low[0] << " " << low[1] << " " << low[2] << " " << high[0] << " " << high[1] << " " << high[2] << endl;
       }
 
-      if (std::fabs(error) > max_error_local) {
-        max_error_local = std::fabs(error);
+      if(fabs(error)>max_error_local){
+        max_error_local=fabs(error);
       }
       
       sum_error_local += error;
-      sum_aerror_local+= std::fabs(error);
+      sum_aerror_local+= fabs(error);
      }
   }
   
-  double sum_error  = 0;
-  double sum_aerror = 0;
-  double max_error  = 0;
+  double sum_error=0;
+  double sum_aerror=0;
+  double max_error=0;
   
   if(d_myworld->size()>1){
-    Uintah::MPI::Reduce(&sum_error_local , &sum_error , 1, MPI_DOUBLE,MPI_SUM, 0, d_myworld->getComm());
-    Uintah::MPI::Reduce(&sum_aerror_local, &sum_aerror, 1, MPI_DOUBLE,MPI_SUM, 0, d_myworld->getComm());
-    Uintah::MPI::Reduce(&max_error_local , &max_error , 1, MPI_DOUBLE,MPI_MAX, 0, d_myworld->getComm());
+    Uintah::MPI::Reduce(&sum_error_local, &sum_error, 1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    Uintah::MPI::Reduce(&sum_aerror_local,&sum_aerror,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    Uintah::MPI::Reduce(&max_error_local, &max_error, 1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
   }
   else
   {
@@ -135,44 +135,43 @@ void CostModelForecaster::outputError(const GridP grid)
   if(d_myworld->myrank()==0 && stats.active()) {
     sum_error/=size;
     sum_aerror/=size;
-    std::cout << "sMPE: " << sum_error << " sMAPE: " << sum_aerror << " MAXsPE: " << max_error << std::endl;
+    cout << "sMPE: " << sum_error << " sMAPE: " << sum_aerror << " MAXsPE: " << max_error << endl;
   }
 }
 //______________________________________________________________________
 //
-void CostModelForecaster::collectPatchInfo(const GridP grid, std::vector<PatchInfo> &patch_info)
+void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &patch_info) 
 {
 
-  std::vector<std::vector<int> > num_particles;
+  vector<vector<int> > num_particles;
   d_lb->collectParticles(grid.get_rep(),num_particles);
 
-  std::vector<PatchInfo> patchList;
-  std::vector<int> num_patches(d_myworld->size(), 0);
+  vector<PatchInfo> patchList;
+  vector<int> num_patches(d_myworld->size(),0);
 
   int total_patches=0;
   
-  for (int l = 0; l < grid->numLevels(); l++) {
+  for(int l=0;l<grid->numLevels();l++) {
 
     const LevelP& level = grid->getLevel(l);
-    total_patches += level->numPatches();
-
-    for (int p = 0; p < level->numPatches(); p++) {
+    total_patches+=level->numPatches();
+    
+    for (int p=0;p<level->numPatches();p++) {
       const Patch *patch = level->getPatch(p);
       //compute number of patches on each processor
-      int owner = d_lb->getPatchwiseProcessorAssignment(patch);
+      int owner=d_lb->getPatchwiseProcessorAssignment(patch);
       num_patches[owner]++;
-
+      
       //if I own patch
-      if (owner == d_myworld->myrank()) {
+      if(owner==d_myworld->myrank()){
         // add to patch list
-        PatchInfo pinfo(num_particles[l][p], patch->getNumCells(), patch->getNumExtraCells() - patch->getNumCells(),
-                        d_execTimes[patch->getID()]);
+        PatchInfo pinfo(num_particles[l][p],patch->getNumCells(),patch->getNumExtraCells()-patch->getNumCells(),d_execTimes[patch->getID()]);
         patchList.push_back(pinfo);
       }
     }
   }
 
-  std::vector<int> displs(d_myworld->size(),0), recvs(d_myworld->size(),0);
+  vector<int> displs(d_myworld->size(),0), recvs(d_myworld->size(),0);
 
   //compute recvs and displs
   for(int i=0;i<d_myworld->size();i++){
@@ -185,30 +184,31 @@ void CostModelForecaster::collectPatchInfo(const GridP grid, std::vector<PatchIn
   
   patch_info.resize(total_patches);
   
-  // allgather the patch info
-  if (d_myworld->size() > 1) {
-    Uintah::MPI::Allgatherv(&patchList[0], patchList.size() * sizeof(PatchInfo), MPI_BYTE, &patch_info[0], &recvs[0], &displs[0],
-                            MPI_BYTE, d_myworld->getComm());
+  //allgather the patch info
+  if(d_myworld->size()>1){
+    Uintah::MPI::Allgatherv(&patchList[0], patchList.size()*sizeof(PatchInfo),  MPI_BYTE,
+                    &patch_info[0], &recvs[0], &displs[0], MPI_BYTE,
+                    d_myworld->getComm());
   }
-  else {
-    patch_info = patchList;
+  else
+  {
+    patch_info=patchList;
   }
 
 }
-
 //______________________________________________________________________
 //
 //computes the least squares approximation to x given the NxM matrix A and the Nx1 vector b.
-void min_norm_least_sq(std::vector<std::vector<double> > &A, std::vector<double> &b, std::vector<double> &x)
+void min_norm_least_sq(vector<vector<double> > &A, vector<double> &b, vector<double> &x)
 {
   int rows = A.size();
   int cols = A[0].size();
 
   //compute A^T*A
-  static std::vector<std::vector<double> > ATA;
-  static std::vector<double> ATb;
+  static vector<vector<double> > ATA;
+  static vector<double> ATb;
   //storing L in the bottom of the symmetric matrix ATA
-  static std::vector<std::vector<double> > &L=ATA;
+  static vector<vector<double> > &L=ATA;
 
   //resize ATA to a MxM matrix 
   ATA.resize(cols);
@@ -236,94 +236,102 @@ void min_norm_least_sq(std::vector<std::vector<double> > &A, std::vector<double>
   }
 
 #if 0
-  if (Parallel::getMPIRank() == 0) {
-    for (int i = 0; i < cols; i++) {
-      std::cout << "ATA " << i << ": ";
-      for (int j = 0; j < cols; j++) {
-        std::cout << ATA[i][j] << " ";
+  if(Parallel::getMPIRank()==0)
+  {
+    for (int i=0;i<cols;i++)
+    {
+      cout << "ATA " << i << ": ";
+      for (int j=0;j<cols;j++)
+      {
+        cout << ATA[i][j] << " ";
       }
-      std::cout << std::endl;
+      cout << endl;
     }
   }
 #endif
 
   //compute ATb
-  for (int r = 0; r < rows; r++) {
-    for (int j = 0; j < cols; j++) {
-      ATb[j] += A[r][j] * b[r];
+  for (int r=0; r<rows; r++){
+    for (int j=0; j<cols; j++){
+      ATb[j] += A[r][j]*b[r];
     }
   }
 
 #if 0
-  if (Parallel::getMPIRank() == 0) {
-    std::cout << " ATB: ";
-    for (int j = 0; j < cols; j++)
-      std::cout << ATb[j] << " ";
-    std::cout << std::endl;
+  if(Parallel::getMPIRank()==0)
+  {
+    cout << " ATB: "; 
+    for(int j=0;j<cols; j++)
+      cout << ATb[j] << " ";
+    cout << endl;
   }
 #endif
 
   //__________________________________
-  // solve ATA*x=ATb for x using cholesky's algorithm
-  // to decompose ATA into L*LT
+  //solve ATA*x=ATb for x using cholesky's algorithm 
+  //to decompose ATA into L*LT
 
-  // LLT decomposition
-  for (int k = 0; k < cols; k++) {
-    double sum = 0;
-    for (int s = 0; s < k; s++) {  //Dot Product
-      sum += (L[k][s] * L[k][s]);
+  //LLT decomposition
+  for(int k=0;k<cols;k++)
+  {
+    double sum=0;
+    for(int s=0;s<k;s++){  //Dot Product
+      sum+=(L[k][s]*L[k][s]); 
     }
 
-    L[k][k] = sqrt(ATA[k][k] - sum);
+    L[k][k]=sqrt(ATA[k][k]-sum);
 
-    for (int i = k + 1; i < cols; i++) {
-      sum = 0;
-
-      for (int s = 0; s < k; s++) {
-        sum += (L[i][s] * L[k][s]);  //Dot Product
+    for(int i=k+1;i<cols;i++){
+      sum=0;
+      
+      for(int s=0;s<k;s++){
+        sum+=(L[i][s]*L[k][s]); //Dot Product
       }
 
-      L[i][k] = ((ATA[i][k] - sum) / L[k][k]);
+      L[i][k]=((ATA[i][k]-sum)/L[k][k]);
     }
   }
 
 #if 0
-  for (int i = 0; i < cols; i++) {
-    std::cout << "L " << i << ": ";
-    for (int j = 0; j <= i; j++) {
-      std::cout << L[i][j] << " ";
+  for (int i=0;i<cols;i++)
+  {
+    cout << "L " << i << ": ";
+    for (int j=0;j<=i;j++)
+    {
+      cout << L[i][j] << " ";
     }
-    std::cout << std::endl;
+    cout << endl;
   }
 #endif
 
-  // Solve using FSA then BSA algorithm
+  //Solve using FSA then BSA algorithm 
 
-  static std::vector<double> y;
+  static vector<double> y;
   y.resize(cols);
   
   //__________________________________
-  // Forward Substitution algorithm
-  for (int i = 0; i < cols; i++) {
-    double sum = 0;
+  //Forward Substitution algorithm
+  for(int i=0;i<cols;i++){
+    double sum=0;
 
-    for (int j = 0; j < i; j++) {
-      sum += (L[i][j] * y[j]);
+    for(int j=0;j<i;j++){
+      sum+=(L[i][j]*y[j]);
     }
-
-    y[i] = (ATb[i] - sum) / L[i][i];
+    
+    y[i]=(ATb[i]-sum)/L[i][i];
   }
 
   //__________________________________
-  // Backwards Substitution algorithm
-  for (int i = cols - 1; i >= 0; i--) {
-    double sum = 0;
+  //Backwards Substitution algorithm
+  for(int i=cols-1;i>=0;i--)
+  {
+    double sum=0;
 
-    for (int j = i + 1; j < cols; j++) {
-      sum += (L[j][i] * x[j]);
+    for(int j=i+1;j<cols;j++){
+      sum+=(L[j][i]*x[j]);
     }
 
-    x[i] = (y[i] - sum) / L[i][i];
+    x[i]=(y[i]-sum)/L[i][i];
   }
 }
 
@@ -338,15 +346,15 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
 
 #else //serial
   //collect the patch information needed to compute the coefficients
-  std::vector<PatchInfo> patch_info;
+  vector<PatchInfo> patch_info;
   collectPatchInfo(currentGrid,patch_info);
 
 #if 0
-  if (stats.active() && d_myworld->myrank() == 0) {
-    static int j = 0;
-
-    for (size_t i = 0; i < patch_info.size(); i++) {
-      stats << j << " " << patch_info[i] << std::endl;
+  if(stats.active() && d_myworld->myrank()==0){
+    static int j=0;
+    
+    for(size_t i=0;i<patch_info.size();i++){
+      stats << j << " " << patch_info[i] << endl;
     }
     j++;
   }
@@ -358,33 +366,33 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
 
   //__________________________________
   //  Forming linear system, Eq. 5.3
-  std::vector<int> fields;
-  for (int i = 0; i < 3; i++) {
-
+  vector<int> fields;
+  for(int i=0;i<3;i++){
+  
     //__________________________________
     //If a column would make the matrix singular remove it.
     //this occurs if all patches have the same number of cells
     //or all patches have the same number of particles, etc.
-
-    if (d_x[i] != 0) {  //if it has been previously detected as singualr then assume it will always be singular...
-      int first_val = patch_info[0][i];
+    
+    if( d_x[i]!=0) {  //if it has been previously detected as singualr then assume it will always be singular...
+      int first_val=patch_info[0][i];
       size_t j;
-
-      for (j = 0; j < patch_info.size(); j++) {
-
-        if (patch_info[j][i] != first_val) {
-
-//          std::cout << "patch_info[" << j << "][" << i <<"]:" << patch_info[j][i] << " first_val: " << first_val << std::endl;
+      
+      for(j=0;j<patch_info.size();j++){
+      
+        if(patch_info[j][i] != first_val){
+        
+          //cout << "patch_info[" << j << "][" << i <<"]:" << patch_info[j][i] << " first_val: " << first_val << endl;
           //add this field
           fields.push_back(i);
           break;
         }
       }
-
-      // singular on this field, set its coefficent to 0
-      if (j == patch_info.size()) {
-        proc0cout << "Removing profiling field (i=" << i << ") '" << PatchInfo::type(i) << "' because it is singular\n";
-        d_x[i] = 0;
+      
+      //singular on this field, set its coefficent to 0
+      if(j == patch_info.size()){  
+        proc0cout << "Removing profiling field (i=" << i <<") '" << PatchInfo::type(i) << "' because it is singular\n";
+        d_x[i]=0;
       }
     }
   }
@@ -395,9 +403,9 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
 
   int cols=fields.size();
 
-  static std::vector<std::vector<double> > A;
-  static std::vector<double> b;
-  static std::vector<double> x;
+  static vector<vector<double> > A;
+  static vector<double> b;
+  static vector<double> x;
 
   //resize vectors & matrix
   b.resize(rows);
@@ -420,12 +428,12 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   min_norm_least_sq(A,b,x);
   
 #if 0
-  if (d_myworld->myrank() == 0) {
-    std::cout << " Coefficients: ";
-    for (int i = 0; i < cols; i++) {
-      std::cout << "x[" << i << "]: " << x[i] << "\n";
+  if(d_myworld->myrank()==0){
+    cout << " Coefficients: ";
+    for(int i=0;i<cols;i++){
+      cout << "x["<<i<<"]: "<< x[i]<< "\n";
     }
-    std::cout << std::endl;
+    cout << endl;
   }
 #endif
 
@@ -435,7 +443,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   iter++;
   
   // Eq. 5.5 in Dissertation
-  double alpha=2.0/(std::min(iter,d_timestepWindow)+1);
+  double alpha=2.0/(min(iter,d_timestepWindow)+1);
   
   // Eq. 5.4
   //update coefficients using fading memory filter
@@ -447,7 +455,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   setCosts(d_x[3], d_x[0], d_x[1], d_x[2]);
   
   if(d_myworld->myrank()==0 && stats.active()){
-    std::cout << "Update: patchCost: " << d_patchCost << " cellCost: " << d_cellCost << " d_extraCellCost: " << d_extraCellCost << " particleCost: " << d_particleCost << std::endl;
+    cout << "Update: patchCost: " << d_patchCost << " cellCost: " << d_cellCost << " d_extraCellCost: " << d_extraCellCost << " particleCost: " << d_particleCost << endl;
   }
   
   d_execTimes.clear();
@@ -456,15 +464,14 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
 //______________________________________________________________________
 //
 void
-CostModelForecaster::getWeights(const Grid* grid, std::vector<std::vector<int> > num_particles, std::vector<std::vector<double> >&costs)
+CostModelForecaster::getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs)
 {
   CostModeler::getWeights(grid,num_particles,costs);
 }
 
 //______________________________________________________________________
 // 
-std::ostream&
-operator<<(std::ostream& out, const CostModelForecaster::PatchInfo &pi)
+ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi)
 {
   out << "NumCells: " << pi.num_cells << " NumExtraCells: " << pi.num_extraCells << " NumParticles: " << pi.num_particles << " ExecTime: " << pi.execTime ;
   return out;

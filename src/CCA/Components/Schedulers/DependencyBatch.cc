@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/Schedulers/DependencyBatch.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <mutex>

@@ -42,14 +42,13 @@
 #include <CCA/Ports/Scheduler.h>
 
 namespace Uintah {
-
    /**************************************
      
      CLASS
        CostModelForecaster 
       
        Profiles the execution costs of regions and then uses the profiling
-       data to compute the coefficients of the cost model.
+       data to compute the coefficents of the cost model.  
        
      GENERAL INFORMATION
       
@@ -68,10 +67,12 @@ namespace Uintah {
       
      DESCRIPTION
        Profiles the execution costs of regions and then uses the profiling
-       data to compute the coefficients of the cost model.
+       data to compute the coefficents of the cost model.  
 
        The DLB uses the getWeights function to assign weights to regions which 
        can then be used to load balance the calculation.
+      
+     WARNING
       
      ****************************************/
 

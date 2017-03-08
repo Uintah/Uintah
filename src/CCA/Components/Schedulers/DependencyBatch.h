@@ -25,7 +25,7 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 #define CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 
-#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 
 #include <list>
 #include <map>

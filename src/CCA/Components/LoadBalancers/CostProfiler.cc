@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/LoadBalancers/CostProfiler.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 
 #include <Core/Util/DebugStream.h>
 
@@ -40,9 +40,9 @@ CostProfiler::setMinPatchSize( const vector<IntVector> & min_patch_size )
 //______________________________________________________________________
 //
 void
-CostProfiler::addContribution( DetailedTask * dtask, double cost )
+CostProfiler::addContribution( DetailedTask *task, double cost )
 {
-  if( dtask->getPatches() == 0 ) {
+  if( task->getPatches() == 0 ) {
     return;
   }
 #if 0  
@@ -54,7 +54,7 @@ CostProfiler::addContribution( DetailedTask * dtask, double cost )
       cout << d_myworld->myrank() << " error patch is owned by processor:" << d_lb->getPatchwiseProcessorAssignment(patch) << " for task:" << task->getName() << endl;
   }
 #endif
-  d_profiler.addContribution( dtask->getPatches(), cost );
+  d_profiler.addContribution( task->getPatches(), cost );
 }
 //______________________________________________________________________
 //

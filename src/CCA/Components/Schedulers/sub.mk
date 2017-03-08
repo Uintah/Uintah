@@ -32,7 +32,6 @@ SRCS += \
         $(SRCDIR)/DependencyBatch.cc          \
         $(SRCDIR)/DependencyException.cc      \
         $(SRCDIR)/DetailedDependency.cc       \
-        $(SRCDIR)/DetailedTask.cc             \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
         $(SRCDIR)/MemoryLog.cc                \
