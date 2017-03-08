@@ -76,7 +76,6 @@
         <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
         <artificial_viscosity> false </artificial_viscosity>
         <use_load_curves> false </use_load_curves>
-        <erosion algorithm = "ZeroStress"/>
         <DoPressureStabilization>true</DoPressureStabilization> 
     </MPM>
 
@@ -101,6 +100,8 @@
              <yield_stress> 3.0e7 </yield_stress>
              <hardening_modulus> 1.0e5 </hardening_modulus>
            </constitutive_model>
+           <erosion algorithm = "ZeroStress"/>
+           
            <damage_model type="Threshold">
               <failure_criteria>MaximumPrincipalStrain</failure_criteria>
               <failure_mean>    0.5 </failure_mean>
@@ -113,6 +114,8 @@
              <bulk_modulus>3.25e6</bulk_modulus>
              <useInitialStress> false </useInitialStress>
            </constitutive_model>
+           <erosion algorithm = "ZeroStress"/>
+           
            <constitutive_model type="Arenisca">
              <FSLOPE> 0.057735026919 </FSLOPE>
              <FSLOPE_p> 0.057735026919 </FSLOPE_p>
@@ -130,6 +133,7 @@
              <B0> 3.25e6 </B0>
              <G0> 1.3e6 </G0>
            </constitutive_model>
+           <erosion algorithm = "ZeroStress"/>
            -->
            <geom_object>
              <difference label = "soil">
@@ -177,6 +181,8 @@
              <useInitialStress> true </useInitialStress>
              <initial_pressure> 2.1e8 </initial_pressure> 
            </constitutive_model>
+           <erosion algorithm = "ZeroStress"/>
+           
            <geom_object>
              <cylinder label = "explosive">
                <bottom> [0.0, 0.035, -0.02] </bottom>

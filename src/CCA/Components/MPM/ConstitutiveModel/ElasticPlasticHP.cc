@@ -34,6 +34,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowStressModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
@@ -191,7 +192,6 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("compute_specific_heat",d_computeSpecificHeat);
   d_Cp = SpecificHeatModelFactory::create(ps);
   
-  setErosionAlgorithm();
   getInitialPorosityData(ps);
   getInitialDamageData(ps);
   //getSpecificHeatData(ps);
@@ -214,10 +214,6 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
   d_doMelting = cm->d_doMelting;
   d_checkStressTriax = cm->d_checkStressTriax;
-
-  d_setStressToZero = cm->d_setStressToZero;
-  d_allowNoTension = cm->d_allowNoTension;
-  d_allowNoShear = cm->d_allowNoShear;
 
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
@@ -443,23 +439,6 @@ ElasticPlasticHP::getSpecificHeatData(ProblemSpecP& ps)
   ps->get("Cp_constn", d_Cp.n);
 }
 */
-//______________________________________________________________________
-//
-void 
-ElasticPlasticHP::setErosionAlgorithm()
-{
-  d_setStressToZero = false;
-  d_allowNoTension  = false;
-  d_allowNoShear    = false;
-  if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm == "AllowNoTension") 
-      d_allowNoTension = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
-      d_allowNoShear = true;
-    else if (flag->d_erosionAlgorithm == "ZeroStress") 
-      d_setStressToZero = true;
-  }
-}
 //______________________________________________________________________
 //
 void 
@@ -1086,24 +1065,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
    
       // Calculate the total stress
       sigma = tensorS + tensorHy;
-
-      // If the particle has already failed, apply various erosion algorithms
-      if (flag->d_doErosion) {
-        if (pLocalized[idx]) {
-          if (d_allowNoTension) {
-            if (p > 0.0){
-              sigma = zero;
-            } else{
-              sigma = tensorHy;
-            }
-          }
-          if(d_allowNoShear){
-            sigma = tensorHy;
-          } else if (d_setStressToZero){
-            sigma = zero;
-          }
-        }
-      }
       
       //-----------------------------------------------------------------------
       // Stage 3:
@@ -1164,12 +1125,15 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Find if the particle has failed/localized
       bool isLocalized = false;
       double tepla = 0.0;
-
-      if (flag->d_doErosion) {
+      
+      bool doErosion = matl->getErosionModel()->d_doEorsion;
+      
+      if (doErosion) {
 
         // Check 1: Look at the temperature
-        if (melted) isLocalized = true;
-
+        if (melted){ 
+          isLocalized = true;
+        }
         // Check 2 and 3: Look at TEPLA and stability
         else if (plastic) {
 
@@ -1177,7 +1141,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           if (d_checkTeplaFailureCriterion) {
             tepla = (pPorosity_new[idx]*pPorosity_new[idx])/
                     (d_porosity.fc*d_porosity.fc);
-            if (tepla > 1.0) isLocalized = true;
+            if (tepla > 1.0){
+              isLocalized = true;
+            }
           } 
 
           // Check 3: Stability criterion (only if material is plastic)
@@ -1214,7 +1180,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
                                                      direction);
             }
           }
-        } 
+        }  // if plastic 
 
         // Check 4: Look at maximum stress
         if (d_checkStressTriax) {
@@ -1243,25 +1209,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
             pLocalized_new[idx] = 1;
             pDamage_new[idx]    = 0.0;
             pPorosity_new[idx]  = 0.0;
-
-            // Apply various erosion algorithms
-            if (d_allowNoTension){
-              if (p > 0.0){
-                sigma = zero;
-              }
-              else{
-                sigma = tensorHy;
-              }
-            }
-            else if (d_allowNoShear){
-              sigma = tensorHy;
-            }
-            else if (d_setStressToZero){
-              sigma = zero;
-            }
           }
-        }
-      }
+        } 
+      }  // if erosion
 
       //-----------------------------------------------------------------------
       // Stage 5:

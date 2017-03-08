@@ -61,7 +61,6 @@
     <do_contact_friction_heating>    false   </do_contact_friction_heating>
     <DoExplicitHeatConduction>       false   </DoExplicitHeatConduction>
     <axisymmetric> true </axisymmetric>
-    <erosion algorithm = "none"/>
 <!--
     <erosion algorithm = "AllowNoTension"/>
 -->
@@ -83,6 +82,8 @@
             <hardening_modulus>161.0e3</hardening_modulus>
             <alpha> 0.0 </alpha>
         </constitutive_model>
+        <!--<erosion algorithm = "AllowNoTension"/> -->
+        
         <thermal_conductivity>174.0</thermal_conductivity>
         <specific_heat>132.0</specific_heat>
         <geom_object>
@@ -149,6 +150,7 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <!--<erosion algorithm = "AllowNoTension"/> -->
 <!--
 -->
         <geom_object>

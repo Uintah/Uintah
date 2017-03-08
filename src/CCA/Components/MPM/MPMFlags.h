@@ -69,7 +69,6 @@ namespace Uintah {
     bool        d_useCBDI; // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI; // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones; // Flag for using cohesive zones
-    bool        d_doErosion; // Flag to decide whether to erode or not
     bool        d_deleteRogueParticles;// Flag to delete rogue particles
     bool        d_doThermalExpansion; // Decide whether to do thermExp or not
     bool        d_with_color;         // to turn on the color variable
@@ -80,9 +79,7 @@ namespace Uintah {
     bool        doMPMOnLevel(int level, int numLevels) const;
     bool        d_refineParticles;  // Refine particles, step toward AMR
     bool        d_XPIC2;            // Use Nairn's XPIC2 algorithm
-   
-    std::string d_erosionAlgorithm; // Algorithm to erode material points
- 
+
     double      d_artificialDampCoeff;
     double      d_artificialViscCoeff1; // Artificial viscosity coefficient 1
     double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2

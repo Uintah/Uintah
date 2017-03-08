@@ -35,7 +35,7 @@ NullDamage::NullDamage()
 //         
 NullDamage::NullDamage(ProblemSpecP& )
 {
-  Algorithm = DamageModel::none;
+  Algorithm = DamageAlgo::none;
 } 
          
 NullDamage::NullDamage(const NullDamage* )

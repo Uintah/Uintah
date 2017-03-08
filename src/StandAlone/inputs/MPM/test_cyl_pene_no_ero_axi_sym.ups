@@ -55,21 +55,17 @@
   </DataArchiver>
 
   <MPM>
-    <time_integrator>explicit</time_integrator>
-    <interpolator>gimp</interpolator>
-    <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
-    <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
-    <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
-    <artificial_viscosity>           true       </artificial_viscosity>
-    <use_load_curves>                false      </use_load_curves>
-    <DoExplicitHeatConduction>       false      </DoExplicitHeatConduction>
-    <ForceBC_force_increment_factor> 1.0        </ForceBC_force_increment_factor>
-    <do_contact_friction_heating> false </do_contact_friction_heating>
-    <erosion algorithm = "none"/>
-    <axisymmetric>true</axisymmetric>
-<!--
-    <erosion algorithm = "AllowNoTension"/>
--->
+    <time_integrator>                 explicit  </time_integrator>
+    <interpolator>                    gimp      </interpolator>
+    <minimum_particle_mass>           1.0e-8    </minimum_particle_mass>
+    <maximum_particle_velocity>       1.0e8     </maximum_particle_velocity>
+    <artificial_damping_coeff>        0.0       </artificial_damping_coeff>
+    <artificial_viscosity>            true      </artificial_viscosity>
+    <use_load_curves>                 false     </use_load_curves>
+    <DoExplicitHeatConduction>        false     </DoExplicitHeatConduction>
+    <ForceBC_force_increment_factor>  1.0       </ForceBC_force_increment_factor>
+    <do_contact_friction_heating>     false     </do_contact_friction_heating>
+    <axisymmetric>                    true      </axisymmetric>
   </MPM>
 
   <PhysicalConstants>
@@ -102,6 +98,7 @@
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
         
+        <!-- <erosion algorithm = "AllowNoTension"/> -->
         <include href="inputs/MPM/MaterialData/JohnsonCookDamageArmcoIron.xml"/>
           
         <geom_object>
@@ -137,6 +134,7 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <!-- <erosion algorithm = "AllowNoTension"/> -->
         <include href="inputs/MPM/MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
         
         <geom_object>
@@ -169,11 +167,11 @@
   <Grid>
     <Level>
       <Box label = "1">
-        <lower>[0.0,-4.0e-2,0.0]</lower>
-        <upper>[3.0e-2,4.0e-2,1.5e-3]</upper>
-        <resolution>[20,40,1]</resolution>
-        <patches>[2,2,1]</patches>
-        <extraCells>[1,1,1]</extraCells>
+        <lower>       [0.0,-4.0e-2,0.0]       </lower>
+        <upper>       [3.0e-2,4.0e-2,1.5e-3]  </upper>
+        <resolution>  [20,40,1]               </resolution>
+        <patches>     [2,2,1]                 </patches>
+        <extraCells>  [1,1,1]                 </extraCells>
       </Box>
     </Level>
     <BoundaryConditions>

@@ -123,7 +123,6 @@
     <manual_new_material>            false      </manual_new_material>
     <DoThermalExpansion>             false      </DoThermalExpansion>
     <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
-    <erosion algorithm = "ZeroStress"/>
   </MPM>
   <!--____________________________________________________________________-->
   <!--    A M R   G R I D                                                 -->
@@ -218,6 +217,8 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <erosion algorithm = "ZeroStress"/>
+            
         <geom_object>                                                
           <difference>                                              
             <cylinder label="outer steel cylinder 1">                    
@@ -265,6 +266,8 @@
           <useObjectiveRate>              false </useObjectiveRate>
           <useModifiedEOS>                true  </useModifiedEOS>
         </constitutive_model>
+        <erosion algorithm = "ZeroStress"/>
+        
         <geom_object>
           <difference>
             <cylinder label="inner steel cylinder 1"> </cylinder>

@@ -53,21 +53,21 @@ namespace Uintah {
                                           SimulationStateP& sharedState,
                                           MPMFlags* flags);
                                           
-    void scheduleUpdateStress_DamageModel(SchedulerP      & sched,
-                                        const PatchSet    * patches,
-                                        const MaterialSet * matls );
+    void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
+                                                  const PatchSet    * patches,
+                                                  const MaterialSet * matls );
    private:
     const ProcessorGroup* d_myworld     = nullptr;
     SimulationStateP      d_sharedState;
     MPMFlags*             d_flags       = nullptr;
     
    protected:
-    /*! update the stress field due to damage */
-    void updateStress_DamageModel(const ProcessorGroup  *,
-                                  const PatchSubset     * patches,
-                                  const MaterialSubset  * ,
-                                  DataWarehouse         * old_dw,
-                                  DataWarehouse         * new_dw );
+    /*! update the stress field due to damage & erosion*/
+    void updateStress_DamageErosionModels(const ProcessorGroup  *,
+                                          const PatchSubset     * patches,
+                                          const MaterialSubset  * ,
+                                          DataWarehouse         * old_dw,
+                                          DataWarehouse         * new_dw );
 
   };
 }

@@ -50,9 +50,15 @@ namespace Uintah {
 
   class DamageModel {
   public:
-    
-    enum DamageAlgo { brittle,threshold, hancock_mackenzie, johnson_cook, none };
-    DamageAlgo Algorithm = none;
+
+
+    enum struct DamageAlgo { brittle,
+                             threshold,
+                             hancock_mackenzie,
+                             johnson_cook,
+                             none };
+
+    DamageAlgo Algorithm = DamageAlgo::none;
 
     DamageModel();
     virtual ~DamageModel();
@@ -93,11 +99,11 @@ namespace Uintah {
     void initializeLabels(const Patch*       patch,
                           const MPMMaterial* matl,
                           DataWarehouse*     new_dw);
-                          
+
     virtual
     void computeSomething( ParticleSubset  * pset,
                            const int       & dwi,
-                           const Patch     * patch,     
+                           const Patch     * patch,
                            DataWarehouse   * old_dw,
                            DataWarehouse   * new_dw );
 

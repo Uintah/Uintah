@@ -35,7 +35,7 @@ static DebugStream dbg("DamageModel", false);
 
 BrittleDamage::BrittleDamage( ProblemSpecP& dam_ps)
 {
-  Algorithm = DamageModel::brittle;
+  Algorithm = DamageAlgo::brittle;
   std::cout << "BrittleDamage constructor" << std::endl;
   d_brittle_damage.r0b          = 57.0;     // Initial energy threshold
   d_brittle_damage.Gf           = 11.2;     // Fracture energy

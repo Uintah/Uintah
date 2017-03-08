@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/MPMCommon.h> 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 using namespace std;
@@ -132,32 +133,35 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
 }
 //______________________________________________________________________
 //
-void MPMCommon::scheduleUpdateStress_DamageModel(SchedulerP       & sched,
-                                                const PatchSet    * patches,
-                                                const MaterialSet * matls )
+void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP       & sched,
+                                                         const PatchSet    * patches,
+                                                         const MaterialSet * matls )
 {
-  printSchedule(patches,cout_doing,"MPMCommon::scheduleUpdateStress_DamageModel");
+  printSchedule(patches,cout_doing,"MPMCommon::scheduleUpdateStress_DamageErosionModels");
   
-  Task* t = scinew Task("MPM::updateStress_DamageModel", this, 
-                        &MPMCommon::updateStress_DamageModel);
+  Task* t = scinew Task("MPM::updateStress_DamageErosionModels", this, 
+                        &MPMCommon::updateStress_DamageErosionModels);
                         
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    DamageModel* dm       = mpm_matl->getDamageModel();
     
+    DamageModel* dm = mpm_matl->getDamageModel();
     dm->addComputesAndRequires(t, mpm_matl);
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addComputesAndRequires(t, mpm_matl);
   }
   
   sched->addTask(t, patches, matls);
 }
 //______________________________________________________________________
 //
-void MPMCommon::updateStress_DamageModel(const ProcessorGroup *,
-                                         const PatchSubset    * patches,
-                                         const MaterialSubset * ,
-                                         DataWarehouse        * old_dw,
-                                         DataWarehouse        * new_dw)
+void MPMCommon::updateStress_DamageErosionModels(const ProcessorGroup *,
+                                                 const PatchSubset    * patches,
+                                                 const MaterialSubset * ,
+                                                 DataWarehouse        * old_dw,
+                                                 DataWarehouse        * new_dw)
 {
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -173,7 +177,10 @@ void MPMCommon::updateStress_DamageModel(const ProcessorGroup *,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       
       DamageModel* dm = mpm_matl->getDamageModel();
-      dm->computeSomething(pset, dwi, patch, old_dw, new_dw); 
+      dm->computeSomething( pset, dwi, patch, old_dw, new_dw );
+      
+      ErosionModel* em = mpm_matl->getErosionModel();
+      em->updateStress_Erosion( pset, old_dw, new_dw );
     }
   }
 }

@@ -53,12 +53,11 @@ namespace Uintah {
       std::string scaling; /* Volume scaling method: "none" or "kayenta" */
       std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
       int seed;            /* seed for random number distribution generator */
-      double t_char;       /* characteristic time for damage to occur */
       
       void print(){
         std::cout << " mean:" << mean << " std: " << std << " exponent: " << exponent
                   << " refVol: " << refVol << " scaling: " << scaling << " dist: " << dist
-                  << " seed: " << seed << " t_char: " << t_char << std::endl;
+                  << " seed: " << seed << "/n";
       }
     };
 
@@ -71,22 +70,10 @@ namespace Uintah {
     double d_tensile_cutoff;           // Fraction of the cohesion at which
                                        // tensile failure occurs
 
-    enum erosionAlgo { ZeroStress,     // set stress tensor to zero
-                       AllowNoTension, // retain compressive mean stress after failue
-                       AllowNoShear,   // retain mean stress after failure - no deviatoric stress
-                       none };
-
-    erosionAlgo d_erosionAlgo = none;
-
     //__________________________________
     //  Labels
-    const VarLabel* pTimeOfLocLabel;
-    const VarLabel* pTimeOfLocLabel_preReloc;
-
     const VarLabel* pFailureStressOrStrainLabel;
     const VarLabel* pFailureStressOrStrainLabel_preReloc;
-
-    SimulationState* d_sharedState;
 
     // Prevent copying of this class copy constructor
     ThresholdDamage& operator=(const ThresholdDamage &cm);

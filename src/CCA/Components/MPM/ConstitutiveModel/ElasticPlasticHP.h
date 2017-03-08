@@ -155,10 +155,6 @@ namespace Uintah {
     bool   d_checkStressTriax;
 
     std::string  d_plasticConvergenceAlgo;
-    // Erosion algorithms
-    bool   d_setStressToZero;
-    bool   d_allowNoTension;
-    bool   d_allowNoShear;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
@@ -460,8 +456,6 @@ namespace Uintah {
     void getInitialPorosityData(ProblemSpecP& ps);
 
     void getInitialDamageData(ProblemSpecP& ps);
-
-    void setErosionAlgorithm();
 
     //void getSpecificHeatData(ProblemSpecP& ps);
     //double computeSpecificHeat(double T);

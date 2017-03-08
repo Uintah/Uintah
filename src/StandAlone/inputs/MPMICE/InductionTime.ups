@@ -126,7 +126,6 @@
       <create_new_particles>           false      </create_new_particles>
       <DoThermalExpansion>             false      </DoThermalExpansion>
       <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
-      <erosion algorithm = "ZeroStress"/>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -189,6 +188,7 @@
              <useObjectiveRate>              false </useObjectiveRate>
              <useModifiedEOS>              true </useModifiedEOS>
            </constitutive_model>
+           <erosion algorithm = "ZeroStress"/>
            
            <geom_object>
              <cylinder label = "0">

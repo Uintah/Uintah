@@ -36,6 +36,7 @@
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ImplicitCM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
@@ -390,11 +391,15 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
     
     DamageModel* dm = mpm_matl->getDamageModel();
     dm->addInitialComputesAndRequires(t, mpm_matl);
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires(t, mpm_matl);
   }
 
   if (flags->d_useLoadCurves) {
@@ -722,6 +727,8 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
       //initialize Damage model
       mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
       
+      mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
+      
       if(!flags->d_doGridReset){
         int indx = mpm_matl->getDWIndex();
         NCVariable<Vector> gDisplacement;
@@ -885,13 +892,13 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   scheduleIterate(                   sched,level,d_perproc_patches,matls);
 
   if(!flags->d_doGridReset){
-    scheduleUpdateTotalDisplacement(      sched, d_perproc_patches,matls);
+    scheduleUpdateTotalDisplacement(        sched, d_perproc_patches,matls);
   }
-  scheduleComputeStressTensorImplicit(    sched, d_perproc_patches,matls);
-  scheduleUpdateStress_DamageModel(       sched, d_perproc_patches,matls);
-  scheduleComputeAcceleration(            sched, d_perproc_patches,matls);
-  scheduleInterpolateToParticlesAndUpdate(sched, d_perproc_patches,matls);
-  scheduleInterpolateStressToGrid(        sched, d_perproc_patches,matls);
+  scheduleComputeStressTensorImplicit(      sched, d_perproc_patches,matls);
+  scheduleUpdateStress_DamageErosionModels( sched, d_perproc_patches,matls);
+  scheduleComputeAcceleration(              sched, d_perproc_patches,matls);
+  scheduleInterpolateToParticlesAndUpdate(  sched, d_perproc_patches,matls);
+  scheduleInterpolateStressToGrid(          sched, d_perproc_patches,matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
                                     d_sharedState->d_particleState_preReloc,

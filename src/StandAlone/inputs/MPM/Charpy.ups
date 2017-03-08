@@ -38,7 +38,6 @@
        <withColor>true</withColor>
        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
 	<artificial_viscosity> true </artificial_viscosity>
-	<erosion algorithm = "none"/>
     </MPM>
    <PhysicalConstants>
        <gravity>[0,0,0]</gravity>

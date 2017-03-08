@@ -43,7 +43,6 @@
     <MPM>
       <time_integrator>explicit</time_integrator>
       <interpolator> cpdi </interpolator>
-      <erosion algorithm="BrittleDamage"> </erosion>
       <artificial_damping_coeff> 5.0 </artificial_damping_coeff>
    </MPM>
 
@@ -59,7 +58,7 @@
                 <shear_modulus>3.52e9</shear_modulus>
                  <bulk_modulus>8.9e9</bulk_modulus>
                </constitutive_model>
-            <is_rigid> true </is_rigid>
+              <is_rigid> true </is_rigid>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>

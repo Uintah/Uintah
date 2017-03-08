@@ -22,8 +22,6 @@
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
-      <erosion                            spec="OPTIONAL NO_DATA"
-                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear, BrittleDamage'" />
       <delete_rogue_particles               spec="OPTIONAL BOOLEAN" />
       <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />  <!-- default is 0. -->
       <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
@@ -194,6 +192,10 @@
           <D4                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
           <D5                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
         </damage_model>
+
+
+        <erosion                         spec="OPTIONAL NO_DATA"
+                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear'" />
 
         <specific_heat                   spec="REQUIRED DOUBLE 'positive'" /> 
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />

@@ -16,11 +16,11 @@
    <SimulationComponent type="mpm" />
 
   <Time>
-    <maxTime>3.0e-5</maxTime>
-    <initTime>0.0</initTime>
-    <delt_min>1.0e-16</delt_min>
-    <delt_max>1.0e-6</delt_max>
-    <timestep_multiplier>0.2</timestep_multiplier>
+    <maxTime>              3.0e-5   </maxTime>
+    <initTime>             0.0      </initTime>
+    <delt_min>             1.0e-16  </delt_min>
+    <delt_max>             1.0e-6   </delt_max>
+    <timestep_multiplier>  0.2      </timestep_multiplier>
   </Time>
 
   <DataArchiver>
@@ -47,21 +47,16 @@
   </DataArchiver>
 
   <MPM>
-    <time_integrator>explicit</time_integrator>
-    <interpolator>linear</interpolator>
-    <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
-    <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
-    <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
-    <artificial_viscosity>           true       </artificial_viscosity>
-    <use_load_curves>                false      </use_load_curves>
-    <ForceBC_force_increment_factor> 1.0        </ForceBC_force_increment_factor>
-    <create_new_particles>           false      </create_new_particles>
-    <manual_new_material>            true       </manual_new_material>
-    <erosion algorithm = "AllowNoTension"/>
-<!--
-    <erosion algorithm = "none"/>
-    <erosion algorithm = "AllowNoTension"/>
--->
+     <time_integrator>                 explicit  </time_integrator>
+     <interpolator>                    linear    </interpolator>
+     <minimum_particle_mass>           1.0e-8    </minimum_particle_mass>
+     <maximum_particle_velocity>       1.0e8     </maximum_particle_velocity>
+     <artificial_damping_coeff>        0.0       </artificial_damping_coeff>
+     <artificial_viscosity>            true      </artificial_viscosity>
+     <use_load_curves>                 false     </use_load_curves>
+     <ForceBC_force_increment_factor>  1.0       </ForceBC_force_increment_factor>
+     <create_new_particles>            false     </create_new_particles>
+     <manual_new_material>             true      </manual_new_material>
   </MPM>
 
   <PhysicalConstants>
@@ -95,7 +90,7 @@
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
           <do_melting>                    true   </do_melting>
         </constitutive_model>
-        
+        <!-- <erosion algorithm = "AllowNoTension"/> -->
         <include href="inputs/MPM/MaterialData/JohnsonCookDamageArmcoIron.xml"/>
         
         <geom_object>
@@ -136,6 +131,7 @@
           <do_melting>                    true   </do_melting>
         </constitutive_model>
         
+        <!-- <erosion algorithm = "AllowNoTension"/> -->
         <include href="inputs/MPM/MaterialData/JohnsonCookDamageArmcoIron.xml"/>
         
         <geom_object>
@@ -173,6 +169,7 @@
           <do_melting>                    true   </do_melting>
         </constitutive_model>
         
+        <!-- <erosion algorithm = "AllowNoTension"/> -->
         <include href="inputs/MPM/MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
         
         <geom_object>
@@ -238,10 +235,10 @@
   <Grid>
     <Level>
       <Box label = "1">
-        <lower>[0.0,-6.0e-2,0.0]</lower>
-        <upper>[3.0e-2,4.0e-2,3.0e-2]</upper>
-        <resolution>[10,25,10]</resolution>
-        <patches>[2,2,2]</patches>
+        <lower>       [0.0,-6.0e-2,0.0]       </lower>
+        <upper>       [3.0e-2,4.0e-2,3.0e-2]  </upper>
+        <resolution>  [10,25,10]              </resolution>
+        <patches>     [2,2,2]                 </patches>
       </Box>
     </Level>
     <BoundaryConditions>

@@ -50,6 +50,7 @@ namespace Uintah {
  class GeometryObject;
  class ConstitutiveModel;
  class DamageModel;
+ class ErosionModel;
  class MPMLabel;
  class ParticleCreator;
  class ScalarDiffusionModel;
@@ -108,6 +109,8 @@ WARNING
    ConstitutiveModel* getConstitutiveModel() const;
    
    DamageModel* getDamageModel() const;
+   
+   ErosionModel* getErosionModel() const;
 
    ScalarDiffusionModel* getScalarDiffusionModel() const;
 
@@ -162,6 +165,7 @@ WARNING
    MPMLabel* d_lb;
    ConstitutiveModel*     d_cm;
    DamageModel*           d_damageModel;
+   ErosionModel*          d_erosionModel;
    ScalarDiffusionModel*  d_sdm;
    ParticleCreator*       d_particle_creator;
 

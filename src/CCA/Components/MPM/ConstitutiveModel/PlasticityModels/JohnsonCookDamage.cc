@@ -30,7 +30,7 @@ using namespace Uintah;
 
 JohnsonCookDamage::JohnsonCookDamage(ProblemSpecP& ps)
 {
-  Algorithm = DamageModel::johnson_cook;
+  Algorithm = DamageAlgo::johnson_cook;
   ps->require("D1",d_initialData.D1);
   ps->require("D2",d_initialData.D2);
   ps->require("D3",d_initialData.D3);

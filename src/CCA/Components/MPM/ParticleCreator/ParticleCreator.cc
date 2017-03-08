@@ -41,6 +41,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
@@ -984,6 +985,8 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
                                                  particle_state_preReloc);
                                                  
   matl->getDamageModel()->addParticleState( particle_state, particle_state_preReloc );
+  
+  matl->getErosionModel()->addParticleState( particle_state, particle_state_preReloc );
 }
 
 int

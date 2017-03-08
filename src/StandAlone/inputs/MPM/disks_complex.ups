@@ -49,7 +49,7 @@
        <artificial_viscosity_coeff2>3.0</artificial_viscosity_coeff2>
        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
        <UseGradientEnhancedVelocityProjection>true</UseGradientEnhancedVelocityProjection>
-       <erosion algorithm = "ZeroStress"/>
+       
    </MPM>
 
 <!--
@@ -82,6 +82,8 @@
                  <he_constant_2>40000.0</he_constant_2>
                  <he_PR>.49</he_PR>
                </constitutive_model>
+               <erosion algorithm = "ZeroStress"/>
+               
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
@@ -103,6 +105,8 @@
                  <shear_modulus>1.2e6</shear_modulus>
                  <bulk_modulus>3.2e6</bulk_modulus>
               </constitutive_model>
+              <erosion algorithm = "ZeroStress"/>
+              
               <damage_model type="Threshold">
                   <failure_mean> 2.0e5       </failure_mean>
                   <failure_std>  1.0e5       </failure_std>

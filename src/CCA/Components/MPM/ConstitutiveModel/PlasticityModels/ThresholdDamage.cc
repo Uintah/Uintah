@@ -38,7 +38,7 @@ ThresholdDamage::ThresholdDamage( ProblemSpecP& ps,
                                   MPMFlags* flag,
                                   SimulationState* sharedState)
 {
-  Algorithm = DamageModel::threshold;
+  Algorithm = DamageAlgo::threshold;
   printTask( dbg, "ThresholdDamage constructor" );
   
   d_epsf.mean   = 10.0;                 // Mean failure stress or strain
@@ -50,9 +50,6 @@ ThresholdDamage::ThresholdDamage( ProblemSpecP& ps,
   // By setting the default value to DBL_MAX, that makes 1/n=0, which makes c=1
   d_epsf.exponent= DBL_MAX;             // Exponent used in vol. scaling of failure criteria
   d_epsf.refVol = 1.0;                  // Reference volume for scaling failure criteria
-  d_epsf.t_char = 1.0e-99;              // Characteristic time of damage evolution
-
-  d_sharedState = sharedState;
 
   ps->require("failure_criteria", d_failure_criteria);
 
@@ -91,27 +88,12 @@ ThresholdDamage::ThresholdDamage( ProblemSpecP& ps,
     }
   }
   ps->get("failure_seed",    d_epsf.seed);        // Seed for RN generator
-  ps->get("char_time",       d_epsf.t_char);      // Characteristic time for damage
 
-  //__________________________________
-  //  Set erosion algorithm
-  d_erosionAlgo = none;
-  if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm == "AllowNoTension")
-      d_erosionAlgo  = AllowNoTension;
-    else if (flag->d_erosionAlgorithm == "ZeroStress")
-      d_erosionAlgo  = ZeroStress;
-    else if (flag->d_erosionAlgorithm == "AllowNoShear")
-      d_erosionAlgo  = AllowNoShear;
-  }
 
   //__________________________________
   //  Create labels
   const TypeDescription* P_dbl = ParticleVariable<double>::getTypeDescription();
-  
-  pTimeOfLocLabel             = VarLabel::create("p.timeofloc",   P_dbl );
-  pTimeOfLocLabel_preReloc    = VarLabel::create("p.timeofloc+",  P_dbl);
-  
+    
   pFailureStressOrStrainLabel = VarLabel::create("p.epsf",        P_dbl );
   pFailureStressOrStrainLabel_preReloc = VarLabel::create("p.epsf+",P_dbl );
 }
@@ -127,9 +109,6 @@ ThresholdDamage::~ThresholdDamage()
   printTask( dbg, "ThresholdDamage destructor" );
   VarLabel::destroy( pFailureStressOrStrainLabel );
   VarLabel::destroy( pFailureStressOrStrainLabel_preReloc );
-  
-  VarLabel::destroy( pTimeOfLocLabel );
-  VarLabel::destroy( pTimeOfLocLabel_preReloc );
 }
 //______________________________________________________________________
 //
@@ -148,7 +127,6 @@ void ThresholdDamage::outputProblemSpec(ProblemSpecP& ps)
   dam_ps->appendElement("scaling",          d_epsf.scaling);
   dam_ps->appendElement("exponent",         d_epsf.exponent);
   dam_ps->appendElement("reference_volume", d_epsf.refVol);
-  dam_ps->appendElement("char_time",        d_epsf.t_char);
 
   if(d_failure_criteria=="MohrColoumb"){
     dam_ps->appendElement("friction_angle", d_friction_angle);
@@ -192,13 +170,12 @@ ThresholdDamage::carryForward(const PatchSubset* patches,
                               DataWarehouse*     old_dw,
                               DataWarehouse*     new_dw)
 {
-  printTask( patches, dbg, "ThresholdDamage::outputProblemSpec" );
+  printTask( patches, dbg, "ThresholdDamage::carryForward" );
   const MaterialSubset* matls = matl->thisMaterial();
   bool replaceVar = true;
   new_dw->transferFrom( old_dw, pFailureStressOrStrainLabel,          patches, matls, replaceVar );
   new_dw->transferFrom( old_dw, pFailureStressOrStrainLabel_preReloc, patches, matls, replaceVar );
-  new_dw->transferFrom( old_dw, pTimeOfLocLabel,                      patches, matls, replaceVar );
-  new_dw->transferFrom( old_dw, pTimeOfLocLabel_preReloc,             patches, matls, replaceVar );
+
   new_dw->transferFrom( old_dw, d_lb->pLocalizedMPMLabel,             patches, matls, replaceVar );
   new_dw->transferFrom( old_dw, d_lb->pLocalizedMPMLabel_preReloc,    patches, matls, replaceVar );
 }
@@ -211,10 +188,7 @@ ThresholdDamage::addParticleState(std::vector<const VarLabel*>& from,
 {
   printTask( dbg, "ThresholdDamage::addParticleState" );
   from.push_back( pFailureStressOrStrainLabel );
-  from.push_back( pTimeOfLocLabel );
-
   to.push_back( pFailureStressOrStrainLabel_preReloc );
-  to.push_back( pTimeOfLocLabel_preReloc );
 }
 
 //______________________________________________________________________
@@ -230,7 +204,6 @@ ThresholdDamage::addInitialComputesAndRequires(Task* task,
   
   const MaterialSubset* matls = matl->thisMaterial();
   task->computes( pFailureStressOrStrainLabel, matls );
-  task->computes( pTimeOfLocLabel,             matls );
   
 //  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 //  task->computes(TotalLocalizedParticleLabel);
@@ -250,19 +223,12 @@ ThresholdDamage::initializeLabels(const Patch       * patch,
   
   ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
   ParticleVariable<double>      pFailureStrain;
-  ParticleVariable<double>      pTimeOfLoc;
   constParticleVariable<double> pVolume;
 
   new_dw->get(pVolume,                   d_lb->pVolumeLabel,          pset);
   new_dw->allocateAndPut(pFailureStrain, pFailureStressOrStrainLabel, pset);
-  new_dw->allocateAndPut(pTimeOfLoc,     pTimeOfLocLabel,             pset);
   
   ParticleSubset::iterator iter;
-
-  for(iter = pset->begin();iter != pset->end();iter++){
-    pTimeOfLoc[*iter] = -1.e99;
-  }
-
   //__________________________________
   //
   // Make the seed differ for each patch, otherwise each patch gets the
@@ -320,7 +286,6 @@ ThresholdDamage::addComputesAndRequires(Task* task,
 
 
   task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matls, gnone);
-  task->requires(Task::OldDW, pTimeOfLocLabel,                matls, gnone);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel,         matls, gnone);
   task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,                  
                                                               matls, gnone);
@@ -328,7 +293,6 @@ ThresholdDamage::addComputesAndRequires(Task* task,
   
   task->modifies(d_lb->pStressLabel_preReloc,          matls);       
   task->computes(pFailureStressOrStrainLabel_preReloc, matls);       
-  task->computes(pTimeOfLocLabel_preReloc,             matls);
   task->computes(d_lb->pLocalizedMPMLabel_preReloc,    matls);
 //  task->computes(TotalLocalizedParticleLabel);
 }
@@ -344,34 +308,27 @@ ThresholdDamage::computeSomething( ParticleSubset  * pset,
   printTask( patch, dbg, "    ThresholdDamage::computeSomething" );
   
   constParticleVariable<int>     pLocalized;
-  constParticleVariable<double>  pTimeOfLoc;
   constParticleVariable<double>  pFailureStrain;
   constParticleVariable<long64>  pParticleID;
   constParticleVariable<Matrix3> pDefGrad_new;
   
   ParticleVariable<Matrix3>      pStress;
   ParticleVariable<int>          pLocalized_new;
-  ParticleVariable<double>       pTimeOfLoc_new;
   ParticleVariable<double>       pFailureStrain_new;
 
   old_dw->get(pLocalized,               d_lb->pLocalizedMPMLabel,    pset);
-  old_dw->get(pTimeOfLoc,               pTimeOfLocLabel,             pset);
   old_dw->get(pFailureStrain,           pFailureStressOrStrainLabel, pset);
   old_dw->get(pParticleID,              d_lb->pParticleIDLabel,      pset);
   new_dw->get(pDefGrad_new,             d_lb->pDeformationMeasureLabel_preReloc,           
-                                                                    pset);
-  
-  new_dw->getModifiable(pStress,        d_lb->pStressLabel_preReloc,  pset);
+                                                                     pset);
+  new_dw->getModifiable(pStress,        d_lb->pStressLabel_preReloc, pset);
 
   new_dw->allocateAndPut(pLocalized_new,
                          d_lb->pLocalizedMPMLabel_preReloc,         pset);
-  new_dw->allocateAndPut(pTimeOfLoc_new,
-                         pTimeOfLocLabel_preReloc,              pset);
   new_dw->allocateAndPut(pFailureStrain_new,
                          pFailureStressOrStrainLabel_preReloc,  pset);
 
   Matrix3 defGrad(0.0);
-  double time = d_sharedState->getElapsedTime();
   
   // Copy failure strains to new dw
   pFailureStrain_new.copyData(pFailureStrain);
@@ -381,14 +338,12 @@ ThresholdDamage::computeSomething( ParticleSubset  * pset,
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++){
     particleIndex idx = *iter;
-    pTimeOfLoc_new[idx] = pTimeOfLoc[idx];
 
     defGrad = pDefGrad_new[idx];
     Matrix3 Identity, zero(0.0); Identity.Identity();
 
     // Find if the particle has failed
     pLocalized_new[idx] = pLocalized[idx];
-    pTimeOfLoc_new[idx] = pTimeOfLoc[idx];
 
     if (pLocalized[idx] == 0){
       if(d_failure_criteria=="MaximumPrincipalStress"){
@@ -403,7 +358,6 @@ ThresholdDamage::computeSomething( ParticleSubset  * pset,
         if ( pLocalized[idx] != pLocalized_new[idx]) {
           cout << "Particle " << pParticleID[idx] << " has failed : MaxPrinStress = "
                << maxEigen << " eps_f = " << pFailureStrain[idx] << endl;
-          pTimeOfLoc_new[idx] = time;
         }
       }
       else if( d_failure_criteria=="MaximumPrincipalStrain" ){
@@ -422,7 +376,6 @@ ThresholdDamage::computeSomething( ParticleSubset  * pset,
         if ( pLocalized[idx] != pLocalized_new[idx]) {
           cout << "Particle " << pParticleID[idx] << " has failed : eps = " << maxEigen
                << " eps_f = " << pFailureStrain[idx] << endl;
-          pTimeOfLoc_new[idx] = time;
         }
       }
       else if( d_failure_criteria=="MohrColoumb" ){
@@ -449,34 +402,8 @@ ThresholdDamage::computeSomething( ParticleSubset  * pset,
         if (pLocalized[idx] != pLocalized_new[idx]) {
           cout << "Particle " << pParticleID[idx] << " has failed : maxPrinStress = "
                << epsMax << " cohesion = " << cohesion << endl;
-          pTimeOfLoc_new[idx] = time;
         }
       } // Mohr-Coloumb
     } // pLocalized==0
-
-    //__________________________________
-    // If the particle has failed, apply various erosion algorithms
-    if ( d_erosionAlgo != none ) {
-      // Compute pressure
-      double pressure = pStress[idx].Trace()/3.0;
-      double failTime = time - pTimeOfLoc_new[idx];
-
-      double D = exp(-failTime/d_epsf.t_char);
-
-      if(pLocalized[idx] != 0) {
-        if( d_erosionAlgo == AllowNoTension ) {
-          if( pressure > 0.0 ){
-              pStress[idx] *= D;
-          } else{
-              pStress[idx] = Identity*pressure;
-          }
-        } else if( d_erosionAlgo == AllowNoShear ){
-           pStress[idx] = Identity*pressure;
-        }
-        else if ( d_erosionAlgo == ZeroStress ){
-          pStress[idx] *= D;
-        }
-      }
-    }  // errosion != none
   }  // pset loop
 }

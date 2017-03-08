@@ -128,15 +128,6 @@ void UCNH::setYieldStressDistribution(const UCNH* cm)
   d_yield.seed   = cm->d_yield.seed;
 }
 
-
-//______________________________________________________________________
-//
-void UCNH::setErosionAlgorithm(const UCNH* cm)
-{
-  d_setStressToZero = cm->d_setStressToZero;
-  d_allowNoTension  = cm->d_allowNoTension;
-  d_allowNoShear    = cm->d_allowNoShear;
-}
 //______________________________________________________________________
 //
 void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)

@@ -160,7 +160,6 @@
     <artificial_viscosity>           true       </artificial_viscosity>
     <use_load_curves>                false      </use_load_curves>
     <create_new_particles>           true       </create_new_particles>
-    <erosion algorithm = "KeepStress"/>
   </MPM>
 
   <!--____________________________________________________________________-->

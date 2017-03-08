@@ -78,7 +78,6 @@
         <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
         <artificial_viscosity> false </artificial_viscosity>
         <use_load_curves> false </use_load_curves>
-        <erosion algorithm = "ZeroStress"/>
         <DoPressureStabilization>true</DoPressureStabilization> 
         <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
     </MPM>
@@ -111,6 +110,8 @@
              <B0> 3.25e6 </B0>
              <G0> 1.3e6 </G0>
            </constitutive_model>
+           <erosion algorithm = "ZeroStress"/>
+           
            <geom_object>
              <difference label = "soil">
                <box label = "half_space">
@@ -159,6 +160,8 @@
              <useInitialStress> true </useInitialStress>
              <initial_pressure> 2.1e8 </initial_pressure> 
            </constitutive_model>
+           <erosion algorithm = "ZeroStress"/>
+           
            <geom_object>
              <cylinder label = "explosive">
                <bottom> [0.05, 0.015, -0.02] </bottom>

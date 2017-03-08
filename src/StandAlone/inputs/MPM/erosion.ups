@@ -43,11 +43,6 @@
      <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
      <artificial_viscosity> true </artificial_viscosity>
      <use_load_curves> true </use_load_curves>
-<!--     <erosion algorithm = "MakeRigid"/>  -->
-     <erosion algorithm = "none"/>
-<!--
-     <erosion algorithm = "AllowNoTension"/>
--->
    </MPM>
 
    <PhysicalConstants>
@@ -65,7 +60,7 @@
            <include href="MaterialData/IsotropicElastic4340Steel.xml"/>
            <include href="MaterialData/VonMisesYield.xml"/>
  <!--      <include href="MaterialData/NoStabilityCheck.xml"/> -->
-          <include href="MaterialData/BeckerStabilityCheck.xml"/>
+           <include href="MaterialData/BeckerStabilityCheck.xml"/>
            <include href="MaterialData/JohnsonCookPlastic4340Steel.xml"/>
            <include href="MaterialData/MieGruneisenEOS4340Steel.xml"/>
 <!--

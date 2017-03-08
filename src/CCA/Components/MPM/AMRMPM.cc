@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/Contact/Contact.h>                     // for Contact
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>                        // for MPMBoundCond
@@ -519,6 +520,9 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     
     DamageModel* dm = mpm_matl->getDamageModel();
     dm->addInitialComputesAndRequires(t, mpm_matl);
+
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires(t, mpm_matl);
     
     if(flags->d_doScalarDiffusion){
       ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
@@ -1065,7 +1069,7 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   
   //__________________________________
   //  Additional tasks
-  scheduleUpdateStress_DamageModel( sched, patches, matls );
+  scheduleUpdateStress_DamageErosionModels( sched, patches, matls );
 
   if (flags->d_reductionVars->accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
@@ -1563,11 +1567,15 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
     
     DamageModel* dm = mpm_matl->getDamageModel();
     dm->addInitialComputesAndRequires(t, mpm_matl);
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires(t, mpm_matl);
   }
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
 
@@ -1795,8 +1803,10 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
       
-      //initialize Damage model
+      //initialize damage/erosion model
       mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
+      
+      mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
       
       if(flags->d_doScalarDiffusion){
     	  mpm_matl->getScalarDiffusionModel()->initializeTimeStep(patch,mpm_matl,new_dw);
@@ -4793,8 +4803,10 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);
-          //initialize Damage model labels
+          //initialize Damage/erosion model labels
         mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
+        
+        mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
                                                            
         
       }

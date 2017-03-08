@@ -97,7 +97,6 @@
      <create_new_particles>        false    </create_new_particles>
      <UseMomentumForm>             false    </UseMomentumForm>
      <withColor>                   true     </withColor>
-     <erosion algorithm = "AllowNoShear"/>
    </MPM>
 
    <PhysicalConstants>
@@ -116,6 +115,8 @@
          <G>0.0</G>
          <K>303.e4</K>
         </constitutive_model>
+        <erosion algorithm = "AllowNoShear"/>
+        
         <geom_object>
           <box label = "Tracers">
             <min>[0.000, 0.00, 0.0]</min>

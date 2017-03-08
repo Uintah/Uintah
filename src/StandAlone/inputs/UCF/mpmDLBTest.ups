@@ -64,9 +64,8 @@
     <use_load_curves>                false      </use_load_curves>
     <ForceBC_force_increment_factor> 1.0        </ForceBC_force_increment_factor>
     <create_new_particles>           true       </create_new_particles>
-    <erosion algorithm = "none"/>
 <!--
-    <erosion algorithm = "AllowNoTension"/>
+    
 -->
   </MPM>
 
@@ -100,6 +99,8 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <!--<erosion algorithm = "AllowNoTension"/> -->
+        
         <geom_object>
           <box label = "Iron Traget">
           <!--
@@ -136,6 +137,8 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <!--<erosion algorithm = "AllowNoTension"/> -->
+        
         <geom_object>
           <null>
           </null>
@@ -156,6 +159,8 @@
           <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
           <include href="../MaterialData/DefaultHypoEOS.xml"/>
         </constitutive_model>
+        <!--<erosion algorithm = "AllowNoTension"/> -->
+        
         <geom_object>
           <difference>
             <union>
@@ -214,6 +219,8 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <!--<erosion algorithm = "AllowNoTension"/> -->
+        
         <geom_object>
           <union>
             <cylinder>
@@ -256,6 +263,8 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <!--<erosion algorithm = "AllowNoTension"/> -->
+        
         <geom_object>
           <null>
           </null>

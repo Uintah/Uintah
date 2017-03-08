@@ -69,7 +69,6 @@
     <UsePrescribedDeformation>     true      </UsePrescribedDeformation>
     <PrescribedDeformationFile>    inputs/MPM/ArenaSoilBanerjeeBrannon/MultiaxialStrainLoadUnload_PrescribedDeformation.inp  </PrescribedDeformationFile>
     <minimum_subcycles_for_F>       -2       </minimum_subcycles_for_F>
-    <erosion algorithm = "none"/>
   </MPM>
 
   <PhysicalConstants>

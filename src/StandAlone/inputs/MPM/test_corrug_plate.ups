@@ -57,7 +57,6 @@
     <artificial_viscosity> false </artificial_viscosity>
     <use_load_curves> false </use_load_curves>
     <do_contact_friction_heating> false </do_contact_friction_heating>
-    <erosion algorithm = "none"/>
   </MPM>
 
   <PhysicalConstants>

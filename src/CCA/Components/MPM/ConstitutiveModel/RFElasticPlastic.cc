@@ -187,7 +187,6 @@ RFElasticPlastic::RFElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("compute_specific_heat",d_computeSpecificHeat);
   d_Cp = SpecificHeatModelFactory::create(ps);
   
-  setErosionAlgorithm();
   //getSpecificHeatData(ps);
   initializeLocalMPMLabels();
 }
@@ -211,10 +210,6 @@ RFElasticPlastic::RFElasticPlastic(const RFElasticPlastic* cm) :
   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
   d_doMelting = cm->d_doMelting;
   d_checkStressTriax = cm->d_checkStressTriax;
-
-  d_setStressToZero = cm->d_setStressToZero;
-  d_allowNoTension = cm->d_allowNoTension;
-  d_allowNoShear = cm->d_allowNoShear;
 
   d_computeSpecificHeat = cm->d_computeSpecificHeat;
   /*
@@ -327,23 +322,7 @@ RFElasticPlastic::initializeLocalMPMLabels()
   pEnergyLabel_preReloc = VarLabel::create("p.energy+",
     ParticleVariable<double>::getTypeDescription());
 }
-//______________________________________________________________________
-//
-void 
-RFElasticPlastic::setErosionAlgorithm()
-{
-  d_setStressToZero = false;
-  d_allowNoTension  = false;
-  d_allowNoShear    = false;
-  if (flag->d_doErosion) {
-    if (flag->d_erosionAlgorithm == "AllowNoTension") 
-      d_allowNoTension = true;
-    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
-      d_allowNoShear = true;
-    else if (flag->d_erosionAlgorithm == "ZeroStress") 
-      d_setStressToZero = true;
-  }
-}
+
 //______________________________________________________________________
 //
 void 
@@ -964,26 +943,6 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the total stress
       sigma = tensorS + tensorHy;
 
-      //********** Concentration Component****************************
-			// -- not used currently in model
-      // // If the particle has already failed, apply various erosion algorithms
-      // if (flag->d_doErosion) {
-      //   if (pLocalized[idx]) {
-      //     if (d_allowNoTension) {
-      //       if (p > 0.0){
-      //          sigma = zero;
-      //       } else{
-      //         sigma = tensorHy;
-      //       }
-      //     }
-      //     if(d_allowNoShear){
-      //       sigma = tensorHy;
-      //     } else if (d_setStressToZero){
-      //       sigma = zero;
-      //     }
-      //   }
-      // }
-      //********** Concentration Component****************************
 
       //-----------------------------------------------------------------------
       // Stage 3:

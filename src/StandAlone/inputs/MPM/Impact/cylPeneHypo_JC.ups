@@ -51,9 +51,6 @@
     <interpolator>linear</interpolator>
     <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
     <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
-<!--
-     <erosion algorithm = "AllowNoTension"/>
--->
   </MPM>
 
   <PhysicalConstants>
@@ -73,6 +70,7 @@
           <include href="../MaterialData/JohnsonCookPlasticArmcoIron.xml"/>
           <include href="../MaterialData/DefaultHypoEOS.xml"/>
         </constitutive_model>
+        <!--<erosion algorithm = "AllowNoTension"/>-->
         <include href="../MaterialData/JohnsonCookDamageArmcoIron.xml"/>
         
         <geom_object>
@@ -100,6 +98,7 @@
           <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
           <include href="../MaterialData/DefaultHypoEOS.xml"/>
         </constitutive_model>
+        <erosion algorithm = "AllowNoTension"/>
         <geom_object>
           <difference>
             <union>
@@ -145,7 +144,7 @@
           <include href="../MaterialData/JohnsonCookPlasticS7ToolSteel.xml"/>
           <include href="../MaterialData/DefaultHypoEOS.xml"/>
         </constitutive_model>
-        
+        <!--<erosion algorithm = "AllowNoTension"/>-->
         <include href="../MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
         
         <geom_object>

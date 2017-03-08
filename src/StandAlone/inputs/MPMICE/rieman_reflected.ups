@@ -176,7 +176,6 @@
     <MPM>
         <time_integrator>         explicit    </time_integrator>
         <create_new_particles>    false       </create_new_particles>
-        <erosion algorithm = "none"/>
     </MPM>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->

@@ -71,7 +71,6 @@
     <UsePrescribedDeformation>     true       </UsePrescribedDeformation>
     <PrescribedDeformationFile>    inputs/MPM/ArenaSoilBanerjeeBrannon/BoulderClay072213-014.defgrad </PrescribedDeformationFile>
     <minimum_subcycles_for_F>       -2        </minimum_subcycles_for_F>
-    <erosion algorithm = "none"/>
   </MPM>
 
   <PhysicalConstants>

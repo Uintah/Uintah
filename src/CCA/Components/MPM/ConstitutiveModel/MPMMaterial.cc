@@ -29,6 +29,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
@@ -101,8 +102,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
-  // Step 2 -- create the constitutive gmodel.
+  // Step 2 -- create the damage/erosion gmodel.
   d_damageModel = DamageModelFactory::create(ps,flags,ss.get_rep() );
+  
+  d_erosionModel = scinew ErosionModel( ps, flags, ss.get_rep() );
 
   // Step 3 -- check if scalar diffusion is used and
   // create the scalar diffusion model.
@@ -201,6 +204,7 @@ MPMMaterial::~MPMMaterial()
   delete d_lb;
   delete d_cm;
   delete d_damageModel;
+  delete d_erosionModel;
   delete d_particle_creator;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
@@ -232,6 +236,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("includeFlowWork",d_includeFlowWork);
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
+  d_erosionModel->outputProblemSpec(mpm_ps);
   
   if(getScalarDiffusionModel()){
     d_sdm->outputProblemSpec(mpm_ps);
@@ -274,6 +279,11 @@ ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
 DamageModel* MPMMaterial::getDamageModel() const
 {
   return d_damageModel;
+}
+
+ErosionModel* MPMMaterial::getErosionModel() const
+{
+  return d_erosionModel;
 }
 
 ScalarDiffusionModel* MPMMaterial::getScalarDiffusionModel() const

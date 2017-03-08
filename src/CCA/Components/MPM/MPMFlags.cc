@@ -65,9 +65,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_fracture = false;
   d_minGridLevel = 0;
   d_maxGridLevel = 1000;
-                      
-  d_erosionAlgorithm = "none";
-  d_doErosion = false;
+
   d_deleteRogueParticles = false;
   d_doThermalExpansion = true;
   d_refineParticles = false;
@@ -249,14 +247,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
-
-   ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
-   if (erosion_ps) {
-     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
-       if (d_erosionAlgorithm == "none") d_doErosion = false;
-       else d_doErosion = true;
-     }
-   }
 
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
 
@@ -453,9 +443,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
 
   ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
-
-  ProblemSpecP erosion_ps = ps->appendChild("erosion");
-  erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
  
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);

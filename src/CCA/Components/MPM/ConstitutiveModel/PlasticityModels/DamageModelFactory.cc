@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#include "DamageModelFactory.h"
-#include "NullDamage.h"
-#include "JohnsonCookDamage.h"
-#include "HancockMacKenzieDamage.h"
-#include "ThresholdDamage.h"
-#include "BrittleDamage.h"
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/NullDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/HancockMacKenzieDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ThresholdDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/BrittleDamage.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -45,8 +45,6 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& matl_ps,
                                         SimulationState* sharedState)
 {
   string cm_type = "none";
-
-  matl_ps->print();
   
   if ( matl_ps->getNodeName() != "constitutive_model" ) { 
     ProblemSpecP cm_ps = matl_ps->findBlock("constitutive_model");

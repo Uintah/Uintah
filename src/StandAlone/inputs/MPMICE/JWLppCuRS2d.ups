@@ -143,7 +143,6 @@
       <create_new_particles>          false       </create_new_particles>
       <DoThermalExpansion>            false       </DoThermalExpansion>
       <testForNegTemps_mpm>           false       </testForNegTemps_mpm>
-      <erosion algorithm="ZeroStress"/>
     </MPM>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
@@ -170,6 +169,7 @@
                   <strain_limit>       3.05          </strain_limit>
                   <reduction_factor>   1.0           </reduction_factor>
                </constitutive_model>
+               <erosion algorithm="ZeroStress"/>
                <thermal_conductivity>  400.0         </thermal_conductivity>
                <specific_heat>         386.0         </specific_heat>
                 <geom_object>

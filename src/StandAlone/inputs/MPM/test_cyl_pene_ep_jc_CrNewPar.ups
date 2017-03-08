@@ -56,9 +56,7 @@
     <ForceBC_force_increment_factor> 1.0        </ForceBC_force_increment_factor>
     <create_new_particles>           true      </create_new_particles>
     <manual_new_material>            false       </manual_new_material>
-    <erosion algorithm = "AllowNoTension"/>
 <!--
-    <erosion algorithm = "none"/>
     <erosion algorithm = "AllowNoTension"/>
 -->
   </MPM>
@@ -93,6 +91,7 @@
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
           <do_melting>                    true   </do_melting>
         </constitutive_model>
+        <erosion algorithm = "AllowNoTension"/>
         
         <include href="inputs/MPM/MaterialData/JohnsonCookDamageArmcoIron.xml"/>
         
@@ -133,21 +132,21 @@
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
           <do_melting>                    true   </do_melting>
         </constitutive_model>
-        
+        <erosion algorithm = "AllowNoTension"/>
         <include href="inputs/MPM/MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
         
         <geom_object>
           <union>
             <cylinder>
-              <bottom>[0.0,1.0e-2,0.0]</bottom>
-              <top>[0.0,3.5e-2,0.0]</top>
-              <radius>0.5e-2</radius>
+              <bottom>  [0.0,1.0e-2,0.0]  </bottom>
+              <top>     [0.0,3.5e-2,0.0]  </top>
+              <radius>  0.5e-2            </radius>
             </cylinder>
             <cone>
-              <bottom>[0.0,0.0,0.0]</bottom>
-              <top>[0.0,1.0e-2,0.0]</top>
-              <bottom_radius>0.1e-2</bottom_radius>
-              <top_radius>0.5e-2</top_radius>
+              <bottom>         [0.0,0.0,0.0]     </bottom>
+              <top>            [0.0,1.0e-2,0.0]  </top>
+              <bottom_radius>  0.1e-2            </bottom_radius>
+              <top_radius>     0.5e-2            </top_radius>
             </cone>
           </union>
           <res>[2,2,2]</res>

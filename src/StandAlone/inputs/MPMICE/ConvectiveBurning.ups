@@ -153,7 +153,6 @@
       <create_new_particles>           false      </create_new_particles>
       <DoThermalExpansion>             false      </DoThermalExpansion>
       <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
-      <erosion algorithm = "ZeroStress"/>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -197,11 +196,9 @@
              <EoverR>                 2.62069e4  </EoverR>
              <dynamic_coeff_friction> 0.25     </dynamic_coeff_friction>
              <volfracHE>              0.95     </volfracHE>
-             
                <T0> 298.0 </T0>
                 <C1> 6.5 </C1>
                 <C2> 120.0 </C2>
-
              <useJWLEOS> true </useJWLEOS>
              <useJWLCEOS> false </useJWLCEOS>
              <A> 732000e9     </A>
@@ -211,11 +208,13 @@
              <R2> 1.41         </R2>
              <om> 0.8867        </om>
              <rho0> 1832      </rho0>
-              <randomize_parameters>          false </randomize_parameters>
+             <randomize_parameters>          false </randomize_parameters>
              <use_time_temperature_equation> false </use_time_temperature_equation>
              <useObjectiveRate>              false </useObjectiveRate>
-             <useModifiedEOS>              true </useModifiedEOS>
+             <useModifiedEOS>                true </useModifiedEOS>
            </constitutive_model>
+           
+           <erosion algorithm = "ZeroStress"/>
            
            <geom_object>
               <box label="wholeDomain">

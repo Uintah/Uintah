@@ -24,6 +24,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
@@ -411,11 +412,15 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
     
     DamageModel* dm = mpm_matl->getDamageModel();
-    dm->addInitialComputesAndRequires(t, mpm_matl);
+    dm->addInitialComputesAndRequires( t, mpm_matl );
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires( t, mpm_matl );
   }
 
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
@@ -950,7 +955,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   
   //__________________________________
   //  Additional tasks
-  scheduleUpdateStress_DamageModel( sched, patches, matls );
+  scheduleUpdateStress_DamageErosionModels( sched, patches, matls );
   
 /*`==========TESTING==========*/
 #if 0
@@ -1603,6 +1608,9 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
     
     DamageModel* dm = mpm_matl->getDamageModel();
     dm->addInitialComputesAndRequires(t, mpm_matl);
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires(t, mpm_matl);
   }
 
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
@@ -1902,6 +1910,8 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       
       //initialize Damage model
       mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
+      
+      mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
       
     }
   } // patches
@@ -3756,30 +3766,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
       } //end of pressureStabilization loop  at the patch level
 
-      if(flags->d_erosionAlgorithm=="ZeroStress"){
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          if(pLocalized[idx]){
-            pFNew[idx] = pFOld[idx];
-            pVelGrad[idx]= Matrix3(0.0);
-          }
-        }
-      }
+      //__________________________________
+      //  Apply Erosion
+      ErosionModel* em = mpm_matl->getErosionModel();
+      em->updateVariables_Erosion( pset, pLocalized, pFOld, pFNew, pVelGrad );
 
-      if(flags->d_erosionAlgorithm=="AllowNoShear" ||
-         flags->d_erosionAlgorithm=="AllowNoTension"){
-        double third = 1./3.;
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          if(pLocalized[idx]){
-            double cbrtJ = cbrt(pFNew[idx].Determinant());
-            pFNew[idx] = cbrtJ*Identity;
-            pVelGrad[idx]=third*pVelGrad[idx].Trace()*Identity;
-          }
-        }
-      }
 
       // scale back huge particle velocities.
       // Default for d_max_vel is 3.e105, hence the conditional

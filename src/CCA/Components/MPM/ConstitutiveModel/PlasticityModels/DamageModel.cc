@@ -29,10 +29,6 @@ using namespace Uintah;
 static DebugStream dbg("DamageModel", false);
 //______________________________________________________________________
 //      TO DO
-//  move CM::addRequiresDamageParameter() into this class
-//  move CM::getDamageParameter() into this class
-//  Do something with TotalLocalizedParticle.  It should be computed in this class not the CMs
-//  Decrement the strain energy if a particle is localized.
 //______________________________________________________________________
 //
 

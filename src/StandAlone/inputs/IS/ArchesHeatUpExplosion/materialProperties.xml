@@ -47,6 +47,8 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        <erosion algorithm = "ZeroStress"/>
+        
         <geom_object>
           <difference>
             <cylinder>
@@ -76,6 +78,8 @@
           <useObjectiveRate>              false </useObjectiveRate>
           <useModifiedEOS>                true  </useModifiedEOS>
         </constitutive_model>
+        <erosion algorithm = "ZeroStress"/>
+        
         <geom_object>
           <cylinder>
             <bottom>           [0.0,0.0,-.0508]   </bottom>

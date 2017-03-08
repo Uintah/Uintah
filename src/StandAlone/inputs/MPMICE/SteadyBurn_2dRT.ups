@@ -190,7 +190,6 @@
     <create_new_particles>          false       </create_new_particles>
     <DoThermalExpansion>            false       </DoThermalExpansion>
     <testForNegTemps_mpm>           false       </testForNegTemps_mpm>
-    <erosion algorithm="ZeroStress"/>
   </MPM>
 
 
@@ -261,6 +260,7 @@
           <critical_scalar_damage>        1.0     </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss   </initial_scalar_damage_distrib>
         </constitutive_model>
+        <erosion algorithm="ZeroStress"/>
         
         <damage_model type="johnson_cook">
           <D1>   0.05    </D1>
@@ -336,6 +336,7 @@
           <useObjectiveRate>              false </useObjectiveRate>
           <useModifiedEOS>                true  </useModifiedEOS>
         </constitutive_model>
+        <erosion algorithm="ZeroStress"/>
 
         <geom_object>
           <difference label="HMX">

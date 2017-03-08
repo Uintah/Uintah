@@ -219,7 +219,6 @@
     <InsertParticles>false</InsertParticles>
     <do_contact_friction_heating>true</do_contact_friction_heating>
     <delete_rogue_particles>false</delete_rogue_particles>
-    <erosion algorithm="ZeroStress"/>
     <boundary_traction_faces>[]</boundary_traction_faces>
     <UseMomentumForm>false</UseMomentumForm>
     <testForNegTemps_mpm>false</testForNegTemps_mpm>
@@ -296,7 +295,8 @@
           <critical_scalar_damage>1</critical_scalar_damage>
           <initial_scalar_damage_distrib>gauss</initial_scalar_damage_distrib>
         </constitutive_model>
-        
+        <erosion algorithm="ZeroStress"/>
+            
         <damage_model type="johnson_cook">
           <D1>0.050000000000000003</D1>
           <D2>3.4399999999999999</D2>
@@ -368,6 +368,7 @@
           <C1>6.5</C1>
           <C2>120</C2>
         </constitutive_model>
+        <erosion algorithm="ZeroStress"/>
         <geom_object>
           <cylinder label="inner steel cylinder 1"/>
           <temperature>300</temperature>

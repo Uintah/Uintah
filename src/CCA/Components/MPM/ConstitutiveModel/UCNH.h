@@ -126,12 +126,6 @@ namespace Uintah {
     bool d_usePlasticity;
     YieldDistribution d_yield;
 
-    //__________________________________
-    // Erosion algorithms
-    bool d_setStressToZero; /* set stress tensor to zero*/
-    bool d_allowNoTension;  /* retain compressive mean stress after failue*/
-    bool d_allowNoShear;    /* retain mean stress after failure - no deviatoric stress */
-                            /* i.e., no deviatoric stress */
     // Initial stress state
     bool d_useInitialStress;
     double d_init_pressure;  // Initial pressure
@@ -274,13 +268,7 @@ namespace Uintah {
 
     void setYieldStressDistribution(const UCNH* cm);
 
-    void createDamageLabels();
-
     void createPlasticityLabels();
-
-    void setErosionAlgorithm();
-
-    void setErosionAlgorithm(const UCNH* cm);
 
   protected:
     // compute stress at each particle in the patch
