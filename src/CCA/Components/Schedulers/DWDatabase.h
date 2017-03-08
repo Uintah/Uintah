@@ -38,14 +38,13 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <iosfwd>
-#include <iostream>
-#include <list>
-#include <map>
+#include <sci_hash_map.h>
+
+#include <ostream>
 #include <sstream>
+#include <string>
 #include <vector>
 
-#include <sci_hash_map.h>
 
 /**************************************
 
@@ -272,7 +271,7 @@ DWDatabase<DomainType>::~DWDatabase()
 template<class DomainType>
 void DWDatabase<DomainType>::clear()
 {
-  for (auto iter = m_vars.begin(); iter != m_vars.end(); iter++) {
+  for (auto iter = m_vars.begin(); iter != m_vars.end(); ++iter) {
     if (*iter) {
       delete *iter;
     }
@@ -298,8 +297,11 @@ DWDatabase<DomainType>::cleanForeign()
 //______________________________________________________________________
 //
 template<class DomainType>
-int DWDatabase<DomainType>::
-decrementScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom)
+int
+DWDatabase<DomainType>::decrementScrubCount( const VarLabel   * label
+                                           ,       int          matlIndex
+                                           , const DomainType * dom
+                                           )
 {
   // Dav's conjectures on how this works:
   //   setScrubCount is called the first time with "count" set to some X.  
@@ -326,8 +328,12 @@ decrementScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom)
 //______________________________________________________________________
 //
 template<class DomainType>
-void DWDatabase<DomainType>::
-setScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom, int count)
+void
+DWDatabase<DomainType>::setScrubCount( const VarLabel   * label
+                                     ,       int          matlIndex
+                                     , const DomainType * dom
+                                     ,       int          count
+                                     )
 {
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
@@ -345,7 +351,10 @@ setScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom, int c
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const DomainType* dom)
+DWDatabase<DomainType>::scrub( const VarLabel   * label
+                             ,       int          matlIndex
+                             , const DomainType * dom
+                             )
 {
   ASSERT(matlIndex >= -1);
   int idx = m_keyDB->lookup(label, matlIndex, dom);
@@ -368,7 +377,10 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts, bool add)
+DWDatabase<DomainType>::initializeScrubs(       int                        dwid
+                                        , const FastHashTable<ScrubItem> * scrubcounts
+                                        ,       bool                       add
+                                        )
 {
   // loop over each variable, probing the scrubcount map. Set the scrubcount appropriately.
   // If the variable has no entry in the scrubcount map, delete it
@@ -384,8 +396,9 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
       }
       else {
         if (result) {
-          if (add)
+          if (add) {
             __sync_add_and_fetch(&(m_scrubs[keyiter->second]), result->m_count);
+          }
           else {
             if (!__sync_bool_compare_and_swap(&(m_scrubs[keyiter->second]), 0, result->m_count)) {
               SCI_THROW(InternalError("initializing non-zero scrub counter", __FILE__, __LINE__));
@@ -404,7 +417,11 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
 //______________________________________________________________________
 //
 template<class DomainType>
-int KeyDatabase<DomainType>::lookup(const VarLabel* label, int matlIndex, const DomainType* dom)
+int
+KeyDatabase<DomainType>::lookup( const VarLabel   * label
+                               ,       int          matlIndex
+                               , const DomainType * dom
+                               )
 {
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
@@ -419,8 +436,11 @@ int KeyDatabase<DomainType>::lookup(const VarLabel* label, int matlIndex, const 
 //______________________________________________________________________
 //
 template<class DomainType>
-void KeyDatabase<DomainType>::merge(const KeyDatabase<DomainType>& newDB){
-  for (typename keyDBtype::const_iterator const_keyiter = newDB.m_keys.begin(); const_keyiter != newDB.m_keys.end(); const_keyiter++) {
+void
+KeyDatabase<DomainType>::merge( const KeyDatabase<DomainType> & newDB )
+{
+  for (typename keyDBtype::const_iterator const_keyiter = newDB.m_keys.begin(); const_keyiter != newDB.m_keys.end();
+      const_keyiter++) {
     typename keyDBtype::const_iterator const_db_iter = m_keys.find(const_keyiter->first);
     if (const_db_iter == m_keys.end()) {
       m_keys.insert(std::pair<VarLabelMatl<DomainType>, int>(const_keyiter->first, m_key_count++));
@@ -431,18 +451,24 @@ void KeyDatabase<DomainType>::merge(const KeyDatabase<DomainType>& newDB){
 //______________________________________________________________________
 //
 template<class DomainType>
-void KeyDatabase<DomainType>::insert(const VarLabel* label, int matlIndex, const DomainType* dom)
+void
+KeyDatabase<DomainType>::insert( const VarLabel   * label
+                               ,       int          matlIndex
+                               , const DomainType * dom
+                               )
 {
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   typename keyDBtype::const_iterator const_iter = m_keys.find(v);
-  if (const_iter == m_keys.end())
+  if (const_iter == m_keys.end()) {
     m_keys.insert(std::pair<VarLabelMatl<DomainType>, int>(v, m_key_count++));
+  }
 }
 
 //______________________________________________________________________
 //
 template<class DomainType>
-void KeyDatabase<DomainType>::clear()
+void
+KeyDatabase<DomainType>::clear()
 {
   m_keys.clear();
   m_key_count = 0;
@@ -451,17 +477,22 @@ void KeyDatabase<DomainType>::clear()
 //______________________________________________________________________
 //
 template<class DomainType>
-void DWDatabase<DomainType>::doReserve(KeyDatabase<DomainType>* keydb)
+void
+DWDatabase<DomainType>::doReserve( KeyDatabase<DomainType> * keydb )
 {
   m_keyDB = keydb;
-  m_vars.resize(m_keyDB->m_key_count + 1, (DataItem*)0);
+  m_vars.resize(m_keyDB->m_key_count + 1, (DataItem*)nullptr);
   m_scrubs.resize(m_keyDB->m_key_count + 1, 0);
 }
 
 //______________________________________________________________________
 //
 template<class DomainType>
-bool DWDatabase<DomainType>::exists(const VarLabel* label, int matlIndex, const DomainType* dom) const
+bool
+DWDatabase<DomainType>::exists( const VarLabel   * label
+                              ,       int          matlIndex
+                              , const DomainType * dom
+                              ) const
 {
   int idx = m_keyDB->lookup(label, matlIndex, dom);
   if (idx == -1) {
@@ -477,8 +508,13 @@ bool DWDatabase<DomainType>::exists(const VarLabel* label, int matlIndex, const 
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainType* dom,
-				                     Variable* var, bool init, bool replace )
+DWDatabase<DomainType>::put( const VarLabel   * label
+                           ,       int          matlIndex
+                           , const DomainType * dom
+				                   ,       Variable   * var
+				                   ,       bool         init
+				                   ,       bool         replace
+				                   )
 {
 
   ASSERT(matlIndex >= -1);
@@ -511,8 +547,12 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::putReduce( const VarLabel* label, int matlIndex,const DomainType* dom,
-				                           ReductionVariableBase* var, bool init)
+DWDatabase<DomainType>::putReduce( const VarLabel              * label
+                                 ,       int                     matlIndex
+                                 , const DomainType            * dom
+                                 ,       ReductionVariableBase * var
+                                 ,       bool                    init
+                                 )
 {
   ASSERT(matlIndex >= -1);
 
@@ -547,7 +587,12 @@ DWDatabase<DomainType>::putReduce( const VarLabel* label, int matlIndex,const Do
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::putForeign( const VarLabel* label, int matlIndex,const DomainType* dom, Variable* var, bool init)
+DWDatabase<DomainType>::putForeign( const VarLabel   * label
+                                  ,       int          matlIndex
+                                  , const DomainType * dom
+                                  ,       Variable   * var
+                                  ,       bool         init
+                                  )
 {
   ASSERT(matlIndex >= -1);
 
@@ -572,7 +617,10 @@ DWDatabase<DomainType>::putForeign( const VarLabel* label, int matlIndex,const D
 //
 template<class DomainType>
 typename DWDatabase<DomainType>::DataItem*
-DWDatabase<DomainType>::getDataItem( const VarLabel* label, int matlIndex, const DomainType* dom ) const
+DWDatabase<DomainType>::getDataItem( const VarLabel   * label
+                                   ,       int          matlIndex
+                                   , const DomainType * dom
+                                   ) const
 {
   ASSERT(matlIndex >= -1);
   int idx = m_keyDB->lookup(label, matlIndex, dom);
@@ -587,7 +635,10 @@ DWDatabase<DomainType>::getDataItem( const VarLabel* label, int matlIndex, const
 template<class DomainType>
 inline
 Variable*
-DWDatabase<DomainType>::get( const VarLabel* label, int matlIndex, const DomainType* dom ) const
+DWDatabase<DomainType>::get( const VarLabel   * label
+                           ,       int          matlIndex
+                           , const DomainType * dom
+                           ) const
 {
   const DataItem* dataItem = getDataItem(label, matlIndex, dom);
   ASSERT(dataItem != nullptr);          // should have thrown an exception before
@@ -599,7 +650,11 @@ DWDatabase<DomainType>::get( const VarLabel* label, int matlIndex, const DomainT
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::get( const VarLabel* label, int matlIndex, const DomainType* dom, Variable& var ) const
+DWDatabase<DomainType>::get( const VarLabel   * label
+                           ,       int          matlIndex
+                           , const DomainType * dom
+                           ,       Variable   & var
+                           ) const
 {
   Variable* tmp = get(label, matlIndex, dom);
   var.copyPointer(*tmp);
@@ -609,10 +664,11 @@ DWDatabase<DomainType>::get( const VarLabel* label, int matlIndex, const DomainT
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::getlist(const VarLabel* label,
-                                int matlIndex,
-                                const DomainType* dom,
-                                std::vector<Variable*>& varlist) const
+DWDatabase<DomainType>::getlist( const VarLabel               * label
+                               ,       int                      matlIndex
+                               , const DomainType             * dom
+                               ,       std::vector<Variable*> & varlist
+                               ) const
 {
   for (DataItem* dataItem = getDataItem(label, matlIndex, dom); dataItem != nullptr; dataItem = dataItem->m_next) {
     varlist.push_back(dataItem->m_var);
@@ -620,16 +676,16 @@ DWDatabase<DomainType>::getlist(const VarLabel* label,
 
   // TODO do we need this - APH 03/01/17
   // this function is allowed to return an empty list
-  if(varlist.size() == 0) {
-    SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex, "DWDatabase::getlist", __FILE__, __LINE__));
-  }
-
+//  if (varlist.size() == 0) {
+//    SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex, "DWDatabase::getlist", __FILE__, __LINE__));
+//  }
 }
 
 //______________________________________________________________________
 //
 template<class DomainType>
-void DWDatabase<DomainType>::print(std::ostream& out, int rank) const
+void
+DWDatabase<DomainType>::print( std::ostream & out, int rank ) const
 {
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     if (m_vars[keyiter->second]) {
@@ -649,9 +705,13 @@ void DWDatabase<DomainType>::print(std::ostream& out, int rank) const
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::logMemoryUse(std::ostream& out, unsigned long& total, const std::string& tag, int dwid)
+DWDatabase<DomainType>::logMemoryUse(       std::ostream  & out
+                                    ,       unsigned long & total
+                                    , const std::string   & tag
+                                    ,       int             dwid
+                                    )
 {
-  for (auto  keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
+  for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     if (m_vars[keyiter->second]) {
       Variable* var = m_vars[keyiter->second]->m_var;
       VarLabelMatl<DomainType> vlm = keyiter->first;
@@ -662,8 +722,8 @@ DWDatabase<DomainType>::logMemoryUse(std::ostream& out, unsigned long& total, co
       var->getSizeInfo(elems, totsize, ptr);
       const TypeDescription* td = label->typeDescription();
 
-      logMemory(out, total, tag, label->getName(), (td ? td->getName() : "-"),
-                vlm.domain_, vlm.matlIndex_, elems, totsize, ptr, dwid);
+      logMemory(out, total, tag, label->getName(), (td ? td->getName() : "-"), vlm.domain_,
+                vlm.matlIndex_, elems, totsize, ptr, dwid);
     }
   }
 }
@@ -672,7 +732,7 @@ DWDatabase<DomainType>::logMemoryUse(std::ostream& out, unsigned long& total, co
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::getVarLabelMatlTriples(std::vector<VarLabelMatl<DomainType> >& v) const
+DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainType> > & v) const
 {
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); keyiter++) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
@@ -682,7 +742,7 @@ DWDatabase<DomainType>::getVarLabelMatlTriples(std::vector<VarLabelMatl<DomainTy
   }
 }
 
-} // End namespace Uintah
+} // namespace Uintah
 
 
 //
@@ -733,6 +793,6 @@ DWDatabase<DomainType>::getVarLabelMatlTriples(std::vector<VarLabelMatl<DomainTy
 #endif 
   } // end namespace std
 
-#endif // #ifdef HAVE_GNU_HASHMAP
+#endif // HAVE_GNU_HASHMAP
 
-#endif // #ifndef CCA_COMPONENTS_SCHEDULERS_DWDATABASE_H
+#endif // CCA_COMPONENTS_SCHEDULERS_DWDATABASE_H
