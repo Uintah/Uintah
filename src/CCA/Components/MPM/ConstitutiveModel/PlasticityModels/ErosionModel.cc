@@ -46,10 +46,10 @@ ErosionModel::ErosionModel( ProblemSpecP   & matl_ps,
   //__________________________________
   //  Set erosion algorithm
   d_algo= erosionAlgo::none;
+  std::string algo = "none";
   
   ProblemSpecP em_ps = matl_ps->findBlock("erosion");
   if( em_ps ) {
-    std::string algo = "none";
     em_ps->getAttribute("algorithm", algo);
     
     if (algo == "AllowNoTension"){
@@ -63,13 +63,12 @@ ErosionModel::ErosionModel( ProblemSpecP   & matl_ps,
     else if (algo == "AllowNoShear"){
       d_algo      = erosionAlgo::AllowNoShear;
       d_doEorsion = true;
-    }
-    d_algoName = algo;
-          
+    }          
     em_ps->getWithDefault("char_time", d_charTime, 1.0e-99);        // Characteristic time for damage
-    cout << " //__________________________________d_Algo: " << d_algo << " algoName " << d_algoName << " d_charTime: " << d_charTime << "  " <<( d_algo == erosionAlgo::none ) << endl;
-
+//    cout << " //__________________________________d_Algo: " << d_algo << " algoName " << algo << " d_charTime: " << d_charTime << "  " <<( d_algo == erosionAlgo::none ) << endl;
   }
+  
+  d_algoName = algo;
   //__________________________________
   //  labels local to model
   const TypeDescription* P_dbl = ParticleVariable<double>::getTypeDescription();
@@ -96,7 +95,7 @@ ErosionModel::outputProblemSpec( ProblemSpecP& ps )
     return;
   }  
   printTask( dbg, "ErosionModel::outputProblemSpec (each Matl)" );
-  ProblemSpecP dam_ps = ps->appendChild("erosion_model");
+  ProblemSpecP dam_ps = ps->appendChild("erosion");
   dam_ps->setAttribute("algorithm",   d_algoName);
   dam_ps->appendElement("char_time",  d_charTime );
 }
@@ -177,7 +176,7 @@ ErosionModel::initializeLabels(const Patch       * patch,
   ParticleSubset::iterator iter;    
 
   for(iter = pset->begin();iter != pset->end();iter++){
-    pTimeOfLoc[*iter] = d_charTime;
+    pTimeOfLoc[*iter] = -1.e99;
   }
 }
 //______________________________________________________________________
@@ -230,7 +229,7 @@ ErosionModel::updateStress_Erosion( ParticleSubset * pset,
                          
   //__________________________________
   // If the particle has failed, apply various erosion algorithms
-  if ( d_algo == erosionAlgo::none ) {
+  if ( d_algo != erosionAlgo::none ) {
   
     Matrix3 Identity, zero(0.0); 
     Identity.Identity();
@@ -251,7 +250,7 @@ ErosionModel::updateStress_Erosion( ParticleSubset * pset,
 
       //__________________________________
       //  modify the stress
-      if( pLocalized_new[idx] != 0 ) {
+      if( pLocalized_old[idx] != 0 ) {     // THIS SHOULD BE pLocalized_new
             
         switch (d_algo) {
         case erosionAlgo::AllowNoTension :
