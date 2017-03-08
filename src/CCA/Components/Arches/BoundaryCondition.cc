@@ -2065,6 +2065,9 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
           my_info.mass_flow_rate = 0.0;
           found_bc = true;
 
+          //allows for non-normal mass flow spec.
+          db_BCType->getWithDefault( "massflow_vector", my_info.velocity, Vector(0,0,0));
+
           // note that the mass flow rate is in the BCstruct value
 
           //compute the density:

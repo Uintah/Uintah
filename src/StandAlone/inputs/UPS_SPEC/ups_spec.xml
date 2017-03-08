@@ -596,7 +596,8 @@
                             need_applies_to="var VelocityFileInput FromFile"/> 
           
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
-                        <!--swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
+
+          <!--swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
           <swirl_centroid   spec="OPTIONAL VECTOR"  need_applies_to="var Swirl"/>
 
           <!-- Stabilized Atmospheric Boundary Layer --> 
@@ -604,6 +605,9 @@
           <roughness        spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- roughness height for the ground [m]--> 
           <freestream_h     spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- height of the free stream velocity --> 
           <k                spec="OPTIONAL DOUBLE" need_applies_to="var StABL"/> <!-- von Karman constant, default=0.41 --> 
+
+          <!-- One might want to specify a non-normal, mass flow inlet. This allows one to specify those components -->
+          <massflow_vector  spec="OPTIONAL VECTOR" need_applies_to="var MassFlowInlet"/> <!-- Specify the vector (tangential components). The Normal component value is ignored. -->
 
         </BCType>
       </Face>
