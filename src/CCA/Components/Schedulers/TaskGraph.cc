@@ -1559,6 +1559,7 @@ CompTable::findcomp(       Task::Dependency   * req
 
     // TODO - fix why this assert is tripped when the gold standard,
     // MPM/ARL/NanoPillar2D_FBC_sym.ups is run using a non-optimized build.
+    // Clue: This assertion is tripped if there are two modifies() in a single task.
     ASSERT(!result || p->m_comp->m_task->getSortedOrder() != result->m_comp->m_task->getSortedOrder());
 
     if (p->m_comp->m_task->getSortedOrder() < req->m_task->getSortedOrder()) {
