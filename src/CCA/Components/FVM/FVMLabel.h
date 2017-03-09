@@ -38,6 +38,7 @@ namespace Uintah{
       const VarLabel* ccRHS_ESPotential;
       const VarLabel* ccConductivity;
       const VarLabel* ccGridConductivity;
+      const VarLabel* ccCurrent;
       const VarLabel* fcxConductivity;
       const VarLabel* fcyConductivity;
       const VarLabel* fczConductivity;

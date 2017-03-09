@@ -43,6 +43,8 @@ FVMLabel::FVMLabel()
                         CCVariable<double>::getTypeDescription());
   ccGridConductivity  = VarLabel::create("cc.GridConductivity",
                           CCVariable<double>::getTypeDescription());
+  ccCurrent           = VarLabel::create("cc.Current",
+                          CCVariable<Vector>::getTypeDescription());
 
   fcxConductivity     = VarLabel::create("fcx.Conductivity",
                         SFCXVariable<double>::getTypeDescription());
@@ -73,6 +75,7 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(ccRHS_ESPotential);
   VarLabel::destroy(ccConductivity);
   VarLabel::destroy(ccGridConductivity);
+  VarLabel::destroy(ccCurrent);
   VarLabel::destroy(fcxConductivity);
   VarLabel::destroy(fcyConductivity);
   VarLabel::destroy(fczConductivity);

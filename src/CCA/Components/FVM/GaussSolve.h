@@ -23,8 +23,8 @@
  */
 
 
-#ifndef UINTAH_CCA_COMPONENTS_FVM_ELECTROSTATICSOLVE_H
-#define UINTAH_CCA_COMPONENTS_FVM_ELECTROSTATICSOLVE_H
+#ifndef UINTAH_CCA_COMPONENTS_FVM_GAUSSSOLVE_H
+#define UINTAH_CCA_COMPONENTS_FVM_GAUSSSOLVE_H
 
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Handle.h>
@@ -41,25 +41,25 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   ElectrostaticSolv
+   GaussSolve
 
 GENERAL INFORMATION
-   ElectrostaticSolv.h
+   GaussSolve.h
 
 KEYWORDS
-   ElectrostaticSolv
+   GaussSolve
 
 DESCRIPTION
-   A solver for electrostatic potential.
+   A solver for electrostatic potential based on charge distribution.
   
 WARNING
   
 ****************************************/
 
-  class ElectrostaticSolve : public UintahParallelComponent, public SimulationInterface {
+  class GaussSolve : public UintahParallelComponent, public SimulationInterface {
   public:
-    ElectrostaticSolve(const ProcessorGroup* myworld);
-    virtual ~ElectrostaticSolve();
+    GaussSolve(const ProcessorGroup* myworld);
+    virtual ~GaussSolve();
 
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
@@ -128,15 +128,6 @@ WARNING
                            DataWarehouse* old_dw, DataWarehouse* new_dw,
                            LevelP, Scheduler*);
 
-    void scheduleComputeCurrent(SchedulerP& sched, const LevelP& level,
-                               const MaterialSet* es_matl);
-
-    void computeCurrent(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw, DataWarehouse* new_dw,
-                        LevelP, Scheduler*);
-
     SimulationStateP d_shared_state;
     double d_delt;
     SolverInterface* d_solver;
@@ -145,8 +136,8 @@ WARNING
     MaterialSubset* d_es_matl;
     bool d_with_mpm;
     
-    ElectrostaticSolve(const ElectrostaticSolve&);
-    ElectrostaticSolve& operator=(const ElectrostaticSolve&);
+    GaussSolve(const GaussSolve&);
+    GaussSolve& operator=(const GaussSolve&);
          
   };
 }

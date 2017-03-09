@@ -72,6 +72,7 @@
 
 #ifndef NO_FVM
 #include <CCA/Components/FVM/ElectrostaticSolve.h>
+#include <CCA/Components/FVM/GaussSolve.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_FVM)
@@ -180,6 +181,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #ifndef NO_FVM
   if (sim_comp == "electrostatic_solver"){
 	  return scinew ElectrostaticSolve(world);
+  }
+
+  if(sim_comp == "gauss_solver"){
+    return scinew GaussSolve(world);
   }
 #else
   turned_off_options += "FVM ";

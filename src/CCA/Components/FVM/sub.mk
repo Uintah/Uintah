@@ -34,7 +34,8 @@ SRCDIR   := CCA/Components/FVM
 SRCS   += $(SRCDIR)/ElectrostaticSolve.cc \
           $(SRCDIR)/FVMBoundCond.cc       \
           $(SRCDIR)/FVMMaterial.cc        \
-          $(SRCDIR)/FVMLabel.cc
+          $(SRCDIR)/FVMLabel.cc           \
+          $(SRCDIR)/GaussSolve.cc
 
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 

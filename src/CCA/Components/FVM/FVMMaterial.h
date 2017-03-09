@@ -41,6 +41,9 @@ namespace Uintah {
       ~FVMMaterial();
 
       void initializeConductivity(CCVariable<double>& conductivity, const Patch* patch);
+      void initializePermitivityAndCharge(CCVariable<double>& permitivity,
+                                          CCVariable<double>& charge,
+                                          const Patch* patch);
 
     private:
        std::vector<GeometryObject*> d_geom_objs;

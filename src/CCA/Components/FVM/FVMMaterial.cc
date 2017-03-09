@@ -86,3 +86,28 @@ FVMMaterial::initializeConductivity(CCVariable<double>& conductivity, const Patc
     }
   }
 }
+
+void FVMMaterial::initializePermitivityAndCharge(CCVariable<double>& permitivity,
+                                                 CCVariable<double>& charge,
+                                                 const Patch* patch)
+{
+  permitivity.initialize(0);
+  charge.initialize(0);
+
+  Vector dx = patch->dCell();
+  double volume = dx.x() * dx.y() * dx.z();
+
+  for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
+        GeometryPieceP piece = d_geom_objs[obj]->getPiece();
+
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        Point center = patch->cellPosition(c);
+
+        if(piece->inside(center)){
+          permitivity[c] = d_geom_objs[obj]->getInitialData_double("permitivity");
+          charge[c] = volume * d_geom_objs[obj]->getInitialData_double("charge_density");
+        }
+      }
+    }
+}

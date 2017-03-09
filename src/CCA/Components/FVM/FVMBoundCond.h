@@ -46,7 +46,11 @@ namespace Uintah{
     		                           constSFCYVariable<double>& fcy_conductivity,
     		                           constSFCZVariable<double>& fcz_conductivity);
 
-      void setESPotentialBC(const Patch* patch, int dwi, CCVariable<double>& es_potential);
+      void setESPotentialBC(const Patch* patch, int dwi,
+                            CCVariable<double>& es_potential,
+                            constSFCXVariable<double>& fcx_conductivity,
+                            constSFCYVariable<double>& fcy_conductivity,
+                            constSFCZVariable<double>& fcz_conductivity);
 
   };
 }
