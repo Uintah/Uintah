@@ -383,7 +383,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     if (str_origin == "" || str_minor_radius == "" || str_major_radius == "" ) {
       ostringstream warn;
       warn<<"ERROR\n Ellipse BC geometry not correctly specified \n"
-      << " you must specify origin [x,y,z], inner_radius [r] outer_radius [r] \n\n";
+      << " you must specify origin [x,y,z], minor_radius [r] major_radius [r] \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
