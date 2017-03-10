@@ -762,9 +762,19 @@ MPMLabel::MPMLabel()
   czIDLabel_preReloc = VarLabel::create("cz.CZID+",
 			ParticleVariable<long64>::getTypeDescription() );
 
+  tracerIDLabel = VarLabel::create("t.tracerID",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  tracerIDLabel_preReloc = VarLabel::create("t.tracerID+",
+			ParticleVariable<long64>::getTypeDescription() );
+
   // for assigning particle ids
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
+
+  pCellNATracerIDLabel =
+    VarLabel::create("cellNATracerID", 
+                                   CCVariable<short int>::getTypeDescription());
 
   // ******* start - for temporary use only, CG
   pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
@@ -831,6 +841,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pParticleIDLabel_preReloc);
   VarLabel::destroy(czIDLabel);
   VarLabel::destroy(czIDLabel_preReloc);
+  VarLabel::destroy(tracerIDLabel);
+  VarLabel::destroy(tracerIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pScratchVecLabel);
   VarLabel::destroy(pScaleFactorLabel);
@@ -941,6 +953,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(TotalLocalizedParticleLabel);
   VarLabel::destroy(pCellNAPIDLabel);
   VarLabel::destroy(pCellNACZIDLabel);
+  VarLabel::destroy(pCellNATracerIDLabel);
 
   VarLabel::destroy(gVelocityOldLabel);
   VarLabel::destroy(dispNewLabel);

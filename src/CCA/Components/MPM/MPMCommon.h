@@ -51,6 +51,10 @@ namespace Uintah {
     virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
                                           SimulationStateP& sharedState,
                                           MPMFlags* flags);
+
+    virtual void tracerProblemSetup(const ProblemSpecP& prob_spec,
+                                    SimulationStateP& sharedState,
+                                    MPMFlags* flags);
    protected:
     const ProcessorGroup* d_myworld;
   };

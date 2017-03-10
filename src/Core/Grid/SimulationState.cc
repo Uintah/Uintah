@@ -40,6 +40,7 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
+#include <CCA/Components/MPM/Tracer/TracerMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
 #include <CCA/Components/FVM/FVMMaterial.h>
@@ -94,6 +95,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   all_mpm_matls     = 0;
   all_cz_matls      = 0;
+  all_tracer_matls  = 0;
   all_ice_matls     = 0;
   all_wasatch_matls = 0;  
   all_arches_matls  = 0;
@@ -236,6 +238,21 @@ void SimulationState::registerCZMaterial(CZMaterial* matl,unsigned int index)
 }
 //__________________________________
 //
+void SimulationState::registerTracerMaterial(TracerMaterial* matl)
+{
+  tracer_matls.push_back(matl);
+  registerMaterial(matl);
+}
+//__________________________________
+//
+void SimulationState::registerTracerMaterial(TracerMaterial* matl,
+                                             unsigned int index)
+{
+  tracer_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+//__________________________________
+//
 void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
 {
    arches_matls.push_back(matl);
@@ -317,6 +334,18 @@ void SimulationState::finalizeMaterials()
     tmp_cz_matls[i] = cz_matls[i]->getDWIndex();
   }
   all_cz_matls->addAll(tmp_cz_matls);
+  
+                                    // Tracer Zone
+  if (all_tracer_matls && all_tracer_matls->removeReference()){
+    delete all_tracer_matls;
+  }
+  all_tracer_matls = scinew MaterialSet();
+  all_tracer_matls->addReference();
+  vector<int> tmp_tracer_matls(tracer_matls.size());
+  for( int i=0; i<(int)tracer_matls.size(); i++ ) {
+    tmp_tracer_matls[i] = tracer_matls[i]->getDWIndex();
+  }
+  all_tracer_matls->addAll(tmp_tracer_matls);
   
                                     // Arches Matls
   if (all_arches_matls && all_arches_matls->removeReference()){
@@ -422,6 +451,10 @@ void SimulationState::clearMaterials()
     delete all_cz_matls;
   }
 
+  if(all_tracer_matls && all_tracer_matls->removeReference()){
+    delete all_tracer_matls;
+  }
+
   if (all_arches_matls && all_arches_matls->removeReference()){
     delete all_arches_matls;
   }
@@ -445,6 +478,7 @@ void SimulationState::clearMaterials()
   matls.clear();
   mpm_matls.clear();
   cz_matls.clear();
+  tracer_matls.clear();
   arches_matls.clear();
   ice_matls.clear();
   wasatch_matls.clear();
@@ -455,10 +489,13 @@ void SimulationState::clearMaterials()
   d_particleState_preReloc.clear();
   d_cohesiveZoneState.clear();
   d_cohesiveZoneState_preReloc.clear();
+  d_tracerState.clear();
+  d_tracerState_preReloc.clear();
 
   all_matls         = 0;
   all_mpm_matls     = 0;
   all_cz_matls      = 0;
+  all_tracer_matls  = 0;
   all_arches_matls  = 0;
   all_ice_matls     = 0;
   all_fvm_matls     = 0;
@@ -505,6 +542,13 @@ const MaterialSet* SimulationState::allCZMaterials() const
 {
   ASSERT(all_cz_matls != 0);
   return all_cz_matls;
+}
+//__________________________________
+//
+const MaterialSet* SimulationState::allTracerMaterials() const
+{
+  ASSERT(all_tracer_matls != 0);
+  return all_tracer_matls;
 }
 //__________________________________
 //

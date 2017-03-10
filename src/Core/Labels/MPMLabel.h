@@ -316,7 +316,10 @@ namespace Uintah {
       const VarLabel* czFailedLabel_preReloc; 
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
+      const VarLabel* tracerIDLabel; 
+      const VarLabel* tracerIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
+      const VarLabel* pCellNATracerIDLabel;
 
       // ******* start - for temporary use only, CG
       const VarLabel* pPressureLabel_t1;

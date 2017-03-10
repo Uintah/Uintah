@@ -51,6 +51,7 @@ class Material;
 class ICEMaterial;
 class MPMMaterial;
 class CZMaterial;
+class TracerMaterial;
 class ArchesMaterial; 
 class WasatchMaterial;
 class FVMMaterial;
@@ -127,6 +128,8 @@ public:
   void registerMPMMaterial(MPMMaterial*,unsigned int index);
   void registerCZMaterial(CZMaterial*);
   void registerCZMaterial(CZMaterial*,unsigned int index);
+  void registerTracerMaterial(TracerMaterial*);
+  void registerTracerMaterial(TracerMaterial*,unsigned int index);
   void registerArchesMaterial(ArchesMaterial*);
   void registerICEMaterial(ICEMaterial*);
   void registerICEMaterial(ICEMaterial*,unsigned int index);
@@ -143,6 +146,9 @@ public:
   }
   int getNumCZMatls() const {
     return (int)cz_matls.size();
+  }
+  int getNumTracerMatls() const {
+    return (int)tracer_matls.size();
   }
   int getNumArchesMatls() const {
     return (int)arches_matls.size();
@@ -167,6 +173,9 @@ public:
   }
   CZMaterial* getCZMaterial(int idx) const {
     return cz_matls[idx];
+  }
+  TracerMaterial* getTracerMaterial(int idx) const {
+    return tracer_matls[idx];
   }
   ArchesMaterial* getArchesMaterial(int idx) const {
     return arches_matls[idx];
@@ -194,6 +203,7 @@ public:
   void finalizeMaterials();
   const MaterialSet* allMPMMaterials() const;
   const MaterialSet* allCZMaterials() const;
+  const MaterialSet* allTracerMaterials() const;
   const MaterialSet* allArchesMaterials() const;
   const MaterialSet* allICEMaterials() const;
   const MaterialSet* allFVMMaterials() const;
@@ -265,6 +275,9 @@ public:
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
 
+  std::vector<std::vector<const VarLabel* > > d_tracerState;
+  std::vector<std::vector<const VarLabel* > > d_tracerState_preReloc;
+
   void resetStats();
   
   // timing statistics to test load balance
@@ -325,6 +338,7 @@ private:
   std::vector<Material*>        matls;
   std::vector<MPMMaterial*>     mpm_matls;
   std::vector<CZMaterial*>      cz_matls;
+  std::vector<TracerMaterial*>  tracer_matls;
   std::vector<ArchesMaterial*>  arches_matls;
   std::vector<ICEMaterial*>     ice_matls;
   std::vector<WasatchMaterial*> wasatch_matls;
@@ -347,6 +361,7 @@ private:
 
   MaterialSet    * all_mpm_matls;
   MaterialSet    * all_cz_matls;
+  MaterialSet    * all_tracer_matls;
   MaterialSet    * all_ice_matls;
   MaterialSet    * all_wasatch_matls;  
   MaterialSet    * all_arches_matls;

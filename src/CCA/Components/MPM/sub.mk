@@ -59,6 +59,7 @@ SUBDIRS := \
 	$(SRCDIR)/PhysicalBC        \
 	$(SRCDIR)/ParticleCreator   \
 	$(SRCDIR)/CohesiveZone      \
+	$(SRCDIR)/Tracer            \
 	$(SRCDIR)/HeatConduction    \
 	$(SRCDIR)/MMS               \
 	$(SRCDIR)/ReactionDiffusion

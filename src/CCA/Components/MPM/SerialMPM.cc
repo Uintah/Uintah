@@ -26,6 +26,8 @@
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
+#include <CCA/Components/MPM/Tracer/TracerMaterial.h>
+#include <CCA/Components/MPM/Tracer/Tracer.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
@@ -271,6 +273,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
 
+  tracerProblemSetup(restart_mat_ps, d_sharedState,flags);
+
   //__________________________________
   //  create analysis modules
   // call problemSetup
@@ -321,6 +325,11 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 
   for (int i = 0; i < d_sharedState->getNumCZMatls();i++) {
     CZMaterial* mat = d_sharedState->getCZMaterial(i);
+    ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
+  }
+
+  for (int i = 0; i < d_sharedState->getNumTracerMatls();i++) {
+    TracerMaterial* mat = d_sharedState->getTracerMaterial(i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
@@ -406,6 +415,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->p_qLabel);
   }
 
+  // The task will have a reference to zeroth_matl
+  if (zeroth_matl->removeReference())
+    delete zeroth_matl; // shouln't happen, but...
+
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -416,10 +429,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 
   schedulePrintParticleCount(level, sched);
-
-  // The task will have a reference to zeroth_matl
-  if (zeroth_matl->removeReference())
-    delete zeroth_matl; // shouln't happen, but...
 
   if (flags->d_useLoadCurves) {
     // Schedule the initialization of pressure BCs per particle
@@ -443,6 +452,13 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     ch->scheduleInitialize(level, sched, cz_matl);
   }
 
+  int numTracerM = d_sharedState->getNumTracerMatls();
+//  for(int m = 0; m < numTracerM; m++){
+  if(numTracerM>0){
+    TracerMaterial* tracer_matl = d_sharedState->getTracerMaterial(0);
+    Tracer* tr = tracer_matl->getTracer();
+    tr->scheduleInitialize(level, sched);// tracer_matl);
+  }
 }
 //______________________________________________________________________
 //
@@ -603,10 +619,12 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
   const MaterialSet* cz_matls = d_sharedState->allCZMaterials();
+  const MaterialSet* tracer_matls = d_sharedState->allTracerMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
 
   const MaterialSubset* mpm_matls_sub = matls->getUnion();
   const MaterialSubset* cz_matls_sub  = cz_matls->getUnion();
+  const MaterialSubset* tracer_matls_sub  = tracer_matls->getUnion();
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
@@ -640,6 +658,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleFinalParticleUpdate(            sched, patches, matls);
+  if(flags->d_useTracers){
+    scheduleUpdateTracers(                sched, patches, mpm_matls_sub,
+                                                          tracer_matls_sub,
+                                                          all_matls);
+  }
   scheduleInsertParticles(                    sched, patches, matls);
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(       sched, patches, matls);
@@ -668,8 +691,16 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     d_sharedState->d_cohesiveZoneState_preReloc,
                                     lb->pXLabel,
                                     d_sharedState->d_cohesiveZoneState,
-                                    lb->czIDLabel, cz_matls,2);
-  }
+                                    lb->czIDLabel, cz_matls, 2);
+ }
+
+ if(flags->d_useTracers){
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+                                    d_sharedState->d_tracerState_preReloc,
+                                    lb->pXLabel,
+                                    d_sharedState->d_tracerState,
+                                    lb->tracerIDLabel, tracer_matls, 3);
+ }
 
   //__________________________________
   //  on the fly analysis
@@ -1360,6 +1391,35 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+void SerialMPM::scheduleUpdateTracers(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSubset* mpm_matls,
+                                      const MaterialSubset* tracer_matls,
+                                      const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleUpdateTracers");
+
+  Task* t=scinew Task("MPM::updateTracers",
+                      this, &SerialMPM::updateTracers);
+
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gnone = Ghost::None;
+  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,    gac,NGN);
+  t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,    gac,NGN);
+  t->requires(Task::OldDW, lb->pXLabel,            tracer_matls, gnone);
+  t->requires(Task::OldDW, lb->tracerIDLabel,      tracer_matls, gnone);
+
+  t->computes(lb->pXLabel_preReloc,           tracer_matls);
+  t->computes(lb->tracerIDLabel_preReloc,     tracer_matls);
+
+  sched->addTask(t, patches, matls);
+}
 void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* mpm_matls,
@@ -3876,6 +3936,93 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
   } // patches
 }
 
+void SerialMPM::updateTracers(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* ,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing updateTracers");
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
+    StaticArray<constNCVariable<double> > gmass(numMPMMatls);
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN);
+      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN);
+    }
+
+    int numTracerMatls=d_sharedState->getNumTracerMatls();
+    for(int m = 0; m < numTracerMatls; m++){
+      TracerMaterial* t_matl = d_sharedState->getTracerMaterial( m );
+      int dwi = t_matl->getDWIndex();
+
+      int adv_matl = t_matl->getAssociatedMaterial();
+
+      // Not populating the delset, but we need this to satisfy Relocate
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+      new_dw->deleteParticles(delset);
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> tx;
+      ParticleVariable<Point> tx_new;
+      constParticleVariable<long64> tracer_ids;
+      ParticleVariable<long64> tracer_ids_new;
+
+      old_dw->get(tx,          lb->pXLabel,                         pset);
+      old_dw->get(tracer_ids,  lb->tracerIDLabel,                   pset);
+
+      new_dw->allocateAndPut(tx_new,        lb->pXLabel_preReloc,       pset);
+      new_dw->allocateAndPut(tracer_ids_new,lb->tracerIDLabel_preReloc, pset);
+
+      tracer_ids_new.copyData(tracer_ids);
+
+      // Loop over particles
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        Matrix3 size(1.0,0.,0.,0.,1.0,0.,0.,0.,1.0);
+        Matrix3 defgrad;
+        defgrad.Identity();
+
+        // Get the node indices that surround the cell
+        int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size,defgrad);
+        Vector vel(0.0,0.0,0.0);
+
+        double sumSk=0.0;
+        // Accumulate the contribution from each surrounding vertex
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          sumSk += gmass[adv_matl][node]*S[k];
+        }
+        vel/=sumSk;
+
+        // Update the tracer's position
+        tx_new[idx] = tx[idx] + vel*delT;
+      }
+    }
+
+    delete interpolator;
+  }
+}
+
 void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* ,
@@ -4912,4 +5059,3 @@ bool SerialMPM::needRecompile(double , double , const GridP& )
     return false;
   }
 }
-
