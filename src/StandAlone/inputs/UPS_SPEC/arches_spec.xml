@@ -918,8 +918,11 @@
 
             <geom_object/>
           </region>
-          <deposit_velocity_name             spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
-          <coal_region                       spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
+          <deposit_velocity_name        spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
+          <coal_name                    spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- this is the name corresponding to a given ash composition. -->
+          <emissivity_model_type        spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- default is "constant" this uses wall_emissivity. "dynamic" will estimate the emissivity from a mie-theory based model. -->
+          <frenkel_constant             spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 1.225. This is the constant in the sintering model. -->
+          <coal_region                  spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
             <T_slag                     spec="REQUIRED DOUBLE"/>  <!-- Slagging Temperature, [K] -->
             <erosion_thickness          spec="REQUIRED DOUBLE"/>  <!-- maximum deposit thickness, [m] -->
             <tscale_dep                 spec="REQUIRED DOUBLE"/>  <!-- time scale of deposition, [s] -->

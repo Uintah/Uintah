@@ -54,14 +54,19 @@ namespace Uintah{
       struct HTVariables {
 
         double time;
+        int em_model_type;
         double delta_t;
         CCVariable<double> T;
         CCVariable<double> T_copy;
         CCVariable<double> T_real;
         CCVariable<double> deposit_thickness;
+        CCVariable<double> emissivity;
+        CCVariable<double> thermal_cond_en;
+        CCVariable<double> thermal_cond_sb;
         CCVariable<double> deposit_velocity;
         constCCVariable<double> deposit_velocity_old;
         constCCVariable<double> ave_deposit_velocity;
+        constCCVariable<double> d_vol_ave;
         constCCVariable<double> T_real_old;
         constCCVariable<double> T_old;
         constCCVariable<int> celltype;
@@ -72,6 +77,9 @@ namespace Uintah{
         constCCVariable<double> incident_hf_t;
         constCCVariable<double> incident_hf_b;
         constCCVariable<double> deposit_thickness_old;
+        constCCVariable<double> emissivity_old;
+        constCCVariable<double> thermal_cond_en_old;
+        constCCVariable<double> thermal_cond_sb_old;
         CCVariable<Stencil7> total_hf;
         constCCVariable<Vector > cc_vel;
         WallModelDriver::RAD_MODEL_TYPE model_type;
@@ -104,6 +112,10 @@ namespace Uintah{
       const VarLabel* _ave_dep_vel_label;
       const VarLabel* _deposit_velocity_label;
       const VarLabel* _deposit_thickness_label;
+      const VarLabel* _d_vol_ave_label;
+      const VarLabel* _emissivity_label;
+      const VarLabel* _thermal_cond_en_label;
+      const VarLabel* _thermal_cond_sb_label;
 
       void doWallHT( const ProcessorGroup* my_world,
                      const PatchSubset* patches,
@@ -178,6 +190,21 @@ namespace Uintah{
         db->require( "deposit_velocity_name", new_name );
         return new_name;
       }
+      
+      inline static int get_emissivity_model_type( const ProblemSpecP& input_db ){
+        ProblemSpecP db = input_db;
+        std::string model_type;
+        int model_int;
+        db->getWithDefault( "emissivity_model_type", model_type,"constant");
+        if (model_type=="constant"){
+          model_int = 1;
+        } else if ( model_type=="dynamic"){
+          model_int = 2;
+        } else {
+          throw InvalidValue("Error: emissivity_model_type must be either constant or dynamic.", __FILE__, __LINE__);
+        }
+          return model_int;
+      }
 
 
       //-----------------------------------------------------------------
@@ -222,6 +249,103 @@ namespace Uintah{
             return test;
 
           };
+        
+
+
+          struct EmissivityBase {
+            virtual void model(double &e, const double &C, double &T, double &Dp, double &tau)=0;
+            virtual ~EmissivityBase(){}};
+          
+          EmissivityBase* m_em_model; 
+
+          struct constant_e : EmissivityBase {
+            void model(double &e, const double &C, double &T, double &Dp, double &tau) {
+               e = C;
+            }
+              ~constant_e(){}
+            };
+            
+            struct dynamic_e : EmissivityBase {
+              dynamic_e(ProblemSpecP db_model){
+                std::string ash_type;
+                db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
+                db_model->getWithDefault( "frenkel_constant", A_frenkel, 1.225);
+                if (ash_type == "indonesian"){
+                  a_sv = -1.503e4;
+                  b_sv = -1.031;
+                  c_sv = 5.366;
+                  a_agg = 0.003329;
+                  b_agg = 8.575;
+                  c_agg = 0.3315;
+                  dp_eff_max=0.674746603591938;
+                  dp_eff_min=0.333333333333333;
+                  dpmax = 3000*1e-6;
+                  coeff_num = {0.133872433468528, -0.085588305614014, 0.420224738232270, 0.345964536984323, 0.157355184642739, -0.420810405519288};
+                  coeff_den = {1.000000000000000, 0.031154322452954, 0.261038846958539, -0.019838837050095, 0.033559752459297, -0.641137462770430};
+                  xscale = {750, 0.001496250000000}; 
+                  xcenter = {1050, 0.00150375}; 
+                  yscale = 0.082268841760067; 
+                  ycenter = 0.940464141548903; 
+                  fresnel={0.9671, -1.076e-06, -0.1613, -0.005533};
+                } else {
+                  throw InvalidValue("Error, coal_name wasn't recognized in dynamic ash emissivity data-base. ", __FILE__, __LINE__);
+                }
+
+            }
+              double a_sv;
+              double b_sv;
+              double c_sv;
+              double A_frenkel;
+              double a_agg;
+              double b_agg;
+              double c_agg;
+              double dp_eff_max;
+              double dp_eff_min;
+              double dpmax;
+              std::vector<double> coeff_num;
+              std::vector<double> coeff_den;
+              std::vector<double> xscale; 
+              std::vector<double> xcenter; 
+              double yscale; 
+              double ycenter; 
+              std::vector<double> fresnel;
+              void model(double &e, const double &C, double &T, double &Dp, double &tau) {
+                
+                // surface tension and viscosity model:
+                // power law fit: log10(st/visc) = a*T^b+c
+                double log10SurfT_div_Visc = a_sv*std::pow(T,b_sv)+c_sv; // [=] log10(m-s)
+                double SurfT_div_Visc = std::pow(10,log10SurfT_div_Visc); // [=] m-s
+                 
+                // Frenkel's model for sintering
+                double x_r = A_frenkel*sqrt(SurfT_div_Visc*tau/Dp/2.0); // Frenkel's model for sintering [=] m/m
+                
+                // agglomeration model related x/r to effective particle size
+                // power law fit: dp_eff_scaled = a*(x/r+1)^b+c
+                double rvec=std::min(a_agg*std::pow((x_r+1),b_agg)+c_agg,dp_eff_max);
+                double m_dp = (dpmax-Dp)/(dp_eff_max-dp_eff_min);
+                double b_dp = Dp - m_dp*dp_eff_min;
+                double d_eff=m_dp*rvec+b_dp;
+          
+                // mie emissivity as a function of temperature and effective particle size
+                // rational quardratice fit: y = (a1+a2*x1+a3*x2+a4*x1^2+a5*x1*x2+a6*x2^2)/(b1+b2*x1+b3*x2+b4*x1^2+b5*x1*x2+b6*x2^2) 
+                double T_sc = (T-xcenter[0])/xscale[0];
+                double d_eff_sc = (d_eff-xcenter[1])/xscale[1];
+                double xv[6]={1, T_sc, d_eff_sc, std::pow(T_sc,2), T_sc*d_eff_sc, std::pow(d_eff_sc,2.0)};
+                double num=0;
+                double den=0;
+                for ( int I=0; I < 6; I++ ) {
+                  num+=coeff_num[I]*xv[I];
+                  den+=coeff_den[I]*xv[I];
+                }
+                e = num/den;
+                e = e*yscale + ycenter;
+                // finally set emissivity to fresnel emissivity (slagging limit) if mie-theory emissivity is too high.
+                // 2nd order exponential fit: ef = a*exp(b*T)+c*exp(d*T);
+                double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T); 
+                e=std::min(ef,e);
+              }
+              ~dynamic_e(){}
+            };
 
 
       };
@@ -362,7 +486,7 @@ namespace Uintah{
               std::vector<GeometryPieceP> geometry;
           };
 
-          inline void newton_solve(WallInfo& wi, HTVariables& vars, double &TW_new, double &T_old, double &rad_q, double &net_q, double &R_tot );
+          inline void newton_solve(WallInfo& wi, HTVariables& vars, double &TW_new, double &T_old, double &rad_q, double &net_q, double &R_tot, double &Emiss );
 
           std::vector<WallInfo> _regions;
 

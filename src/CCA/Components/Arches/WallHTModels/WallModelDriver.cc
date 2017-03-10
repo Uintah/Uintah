@@ -3,7 +3,7 @@
  *
  * Copyright (c) 1997-2016 The University of Utah
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
+  is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
  * deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
@@ -71,6 +71,9 @@ WallModelDriver::~WallModelDriver()
   VarLabel::destroy( _True_T_Label );
   if (do_coal_region){
     VarLabel::destroy( _deposit_thickness_label );
+    VarLabel::destroy( _emissivity_label );
+    VarLabel::destroy( _thermal_cond_en_label );
+    VarLabel::destroy( _thermal_cond_sb_label );
   }
 }
 
@@ -147,6 +150,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       _all_ht_models.push_back( coal_ht );
 
       _dep_vel_name = get_dep_vel_name( db_model );
+    
     } else {
 
       throw InvalidValue("Error: Wall Heat Transfer model not recognized.", __FILE__, __LINE__);
@@ -157,6 +161,9 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
   if (do_coal_region){
     const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
     _deposit_thickness_label = VarLabel::create( "deposit_thickness", CC_double );
+    _emissivity_label = VarLabel::create( "emissivity", CC_double );
+    _thermal_cond_en_label = VarLabel::create( "thermal_cond_en", CC_double );
+    _thermal_cond_sb_label = VarLabel::create( "thermal_cond_sb", CC_double );
   }
 
 }
@@ -182,6 +189,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   if (do_coal_region){
     _ave_dep_vel_label = VarLabel::find(_dep_vel_name);
+    _d_vol_ave_label = VarLabel::find("d_vol_ave");
   }
 
   if ( !check_varlabels() ){
@@ -203,8 +211,15 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     task->requires( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 );
     if (do_coal_region){
       task->computes( _deposit_thickness_label );
+      task->computes( _emissivity_label );
+      task->computes( _thermal_cond_en_label );
+      task->computes( _thermal_cond_sb_label );
       task->requires( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _emissivity_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _thermal_cond_en_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _thermal_cond_sb_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _ave_dep_vel_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _d_vol_ave_label, Ghost::None, 0 );
     }
     //task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 );
 
@@ -283,14 +298,27 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
       if (do_coal_region){
         old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
+        old_dw->get( vars.d_vol_ave , _d_vol_ave_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
         old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.emissivity_old , _emissivity_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.thermal_cond_en_old , _thermal_cond_en_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.thermal_cond_sb_old , _thermal_cond_sb_label, _matl_index, patch, Ghost::None, 0 );
         new_dw->allocateAndPut( vars.deposit_thickness, _deposit_thickness_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.emissivity, _emissivity_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.thermal_cond_en, _thermal_cond_en_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        new_dw->allocateAndPut( vars.thermal_cond_sb, _thermal_cond_sb_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( vars.celltype[*c] > 7 && vars.celltype[*c] < 11 ){
             vars.deposit_thickness[*c] = vars.deposit_thickness_old[*c];
+            vars.emissivity[*c] = vars.emissivity_old[*c];
+            vars.thermal_cond_en[*c] = vars.thermal_cond_en_old[*c];
+            vars.thermal_cond_sb[*c] = vars.thermal_cond_sb_old[*c];
           } else {
             vars.deposit_thickness[*c] = 0.0;
+            vars.emissivity[*c] = 0.0;
+            vars.thermal_cond_en[*c] = 0.0;
+            vars.thermal_cond_sb[*c] = 0.0;
           }
         }
       }
@@ -357,15 +385,33 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
       if (do_coal_region){
         CCVariable<double> deposit_thickness;
+        CCVariable<double> emissivity;
+        CCVariable<double> thermal_cond_en;
+        CCVariable<double> thermal_cond_sb;
         constCCVariable<double> deposit_thickness_old;
+        constCCVariable<double> emissivity_old;
+        constCCVariable<double> thermal_cond_en_old;
+        constCCVariable<double> thermal_cond_sb_old;
         old_dw->get( deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( emissivity_old , _emissivity_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( thermal_cond_en_old , _thermal_cond_en_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( thermal_cond_sb_old , _thermal_cond_sb_label, _matl_index, patch, Ghost::None, 0 );
         new_dw->allocateAndPut( deposit_thickness, _deposit_thickness_label, _matl_index , patch );
+        new_dw->allocateAndPut( emissivity, _emissivity_label, _matl_index , patch );
+        new_dw->allocateAndPut( thermal_cond_en, _thermal_cond_en_label, _matl_index , patch );
+        new_dw->allocateAndPut( thermal_cond_sb, _thermal_cond_sb_label, _matl_index , patch );
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( cell_type[*c] > 7 && cell_type[*c] < 11 ){
             deposit_thickness[*c] = deposit_thickness_old[*c];
+            emissivity[*c] = emissivity_old[*c];
+            thermal_cond_en[*c] = thermal_cond_en_old[*c];
+            thermal_cond_sb[*c] = thermal_cond_sb_old[*c];
           } else {
             deposit_thickness[*c] = 0.0;
+            emissivity[*c] = 0.0;
+            thermal_cond_en[*c] = 0.0;
+            thermal_cond_sb[*c] = 0.0;
           }
         }
       }
@@ -837,6 +883,7 @@ WallModelDriver::CoalRegionHT::CoalRegionHT()
 
 //----------------------------------
 WallModelDriver::CoalRegionHT::~CoalRegionHT(){
+  delete m_em_model;
 };
 
 //----------------------------------
@@ -847,6 +894,15 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
   db->getWithDefault( "max_it", _max_it, 50 );
   db->getWithDefault( "initial_tol", _init_tol, 1e-3 );
   db->getWithDefault( "tol", _tol, 1e-5 );
+      
+  int emissivity_model_type = get_emissivity_model_type( db );
+  if (emissivity_model_type == 1){
+    m_em_model = scinew constant_e();
+  } else if (emissivity_model_type == 2){
+    m_em_model = scinew dynamic_e(db);
+  } else {
+    throw InvalidValue("ERROR: WallModelDriver: No emissivity model selected.",__FILE__,__LINE__);
+  }
 
   for ( ProblemSpecP r_db = db->findBlock("coal_region"); r_db != nullptr; r_db = r_db->findNextBlock("coal_region") ) {
 
@@ -872,7 +928,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
 void
 WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){
 
-  double TW_new, T_old, net_q, rad_q, total_area_face, R_wall, R_d, R_tot;
+  double TW_new, T_old, net_q, rad_q, total_area_face, R_wall, R_d, R_tot, Emiss, dp_arrival, tau_sint;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); // cell spacing
@@ -896,7 +952,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
   //Pad for ghosts
   lowPindex -= IntVector(1,1,1);
   highPindex += IntVector(1,1,1);
-
+  
   for ( std::vector<WallInfo>::iterator region_iter = _regions.begin(); region_iter != _regions.end(); region_iter++ ){
 
     WallInfo wi = *region_iter;
@@ -966,17 +1022,25 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               rad_q /= total_area_face; // representative radiative flux to the cell.
 
               R_wall = wi.dy / wi.k;
-
+              Emiss=vars.emissivity_old[c]; // We are using the old emissivity for the calculation of the deposition regime
+                                            // and the new temperature. We then update the emissivity using the new temperature.
+                                            // This effectivly time-lags the emissivity by one radiation-solve. We chose to do this 
+                                            // because we didn't want to make the temperature solve more expensive. 
+              TW_new =  vars.T_real_old[c];
+              dp_arrival=vars.d_vol_ave[c];
+              tau_sint=min(dp_arrival/max(vars.ave_deposit_velocity[c],1e-50),1e10); // [s]  
+              vars.thermal_cond_en[c]=0.0;
+              vars.thermal_cond_sb[c]=0.0;
               vars.deposit_thickness[c] = vars.ave_deposit_velocity[c] * wi.t_sb;
 
               vars.deposit_thickness[c] = min(vars.deposit_thickness[c],wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
 
               // here we computed quantaties to find which deposition regime we are in.
               double qnet_max = rad_q - _sigma_constant * std::pow( wi.T_slag, 4.0 );
-              qnet_max *= wi.emissivity;
+              qnet_max *= Emiss;
               qnet_max = qnet_max > 1e-8 ? qnet_max : 1e-8; // to avoid div by zero we min is 1e-8
               double dp_max = wi.k_deposit * ( (wi.T_slag-wi.T_inner)/qnet_max - R_wall);
-              double rad_q_max = (wi.T_slag-wi.T_inner)/(R_wall*wi.emissivity) + _sigma_constant*std::pow(wi.T_slag,4.0);
+              double rad_q_max = (wi.T_slag-wi.T_inner)/(R_wall*Emiss) + _sigma_constant*std::pow(wi.T_slag,4.0);
 
               if (vars.deposit_thickness[c] < dp_max) {
                 // Regime 1
@@ -994,9 +1058,14 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               R_d = vars.deposit_thickness[c] / wi.k_deposit;
               R_tot = R_wall + R_d; // total thermal resistance
               T_old =  vars.T_real_old[c];
-              TW_new =  vars.T_real_old[c];
               net_q = rad_q;
-              newton_solve( wi, vars, TW_new, T_old, rad_q, net_q, R_tot ); // this funcitons solves for the new TW_new.
+              newton_solve( wi, vars, TW_new, T_old, rad_q, net_q, R_tot, Emiss ); // this funcitons solves for the new TW_new.
+              //TW_new = 900.0;
+              //dp_arrival = 1e-20;
+              //tau_sint = 0.0;              
+              m_em_model->model(Emiss,wi.emissivity,TW_new,dp_arrival, tau_sint);
+              //std::cout << "Tp: " << TW_new << " dp: " << dp_arrival << " tau: " << tau_sint << " e: " << Emiss << std::endl; 
+              vars.emissivity[c]=Emiss;
               vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new; // this is the real wall temperature, vars.T_real_old is the old solution for "temperature".
               // now to make consistent with assumed emissivity of 1 in radiation model:
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
@@ -1062,7 +1131,7 @@ WallModelDriver::CoalRegionHT::copySolution( const Patch* patch, CCVariable<doub
 }
 //----------------------------------
 void
-WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, double &TW_new, double &T_old, double &rad_q, double &net_q, double &R_tot )
+WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, double &TW_new, double &T_old, double &rad_q, double &net_q, double &R_tot, double &Emiss  )
 {
   // solver constants
   double d_tol    = 1e-15;
@@ -1080,11 +1149,11 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, dou
   TW_old = TW_guess-delta;
   net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
   net_q = net_q > 0 ? net_q : 0;
-  net_q *= wi.emissivity;
+  net_q *= Emiss;
   f0 = - TW_old + wi.T_inner + net_q * R_tot;
   TW_new = TW_guess+delta;
   net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
-  net_q *= wi.emissivity;
+  net_q *= Emiss;
   net_q = net_q>0 ? net_q : 0;
   f1 = - TW_new + wi.T_inner + net_q * R_tot;
   for ( int iterT=0; iterT < NIter; iterT++) {
@@ -1095,13 +1164,13 @@ WallModelDriver::CoalRegionHT::newton_solve(WallInfo& wi, HTVariables& vars, dou
     if (std::abs(TW_new-TW_old) < d_tol){
       net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
       net_q =  net_q > 0 ? net_q : 0;
-      net_q *= wi.emissivity;
+      net_q *= Emiss;
       break;
     }
     f0    =  f1;
     net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
     net_q =  net_q>0 ? net_q : 0;
-    net_q *= wi.emissivity;
+    net_q *= Emiss;
     f1    = - TW_new + wi.T_inner + net_q * R_tot;
   }
 }

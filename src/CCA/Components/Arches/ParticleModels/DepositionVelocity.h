@@ -75,6 +75,8 @@ private:
       std::string _rhoP_name;
       double _user_specified_rho;
       double _relaxation_coe;
+      std::string _diameter_base_name;
+      double _pi = std::acos(-1.);
 
   };
 }
