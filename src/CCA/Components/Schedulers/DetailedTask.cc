@@ -48,7 +48,10 @@
 
 using namespace Uintah;
 
+
+// declared in DetailedTasks.h - used in both places to protect external ready queue (hence, extern here)
 extern std::mutex g_external_ready_mutex;
+
 
 namespace {
 
@@ -484,28 +487,26 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
 void
 DetailedTask::dependencySatisfied( InternalDependency * dep )
 {
-  g_internal_dependency_mutex.lock();
-  {
-    ASSERT(numPendingInternalDependencies > 0);
-    unsigned long currentGeneration = d_taskGroup->getCurrentDependencyGeneration();
+  std::lock_guard<std::mutex> internal_dependency_guard(g_internal_dependency_mutex);
 
-    // if false, then the dependency has already been satisfied
-    ASSERT(dep->m_satisfied_generation < currentGeneration);
+  ASSERT(numPendingInternalDependencies > 0);
+  unsigned long currentGeneration = d_taskGroup->getCurrentDependencyGeneration();
 
-    dep->m_satisfied_generation = currentGeneration;
-    numPendingInternalDependencies--;
+  // if false, then the dependency has already been satisfied
+  ASSERT(dep->m_satisfied_generation < currentGeneration);
 
-    DOUT(internaldbg, *(dep->m_dependent_task->getTask()) << " has " << numPendingInternalDependencies << " left.");
+  dep->m_satisfied_generation = currentGeneration;
+  numPendingInternalDependencies--;
 
-    DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->m_prerequisite_task << " dep: "
-                              << *dep->m_dependent_task << " numPending: " << numPendingInternalDependencies);
+  DOUT(internaldbg, *(dep->m_dependent_task->getTask()) << " has " << numPendingInternalDependencies << " left.");
 
-    if (numPendingInternalDependencies == 0) {
-      d_taskGroup->internalDependenciesSatisfied( this );
-      numPendingInternalDependencies = internalDependencies.size(); // reset for next timestep
-    }
+  DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->m_prerequisite_task
+                            << " dep: " << *dep->m_dependent_task << " numPending: " << numPendingInternalDependencies);
+
+  if (numPendingInternalDependencies == 0) {
+    d_taskGroup->internalDependenciesSatisfied(this);
+    numPendingInternalDependencies = internalDependencies.size();  // reset for next timestep
   }
-  g_internal_dependency_mutex.unlock();
 }
 
 //_____________________________________________________________________________
@@ -513,16 +514,14 @@ DetailedTask::dependencySatisfied( InternalDependency * dep )
 void
 DetailedTask::emitEdges( ProblemSpecP edgesElement )
 {
-  std::map<DependencyBatch*, DependencyBatch*>::iterator req_iter;
-  for ( req_iter = d_reqs.begin(); req_iter != d_reqs.end(); req_iter++ ) {
+  for (auto req_iter = d_reqs.begin(); req_iter != d_reqs.end(); req_iter++) {
     DetailedTask* fromTask = (*req_iter).first->m_from_task;
-    ProblemSpecP  edge     = edgesElement->appendChild("edge");
+    ProblemSpecP edge = edgesElement->appendChild("edge");
     edge->appendElement("source", fromTask->getName());
     edge->appendElement("target", getName());
   }
 
-  std::list<InternalDependency>::iterator iter;
-  for (iter = internalDependencies.begin(); iter != internalDependencies.end(); iter++) {
+  for (auto iter = internalDependencies.begin(); iter != internalDependencies.end(); iter++) {
     DetailedTask* fromTask = (*iter).m_prerequisite_task;
     if (getTask()->isReductionTask() && fromTask->getTask()->isReductionTask()) {
       // Ignore internal links between reduction tasks because they
