@@ -157,7 +157,11 @@ bool PetscLinearSolve(Mat& A,
     throw UintahPetscError(ierr, "KSPCreate", __FILE__, __LINE__);
     
     
+#if (PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR >= 6)
+  ierr = KSPSetOperators(solver,A,A);
+#else
   ierr = KSPSetOperators(solver,A,A,DIFFERENT_NONZERO_PATTERN);
+#endif
   if(ierr)
     throw UintahPetscError(ierr, "KSPSetOperators", __FILE__, __LINE__);
   
