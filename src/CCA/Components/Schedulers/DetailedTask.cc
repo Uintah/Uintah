@@ -122,8 +122,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     message << "   num Pending Deps: " << numPendingInternalDependencies << "\n";
     message << "   Originally needed deps (" << internalDependencies.size() << "):\n";
 
-    std::list<InternalDependency>::iterator iter = internalDependencies.begin();
-
+    auto iter = internalDependencies.begin();
     for (int i = 0; iter != internalDependencies.end(); ++iter, ++i) {
       message << i << ":    " << *((*iter).m_prerequisite_task->getTask()) << "\n";
     }
@@ -167,7 +166,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 
   d_task->doit( this, event, pg, d_patches, d_matls, dws, nullptr, nullptr, nullptr, -1 );
 
-  for (int i = 0; i < (int)dws.size(); i++) {
+  for (int i = 0; i < static_cast<int>(dws.size()); i++) {
     if ( oddws[i] != nullptr ) {
       oddws[i]->checkTasksAccesses( d_patches, d_matls );
       oddws[i]->popRunningTask();
@@ -184,8 +183,8 @@ DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
 
   const Task* task = getTask();
 
-  const std::set<const VarLabel*, VarLabel::Compare>& initialRequires = d_taskGroup->getSchedulerCommon()->getInitialRequiredVars();
-  const std::set<std::string>& unscrubbables = d_taskGroup->getSchedulerCommon()->getNoScrubVars();
+  const std::set<const VarLabel*, VarLabel::Compare> & initialRequires = d_taskGroup->getSchedulerCommon()->getInitialRequiredVars();
+  const std::set<std::string>                        &   unscrubbables = d_taskGroup->getSchedulerCommon()->getNoScrubVars();
 
   // Decrement the scrub count for each of the required variables
   for (const Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
@@ -472,13 +471,11 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
     DOUT( true, message.str() );
   }
 
-  std::map<DetailedTask*, InternalDependency*>::iterator iter;
-  for (iter = internalDependents.begin(); iter != internalDependents.end(); iter++) {
+  for (auto iter = internalDependents.begin(); iter != internalDependents.end(); ++iter) {
     InternalDependency* dep = (*iter).second;
+    dep->m_dependent_task->dependencySatisfied(dep);
 
     DOUT(internaldbg, "Rank-" << Parallel::getMPIRank() << " Dependency satisfied between " << *dep->m_dependent_task << " and " << *this);
-
-    dep->m_dependent_task->dependencySatisfied(dep);
   }
 }
 
@@ -514,14 +511,14 @@ DetailedTask::dependencySatisfied( InternalDependency * dep )
 void
 DetailedTask::emitEdges( ProblemSpecP edgesElement )
 {
-  for (auto req_iter = d_reqs.begin(); req_iter != d_reqs.end(); req_iter++) {
+  for (auto req_iter = d_reqs.begin(); req_iter != d_reqs.end(); ++req_iter) {
     DetailedTask* fromTask = (*req_iter).first->m_from_task;
     ProblemSpecP edge = edgesElement->appendChild("edge");
     edge->appendElement("source", fromTask->getName());
     edge->appendElement("target", getName());
   }
 
-  for (auto iter = internalDependencies.begin(); iter != internalDependencies.end(); iter++) {
+  for (auto iter = internalDependencies.begin(); iter != internalDependencies.end(); ++iter) {
     DetailedTask* fromTask = (*iter).m_prerequisite_task;
     if (getTask()->isReductionTask() && fromTask->getTask()->isReductionTask()) {
       // Ignore internal links between reduction tasks because they
