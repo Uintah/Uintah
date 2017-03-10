@@ -1769,6 +1769,18 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
                                        particleIDLabel, matls);
     releasePort("load balancer");
   }
+
+  if (which == 3) {
+    if (m_reloc_new_pos_label) {
+      ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
+    }
+    m_reloc_new_pos_label = new_posLabel;
+    UintahParallelPort * upp = getPort( "load balancer" );
+    LoadBalancerPort   * lb  = dynamic_cast< LoadBalancerPort * >( upp );
+    m_relocate_3.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel, new_labels,
+                                       particleIDLabel, matls);
+    releasePort("load balancer");
+  }
 }
 
 //______________________________________________________________________

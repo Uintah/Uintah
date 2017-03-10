@@ -69,6 +69,7 @@ namespace Uintah {
     bool        d_useCBDI; // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI; // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones; // Flag for using cohesive zones
+    bool        d_useTracers; // Flag for using tracers
     bool        d_doErosion; // Flag to decide whether to erode or not
     bool        d_deleteRogueParticles;// Flag to delete rogue particles
     bool        d_doThermalExpansion; // Decide whether to do thermExp or not

@@ -366,6 +366,14 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void updateTracers(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   virtual void setPrescribedMotion(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -495,6 +503,12 @@ protected:
                                            const MaterialSubset*,
                                            const MaterialSubset*,
                                            const MaterialSet*);
+
+  virtual void scheduleUpdateTracers(SchedulerP&, 
+                                     const PatchSet*,
+                                     const MaterialSubset*,
+                                     const MaterialSubset*,
+                                     const MaterialSet*);
 
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 
                                            const PatchSet*,

@@ -48,6 +48,7 @@
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
       <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
+      <use_tracers                        spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <PrescribedDeformationFile          spec="OPTIONAL STRING" />
@@ -203,6 +204,11 @@
         <cz_filename                       spec="REQUIRED STRING" />
         <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
+      <tracer                            spec="MULTIPLE NO_DATA"
+                                           attribute1="name OPTIONAL STRING" >
+        <associated_material               spec="OPTIONAL INTEGER" />
+        <tracer_filename                   spec="REQUIRED STRING" />
+      </tracer>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
       <include href="diffusion_interface.xml" />
     </MPM>

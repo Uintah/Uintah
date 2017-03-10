@@ -61,6 +61,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_useCBDI = false;
   d_useCPTI = false;
   d_useCohesiveZones = false;
+  d_useTracers = false;
   d_with_color = false;
   d_fracture = false;
   d_minGridLevel = 0;
@@ -212,6 +213,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("use_CBDI_boundary_condition", d_useCBDI);
   mpm_flag_ps->get("exactDeformation",            d_exactDeformation);
   mpm_flag_ps->get("use_cohesive_zones",          d_useCohesiveZones);
+  mpm_flag_ps->get("use_tracers",                 d_useTracers);
 
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
     if (d_myworld->myrank() == 0){
@@ -411,6 +413,7 @@ else{
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
+    dbg << " Use Tracers                 = " << d_useTracers << endl;
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
@@ -443,6 +446,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("refine_particles",   d_refineParticles);
   ps->appendElement("XPIC2",              d_XPIC2);
   ps->appendElement("use_cohesive_zones", d_useCohesiveZones);
+  ps->appendElement("use_tracers",        d_useTracers);
   ps->appendElement("use_load_curves",    d_useLoadCurves);
   ps->appendElement("use_CBDI_boundary_condition", d_useCBDI);
   ps->appendElement("exactDeformation",d_exactDeformation);
