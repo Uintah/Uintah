@@ -177,7 +177,7 @@ void MPMCommon::updateStress_DamageErosionModels(const ProcessorGroup *,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       
       DamageModel* dm = mpm_matl->getDamageModel();
-      dm->computeSomething( pset, dwi, patch, old_dw, new_dw );
+      dm->computeSomething( pset, mpm_matl, patch, old_dw, new_dw );
       
       ErosionModel* em = mpm_matl->getErosionModel();
       em->updateStress_Erosion( pset, old_dw, new_dw );

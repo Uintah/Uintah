@@ -82,11 +82,11 @@ namespace Uintah {
                                 const MPMMaterial* matl);
 
     virtual
-    void  computeSomething( ParticleSubset  * pset,
-                            const int       & dwi,            
-                            const Patch     * patch,          
-                            DataWarehouse   * old_dw,         
-                            DataWarehouse   * new_dw );
+    void  computeSomething( ParticleSubset    * pset,
+                            const MPMMaterial * matl,           
+                            const Patch       * patch,         
+                            DataWarehouse     * old_dw,        
+                            DataWarehouse     * new_dw );
   
   };
 

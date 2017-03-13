@@ -72,8 +72,10 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags,
 //______________________________________________________________________
 //
 void
-MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
-                                    MPMFlags* flags, const bool isRestart)
+MPMMaterial::standardInitialization(ProblemSpecP& ps, 
+                                    SimulationStateP& ss,
+                                    MPMFlags* flags, 
+                                    const bool isRestart)
 
 {
   // Follow the layout of the input file
@@ -93,7 +95,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
   // 7.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
-  d_cm = ConstitutiveModelFactory::create(ps,flags);
+  bool ans;
+  d_cm = ConstitutiveModelFactory::create(ps,flags, ans);
+  set_pLocalizedComputed( ans );
+  
   if(!d_cm){
     ostringstream desc;
     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
@@ -284,6 +289,18 @@ DamageModel* MPMMaterial::getDamageModel() const
 ErosionModel* MPMMaterial::getErosionModel() const
 {
   return d_erosionModel;
+}
+
+// is pLocalizedMPM computed upstream of damage models?
+void
+MPMMaterial::set_pLocalizedComputed( const bool ans ){
+  d_pLocalizedComputed = ans;
+}
+
+bool
+MPMMaterial::is_pLocalizedPreComputed() const
+{
+  return d_pLocalizedComputed;
 }
 
 ScalarDiffusionModel* MPMMaterial::getScalarDiffusionModel() const

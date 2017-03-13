@@ -79,8 +79,13 @@ using namespace std;
 using namespace Uintah;
 
 ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
-                                                    MPMFlags* flags)
+                                                    MPMFlags* flags,
+                                                    bool& computes_pLocalizedMPM)
 {
+
+  // does this CM compute pLocalizedMPM?
+  computes_pLocalizedMPM = false; 
+  
   ProblemSpecP child = ps->findBlock("constitutive_model");
   if(!child)
     throw ProblemSetupException("Cannot find constitutive_model tag", __FILE__, __LINE__);
@@ -236,6 +241,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew ElasticPlasticHP(child,flags));
   }
   else if (cm_type ==  "elastic_plastic_hp"){
+    computes_pLocalizedMPM = true;
     return(scinew ElasticPlasticHP(child,flags));
   }
   else if (cm_type ==  "soil_foam"){

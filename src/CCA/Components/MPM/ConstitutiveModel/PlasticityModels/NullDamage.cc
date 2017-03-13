@@ -30,7 +30,7 @@ static DebugStream dbg("DamageModel", false);
 
 NullDamage::NullDamage()
 {
-} 
+}
 //______________________________________________________________________
 //         
 NullDamage::NullDamage(ProblemSpecP& )
@@ -88,6 +88,9 @@ void
 NullDamage::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl)
 {
+  if( matl->is_pLocalizedPreComputed() ){
+    return;
+  }
   printTask( dbg, "    NullDamage::addComputesAndRequires" );
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matls = matl->thisMaterial();
@@ -98,14 +101,19 @@ NullDamage::addComputesAndRequires(Task* task,
 //______________________________________________________________________
 //
 void
-NullDamage::computeSomething( ParticleSubset  * pset,
-                              const int       & ,
-                              const Patch     * patch,
-                              DataWarehouse   * old_dw,
-                              DataWarehouse   * new_dw )
+NullDamage::computeSomething( ParticleSubset    * pset,
+                              const MPMMaterial * matl,
+                              const Patch       * patch,
+                              DataWarehouse     * old_dw,
+                              DataWarehouse     * new_dw )
 {
-  printTask( patch, dbg, "    NullDamage::computeSomething" );
-
+  if( matl->is_pLocalizedPreComputed() ){
+    return;
+  }
+  std::ostringstream mesg;
+  mesg << "    NullDamage::computeSomething  (matl:" << matl->getDWIndex() << ")";
+  printTask( patch, dbg, mesg.str() );
+    
   constParticleVariable<int>     pLocalized;
   ParticleVariable<int>          pLocalized_new;
   

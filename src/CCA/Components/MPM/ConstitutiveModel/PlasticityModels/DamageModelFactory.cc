@@ -40,12 +40,12 @@ using namespace std;
 using namespace Uintah;
 //______________________________________________________________________
 //
-DamageModel* DamageModelFactory::create(ProblemSpecP& matl_ps,
-                                        MPMFlags* flags,
-                                        SimulationState* sharedState)
+DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
+                                        MPMFlags        * flags,
+                                        SimulationState * sharedState)
 {
   string cm_type = "none";
-  
+
   if ( matl_ps->getNodeName() != "constitutive_model" ) { 
     ProblemSpecP cm_ps = matl_ps->findBlock("constitutive_model");
     cm_ps->getAttribute("type", cm_type);
@@ -58,24 +58,24 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& matl_ps,
   }
   
   string dam_type;
-  if(!child->getAttribute("type", dam_type)){
+  if(!child->getAttribute( "type", dam_type )){
     throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
   }
   
   if (dam_type == "johnson_cook"){
-    return( scinew JohnsonCookDamage(child) );
+    return( scinew JohnsonCookDamage( child ) );
   }
   else if (dam_type == "hancock_mackenzie") {
-    return( scinew HancockMacKenzieDamage(child) );
+    return( scinew HancockMacKenzieDamage( child ) );
   }
   else if (dam_type == "Threshold") {
-    return( scinew ThresholdDamage(child, flags, sharedState) );
+    return( scinew ThresholdDamage( child, flags, sharedState ) );
   }
   else if (dam_type == "Brittle") {
-    return( scinew BrittleDamage(child) );
+    return( scinew BrittleDamage( child ) );
   }
   else if (dam_type == "none") {
-    return(scinew NullDamage(child) );
+    return(scinew NullDamage( child ) );
   }
   else if( cm_type == "elastic_plastic_hp" || cm_type == "elastic_plastic"  ){
     string txt="MPM:  The only damage models that work with elasitc_plastic are johnson_cook and hancock_mackenzie";
@@ -83,7 +83,7 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& matl_ps,
   }
   else {
     proc0cout << "**WARNING** Creating default null damage model" << endl;
-    return(scinew NullDamage(child));
+    return( scinew NullDamage( child ) );
     //throw ProblemSetupException("Unknown Damage Model ("+dam_type+")", __FILE__, __LINE__);
   }
 }

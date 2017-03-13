@@ -69,7 +69,6 @@ namespace Uintah {
     double d_friction_angle;           // Assumed to come in degrees
     double d_tensile_cutoff;           // Fraction of the cohesion at which
                                        // tensile failure occurs
-
     //__________________________________
     //  Labels
     const VarLabel* pFailureStressOrStrainLabel;
@@ -79,13 +78,14 @@ namespace Uintah {
     ThresholdDamage& operator=(const ThresholdDamage &cm);
 
 
+
   //______________________________________________________________________
   //
   public:
     // constructors
-    ThresholdDamage( ProblemSpecP& ps,
-                     MPMFlags* Mflags,
-                     SimulationState* sharedState  );
+    ThresholdDamage( ProblemSpecP    & ps,
+                     MPMFlags        * Mflags,
+                     SimulationState * sharedState );
 
     ThresholdDamage(const ThresholdDamage* cm);
 
@@ -112,11 +112,11 @@ namespace Uintah {
                                 const MPMMaterial* matl);
 
     virtual
-    void  computeSomething( ParticleSubset  * pset,
-                            const int       & dwi,            
-                            const Patch     * patch,          
-                            DataWarehouse   * old_dw,         
-                            DataWarehouse   * new_dw );       
+    void  computeSomething( ParticleSubset    * pset,
+                            const MPMMaterial * matl,            
+                            const Patch       * patch,          
+                            DataWarehouse     * old_dw,         
+                            DataWarehouse     * new_dw );       
 
     virtual
     void carryForward( const PatchSubset* patches,

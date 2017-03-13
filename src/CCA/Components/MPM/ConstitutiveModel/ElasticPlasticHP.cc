@@ -622,8 +622,8 @@ ElasticPlasticHP::computeStableTimestep(const Patch* patch,
 //
 void 
 ElasticPlasticHP::addComputesAndRequires(Task* task,
-                                       const MPMMaterial* matl,
-                                       const PatchSet* patches) const
+                                         const MPMMaterial* matl,
+                                         const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -636,6 +636,8 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
     addSharedCRForHypoExplicit(task, matlset, patches);
   }
 
+//  matl->set_pLocalizedComputed(false);
+
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
   task->requires(Task::OldDW, pRotationLabel,         matlset, gnone);
@@ -644,7 +646,6 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
   task->requires(Task::OldDW, pDamageLabel,           matlset, gnone);
   task->requires(Task::OldDW, pPorosityLabel,         matlset, gnone);
-  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
@@ -743,7 +744,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pPlasticStrainRate, pPlasticStrainRateLabel, pset);
     old_dw->get(pPorosity,          pPorosityLabel,          pset);
     old_dw->get(pEnergy,            pEnergyLabel,            pset);
-    old_dw->get(pLocalized,         lb->pLocalizedMPMLabel,  pset);
     old_dw->get(pRotation,          pRotationLabel,          pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
@@ -800,16 +800,15 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     // Loop thru particles
     ParticleSubset::iterator iter = pset->begin(); 
     for( ; iter != pset->end(); iter++){
-      particleIndex idx = *iter;
+      particleIndex idx = *iter;      
+      
+      pLocalized_new[idx] = false;
 
       // Assign zero int. heating by default, modify with appropriate sources
       // This has units (in MKS) of K/s  (i.e. temperature/time)
       pdTdt[idx] = 0.0;
 
       Matrix3 tensorL=velGrad[idx];
-
-      // Carry forward the pLocalized tag for now, alter below
-      pLocalized_new[idx] = pLocalized[idx];
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient F_n^np1 = dudx * dt + Identity
@@ -829,8 +828,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           cerr << "Tm = " << Tm << endl;
           cerr << "DWI = " << matl->getDWIndex() << endl;
           cerr << "L.norm()*dt = " << tensorL.Norm()*delT << endl;
-          pLocalized_new[idx]=-999;
-
+          
           tensorL=zero;
           tensorF_new.Identity();
       }
@@ -941,18 +939,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Material has melted if flowStress <= 0.0
       bool melted  = false;
       bool plastic = false;
-      if (temperature > Tm_cur || flowStress <= 0.0) {
-
+      if (temperature > Tm_cur) {
         melted = true;
         // Set the deviatoric stress to zero
-        if (d_doMelting){
            tensorS = 0.0;
-        } else {
-           cerr << "The material has exceed the melt temperature, but you haven't turned \n";
-           cerr << "melting on.  ElasticPlasticHP does nonsensical things here.  You should \n";
-           cerr << "probably either set <do_melting>true</do_melting>, or increase the material\n";
-           cerr << "<melt_temp> to a level that won't be exceeded.\n";
-        }
 
         d_flow->updateElastic(idx);
 
@@ -968,11 +958,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         double flow_rule = d_yield->evalYieldCondition(equivStress, flowStress,
                                                        traceOfTrialStress, 
                                                        porosity, state->yieldStress);
-        // Compute the deviatoric stress
-        /*
-        cout << "flow_rule = " << flow_rule << " s_eq = " << equivStress
-             << " s_flow = " << flowStress << endl;
-        */
 
         if (flow_rule < 0.0) {
           // Set the deviatoric stress to the trial stress
@@ -1004,7 +989,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           if (normS > 0.0 && d_plasticConvergenceAlgo == "biswajit") {
             doRadialReturn = computePlasticStateBiswajit(state, pPlasticStrain, pStrainRate, 
                                                          sigma, trialS, tensorEta, tensorS,
-                                                         delGamma, flowStress, porosity, mu_cur, delT, matl, idx);
+                                                         delGamma, flowStress, porosity,
+                                                         mu_cur, delT, matl, idx);
           }
           
           //__________________________________
@@ -1084,14 +1070,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         pPlasticStrain_new[idx]     = state->plasticStrain;
         pPlasticStrainRate_new[idx] = state->plasticStrainRate;
 
-        /*
-        if (pPlasticStrainRate_new[idx] > pStrainRate_new[idx]) {
-          cout << "Patch = " << patch->getID() << " particle = " << idx
-               << " edot = " << pStrainRate_new[idx] 
-               << " epdot = " << pPlasticStrainRate_new[idx] << endl;
-        }
-        */
-
         // Update the porosity
         if (d_evolvePorosity) {
           pPorosity_new[idx] = updatePorosity(tensorD, delT, pPorosity[idx], 
@@ -1101,6 +1079,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         }
         
         // Calculate the updated scalar damage parameter
+        // THE DAMAGE COMPUTED BELOW CURRENTLY HAS NO EFFECT ON THE REST OF THE
+        // SIMULATION, SO WHY BOTHER?
         if (d_evolveDamage) { 
           pDamage_new[idx] = 
             d_damage->computeScalarDamage(state->plasticStrainRate, sigma, 
@@ -1123,7 +1103,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Stage 4:
       //-----------------------------------------------------------------------
       // Find if the particle has failed/localized
-      bool isLocalized = false;
+      pLocalized_new[idx] = false;
+      
       double tepla = 0.0;
       
       bool doErosion = matl->getErosionModel()->d_doEorsion;
@@ -1132,22 +1113,22 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
         // Check 1: Look at the temperature
         if (melted){ 
-          isLocalized = true;
-        }
+          pLocalized_new[idx] = true;
+
         // Check 2 and 3: Look at TEPLA and stability
-        else if (plastic) {
+        } else if (plastic) {
 
           // Check 2: Modified Tepla rule
           if (d_checkTeplaFailureCriterion) {
             tepla = (pPorosity_new[idx]*pPorosity_new[idx])/
                     (d_porosity.fc*d_porosity.fc);
             if (tepla > 1.0){
-              isLocalized = true;
+              pLocalized_new[idx] = true;
             }
           } 
 
           // Check 3: Stability criterion (only if material is plastic)
-          if (d_stable->doIt() && !isLocalized) {
+          if (d_stable->doIt() && !pLocalized_new[idx]) {
 
             // Calculate values needed for tangent modulus calculation
             state->temperature = temperature;
@@ -1157,8 +1138,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
             state->shearModulus = mu_cur ;
             double sigY = d_flow->computeFlowStress(state, delT, d_tol, 
                                                        matl, idx);
-            if (!(sigY > 0.0)) isLocalized = true;
-            else {
+            if ( !(sigY > 0.0) ){
+              pLocalized_new[idx] = true;
+            } else {
               double dsigYdep = 
                 d_flow->evalDerivativeWRTPlasticStrain(state, idx);
               double A = voidNucleationFactor(state->plasticStrain);
@@ -1173,16 +1155,16 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
                                                      dsigYdep, 
                                                      pPorosity_new[idx],
                                                      A, Cep);
-          
+
               // Initialize localization direction
               Vector direction(0.0,0.0,0.0);
-              isLocalized = d_stable->checkStability(sigma, tensorD, Cep, 
-                                                     direction);
+              pLocalized_new[idx] = d_stable->checkStability(sigma, tensorD, Cep, 
+                                                             direction);
             }
           }
         }  // if plastic 
 
-        // Check 4: Look at maximum stress
+        // Check 4: Look at maximum stress (JG:  This is the same as threshold damage)
         if (d_checkStressTriax) {
 
           // Compute eigenvalues of the stress tensor
@@ -1193,23 +1175,14 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           
           double max_stress = Max(Max(eigVal[0],eigVal[1]), eigVal[2]);
           if (max_stress > d_initialData.sigma_crit) {
-            isLocalized = true;
+            pLocalized_new[idx] = true;
           }
         }
 
-        // Use erosion algorithms to treat newly localized particles
-        if (isLocalized) {
-
-          // If the localized particles fail again then set their stress to zero
-          if (pLocalized[idx]) {
-            pDamage_new[idx]   = 0.0;
-            pPorosity_new[idx] = 0.0;
-          } else {
-            // set the particle localization flag to true  
-            pLocalized_new[idx] = 1;
-            pDamage_new[idx]    = 0.0;
-            pPorosity_new[idx]  = 0.0;
-          }
+ 
+        if (pLocalized_new[idx]) {
+          pDamage_new[idx]    = 0.0;
+          pPorosity_new[idx]  = 0.0;
         } 
       }  // if erosion
 

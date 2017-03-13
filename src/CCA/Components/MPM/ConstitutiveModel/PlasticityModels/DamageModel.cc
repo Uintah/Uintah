@@ -88,10 +88,10 @@ DamageModel::initializeLabels(const Patch*       patch,
 //______________________________________________________________________
 //
 void 
-DamageModel::computeSomething( ParticleSubset  * pset,
-                               const int       & dwi,
-                               const Patch     * patch,     
-                               DataWarehouse   * old_dw,
-                               DataWarehouse   * new_dw )
+DamageModel::computeSomething( ParticleSubset    * pset,
+                               const MPMMaterial * matl,
+                               const Patch       * patch,    
+                               DataWarehouse     * old_dw,
+                               DataWarehouse     * new_dw )
 {
 }

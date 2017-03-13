@@ -34,22 +34,22 @@ using std::endl;
 static DebugStream dbg("DamageModel", false);
 //______________________________________________________________________
 //
-ThresholdDamage::ThresholdDamage( ProblemSpecP& ps,
-                                  MPMFlags* flag,
-                                  SimulationState* sharedState)
+ThresholdDamage::ThresholdDamage( ProblemSpecP    & ps,
+                                  MPMFlags        * flags,
+                                  SimulationState * sharedState )
 {
   Algorithm = DamageAlgo::threshold;
   printTask( dbg, "ThresholdDamage constructor" );
-  
-  d_epsf.mean   = 10.0;                 // Mean failure stress or strain
-  d_epsf.std    = 0.0;                  // Std. Dev or Weibull mod. for failure stres or strain
-  d_epsf.seed   = 0;                    // seed for weibull distribution generator
-  d_epsf.dist   = "constant";
-  d_epsf.scaling = "none";
+
+  d_epsf.mean     = 10.0;                 // Mean failure stress or strain
+  d_epsf.std      = 0.0;                  // Std. Dev or Weibull mod. for failure stres or strain
+  d_epsf.seed     = 0;                    // seed for weibull distribution generator
+  d_epsf.dist     = "constant";
+  d_epsf.scaling  = "none";
   // "exponent" is the value of n used in c=(Vbar/V)^(1/n)
   // By setting the default value to DBL_MAX, that makes 1/n=0, which makes c=1
-  d_epsf.exponent= DBL_MAX;             // Exponent used in vol. scaling of failure criteria
-  d_epsf.refVol = 1.0;                  // Reference volume for scaling failure criteria
+  d_epsf.exponent = DBL_MAX;              // Exponent used in vol. scaling of failure criteria
+  d_epsf.refVol   = 1.0;                  // Reference volume for scaling failure criteria
 
   ps->require("failure_criteria", d_failure_criteria);
 
@@ -284,7 +284,6 @@ ThresholdDamage::addComputesAndRequires(Task* task,
 
 //  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
 
-
   task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matls, gnone);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel,         matls, gnone);
   task->requires(Task::NewDW, d_lb->pDeformationMeasureLabel_preReloc,                  
@@ -299,11 +298,11 @@ ThresholdDamage::addComputesAndRequires(Task* task,
 //______________________________________________________________________
 //
 void
-ThresholdDamage::computeSomething( ParticleSubset  * pset,
-                                   const int       & dwi,
-                                   const Patch     * patch,
-                                   DataWarehouse   * old_dw,
-                                   DataWarehouse   * new_dw )
+ThresholdDamage::computeSomething( ParticleSubset    * pset,
+                                   const MPMMaterial * matl,
+                                   const Patch       * patch,
+                                   DataWarehouse     * old_dw,
+                                   DataWarehouse     * new_dw )
 {
   printTask( patch, dbg, "    ThresholdDamage::computeSomething" );
   

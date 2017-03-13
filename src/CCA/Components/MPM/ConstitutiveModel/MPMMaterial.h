@@ -108,6 +108,11 @@ WARNING
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
    
+   
+   void set_pLocalizedComputed( const bool ans);
+  
+   bool is_pLocalizedPreComputed() const;
+   
    DamageModel* getDamageModel() const;
    
    ErosionModel* getErosionModel() const;
@@ -170,9 +175,11 @@ WARNING
    ParticleCreator*       d_particle_creator;
 
    double d_density;
-   bool d_includeFlowWork;
+   bool   d_includeFlowWork;
    double d_specificHeat;
    double d_thermalConductivity;
+   bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc
+
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)

@@ -33,7 +33,7 @@ static DebugStream dbg("DamageModel", false);
 //      TODO:  
 //
 
-BrittleDamage::BrittleDamage( ProblemSpecP& dam_ps)
+BrittleDamage::BrittleDamage( ProblemSpecP& dam_ps )
 {
   Algorithm = DamageAlgo::brittle;
   std::cout << "BrittleDamage constructor" << std::endl;
@@ -238,11 +238,11 @@ BrittleDamage::addComputesAndRequires(Task* task,
 //______________________________________________________________________
 //
 void
-BrittleDamage::computeSomething( ParticleSubset  * pset,
-                                 const int       & dwi,
-                                 const Patch     * patch,
-                                 DataWarehouse   * old_dw,
-                                 DataWarehouse   * new_dw )
+BrittleDamage::computeSomething( ParticleSubset    * pset,
+                                 const MPMMaterial *,
+                                 const Patch       * patch,
+                                 DataWarehouse     * old_dw,
+                                 DataWarehouse     * new_dw )
 {
   printTask( patch, dbg, "    BrittleDamage::computeSomething" );
 
