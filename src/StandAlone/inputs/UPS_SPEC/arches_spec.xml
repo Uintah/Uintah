@@ -816,6 +816,10 @@
                                         attribute1="label REQUIRED STRING">       <!-- type = how bc is applied,
                                                                                        label= unique name for this intrusion boundary -->
            <geom_object/>                                                         <!-- geometry object associated with this intrusion -->
+
+           <ignore_missing_bc           spec="OPTIONAL NO_DATA"/>                 <!-- [false] Allows one to specfiy only the BCs that are relevant. 
+                                                                                       If found, then for intrusion inlets, the flux of any missing variables (scalars)
+                                                                                       is zero. Note that one must still specify all IV for a proper table lookup. -->
            <flux_dir                    spec="MULTIPLE STRING 'x-,X-,x+,X+,
                                                                y-,Y-,y+,Y+,
                                                                z-,Z-,z+,Z+"/>     <!-- direction to apply type of BC, otherwise treated as wall -->

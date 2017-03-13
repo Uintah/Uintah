@@ -63,7 +63,7 @@ namespace Uintah {
 
 //-------------------------------------------------------
 
-/** 
+/**
   * @class    DQMOM
   * @author   Charles Reid (charlesreid1@gmail.com)
   * @date     March 2009      "Initial" Arches version
@@ -74,7 +74,7 @@ namespace Uintah {
   *
   * @details  Using the direct quadrature method of moments (DQMOM), the NDF transport equation is represented
   *           by a set of delta functions times weights.  The moment transform of this NDF transport equation
-  *           yields a set of (closed) moment transport equations. These equations can be expressed in terms 
+  *           yields a set of (closed) moment transport equations. These equations can be expressed in terms
   *           of the weights and abscissas of the quadrature approximation, and re-cast as a linear system,
   *           \f$ \mathbf{AX} = \mathbf{B} \f$.  This class solves the linear system to yield the source terms
   *           for the weight and weighted abscissa transport equations (the variables contained in \f$\mathbf{X}\f$).
@@ -83,9 +83,9 @@ namespace Uintah {
 
 //-------------------------------------------------------
 
-class ArchesLabel; 
-class DQMOMEqn; 
-class ModelBase; 
+class ArchesLabel;
+class DQMOMEqn;
+class ModelBase;
 class LU;
 
 class DQMOM {
@@ -98,29 +98,29 @@ public:
 
   typedef std::vector<int> MomentVector;
 
-  /** @brief Obtain parameters from input file and process them, whatever that means 
+  /** @brief Obtain parameters from input file and process them, whatever that means
    */
   void problemSetup( const ProblemSpecP& params );
 
-  /** @brief              Populate the map containing labels for each moment 
+  /** @brief              Populate the map containing labels for each moment
       @param allMoments   Vector containing all moment indices specified by user in <Moment> blocks within <DQMOM> block */
   void populateMomentsMap( std::vector<MomentVector> allMoments );
 
-  /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system. 
+  /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system.
   */
   void sched_solveLinearSystem( const LevelP & level,
                                 SchedulerP   & sched,
                                 int            timeSubStep );
-    
-  /** @brief Create linear solver object, create linear system AX=B, and solve the linear system. 
+
+  /** @brief Create linear solver object, create linear system AX=B, and solve the linear system.
   */
   void solveLinearSystem( const ProcessorGroup *,
                           const PatchSubset    * patches,
                           const MaterialSubset *,
                           DataWarehouse        * old_dw,
-                          DataWarehouse        * new_dw, 
+                          DataWarehouse        * new_dw,
                           const int timeSubStep );
-  
+
   /** @brief Schedule calculation of all moments
   */
   void sched_calculateMoments( const LevelP & level,
@@ -136,13 +136,13 @@ public:
 
 
 
-    /** @brief Destroy A, X, B, and solver object  
+    /** @brief Destroy A, X, B, and solver object
     */
     void destroyLinearSystem();
 
     /** @brief Access function for boolean, whether to calculate/save moments */
     bool getSaveMoments() {
-      return b_save_moments; }
+      return m_save_moments; }
 
 private:
 
@@ -174,13 +174,13 @@ private:
   void constructBopt_unw( ColumnMatrix*  &BB,
                           std::vector<double> &Abscissas,
                           std::vector<double> &models);
-    
+
   void construct_Simplest_XX( ColumnMatrix*  &XX,
                            std::vector<double> &models);
 
 
   std::vector<std::string> InternalCoordinateEqnNames;
-  
+
   std::vector<MomentVector> momentIndexes; ///< Vector containing all moment indices
 
   std::vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
@@ -188,13 +188,13 @@ private:
 
   std::vector< std::vector<ModelBase*> > weightedAbscissaModels;
 
-  ArchesLabel* d_fieldLabels; 
-  
-  unsigned int N_xi;  ///< Number of internal coordinates
+  ArchesLabel* m_fieldLabels;
+
+  unsigned int m_N_xi;  ///< Number of internal coordinates
   unsigned int N_;    ///< Number of quadrature nodes
-  
+
   int d_timeSubStep;
-  bool b_save_moments; ///< boolean - calculate & save moments?
+  bool m_save_moments; ///< boolean - calculate & save moments?
 
   double d_solver_tolerance;
   double d_maxConditionNumber;
@@ -204,8 +204,8 @@ private:
   std::vector<double> d_opt_abscissas;
   DenseMatrix* AAopt;
 
-  const VarLabel* d_normBLabel; 
-  const VarLabel* d_normXLabel; 
+  const VarLabel* d_normBLabel;
+  const VarLabel* d_normXLabel;
   const VarLabel* d_normResLabel;
   const VarLabel* d_normResNormalizedLabelB;
   const VarLabel* d_normResNormalizedLabelX;
@@ -217,7 +217,7 @@ private:
   bool b_optimize;
   bool b_simplest;
   bool d_unweighted;
-  std::string d_which_dqmom; 
+  std::string d_which_dqmom;
   std::string d_solverType;
 
   struct constCCVarWrapper {
@@ -253,7 +253,7 @@ private:
 
 #if defined(VERIFY_AB_CONSTRUCTION)
   /** @brief  Construct A and B using weights and weighted abscissas found in a file,
-              then compare the constructed A and B to the real A and B. 
+              then compare the constructed A and B to the real A and B.
               This method verifies the A and B construction procedure.
   */
   void verifyABConstruction();
@@ -264,7 +264,7 @@ private:
   std::string vab_file_moments;///< Name of file containing moment indices
 
   int vab_dimension;      ///< Dimension of the problem
-  int vab_N, vab_N_xi;    ///< Number of environments, internal coordinates of the problem
+  int vab_N, vab_m_N_xi;    ///< Number of environments, internal coordinates of the problem
   double vab_tol;         ///< Tolerance for comparisons
 
   bool b_have_vab_matrices_been_printed;
@@ -300,7 +300,7 @@ private:
 
   /** @brief   Read a vector from an already-open filestream */
   void getVectorFromFile( std::vector<double>& vec, ifstream& filestream );
-  
+
   /** @brief  Read moment indices from a file */
   void getMomentsFromFile( std::vector<MomentVector>& moments, std::string filename );
 

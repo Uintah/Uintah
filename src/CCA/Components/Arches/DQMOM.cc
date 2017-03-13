@@ -41,11 +41,11 @@ using namespace std;
 using namespace Uintah;
 
 DQMOM::DQMOM(ArchesLabel* fieldLabels, std::string which_dqmom):
-d_fieldLabels(fieldLabels), d_which_dqmom(which_dqmom)
+m_fieldLabels(fieldLabels), d_which_dqmom(which_dqmom)
 {
 
   string varname;
-  
+
   varname = "normB";
   d_normBLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
@@ -60,22 +60,22 @@ d_fieldLabels(fieldLabels), d_which_dqmom(which_dqmom)
 
   varname = "normResNormalizedX";
   d_normResNormalizedLabelX = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
-  
+
   varname = "conditionNumber";
   d_conditionNumberLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 }
 
 DQMOM::~DQMOM()
 {
-  VarLabel::destroy(d_normBLabel); 
-  VarLabel::destroy(d_normXLabel); 
+  VarLabel::destroy(d_normBLabel);
+  VarLabel::destroy(d_normXLabel);
   VarLabel::destroy(d_normResLabel);
   VarLabel::destroy(d_normResNormalizedLabelB);
   VarLabel::destroy(d_normResNormalizedLabelX);
   VarLabel::destroy(d_conditionNumberLabel);
 
  if( d_solverType == "Optimize" ) {
-   delete AAopt; 
+   delete AAopt;
  }
 
 }
@@ -84,17 +84,17 @@ DQMOM::~DQMOM()
 //---------------------------------------------------------------------------
 void DQMOM::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params; 
+  ProblemSpecP db = params;
 
-  if ( d_which_dqmom == "unweightedAbs" ) 
-    d_unweighted = true; 
-  else 
-    d_unweighted = false; 
+  if ( d_which_dqmom == "unweightedAbs" )
+    d_unweighted = true;
+  else
+    d_unweighted = false;
 
 #if defined(VERIFY_LINEAR_SOLVER)
   // grab the name of the file containing the test matrices
   ProblemSpecP db_verify_linear_solver = db->findBlock("Verify_Linear_Solver");
-  if( !db_verify_linear_solver ) 
+  if( !db_verify_linear_solver )
     throw ProblemSetupException("ERROR: DQMOM: You turned on a compiler flag to perform verification of linear solver, but did not put the corresponding tags in your input file.",__FILE__,__LINE__);
   db_verify_linear_solver->require("A", vls_file_A);
   db_verify_linear_solver->require("X", vls_file_X);
@@ -110,7 +110,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 #if defined(VERIFY_AB_CONSTRUCTION)
   // grab the name of the file containing the test matrices
   ProblemSpecP db_verify_ab_construction = db->findBlock("Verify_AB_Construction");
-  if( !db_verify_ab_construction ) 
+  if( !db_verify_ab_construction )
     throw ProblemSetupException("ERROR: DQMOM: You turned on a compiler flag to perform verification of A and B construction, but did not put the corresponding tags in your input file.",__FILE__,__LINE__);
   db_verify_ab_construction->require("A", vab_file_A);
   db_verify_ab_construction->require("B", vab_file_B);
@@ -131,36 +131,36 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   moments = 0;
 
   d_small_normalizer = 1e-8; // "small" number limit for denominator of norm calculations
-  
+
   // obtain moment index vectors
   vector<int> temp_moment_index;
   for ( ProblemSpecP db_moments = db->findBlock("Moment"); db_moments != nullptr; db_moments = db_moments->findNextBlock("Moment") ) {
     temp_moment_index.resize(0);
     db_moments->get("m", temp_moment_index);
-    
+
     // put moment index into vector of moment indices:
     momentIndexes.push_back(temp_moment_index);
-    
+
     // keep track of total number of moments
     ++moments;
 
     index_length = temp_moment_index.size();
   }
 
-  db->getWithDefault("save_moments", b_save_moments, false);
+  db->getWithDefault("save_moments", m_save_moments, false);
 #if defined(VERIFY_AB_CONSTRUCTION) || defined(VERIFY_LINEAR_SOLVER)
-  b_save_moments = false;
+  m_save_moments = false;
 #endif
-  if( b_save_moments ) {
+  if( m_save_moments ) {
     throw InvalidValue( "ERROR:Save moments is currently disabled.",__FILE__,__LINE__);
     DQMOM::populateMomentsMap(momentIndexes);
   }
 
   // This block puts the labels in the same order as the input file, so the moment indices match up OK
-  
+
   DQMOMEqnFactory & eqn_factory = DQMOMEqnFactory::self();
   N_ = eqn_factory.get_quad_nodes();
- 
+
   for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
     string weight_name = "w_qn";
     string node;
@@ -176,7 +176,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     //d_weight_scaling_constant = temp_weightEqnD.getScalingConstant();
   }
 
-  N_xi = 0;
+  m_N_xi = 0;
   for (ProblemSpecP db_ic = db->findBlock("Ic"); db_ic != nullptr; db_ic = db_ic->findNextBlock("Ic") ) {
     string ic_name;
     vector<string> modelsList;
@@ -194,12 +194,12 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
       weightedAbscissaEqns.push_back( &temp_weightedAbscissaEqnD );
       //d_weighted_abscissa_scaling_constants.push_back( temp_weightedAbscissaEqnD.getScalingConstant() );
     }
-    N_xi = N_xi + 1;
+    m_N_xi = m_N_xi + 1;
   }
-  
+
 #if defined(VERIFY_AB_CONSTRUCTION)
   N_ = vab_N;
-  N_xi = vab_N_xi;
+  m_N_xi = vab_N_xi;
 #endif
 
   ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
@@ -228,7 +228,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
       if(db_optimize){
         b_optimize = true;
         db_optimize->get("Optimal_abscissas",d_opt_abscissas);
-        AAopt = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
+        AAopt = scinew DenseMatrix((m_N_xi+1)*N_,(m_N_xi+1)*N_);
         AAopt->zero();
         //if(d_unweighted == true){
           constructAopt_unw( AAopt, d_opt_abscissas );
@@ -249,19 +249,28 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     }
 
   } else {
-    string err_msg = "ERROR: Arches: DQMOM: Could not find block '<LinearSolver>': this block is required for DQMOM. \n";
-    throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+
+    //default for non-inversion
+    b_optimize = false;
+    d_solver_tolerance = 1.0e-5;
+    d_maxConditionNumber = 1.e16;
+    b_calcConditionNumber = false;
+    d_solverType = "Simplest";
+    b_simplest = true;
+
+    //string err_msg = "ERROR: Arches: DQMOM: Could not find block '<LinearSolver>': this block is required for DQMOM. \n";
+    //throw ProblemSetupException(err_msg,__FILE__,__LINE__);
   }
 
   // Check to make sure number of total moments specified in input file is correct
-  if ( moments != (N_xi+1)*N_ && d_solverType != "Simplest") {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
+  if ( moments != (m_N_xi+1)*N_ && d_solverType != "Simplest") {
+    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (m_N_xi+1)*N_ << " moments." << endl;
     throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
   }
 
   // Check to make sure number of moment indices matches the number of internal coordinates
-  if ( index_length != N_xi && d_solverType != "Simplest" ) {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
+  if ( index_length != m_N_xi && d_solverType != "Simplest" ) {
+    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << m_N_xi << " internal coordinates." << endl;
     throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
 
@@ -283,7 +292,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   */
 void
 DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
-{ 
+{
   proc0cout << endl;
   proc0cout << "******* Moment Registration ********" << endl;
   proc0cout << endl;
@@ -305,8 +314,8 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
 
     // actually populate the DQMOMMoments map with moment names
     // e.g. moment_001 &c.
-    //d_fieldLabels->DQMOMMoments[tempMomentVector] = tempVarLabel;
-    d_fieldLabels->DQMOMMoments[thisMoment] = tempVarLabel;
+    //m_fieldLabels->DQMOMMoments[tempMomentVector] = tempVarLabel;
+    m_fieldLabels->DQMOMMoments[thisMoment] = tempVarLabel;
   }
   proc0cout << endl;
 }
@@ -316,29 +325,29 @@ DQMOM::populateMomentsMap( std::vector<MomentVector> allMoments )
 // **********************************************
 void
 DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int timeSubStep )
-{ 
+{
   string taskname = "DQMOM::solveLinearSystem";
   Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem, timeSubStep);
 
   CoalModelFactory& model_factory = CoalModelFactory::self();
-  Task::WhichDW which_dw; 
+  Task::WhichDW which_dw;
 
   if (timeSubStep == 0) {
-    tsk->computes(d_normBLabel); 
+    tsk->computes(d_normBLabel);
     tsk->computes(d_normXLabel);
     tsk->computes(d_normResLabel);
     tsk->computes(d_normResNormalizedLabelB);
     tsk->computes(d_normResNormalizedLabelX);
     tsk->computes(d_conditionNumberLabel);
-    which_dw = Task::NewDW; 
+    which_dw = Task::NewDW;
   } else {
-    tsk->modifies(d_normBLabel); 
+    tsk->modifies(d_normBLabel);
     tsk->modifies(d_normXLabel);
     tsk->modifies(d_normResLabel);
     tsk->modifies(d_normResNormalizedLabelB);
     tsk->modifies(d_normResNormalizedLabelX);
     tsk->modifies(d_conditionNumberLabel);
-    which_dw = Task::OldDW; 
+    which_dw = Task::OldDW;
   }
 
 
@@ -347,7 +356,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
 
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    
+
     // require weights
     tsk->requires( which_dw, tempLabel, Ghost::None, 0 );
 
@@ -366,11 +375,11 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
       tsk->requires( Task::NewDW, model_label, Ghost::None, 0 );
     }
   }
-  
+
   for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
-    
+
     // require weighted abscissas
     tsk->requires(which_dw, tempLabel, Ghost::None, 0);
 
@@ -381,7 +390,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     } else {
       tsk->modifies(sourceterm_label);
     }
-    
+
     // require model terms
     vector<string> modelsList = (*iEqn)->getModelsList();
     for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
@@ -391,7 +400,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     }
   }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, level->eachPatch(), m_fieldLabels->d_sharedState->allArchesMaterials());
 
 }
 
@@ -399,11 +408,11 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
 // Actually solve systems
 // **********************************************
 void
-DQMOM::solveLinearSystem( const ProcessorGroup* pc,  
+DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw, 
+                          DataWarehouse* new_dw,
                           const int timeSubStep )
 {
   double start_solveLinearSystemTime = Time::currentSeconds();
@@ -427,25 +436,25 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
 
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    DataWarehouse* which_dw; 
+    int matlIndex = m_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    DataWarehouse* which_dw;
 
-    CCVariable<double> normB; 
-    CCVariable<double> normX; 
+    CCVariable<double> normB;
+    CCVariable<double> normX;
     CCVariable<double> normRes;
     CCVariable<double> normResNormalizedB;
     CCVariable<double> normResNormalizedX;
     CCVariable<double> conditionNumber;
-    if ( timeSubStep == 0 ){ 
-      which_dw = new_dw; 
+    if ( timeSubStep == 0 ){
+      which_dw = new_dw;
       new_dw->allocateAndPut(normB, d_normBLabel, matlIndex, patch);
       new_dw->allocateAndPut(normX, d_normXLabel, matlIndex, patch);
       new_dw->allocateAndPut( normRes, d_normResLabel, matlIndex, patch );
       new_dw->allocateAndPut( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
       new_dw->allocateAndPut( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
       new_dw->allocateAndPut( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
-    } else { 
-      which_dw = old_dw; 
+    } else {
+      which_dw = old_dw;
       new_dw->getModifiable(normB, d_normBLabel, matlIndex, patch);
       new_dw->getModifiable(normX, d_normXLabel, matlIndex, patch);
       new_dw->getModifiable( normRes, d_normResLabel, matlIndex, patch );
@@ -465,22 +474,22 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightEqns.end(); iEqn++) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      if ( timeSubStep == 0 ) { 
+      if ( timeSubStep == 0 ) {
         new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-      } else { 
+      } else {
         new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
       }
       tempCCVar.initialize(0.0);
     }
-  
+
     // get/allocate weighted abscissa source term labels
     for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
          iEqn != weightedAbscissaEqns.end(); ++iEqn) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      if ( timeSubStep == 0 ){ 
+      if ( timeSubStep == 0 ){
         new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-      } else { 
+      } else {
         new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
       }
       tempCCVar.initialize(0.0);
@@ -488,10 +497,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     // get weights from data warehouse and put into CCVariable
     vector<constCCVarWrapper_withModels> weightCCVars;
-    for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
+    for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
          iEqn != weightEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      
+
       // instead of using a CCVariable, use a constCCVarWrapper struct
       constCCVarWrapper_withModels tempWrapper;
       which_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
@@ -502,7 +511,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       for( vector<string>::iterator iModels = modelsList.begin();
            iModels != modelsList.end(); ++iModels ) {
         ModelBase& model_base = model_factory.retrieve_model(*iModels);
-        
+
         // instead of using a CCVariable, use a constCCVarWrapper struct
         constCCVarWrapper tempModelWrapper;
         const VarLabel* model_label = model_base.getModelLabel();
@@ -512,7 +521,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       // put the vector into the constCCVarWrapper_withModels
       tempWrapper.models = modelCCVarsVec;
-      
+
       // put the wrapper into a vector
       weightCCVars.push_back(tempWrapper);
     }
@@ -522,7 +531,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
          iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      std::string eqn_name = (*iEqn)->getEqnName(); 
+      std::string eqn_name = (*iEqn)->getEqnName();
 
       // instead of using a CCVariable, use a constCCVarWrapper struct
       constCCVarWrapper_withModels tempWrapper;
@@ -534,17 +543,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       for( vector<string>::iterator iModels = modelsList.begin();
            iModels != modelsList.end(); ++iModels ) {
         ModelBase& model_base = model_factory.retrieve_model(*iModels);
-        
+
         // instead of using a CCVariable, use a constCCVarWrapper struct
         constCCVarWrapper tempModelWrapper;
         const VarLabel* model_label = model_base.getModelLabel();
         new_dw->get( tempModelWrapper.data, model_label, matlIndex, patch, Ghost::None, 0);
         modelCCVarsVec.push_back(tempModelWrapper);
       }
-      
+
       // put the vector into the constCCVarWrapper_withModels
       tempWrapper.models = modelCCVarsVec;
-      
+
       // put the wrapper into a vector
       weightedAbscissaCCVars.push_back(tempWrapper);
 
@@ -578,16 +587,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }
 
     // Cell iterator
-      int dimension = N_*(N_xi+1);
+      int dimension = N_*(m_N_xi+1);
       vector<double> weights(N_);
-      vector<double> weight_models(N_); 
-      vector<double> weightedAbscissas(N_xi*N_);
-      vector<double> models(N_xi*N_);
+      vector<double> weight_models(N_);
+      vector<double> weightedAbscissas(m_N_xi*N_);
+      vector<double> models(m_N_xi*N_);
 
     for ( CellIterator iter = patch->getCellIterator();
           !iter.done(); ++iter) {
       IntVector c = *iter;
- 
+
 
       // get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
       int jj=0;
@@ -607,7 +616,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         weight_models[jj]=runningsum;
         jj++;
       }
-            
+
 
       // get weighted abscissas in current cell from CCVariable in constCCVarWrapper, store value in vector
       jj=0;
@@ -629,8 +638,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       }
 
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
-      
-        
+
+
       if (b_optimize == true) {
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
@@ -641,9 +650,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         //} else {
         //  constructBopt( BB, weights, d_opt_abscissas, models );
         //}
-          
+
         total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
-        double start_SolveTime = Time::currentSeconds(); //timing 
+        double start_SolveTime = Time::currentSeconds(); //timing
         Mult( (*XX), (*AAopt), (*BB) );
         total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
 
@@ -658,7 +667,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             if( b_isFirstTimeStep ) {
               currentTimeStep = 0;
             } else {
-              currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+              currentTimeStep = m_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
             }
             int sizeofit;
             ofstream oStream;
@@ -684,7 +693,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             }
             oStream.close();
 
-            // write B matrix 
+            // write B matrix
             sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
             oStream.open(filename);
             for( int iRow = 0; iRow < dimension; ++iRow ) {
@@ -727,16 +736,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         delete BB;
         delete XX;
- 
+
       }else if( b_simplest == true ){
-   
+
           double start_AXBConstructionTime = Time::currentSeconds();
 
           total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
-          double start_SolveTime = Time::currentSeconds(); //timing 
+          double start_SolveTime = Time::currentSeconds(); //timing
 
           total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
-          
+
           int z=0; // equation loop counter
           int z2=0; // equation loop counter
 
@@ -763,35 +772,35 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         vector<double> Xdoub( dimension, 0.0 );
         vector<long double> Xlong( dimension, 0.0 );
         vector<double> Resid( dimension, 0.0 );
-  
+
         double start_AXBConstructionTime = Time::currentSeconds();
-  
+
         constructLinearSystem( A, B, weights, weightedAbscissas, models);
-  
+
         total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
-  
+
         // Save original A before decomposition into LU
         LU Aorig( A );
-  
+
         double start_SolveTime = Time::currentSeconds(); //timing
-  
+
         // Solve linear system
         A.decompose();
         A.back_subs( &B[0], &Xdoub[0] );
-  
+
         total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
-  
+
         for( unsigned int j=0; j < Xdoub.size(); ++j ) {
           Xlong[j] = Xdoub[j];
         }
 
         conditionNumber[c] = 0.0;
-  
+
         // --------------------------------------------
         // If no solution to linear system...
         if( A.isSingular() ) {
           //proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
-  
+
           // set solution vector = 0
           vector<double>::iterator iXd = Xdoub.begin();
           for( vector<long double>::iterator iXl = Xlong.begin();
@@ -799,31 +808,31 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             (*iXl) = 0.0;
             (*iXd) = 0.0;
           }
-  
+
           // set residual vector = 0
           for( vector<double>::iterator iR = Resid.begin();
                iR != Resid.end(); ++iR ) {
             (*iR) = 0.0;
           }
-  
+
         // -------------------------------------------------
         // If there is a solution to linear system...
         } else {
           double start_SolveTime = Time::currentSeconds(); //timing
-          
+
           if( do_iterative_refinement ) {
             A.iterative_refinement( Aorig, &B[0], &Xdoub[0], &Xlong[0] );
           }
-  
+
           total_SolveTime += Time::currentSeconds() - start_SolveTime; //timing
-  
+
           // get residual vector
           Aorig.getResidual( &B[0], &Xlong[0], &Resid[0] );
-  
+
           // find norm of residual
           double the_normR = A.getNorm( &Resid[0], 0 );
           normRes[c] = the_normR;
-  
+
           // find norm of residual vector divided by the norm of B
           // R = (B - AX)/(norm(B))
           vector<double> ResidNormalizedB = Resid;
@@ -834,7 +843,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             }
           }
           normResNormalizedB[c] = A.getNorm( &ResidNormalizedB[0], 0 );
-          
+
           // find norm of residual vector divided by the norm of X
           // R = (B - AX)/(norm(X))
           vector<double> ResidNormalizedX = Resid;
@@ -845,15 +854,15 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             }
           }
           normResNormalizedX[c] = A.getNorm( &ResidNormalizedX[0], 0 );
-   
+
           // find norm of RHS vector
           normB[c] = A.getNorm( &B[0], 0 );
-  
+
           // find norm of solution vector
           normX[c] = A.getNorm( &Xlong[0], 0 );
-  
+
         }
-        
+
 #if defined(DEBUG_MATRICES)
         if( pc->myrank() == 0 ) {
           if( b_writefile ) {
@@ -861,8 +870,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             int currentTimeStep;
             if( b_isFirstTimeStep ) {
               currentTimeStep = 0;
-            } else { 
-              currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+            } else {
+              currentTimeStep = m_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
             }
             int sizeofit;
             ofstream oStream;
@@ -874,7 +883,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             oStream.open(filename);
             for( int iRow = 0; iRow < dimension; ++iRow ) {
               for( int iCol = 0; iCol < dimension; ++iCol ) {
-                oStream << " " << Aorig(iRow,iCol); 
+                oStream << " " << Aorig(iRow,iCol);
               }
               oStream << endl;
             }
@@ -913,11 +922,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif //debug matrices
 
         int z=0; // equation loop counter
-        
+
         // check "acceptable solution" criteria, and assign solution values to source terms
-  
+
         // Weight equations:
-        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
+        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
              iEqn != weightEqns.end(); ++iEqn ) {
 
           if (z >= dimension ) {
@@ -930,17 +939,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-            conditionNumber[c] = -1.0; 
+            conditionNumber[c] = -1.0;
           } else {
             (*(Source_weights_weightedAbscissas[z]))[c] = Xlong[z];
           }
           ++z;
         }
-  
+
         // Weighted abscissa equations:
-        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
+        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-  
+
           // Make sure several critera are met for an acceptable solution
           if (z >= dimension ) {
             stringstream err_msg;
@@ -952,7 +961,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-            conditionNumber[c] = -1.0; 
+            conditionNumber[c] = -1.0;
           } else {
             (*(Source_weights_weightedAbscissas[z]))[c] = Xlong[z];
           }
@@ -963,23 +972,23 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         ///////////////////////////////////////////////////////
         // Use the DenseMatrix solver (which uses LAPACK)
-  
+
         DenseMatrix* AA = scinew DenseMatrix( dimension, dimension );
-        ColumnMatrix* BB = scinew ColumnMatrix( dimension );               
-        ColumnMatrix* XX = scinew ColumnMatrix( dimension );               
-        ColumnMatrix* RR = scinew ColumnMatrix( dimension );               
-  
+        ColumnMatrix* BB = scinew ColumnMatrix( dimension );
+        ColumnMatrix* XX = scinew ColumnMatrix( dimension );
+        ColumnMatrix* RR = scinew ColumnMatrix( dimension );
+
         AA->zero();
         BB->zero();
-  
+
         do_iterative_refinement = false;
-  
+
         double start_AXBConstructionTime = Time::currentSeconds(); //timing
-  
-        constructLinearSystem( AA, BB, weights, weightedAbscissas, models ); 
-  
+
+        constructLinearSystem( AA, BB, weights, weightedAbscissas, models );
+
         total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime; //timing
-  
+
         // save original A before solving
         DenseMatrix* AAorig = AA->clone();
 
@@ -1033,11 +1042,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               if( b_isFirstTimeStep ) {
                 currentTimeStep = 0;
               } else {
-                currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+                currentTimeStep = m_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
               }
               int sizeofit;
               ofstream oStream;
-            
+
               double start_FileWriteTime = Time::currentSeconds();
 
               // write U, S, and V matrices to file
@@ -1067,7 +1076,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                 oStream << scientific << setw(20) << setprecision(20) << " " << S->a[iRow] << endl;
               }
               oStream.close();
-            
+
               total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
             }
           }
@@ -1123,7 +1132,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
           Mult( (*XX), (*AA), (*BB) );
           total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
-        } 
+        }
 
         conditionNumber[c] = conditionNumber_;
 
@@ -1135,7 +1144,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           double temp = (*RR)[yy] - (*BB)[yy];
           (*RR)[yy] = temp;
         }
- 
+
         // find norm of residual
         double this_normRes = 0;
         for( int ii=0; ii<dimension; ++ii ) {
@@ -1144,7 +1153,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
         }
         normRes[c] = this_normRes;
- 
+
         // norm of residual divided by norm of B
         //    Don't divide by small B's!
         //    Otherwise you'll be dividing a small residual by a small B, so the norm will be large
@@ -1163,7 +1172,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
         }
         normResNormalizedB[c] = this_normResNormalizedB;
- 
+
         // norm of residual divided by norm of X
         //    Don't divide by small X's!
         //    Otherwise you'll be dividing a small residual by a small X, so the norm will be large
@@ -1182,7 +1191,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
         }
         normResNormalizedX[c] = this_normResNormalizedX;
- 
+
         // norm of B
         double this_normB = 0;
         for( int ii=0; ii<dimension; ++ii ) {
@@ -1191,7 +1200,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
         }
         normB[c] = this_normB;
- 
+
         // norm of X
         double this_normX = 0;
         for( int ii=0; ii<dimension; ++ii ) {
@@ -1200,7 +1209,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
         }
         normX[c] = this_normX;
-  
+
 #if defined(DEBUG_MATRICES)
         if( pc->myrank() == 0 ) {
           if( b_writefile ) {
@@ -1209,13 +1218,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             if( b_isFirstTimeStep ) {
               currentTimeStep = 0;
             } else {
-              currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+              currentTimeStep = m_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
             }
             int sizeofit;
             ofstream oStream;
-            
+
             double start_FileWriteTime = Time::currentSeconds();
-  
+
             // write A matrix to file
             sizeofit = sprintf( filename, "A_%.2d.mat", currentTimeStep );
             oStream.open(filename);
@@ -1239,7 +1248,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               }
               oStream.close();
             }
-  
+
             // write X vector to file
             sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
             oStream.open(filename);
@@ -1247,7 +1256,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               oStream << scientific << setw(20) << setprecision(20) << (*XX)[iRow] << endl;
             }
             oStream.close();
-  
+
             // write B vector to file
             sizeofit = sprintf( filename, "B_%.2d.mat", currentTimeStep );
             oStream.open(filename);
@@ -1255,7 +1264,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               oStream << scientific << setw(20) << setprecision(20) << (*BB)[iRow] << endl;
             }
             oStream.close();
-  
+
             // write residual vector to file
             sizeofit = sprintf( filename, "R_%.2d.mat", currentTimeStep );
             oStream.open(filename);
@@ -1271,11 +1280,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 
         // check "acceptable solution" criteria, and assign solution values to source terms
-        
+
         int z=0; // equation loop counter
 
         // Weight equations:
-        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
+        for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
              iEqn != weightEqns.end(); ++iEqn ) {
 
           if (z >= dimension ) {
@@ -1288,17 +1297,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-            conditionNumber[c] = -1.0; 
+            conditionNumber[c] = -1.0;
           } else {
             (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
           }
           ++z;
         }
-  
+
         // Weighted abscissa equations:
-        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
+        for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-  
+
           // Make sure several critera are met for an acceptable solution
           if (z >= dimension ) {
             stringstream err_msg;
@@ -1310,13 +1319,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-            conditionNumber[c] = -1.0; 
+            conditionNumber[c] = -1.0;
           } else {
             (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
           }
           ++z;
         }
-  
+
         delete AA;
         delete BB;
         delete XX;
@@ -1359,15 +1368,15 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   // ---------------------------------------------
   // Verification Procedure:
   // ---------------------------------------------
-  
+
 #if defined(VERIFY_LINEAR_SOLVER)
   verifyLinearSolver();
 #endif
-  
+
 #if defined(VERIFY_AB_CONSTRUCTION)
   verifyABConstruction();
 #endif
-  
+
   // ---------------------------------------------
 
 #if defined(DEBUG_MATRICES)
@@ -1385,7 +1394,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   string msg = "    Time for AX=B construction: ";
   proc0cout << msg << total_AXBConstructionTime << " seconds\n";
 
-  if( d_solverType == "Lapack-invert" ) { 
+  if( d_solverType == "Lapack-invert" ) {
     proc0cout << "    Time for Lapack inversion-multiplication: " << total_SolveTime << " seconds\n";
     if( b_calcConditionNumber ) {
       proc0cout << "    Time for calculation of condition number: " << total_SVDTime << " seconds\n";
@@ -1412,9 +1421,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 // Construct A and B matrices for DQMOM
 // **********************************************
 void
-DQMOM::constructLinearSystem( LU             &A, 
-                              vector<double> &B, 
-                              vector<double> &weights, 
+DQMOM::constructLinearSystem( LU             &A,
+                              vector<double> &B,
+                              vector<double> &weights,
                               vector<double> &weightedAbscissas,
                               vector<double> &models,
                               int             verbosity)
@@ -1424,7 +1433,7 @@ DQMOM::constructLinearSystem( LU             &A,
   // construct AX=B
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
     MomentVector thisMoment = momentIndexes[k];
- 
+
     // weights
     for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
       double prefixA = 1;
@@ -1448,14 +1457,14 @@ DQMOM::constructLinearSystem( LU             &A,
 
     // weighted abscissas
     double totalsumS = 0;
-    for( unsigned int j = 0; j < N_xi; ++j ) {
+    for( unsigned int j = 0; j < m_N_xi; ++j ) {
       double prefixA    = 1;
       double productA   = 1;
-      
+
       double prefixS    = 1;
       double productS   = 1;
       double modelsumS  = 0;
-      
+
       double quadsumS = 0;
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
         if (weights[alpha] == 0) {
@@ -1482,7 +1491,7 @@ DQMOM::constructLinearSystem( LU             &A,
           productS = 1;
 
           // calculate product containing all internal coordinates except j
-          for (unsigned int n = 0; n < N_xi; ++n) {
+          for (unsigned int n = 0; n < m_N_xi; ++n) {
             if (n != j) {
               // the if statements checking these same conditions (above) are only
               // checking internal coordinate j, so we need them again for internal
@@ -1502,7 +1511,7 @@ DQMOM::constructLinearSystem( LU             &A,
             }
           }//end int coord n
         }//end divide by zero conditionals
-        
+
 
         modelsumS = - models[j*(N_)+alpha];
 
@@ -1510,12 +1519,12 @@ DQMOM::constructLinearSystem( LU             &A,
         A(k,col)=prefixA*productA;
         if(verbosity == 1)
           proc0cout << "Setting A(" << k << "," << col << ") = " << prefixA*productA << endl;
-        
+
         quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
       }//end quad nodes
       totalsumS = totalsumS + quadsumS;
     }//end int coords j sub-matrix
-    
+
     B[k] = totalsumS;
   } // end moments
 }
@@ -1544,12 +1553,12 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
 
       (*AA)[k][alpha] = prefixA*productA;
     } //end weights sub-matrix
-  
+
     // weighted abscissas
-    for( unsigned int j = 0; j < N_xi; ++j ) {
+    for( unsigned int j = 0; j < m_N_xi; ++j ) {
       double prefixA    = 1;
       double productA   = 1;
-      
+
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
         if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
           //FIXME:
@@ -1563,7 +1572,7 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
           productA = 1;
 
           // calculate product containing all internal coordinates except j
-          for (unsigned int n = 0; n < N_xi; ++n) {
+          for (unsigned int n = 0; n < m_N_xi; ++n) {
             if (n != j) {
               // the if statements checking these same conditions (above) are only
               // checking internal coordinate j, so we need them again for internal
@@ -1596,7 +1605,7 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
 
     // weighted abscissas
     double totalsumS = 0;
-    for( unsigned int j = 0; j < N_xi; ++j ) {
+    for( unsigned int j = 0; j < m_N_xi; ++j ) {
       double prefixS    = 1;
       double productS   = 1;
       double modelsumS  = 0;
@@ -1620,7 +1629,7 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
           productS = 1;
 
           // calculate product containing all internal coordinates except j
-          for (unsigned int n = 0; n < N_xi; ++n) {
+          for (unsigned int n = 0; n < m_N_xi; ++n) {
             if (n != j) {
               // the if statements checking these same conditions (above) are only
               // checking internal coordinate j, so we need them again for internal
@@ -1646,7 +1655,7 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
     (*BB)[k] = totalsumS;
   } // end moments
 }
-  
+
 
 // **********************************************
 // Construct A optimized for unweighted abscissas
@@ -1674,7 +1683,7 @@ DQMOM::constructAopt_unw( DenseMatrix*   &AA,
     } //end weights sub-matrix
 
     // weighted abscissas
-    for( unsigned int j = 0; j < N_xi; ++j ) {
+    for( unsigned int j = 0; j < m_N_xi; ++j ) {
       double prefixA    = 1;
       double productA   = 1;
 
@@ -1691,7 +1700,7 @@ DQMOM::constructAopt_unw( DenseMatrix*   &AA,
           productA = 1;
 
           // calculate product containing all internal coordinates except j
-          for (unsigned int n = 0; n < N_xi; ++n) {
+          for (unsigned int n = 0; n < m_N_xi; ++n) {
             if (n != j) {
               // the if statements checking these same conditions (above) are only
               // checking internal coordinate j, so we need them again for internal
@@ -1722,7 +1731,7 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
     MomentVector thisMoment = momentIndexes[k];
 
     double totalsumS = 0;
-    for( unsigned int j = 0; j < N_xi; ++j ) {
+    for( unsigned int j = 0; j < m_N_xi; ++j ) {
       double prefixS    = 1;
       double productS   = 1;
       double modelsumS  = 0;
@@ -1742,7 +1751,7 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
           prefixS = -(thisMoment[j])*(pow(base, exponent));
           productS = 1;
           // calculate product containing all internal coordinates except j
-          for (unsigned int n = 0; n < N_xi; ++n) {
+          for (unsigned int n = 0; n < m_N_xi; ++n) {
             if (n != j) {
               // the if statements checking these same conditions (above) are only
               // checking internal coordinate j, so we need them again for internal
@@ -1772,9 +1781,9 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
 // Construct A and B matrices for DQMOM
 // **********************************************
 void
-DQMOM::constructLinearSystem( DenseMatrix*   &AA, 
-                              ColumnMatrix*  &BB, 
-                              vector<double> &weights, 
+DQMOM::constructLinearSystem( DenseMatrix*   &AA,
+                              ColumnMatrix*  &BB,
+                              vector<double> &weights,
                               vector<double> &weightedAbscissas,
                               vector<double> &models,
                               int             verbosity)
@@ -1785,12 +1794,12 @@ DQMOM::constructLinearSystem( DenseMatrix*   &AA,
     MomentVector thisMoment = momentIndexes[k];
 
     // preprocessing - start with powers
-    double d_powers[N_][N_xi];  // a^(b-1)
-    double powers[N_][N_xi];    // a^b
-    double rightPartialProduct[N_][N_xi], leftPartialProduct[N_][N_xi];
+    double d_powers[N_][m_N_xi];  // a^(b-1)
+    double powers[N_][m_N_xi];    // a^b
+    double rightPartialProduct[N_][m_N_xi], leftPartialProduct[N_][m_N_xi];
     for (unsigned int m = 0; m < N_; m++) {
       if (weights[m] != 0) {
-        for (unsigned int n = 0; n < N_xi; n++) {
+        for (unsigned int n = 0; n < m_N_xi; n++) {
 
           //TODO should we worry about 0^0, based on former seq code, only fear is resolved
           double base = weightedAbscissas[n * N_ + m] / weights[m];
@@ -1799,21 +1808,21 @@ DQMOM::constructLinearSystem( DenseMatrix*   &AA,
           powers[m][n] = d_powers[m][n] * base;
         }
       } else {
-        for (unsigned int n = 0; n < N_xi; n++) {
+        for (unsigned int n = 0; n < m_N_xi; n++) {
           d_powers[m][n] = powers[m][n] = 0;
           rightPartialProduct[m][n] = leftPartialProduct[m][n] = 0;
         }
-        rightPartialProduct[m][0] = leftPartialProduct[m][N_xi - 1] = 1;
+        rightPartialProduct[m][0] = leftPartialProduct[m][m_N_xi - 1] = 1;
       }
     }
     // now partial products to eliminate innermost for loop
     for (unsigned int m = 0; m < N_; m++) {
       if (weights[m] != 0) {
         rightPartialProduct[m][0] = 1;
-        leftPartialProduct[m][N_xi - 1] = 1;
-        for (unsigned int n = 1; n < N_xi; n++) {
+        leftPartialProduct[m][m_N_xi - 1] = 1;
+        for (unsigned int n = 1; n < m_N_xi; n++) {
           rightPartialProduct[m][n] = rightPartialProduct[m][n - 1] * powers[m][n - 1];
-          leftPartialProduct[m][N_xi - 1 - n] = leftPartialProduct[m][N_xi - 1 - n + 1] * powers[m][N_xi - 1 - n + 1];
+          leftPartialProduct[m][m_N_xi - 1 - n] = leftPartialProduct[m][m_N_xi - 1 - n + 1] * powers[m][m_N_xi - 1 - n + 1];
         }
       }
     }
@@ -1839,7 +1848,7 @@ DQMOM::constructLinearSystem( DenseMatrix*   &AA,
 
     // weighted abscissas
     double totalsumS = 0;
-    for (unsigned int j = 0; j < N_xi; ++j) {
+    for (unsigned int j = 0; j < m_N_xi; ++j) {
       double prefixA = 1;
       double productA = 1;
 
@@ -1899,16 +1908,16 @@ DQMOM::constructLinearSystem( DenseMatrix*   &AA,
 // **********************************************
 void
 DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeSubStep )
-{ 
+{
   //string taskname = "DQMOM::calculateMoments";
   //Task* tsk = scinew Task(taskname, this, &DQMOM::calculateMoments);
 
   //if( timeSubStep == 0 )
     //proc0cout << "Requesting DQMOM moment labels" << endl;
-  
+
   //// computing/modifying the actual moments
-  //for( ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.begin();
-       //iMoment != d_fieldLabels->DQMOMMoments.end(); ++iMoment ) {
+  //for( ArchesLabel::MomentMap::iterator iMoment = m_fieldLabels->DQMOMMoments.begin();
+       //iMoment != m_fieldLabels->DQMOMMoments.end(); ++iMoment ) {
     //if( timeSubStep == 0 )
       //tsk->computes( iMoment->second );
     //else
@@ -1929,19 +1938,19 @@ DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeS
     //tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
   //}
 
-  //sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  //sched->addTask(tsk, level->eachPatch(), m_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
 // **********************************************
 // actually calculate the moments
 // **********************************************
 /** @details  This calculates the value of each of the $\f(N_{\xi}+1)N$\f moments
-  *           given to the DQMOM class. For a given moment index $\f k = k_1, k_2, \dots $\f, 
+  *           given to the DQMOM class. For a given moment index $\f k = k_1, k_2, \dots $\f,
   *           the moment is calculated as:
   *           \f[ m_{k} = \sum_{\alpha=1}^{N} w_{\alpha} \prod_{j=1}^{N_{\xi}} \xi_{j}^{k_j} \f]
   */
 void
-DQMOM::calculateMoments( const ProcessorGroup* pc,  
+DQMOM::calculateMoments( const ProcessorGroup* pc,
                          const PatchSubset* patches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
@@ -1952,7 +1961,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
     //const Patch* patch = patches->get(p);
 
     //int archIndex = 0;
-    //int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    //int matlIndex = m_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     //// get weights from data warehouse and store their corresponding CCVariables
     //vector<constCCVarWrapper> weightCCVars;
@@ -1986,7 +1995,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
     //for ( CellIterator iter = patch->getCellIterator();
           //!iter.done(); ++iter) {
       //IntVector c = *iter;
-      
+
       //vector<double> weights;
       //vector<double> weightedAbscissas;
 
@@ -2005,7 +2014,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
       //}
 
       //// moment index k = {k1, k2, k3, ...}
-      //// moment k = \displaystyle{ sum_{alpha=1}^{N}{ w_{\alpha} \prod_{j=1}^{N_xi}{ \langle \xi_{j} \rangle_{\alpha}^{k_j} } } }
+      //// moment k = \displaystyle{ sum_{alpha=1}^{N}{ w_{\alpha} \prod_{j=1}^{m_N_xi}{ \langle \xi_{j} \rangle_{\alpha}^{k_j} } } }
       //for( vector<MomentVector>::iterator iAllMoments = momentIndexes.begin();
            //iAllMoments != momentIndexes.end(); ++iAllMoments ) {
 
@@ -2013,8 +2022,8 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
 
         //// Grab the corresponding moment from the DQMOMMoment map (to get the VarLabel associated with this moment)
         //const VarLabel* moment_label;
-        //ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.find( thisMoment );
-        //if( iMoment != d_fieldLabels->DQMOMMoments.end() ) {
+        //ArchesLabel::MomentMap::iterator iMoment = m_fieldLabels->DQMOMMoments.find( thisMoment );
+        //if( iMoment != m_fieldLabels->DQMOMMoments.end() ) {
           //// grab the corresponding label
           //moment_label = iMoment->second;
         //} else {
@@ -2029,7 +2038,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
           //throw InvalidValue( errmsg,__FILE__,__LINE__);
         //}
 
-        //// Associate a CCVariable<double> with this moment 
+        //// Associate a CCVariable<double> with this moment
         //CCVariable<double> moment_k;
         //if( new_dw->exists( moment_label, matlIndex, patch ) ) {
           //// running getModifiable once for each cell
@@ -2060,9 +2069,9 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
             //double weight = weights[alpha]*d_weight_scaling_constant;
             //running_weights_sum += weight;
             //running_product = weight;
-            //for( unsigned int j = 0; j < N_xi; ++j ) {
+            //for( unsigned int j = 0; j < m_N_xi; ++j ) {
 
-              //double base = (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant 
+              //double base = (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant
                                                                                                                                     //// because it's already in the weighted abscissa!
               //// calculating moments about the mean... so find the mean
               //if( thisMoment[j] != 0 && thisMoment[j] != 1 ) {
@@ -2152,7 +2161,7 @@ DQMOM::verifyLinearSolver()
   // assemble norms (determinant, normRes, normResNormalized, normX)
   vector<double> verification_norms(5);
   getVectorFromFile( verification_norms, vls_file_norms );
-  
+
   vector<string> verification_normnames;
   verification_normnames.push_back("determinant");
   verification_normnames.push_back("normRes");
@@ -2160,7 +2169,7 @@ DQMOM::verifyLinearSolver()
   verification_normnames.push_back("normB");
   verification_normnames.push_back("normX");
 
-  
+
   // ---------------------------------------------------------------------
   // Print verification objects picked up by verifyLinearSolver() method
   // (But only print them ONCE!)
@@ -2275,12 +2284,12 @@ DQMOM::verifyLinearSolver()
 
   // --------------------------------------------------------------------
   // 1. Decompose
-  // (For now, verify these as ONE step; 
-  //  these should be verified separately 
+  // (For now, verify these as ONE step;
+  //  these should be verified separately
   //  to make bugs easier to locate...)
   proc0cout << "Step 1: LU decomposition          " << endl;
   proc0cout << "----------------------------------" << endl;
-  
+
   LU verification_A_original( verification_A );
   DenseMatrix* AAorig = verification_AA->clone();
 
@@ -2294,7 +2303,7 @@ DQMOM::verifyLinearSolver()
   proc0cout << "Comparing calculated solution to verification solution..." << endl;
   proc0cout << "---------------------------------------------------------" << endl;
   vector<double> X(vls_dimension);
-  verification_A.decompose(); 
+  verification_A.decompose();
   verification_A.back_subs( &verification_B[0], &X[0] );
   compare( verification_X, X, tol );
 
@@ -2318,9 +2327,9 @@ DQMOM::verifyLinearSolver()
   double determinant = verification_A.getDeterminant();
   compare( verification_norms[0], determinant, tol );
 
-  
+
   // --------------------------------------------------------------------
-  // 4. Get residual - Calculate residual from A, B, X from file and 
+  // 4. Get residual - Calculate residual from A, B, X from file and
   //    compare to residual (from file).
   proc0cout << endl;
   proc0cout << endl;
@@ -2330,7 +2339,7 @@ DQMOM::verifyLinearSolver()
   vector<double> R(vls_dimension);
   verification_A_original.getResidual( &verification_B[0], &X[0], &R[0] );
   compare( verification_R, R, tol );
-  
+
   proc0cout << endl;
   proc0cout << endl;
   proc0cout << "Step 4B: Verifying ColumnMatrix residual calculation      " << endl;
@@ -2344,7 +2353,7 @@ DQMOM::verifyLinearSolver()
 
 
   // ---------------------------------------------------------------------
-  // 5. Get norm of residual - compare calculated norm of (verification) 
+  // 5. Get norm of residual - compare calculated norm of (verification)
   //    residual to norm of residual (from file).
   proc0cout << endl;
   proc0cout << endl;
@@ -2496,14 +2505,14 @@ DQMOM::verifyABConstruction()
   ColumnMatrix* verification_BB = scinew ColumnMatrix( vab_dimension );
   getVectorFromFile( verification_BB, vab_dimension, vab_file_B );
 
-  // assemble inputs 
+  // assemble inputs
   ifstream vab_inputs( vab_file_inputs.c_str() );
   if(vab_inputs.fail() ) {
     ostringstream err_msg;
     err_msg << "ERROR: DQMOM: Verification of A and B construction procedure could not find the file containing weight/weighted abscissa/model inputs: You specified " << vab_file_inputs << endl;
     throw FileNotFound(err_msg.str(),__FILE__,__LINE__);
   }
-  
+
   // assemble weights
   vector<double> weights(vab_N);
   getVectorFromFile( weights, vab_inputs );
@@ -2582,7 +2591,7 @@ DQMOM::verifyABConstruction()
     proc0cout << "------------------------------" << endl;
     for(vector<MomentVector>::iterator iAllMoments = momentIndexes.begin();
         iAllMoments != momentIndexes.end(); ++iAllMoments ) {
-      for(MomentVector::iterator iThisMoment = iAllMoments->begin(); 
+      for(MomentVector::iterator iThisMoment = iAllMoments->begin();
           iThisMoment != iAllMoments->end(); ++iThisMoment ) {
         proc0cout << (*iThisMoment) << " ";
       }
@@ -2689,20 +2698,20 @@ DQMOM::compare( vector<double> vector1, vector<double> vector2, double tolerance
   const int size2 = vector2.size();
   if( size1 != size2 ) {
     proc0cout << "You specified vector 1 (length = " << size1 << ") and vector 2 (length = " << size2 << ")." << endl;
-    string err_msg = "ERROR: DQMOM: Compare: Cannot compare vectors of dissimilar size."; 
+    string err_msg = "ERROR: DQMOM: Compare: Cannot compare vectors of dissimilar size.";
     throw InvalidValue( err_msg,__FILE__,__LINE__);
   }
 
   proc0cout << " >>> " << endl;
   int mismatches = 0;
   int element = 0;
-  for(vector<double>::iterator ivec1 = vector1.begin(), ivec2 = vector2.begin(); 
+  for(vector<double>::iterator ivec1 = vector1.begin(), ivec2 = vector2.begin();
       ivec1 != vector1.end(); ++ivec1, ++ivec2, ++element) {
     double pdiff = fabs( ( (*ivec1)-(*ivec2) )/(*ivec1) );
     if( pdiff > tolerance ) {
       proc0cout << " >>> Element " << element << " mismatch: "
                 << "\tPercent Diff = "    << setw(3)  << setprecision(2) << pdiff
-                << "\tVector1 (Verif) = " << setw(12) << setprecision(4) << (*ivec1) 
+                << "\tVector1 (Verif) = " << setw(12) << setprecision(4) << (*ivec1)
                 << "\tVector2 (Calc) = "  << setw(12) << setprecision(4) << (*ivec2) << endl;
       ++mismatches;
     }
@@ -2713,7 +2722,7 @@ DQMOM::compare( vector<double> vector1, vector<double> vector2, double tolerance
     proc0cout << " >>> !!! COMPARISON FAILED !!! " << endl;
     proc0cout << " >>> " << endl;
   }
-  
+
   proc0cout << " >>> Summary of vector comparison: found " << mismatches << " mismatches in " << element << " elements." << endl;
   proc0cout << " >>> " << endl;
   proc0cout << endl;
@@ -2754,12 +2763,12 @@ DQMOM::compare( double x1, double x2, double tolerance )
 {
   proc0cout << " >>> " << endl;
   int mismatches = 0;
-  
+
   double pdiff = fabs( (x1-x2)/x1 );
   if( pdiff > tolerance ) {
     proc0cout << " >>> Element mismatch: "
               << "\tPercent Diff = "  << setw(3)  << setprecision(2) << pdiff
-              << "\tX1 (Verif) = "    << setw(12) << setprecision(4) << x1 
+              << "\tX1 (Verif) = "    << setw(12) << setprecision(4) << x1
               << "\tX2 (Calc) = "     << setw(12) << setprecision(4) << x2 << endl;
     ++mismatches;
   }
@@ -2783,7 +2792,7 @@ DQMOM::compare( LU matrix1, LU matrix2, double tolerance )
   const int size2 = matrix2.getDimension();
   if( size1 != size2 ) {
     proc0cout << "You specified matrix 1 (length = " << size1 << ") and matrix 2 (length = " << size2 << ")." << endl;
-    string err_msg = "ERROR: DQMOM: Compare: Cannot compare matrices of dissimilar size."; 
+    string err_msg = "ERROR: DQMOM: Compare: Cannot compare matrices of dissimilar size.";
     throw InvalidValue( err_msg,__FILE__,__LINE__);
   }
 
@@ -2796,7 +2805,7 @@ DQMOM::compare( LU matrix1, LU matrix2, double tolerance )
       if( pdiff > tolerance ) {
         proc0cout << " >>> Element (row "    << setw(2)  << setprecision(0) << row+1 << ", col " << setw(2) << setprecision(0) << col+1 << ") mismatch: "
                   << "\tPercent Diff = "     << setw(3)  << setprecision(2) << pdiff
-                  << "\tMatrix 1 (Verif) = " << setw(12) << setprecision(4) << matrix1(row,col) 
+                  << "\tMatrix 1 (Verif) = " << setw(12) << setprecision(4) << matrix1(row,col)
                   << "\tMatrix 2 (Calc) = "  << setw(12) << setprecision(4) << matrix2(row,col) << endl;
         ++mismatches;
       }
@@ -2947,14 +2956,14 @@ DQMOM::getMatrixFromFile( DenseMatrix* &matrix, int dimension, string filename )
 }
 
 /** @details  This method opens an ifstream to a file containing moment indices.
-  *           This allows for verification of the construction of A and B using the 
-  *           correct moment indices, independent of the moment indeces found in the 
+  *           This allows for verification of the construction of A and B using the
+  *           correct moment indices, independent of the moment indeces found in the
   *           input file.
-  *           This allows the verification procedure to be completely independent 
-  *           of the UPS input file, and depend only upon the verification input 
+  *           This allows the verification procedure to be completely independent
+  *           of the UPS input file, and depend only upon the verification input
   *           files.
   *
-  *           The number of moment indices is equal to the number of elements 
+  *           The number of moment indices is equal to the number of elements
   *           in "moments".
   */
 void
@@ -2993,7 +3002,7 @@ DQMOM::getMomentsFromFile( vector<MomentVector>& moments, string filename )
 
 /** @details  This method opens an ifstream to file "filename", then reads the file
   *           one line at a time.  Each line becomes an element of the vector "vec",
-  *           unless the line begins with a '#' character (indicates comment) or 
+  *           unless the line begins with a '#' character (indicates comment) or
   *           the line is empty.
   *
   *           The number of lines read is equal to the size of the vector "vec".
@@ -3049,7 +3058,7 @@ DQMOM::getVectorFromFile( ColumnMatrix* &vec, int dimension, string filename )
   }
 }
 
-/** @details  This method uses an already open ifstream "filestream" and reads the 
+/** @details  This method uses an already open ifstream "filestream" and reads the
   *           file one line at a time.  The filestream is passed, rather than a file
   *           name, in the case that one file contains multiple vectors.
   *
@@ -3059,7 +3068,7 @@ DQMOM::getVectorFromFile( ColumnMatrix* &vec, int dimension, string filename )
   *            current location in the file.)
   *
   *           Each line becomes an element of the vector "vec",
-  *           unless the line begins with a '#' character (indicates comment) or 
+  *           unless the line begins with a '#' character (indicates comment) or
   *           the line is empty.
   *
   *           The number of lines read is equal to the size of vector "vec".

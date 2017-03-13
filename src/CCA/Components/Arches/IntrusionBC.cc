@@ -154,6 +154,12 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
       intrusion.name = name;
       intrusion.velocity = Vector(0,0,0);
 
+      if ( db_intrusion->findBlock("ignore_missing_bc") ){
+        intrusion.ignore_missing_bc = true;
+      } else {
+        intrusion.ignore_missing_bc = false;
+      }
+
       // set up velocity:
       ProblemSpecP db_velocity = db_intrusion->findBlock("velocity");
       intrusion.has_velocity_model = false;
@@ -1183,11 +1189,14 @@ IntrusionBC::addScalarRHS( const Patch* patch,
         std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( scalar_name );
 
         //if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){
+        bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-          throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__);
+          if ( !iIntrusion->second.ignore_missing_bc )
+            throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__);
+          found_bc = false;
         }
 
-        if ( !iIntrusion->second.interior_cell_iterator.empty() ) {
+        if ( !iIntrusion->second.interior_cell_iterator.empty() && found_bc ) {
 
           BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(p);
 
@@ -1244,11 +1253,14 @@ IntrusionBC::addScalarRHS( const Patch* patch,
         std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( scalar_name );
 
         //if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){
+        bool found_bc = true;
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){
-          throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__);
+          if ( !iIntrusion->second.ignore_missing_bc )
+            throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__);
+          found_bc = false;
         }
 
-        if ( !iIntrusion->second.interior_cell_iterator.empty() ) {
+        if ( !iIntrusion->second.interior_cell_iterator.empty() && found_bc ) {
 
           BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(p);
 

@@ -948,6 +948,9 @@ namespace Uintah{
         //scalars
         std::map<std::string, scalarInletBase*> scalar_map;
 
+        // ignore missing bc spec
+        bool ignore_missing_bc;                            /// Don't throw an error when a bc spec is found. 
+
       };
 
       typedef std::map<std::string, Boundary> IntrusionMap;
@@ -990,7 +993,7 @@ namespace Uintah{
       const ArchesLabel* _lab;
       const MPMArchesLabel* _mpmlab;
       Properties* _props;
-      TableLookup* _table_lookup; 
+      TableLookup* _table_lookup;
       int _WALL;
       bool _intrusion_on;
       bool _do_energy_exchange;
