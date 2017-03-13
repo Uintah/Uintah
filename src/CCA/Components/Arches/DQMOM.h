@@ -191,34 +191,33 @@ private:
   ArchesLabel* m_fieldLabels;
 
   unsigned int m_N_xi;  ///< Number of internal coordinates
-  unsigned int N_;    ///< Number of quadrature nodes
+  unsigned int m_N_;    ///< Number of quadrature nodes
 
-  int d_timeSubStep;
   bool m_save_moments; ///< boolean - calculate & save moments?
 
-  double d_solver_tolerance;
-  double d_maxConditionNumber;
-  double d_w_small;
-  double d_weight_scaling_constant;
-  std::vector<double> d_weighted_abscissa_scaling_constants;
-  std::vector<double> d_opt_abscissas;
-  DenseMatrix* AAopt;
+  double m_solver_tolerance;
+  double m_maxConditionNumber;
+  double m_w_small;
+  //double d_weight_scaling_constant;
+  //std::vector<double> d_weighted_abscissa_scaling_constants;
+  std::vector<double> m_opt_abscissas;
+  DenseMatrix* m_AAopt;
 
-  const VarLabel* d_normBLabel;
-  const VarLabel* d_normXLabel;
-  const VarLabel* d_normResLabel;
-  const VarLabel* d_normResNormalizedLabelB;
-  const VarLabel* d_normResNormalizedLabelX;
-  const VarLabel* d_conditionNumberLabel;
+  const VarLabel* m_normBLabel;
+  const VarLabel* m_normXLabel;
+  const VarLabel* m_normResLabel;
+  const VarLabel* m_normRedNormalizedLabelB;
+  const VarLabel* m_normRedNormalizedLabelX;
+  const VarLabel* m_conditionNumberLabel;
 
-  double d_small_normalizer; ///< When X (or B) is smaller than this, don't normalize the residual by it
-  bool b_useLapack;
-  bool b_calcConditionNumber;
-  bool b_optimize;
-  bool b_simplest;
-  bool d_unweighted;
-  std::string d_which_dqmom;
-  std::string d_solverType;
+  double m_small_normalizer; ///< When X (or B) is smaller than this, don't normalize the residual by it
+  bool m_useLapack;
+  bool m_calcConditionNumber;
+  bool m_optimize;
+  bool m_simplest;
+  bool m_unmweighted;
+  std::string m_which_dqmom;
+  std::string m_solverType;
 
   struct constCCVarWrapper {
     constCCVariable<double> data;
@@ -247,7 +246,7 @@ private:
 
   int vls_dimension;      ///< Dimension of problem
   double vls_tol;         ///< Tolerance for comparisons
-  bool b_have_vls_matrices_been_printed;
+  bool m_vls_mat_print;
 
 #endif
 
@@ -267,7 +266,7 @@ private:
   int vab_N, vab_m_N_xi;    ///< Number of environments, internal coordinates of the problem
   double vab_tol;         ///< Tolerance for comparisons
 
-  bool b_have_vab_matrices_been_printed;
+  bool m_vab_mat_print;
 #endif
 
 #if defined(VERIFY_LINEAR_SOLVER) || defined(VERIFY_AB_CONSTRUCTION)
@@ -307,7 +306,7 @@ private:
 #endif
 
 #if defined(DEBUG_MATRICES)
-  bool b_isFirstTimeStep;
+  bool m_isFirstTimestep;
 #endif
 
 }; // end class DQMOM
