@@ -87,7 +87,6 @@ namespace Uintah {
       double Shear;   /*< Shear Modulus */
       double alpha;   /*< Coeff. of thermal expansion */
       double Chi;     /*< Taylor-Quinney coefficient */
-      double sigma_crit; /*< Critical stress */
     };   
 
     // Create datatype for storing porosity parameters
@@ -152,7 +151,6 @@ namespace Uintah {
     bool   d_computeSpecificHeat;
     bool   d_checkTeplaFailureCriterion;
     bool   d_doMelting;
-    bool   d_checkStressTriax;
 
     std::string  d_plasticConvergenceAlgo;
 

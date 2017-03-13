@@ -85,8 +85,6 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
   d_initialData.Chi = 0.9;
   ps->get("taylor_quinney_coeff",d_initialData.Chi);
-  d_initialData.sigma_crit = 2.0e99; // Make huge to do nothing by default
-  ps->get("critical_stress", d_initialData.sigma_crit);
 
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
@@ -103,8 +101,6 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   d_doMelting = true;
   ps->get("do_melting",d_doMelting);
 
-  d_checkStressTriax = true;
-  ps->get("check_max_stress_failure",d_checkStressTriax);
   
   // plasticity convergence Algorithm
   d_plasticConvergenceAlgo = "radialReturn";   // default
@@ -205,7 +201,6 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   d_initialData.Shear = cm->d_initialData.Shear;
   d_initialData.alpha = cm->d_initialData.alpha;
   d_initialData.Chi = cm->d_initialData.Chi;
-  d_initialData.sigma_crit = cm->d_initialData.sigma_crit;
 
   d_tol = cm->d_tol ;
   d_useModifiedEOS = cm->d_useModifiedEOS;
@@ -213,7 +208,6 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
   d_doMelting = cm->d_doMelting;
-  d_checkStressTriax = cm->d_checkStressTriax;
 
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
@@ -295,13 +289,11 @@ void ElasticPlasticHP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("shear_modulus",                 d_initialData.Shear);
   cm_ps->appendElement("coeff_thermal_expansion",       d_initialData.alpha);
   cm_ps->appendElement("taylor_quinney_coeff",          d_initialData.Chi);
-  cm_ps->appendElement("critical_stress",               d_initialData.sigma_crit);
   cm_ps->appendElement("tolerance",                     d_tol);
   cm_ps->appendElement("useModifiedEOS",                d_useModifiedEOS);
   cm_ps->appendElement("initial_material_temperature",  d_initialMaterialTemperature);
   cm_ps->appendElement("check_TEPLA_failure_criterion", d_checkTeplaFailureCriterion);
   cm_ps->appendElement("do_melting",                    d_doMelting);
-  cm_ps->appendElement("check_max_stress_failure",      d_checkStressTriax);
   cm_ps->appendElement("plastic_convergence_algo",      d_plasticConvergenceAlgo);
   cm_ps->appendElement("compute_specific_heat",         d_computeSpecificHeat);
 
@@ -1164,22 +1156,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           }
         }  // if plastic 
 
-        // Check 4: Look at maximum stress (JG:  This is the same as threshold damage)
-        if (d_checkStressTriax) {
-
-          // Compute eigenvalues of the stress tensor
-          SymmMatrix3 stress(sigma);          
-          Vector eigVal(0.0, 0.0, 0.0);
-          Matrix3 eigVec;
-          stress.eigen(eigVal, eigVec);
-          
-          double max_stress = Max(Max(eigVal[0],eigVal[1]), eigVal[2]);
-          if (max_stress > d_initialData.sigma_crit) {
-            pLocalized_new[idx] = true;
-          }
-        }
-
- 
         if (pLocalized_new[idx]) {
           pDamage_new[idx]    = 0.0;
           pPorosity_new[idx]  = 0.0;

@@ -290,9 +290,18 @@ ThresholdDamage::addComputesAndRequires(Task* task,
                                                               matls, gnone);
   task->requires(Task::OldDW, d_lb->pLocalizedMPMLabel,       matls, gnone);
   
-  task->modifies(d_lb->pStressLabel_preReloc,          matls);       
-  task->computes(pFailureStressOrStrainLabel_preReloc, matls);       
-  task->computes(d_lb->pLocalizedMPMLabel_preReloc,    matls);
+  task->modifies(d_lb->pStressLabel_preReloc,          matls);
+
+  task->computes(pFailureStressOrStrainLabel_preReloc, matls);
+  
+  //pLocalizedMPM+ _can_ be computed upstream
+  if( matl->is_pLocalizedPreComputed() ){
+    task->modifies(d_lb->pLocalizedMPMLabel_preReloc,    matls);
+  } else { 
+    task->computes(d_lb->pLocalizedMPMLabel_preReloc,    matls);    
+  }
+       
+  
 //  task->computes(TotalLocalizedParticleLabel);
 }
 //______________________________________________________________________
@@ -322,10 +331,18 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
                                                                      pset);
   new_dw->getModifiable(pStress,        d_lb->pStressLabel_preReloc, pset);
 
-  new_dw->allocateAndPut(pLocalized_new,
-                         d_lb->pLocalizedMPMLabel_preReloc,         pset);
+
   new_dw->allocateAndPut(pFailureStrain_new,
                          pFailureStressOrStrainLabel_preReloc,  pset);
+
+  //pLocalizedMPM+ _can_ be computed upstream
+  if( matl->is_pLocalizedPreComputed() ){
+    new_dw->getModifiable(pLocalized_new,
+                         d_lb->pLocalizedMPMLabel_preReloc,     pset);    
+  } else {
+    new_dw->allocateAndPut(pLocalized_new,
+                         d_lb->pLocalizedMPMLabel_preReloc,     pset);    
+  }
 
   Matrix3 defGrad(0.0);
   
