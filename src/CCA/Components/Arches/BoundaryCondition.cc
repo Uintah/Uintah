@@ -2005,23 +2005,30 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
       //avoid the "or" in case I want to add more logic
       //re: the face normal.
+      double v_sign;
       if ( which_face =="x-") {
         v_index = 0;
+        v_sign=-1;
       }
       else if ( which_face =="x+") {
         v_index = 0;
+        v_sign=1;
       }
       else if ( which_face =="y-") {
         v_index = 1;
+        v_sign=-1;
       }
       else if ( which_face =="y+") {
         v_index = 1;
+        v_sign=1;
       }
       else if ( which_face =="z-") {
         v_index = 2;
+        v_sign=-1;
       }
       else if ( which_face =="z+") {
         v_index = 2;
+        v_sign=1;
       }
       else {
         throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
@@ -2066,7 +2073,20 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
           found_bc = true;
 
           //allows for non-normal mass flow spec.
-          db_BCType->getWithDefault( "massflow_vector", my_info.velocity, Vector(0,0,0));
+          Vector defaultNormalVector= Vector(0,0,0); defaultNormalVector[v_index]=-1*v_sign; // defaul normal vector
+          db_BCType->getWithDefault( "massflow_unitVector", my_info.unitVector, defaultNormalVector);
+
+          if (-v_sign*my_info.unitVector[v_index] <= 0.0) {   // defaul normal vector
+            throw InvalidValue("massflow_unitVector Error: Normal component cannot be zero or be oriented in direction outward of domain. ", __FILE__, __LINE__);
+          }
+
+          double tolly=1e-5;
+          double mag_squared=my_info.unitVector.length2();
+          if ( mag_squared < 1-tolly || mag_squared > 1.0 +tolly){    // defaul normal vector
+             proc0cout << "massflow_unitVector WARNING: unit vector nas non-unity magnitude, normalizing . \n"; 
+             my_info.unitVector.safe_normalize();
+          }
+
 
           // note that the mass flow rate is in the BCstruct value
 
@@ -2101,6 +2121,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
           double density = mixingTable->getTableValue(iv,"density");
           my_info.density = density;
+
 
         } else if ( type == "VelocityFileInput" ) {
 
@@ -2221,9 +2242,24 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
 
             if ( type1 == "PartMassFlowInlet" ) {
               db_BCType1->getAttribute("label", my_info.partName);
-              db_BCType1->require("value",my_info.partMassFlow_rate);
+              db_BCType1->require("value",my_info.mass_flow_rate);
               my_info.lHasPartMassFlow=true;
               my_info.partVelocity = Vector(0,0,0);
+              //------------------For non-orthoganol flows ------------//
+              Vector defaultNormalVector= Vector(0,0,0); defaultNormalVector[v_index]=-1*v_sign; // defaul normal vector
+              db_BCType->getWithDefault( "massflow_unitVector", my_info.unitVector, defaultNormalVector);
+
+              if (-v_sign*my_info.unitVector[v_index] <= 0.0) {   // defaul normal vector
+                throw InvalidValue("massflow_unitVector Error: Normal component cannot be zero or be oriented in direction outward of domain. ", __FILE__, __LINE__);
+              }
+
+              double tolly=1e-5;
+              double mag_squared=my_info.unitVector.length2();
+              if ( mag_squared < 1-tolly || mag_squared > 1.0 +tolly){    // defaul normal vector
+                 proc0cout << "massflow_unitVector WARNING: unit vector nas non-unity magnitude, normalizing . \n"; 
+                 my_info.unitVector.safe_normalize();
+              }
+              //-------------------------------------------------------//
 
               int qn_total;
               qn_total=ParticleTools::get_num_env(db_face,ParticleTools::DQMOM);
@@ -2293,7 +2329,6 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
                 double density = ParticleTools::getInletParticleDensity(db_face);
 
                 MassParticleDensity+=weight*M_PI*diameter*diameter*diameter/6.0*density;  // (kg/ m^3)
-
               }
               my_info.partDensity = MassParticleDensity;
               // note that the mass flow rate is in the BCstruct value
@@ -2677,14 +2712,21 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
             {
               double pm = -1.0*insideCellDir[norm];
 
-              if ( bc_iter->second.partDensity < 1e-200 &&  bc_iter->second.partMassFlow_rate > 1e-300 ) {
+              if ( bc_iter->second.partDensity < 1e-200 &&  bc_iter->second.mass_flow_rate > 1e-300 ) {
                 throw ProblemSetupException("Arches was unable to satisfy the specified mass flow inlet of particles.  Did you specify reasonable particle density and weights? ", __FILE__, __LINE__);
               }
               bc_iter->second.partVelocity[norm] = 0.0;
-              if ( bc_iter->second.partMassFlow_rate > 1.e-300 ){
-                bc_iter->second.partVelocity[norm] = pm*bc_iter->second.partMassFlow_rate /
+              if ( bc_iter->second.mass_flow_rate > 1.e-300 ){
+                bc_iter->second.partVelocity[norm] = pm*bc_iter->second.mass_flow_rate /
                   (area * bc_iter->second.partDensity);
               }
+              //------------------For non-orthoganol flows-------------//
+              int nDim=3; // three dimensional space
+              for (int ix=0 ; ix<nDim; ix++){
+                bc_iter->second.partVelocity[ix]=bc_iter->second.partVelocity[norm]*bc_iter->second.unitVector[ix]/bc_iter->second.unitVector[norm];
+              }
+              //-------------------------------------------------------//
+
               std::string Ubc_kind = "Dirichlet"; // this must be specified for setting uintah BC
 
               int qn_total =  bc_iter->second.vWeights.size();
@@ -2725,6 +2767,13 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
                   if (bc_iter->second.density > 0.0) {
                     bc_iter->second.velocity[norm] = pm * bc_iter->second.mass_flow_rate / (area * bc_iter->second.density);
                   }
+
+                  int nDim=3; // three dimensional space
+                  for (int ix=0 ; ix<nDim; ix++){
+                    bc_iter->second.velocity[ix]=bc_iter->second.velocity[norm]*bc_iter->second.unitVector[ix]/bc_iter->second.unitVector[norm];
+                  }
+
+ 
 
                   if (d_check_inlet_obstructions) {
                     if (volFraction[c - insideCellDir] < small) {

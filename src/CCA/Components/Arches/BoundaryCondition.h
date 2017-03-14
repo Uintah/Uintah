@@ -568,8 +568,9 @@ struct BCInfo {
   // Inlets:
   Vector velocity;
   Vector partVelocity;
+  Vector unitVector;
+  Vector partUnitVector;
   double mass_flow_rate;
-  double partMassFlow_rate;
   std::string filename;
   std::map<IntVector, double> file_input;
   double swirl_no;

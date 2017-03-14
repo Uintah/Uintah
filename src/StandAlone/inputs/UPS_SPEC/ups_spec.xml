@@ -608,7 +608,7 @@
           <k                spec="OPTIONAL DOUBLE" need_applies_to="var StABL"/> <!-- von Karman constant, default=0.41 --> 
 
           <!-- One might want to specify a non-normal, mass flow inlet. This allows one to specify those components -->
-          <massflow_vector  spec="OPTIONAL VECTOR" need_applies_to="var MassFlowInlet"/> <!-- Specify the vector (tangential components). The Normal component value is ignored. -->
+          <massflow_unitVector  spec="OPTIONAL VECTOR" need_applies_to="var MassFlowInlet, PartMassFlowInlet"/> <!-- Specify the vector. The Normal component value is ignored. -->
 
         </BCType>
       </Face>
