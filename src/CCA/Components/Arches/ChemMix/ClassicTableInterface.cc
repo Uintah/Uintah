@@ -279,6 +279,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& db )
   //is needed for scalars that aren't solved on stage 1:
   ChemHelper& helper = ChemHelper::self();
   helper.add_lookup_species( "density", ChemHelper::OLD );
+  helper.set_table_constants( &d_constants );
 
   proc0cout << "\n --- End Classic Arches table information --- " << endl;
   proc0cout << endl;

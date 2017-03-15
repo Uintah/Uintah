@@ -211,6 +211,13 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   helper.add_lookup_species("temperature");
   helper.add_lookup_species("mixture_molecular_weight");
 
+  // Example on getting the table constants
+  // ChemHelper::TableConstantsMapType the_table_constants = helper.get_table_constants();
+  // auto press_iter = the_table_constants->find("Pressure");
+  // if ( press_iter == the_table_constants->end() ){
+  //   std::cout << " No Pressure key found in the table. " << std::endl;
+  // }
+
   // model global constants
   // get model coefficients
   std::string oxidizer_name;
@@ -663,7 +670,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     std::vector<double> rh_l_delta(_NUM_reactions);
     std::vector<double> Sc(_NUM_reactions);
     std::vector<double> Sh(_NUM_reactions);
-     
+
     InversionBase* invf;
     if (_NUM_reactions==2){
       invf = scinew invert_2_2;
@@ -849,7 +856,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
 inline void
 CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r,
-                                   double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, 
+                                   double &gas_rho, double &cg, std::vector<double> &k_r, double &MW,
                                    double &r_devol, double &p_diam, std::vector<double> &Sh,
                                    double &w, double &p_area,
                                    std::vector<double> &_D_oxid_mix_l ){

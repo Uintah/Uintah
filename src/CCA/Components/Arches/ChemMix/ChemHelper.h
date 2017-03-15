@@ -15,6 +15,8 @@ namespace Uintah {
 
       enum STATE { NEW, OLD };
 
+      typedef std::map<std::string, double>* TableConstantsMapType;
+
       static ChemHelper& self(){
         static ChemHelper s;
         return s;
@@ -30,8 +32,18 @@ namespace Uintah {
 
       }
 
+      void set_table_constants( std::map<std::string, double>* constants ){
+        m_table_constants = constants;
+      }
+
+      TableConstantsMapType get_table_constants(){ return m_table_constants; }
+
       std::vector<std::string> model_req_species;
       std::vector<std::string> model_req_old_species;
+
+    private:
+
+      TableConstantsMapType m_table_constants;
 
   }; // Class ChemHelper
 } // Uintah namespace
