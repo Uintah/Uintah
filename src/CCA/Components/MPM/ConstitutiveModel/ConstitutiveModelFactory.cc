@@ -237,10 +237,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type ==  "shell_CNH"){
     return(scinew ShellMaterial(child,flags));
   }
-  else if (cm_type ==  "elastic_plastic"){
-    return(scinew ElasticPlasticHP(child,flags));
-  }
-  else if (cm_type ==  "elastic_plastic_hp"){
+  else if (cm_type ==  "elastic_plastic" ||
+           cm_type ==  "elastic_plastic_hp"){
     computes_pLocalizedMPM = true;
     return(scinew ElasticPlasticHP(child,flags));
   }

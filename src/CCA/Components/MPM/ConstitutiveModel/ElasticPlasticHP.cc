@@ -628,8 +628,6 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
     addSharedCRForHypoExplicit(task, matlset, patches);
   }
 
-//  matl->set_pLocalizedComputed(false);
-
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
   task->requires(Task::OldDW, pRotationLabel,         matlset, gnone);
@@ -1506,7 +1504,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
 
   // Particle and Grid data
   delt_vartype delT;
-  constParticleVariable<int>     pLocalized;
   constParticleVariable<double>  pMass, pVolume,
                                  pTempPrev, pTemperature,
                                  pPlasticStrain, pDamage, pPorosity, 
@@ -1571,7 +1568,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pDamage,             pDamageLabel,             pset);
     old_dw->get(pStrainRate,         pStrainRateLabel,         pset);
     old_dw->get(pPorosity,           pPorosityLabel,           pset);
-    old_dw->get(pLocalized,          lb->pLocalizedMPMLabel,   pset);
     old_dw->get(pEnergy,             pEnergyLabel,             pset);
 
     // Create and allocate arrays for storing the updated information
@@ -1621,7 +1617,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         pPlasticStrainRate_new[idx] = 0.0;
         pDamage_new[idx]        = pDamage[idx];
         pPorosity_new[idx]      = pPorosity[idx];
-        pLocalized_new[idx]     = pLocalized[idx];
+        pLocalized_new[idx]     = false;
 
         pStress_new[idx]      = Zero;
         pDeformGrad_new[idx]  = One; 
@@ -1643,6 +1639,8 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
     ParticleSubset::iterator iter = pset->begin(); 
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
+      
+      pLocalized_new[idx] = false;
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
@@ -1797,9 +1795,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         Matrix3 dp = Zero;
         d_devStress->updateInternalStresses(idx, dp, defState, delT);
 
-        // Compute stability criterion
-        pLocalized_new[idx] = pLocalized[idx];
-
       } else {
         //__________________________________
         // Radial Return
@@ -1847,9 +1842,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         // Calculate Tdot (internal plastic heating rate)
         double Tdot = state->yieldStress*state->plasticStrainRate*fac;
         pdTdt[idx] = Tdot;
-
-        // No failure implemented for implcit time integration
-        pLocalized_new[idx] = pLocalized[idx];
 
         // Update internal variables in the flow model
         d_flow->updatePlastic(idx, delGamma);
