@@ -3,7 +3,7 @@
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
-    <title>Arches "2D" Periodic Box Almgren MMS </title>
+    <title>No Flow - Constant Everything</title>
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
