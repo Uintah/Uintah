@@ -1081,6 +1081,8 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   constParticleVariable<Point>   pX;
   constParticleVariable<Matrix3> pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
+  constParticleVariable<int>     pLocalizedOld;
+  
   constNCVariable<Vector>        gDisp;
   ParticleVariable<double>       pVolume_new, pdTdt, pPlasticStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
@@ -1118,6 +1120,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pX,                       lb->pXLabel,                  pset);
     old_dw->get(pSize,                    lb->pSizeLabel,               pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pLocalizedOld,            lb->pLocalizedMPMLabel,       pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
 
     // Allocate space for updated particle variables
@@ -1253,18 +1256,17 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         // compute the total stress (volumetric + deviatoric)
         pStress_new[idx] = Identity*p + tauDev/J;
 
+
+        //__________________________________
         // Compute the strain energy for non-localized particles
-        double U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-        double W = .5*shear*(pBeBar_new[idx].Trace() - 3.0);
-        double e = (U + W)*pVolume_new[idx]/J;
-        se += e;
-/*`==========TESTING==========*/
-        // FIX MEs
-        // Don't save strain energy if particle is not localized to point
-//        if(d_useDamage && pLocalized_new[idx] != 0){
-//          se -= e;
-//        } 
-/*===========TESTING==========`*/
+        // Note this calculation is lagging by a timestep.
+        if(pLocalizedOld[idx] == 0){
+          double U = .5*bulk*(.5*(J*J - 1.0) - log(J));
+          double W = .5*shear*(pBeBar_new[idx].Trace() - 3.0);
+          double e = (U + W)*pVolume_new[idx]/J;
+          se += e;
+        }
+     
       } // end loop over particles
       if (flag->d_reductionVars->accStrainEnergy ||
           flag->d_reductionVars->strainEnergy) {
