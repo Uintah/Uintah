@@ -789,20 +789,23 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           // invert Jacobian -> (dF_(n)/drh_(n))^-1
           invf->invert_mat(dfdrh); // simple matrix inversion for a 2x2 matrix.
           // get rh_(n+1)
+          double dominantRate=0.0;
           for (int l=0; l<_NUM_reactions; l++) {
             for (int var=0; var<_NUM_reactions; var++) {
               rh_l_new[l]-=(*dfdrh)[l][var]*F[var];
             }
+              dominantRate=std::max(dominantRate,std::abs(rh_l_new[l]));
           }
           residual = 0.0;
+
           for (int l=0; l<_NUM_reactions; l++) {
-            residual += std::abs(F[l]);
+            residual += std::abs(F[l])/dominantRate;
           }
           // make sure rh_(n+1) is inbounds
           for (int l=0; l<_NUM_reactions; l++) {
             rh_l_new[l]=std::min(1000.0, std::max(0.0, rh_l_new[l]));
           }
-          if (residual < 1e-12) {
+          if (residual < 1e-3) {
             break;
           }
         } // end newton solve
