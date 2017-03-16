@@ -28,92 +28,97 @@
 // Department of Computer Science
 // University of Utah
 // Feb. 2000
+//
 // DebugStream is an ostream that is useful for outputting debug messages.
 // When an instance is created, it is given a name.  An environment variable,
 // SCI_DEBUG, is inspected to see if a particular instance should be
 // active(identified by its name), and if so where to send the output.
 // The syntax for the environment variable is:
+//
 // SCI_DEBUG = ([name]:[-|+|+FILENAME])(,[name]:[-|+|+FILENAME])*
+//
 // The + or - specifies whether the named object is on or off.  If a file is
 // specified it is opened in ios::out mode.  If no file is specified,
 // the stream is directed to cerr.  The : and , characters are
 // restricted to deliminators.
+//
+// Note: The 'name' is not case-sensitive.  Eg: GeometryPiece matches GEOMETRYPIECE.
+//
 // Example:
-// SCI_DEBUG = modules.meshgen.warning:+meshgen.out,util.debugstream.error:-
+//   SCI_DEBUG = modules.meshgen.warning:+meshgen.out,util.debugstream.error:-
+//
 // Future Additions:
 // o Possible additions to constructor:
 //   - Default file to output to
 //   - Mode that the file will be opened in (append, out, etc.) (usefulness??)
 // o Allow DEFAULT specification in the env variable which would override
-//   all default settings. (usefulness??)
+//     all default settings. (usefulness??)
 // o Time stamp option
+//
 // Annoyances:
 // o Because the list of environment variables, "environ", is built at
-// run time, and getenv queries that list, I have not been able to
-// figure out a way to requery the environment variables during
-// execution.  
+//   run time, and getenv queries that list, I have not been able to
+//   figure out a way to requery the environment variables during
+//   execution.  
 
 #ifndef SCI_project_DebugStream_h
 #define SCI_project_DebugStream_h 1
 
-// temp fix to get pg compilers to resolve symbols
-#ifdef __PGI
-#define __mbstate_t mbstate_t
-#endif
-
-#include <cstdlib> // for getenv()
 #include <string>
 #include <iostream>
 
 namespace Uintah {
 
-    class DebugStream;
-    class DebugBuf;
+class DebugStream;
+class DebugBuf;
 
-    ///////////////////
-    // class DebugBuf
-    // For use with DebugStream.  This class overrides the overflow
-    // operator.  Each time overflow is called it checks to see where
-    // to direct the output to. 
-    class DebugBuf:public std::streambuf{
-    private:
-    public:
-      DebugBuf();
-      ~DebugBuf();
-      // points the the DebugStream that instantiated me
-      DebugStream *owner;
-      int overflow(int ch);
-    };
+///////////////////
+// Class DebugBuf
+//
+// For use with DebugStream.  This class overrides the overflow
+// operator.  Each time overflow is called it checks to see where
+// to direct the output to. 
+class DebugBuf : public std::streambuf {
+private:
+public:
+  DebugBuf();
+  ~DebugBuf();
+  // Points the the DebugStream that instantiated me.
+  DebugStream * m_owner;
+  int overflow( int ch );
+};
+
+///////////////////
+// class DebugStream
+// A general purpose debugging ostream.
+class DebugStream: public std::ostream {
+private:
+  // Identifies me uniquely.
+  std::string m_name;
+  // The stream filename.
+  std::string m_filename;
+  // The buffer that is used for output redirection.
+  DebugBuf m_dbgbuf;
+  // If false, all input is ignored.
+  bool m_isactive;
 
 
-    ///////////////////
-    // class DebugStream
-    // A general purpose debugging ostream.
-    class DebugStream: public std::ostream{
-    private:
-      // identifies me uniquely
-      std::string name;
-      // the stream filename
-      std::string filename;
-      // the buffer that is used for output redirection
-      DebugBuf dbgbuf;
-      // if false, all input is ignored
-      bool isactive;
-      // check the environment variable
-      void checkenv(std::string);
-            
-    public:
-      DebugStream();
-      DebugStream(const std::string& name, bool defaulton = true);
-      ~DebugStream();
-      std::string getName() {return name;};      
-      std::string getFilename() {return filename;};      
-      void setFilename( std::string name ) {filename = name;};      
-      bool active() {return isactive;};
-      void setActive(bool active) { isactive = active; };
-      // the ostream that output should be redirected to. cout by default.
-      std::ostream *outstream;
-    };
+  // Check the environment variable.
+  void checkenv( const std::string & name );
+        
+public:
+  DebugStream();
+  DebugStream(const std::string& name, bool defaulton = true);
+  ~DebugStream();
+  std::string getName() { return m_name; }
+  std::string getFilename() { return m_filename; }
+  void setFilename( const std::string & name ) { m_filename = name; }
+  bool active() { return m_isactive; }
+  void setActive( bool active ) { m_isactive = active; }
+
+  // The ostream that output should be redirected to. cout by default.
+  std::ostream * m_outstream;
+};
     
 } // End namespace Uintah
 

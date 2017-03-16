@@ -48,8 +48,12 @@
 // o Time stamp option
 
 #include <Core/Util/DebugStream.h>
-#include <iostream>
+
+#include <algorithm>
+#include <cstdlib> // for getenv()
 #include <fstream>
+#include <iostream>
+
 using namespace std;
 
 namespace Uintah {
@@ -64,48 +68,59 @@ DebugBuf::DebugBuf()
 DebugBuf::~DebugBuf()
 {}
 
-int DebugBuf::overflow(int ch)
+int
+DebugBuf::overflow( int ch )
 {
-  if (owner==nullptr){
-    cout << "DebugBuf: owner not initialized? Maybe static object init order error." << endl;
-  }else if(owner->active()){
-    return(*(owner->outstream) << (char)ch ? 0 : EOF);
+  if( m_owner == nullptr ) {
+    cout << "DebugBuf: owner not initialized? Maybe static object init order error.\n";
+  }
+  else if( m_owner->active() ) {
+    return(*(m_owner->m_outstream) << (char)ch ? 0 : EOF);
   }
   return 0;
 }
 
 
-DebugStream::DebugStream(const string& iname, bool defaulton):
-    std::ostream(&dbgbuf),outstream(0)
+DebugStream::DebugStream( const string& iname, bool defaulton ) :
+    std::ostream( &m_dbgbuf ), m_outstream( 0 )
 {
-  name = iname;
-  dbgbuf.owner = this;
+  m_name = iname;
+  m_dbgbuf.m_owner = this;
   // set default values
-  isactive = defaulton;
-  outstream = &cout;
-  filename = "cout";
+  m_isactive = defaulton;
+  m_outstream = &cout;
+  m_filename = "cout";
   
-  // check SCI_DEBUG to see if this instance is mentioned
-  checkenv(iname);
+  // check SCI_DEBUG to see if this instance is mentioned.
+  checkenv( iname );
 }
 
 
 DebugStream::~DebugStream()
 {
-  if( outstream && outstream != &cerr && outstream != &cout ){
-    delete(outstream);
+  if( m_outstream && m_outstream != &cerr && m_outstream != &cout ){
+    delete( m_outstream );
   }
 }
 
-void DebugStream::checkenv(string iname)
+void
+DebugStream::checkenv( const string & iname )
 {
-  char* vars = getenv(ENV_VAR);
-  if(!vars)
+  // Set the input name (iname) to all lowercase as we are going to be doing case-insensitive checks.
+  string temp = iname;
+  transform( temp.begin(), temp.end(), temp.begin(), ::tolower );
+  const string iname_lower = temp;
+
+  char* vars = getenv( ENV_VAR );
+  if( !vars ) {
      return;
-  string var(vars);
-  // if SCI_DEBUG was defined, parse the string and store appropriate
+  }
+  string var( vars );
+
+  // If SCI_DEBUG was defined, parse the string and store appropriate
   // values in onstreams and offstreams
-  if(!var.empty()){
+
+  if( !var.empty() ){
     string name, file;
     
     unsigned long oldcomma = 0;
@@ -114,45 +129,49 @@ void DebugStream::checkenv(string iname)
     if(commapos == string::npos){
       commapos = var.size();
     }
-    while(colonpos != string::npos){
-      name.assign(var, oldcomma, colonpos-oldcomma);
-      if(name == iname){
+    while( colonpos != string::npos ){
+      name.assign( var, oldcomma, colonpos-oldcomma );
+
+      // Doing case-insensitive test... so lower the name.
+      transform( name.begin(), name.end(), name.begin(), ::tolower );
+
+      if( name == iname_lower ){
 	file.assign(var, colonpos+1, commapos-colonpos-1);
-	if(file[0] == '-'){
-	  isactive = false;
+	if( file[0] == '-' ){
+	  m_isactive = false;
 	}
-	else if(file[0] == '+'){
-	  isactive = true;
+	else if( file[0] == '+' ){
+	  m_isactive = true;
 	}
 	else{
-	  // houston, we have a problem: SCI_DEBUG was not correctly
-	  // set.  Ignore and set all to default value	
+	  // Houston, we have a problem: SCI_DEBUG was not correctly
+	  // set.  Ignore and set all to default values...
 	  return;
 	}
 
 	// if no output file was specified, set to cout
-	if(file.length() == 1){
-	  filename = std::string("std::cout");
-	  outstream = &cout;
+	if( file.length() == 1 ) {
+	  m_filename = std::string( "std::cout" );
+	  m_outstream = &cout;
 	}
-	else if(file.length() > 1){
-	  filename = file.substr(1, file.size()-1).c_str();
-	  outstream = new ofstream(filename);
+	else if( file.length() > 1 ) {
+	  m_filename = file.substr(1, file.size()-1).c_str();
+	  m_outstream = new ofstream( m_filename );
 	}
 	return;
       }
-      oldcomma = commapos+1;
-      commapos = var.find(',', oldcomma+1);
-      colonpos = var.find(':', oldcomma+1);
-      if(commapos == string::npos){
+      oldcomma = commapos + 1;
+      commapos = var.find( ',', oldcomma + 1 );
+      colonpos = var.find( ':', oldcomma + 1 );
+      if( commapos == string::npos ) {
 	commapos = var.size();
       }
     }
   }
-  else{
-    // SCI_DEBUG was not defined,
-    // all objects will be set to default
-  }
+  // else {
+  //    SCI_DEBUG was not defined,
+  //    all objects will be set to default
+  // }
 }
 
 } // End namespace Uintah
