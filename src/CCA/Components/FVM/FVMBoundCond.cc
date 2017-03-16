@@ -185,7 +185,7 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
                 rhs[c] -= bc_value * fcz_conductivity[c] * b;
               }else if(bc_kind == "Neumann"){
                 A[c].b = 0;
-                A[c].p = fcz_conductivity[c] * b;
+                A[c].p += fcz_conductivity[c] * b;
                 rhs[c] -= bc_value * a_b;
               }
             }
@@ -368,3 +368,126 @@ void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
   } // end face loop
 }
 
+void FVMBoundCond::setG1BoundaryConditions(const Patch* patch, int dwi,
+                                           CCVariable<Stencil7>& A,
+                                           CCVariable<double>& rhs)
+{
+  IntVector xoffset(1,0,0);
+  IntVector yoffset(0,1,0);
+  IntVector zoffset(0,0,1);
+  Vector dx = patch->dCell();
+
+  double a_n = dx.x() * dx.z(); double a_s = dx.x() * dx.z();
+  double a_e = dx.y() * dx.z(); double a_w = dx.y() * dx.z();
+  double a_t = dx.x() * dx.y(); double a_b = dx.x() * dx.y();
+  // double vol = dx.x() * dx.y() * dx.z();
+
+  double n = a_n / dx.y(); double s = a_s / dx.y();
+  double e = a_e / dx.x(); double w = a_w / dx.x();
+  double t = a_t / dx.z(); double b = a_b / dx.z();
+
+  std::vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  for(std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    Patch::FaceType face = *itr;
+    std::string bc_kind  = "NotSet";
+    int nCells = 0;
+
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
+
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      Iterator bound_ptr;
+      bool foundIterator =  getIteratorBCValueBCKind<double>( patch, face, child,
+                                "Voltage", dwi, bc_value, bound_ptr,bc_kind);
+      if(foundIterator){
+        switch (face) {
+          case Patch::xplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c(*bound_ptr - xoffset);
+              if(bc_kind == "Dirichlet"){
+                A[c].e = 0;
+                rhs[c] -= bc_value * e;
+              }else if(bc_kind == "Neumann"){
+                A[c].e = 0;
+                A[c].p += e;
+                rhs[c] -= bc_value * a_e;
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::xminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c(*bound_ptr + xoffset);
+              if(bc_kind == "Dirichlet"){
+                A[c].w = 0;
+                rhs[c] -= bc_value * w;
+              }else if(bc_kind == "Neumann"){
+                A[c].w = 0;
+                A[c].p += w;
+                rhs[c] -= bc_value * a_w;
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::yplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c(*bound_ptr - yoffset);
+              if(bc_kind == "Dirichlet"){
+                A[c].n = 0;
+                rhs[c] -= bc_value * n;
+              }else if(bc_kind == "Neumann"){
+                A[c].n = 0;
+                A[c].p += n;
+                rhs[c] -= bc_value * a_n;
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::yminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c(*bound_ptr + yoffset);
+              if(bc_kind == "Dirichlet"){
+                A[c].s = 0;
+                rhs[c] -= bc_value * s;
+              }else if(bc_kind == "Neumann"){
+                A[c].s = 0;
+                A[c].p += s;
+                rhs[c] -= bc_value * a_s;
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::zplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c(*bound_ptr - zoffset);
+              if(bc_kind == "Dirichlet"){
+                A[c].t = 0;
+                rhs[c] -= bc_value * t;
+              }else if(bc_kind == "Neumann"){
+                A[c].t = 0;
+                A[c].p += t;
+                rhs[c] -= bc_value * a_t;
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::zminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c(*bound_ptr + zoffset);
+              if(bc_kind == "Dirichlet"){
+                A[c].b = 0;
+                rhs[c] -= bc_value * b;
+              }else if(bc_kind == "Neumann"){
+                A[c].b = 0;
+                A[c].p += b;
+                rhs[c] -= bc_value * a_b;
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+        } // end switch statment
+      } // end foundIterator if statment
+    } // end child loop
+  } // end face loop
+}

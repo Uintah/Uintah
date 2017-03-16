@@ -121,7 +121,7 @@ void ElectrostaticSolve::problemSetup(const ProblemSpecP& prob_spec,
   if( !d_with_mpm ) {
     for ( ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != nullptr; ps = ps->findNextBlock("material") ) {
 
-      FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state);
+      FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state, FVMMaterial::ESPotential);
       d_shared_state->registerFVMMaterial(mat);
     }
   }
@@ -309,9 +309,9 @@ void ElectrostaticSolve::computeFCConductivity(const ProcessorGroup* pg,const Pa
 
 
     new_dw->get(grid_conductivity, d_lb->ccGridConductivity, 0, patch, Ghost::AroundCells, 1);
-    new_dw->allocateAndPut(fcx_conductivity,  d_lb->fcxConductivity,    0, patch);
-    new_dw->allocateAndPut(fcy_conductivity,  d_lb->fcyConductivity,    0, patch);
-    new_dw->allocateAndPut(fcz_conductivity,  d_lb->fczConductivity,    0, patch);
+    new_dw->allocateAndPut(fcx_conductivity, d_lb->fcxConductivity,    0, patch);
+    new_dw->allocateAndPut(fcy_conductivity, d_lb->fcyConductivity,    0, patch);
+    new_dw->allocateAndPut(fcz_conductivity, d_lb->fczConductivity,    0, patch);
 
     fcx_conductivity.initialize(0.0);
     fcy_conductivity.initialize(0.0);

@@ -361,6 +361,8 @@
       <exponentialInitialize_2D  spec="OPTIONAL BOOLEAN"/>
       <concentration             spec="OPTIONAL DOUBLE"/>
       <conductivity              spec="OPTIONAL DOUBLE"/>
+      <charge_density            spec="OPTIONAL DOUBLE"/>
+      <permittivity              spec="OPTIONAL DOUBLE"/>
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"

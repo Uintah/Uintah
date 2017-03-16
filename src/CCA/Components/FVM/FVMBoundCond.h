@@ -52,6 +52,10 @@ namespace Uintah{
                             constSFCYVariable<double>& fcy_conductivity,
                             constSFCZVariable<double>& fcz_conductivity);
 
+      void setG1BoundaryConditions(const Patch* patch, int dwi,
+                                   CCVariable<Stencil7>& A,
+                                   CCVariable<double>& rhs);
+
   };
 }
 #endif

@@ -88,9 +88,9 @@ GaussSolve::~GaussSolve()
 //__________________________________
 //
 void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
-                                      const ProblemSpecP& restart_prob_spec,
-                                      GridP& grid,
-                                      SimulationStateP& shared_state)
+                              const ProblemSpecP& restart_prob_spec,
+                              GridP& grid,
+                              SimulationStateP& shared_state)
 {
   d_shared_state = shared_state;
 
@@ -109,7 +109,7 @@ void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 
-  d_solver_parameters = d_solver->readParameters(fvm_ps, "electrostatic_solver",
+  d_solver_parameters = d_solver->readParameters(fvm_ps, "gauss1_solver",
                                              d_shared_state);
   d_solver_parameters->setSolveOnExtraCells(false);
     
@@ -122,7 +122,7 @@ void GaussSolve::problemSetup(const ProblemSpecP& prob_spec,
     for (ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != 0;
         ps = ps->findNextBlock("material") ) {
 
-      FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state);
+      FVMMaterial *mat = scinew FVMMaterial(ps, d_shared_state, FVMMaterial::Gauss);
       d_shared_state->registerFVMMaterial(mat);
     }
   }
@@ -143,7 +143,9 @@ void GaussSolve::scheduleInitialize(const LevelP& level,
   Task* t = scinew Task("GaussSolve::initialize", this,
                         &GaussSolve::initialize);
 
-  t->computes(d_lb->ccConductivity);
+  t->computes(d_lb->ccCharge1);
+  t->computes(d_lb->ccCharge2);
+  t->computes(d_lb->ccPermittivity);
   sched->addTask(t, level->eachPatch(), fvm_matls);
 
   d_solver->scheduleInitialize(level,sched, fvm_matls);
@@ -172,9 +174,8 @@ GaussSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   const MaterialSet* fvm_matls = d_shared_state->allFVMMaterials();
   const MaterialSet* all_matls = d_shared_state->allMaterials();
 
-  scheduleComputeConductivity(   sched, level, fvm_matls);
-  scheduleComputeFCConductivity( sched, level, d_es_matlset);
-  scheduleBuildMatrixAndRhs(     sched, level, d_es_matlset);
+  scheduleComputeCharge(     sched, level, fvm_matls);
+  scheduleBuildMatrixAndRhs( sched, level, d_es_matlset);
 
   d_solver->scheduleSolve(level, sched, d_es_matlset,
                           d_lb->ccESPotentialMatrix, Task::NewDW,
@@ -183,7 +184,7 @@ GaussSolve::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                           0, Task::OldDW,
                           d_solver_parameters,false);
 
-  scheduleUpdateESPotential(     sched, level, d_es_matlset);
+  //scheduleUpdateESPotential(     sched, level, d_es_matlset);
 
 }
 //__________________________________
@@ -211,12 +212,17 @@ void GaussSolve::initialize(const ProcessorGroup*,
       FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
       int idx = fvm_matl->getDWIndex();
 
-      CCVariable<double> conductivity;
-      new_dw->allocateAndPut(conductivity, d_lb->ccConductivity, idx, patch);
+      CCVariable<double> charge1;
+      CCVariable<double> charge2;
+      CCVariable<double> permittivity;
+      new_dw->allocateAndPut(charge1,      d_lb->ccCharge1,      idx, patch);
+      new_dw->allocateAndPut(charge2,      d_lb->ccCharge2,      idx, patch);
+      new_dw->allocateAndPut(permittivity, d_lb->ccPermittivity, idx, patch);
 
-      fvm_matl->initializeConductivity(conductivity, patch);
+      fvm_matl->initializePermittivityAndCharge(permittivity, charge1,
+                                                charge2, patch);
 
-      bc.setConductivityBC(patch, idx, conductivity);
+      //bc.setConductivityBC(patch, idx, conductivity);
 
     }
   }
@@ -226,127 +232,13 @@ void GaussSolve::initialize(const ProcessorGroup*,
 
 //______________________________________________________________________
 //
-void GaussSolve::scheduleComputeConductivity(SchedulerP& sched,
-                                                     const LevelP& level,
-                                                     const MaterialSet* fvm_matls)
-{
-  Task* t = scinew Task("GaussSolve::computeConductivity", this,
-                           &GaussSolve::computeConductivity);
-
-  t->requires(Task::OldDW, d_lb->ccConductivity, Ghost::AroundCells, 1);
-  t->computes(d_lb->ccConductivity);
-  t->computes(d_lb->ccGridConductivity, d_es_matl, Task::OutOfDomain);
-
-  sched->addTask(t, level->eachPatch(), fvm_matls);
-}
-
-//______________________________________________________________________
-//
-void GaussSolve::computeConductivity(const ProcessorGroup* pg,
-                                             const PatchSubset* patches,
-                                             const MaterialSubset* fvm_matls,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw)
-{
-  int num_matls = d_shared_state->getNumFVMMatls();
-  for (int p = 0; p < patches->size(); p++){
-    const Patch* patch = patches->get(p);
-
-    CCVariable<double>   grid_conductivity;
-
-    new_dw->allocateAndPut(grid_conductivity, d_lb->ccGridConductivity, 0, patch);
-
-    grid_conductivity.initialize(0.0);
-
-    for(int m = 0; m < num_matls; m++){
-      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
-      int idx = fvm_matl->getDWIndex();
-
-      constCCVariable<double> old_conductivty;
-      CCVariable<double> conductivity;
-
-      old_dw->get(old_conductivty, d_lb->ccConductivity, idx, patch, Ghost::AroundCells, 1);
-      new_dw->allocateAndPut(conductivity, d_lb->ccConductivity,  idx, patch);
-
-      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        conductivity[c] = old_conductivty[c];
-        if(conductivity[c] > 0.0){
-          grid_conductivity[c] = conductivity[c];
-        }
-      }
-    } // material loop
-  } // patch loop
-}
-
-void GaussSolve::scheduleComputeFCConductivity(SchedulerP& sched, const LevelP& level,
-                                                       const MaterialSet* es_matls)
-{
-  Task* t = scinew Task("GaussSolve::computeFCConductivity", this,
-                        &GaussSolve::computeFCConductivity);
-
-    t->requires(Task::NewDW, d_lb->ccGridConductivity, Ghost::AroundCells, 1);
-    t->computes(d_lb->fcxConductivity,    d_es_matl, Task::OutOfDomain);
-    t->computes(d_lb->fcyConductivity,    d_es_matl, Task::OutOfDomain);
-    t->computes(d_lb->fczConductivity,    d_es_matl, Task::OutOfDomain);
-    sched->addTask(t, level->eachPatch(), es_matls);
-}
-
-void GaussSolve::computeFCConductivity(const ProcessorGroup* pg,const PatchSubset* patches,
-                                               const MaterialSubset* es_matls,DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++){
-    const Patch* patch = patches->get(p);
-
-    constCCVariable<double>  grid_conductivity;
-
-    SFCXVariable<double> fcx_conductivity;
-    SFCYVariable<double> fcy_conductivity;
-    SFCZVariable<double> fcz_conductivity;
-
-
-    new_dw->get(grid_conductivity, d_lb->ccGridConductivity, 0, patch, Ghost::AroundCells, 1);
-    new_dw->allocateAndPut(fcx_conductivity,  d_lb->fcxConductivity,    0, patch);
-    new_dw->allocateAndPut(fcy_conductivity,  d_lb->fcyConductivity,    0, patch);
-    new_dw->allocateAndPut(fcz_conductivity,  d_lb->fczConductivity,    0, patch);
-
-    fcx_conductivity.initialize(0.0);
-    fcy_conductivity.initialize(0.0);
-    fcz_conductivity.initialize(0.0);
-
-    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      IntVector offset(-1,0,0);
-      fcx_conductivity[c] = .5*(grid_conductivity[c] + grid_conductivity[c + offset]);
-    }
-
-    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      IntVector offset(0,-1,0);
-      fcy_conductivity[c] = .5*(grid_conductivity[c] + grid_conductivity[c + offset]);
-    }
-
-    for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      IntVector offset(0,0,-1);
-      fcz_conductivity[c] = .5*(grid_conductivity[c] + grid_conductivity[c + offset]);
-    }
-  } // patch loop
-}
-//______________________________________________________________________
-//
 void GaussSolve::scheduleBuildMatrixAndRhs(SchedulerP& sched,
-                                                   const LevelP& level,
-                                                   const MaterialSet* es_matl)
+                                           const LevelP& level,
+                                           const MaterialSet* es_matl)
 {
   Task* task = scinew Task("GaussSolve::buildMatrixAndRhs", this,
                            &GaussSolve::buildMatrixAndRhs,
                            level, sched.get_rep());
-
-  task->requires(Task::NewDW, d_lb->fcxConductivity , Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->fcyConductivity , Ghost::AroundCells, 1);
-  task->requires(Task::NewDW, d_lb->fczConductivity , Ghost::AroundCells, 1);
 
   task->computes(d_lb->ccESPotentialMatrix, d_es_matl, Task::OutOfDomain);
   task->computes(d_lb->ccRHS_ESPotential,   d_es_matl, Task::OutOfDomain);
@@ -379,13 +271,13 @@ void GaussSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
     double e = a_e / dx.x(); double w = a_w / dx.x();
     double t = a_t / dx.z(); double b = a_b / dx.z();
 
-    constSFCXVariable<double> fcx_conductivity;
-    constSFCYVariable<double> fcy_conductivity;
-    constSFCZVariable<double> fcz_conductivity;
+    constCCVariable<double> cc_charge1;
+    constCCVariable<double> cc_charge2;
+    constCCVariable<double> cc_permit;
 
-    new_dw->get(fcx_conductivity, d_lb->fcxConductivity, 0, patch, Ghost::AroundCells, 1);
-    new_dw->get(fcy_conductivity, d_lb->fcyConductivity, 0, patch, Ghost::AroundCells, 1);
-    new_dw->get(fcz_conductivity, d_lb->fczConductivity, 0, patch, Ghost::AroundCells, 1);
+    new_dw->get(cc_charge1, d_lb->ccCharge1,      0, patch, Ghost::AroundCells, 1);
+    new_dw->get(cc_charge2, d_lb->ccCharge2,      0, patch, Ghost::AroundCells, 1);
+    new_dw->get(cc_permit,  d_lb->ccPermittivity, 0, patch, Ghost::AroundCells, 1);
 
     CCVariable<Stencil7> A;
     CCVariable<double> rhs;
@@ -408,21 +300,17 @@ void GaussSolve::buildMatrixAndRhs(const ProcessorGroup* pg,
     for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       Stencil7&  A_tmp=A[c];
-      double efc = e*fcx_conductivity[c + xoffset];
-      double wfc = w*fcx_conductivity[c];
-      double nfc = n*fcy_conductivity[c + yoffset];
-      double sfc = s*fcy_conductivity[c];
-      double tfc = t*fcz_conductivity[c + zoffset];
-      double bfc = b*fcz_conductivity[c];
-      double center = efc + wfc + nfc + sfc + tfc + bfc;
+      double center = e + w + n + s + t + b;
 
       A_tmp.p = -center;
-      A_tmp.n = nfc;   A_tmp.s = sfc;
-      A_tmp.e = efc;   A_tmp.w = wfc;
-      A_tmp.t = tfc;   A_tmp.b = bfc;
+      A_tmp.n = n;   A_tmp.s = s;
+      A_tmp.e = e;   A_tmp.w = w;
+      A_tmp.t = t;   A_tmp.b = b;
+
+      rhs[c] = (cc_charge1[c] + cc_charge2[c])/cc_permit[c];
     } // End CellIterator
 
-    bc.setESBoundaryConditions(patch, 0, A, rhs, fcx_conductivity, fcy_conductivity, fcz_conductivity);
+    bc.setG1BoundaryConditions(patch, 0, A, rhs);
 
   } // End patches
 }
@@ -437,6 +325,64 @@ void GaussSolve::scheduleSolve(SchedulerP& sched,
                           d_lb->ccRHS_ESPotential, Task::NewDW,
                           d_lb->ccESPotential, Task::OldDW,
                           d_solver_parameters,false);
+}
+
+void GaussSolve::scheduleComputeCharge(SchedulerP& sched,
+                                       const LevelP& level,
+                                       const MaterialSet* fvm_matls)
+{
+  Task* t = scinew Task("GaussSolve::computeCharge", this,
+                        &GaussSolve::computeCharge);
+
+  t->requires(Task::OldDW, d_lb->ccCharge1,      Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_lb->ccCharge2,      Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, d_lb->ccPermittivity, Ghost::AroundCells, 1);
+  t->computes(d_lb->ccCharge1);
+  t->computes(d_lb->ccCharge2);
+  t->computes(d_lb->ccPermittivity);
+
+  sched->addTask(t, level->eachPatch(), fvm_matls);
+}
+
+//______________________________________________________________________
+//
+void GaussSolve::computeCharge(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* fvm_matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw)
+{
+  int num_matls = d_shared_state->getNumFVMMatls();
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    for(int m = 0; m < num_matls; m++){
+      FVMMaterial* fvm_matl = d_shared_state->getFVMMaterial(m);
+      int idx = fvm_matl->getDWIndex();
+
+      constCCVariable<double> old_charge1;
+      constCCVariable<double> old_charge2;
+      constCCVariable<double> old_permittivity;
+
+      CCVariable<double> charge1;
+      CCVariable<double> charge2;
+      CCVariable<double> permittivity;
+
+      old_dw->get(old_charge1,      d_lb->ccCharge1,      idx, patch, Ghost::AroundCells, 1);
+      old_dw->get(old_charge2,      d_lb->ccCharge2,      idx, patch, Ghost::AroundCells, 1);
+      old_dw->get(old_permittivity, d_lb->ccPermittivity, idx, patch, Ghost::AroundCells, 1);
+      new_dw->allocateAndPut(charge1,      d_lb->ccCharge1,       idx, patch);
+      new_dw->allocateAndPut(charge2,      d_lb->ccCharge2,       idx, patch);
+      new_dw->allocateAndPut(permittivity, d_lb->ccPermittivity,  idx, patch);
+
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        charge1[c] = old_charge1[c];
+        charge2[c] = old_charge2[c];
+        permittivity[c] = old_permittivity[c];
+      }
+    } // material loop
+  } // patch loop
 }
 
 void GaussSolve::scheduleUpdateESPotential(SchedulerP& sched, const LevelP& level,

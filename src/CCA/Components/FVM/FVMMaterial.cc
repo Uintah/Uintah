@@ -36,10 +36,20 @@
 
 using namespace Uintah;
 
-FVMMaterial::FVMMaterial( ProblemSpecP& ps, SimulationStateP& shared_state )
+FVMMaterial::FVMMaterial( ProblemSpecP& ps, SimulationStateP& shared_state,
+                          FVMMethod method_type )
 {
+  d_method_type = method_type;
   std::list<GeometryObject::DataItem> geom_obj_data;
-  geom_obj_data.push_back(GeometryObject::DataItem("conductivity",GeometryObject::Double));
+
+  if(d_method_type == ESPotential){
+      geom_obj_data.push_back(GeometryObject::DataItem("conductivity",GeometryObject::Double));
+  }
+
+  if(d_method_type == Gauss){
+    geom_obj_data.push_back(GeometryObject::DataItem("charge_density",GeometryObject::Double));
+    geom_obj_data.push_back(GeometryObject::DataItem("permittivity",GeometryObject::Double));
+  }
 
   for ( ProblemSpecP geom_obj_ps = ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
@@ -87,12 +97,14 @@ FVMMaterial::initializeConductivity(CCVariable<double>& conductivity, const Patc
   }
 }
 
-void FVMMaterial::initializePermitivityAndCharge(CCVariable<double>& permitivity,
-                                                 CCVariable<double>& charge,
-                                                 const Patch* patch)
+void FVMMaterial::initializePermittivityAndCharge(CCVariable<double>& permittivity,
+                                                  CCVariable<double>& charge1,
+                                                  CCVariable<double>& charge2,
+                                                  const Patch* patch)
 {
-  permitivity.initialize(0);
-  charge.initialize(0);
+  permittivity.initialize(0);
+  charge1.initialize(0);
+  charge2.initialize(0);
 
   Vector dx = patch->dCell();
   double volume = dx.x() * dx.y() * dx.z();
@@ -105,8 +117,9 @@ void FVMMaterial::initializePermitivityAndCharge(CCVariable<double>& permitivity
         Point center = patch->cellPosition(c);
 
         if(piece->inside(center)){
-          permitivity[c] = d_geom_objs[obj]->getInitialData_double("permitivity");
-          charge[c] = volume * d_geom_objs[obj]->getInitialData_double("charge_density");
+          permittivity[c] = d_geom_objs[obj]->getInitialData_double("permittivity");
+          charge1[c] = volume * d_geom_objs[obj]->getInitialData_double("charge_density");
+          charge2[c] = -volume * d_geom_objs[obj]->getInitialData_double("charge_density");
         }
       }
     }

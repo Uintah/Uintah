@@ -39,6 +39,11 @@ namespace Uintah{
       const VarLabel* ccConductivity;
       const VarLabel* ccGridConductivity;
       const VarLabel* ccCurrent;
+      const VarLabel* ccCharge1;
+      const VarLabel* ccCharge2;
+      const VarLabel* ccChargeDensity1;
+      const VarLabel* ccChargeDensity2;
+      const VarLabel* ccPermittivity;
       const VarLabel* fcxConductivity;
       const VarLabel* fcyConductivity;
       const VarLabel* fczConductivity;

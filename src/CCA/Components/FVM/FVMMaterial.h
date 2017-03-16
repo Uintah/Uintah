@@ -37,13 +37,19 @@
 namespace Uintah {
   class FVMMaterial : public Material {
     public:
-      FVMMaterial(ProblemSpecP& ps, SimulationStateP& shared_state);
+      enum FVMMethod{
+        ESPotential,
+        Gauss
+      };
+      FVMMaterial(ProblemSpecP& ps, SimulationStateP& shared_state,
+                  FVMMethod method_type);
       ~FVMMaterial();
 
       void initializeConductivity(CCVariable<double>& conductivity, const Patch* patch);
-      void initializePermitivityAndCharge(CCVariable<double>& permitivity,
-                                          CCVariable<double>& charge,
-                                          const Patch* patch);
+      void initializePermittivityAndCharge(CCVariable<double>& permitivity,
+                                           CCVariable<double>& charge1,
+                                           CCVariable<double>& charge2,
+                                           const Patch* patch);
 
     private:
        std::vector<GeometryObject*> d_geom_objs;
@@ -52,6 +58,8 @@ namespace Uintah {
        // copy constructor
        FVMMaterial(const FVMMaterial &fvmm);
        FVMMaterial& operator=(const FVMMaterial &fvmm);
+
+       FVMMethod d_method_type;
   };
 
 } // End namespace Uintah

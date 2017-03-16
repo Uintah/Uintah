@@ -3,9 +3,11 @@
 
   <Uintah_specification> 
     <FVM                   spec="OPTIONAL NO_DATA">
-      <delt                     spec="REQUIRED DOUBLE 'positive'" />
-      <Parameters               spec="OPTIONAL NO_DATA"                                           
-                                attribute1="variable OPTIONAL STRING 'electrostatic_solver'" >
+      <delt                spec="REQUIRED DOUBLE 'positive'" />
+      <Parameters          spec="OPTIONAL NO_DATA"                                           
+                             attribute1="variable OPTIONAL STRING
+                                        'electrostatic_solver,
+                                         gauss1_solver'" >
         <initial_tolerance spec="OPTIONAL DOUBLE 'positive'"/>
         <criteria          spec="OPTIONAL STRING 'Absolute relative'" />                     
         <jump              spec="OPTIONAL INTEGER" />                                        

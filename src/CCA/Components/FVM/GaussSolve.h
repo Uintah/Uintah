@@ -93,20 +93,6 @@ WARNING
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw);
 
-    void scheduleComputeConductivity(SchedulerP& sched, const LevelP& level,
-                                     const MaterialSet* fvm_matls);
-
-    void computeConductivity(const ProcessorGroup* pg,const PatchSubset* patches,
-                             const MaterialSubset* fvm_matls,DataWarehouse* old_dw,
-                             DataWarehouse* new_dw);
-
-    void scheduleComputeFCConductivity(SchedulerP& sched, const LevelP& level,
-                                       const MaterialSet* es_matl);
-
-    void computeFCConductivity(const ProcessorGroup* pg,const PatchSubset* patches,
-                               const MaterialSubset* es_matls,DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
     void scheduleBuildMatrixAndRhs(SchedulerP& sched, const LevelP& level,
                                    const MaterialSet* es_matls);
 
@@ -118,6 +104,14 @@ WARNING
 
     void scheduleSolve(SchedulerP& sched, const LevelP& level,
                        const MaterialSet* es_matlset);
+
+    void scheduleComputeCharge(SchedulerP& sched, const LevelP& level,
+                               const MaterialSet* fvm_matls);
+
+    void computeCharge(const ProcessorGroup* pg, const PatchSubset* patches,
+                       const MaterialSubset* fvm_matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);
 
     void scheduleUpdateESPotential(SchedulerP& sched, const LevelP& level,
                                    const MaterialSet* es_matl);
