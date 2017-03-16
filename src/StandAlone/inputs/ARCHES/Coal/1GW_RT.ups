@@ -1792,7 +1792,6 @@
               <T_slag>1400</T_slag>
               <wall_thickness>0.0127</wall_thickness>
               <erosion_thickness>0.1</erosion_thickness>
-              <initial_deposit_thickness>1.0</initial_deposit_thickness>
               <wall_emissivity>0.8</wall_emissivity>
               <tube_side_T>300</tube_side_T>
               <relaxation_coef>0.8</relaxation_coef>

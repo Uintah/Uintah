@@ -922,21 +922,27 @@
 
             <geom_object/>
           </region>
-          <deposit_velocity_name        spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
-          <coal_name                    spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- this is the name corresponding to a given ash composition. -->
-          <emissivity_model_type        spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- default is "constant" this uses wall_emissivity. "dynamic" will estimate the emissivity from a mie-theory based model. -->
-          <frenkel_constant             spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 1.225. This is the constant in the sintering model. -->
-          <coal_region                  spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
-            <T_slag                     spec="REQUIRED DOUBLE"/>  <!-- Slagging Temperature, [K] -->
-            <erosion_thickness          spec="REQUIRED DOUBLE"/>  <!-- maximum deposit thickness, [m] -->
-            <tscale_dep                 spec="REQUIRED DOUBLE"/>  <!-- time scale of deposition, [s] -->
-            <k                          spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity, [W/(m K)] -->
-            <k_deposit                  spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity of deposit, [W/(m K)] -->
-            <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] -->
-            <initial_deposit_thickness     spec="REQUIRED DOUBLE"/>  <!-- thickness of wall deposit that depents on time averaged deposition flux in meters, [meters] -->
-            <wall_emissivity            spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 -->
-            <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
-            <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
+          <deposit_velocity_name           spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>
+          <coal_name                       spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- this is the name corresponding to a given ash composition. -->
+          <emissivity_model_type           spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- default is "constant" this uses wall_emissivity. "dynamic" will estimate the emissivity from a mie-theory based model. -->
+          <thermal_cond_model_type         spec="OPTIONAL STRING" need_applies_to="type coal_region_ht"/> <!-- default is "constant" this uses k_deposit_enamel and k_depositk_deposit_soot_blown. "hadley" will estimate the tc. -->
+          <frenkel_constant                spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 1.225. This is the constant in the sintering model. -->
+          <enamel_deposit_porosity         spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 0.6. This is the ash enamel porosity. -->
+          <sb_deposit_porosity             spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 0.6. This is the ash sb prosity. -->
+          <enamel_ash_composition          spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to="type coal_region_ht"/> <!-- species in the following order: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. -->
+          <sb_ash_composition              spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to="type coal_region_ht"/> <!-- species in the following order: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. -->
+          <coal_region                     spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
+            <T_slag                        spec="REQUIRED DOUBLE"/>  <!-- Slagging Temperature, [K] -->
+            <erosion_thickness             spec="REQUIRED DOUBLE"/>  <!-- maximum deposit thickness, [m] -->
+            <tscale_dep                    spec="REQUIRED DOUBLE"/>  <!-- time scale of deposition, [s] -->
+            <k                             spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity, [W/(m K)] -->
+            <k_deposit_enamel              spec="OPTIONAL DOUBLE"/>  <!-- thermal conductivity of soot blowable deposit (default is 1.0), [W/(m K)] -->
+            <k_deposit                     spec="OPTIONAL DOUBLE"/>  <!-- thermal conductivity of permanent enamel deposit (default is 1.0), [W/(m K)] -->
+            <wall_thickness                spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] -->
+            <enamel_deposit_thickness      spec="OPTIONAL DOUBLE"/>  <!-- thickness of permanent wall deposit, [meters] -->
+            <wall_emissivity               spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 -->
+            <tube_side_T                   spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
+            <relaxation_coef               spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
                                                                                    because we have assumed (with this model) that the wall comes to
                                                                                    instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation.
                                                                                    for wall with large thermal resistance, recommend relaxation_coef=0.1-0.8,

@@ -205,6 +205,21 @@ namespace Uintah{
         }
           return model_int;
       }
+      
+      inline static int get_thermal_cond_model_type( const ProblemSpecP& input_db ){
+        ProblemSpecP db = input_db;
+        std::string model_type;
+        int model_int;
+        db->getWithDefault( "thermal_cond_model_type", model_type,"constant");
+        if (model_type=="constant"){
+          model_int = 1;
+        } else if ( model_type=="hadley"){
+          model_int = 2;
+        } else {
+          throw InvalidValue("Error: thermal_cond_model_type must be either constant or hadley.", __FILE__, __LINE__);
+        }
+          return model_int;
+      }
 
 
       //-----------------------------------------------------------------
@@ -251,6 +266,93 @@ namespace Uintah{
           };
         
 
+          struct ThermalCondBase {
+            virtual void model(double &k_sb, double &k_en, const double &C_sb, const double &C_en, const double &T)=0;
+            virtual ~ThermalCondBase(){}};
+          
+          ThermalCondBase* m_tc_model; 
+
+          struct constant_tc : ThermalCondBase {
+            void model(double &k_sb, double &k_en, const double &C_sb, const double &C_en, const double &T) {
+              k_sb = C_sb;
+              k_en = C_en;
+            }
+            ~constant_tc(){}
+          };
+            
+          struct hadley_tc : ThermalCondBase {
+            hadley_tc(ProblemSpecP db_model){
+              std::vector<double> default_comp = {39.36,25.49, 7.89,  10.12, 2.46, 0.0, 1.09, 4.10};
+              db_model->getWithDefault( "enamel_ash_composition", en_ash_comp, default_comp);
+              db_model->getWithDefault( "sb_ash_composition", sb_ash_comp, default_comp);
+              db_model->getWithDefault( "enamel_deposit_porosity", en_porosity, 0.6);
+              db_model->getWithDefault( "sb_deposit_porosity", sb_porosity, 0.6);
+              if (en_ash_comp.size() != 8 || sb_ash_comp.size() != 8){
+                throw InvalidValue("Error ash_compositions (enamel_ash_composition and sb_ash_composition) must have 8 entries: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. ", __FILE__, __LINE__);
+              }
+           
+              double poly_datas[6][5] = {{2.511097e1, -7.293704e-2, 9.210643e-5, -5.005416e-8, 9.748495e-12},//%sio2
+                                         {2.656406e1, -5.013363e-2, 4.798874e-5, -2.274117e-8, 4.353314e-12},//%al2o3
+                                         {2.738097e1, -9.707191e-2, 1.303015e-4, -6.99833e-8 , 1.467744e-11},//fe2o3
+                                         {1.79954e1 , -2.807481e-2, 2.769034e-5, -1.244762e-8, 2.104583e-12},//cao
+                                         {8.320303e1, -1.780395e-1, 1.598474e-4, -6.622821e-8, 1.072425e-11},//mgo
+                                         {3.03673e1 , -6.10737e-2 , 6.65477e-5 , -3.40088e-8 , 6.17558e-12}};//na2o
+              for (int i=0; i<6; ++i) {
+                for (int j=0; j<5; ++j) {
+                  poly_data[i][j] = poly_datas[i][j];
+                }
+              }
+              en_ash_comp_tc = {en_ash_comp[0],en_ash_comp[1],en_ash_comp[3],en_ash_comp[2],en_ash_comp[7],en_ash_comp[4]};
+              sb_ash_comp_tc = {sb_ash_comp[0],sb_ash_comp[1],sb_ash_comp[3],sb_ash_comp[2],sb_ash_comp[7],sb_ash_comp[4]};
+              double en_ash_comp_tc_sum = 0.0;
+              double sb_ash_comp_tc_sum = 0.0;
+              std::for_each(en_ash_comp_tc.begin(), en_ash_comp_tc.end(), [&] (double n) { en_ash_comp_tc_sum += n;});
+              std::for_each(sb_ash_comp_tc.begin(), sb_ash_comp_tc.end(), [&] (double n) { sb_ash_comp_tc_sum += n;});
+              for (int i=0; i<6; ++i) {// renormalize to 1.
+                en_ash_comp_tc[i] = en_ash_comp_tc[i]/en_ash_comp_tc_sum;
+                sb_ash_comp_tc[i] = sb_ash_comp_tc[i]/sb_ash_comp_tc_sum;
+              }
+              double pb = 0.5;
+              f0 = 0.8+0.1*pb;
+            }
+            std::vector<double> en_ash_comp_tc;
+            std::vector<double> sb_ash_comp_tc;
+            std::vector<double> en_ash_comp;
+            std::vector<double> sb_ash_comp;
+            double f0;
+            double en_porosity;
+            double sb_porosity;
+            double poly_data[6][5];
+            void model(double &k_sb, double &k_en, const double &C_sb, const double &C_en, const double &T) {
+              double ks_en, ks_sb, k, kg, a, kappa;
+              std::vector<double> ki;
+              
+              // first compute solid tc as a function of temperature
+              for (int i=0; i<6; ++i) {
+                k = poly_data[i][0] + poly_data[i][1]*T + poly_data[i][2]*T*T + poly_data[i][3]*T*T*T + poly_data[i][4]*T*T*T*T;
+                ki.push_back(k);
+              }
+              ks_en=0.0;
+              ks_sb=0.0;
+              for (int i=0; i<6; ++i) {
+                ks_en=ks_en+ki[i]*en_ash_comp_tc[i];
+                ks_sb=ks_sb+ki[i]*en_ash_comp_tc[i];
+              }
+              // second compute the gas tc as a function of temperature 
+              kg = 2.286e-11*T*T*T - 7.022e-8*T*T + 1.209e-4*T - 5.321e-3;
+              
+              // third compute effective k for enamel layer using hadley model
+              a = (en_porosity>=0.3) ? 1.5266*std::pow(1-en_porosity,8.7381) : 0.7079*std::pow(1-en_porosity,6.3051);
+              kappa = ks_en/kg;
+              k_en =  (en_porosity < 1e-8) ? 0.0 : kg*((1.0-a)*(en_porosity*f0 + (1.0-en_porosity*f0)*kappa)/(1.0-en_porosity*(1.0-f0) + en_porosity*(1.0-f0)*kappa) + a*(2.0*(1.0-en_porosity)*kappa*kappa + (1.0+2.0*en_porosity)*kappa)/((2.0+en_porosity)*kappa + 1.0 - en_porosity));
+              // fourth compute effective k for sb layer using hadley model
+              a = (sb_porosity>=0.3) ? 1.5266*std::pow(1-sb_porosity,8.7381) : 0.7079*std::pow(1-sb_porosity,6.3051);
+              kappa = ks_sb/kg;
+              k_sb = (sb_porosity < 1e-8) ? 0.0 : kg*((1.0-a)*(sb_porosity*f0 + (1.0-sb_porosity*f0)*kappa)/(1.0-sb_porosity*(1.0-f0) + sb_porosity*(1.0-f0)*kappa) + a*(2.0*(1.0-sb_porosity)*kappa*kappa + (1.0+2.0*sb_porosity)*kappa)/((2.0+sb_porosity)*kappa + 1.0 - sb_porosity));
+            }
+            ~hadley_tc(){}
+          };
+
 
           struct EmissivityBase {
             virtual void model(double &e, const double &C, double &T, double &Dp, double &tau)=0;
@@ -262,92 +364,90 @@ namespace Uintah{
             void model(double &e, const double &C, double &T, double &Dp, double &tau) {
                e = C;
             }
-              ~constant_e(){}
-            };
+            ~constant_e(){}
+          };
             
-            struct dynamic_e : EmissivityBase {
-              dynamic_e(ProblemSpecP db_model){
-                std::string ash_type;
-                db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
-                db_model->getWithDefault( "frenkel_constant", A_frenkel, 1.225);
-                if (ash_type == "indonesian"){
-                  a_sv = -1.503e4;
-                  b_sv = -1.031;
-                  c_sv = 5.366;
-                  a_agg = 0.003329;
-                  b_agg = 8.575;
-                  c_agg = 0.3315;
-                  dp_eff_max=0.674746603591938;
-                  dp_eff_min=0.333333333333333;
-                  dpmax = 3000*1e-6;
-                  coeff_num = {0.133872433468528, -0.085588305614014, 0.420224738232270, 0.345964536984323, 0.157355184642739, -0.420810405519288};
-                  coeff_den = {1.000000000000000, 0.031154322452954, 0.261038846958539, -0.019838837050095, 0.033559752459297, -0.641137462770430};
-                  xscale = {750, 0.001496250000000}; 
-                  xcenter = {1050, 0.00150375}; 
-                  yscale = 0.082268841760067; 
-                  ycenter = 0.940464141548903; 
-                  fresnel={0.9671, -1.076e-06, -0.1613, -0.005533};
-                } else {
-                  throw InvalidValue("Error, coal_name wasn't recognized in dynamic ash emissivity data-base. ", __FILE__, __LINE__);
-                }
-
-            }
-              double a_sv;
-              double b_sv;
-              double c_sv;
-              double A_frenkel;
-              double a_agg;
-              double b_agg;
-              double c_agg;
-              double dp_eff_max;
-              double dp_eff_min;
-              double dpmax;
-              std::vector<double> coeff_num;
-              std::vector<double> coeff_den;
-              std::vector<double> xscale; 
-              std::vector<double> xcenter; 
-              double yscale; 
-              double ycenter; 
-              std::vector<double> fresnel;
-              void model(double &e, const double &C, double &T, double &Dp, double &tau) {
-                
-                // surface tension and viscosity model:
-                // power law fit: log10(st/visc) = a*T^b+c
-                double log10SurfT_div_Visc = a_sv*std::pow(T,b_sv)+c_sv; // [=] log10(m-s)
-                double SurfT_div_Visc = std::pow(10,log10SurfT_div_Visc); // [=] m-s
-                 
-                // Frenkel's model for sintering
-                double x_r = A_frenkel*sqrt(SurfT_div_Visc*tau/Dp/2.0); // Frenkel's model for sintering [=] m/m
-                
-                // agglomeration model related x/r to effective particle size
-                // power law fit: dp_eff_scaled = a*(x/r+1)^b+c
-                double rvec=std::min(a_agg*std::pow((x_r+1),b_agg)+c_agg,dp_eff_max);
-                double m_dp = (dpmax-Dp)/(dp_eff_max-dp_eff_min);
-                double b_dp = Dp - m_dp*dp_eff_min;
-                double d_eff=m_dp*rvec+b_dp;
-          
-                // mie emissivity as a function of temperature and effective particle size
-                // rational quardratice fit: y = (a1+a2*x1+a3*x2+a4*x1^2+a5*x1*x2+a6*x2^2)/(b1+b2*x1+b3*x2+b4*x1^2+b5*x1*x2+b6*x2^2) 
-                double T_sc = (T-xcenter[0])/xscale[0];
-                double d_eff_sc = (d_eff-xcenter[1])/xscale[1];
-                double xv[6]={1, T_sc, d_eff_sc, std::pow(T_sc,2), T_sc*d_eff_sc, std::pow(d_eff_sc,2.0)};
-                double num=0;
-                double den=0;
-                for ( int I=0; I < 6; I++ ) {
-                  num+=coeff_num[I]*xv[I];
-                  den+=coeff_den[I]*xv[I];
-                }
-                e = num/den;
-                e = e*yscale + ycenter;
-                // finally set emissivity to fresnel emissivity (slagging limit) if mie-theory emissivity is too high.
-                // 2nd order exponential fit: ef = a*exp(b*T)+c*exp(d*T);
-                double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T); 
-                e=std::min(ef,e);
+          struct dynamic_e : EmissivityBase {
+            dynamic_e(ProblemSpecP db_model){
+              std::string ash_type;
+              db_model->getWithDefault( "coal_name", ash_type, "generic_coal");
+              db_model->getWithDefault( "frenkel_constant", A_frenkel, 1.225);
+              if (ash_type == "indonesian"){
+                a_sv = -1.503e4;
+                b_sv = -1.031;
+                c_sv = 5.366;
+                a_agg = 0.003329;
+                b_agg = 8.575;
+                c_agg = 0.3315;
+                dp_eff_max=0.674746603591938;
+                dp_eff_min=0.333333333333333;
+                dpmax = 3000*1e-6;
+                coeff_num = {0.133872433468528, -0.085588305614014, 0.420224738232270, 0.345964536984323, 0.157355184642739, -0.420810405519288};
+                coeff_den = {1.000000000000000, 0.031154322452954, 0.261038846958539, -0.019838837050095, 0.033559752459297, -0.641137462770430};
+                xscale = {750, 0.001496250000000}; 
+                xcenter = {1050, 0.00150375}; 
+                yscale = 0.082268841760067; 
+                ycenter = 0.940464141548903; 
+                fresnel={0.9671, -1.076e-06, -0.1613, -0.005533};
+              } else {
+                throw InvalidValue("Error, coal_name wasn't recognized in dynamic ash emissivity data-base. ", __FILE__, __LINE__);
               }
-              ~dynamic_e(){}
-            };
 
-
+          }
+            double a_sv;
+            double b_sv;
+            double c_sv;
+            double A_frenkel;
+            double a_agg;
+            double b_agg;
+            double c_agg;
+            double dp_eff_max;
+            double dp_eff_min;
+            double dpmax;
+            std::vector<double> coeff_num;
+            std::vector<double> coeff_den;
+            std::vector<double> xscale; 
+            std::vector<double> xcenter; 
+            double yscale; 
+            double ycenter; 
+            std::vector<double> fresnel;
+            void model(double &e, const double &C, double &T, double &Dp, double &tau) {
+              
+              // surface tension and viscosity model:
+              // power law fit: log10(st/visc) = a*T^b+c
+              double log10SurfT_div_Visc = a_sv*std::pow(T,b_sv)+c_sv; // [=] log10(m-s)
+              double SurfT_div_Visc = std::pow(10,log10SurfT_div_Visc); // [=] m-s
+               
+              // Frenkel's model for sintering
+              double x_r = A_frenkel*sqrt(SurfT_div_Visc*tau/Dp/2.0); // Frenkel's model for sintering [=] m/m
+              
+              // agglomeration model related x/r to effective particle size
+              // power law fit: dp_eff_scaled = a*(x/r+1)^b+c
+              double rvec=std::min(a_agg*std::pow((x_r+1),b_agg)+c_agg,dp_eff_max);
+              double m_dp = (dpmax-Dp)/(dp_eff_max-dp_eff_min);
+              double b_dp = Dp - m_dp*dp_eff_min;
+              double d_eff=m_dp*rvec+b_dp;
+          
+              // mie emissivity as a function of temperature and effective particle size
+              // rational quardratice fit: y = (a1+a2*x1+a3*x2+a4*x1^2+a5*x1*x2+a6*x2^2)/(b1+b2*x1+b3*x2+b4*x1^2+b5*x1*x2+b6*x2^2) 
+              double T_sc = (T-xcenter[0])/xscale[0];
+              double d_eff_sc = (d_eff-xcenter[1])/xscale[1];
+              double xv[6]={1, T_sc, d_eff_sc, std::pow(T_sc,2), T_sc*d_eff_sc, std::pow(d_eff_sc,2.0)};
+              double num=0;
+              double den=0;
+              for ( int I=0; I < 6; I++ ) {
+                num+=coeff_num[I]*xv[I];
+                den+=coeff_den[I]*xv[I];
+              }
+              e = num/den;
+              e = e*yscale + ycenter;
+              // finally set emissivity to fresnel emissivity (slagging limit) if mie-theory emissivity is too high.
+              // 2nd order exponential fit: ef = a*exp(b*T)+c*exp(d*T);
+              double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T); 
+              e=std::min(ef,e);
+            }
+            ~dynamic_e(){}
+          };
       };
 
       std::vector<HTModelBase*> _all_ht_models;
@@ -474,10 +574,11 @@ namespace Uintah{
               double T_slag;
               double dy_erosion;
               double t_sb;
-              double k;
-              double k_deposit;
-              double dy;
-              double dy_dep_init; // initial deposit thickness
+              double k; // wall
+              double dy; // wall
+              double k_dep_en; // enamel deposit t.c.
+              double k_dep_sb; // soot blown deposit t.c.
+              double dy_dep_en; // enamel deposit thickness
               double emissivity;
               double T_inner;
               double relax;     ///< A relaxation coefficient to help stability (eg, wall temperature changes too fast)...but not necessarily with accuracy
@@ -486,7 +587,7 @@ namespace Uintah{
               std::vector<GeometryPieceP> geometry;
           };
 
-          inline void newton_solve(WallInfo& wi, HTVariables& vars, double &TW_new, double &T_old, double &rad_q, double &net_q, double &R_tot, double &Emiss );
+          inline void newton_solve(WallInfo& wi, double &TW_new, double &k_sb, double &k_en, double &dy_dep_sb, double &dy_dep_en, double &T_old, double &rad_q, double &net_q, double &R_wall, double &Emiss );
 
           std::vector<WallInfo> _regions;
 
