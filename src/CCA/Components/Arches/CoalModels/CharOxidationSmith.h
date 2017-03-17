@@ -188,6 +188,7 @@ private:
   double _T0;
   double _R_cal; // [cal/ (K mol) ]
   double _R; // [J/ (K mol) ]
+  double _gasPressure; // [ J / m^3 ] or [ N /m^2]
 
   // from input file
   double _RC_scaling_constant;   ///< Scaling factor for raw coal internal coordinate

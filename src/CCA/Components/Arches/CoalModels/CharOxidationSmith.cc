@@ -107,6 +107,24 @@ CharOxidationSmith::~CharOxidationSmith()
 void
 CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
 {
+  // Ensure the following species are populated from table
+  // (this is expensive and should be avoided, if a species isn't needed)
+  ChemHelper& helper = ChemHelper::self();
+  helper.add_lookup_species("temperature");
+  helper.add_lookup_species("mixture_molecular_weight");
+
+  // Example on getting the table constants
+   ChemHelper::TableConstantsMapType the_table_constants = helper.get_table_constants();
+   auto press_iter = the_table_constants->find("Pressure");
+   if ( press_iter == the_table_constants->end() ){
+     _gasPressure=101325.;
+     if (qn==0)
+       proc0cout << " No Pressure key found in the table." << std::endl;
+   }else{
+     _gasPressure=press_iter->second;
+     if (qn==0)
+       proc0cout << " Pressure used in char OXY smith." <<_gasPressure << " pascals" << std::endl;
+   }
 
 
   ProblemSpecP db = params;
@@ -205,18 +223,6 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     }
   }
 
-  // Ensure the following species are populated from table
-  // (this is expensive and should be avoided, if a species isn't needed)
-  ChemHelper& helper = ChemHelper::self();
-  helper.add_lookup_species("temperature");
-  helper.add_lookup_species("mixture_molecular_weight");
-
-  // Example on getting the table constants
-  // ChemHelper::TableConstantsMapType the_table_constants = helper.get_table_constants();
-  // auto press_iter = the_table_constants->find("Pressure");
-  // if ( press_iter == the_table_constants->end() ){
-  //   std::cout << " No Pressure key found in the table. " << std::endl;
-  // }
 
   // model global constants
   // get model coefficients
@@ -705,9 +711,9 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         w=weight[d_quadNode](i,j,k);// [#/m^3]
         MW=1./MWmix(i,j,k); // [kg mix / kmol mix] (MW in table is 1/MW).
         RHS=RHS_source(i,j,k)*_char_scaling_constant*_weight_scaling_constant; // [kg/s]
-        r_devol=devolRC(i,j,k)*_char_scaling_constant*_weight_scaling_constant; // [kg/m^3/s]
+        r_devol=devolRC(i,j,k)*_RC_scaling_constant*_weight_scaling_constant; // [kg/m^3/s]
         r_devol_ns=-r_devol; // [kg/m^3/s]
-        RHS_v=RC_RHS_source(i,j,k)*_char_scaling_constant*_weight_scaling_constant; // [kg/s]
+        RHS_v=RC_RHS_source(i,j,k)*_RC_scaling_constant*_weight_scaling_constant; // [kg/s]
 
 
         // populate temporary variable vectors
@@ -747,7 +753,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
                                          ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() )  );// [m/s]
         Re_p  = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
 
-        cg = 101325. / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
+        cg = _gasPressure / (_R * gas_T * 1000.); // [kmoles/m^3] - Gas concentration
         p_area = M_PI * p_diam*p_diam; // particle surface area [m^2]
         // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
         for (int l=0; l<_NUM_reactions; l++) {
@@ -803,7 +809,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           }
           // make sure rh_(n+1) is inbounds
           for (int l=0; l<_NUM_reactions; l++) {
-            rh_l_new[l]=std::min(1000.0, std::max(0.0, rh_l_new[l]));
+            rh_l_new[l]=std::min(0.01*_gasPressure, std::max(0.0, rh_l_new[l])); // max rate adjusted based on pressure (empirical limit)
           }
           if (residual < 1e-3) {
             break;
@@ -838,9 +844,9 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         }
         // check to see if reaction rate is fuel limited.
         if ( add_rawcoal_birth && add_char_birth ){
-          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] equation assumes RC_scaling=Char_scaling
+          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w + char_birth(i,j,k)/w + rawcoal_birth(i,j,k)/w )); // [kg/s/#] 
         } else {
-          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] equation assumes RC_scaling=Char_scaling
+          char_mass_rate = std::max( char_mass_rate, - ((rc+ch)/(dt) + (RHS + RHS_v)/(vol*w) + r_devol/w )); // [kg/s/#] 
         }
         char_mass_rate = std::min( 0.0, char_mass_rate); // [kg/s/#] make sure we aren't creating char.
         char_rate(i,j,k) = (char_mass_rate*w)/(_char_scaling_constant*_weight_scaling_constant); // [kg/m^3/s - scaled]
