@@ -289,15 +289,14 @@
           <meanstrain_nucleation>0.29999999999999999</meanstrain_nucleation>
           <stddevstrain_nucleation>0.10000000000000001</stddevstrain_nucleation>
           <initial_porosity_distrib>gauss</initial_porosity_distrib>
-          <evolve_damage>true</evolve_damage>
-          <initial_mean_scalar_damage>0.0050000000000000001</initial_mean_scalar_damage>
-          <initial_std_scalar_damage>0.001</initial_std_scalar_damage>
-          <critical_scalar_damage>1</critical_scalar_damage>
-          <initial_scalar_damage_distrib>gauss</initial_scalar_damage_distrib>
         </constitutive_model>
         <erosion algorithm="ZeroStress"/>
             
         <damage_model type="johnson_cook">
+          <initial_mean_scalar_damage>0.0050000000000000001</initial_mean_scalar_damage>
+          <initial_std_scalar_damage>0.001</initial_std_scalar_damage>
+          <critical_scalar_damage>1e-10</critical_scalar_damage>
+          <initial_scalar_damage_distrib>gauss</initial_scalar_damage_distrib>
           <D1>0.050000000000000003</D1>
           <D2>3.4399999999999999</D2>
           <D3>-2.1200000000000001</D3>

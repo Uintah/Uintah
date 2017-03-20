@@ -23,26 +23,41 @@
  */
 
 
-#include "JohnsonCookDamage.h"
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookDamage.h>
+#include <Core/Math/Gaussian.h>
 #include <cmath>
 
 using namespace Uintah;
-
+static DebugStream dbg("DamageModel", false);
+//______________________________________________________________________
+//
 JohnsonCookDamage::JohnsonCookDamage(ProblemSpecP& ps)
 {
   Algorithm = DamageAlgo::johnson_cook;
-  ps->require("D1",d_initialData.D1);
-  ps->require("D2",d_initialData.D2);
-  ps->require("D3",d_initialData.D3);
-  ps->require("D4",d_initialData.D4);
-  ps->require("D5",d_initialData.D5);
   d_initialData.D0 = 0.0;
-  ps->get("D0",d_initialData.D0);
-  d_initialData.Dc = 0.7;
-  ps->get("Dc",d_initialData.Dc);
-  d_initialData.spallStress = 8.0;
+  d_initialData.Dc = 1.0e-10;
+  
+  d_initialData.D0_std  = 0.0; // Initial STD scalar damage
+  d_initialData.dist    = "constant";
+
+  ps->get( "initial_mean_scalar_damage",    d_initialData.D0);
+  ps->get( "initial_std_scalar_damage",     d_initialData.D0_std);
+  ps->get( "critical_scalar_damage",        d_initialData.Dc);
+  ps->get( "initial_scalar_damage_distrib", d_initialData.dist);
+
+  ps->require( "D1",d_initialData.D1);
+  ps->require( "D2",d_initialData.D2);
+  ps->require( "D3",d_initialData.D3);
+  ps->require( "D4",d_initialData.D4);
+  ps->require( "D5",d_initialData.D5);  
+  
+  const TypeDescription* P_dbl = ParticleVariable<double>::getTypeDescription();  
+  pDamageLabel = VarLabel::create("p.damage",           P_dbl );
+  pDamageLabel_preReloc = VarLabel::create("p.damage+", P_dbl );
+  pPlasticStrainRateLabel_preReloc = VarLabel::find("p.plasticStrainRate+");
 } 
-         
+//______________________________________________________________________
+//         
 JohnsonCookDamage::JohnsonCookDamage(const JohnsonCookDamage* cm)
 {
   d_initialData.D1 = cm->d_initialData.D1;
@@ -52,13 +67,16 @@ JohnsonCookDamage::JohnsonCookDamage(const JohnsonCookDamage* cm)
   d_initialData.D5 = cm->d_initialData.D5;
   d_initialData.D0 = cm->d_initialData.D0;
   d_initialData.Dc = cm->d_initialData.Dc;
-  d_initialData.spallStress = cm->d_initialData.spallStress;
 } 
-         
+//______________________________________________________________________
+//         
 JohnsonCookDamage::~JohnsonCookDamage()
 {
+  VarLabel::destroy(pDamageLabel);
+  VarLabel::destroy(pDamageLabel_preReloc);
 }
-
+//______________________________________________________________________
+//
 void JohnsonCookDamage::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP damage_ps = ps->appendChild("damage_model");
@@ -69,24 +87,203 @@ void JohnsonCookDamage::outputProblemSpec(ProblemSpecP& ps)
   damage_ps->appendElement("D3",d_initialData.D3);
   damage_ps->appendElement("D4",d_initialData.D4);
   damage_ps->appendElement("D5",d_initialData.D5);
-  damage_ps->appendElement("D0",d_initialData.D0);
-  damage_ps->appendElement("Dc",d_initialData.Dc);
+  damage_ps->appendElement( "initial_mean_scalar_damage",    d_initialData.D0);
+  damage_ps->appendElement( "initial_std_scalar_damage",     d_initialData.D0_std);
+  damage_ps->appendElement( "critical_scalar_damage",        d_initialData.Dc);
+  damage_ps->appendElement( "initial_scalar_damage_distrib", d_initialData.dist);
 }
 
-         
-inline double 
-JohnsonCookDamage::initialize()
+//______________________________________________________________________
+//
+void
+JohnsonCookDamage::addParticleState(std::vector<const VarLabel*>& from,
+                                    std::vector<const VarLabel*>& to)
 {
-  return d_initialData.D0;
+  from.push_back( pDamageLabel );
+  to.push_back(   pDamageLabel_preReloc );
+}
+//______________________________________________________________________
+//
+void 
+JohnsonCookDamage::addInitialComputesAndRequires(Task* task,
+                                           const MPMMaterial* matl )
+{
+  int dwi = matl->getDWIndex();
+  std::ostringstream mesg;
+  mesg << "JohnsonCookDamage::addInitialComputesAndRequires (matl:" << dwi <<  ")";
+  printTask( dbg, mesg.str() );
+  
+  const MaterialSubset* matls = matl->thisMaterial();
+  task->computes(pDamageLabel, matls);
+}
+//______________________________________________________________________
+//
+void
+JohnsonCookDamage::initializeLabels(const Patch       * patch,
+                                    const MPMMaterial * matl,       
+                                    DataWarehouse     * new_dw)     
+{
+  int dwi = matl->getDWIndex();
+  std::ostringstream mesg;
+  mesg << "JohnsonCookDamage::initializeLabels (matl:" << dwi << ")";
+  printTask( patch, dbg, mesg.str() );
+
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  ParticleVariable<double> pDamage;
+  new_dw->allocateAndPut(pDamage, pDamageLabel, pset);
+
+  //__________________________________
+  //
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end();iter++){
+    pDamage[*iter] = d_initialData.D0;
+  }
+
+  if (d_initialData.dist != "constant") {
+
+    Gaussian gaussGen(d_initialData.D0, d_initialData.D0_std, 0, 1,DBL_MAX);
+    ParticleSubset::iterator iter = pset->begin();
+    for(;iter != pset->end();iter++){
+
+      // Generate a Gaussian distributed random number given the mean
+      // damage and the std.
+      pDamage[*iter] = fabs(gaussGen.rand(1.0));
+    }
+  }
+}
+//______________________________________________________________________
+//
+void
+JohnsonCookDamage::addComputesAndRequires(Task* task,
+                                          const MPMMaterial* matl)
+{
+  printTask( dbg, "    JohnsonCookDamage::addComputesAndRequires" );
+  Ghost::GhostType  gnone = Ghost::None;
+  const MaterialSubset* matls = matl->thisMaterial();
+
+//  VarLabel* TotalLocalizedParticleLabel  = VarLabel::find( "TotalLocalizedParticle" );
+
+  task->requires( Task::OldDW, pDamageLabel,                     matls, gnone);
+  task->requires( Task::OldDW, d_lb->pTemperatureLabel,          matls, gnone);      
+  task->requires( Task::NewDW, d_lb->pStressLabel_preReloc,      matls, gnone);      
+  task->requires( Task::NewDW, pPlasticStrainRateLabel_preReloc, matls, gnone);
+  task->computes( pDamageLabel_preReloc, matls );
+//  task->computes(TotalLocalizedParticleLabel);
 }
 
-inline bool
-JohnsonCookDamage:: hasFailed(double damage)
+//______________________________________________________________________
+//
+void
+JohnsonCookDamage::computeSomething( ParticleSubset    * pset,
+                                     const MPMMaterial * matl,
+                                     const Patch       * patch,
+                                     DataWarehouse     * old_dw,
+                                     DataWarehouse     * new_dw )
 {
-  if (damage > d_initialData.Dc) return true;
-  return false;
-}
+  printTask( patch, dbg, "    JohnsonCookDamage::computeSomething" );
+
+  constParticleVariable<Matrix3> pStress;
+  constParticleVariable<double>  pPlasticStrainRate;
+  constParticleVariable<double>  pDamage_old;
+  constParticleVariable<double>  pTemperature;
+  ParticleVariable<double>       pDamage;
+  
+  old_dw->get( pDamage_old,         pDamageLabel,                      pset);
+  old_dw->get( pTemperature,        d_lb->pTemperatureLabel,           pset);   
+  new_dw->get( pStress,             d_lb->pStressLabel_preReloc,       pset);   
+  new_dw->get( pPlasticStrainRate,  pPlasticStrainRateLabel_preReloc,  pset);   
+  new_dw->allocateAndPut( pDamage,  pDamageLabel_preReloc,             pset);   
+
+    // Get the time increment (delT)
+  delt_vartype delT;
+  old_dw->get(delT, d_lb->delTLabel, patch->getLevel());
+  
+  Matrix3 I; 
+  I.Identity();
+  
+  double Tr = matl->getRoomTemperature();
+  double Tm = matl->getMeltTemperature();
+  
+  //__________________________________
+  //
+  ParticleSubset::iterator iter = pset->begin();
+  for(; iter != pset->end(); iter++){
+    particleIndex idx = *iter;
     
+//    if ( pPlasticStrainRate[idx] == 0.0 ){ // no plastic deformation or damage
+//      continue;                            // Jim: please double check this
+//    }
+    double epdot    = pPlasticStrainRate[idx];  
+    double sigMean  = pStress[idx].Trace()/3.0;
+    Matrix3 sig_dev = pStress[idx] - I*sigMean;
+    double sigEquiv = sqrt( (sig_dev.NormSquared())*1.5 );
+
+    double sigStar = 0.0;
+    if (sigEquiv != 0){
+      sigStar = sigMean/sigEquiv;
+    }
+    if (sigStar > 1.5){
+      sigStar = 1.5;
+    }
+    if (sigStar < -1.5){
+      sigStar = -1.5;
+    }
+
+    double stressPart = d_initialData.D1 + d_initialData.D2 * exp(d_initialData.D3 * sigStar);
+
+    double strainRatePart = 1.0;
+
+    if (epdot < 1.0) { 
+      strainRatePart = pow((1.0 + epdot),d_initialData.D4);
+    }else{
+      strainRatePart = 1.0 + d_initialData.D4*log(epdot);
+    }
+
+    double Tstar    = (pTemperature[idx] - Tr)/(Tm - Tr);
+    double tempPart = 1.0 + d_initialData.D5*Tstar;
+
+    // Calculate the updated scalar damage parameter
+    double epsFrac = stressPart*strainRatePart*tempPart;
+    if (epsFrac < d_initialData.Dc){
+      pDamage[idx] = pDamage_old[idx];
+    }
+
+    // Calculate plastic strain increment
+    double epsInc = epdot*delT;
+    pDamage[idx] = pDamage_old[idx] + epsInc/epsFrac;
+    if (pDamage[idx] < d_initialData.Dc){
+      pDamage[idx] = 0.0;
+    }
+  #if 1
+  if( epdot != 0 && Tstar != 0){
+  std::cout.precision(16);
+  std::cout << "epdot: " << epdot 
+            << " T: " << pTemperature[idx] 
+            << " delT: " << delT 
+            << " tolerance: " << d_initialData.Dc << std::endl;
+
+  std::cout << "  pStress: " << pStress[idx] << std::endl;
+  
+  std::cout << "  sigstar = " << sigStar 
+            << " epdotStar = " << epdot
+            << " Tstar = " << Tstar << std::endl;
+       
+  std::cout << "  e_inc = " << epsInc
+            << " e_f = " << epsFrac
+            << " D_n = " << pDamage_old[idx] 
+            << " D_n+1 = " << pDamage[idx] << std::endl;
+  }
+  #endif
+
+  }  // pset loop
+}
+
+
+
+
+//______________________________________________________________________
+//    
 double 
 JohnsonCookDamage::computeScalarDamage(const double& epdot,
                                        const Matrix3& stress,
@@ -96,54 +293,5 @@ JohnsonCookDamage::computeScalarDamage(const double& epdot,
                                        const double& tolerance,
                                        const double& damage_old)
 {
-  Matrix3 I; I.Identity();
-  double sigMean = stress.Trace()/3.0;
-  Matrix3 sig_dev = stress - I*sigMean;
-  double sigEquiv = sqrt((sig_dev.NormSquared())*1.5);
-  //cout << "sigMean = " << sigMean << " sigEquiv = " << sigEquiv;
-
-  double sigStar = 0.0;
-  if (sigEquiv != 0) sigStar = sigMean/sigEquiv;
-  //if (sigStar > d_initialData.spallStress) return 1.0;
-  if (sigStar > 1.5) sigStar = 1.5;
-  if (sigStar < -1.5) sigStar = -1.5;
-  //cout << " sigStar = " << sigStar;
-  double stressPart = d_initialData.D1 + 
-    d_initialData.D2*exp(d_initialData.D3*sigStar);
-  //cout << " stressPart = " << stressPart;
-
-  double strainRatePart = 1.0;
-  //cout << " epdot = " << epdot;
-  if (epdot < 1.0) 
-    strainRatePart = pow((1.0 + epdot),d_initialData.D4);
-  else
-    strainRatePart = 1.0 + d_initialData.D4*log(epdot);
-  //cout << " epdotPart = " << strainRatePart;
-
-  double Tr = matl->getRoomTemperature();
-  double Tm = matl->getMeltTemperature();
-  //cout << " Tr = " << Tr << " Tm = " << Tm << " T = " << T << endl;
-  double Tstar = (T-Tr)/(Tm-Tr);
-  double tempPart = 1.0 + d_initialData.D5*Tstar;
-  //cout << " tempPart = " << tempPart;
-
-  // Calculate the updated scalar damage parameter
-  double epsFrac = stressPart*strainRatePart*tempPart;
-  if (epsFrac < tolerance) return damage_old;
-
-  // Calculate plastic strain increment
-  double epsInc = epdot*delT;
-  double damage_new = damage_old  + epsInc/epsFrac;
-  if (damage_new < tolerance) damage_new = 0.0;
-  /*
-  cout << "sigstar = " << sigStar << " epdotStar = " << epdot
-       << " Tstar = " << Tstar << endl;
-  cout << "Ep_dot = " << epdot 
-       << " e_inc = " << epsInc
-       << " e_f = " << epsFrac
-       << " D_n = " << damage_old 
-       << " D_n+1 = " << damage_new << endl;
-  */
-  return damage_new;
 }
  

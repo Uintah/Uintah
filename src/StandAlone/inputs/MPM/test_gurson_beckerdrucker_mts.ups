@@ -101,15 +101,17 @@
           <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
           <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
           <initial_porosity_distrib>      gauss </initial_porosity_distrib>
-          <initial_mean_scalar_damage>    0.01  </initial_mean_scalar_damage>
-          <initial_std_scalar_damage>     0.01  </initial_std_scalar_damage>
-          <critical_scalar_damage>        0.7   </critical_scalar_damage>
-          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
           <plastic_convergence_algo>  biswajit  </plastic_convergence_algo>
         </constitutive_model>
         
-        <include href="inputs/MPM/MaterialData/HancockDamHY100Steel.xml"/>
-        
+        <damage_model type="hancock_mackenzie">
+          <initial_mean_scalar_damage>    0.01  </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.01  </initial_std_scalar_damage>
+          <critical_scalar_damage>        1e-10 </critical_scalar_damage>
+          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+          <include href="inputs/MPM/MaterialData/HancockDamHY100Steel.xml"/>
+        </damage_model>
+
         <geom_object>
           <cylinder label = "Cylinder">
             <bottom>[0.0,0.0,0.0]</bottom>

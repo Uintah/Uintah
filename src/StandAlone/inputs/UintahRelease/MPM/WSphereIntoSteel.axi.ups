@@ -111,7 +111,6 @@
           <isothermal>                    false </isothermal>
           <tolerance>                  1.0e-10  </tolerance>
           <evolve_porosity>               true  </evolve_porosity>
-          <evolve_damage>                 true  </evolve_damage>
           <compute_specific_heat>         true  </compute_specific_heat>
           <do_melting>                    true  </do_melting>
           <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
@@ -134,7 +133,6 @@
           <include href="inputs/MPM/MaterialData/JCPlastic4340St.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
-          <include href="inputs/MPM/MaterialData/JCDamage4340St.xml"/>
           <specific_heat_model type="constant_Cp"> </specific_heat_model>
 
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
@@ -144,12 +142,16 @@
           <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
           <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
           <initial_porosity_distrib>      gauss </initial_porosity_distrib>
-
-          <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
-          <initial_std_scalar_damage>     0.001 </initial_std_scalar_damage>
-          <critical_scalar_damage>        1.0   </critical_scalar_damage>
-          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
+        
+        <damage_model type="johnson_cook">
+          <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.001  </initial_std_scalar_damage>
+          <critical_scalar_damage>      1.0e-10  </critical_scalar_damage>
+          <initial_scalar_damage_distrib> gauss  </initial_scalar_damage_distrib>
+          <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
+        </damage_model>
+        
         <!--<erosion algorithm = "AllowNoTension"/> -->
 <!--
 -->

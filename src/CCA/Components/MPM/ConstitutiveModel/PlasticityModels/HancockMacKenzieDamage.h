@@ -26,7 +26,7 @@
 #define __HANCOCKMACKENZIE_DAMAGE_MODEL_H__
 
 
-#include "DamageModel.h"        
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -58,20 +58,26 @@ namespace Uintah {
   class HancockMacKenzieDamage : public DamageModel {
 
   public:
-    // Create datatype for storing model parameters
-    struct CMData {
-      double D0; /*< Initial damage */
-      double Dc; /*< Critical damage */
-    };   
+     // Create datatype for storing damage parameters
+    struct damageData {
+      double D0;                    /*< Initial mean scalar damage */
+      double D0_std;                /*< Initial standard deviation of scalar damage */
+      double Dc;                    /*< Critical scalar damage */
+      std::string dist;             /*< Initial damage distrinution */
+    };
 
   private:
+    
+    damageData d_initialData;
 
-    CMData d_initialData;
-         
     // Prevent copying of this class
     // copy constructor
     //HancockMacKenzieDamage(const HancockMacKenzieDamage &cm);
     HancockMacKenzieDamage& operator=(const HancockMacKenzieDamage &cm);
+    
+    const VarLabel* pDamageLabel;
+    const VarLabel* pDamageLabel_preReloc;
+    const VarLabel* pPlasticStrainRateLabel_preReloc;
 
   public:
     // constructors
@@ -82,20 +88,7 @@ namespace Uintah {
     virtual ~HancockMacKenzieDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-         
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Initialize the damage parameter in the calling function
-    */
-    //////////////////////////////////////////////////////////////////////////
-    double initialize();
 
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Determine if damage has crossed cut off
-    */
-    //////////////////////////////////////////////////////////////////////////
-    bool hasFailed(double damage);
     
     //////////
     // Calculate the scalar damage parameter 
@@ -106,6 +99,27 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        const double& tolerance,
                                        const double& damage_old);
+    virtual
+    void addComputesAndRequires(Task* task,
+                                const MPMMaterial* matl);
+    virtual
+    void  computeSomething( ParticleSubset    * pset,
+                            const MPMMaterial * matl,           
+                            const Patch       * patch,         
+                            DataWarehouse     * old_dw,        
+                            DataWarehouse     * new_dw );
+    virtual
+    void addParticleState(std::vector<const VarLabel*>& from,
+                          std::vector<const VarLabel*>& to);
+
+    virtual 
+    void addInitialComputesAndRequires(Task* task,
+                                       const MPMMaterial* matl );
+                                               
+    virtual
+    void initializeLabels(const Patch*       patch,
+                          const MPMMaterial* matl,
+                          DataWarehouse*     new_dw ); 
   };
 
 } // End namespace Uintah

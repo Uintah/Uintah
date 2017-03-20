@@ -94,10 +94,6 @@ namespace Uintah {
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
-    double initialize();
-
-    bool hasFailed(double damage);
-
     virtual
     double computeScalarDamage(const double   & plasticStrainRate,
                                const Matrix3  & stress,

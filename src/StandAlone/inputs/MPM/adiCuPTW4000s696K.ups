@@ -103,7 +103,6 @@
           <tolerance>                     1.0e-12 </tolerance>
           <do_melting>                    false   </do_melting>
           <evolve_porosity>               false   </evolve_porosity>
-          <evolve_damage>                 false   </evolve_damage>
           <check_TEPLA_failure_criterion> false   </check_TEPLA_failure_criterion>
           <check_max_stress_failure>      false   </check_max_stress_failure>
           <initial_material_temperature>  696.0   </initial_material_temperature>
@@ -162,13 +161,17 @@
           <compute_specific_heat> false </compute_specific_heat>
           <specific_heat_model type="constant_Cp">
           </specific_heat_model>
-          
         </constitutive_model>
-        
+<!--
         <damage_model type = "hancock_mackenzie">
+          <initial_mean_scalar_damage>    0.0      </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.0      </initial_std_scalar_damage>
+          <critical_scalar_damage>        1.0      </critical_scalar_damage>
+          <initial_scalar_damage_distrib> constant </initial_scalar_damage_distrib>
           <D0> 0.0001 </D0>
           <Dc> 0.7    </Dc>
         </damage_model>
+--> 
 
         <geom_object>
           <box label = "box">

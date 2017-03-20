@@ -112,10 +112,6 @@ namespace Uintah {
     bool d_useModifiedEOS;
     int d_8or27;
 
-    //__________________________________
-    //  Damage
-    bool d_useDamage  = false;
-
     // MohrColoumb options
     double d_friction_angle;  // Assumed to come in degrees
     double d_tensile_cutoff;  // Fraction of the cohesion at which
@@ -187,13 +183,6 @@ namespace Uintah {
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
-    ////////////////////////////////////////////////////////////////////////
-    /*! \\brief Add the requires for failure simulation. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
 
     // Compute Functions //
     ///////////////////////
@@ -239,13 +228,6 @@ namespace Uintah {
     // Returns the compressibility of the material
     virtual double getCompressibility();
 
-    ////////////////////////////////////////////////////////////////////////
-    /*! \\brief Get the flag that marks a failed particle. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch,
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
 
     virtual void addSplitParticlesComputesAndRequires(Task* task,
                                                       const MPMMaterial* matl,
@@ -262,8 +244,7 @@ namespace Uintah {
                                              DataWarehouse* new_dw);
 
   private:
-    // Damage requirements //
-    /////////////////////////
+    
     void getYieldStressDistribution(ProblemSpecP& ps);
 
     void setYieldStressDistribution(const UCNH* cm);

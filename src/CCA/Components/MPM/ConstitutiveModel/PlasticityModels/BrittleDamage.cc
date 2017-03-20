@@ -103,20 +103,7 @@ void BrittleDamage::outputProblemSpec(ProblemSpecP& ps)
   dam_ps->appendElement("brittle_damage_printDamage",          d_brittle_damage.printDamage);
 }
 
-//______________________________________________________________________
-//
-inline double
-BrittleDamage::initialize()
-{
-  return 0.0;
-}
-//______________________________________________________________________
-//
-inline bool
-BrittleDamage:: hasFailed(double )
-{
-  return false;
-}
+
 //______________________________________________________________________
 //
 double

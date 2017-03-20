@@ -134,20 +134,6 @@ void ThresholdDamage::outputProblemSpec(ProblemSpecP& ps)
                                            d_tensile_cutoff);
   }
 }
-//______________________________________________________________________
-//
-inline double
-ThresholdDamage::initialize()
-{
-  return 0.0;
-}
-//______________________________________________________________________
-//
-inline bool
-ThresholdDamage::hasFailed(double )
-{
-  return false;
-}
 
 //______________________________________________________________________
 //

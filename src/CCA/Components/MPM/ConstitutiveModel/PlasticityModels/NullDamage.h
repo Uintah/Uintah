@@ -62,13 +62,8 @@ namespace Uintah {
     virtual ~NullDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-
-    double initialize();
-
-    bool hasFailed(double damage);
     
-    //////////
-    // Calculate the scalar damage parameter 
+
     virtual double computeScalarDamage(const double& plasticStrainRate,
                                        const Matrix3& stress,
                                        const double& temperature,

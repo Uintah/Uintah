@@ -93,21 +93,25 @@
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JCPlastic6061T6Al.xml"/>
-          <include href="inputs/MPM/MaterialData/JCDamage6061T6Al.xml"/>
           <include href="inputs/MPM/MaterialData/MieGrunEOS6061T6Al.xml"/>
-          <initial_material_temperature>  294.0 </initial_material_temperature>
-          <initial_mean_porosity>         0.001 </initial_mean_porosity>
+          <initial_material_temperature>  294.0  </initial_material_temperature>
+          <initial_mean_porosity>         0.001  </initial_mean_porosity>
           <initial_std_porosity>          0.0005 </initial_std_porosity>
-          <critical_porosity>             0.7   </critical_porosity>
-          <frac_nucleation>               0.5   </frac_nucleation>
-          <meanstrain_nucleation>         0.5   </meanstrain_nucleation>
+          <critical_porosity>             0.7    </critical_porosity>
+          <frac_nucleation>               0.5    </frac_nucleation>
+          <meanstrain_nucleation>         0.5    </meanstrain_nucleation>
           <stddevstrain_nucleation>       0.05   </stddevstrain_nucleation>
-          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+          <initial_porosity_distrib>      gauss  </initial_porosity_distrib>
+        </constitutive_model>
+        
+        <damage_model type="johnson_cook">
           <initial_mean_scalar_damage>    0.001  </initial_mean_scalar_damage>
           <initial_std_scalar_damage>     0.0005 </initial_std_scalar_damage>
-          <critical_scalar_damage>        1.0   </critical_scalar_damage>
-          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
-        </constitutive_model>
+          <critical_scalar_damage>        1.0e-10   </critical_scalar_damage>
+          <initial_scalar_damage_distrib> gauss   </initial_scalar_damage_distrib>
+          <include href="inputs/MPM/MaterialData/JCDamage6061T6Al.xml"/>
+        </damage_model>
+        
         <geom_object>
           <corrugated> 
             <xymin>      [1.0,11.0,0.0]   </xymin> 

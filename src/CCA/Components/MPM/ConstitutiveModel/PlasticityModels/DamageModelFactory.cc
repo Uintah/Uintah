@@ -43,25 +43,38 @@ using namespace Uintah;
 DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
                                         MPMFlags        * flags,
                                         SimulationState * sharedState)
-{
-  string cm_type = "none";
-
-  if ( matl_ps->getNodeName() != "constitutive_model" ) { 
-    ProblemSpecP cm_ps = matl_ps->findBlock("constitutive_model");
-    cm_ps->getAttribute("type", cm_type);
-  }
-   
+{   
   ProblemSpecP child = matl_ps->findBlock("damage_model");
   if(!child) {
     proc0cout << "**WARNING** Creating default null damage model" << endl;
     return( scinew NullDamage() );
   }
   
-  string dam_type;
+  string dam_type = "none";
   if(!child->getAttribute( "type", dam_type )){
     throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
   }
   
+  //__________________________________
+  //  bulletproofing
+  string cm_type = "none";
+
+  if ( matl_ps->getNodeName() != "constitutive_model" ) { 
+    ProblemSpecP cm_ps = matl_ps->findBlock("constitutive_model");
+    cm_ps->getAttribute("type", cm_type);
+  }
+  
+  if (dam_type == "hancock_mackenzie" || dam_type == "johnson_cook" ) {
+    if( cm_type != "elastic_plastic_hp" && cm_type != "elastic_plastic"  ){
+      string txt="MPM:  The only constitute model that works with the johnson_cook and hancock_mackenzie damage models is elastic_plastic/elastic_plastic_hp";
+      txt = txt + " (CM: " + cm_type + " DM: " + dam_type + ")"; 
+      throw ProblemSetupException(txt, __FILE__, __LINE__);
+    }
+  }  
+  
+  
+  //__________________________________
+  //
   if (dam_type == "johnson_cook"){
     return( scinew JohnsonCookDamage( child ) );
   }
@@ -76,10 +89,6 @@ DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
   }
   else if (dam_type == "none") {
     return(scinew NullDamage( child ) );
-  }
-  else if( cm_type == "elastic_plastic_hp" || cm_type == "elastic_plastic"  ){
-    string txt="MPM:  The only damage models that work with elasitc_plastic are johnson_cook and hancock_mackenzie";
-    throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
   else {
     proc0cout << "**WARNING** Creating default null damage model" << endl;

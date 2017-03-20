@@ -33,7 +33,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowStressModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
@@ -142,16 +141,6 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
          << " Biswajit.  "<< endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
-
-  ProblemSpecP matl_ps = ps->getParent();
-  d_damage = DamageModelFactory::create(matl_ps, flag, d_sharedState);
-  if(!d_damage){
-    ostringstream desc;
-    desc << "An error occured in the DamageModelFactory that has \n"
-         << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
   
   d_eos = MPMEquationOfStateFactory::create(ps);
   d_eos->setBulkModulus(d_initialData.Bulk);
@@ -189,7 +178,6 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   d_Cp = SpecificHeatModelFactory::create(ps);
   
   getInitialPorosityData(ps);
-  getInitialDamageData(ps);
   //getSpecificHeatData(ps);
   initializeLocalMPMLabels();
 }
@@ -218,12 +206,6 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   d_porosity.sn = cm->d_porosity.sn ;
   d_porosity.porosityDist = cm->d_porosity.porosityDist ;
 
-  d_evolveDamage = cm->d_evolveDamage;
-  d_scalarDam.D0 = cm->d_scalarDam.D0 ;
-  d_scalarDam.D0_std = cm->d_scalarDam.D0_std ;
-  d_scalarDam.Dc = cm->d_scalarDam.Dc ;
-  d_scalarDam.scalarDamageDist = cm->d_scalarDam.scalarDamageDist ;
-
   d_computeSpecificHeat = cm->d_computeSpecificHeat;
   /*
   d_Cp.A = cm->d_Cp.A;
@@ -235,7 +217,6 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   d_yield   = YieldConditionFactory::createCopy(cm->d_yield);
   d_stable  = StabilityCheckFactory::createCopy(cm->d_stable);
   d_flow    = FlowStressModelFactory::createCopy(cm->d_flow);
-  d_damage  = DamageModelFactory::createCopy(cm->d_damage);
   d_eos     = MPMEquationOfStateFactory::createCopy(cm->d_eos);
   d_eos->setBulkModulus(d_initialData.Bulk);
   d_shear   = ShearModulusModelFactory::createCopy(cm->d_shear);
@@ -252,7 +233,6 @@ ElasticPlasticHP::~ElasticPlasticHP()
   VarLabel::destroy(pStrainRateLabel);
   VarLabel::destroy(pPlasticStrainLabel);
   VarLabel::destroy(pPlasticStrainRateLabel);
-  VarLabel::destroy(pDamageLabel);
   VarLabel::destroy(pPorosityLabel);
   VarLabel::destroy(pEnergyLabel);
 
@@ -260,14 +240,13 @@ ElasticPlasticHP::~ElasticPlasticHP()
   VarLabel::destroy(pStrainRateLabel_preReloc);
   VarLabel::destroy(pPlasticStrainLabel_preReloc);
   VarLabel::destroy(pPlasticStrainRateLabel_preReloc);
-  VarLabel::destroy(pDamageLabel_preReloc);
+
   VarLabel::destroy(pPorosityLabel_preReloc);
   VarLabel::destroy(pEnergyLabel_preReloc);
 
   delete d_flow;
   delete d_yield;
   delete d_stable;
-  delete d_damage;
   delete d_eos;
   delete d_shear;
   delete d_melt;
@@ -315,13 +294,6 @@ void ElasticPlasticHP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("stddevstrain_nucleation",   d_porosity.sn);
   cm_ps->appendElement("initial_porosity_distrib",  d_porosity.porosityDist);
 
-  cm_ps->appendElement("evolve_damage",             d_evolveDamage);
-  cm_ps->appendElement("initial_mean_scalar_damage",d_scalarDam.D0);
-  cm_ps->appendElement("initial_std_scalar_damage", d_scalarDam.D0_std);
-  cm_ps->appendElement("critical_scalar_damage",    d_scalarDam.Dc);
-  cm_ps->appendElement("initial_scalar_damage_distrib",
-                       d_scalarDam.scalarDamageDist);
-
   /*
   cm_ps->appendElement("Cp_constA", d_Cp.A);
   cm_ps->appendElement("Cp_constB", d_Cp.B);
@@ -349,8 +321,6 @@ ElasticPlasticHP::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pPlasticStrainRateLabel = VarLabel::create("p.plasticStrainRate",
     ParticleVariable<double>::getTypeDescription());
-  pDamageLabel = VarLabel::create("p.damage",
-    ParticleVariable<double>::getTypeDescription());
   pPorosityLabel = VarLabel::create("p.porosity",
     ParticleVariable<double>::getTypeDescription());;
   pEnergyLabel = VarLabel::create("p.energy",
@@ -363,8 +333,6 @@ ElasticPlasticHP::initializeLocalMPMLabels()
   pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
     ParticleVariable<double>::getTypeDescription());
   pPlasticStrainRateLabel_preReloc = VarLabel::create("p.plasticStrainRate+",
-    ParticleVariable<double>::getTypeDescription());
-  pDamageLabel_preReloc = VarLabel::create("p.damage+",
     ParticleVariable<double>::getTypeDescription());
   pPorosityLabel_preReloc = VarLabel::create("p.porosity+",
     ParticleVariable<double>::getTypeDescription());
@@ -392,22 +360,6 @@ ElasticPlasticHP::getInitialPorosityData(ProblemSpecP& ps)
   ps->get("meanstrain_nucleation",         d_porosity.en);
   ps->get("stddevstrain_nucleation",       d_porosity.sn);
   ps->get("initial_porosity_distrib",      d_porosity.porosityDist);
-}
-//______________________________________________________________________
-//
-void 
-ElasticPlasticHP::getInitialDamageData(ProblemSpecP& ps)
-{
-  d_evolveDamage = true;
-  ps->get("evolve_damage",d_evolveDamage);
-  d_scalarDam.D0 = 0.0; // Initial scalar damage
-  d_scalarDam.D0_std = 0.0; // Initial STD scalar damage
-  d_scalarDam.Dc = 1.0; // Critical scalar damage
-  d_scalarDam.scalarDamageDist = "constant";
-  ps->get("initial_mean_scalar_damage",        d_scalarDam.D0);
-  ps->get("initial_std_scalar_damage",         d_scalarDam.D0_std);
-  ps->get("critical_scalar_damage",            d_scalarDam.Dc);
-  ps->get("initial_scalar_damage_distrib",     d_scalarDam.scalarDamageDist);
 }
 
 /*! Compute specific heat
@@ -442,7 +394,6 @@ ElasticPlasticHP::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pStrainRateLabel);
   from.push_back(pPlasticStrainLabel);
   from.push_back(pPlasticStrainRateLabel);
-  from.push_back(pDamageLabel);
   from.push_back(pPorosityLabel);
   from.push_back(pEnergyLabel);
 
@@ -450,7 +401,6 @@ ElasticPlasticHP::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pStrainRateLabel_preReloc);
   to.push_back(pPlasticStrainLabel_preReloc);
   to.push_back(pPlasticStrainRateLabel_preReloc);
-  to.push_back(pDamageLabel_preReloc);
   to.push_back(pPorosityLabel_preReloc);
   to.push_back(pEnergyLabel_preReloc);
 
@@ -471,7 +421,6 @@ ElasticPlasticHP::addInitialComputesAndRequires(Task* task,
   task->computes(pStrainRateLabel,    matlset);
   task->computes(pPlasticStrainLabel, matlset);
   task->computes(pPlasticStrainRateLabel, matlset);
-  task->computes(pDamageLabel,        matlset);
   task->computes(pPorosityLabel,      matlset);
   task->computes(pEnergyLabel,        matlset);
  
@@ -503,29 +452,28 @@ ElasticPlasticHP::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<Matrix3> pRotation;
-  ParticleVariable<double>  pPlasticStrain, pDamage, pPorosity, 
+  ParticleVariable<double>  pPlasticStrain, pPorosity, 
                             pPlasticStrainRate, pStrainRate, pEnergy;
 
   new_dw->allocateAndPut(pRotation,          pRotationLabel, pset);
   new_dw->allocateAndPut(pStrainRate,        pStrainRateLabel, pset);
   new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
   new_dw->allocateAndPut(pPlasticStrainRate, pPlasticStrainRateLabel, pset);
-  new_dw->allocateAndPut(pDamage,            pDamageLabel, pset);
   new_dw->allocateAndPut(pPorosity,          pPorosityLabel, pset);
   new_dw->allocateAndPut(pEnergy,            pEnergyLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
 
-    pRotation[*iter] = one;
-    pStrainRate[*iter] = 0.0;
-    pPlasticStrain[*iter] = 0.0;
-    pPlasticStrainRate[*iter] = 0.0;
-    pDamage[*iter] = d_damage->initialize();
-    pPorosity[*iter] = d_porosity.f0;
-    pEnergy[*iter] = 0.;
+    pRotation[*iter]           =  one;
+    pStrainRate[*iter]         =  0.0;
+    pPlasticStrain[*iter]      =  0.0;
+    pPlasticStrainRate[*iter]  =  0.0;
+    pPorosity[*iter]           =  d_porosity.f0;
+    pEnergy[*iter]             =  0.;
+
   }
 
-  // Do some extra things if the porosity or the damage distribution
+  // Do some extra things if the porosity  distribution
   // is not uniform.  
   // ** WARNING ** Weibull distribution needs to be implemented.
   //               At present only Gaussian available.
@@ -538,18 +486,6 @@ ElasticPlasticHP::initializeCMData(const Patch* patch,
       // Generate a Gaussian distributed random number given the mean
       // porosity and the std.
       pPorosity[*iter] = fabs(gaussGen.rand(1.0));
-    }
-  }
-
-  if (d_scalarDam.scalarDamageDist != "constant") {
-
-    Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0, 1,DBL_MAX);
-    ParticleSubset::iterator iter = pset->begin();
-    for(;iter != pset->end();iter++){
-
-      // Generate a Gaussian distributed random number given the mean
-      // damage and the std.
-      pDamage[*iter] = fabs(gaussGen.rand(1.0));
     }
   }
 
@@ -634,7 +570,6 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
   task->requires(Task::OldDW, pPlasticStrainRateLabel,matlset, gnone);
-  task->requires(Task::OldDW, pDamageLabel,           matlset, gnone);
   task->requires(Task::OldDW, pPorosityLabel,         matlset, gnone);
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
@@ -643,7 +578,6 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   task->computes(pStrainRateLabel_preReloc,     matlset);
   task->computes(pPlasticStrainLabel_preReloc,  matlset);
   task->computes(pPlasticStrainRateLabel_preReloc,  matlset);
-  task->computes(pDamageLabel_preReloc,         matlset);
   task->computes(pPorosityLabel_preReloc,       matlset);
   task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
   task->computes(pEnergyLabel_preReloc,         matlset);
@@ -723,13 +657,12 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStress,      lb->pStressLabel,             pset);
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
 
-    constParticleVariable<double> pPlasticStrain, pDamage, pPorosity;
+    constParticleVariable<double> pPlasticStrain, pPorosity;
     constParticleVariable<double> pStrainRate, pPlasticStrainRate, pEnergy;
     constParticleVariable<int> pLocalized;
     constParticleVariable<Matrix3> pRotation;
 
     old_dw->get(pPlasticStrain,     pPlasticStrainLabel,     pset);
-    old_dw->get(pDamage,            pDamageLabel,            pset);
     old_dw->get(pStrainRate,        pStrainRateLabel,        pset);
     old_dw->get(pPlasticStrainRate, pPlasticStrainRateLabel, pset);
     old_dw->get(pPorosity,          pPorosityLabel,          pset);
@@ -752,7 +685,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
     // Create and allocate arrays for storing the updated information
     ParticleVariable<Matrix3> pRotation_new;
-    ParticleVariable<double>  pPlasticStrain_new, pDamage_new, pPorosity_new; 
+    ParticleVariable<double>  pPlasticStrain_new, pPorosity_new; 
     ParticleVariable<double>  pStrainRate_new, pPlasticStrainRate_new;
     ParticleVariable<int>     pLocalized_new;
     ParticleVariable<double>  pdTdt, p_q, pEnergy_new;
@@ -766,8 +699,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
                            pPlasticStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pPlasticStrainRate_new,      
                            pPlasticStrainRateLabel_preReloc,      pset);
-    new_dw->allocateAndPut(pDamage_new,      
-                           pDamageLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pPorosity_new,      
                            pPorosityLabel_preReloc,               pset);
     new_dw->allocateAndPut(pLocalized_new,      
@@ -1045,13 +976,12 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Stage 3:
       //-----------------------------------------------------------------------
-      // Compute porosity/damage/temperature change
+      // Compute porosity/temperature change
       if (!plastic) {
 
         // Save the updated data
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
         pPlasticStrainRate_new[idx] = 0.0;
-        pDamage_new[idx]   = pDamage[idx];
         pPorosity_new[idx] = pPorosity[idx];
         
       } else {
@@ -1067,18 +997,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         } else {
           pPorosity_new[idx] = pPorosity[idx];
         }
-        
-        // Calculate the updated scalar damage parameter
-        // THE DAMAGE COMPUTED BELOW CURRENTLY HAS NO EFFECT ON THE REST OF THE
-        // SIMULATION, SO WHY BOTHER?
-        if (d_evolveDamage) { 
-          pDamage_new[idx] = 
-            d_damage->computeScalarDamage(state->plasticStrainRate, sigma, 
-                                          temperature, delT, matl, d_tol, 
-                                          pDamage[idx]);
-        } else {
-          pDamage_new[idx] = pDamage[idx];
-        }
+
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = d_initialData.Chi;
         double fac = taylorQuinney/(rho_cur*state->specificHeat);
@@ -1155,7 +1074,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         }  // if plastic 
 
         if (pLocalized_new[idx]) {
-          pDamage_new[idx]    = 0.0;
           pPorosity_new[idx]  = 0.0;
         } 
       }  // if erosion
@@ -1506,7 +1424,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
   delt_vartype delT;
   constParticleVariable<double>  pMass, pVolume,
                                  pTempPrev, pTemperature,
-                                 pPlasticStrain, pDamage, pPorosity, 
+                                 pPlasticStrain, pPorosity, 
                                  pStrainRate, pPlasticStrainRate,pEnergy;
 
   constParticleVariable<Point>   px;
@@ -1517,7 +1435,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
   ParticleVariable<int>          pLocalized_new;
   ParticleVariable<Matrix3>      pDeformGrad_new, pStress_new, pRotation_new;
   ParticleVariable<double>       pVolume_deformed, pPlasticStrain_new, 
-                                 pDamage_new, pPorosity_new, pStrainRate_new,
+                                 pPorosity_new, pStrainRate_new,
                                  pPlasticStrainRate_new, pdTdt,pEnergy_new;
 
   // Local variables
@@ -1565,7 +1483,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pRotation,           pRotationLabel,           pset);
     old_dw->get(pPlasticStrain,      pPlasticStrainLabel,      pset);
     old_dw->get(pPlasticStrainRate,  pPlasticStrainRateLabel,  pset);
-    old_dw->get(pDamage,             pDamageLabel,             pset);
     old_dw->get(pStrainRate,         pStrainRateLabel,         pset);
     old_dw->get(pPorosity,           pPorosityLabel,           pset);
     old_dw->get(pEnergy,             pEnergyLabel,             pset);
@@ -1589,8 +1506,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
                            pPlasticStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pPlasticStrainRate_new,      
                            pPlasticStrainRateLabel_preReloc,      pset);
-    new_dw->allocateAndPut(pDamage_new,      
-                           pDamageLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pPorosity_new,      
                            pPorosityLabel_preReloc,               pset);
     new_dw->allocateAndPut(pLocalized_new,      
@@ -1615,7 +1530,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         pStrainRate_new[idx]    = pStrainRate[idx];
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
         pPlasticStrainRate_new[idx] = 0.0;
-        pDamage_new[idx]        = pDamage[idx];
         pPorosity_new[idx]      = pPorosity[idx];
         pLocalized_new[idx]     = false;
 
@@ -1785,7 +1699,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         pStress_new[idx]        = trialStress;
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
         pPlasticStrainRate_new[idx] = 0.0;
-        pDamage_new[idx]        = pDamage[idx];
         pPorosity_new[idx]      = pPorosity[idx];
         
         // Update the internal variables
@@ -1823,17 +1736,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
           double ep = state->plasticStrain;
           pPorosity_new[idx] = updatePorosity(tensorD, delT, porosity, ep);
         }
-
-        // Calculate the updated scalar damage parameter
-        if (d_evolveDamage) 
-          pDamage_new[idx] = 
-            d_damage->computeScalarDamage(state->plasticStrainRate, 
-                                          pStress_new[idx],
-                                          temperature,
-                                          delT, matl, d_tol, 
-                                          pDamage[idx]);
-        else
-          pDamage_new[idx] = pDamage[idx];
 
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = d_initialData.Chi;
@@ -3081,7 +2983,7 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
 
     // Carry forward the data local to this constitutive model 
     constParticleVariable<Matrix3> pRotation;
-    constParticleVariable<double>  pPlasticStrain, pDamage, pPorosity; 
+    constParticleVariable<double>  pPlasticStrain, pPorosity; 
     constParticleVariable<double>  pStrainRate, pPlasticStrainRate;
     constParticleVariable<int>     pLocalized;
 
@@ -3089,12 +2991,11 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
     old_dw->get(pStrainRate,     pStrainRateLabel,        pset);
     old_dw->get(pPlasticStrain,  pPlasticStrainLabel,     pset);
     old_dw->get(pPlasticStrainRate,  pPlasticStrainRateLabel,  pset);
-    old_dw->get(pDamage,         pDamageLabel,            pset);
     old_dw->get(pPorosity,       pPorosityLabel,          pset);
     old_dw->get(pLocalized,      lb->pLocalizedMPMLabel,  pset);
 
     ParticleVariable<Matrix3>      pRotation_new;
-    ParticleVariable<double>       pPlasticStrain_new, pDamage_new;
+    ParticleVariable<double>       pPlasticStrain_new;
     ParticleVariable<double>       pPorosity_new, pStrainRate_new, pPlasticStrainRate_new;
     ParticleVariable<int>          pLocalized_new;
 
@@ -3106,8 +3007,6 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
                            pPlasticStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pPlasticStrainRate_new,      
                            pPlasticStrainRateLabel_preReloc,      pset);
-    new_dw->allocateAndPut(pDamage_new,      
-                           pDamageLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pPorosity_new,      
                            pPorosityLabel_preReloc,               pset);
     new_dw->allocateAndPut(pLocalized_new,      
@@ -3128,7 +3027,6 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
       pStrainRate_new[idx] = pStrainRate[idx];
       pPlasticStrain_new[idx] = pPlasticStrain[idx];
       pPlasticStrainRate_new[idx] = pPlasticStrainRate[idx];
-      pDamage_new[idx] = pDamage[idx];
       pPorosity_new[idx] = pPorosity[idx];
       pLocalized_new[idx] = pLocalized[idx];
     }
@@ -3141,42 +3039,7 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
     }
   }
 }
-/*`==========TESTING==========*/
-          // to be deleted soon  -Todd 
 //______________________________________________________________________
-//
-void 
-ElasticPlasticHP::addRequiresDamageParameter(Task* task,
-                                           const MPMMaterial* matl,
-                                           const PatchSet* ) const
-{
-#if 0
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
-#endif
-}
-//__________________________________
-//
-void 
-ElasticPlasticHP::getDamageParameter(const Patch* patch,
-                                   ParticleVariable<int>& damage,
-                                   int dwi,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
-{
-#if 0
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
-  constParticleVariable<int> pLocalized;
-  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
-
-  ParticleSubset::iterator iter;
-  for (iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = pLocalized[*iter];
-  }
-#endif   
-}
- 
-/*===========TESTING==========`*/    
 // Compute the elastic tangent modulus tensor for isotropic
 // materials (**NOTE** can get rid of one copy operation if needed)
 void 
@@ -3202,6 +3065,7 @@ ElasticPlasticHP::computeElasticTangentModulus(double bulk,
   Ce.convertToTensorForm(C_6x6);
 }
 
+//______________________________________________________________________
 // Update the porosity of the material
 double 
 ElasticPlasticHP::updatePorosity(const Matrix3& D,

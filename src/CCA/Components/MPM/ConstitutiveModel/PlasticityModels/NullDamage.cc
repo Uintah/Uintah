@@ -55,20 +55,6 @@ void NullDamage::outputProblemSpec(ProblemSpecP& ps)
 }
 
 //______________________________________________________________________
-//         
-inline double 
-NullDamage::initialize()
-{
-  return 0.0;
-}
-//______________________________________________________________________
-//
-inline bool
-NullDamage:: hasFailed(double )
-{
-  return false;
-}
-//______________________________________________________________________
 //    
 double 
 NullDamage::computeScalarDamage(const double& ,

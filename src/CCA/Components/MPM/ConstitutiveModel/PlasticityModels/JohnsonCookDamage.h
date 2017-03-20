@@ -65,14 +65,16 @@ namespace Uintah {
   public:
     // Create datatype for storing model parameters
     struct CMData {
-      double D0; /*< Initial damage */
-      double Dc; /*< Critical damage */
       double D1;
       double D2;
       double D3;
       double D4;
       double D5;
-      double spallStress;
+      
+      double D0;                    /*< Initial mean scalar damage */
+      double D0_std;                /*< Initial standard deviation of scalar damage */
+      double Dc;                    /*< Critical scalar damage */
+      std::string dist;             /*< Initial damage distrinution */
     };   
 
   private:
@@ -84,6 +86,10 @@ namespace Uintah {
     //JohnsonCookDamage(const JohnsonCookDamage &cm);
     JohnsonCookDamage& operator=(const JohnsonCookDamage &cm);
 
+    const VarLabel* pDamageLabel;
+    const VarLabel* pDamageLabel_preReloc;
+    const VarLabel* pPlasticStrainRateLabel_preReloc;
+
   public:
     // constructors
     JohnsonCookDamage(ProblemSpecP& ps); 
@@ -93,20 +99,8 @@ namespace Uintah {
     virtual ~JohnsonCookDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-         
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Initialize the damage parameter in the calling function
-    */
-    //////////////////////////////////////////////////////////////////////////
-    double initialize();
 
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Determine if damage has crossed cut off
-    */
-    //////////////////////////////////////////////////////////////////////////
-    bool hasFailed(double damage);
+    double initialize();
     
     //////////
     // Calculate the scalar damage parameter 
@@ -117,7 +111,28 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        const double& tolerance,
                                        const double& damage_old);
-  
+    virtual
+    void addComputesAndRequires(Task* task,
+                                const MPMMaterial* matl);
+    virtual
+    void  computeSomething( ParticleSubset    * pset,
+                            const MPMMaterial * matl,           
+                            const Patch       * patch,         
+                            DataWarehouse     * old_dw,        
+                            DataWarehouse     * new_dw );
+
+    virtual
+    void addParticleState(std::vector<const VarLabel*>& from,
+                          std::vector<const VarLabel*>& to);
+
+    virtual 
+    void addInitialComputesAndRequires(Task* task,
+                                       const MPMMaterial* matl );
+                                               
+    virtual
+    void initializeLabels(const Patch*       patch,
+                          const MPMMaterial* matl,
+                          DataWarehouse*     new_dw );  
   };
 
 } // End namespace Uintah

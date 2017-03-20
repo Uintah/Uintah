@@ -427,14 +427,6 @@ void UCNH::addInitialComputesAndRequires(Task* task,
 }
 
 //______________________________________________________________________
-//  This belongs in the damage models
-void UCNH::addRequiresDamageParameter(Task* task,
-                                       const MPMMaterial* matl,
-                                       const PatchSet* ) const
-{
-    // no longer needed
-}
-//______________________________________________________________________
 //
 void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
                              const double p_ref,
@@ -880,15 +872,15 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
                                                         dx, pSize,interpolator);
       }
 
-      if((d_usePlasticity || d_useDamage) && flag->d_doGridReset){
-        old_dw->get(gDisp,           lb->dispNewLabel, dwi, patch, gac, 1);
+      if( d_usePlasticity && flag->d_doGridReset){
+        old_dw->get(gDisp, lb->dispNewLabel, dwi, patch, gac, 1);
       }
 
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
         // Compute the displacement gradient and B matrices
-        if(d_usePlasticity || d_useDamage){
+        if( d_usePlasticity ){
           interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,
                                                     pSize[idx],pDefGrad[idx]);
 
@@ -900,7 +892,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         double J;
 
         pDefGradInc = pDispGrad + Identity;
-        if(d_usePlasticity || d_useDamage) {
+        if( d_usePlasticity ) {
           pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx];
           J = pDefGrad_new[idx].Determinant();
 
@@ -1023,17 +1015,7 @@ double UCNH::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }
-//______________________________________________________________________
-//
-void UCNH::getDamageParameter(const Patch* patch,
-                              ParticleVariable<int>& damage,
-                              int dwi,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw)
-{
 
-    // no longer needed
-}
 //______________________________________________________________________
 //
 void UCNH::addParticleState(std::vector<const VarLabel*>& from,
@@ -1181,7 +1163,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         defGrad  = defGradInc*pDefGrad[idx];
         double J = pDefGrad_new[idx].Determinant();
 
-        if(d_usePlasticity || d_useDamage) {
+        if( d_usePlasticity ) {
           J = defGrad.Determinant();
           pDefGrad_new[idx] = defGrad;
 

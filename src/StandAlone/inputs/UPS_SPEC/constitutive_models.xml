@@ -88,7 +88,6 @@
     <CrackMaxGrowthRate            spec="OPTIONAL DOUBLE" />
     <CrackPowerValue               spec="OPTIONAL DOUBLE" />
     <critical_porosity             spec="OPTIONAL DOUBLE" />
-    <critical_scalar_damage        spec="OPTIONAL DOUBLE" />
     <critical_stress               spec="OPTIONAL DOUBLE" />
     <damage_cutoff                 spec="OPTIONAL DOUBLE" />
     
@@ -161,11 +160,8 @@
     <InitialCrackRadius            spec="OPTIONAL DOUBLE 'positive'" />
     <initial_material_temperature  spec="OPTIONAL DOUBLE" />
     <initial_mean_porosity         spec="OPTIONAL DOUBLE" />
-    <initial_mean_scalar_damage    spec="OPTIONAL DOUBLE" />
     <initial_porosity_distrib      spec="OPTIONAL STRING 'constant, gauss'" />
-    <initial_scalar_damage_distrib spec="OPTIONAL STRING 'constant, gauss'" />
     <initial_std_porosity          spec="OPTIONAL DOUBLE" />
-    <initial_std_scalar_damage     spec="OPTIONAL DOUBLE" />
     <isothermal                    spec="OPTIONAL BOOLEAN" />
     <K                             spec="OPTIONAL DOUBLE" />
     <K0                            spec="OPTIONAL DOUBLE" />
