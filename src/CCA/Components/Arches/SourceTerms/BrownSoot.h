@@ -118,7 +118,9 @@ private:
   std::string m_Ysoot_name;          ///< string name for Ysoot
   std::string m_Ns_name;             ///< string name for Ns (#/kg)
   std::string m_O2_name;             ///< string name for o2  (from table)
+  std::string m_OH_name;             ///< string name for oh  (from table)
   std::string m_CO2_name;            ///< string name for co2  (from table)
+  std::string m_H2O_name;             ///< string name for h2o (from table)
   std::string m_rho_name;            ///< string name for rho (from table)
   std::string m_temperature_name;    ///< string name for temperature (from table)
 
@@ -131,48 +133,12 @@ private:
   const VarLabel* m_Ysoot_label;
   const VarLabel* m_Ns_label;
   const VarLabel* m_o2_label;
+  const VarLabel* m_oh_label;
   const VarLabel* m_co2_label;
+  const VarLabel* m_h2o_label;
   const VarLabel* m_temperature_label;
   const VarLabel* m_rho_label;
 
-
-  void coalSootTar( const double P,
-                    const double T,
-                    const double rhoYO2,
-                    const double rhoYt,
-                    const double DT,
-                    double &Ytar_source );
-
-  void coalSootND( const double P,
-                   const double T,
-                   const double XCO2,
-                   const double XO2,
-                   const double rhoYt,
-                   const double rhoYs,
-                   const double nd,
-                   const double dt,
-                   double &Ns_source );
-
-  void coalSootMassSrc( const double P,
-                        const double T,
-                        const double XCO2,
-                        const double XO2,
-                        const double rhoYt,
-                        const double rhoYs,
-                        const double nd,
-                        const double dt,
-                        double &Ysoot_source );
-
-  void coalGasSootSrc( const double P,
-                       const double T,
-                       const double XCO2,
-                       const double XO2,
-                       const double rhoYt,
-                       const double rhoYs,
-                       const double nd,
-                       const double rhoYO2,
-                       const double dt,
-                       double &Off_Gas );
 
 }; // end BrownSoot
 } // end namespace Uintah

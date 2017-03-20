@@ -1897,6 +1897,8 @@
             <mix_mol_weight_label>mixture_molecular_weight</mix_mol_weight_label>
             <o2_label>O2</o2_label>
             <co2_label>CO2</co2_label>
+            <oh_label>OH</oh_label>
+            <h2o_label>H2O</h2o_label>
             <density_label>density</density_label>
             <temperature_label>radiation_temperature</temperature_label>
             <tar_src label="BrownTar"/>

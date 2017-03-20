@@ -1701,7 +1701,9 @@
 
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot"/> <!-- o2 label (default = O2) -->
+            <oh_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot"/> <!-- oh label (default = OH) -->
             <co2_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot"/> <!-- o2 label (default = O2) -->
+            <h2o_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot"/> <!-- h2o label (default = H2O) -->
             <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- n2 label (default = N2) -->
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer,
                                                                                      bowman_nox,
