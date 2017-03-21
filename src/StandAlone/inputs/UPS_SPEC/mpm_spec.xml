@@ -185,8 +185,6 @@
           <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE"     need_applies_to="type Brittle"/>
           <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN"    need_applies_to="type Brittle"/>
 
-          <Dc                          spec="OPTIONAL DOUBLE"           need_applies_to="type hancock_mackenzie"/>
-          <D0                          spec="OPTIONAL DOUBLE"           need_applies_to="type hancock_mackenzie"/>
           <D1                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
           <D2                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>
           <D3                          spec="OPTIONAL DOUBLE"           need_applies_to="type johnson_cook"/>

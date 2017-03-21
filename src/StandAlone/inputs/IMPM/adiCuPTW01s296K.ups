@@ -177,8 +177,10 @@
         </constitutive_model>
         
         <damage_model type = "hancock_mackenzie">
-          <D0> 0.0001 </D0>
-          <Dc> 0.7    </Dc>
+          <initial_mean_scalar_damage>    0.0001   </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.0      </initial_std_scalar_damage>
+          <critical_scalar_damage>        0.7      </critical_scalar_damage>
+          <initial_scalar_damage_distrib> constant </initial_scalar_damage_distrib>
         </damage_model>
         
         <geom_object>
