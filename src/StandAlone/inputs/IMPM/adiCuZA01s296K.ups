@@ -10,11 +10,11 @@
    <SimulationComponent type="impm" />
 
   <Time>
-    <maxTime>9.0e0</maxTime>
-    <initTime>0.0</initTime>
-    <delt_min>0.0</delt_min>
-    <delt_max>1.0e-1</delt_max>
-    <timestep_multiplier>1.0</timestep_multiplier>
+    <maxTime>              9.0e0   </maxTime>
+    <initTime>             0.0     </initTime>
+    <delt_min>             0.0     </delt_min>
+    <delt_max>             1.0e-1  </delt_max>
+    <timestep_multiplier>  1.0     </timestep_multiplier>
   </Time>
   <DataArchiver>
     <filebase>adiCuZA01s296K.uda</filebase>
@@ -51,27 +51,27 @@
   </DataArchiver>
 
   <MPM>
-    <do_grid_reset> false </do_grid_reset>
-    <time_integrator>implicit</time_integrator>
-    <boundary_traction_faces>[zminus,zplus]</boundary_traction_faces> 
-    <dynamic>true</dynamic>
-    <solver>petsc</solver>
-    <convergence_criteria_disp>1.e-10</convergence_criteria_disp>
-    <convergence_criteria_energy>4.e-10</convergence_criteria_energy>
-    <iters_before_timestep_restart>15</iters_before_timestep_restart>
-    <num_iters_to_decrease_delT>12</num_iters_to_decrease_delT>
-    <num_iters_to_increase_delT>4</num_iters_to_increase_delT>
-    <delT_decrease_factor>0.5</delT_decrease_factor>
-    <delT_increase_factor>2.0</delT_increase_factor>
-    <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
-    <interpolator>linear</interpolator>
-    <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
-    <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
-    <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
-    <artificial_viscosity> false </artificial_viscosity>
-    <use_load_curves> false </use_load_curves>
-    <do_contact_friction_heating> false    </do_contact_friction_heating>
-    <create_new_particles>        false    </create_new_particles>
+    <do_grid_reset>                  false           </do_grid_reset>
+    <time_integrator>                implicit        </time_integrator>
+    <boundary_traction_faces>        [zminus,zplus]  </boundary_traction_faces>
+    <dynamic>                        true            </dynamic>
+    <solver>                         petsc           </solver>
+    <convergence_criteria_disp>      1.e-10          </convergence_criteria_disp>
+    <convergence_criteria_energy>    4.e-10          </convergence_criteria_energy>
+    <iters_before_timestep_restart>  15              </iters_before_timestep_restart>
+    <num_iters_to_decrease_delT>     12              </num_iters_to_decrease_delT>
+    <num_iters_to_increase_delT>     4               </num_iters_to_increase_delT>
+    <delT_decrease_factor>           0.5             </delT_decrease_factor>
+    <delT_increase_factor>           2.0             </delT_increase_factor>
+    <DoImplicitHeatConduction>       true            </DoImplicitHeatConduction>
+    <interpolator>                   linear          </interpolator>
+    <minimum_particle_mass>          1.0e-8          </minimum_particle_mass>
+    <maximum_particle_velocity>      1.0e8           </maximum_particle_velocity>
+    <artificial_damping_coeff>       0.0             </artificial_damping_coeff>
+    <artificial_viscosity>           false           </artificial_viscosity>
+    <use_load_curves>                false           </use_load_curves>
+    <do_contact_friction_heating>    false           </do_contact_friction_heating>
+    <create_new_particles>           false           </create_new_particles>
   </MPM>
 
   <PhysicalConstants>
@@ -114,7 +114,6 @@
           <tolerance>                     1.0e-12 </tolerance>
           <do_melting>                    false   </do_melting>
           <evolve_porosity>               false   </evolve_porosity>
-          <evolve_damage>                 false   </evolve_damage>
           <check_TEPLA_failure_criterion> false   </check_TEPLA_failure_criterion>
           <check_max_stress_failure>      false   </check_max_stress_failure>
           <initial_material_temperature>  296.0   </initial_material_temperature>
