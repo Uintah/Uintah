@@ -844,6 +844,7 @@ void SerialMPM::scheduleComputeSPlusSSPlusVp(SchedulerP& sched,
   Ghost::GhostType gan = Ghost::AroundNodes;
   Ghost::GhostType gac = Ghost::AroundCells;
   t->requires(Task::OldDW, lb->pXLabel,                     gan, NGP);
+  t->requires(Task::OldDW, lb->pMassLabel,                  gan, NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,                  gan, NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,    gan, NGP);
   t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,        gan, NGP);
