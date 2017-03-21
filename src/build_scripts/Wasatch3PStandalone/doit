@@ -18,13 +18,9 @@ do
   echo
 
   if ! test -d "$dir"; then
-    echo "WARNING: W3P source directories do not appear to be 'git'ed yet. Downloading them now:"
+    echo "WARNING: W3P source directory $dir does not appear to be 'git'ed yet. Downloading it now:"
     echo
-    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git
-    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git
-    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git
-    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git
-    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/NSCBC.git
+    git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/$dir.git
   fi
 
   echo "----- Updating GIT files for $dir ---"
