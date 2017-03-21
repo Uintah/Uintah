@@ -27,7 +27,7 @@ do
     git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/NSCBC.git
   fi
 
-  echo "----- Updating GIT files ---"
+  echo "----- Updating GIT files for $dir ---"
   echo
 
   cd $dir
@@ -39,10 +39,15 @@ do
   fi
 
   echo
-  echo "----- Installing ---"
+  echo "----- Installing $dir -----"
   echo
   cd ../$dir-build
+
   ./doit
+
+  if test $? != 0; then
+      exit -1
+  fi
 
   cd ..
 

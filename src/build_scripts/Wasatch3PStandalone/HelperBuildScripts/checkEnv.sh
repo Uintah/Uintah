@@ -250,6 +250,7 @@ if test "$MACHINE" = "Titan"; then
   NAME2="titan"
   INSTALL_BASE=/ccs/proj/csc188/utah/thirdparty-install/titan/Wasatch3P
   BOOST_LOC=$BOOST_ROOT
+  #BOOST_LOC=/ccs/proj/csc188/utah/thirdparty-install/titan/Boost/v1_57_0/cc4.9.0-mpich7.2.5
 else
 if test "$MACHINE" = "Mira"; then
   

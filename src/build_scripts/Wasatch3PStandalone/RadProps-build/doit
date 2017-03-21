@@ -8,18 +8,27 @@ rm -rf CMakeCache.txt CMakeFiles *.cmake
 rm -rf ${INSTALL_HERE}/*
 
 if test "$BUILD_CUDA" = "yes"; then
-FLAGS="-DENABLE_CUDA=ON"
+  FLAGS="-DENABLE_CUDA=ON"
 fi
-cmake                                               \
-  $FLAGS                                            \
-  -DRadProps_ENABLE_TESTING=OFF                     \
-  -DRadProps_ENABLE_PREPROCESSOR=OFF                \
-  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}            \
-  -DCMAKE_C_COMPILER=$CC                            \
-  -DCMAKE_CXX_COMPILER=$CXX                         \
-  -DCMAKE_CXX_FLAGS=-fPIC                           \
-  -DTabProps_DIR=$INSTALL_BASE/$COMP/TabProps/share \
-  ../RadProps
+
+cmake_cmd="\
+  cmake                                               \
+    $FLAGS                                            \
+    -DRadProps_ENABLE_TESTING=OFF                     \
+    -DRadProps_ENABLE_PREPROCESSOR=OFF                \
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}            \
+    -DCMAKE_C_COMPILER=$CC                            \
+    -DCMAKE_CXX_COMPILER=$CXX                         \
+    -DCMAKE_CXX_FLAGS=\"-fPIC\"                       \
+    -DTabProps_DIR=$INSTALL_BASE/$COMP/TabProps/share \
+    ../RadProps"
+
+echo ""
+echo "Running CMAKE command:"
+echo $cmake_cmd
+echo ""
+
+eval $cmake_cmd
 
 if test $? == 0; then
   echo ""
