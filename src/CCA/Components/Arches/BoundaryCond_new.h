@@ -7,7 +7,6 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <boost/shared_ptr.hpp>
 
 //===========================================================================
 

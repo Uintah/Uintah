@@ -44,7 +44,6 @@ BrownSoot::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("h2o_label",            m_H2O_name,              "H2O");
   db->getWithDefault("density_label",        m_rho_name,              "density");
   db->getWithDefault("temperature_label",    m_temperature_name,      "radiation_temperature");
-  db->getWithDefault("system_pressure",      m_sys_pressure,          101325.0); // [Pa]
 
   db->findBlock("tar_src")->getAttribute( "label", m_tar_src_name );
   db->findBlock("num_density_src")->getAttribute( "label", m_nd_name );
@@ -122,6 +121,16 @@ BrownSoot::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   tsk->requires( which_dw, m_rho_label,                          Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+  
+  //get the system pressure:
+  ChemHelper& helper = ChemHelper::self();
+  ChemHelper::TableConstantsMapType tab_constants = helper.get_table_constants();
+  auto i_press = tab_constants->find("Pressure");
+  if ( i_press != tab_constants->end() ){
+    m_sys_pressure = i_press->second;
+  } else {
+    m_sys_pressure = 101325.0; //otherise assume atmospheric
+  }
 
 }
 //---------------------------------------------------------------------------
@@ -241,11 +250,11 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
         const double nd     = Ns[c] * rho[c];
 
         const double T = temperature[c];
-        const double P = m_sys_pressure;  
+        const double P = m_sys_pressure;
         const double dt = delta_t;
 
         //if (c==IntVector(30,10,10){ })
-      
+
         //---------------- tar
 
         double kfs = Afs*exp(-Efs/Rgas/abs(T));                    ///< tar to soot form.   (kg/m3*s)/rhoYt
@@ -253,7 +262,7 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
         double kot = abs(rhoYO2)*Aot*exp(-Eot/Rgas/abs(T));        ///< tar oxidation rate (kg/m3*s)/rhoYt
 
         tar_src[c] = abs(rhoYt)/dt*( exp((-kfs-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s
-          
+
         //---------------- nd
 
         double rfn = Na/MWc/Cmin * kfs * abs(rhoYt);                  ///< soot nucleation rate (#/m3*s)
@@ -264,7 +273,7 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
 
         num_density_src[c] = rfn - ran;                               ///< #/m3*s
         num_density_src[c] = ( num_density_src[c] < 0.0 ) ? std::max( -nd/dt, num_density_src[c] ) : num_density_src[c];
-          
+
         //---------------- Ys
 
         double SA = M_PI*pow( abs(6./M_PI*rhoYs/rhos), 2./3. )*pow(abs(nd),1./3.);   ///< m2/m3: pi*pow() = SA/part; pi*pow()*nd = SA/part*part/m3 = SA/Vol
@@ -274,19 +283,19 @@ BrownSoot::computeSource( const ProcessorGroup* pc,
         //double rgs = rhos*pow(abs(XCO2),0.54)*Ags*exp(-Egs/Rgas/abs(T));	         ///< soot gasification rate kg/m3*s
 
         double ros = pow(abs(T), -0.5)*( Ao2*P*XO2*exp(-Eo2/Rgas/T) +           ///< soot oxidation rate (kg/m3/s)
-                                         Aoh*P*XOH ) * SA;                      
+                                         Aoh*P*XOH ) * SA;
         double rgs = ( Aco2*pow(P*XCO2,0.5)*T*T*exp(-Eco2/Rgas/T) +             ///< soot gasification rate (kg/m3/s)
                        Ah2o*pow(P*XH2O,nh2o)*pow(abs(T),-0.5)*exp(-Eh2o/Rgas/T) ) * SA;
 
         soot_mass_src[c] = rfs - ros - rgs;
         soot_mass_src[c] = ( soot_mass_src[c] < 0.0 ) ? std::max( -rhoYs/dt, soot_mass_src[c] ) : soot_mass_src[c];
-        
+
         //---------------- Gas source
 
         double gas_rate_from_tar = -abs(rhoYt)/dt*( exp((-kgt-kot)*dt) - 1.0 );  ///< kg/m3*s
         balance_src[c] = rgs + ros + gas_rate_from_tar;
         balance_src[c] = std::min( rhoYs/dt + rhoYt/dt, balance_src[c] );
-     
+
     }
   }
 }

@@ -50,7 +50,6 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/Handle.h>
 #include <string>
-#include <boost/shared_ptr.hpp>
 
 // Divergence constraint instead of drhodt in pressure equation
 //#define divergenceconstraint
