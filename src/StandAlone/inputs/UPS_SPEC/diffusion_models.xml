@@ -9,16 +9,16 @@
     <initial_concentration spec="OPTIONAL DOUBLE" />
     
     <!-- Variables specific to the Bazant model (for now) -->
-    <Boltzmann             spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
-    <solutionEnergy        spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
-    <penaltyCahnHilliard   spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
-    <sitesPerVolume        spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
-    <volPerIntercSite      spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
-    <initialChemicalPotential spec = "OPTIONAL DOUBLE" />
-    <mismatchStrain        spec="OPTIONAL NO_DATA" >
-      <v1                  spec="REQUIRED VECTOR" />
-      <v2                  spec="REQUIRED VECTOR" />
-      <v3                  spec="REQUIRED VECTOR" />
+    <BoltzmannConstant          spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <regularSolutionParameter   spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <penaltyCahnHilliard        spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <intercolantSiteDensity     spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <molecularWeight            spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <externalChemicalPotential  spec="OPTIONAL DOUBLE" />
+    <mismatchStrain             spec="OPTIONAL NO_DATA" >
+      <v1                       spec="REQUIRED VECTOR" />
+      <v2                       spec="REQUIRED VECTOR" />
+      <v3                       spec="REQUIRED VECTOR" />
     </mismatchStrain>
     <!-- Bazant model variables -->
 

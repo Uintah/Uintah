@@ -81,10 +81,12 @@ RFElasticPlastic::RFElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   //********** Concentration Component****************************
-  if(flag->d_doScalarDiffusion){
+  if(flag->d_doScalarDiffusion)
+  {
     ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
-  }else{
-    d_initialData.vol_exp_coeff = 0.0;
+  }
+  else
+  {
     ostringstream warn;
     warn << "RFElasticPlastic:: This Constitutive Model requires the use\n"
          << "of scalar diffusion" << endl;

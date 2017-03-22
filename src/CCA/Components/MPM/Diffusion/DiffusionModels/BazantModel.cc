@@ -50,12 +50,13 @@ namespace Uintah
                                                         )
   {
     d_includeMismatch = false;
-    ps->require("Boltzmann",d_unitBoltzmann);
-    ps->require("solutionEnergy", d_solutionParameter);
-    ps->require("penaltyCahnHilliard", d_energyGradientCoefficient);
-    ps->require("sitesPerVolume", d_diffusionSitesPerVolume);
-    ps->require("volPerIntercSite", d_volPerSite);
-    ps->getWithDefault("initialChemicalPotential", d_mu0, 0.0);
+    ps->require("BoltzmannConstant",d_unitBoltzmann);
+    ps->require("regularSolutionParameter", d_regSolnParam);
+    ps->require("penaltyCahnHilliard", d_CahnHilliardGradPenalty);
+    ps->require("intercolantSiteDensity", d_intercSiteDensity);
+    ps->require("molecularWeight", d_molWeight);
+
+    ps->getWithDefault("externalChemicalPotential", d_muOther, 0.0);
     ProblemSpecP mismatchPS = ps->findBlock("MismatchStrain");
     if (mismatchPS)
     {
@@ -131,18 +132,19 @@ namespace Uintah
     ParticleVariable<Vector> pFluxNew;
     NewDW->allocateAndPut(pFluxNew, d_lb->pFluxLabel_preReloc,        pset);
 
-    double oneOverKb = 1.0/d_unitBoltzmann;
-    // This should be 1/k_b FIXME TODO FIXME JBH
+    double maxFlux = 1e-25;
     for (int i = 0; i < pset->numParticles(); ++i )
     {
       // Flux calculation goes here.
       Vector concTerm = pGradConcentration[i];
-      double thermalInv = oneOverKb/pTemperature[i];
+      double thermalInv = 1.0/(pTemperature[i]*d_unitBoltzmann);
       Vector muTerm = thermalInv * pConcentration[i] * pGradChemPotential[i];
       pFluxNew[i] = -d_D0 * (concTerm + muTerm);
+      double fluxRate = pFluxNew[i].maxComponentMag();
+      if (fluxRate > maxFlux) maxFlux = fluxRate;
     }
 
-    double delT_local = computeStableTimeStep(d_D0, dx);
+    double delT_local = computeStableTimeStep(maxFlux, dx);
     NewDW->put(delt_vartype(delT_local), d_lb->delTLabel, patch->getLevel());
   }
 
@@ -165,12 +167,16 @@ namespace Uintah
     std::random_device rd;
     std::mt19937 gen(rd());
     std::normal_distribution<> normalDist(0.0, 0.00005);
+    std::uniform_real_distribution<> uniformDist(0.0, 1.0);
 
     for (int pIndex = 0; pIndex < pset->numParticles(); ++pIndex)
     {
       pFlux[pIndex] = Vector(0.0);
       double conc = pConcentration[pIndex];
-      conc += normalDist(gen);
+//      if (uniformDist(gen) < 0.01)
+//      {
+//        conc += normalDist(gen);
+//      }
       if (conc < 0.0) conc = 0.0;
       if (conc > d_MaxConcentration) conc = d_MaxConcentration;
       pConcentration[pIndex] = 1.0;
@@ -235,11 +241,14 @@ namespace Uintah
     rdm_ps->appendElement("diffusivity",d_D0);
     rdm_ps->appendElement("max_concentration",d_MaxConcentration);
 
-    rdm_ps->appendElement("Boltzmann", d_unitBoltzmann);
-    rdm_ps->appendElement("solutionEnergy", d_solutionParameter);
-    rdm_ps->appendElement("penaltyCahnHilliard", d_energyGradientCoefficient);
-    rdm_ps->appendElement("sitesPerVolume", d_diffusionSitesPerVolume);
-    rdm_ps->appendElement("volPerIntercSite", d_volPerSite);
+    rdm_ps->appendElement("BoltzmannConstant", d_unitBoltzmann);
+    rdm_ps->appendElement("regularSolutionParameter", d_regSolnParam);
+    rdm_ps->appendElement("penaltyCahnHilliard", d_CahnHilliardGradPenalty);
+    rdm_ps->appendElement("intercolantSiteDensity", d_intercSiteDensity);
+    rdm_ps->appendElement("externalChemicalPotential", d_muOther);
+    rdm_ps->appendElement("molecularWeight", d_molWeight);
+//    rdm_ps->appendElement("sitesPerVolume", d_diffusionSitesPerVolume);
+//    rdm_ps->appendElement("volPerIntercSite", d_volPerSite);
 
     if (d_includeMismatch)
     {
@@ -309,6 +318,72 @@ namespace Uintah
     task->computes(d_lb->pChemicalPotentialGradientLabel, matlset);
   }
 
+  void BazantDiffusion::calculateChemicalPotentialTake3(
+                                                        const PatchSubset   * patches ,
+                                                        const MPMMaterial   * matl    ,
+                                                              DataWarehouse * oldDW   ,
+                                                              DataWarehouse * newDW
+                                                       )
+  {
+    Ghost::GhostType gan = Ghost::AroundNodes;
+    Ghost::GhostType gap = Ghost::AroundCells;
+
+    for (int patchIdx = 0; patchIdx < patches->size(); ++patchIdx)
+    {
+      const Patch*          patch   = patches->get(patchIdx);
+      ParticleInterpolator* pInterp = d_Mflag->d_interpolator->clone(patch);
+
+      int interpPoints = pInterp->size();
+
+      std::vector<IntVector> nodeList(interpPoints);
+      std::vector<double>           S(interpPoints);
+      std::vector<Vector>         d_S(interpPoints);
+
+      Vector   dx = patch->dCell();
+      Vector oodx = dx.inverse();
+
+      int dwi = matl->getDWIndex();
+
+      ParticleSubset* pSetGhost       = oldDW->getParticleSubset(dwi, patch, gap, NGP, d_lb->pXLabel);
+      // These two -should- get the low/high index for the nodes to which the
+      // ghost particle set would interpolate onto for this patch, including the U/R
+      // edge which is normally excluded and which we need.
+      IntVector       ghostLowIndex   = pSetGhost->getLow();
+      IntVector       ghostHighIndex  = pSetGhost->getHigh();
+
+      constParticleVariable<double>   pConcentration, pTemperature, pMass;
+      constParticleVariable<Vector>   pConcGradient;
+      constParticleVariable<Point>    pX;
+      constParticleVariable<Matrix3>  pSize, pDefGrad;
+
+      // Get outer particle set variables to interpolate to nodal values.
+      oldDW->get(pConcentration, d_lb->pConcentrationLabel,       pSetGhost);
+      oldDW->get(pConcGradient,  d_lb->pConcGradientLabel,        pSetGhost);
+      oldDW->get(pX,             d_lb->pXLabel,                   pSetGhost);
+      oldDW->get(pSize,          d_lb->pSizeLabel,                pSetGhost);
+      oldDW->get(pDefGrad,       d_lb->pDeformationMeasureLabel,  pSetGhost);
+      oldDW->get(pTemperature,   d_lb->pTemperatureLabel,         pSetGhost);
+      oldDW->get(pMass,          d_lb->pMassLabel,                pSetGhost);
+
+      // For phase-field strain
+      constParticleVariable<Matrix3> pStress, pStrain;
+      oldDW->get(pStress,        d_lb->pStressLabel,              pSetGhost);
+      // oldDW->get(pStrain, d_lb->pStrainLabel, pSetGhost);
+
+      // For coulombic potential
+      constParticleVariable<double>  pCoulombPotential;
+
+
+
+
+
+
+
+      ParticleSubset* pSetNoGhost = oldDW->getParticleSubset(dwi, patch, gap, 0, d_lb->pXLabel);
+
+    }
+  }
+
   void BazantDiffusion::calculateChemicalPotential(
                                                          const PatchSubset    * patches,
                                                          const MPMMaterial    * matl,
@@ -318,6 +393,8 @@ namespace Uintah
   {
     Ghost::GhostType gac = Ghost::AroundCells;
     Ghost::GhostType gan = Ghost::AroundNodes;
+
+    double prefactCahnHilliard = d_CahnHilliardGradPenalty/d_intercSiteDensity;
 
     for (int patchIndex = 0; patchIndex < patches->size(); ++patchIndex)
     {
@@ -331,11 +408,7 @@ namespace Uintah
       std::vector<Vector>    d_S(interpSize);
 
       Vector dx = patch->dCell();
-      double oodx[3];
-      for (int i = 0; i < 3; ++i)
-      {
-        oodx[i] = 1.0/dx[i];
-      }
+      Vector oodx = dx.inverse();
 
       int dwi = matl->getDWIndex();
 
@@ -382,26 +455,31 @@ namespace Uintah
       ParticleVariable<double> pMu;
       NewDW->allocateAndPut(pMu, d_lb->pChemicalPotentialLabel, pset_noghost );
 
+      Matrix3 mIdentity(1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0);
       // Loop for non-ghost particles.
       for (int pIdx = 0; pIdx < pset_noghost->numParticles(); ++pIdx)
       {
         // Calculate chemical potential
         double conc     = pConcentration[pIdx];
         Vector gradConc = pConcGradient[pIdx];
+
+        double molIntercolant = pMass[pIdx]/d_molWeight;
         double kT = pTemperature[pIdx] * d_unitBoltzmann;
         if (!concNormalized)
         {
           conc      *= d_InverseMaxConcentration;
           gradConc  *= d_InverseMaxConcentration;
         }
-        double mu_homogeneous =
-            d_solutionParameter*d_diffusionSitesPerVolume*(1.0-2.0*conc)
-            + 2.0 * kT * (std::log(conc) - std::log(1.0-conc));
-        double mu_CahnHilliardIso = 0.5*d_volPerSite*
-            (Dot(gradConc,d_energyGradientCoefficient*gradConc));
+        double mu_homogeneous = molIntercolant*d_regSolnParam*(1.0 - 2.0*conc)
+                                + kT * (std::log(conc) - std::log(1.0-conc));
+        Vector penaltyCH = (mIdentity * gradConc);
+        double mu_CahnHilliardIso = -Dot(oodx, penaltyCH) * prefactCahnHilliard ;
+
         // FIXME TODO JBH 2/2017
         //  Should last term be Dot(oodx,d_energyGradientCoefficient*gradConc)?
-        double mu_total = pMass[pIdx]*(mu_homogeneous-mu_CahnHilliardIso-d_mu0);
+        double mu_total = pMass[pIdx]*(mu_homogeneous-mu_CahnHilliardIso+d_muOther);
         // Store on particle
         pMu[pIdx] = mu_total;
 
@@ -437,14 +515,12 @@ namespace Uintah
              conc      *= d_InverseMaxConcentration;
              gradConc  *= d_InverseMaxConcentration;
            }
-           double mu_homogeneous =
-               d_solutionParameter*d_diffusionSitesPerVolume*(1.0-2.0*conc)
-               + 2.0 * kT * (std::log(conc) - std::log(1.0-conc));
-           double mu_CahnHilliardIso = 0.5*d_volPerSite*
-               (Dot(gradConc,d_energyGradientCoefficient*gradConc));
+           double mu_homogeneous =  d_regSolnParam*(1.0 - 2.0*conc)
+                                  + kT * ( std::log(conc) - std::log(1.0-conc));
+           double mu_CahnHilliardIso = prefactCahnHilliard * Dot(oodx,gradConc);
            // FIXME TODO JBH 2/2017
            //  Should last term be Dot(oodx,d_energyGradientCoefficient*gradConc)?
-           double mu_total = pMass[pIdx]*(mu_homogeneous-mu_CahnHilliardIso-d_mu0);
+           double mu_total = pMass[pIdx]*(mu_homogeneous-mu_CahnHilliardIso+d_muOther);
            // Interpolate to grid.
            int numNodes = pInterp->findCellAndWeights(pX[pIdx], nodeIndices, S,
                                                       pSize[pIdx], pDefGrad[pIdx]);

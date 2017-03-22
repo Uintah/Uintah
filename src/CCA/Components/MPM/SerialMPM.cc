@@ -4113,11 +4113,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup  * ,
           pConcentrationNew[idx] = pConcentration[idx] + concRate * delT;
           pareanew[idx] = parea[idx];
 
-          if (pConcentrationNew[idx] < 0.0 ) {
-            pConcentrationNew[idx] = 0.0;
+          const double maxConcTol = 1e-10;
+          if (pConcentrationNew[idx] < maxConcTol ) {
+            pConcentrationNew[idx] = maxConcTol;
           }
-          if (pConcentrationNew[idx] >= 0.99999 ) {
-            pConcentrationNew[idx] = 0.99999;
+          if (pConcentrationNew[idx] > (1.0 - maxConcTol) ) {
+            pConcentrationNew[idx] = (1.0 - maxConcTol);
           }
 
           pConcPreviousNew[idx] = pConcentration[idx];
