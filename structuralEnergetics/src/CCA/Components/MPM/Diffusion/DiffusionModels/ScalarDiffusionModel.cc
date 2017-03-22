@@ -388,7 +388,7 @@ double ScalarDiffusionModel::computeStableTimeStep(
   // For a Forward Euler timestep the limiting factor is
   // dt < dx^2 / 2*D.
   Vector timeStep(dx.x()*dx.x(), dx.y()*dx.y(), dx.z()*dx.z());
-  timeStep = timeStep/(Dif*2);
+  timeStep = timeStep/(2.0*Dif);
   return timeStep.minComponent();
 }
 

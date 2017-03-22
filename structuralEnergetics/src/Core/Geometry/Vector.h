@@ -60,6 +60,7 @@ public:
   inline explicit Vector(double init) : x_(init), y_(init), z_(init) {}
   inline double length() const;
   inline double length2() const;
+  inline Vector inverse();
   friend inline double Dot(const Vector&, const Vector&);
   friend inline double Dot(const Point&, const Vector&);
   friend inline double Dot(const Vector&, const Point&);
@@ -180,6 +181,20 @@ public:
     }
   }
 
+  inline double maxComponentMag() const
+  {
+    double mx = std::abs(x_);
+    double my = std::abs(y_);
+    double mz = std::abs(z_);
+    if (mx > my )
+    {
+      if (mx > mz) return mx; // mx > my && mx > mz
+      return mz;  // mz >= mx > my
+    }
+    if (my > mz) return my; // my >= mx && my > mz
+    return mz; // mz >= my >= mx
+  }
+
   inline void Set(double x, double y, double z)
     { 
       x_ = x;
@@ -225,6 +240,11 @@ inline Vector::Vector(const Vector& p)
 inline double Vector::length2() const
 {
     return x_*x_+y_*y_+z_*z_;
+}
+
+inline Vector Vector::inverse()
+{
+  return (Vector(1.0/x_, 1.0/y_, 1.0/z_));
 }
 
 inline Vector& Vector::operator=(const Vector& v)

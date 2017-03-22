@@ -41,6 +41,8 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
+#include <cmath>
+
 namespace Uintah
 {
 
@@ -132,15 +134,19 @@ namespace Uintah
                                                     DataWarehouse * old_dw,
                                                     DataWarehouse * new_dw
                                              );
+      virtual void calculateChemicalPotentialTake3( const PatchSubset *, const MPMMaterial *, DataWarehouse*, DataWarehouse*);
 
     private:
 
-      double d_solutionParameter;
-      double d_unitBoltzmann;
-      double d_energyGradientCoefficient; // Cahn-Hilliard term that penalizes interface
-      double d_diffusionSitesPerVolume;
-      double d_volPerSite;
-      double d_mu0;
+      // Required components for this model
+      double d_regSolnParam;            // Enthalpic contribution for regular solution theory
+      double d_unitBoltzmann;           // Base value of k_B in consistent units
+      double d_CahnHilliardGradPenalty; // Cahn-Hilliard term that penalizes interface
+      double d_intercSiteDensity;       // Density of intercalant species at 100% loading
+      double d_molWeight;               // Molecular weight of full concentration compound
+
+      // Optional components for this model
+      double d_muOther;                 // External chemical potential from source not in this model.
       double d_mismatchMagnitude;
       bool   d_includeMismatch;
 
