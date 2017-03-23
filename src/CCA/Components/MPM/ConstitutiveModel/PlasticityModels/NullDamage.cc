@@ -53,20 +53,6 @@ void NullDamage::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP damage_ps = ps->appendChild("damage_model");
   damage_ps->setAttribute("type","null");
 }
-
-//______________________________________________________________________
-//    
-double 
-NullDamage::computeScalarDamage(const double& ,
-                                const Matrix3& ,
-                                const double& ,
-                                const double& ,
-                                const MPMMaterial*,
-                                const double& ,
-                                const double& )
-{
-  return 0.0;
-}
  
 //______________________________________________________________________
 //

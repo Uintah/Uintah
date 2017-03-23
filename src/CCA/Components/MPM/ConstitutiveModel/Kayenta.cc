@@ -150,8 +150,6 @@ Kayenta::~Kayenta()
    }
    VarLabel::destroy(peakI1IDistLabel);
    VarLabel::destroy(peakI1IDistLabel_preReloc);
-   VarLabel::destroy(pLocalizedLabel);
-   VarLabel::destroy(pLocalizedLabel_preReloc);
 }
 void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
@@ -314,12 +312,7 @@ void Kayenta::initializeCMData(const Patch* patch,
       ISVs[i][*iter] = xinit[i];
     }
   }
-  ParticleVariable<int>     pLocalized;
-  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end();iter++){
-    pLocalized[*iter] = 0;
-  }
+
   ParticleVariable<double> peakI1IDist;
   new_dw->allocateAndPut(peakI1IDist, peakI1IDistLabel, pset);
   if ( wdist.Perturb){
@@ -346,27 +339,7 @@ void Kayenta::initializeCMData(const Patch* patch,
   }
   computeStableTimestep(patch, matl, new_dw);
 }
-void Kayenta::addRequiresDamageParameter(Task* task,
-                                           const MPMMaterial* matl,
-                                           const PatchSet* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
-}
-void Kayenta::getDamageParameter(const Patch* patch,
-                                   ParticleVariable<int>& damage,
-                                   int dwi,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
-{
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
-  constParticleVariable<int> pLocalized;
-  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
-  ParticleSubset::iterator iter;
-  for (iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = pLocalized[*iter];
-  }
-}
+
 void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
                                std::vector<const VarLabel*>& to)
 {
@@ -375,9 +348,7 @@ void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
     from.push_back(ISVLabels[i]);
     to.push_back(ISVLabels_preReloc[i]);
   }
-  from.push_back(pLocalizedLabel);
   from.push_back(peakI1IDistLabel);
-  to.push_back(pLocalizedLabel_preReloc);
   to.push_back(peakI1IDistLabel_preReloc);
 }
 void Kayenta::computeStableTimestep(const Patch* patch,
@@ -465,8 +436,8 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<int> pLocalized;
     ParticleVariable<int>     pLocalized_new;
     constParticleVariable<long64> pParticleID;
-    old_dw->get(pLocalized, pLocalizedLabel, pset);
-    new_dw->allocateAndPut(pLocalized_new,pLocalizedLabel_preReloc, pset);
+    
+    old_dw->get(pLocalized,          lb->pLocalizedMPMLabel,       pset);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
@@ -481,14 +452,15 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
     ParticleVariable<double> pdTdt,p_q;
-    new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,              pset);
-    new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
-    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pLocalized_new,  lb->pLocalizedMPMLabel_preReloc, pset);
+    new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,                  pset);
+    new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,           pset);
+    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,       pset);
     new_dw->get(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc,        pset);
-    new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,              pset);
-    new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,             pset);
+                           lb->pDeformationMeasureLabel_preReloc,            pset);
+    new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,                  pset);
+    new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,                 pset);
     peakI1IDist_new.copyData(peakI1IDist);
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -501,7 +473,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
-      pLocalized_new[idx]=0;
+      
+      pLocalized_new[idx]=pLocalized[idx];
+      
       // get the volumetric part of the deformation
       double J = deformationGradient_new[idx].Determinant();
       // Check 1: Look at Jacobian
@@ -628,12 +602,12 @@ void Kayenta::carryForward(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<double> peakI1IDist;
     ParticleVariable<double> peakI1IDist_new;
-    constParticleVariable<int>     pLocalized;
+
     old_dw->get(peakI1IDist, peakI1IDistLabel, pset);
     new_dw->allocateAndPut(peakI1IDist_new,
                                  peakI1IDistLabel_preReloc, pset);
     peakI1IDist_new.copyData(peakI1IDist);
-    old_dw->get(pLocalized,      pLocalizedLabel,      pset);
+
     // Carry forward the data common to all constitutive models
     // when using RigidMPM.
     // This method is defined in the ConstitutiveModel base class.
@@ -641,13 +615,13 @@ void Kayenta::carryForward(const PatchSubset* patches,
     // Carry forward the data local to this constitutive model
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
-    ParticleVariable<int>          pLocalized_new;
+
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
       ISVs_new[i].copyData(ISVs[i]);
   }
-    new_dw->allocateAndPut(pLocalized_new, pLocalizedLabel_preReloc, pset);
+
     // Don't affect the strain energy or timestep size
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
     if (flag->d_reductionVars->accStrainEnergy ||
@@ -668,7 +642,6 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
   for(int i=0;i<d_NINSV;i++){
     task->computes(ISVLabels[i], matlset);
   }
-  task->computes(pLocalizedLabel,     matlset);
   task->computes(peakI1IDistLabel, matlset);
 }
 void Kayenta::addComputesAndRequires(Task* task,
@@ -685,11 +658,13 @@ void Kayenta::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
     task->computes(             ISVLabels_preReloc[i], matlset);
   }
-  task->requires(Task::OldDW, pLocalizedLabel,        matlset, Ghost::None);
-  task->requires(Task::OldDW, peakI1IDistLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pParticleIDLabel,  matlset, Ghost::None);
-  task->computes(peakI1IDistLabel_preReloc, matlset);
-  task->computes(pLocalizedLabel_preReloc,      matlset);
+  
+  task->requires(Task::OldDW, lb->pLocalizedMPMLabel,   matlset, Ghost::None);
+  task->requires(Task::OldDW, peakI1IDistLabel,         matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
+  
+  task->computes(peakI1IDistLabel_preReloc,       matlset);
+  task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
 }
 void Kayenta::addComputesAndRequires(Task*,
                                      const MPMMaterial*,
@@ -874,11 +849,7 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
 void
 Kayenta::initializeLocalMPMLabels()
 {
-  // create a localized variable
-  pLocalizedLabel = VarLabel::create("p.localized",
-                  ParticleVariable<int>::getTypeDescription());
-  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
-                  ParticleVariable<int>::getTypeDescription());
+ 
  vector<string> ISVNames;
 // These lines of code are added by KC to replace the currently hard-coded
 // internal variable allocation with a proper call to KMMRXV routine.

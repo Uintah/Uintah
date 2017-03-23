@@ -67,8 +67,6 @@ namespace Uintah {
     std::vector<const VarLabel*> histVarVect_preReloc;
     const VarLabel* pSSELabel;
     const VarLabel* pSSELabel_preReloc;
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
       
   private:
     int d_nProps;
@@ -123,12 +121,6 @@ namespace Uintah {
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
     
-    ////////////////////////////////////////////////////////////////////////
-    /*! \\brief Add the requires for failure simulation. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
     
     
     // Compute Functions //
@@ -174,13 +166,7 @@ namespace Uintah {
     // Returns the compressibility of the material
     virtual double getCompressibility();
       
-    ////////////////////////////////////////////////////////////////////////
-    /*! \\brief Get the flag that marks a failed particle. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
+
   private:
     void initializeLocalMPMLabels();
     

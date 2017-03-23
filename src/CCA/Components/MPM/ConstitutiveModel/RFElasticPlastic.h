@@ -93,12 +93,10 @@ class RFElasticPlastic : public ConstitutiveModel {
 
     const VarLabel* pPlasticStrainLabel;  
     const VarLabel* pPlasticStrainRateLabel;  
-    const VarLabel* pLocalizedLabel;  
     const VarLabel* pEnergyLabel;  
 
     const VarLabel* pPlasticStrainLabel_preReloc;  
     const VarLabel* pPlasticStrainRateLabel_preReloc;  
-    const VarLabel* pLocalizedLabel_preReloc;  
     const VarLabel* pEnergyLabel_preReloc;
 
   protected:
@@ -201,22 +199,6 @@ class RFElasticPlastic : public ConstitutiveModel {
                               const MPMMaterial* matl,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief initialize  each particle's constitutive model data */

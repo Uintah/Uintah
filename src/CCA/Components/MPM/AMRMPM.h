@@ -202,12 +202,6 @@ protected:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
 
-  void updateErosionParameter(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* ,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
-
   virtual void computeInternalForce(const ProcessorGroup*,
                                     const PatchSubset* patches,  
                                     const MaterialSubset* matls, 
@@ -346,10 +340,6 @@ protected:
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSet*);
-  
-  void scheduleUpdateErosionParameter(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls);
 
   virtual void scheduleComputeInternalForce(SchedulerP&, 
                                             const PatchSet*,

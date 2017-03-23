@@ -118,12 +118,15 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew Arenisca(child,flags));
   }
   else if (cm_type == "Arenisca3"){
+    computes_pLocalizedMPM = true;
     return(scinew Arenisca3(child,flags));
   }
   else if (cm_type == "Arenisca4") {
+    computes_pLocalizedMPM = true;
     return(scinew Arenisca4(child,flags));
   }
   else if (cm_type == "ArenaSoil"){
+    computes_pLocalizedMPM = true;
     return(scinew Vaango::ArenaPartiallySaturated(child,flags));
   }
   //__________________________________
@@ -178,9 +181,10 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type ==  "p_alpha"){
     return(scinew P_Alpha(child,flags));
   }
-  else if (cm_type ==  "water")
+  else if (cm_type ==  "water"){
+    computes_pLocalizedMPM = true;
     return(scinew Water(child,flags));
-
+  }
   else if (cm_type ==  "TH_water"){
     return(scinew TH_Water(child,flags));
   }
@@ -218,6 +222,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew HypoElasticFortran(child,flags));
   }
   else if (cm_type == "kayenta"){
+    computes_pLocalizedMPM = true;
     return(scinew Kayenta(child,flags));
   }
   else if (cm_type == "diamm"){
@@ -232,6 +237,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew MurnaghanMPM(child,flags));
   }
   else if (cm_type ==  "program_burn"){
+    computes_pLocalizedMPM = true;
     return(scinew ProgramBurn(child,flags));
   }
   else if (cm_type ==  "shell_CNH"){
@@ -252,16 +258,19 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew MurnaghanMPM(child,flags));
   }
   else if (cm_type ==  "jwlpp_mpm"){
+    computes_pLocalizedMPM = true;
     return(scinew JWLppMPM(child,flags));
   }
 //  else if (cm_type ==  "camclay"){
 //    return(scinew CamClay(child,flags));
 //  }
   else if (cm_type ==  "rf_elastic_plastic"){
+    computes_pLocalizedMPM = true;
     return(scinew RFElasticPlastic(child,flags));
   }
   else if (cm_type ==  "TongeRameshPTR") {
     if (flags->d_integrator_type == "explicit"){
+      computes_pLocalizedMPM = true;
       return(scinew TongeRameshPTR(child,flags));
     } else {
       ostringstream msg;

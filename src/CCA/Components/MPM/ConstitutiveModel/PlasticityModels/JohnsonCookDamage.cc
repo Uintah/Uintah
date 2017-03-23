@@ -278,20 +278,3 @@ JohnsonCookDamage::computeSomething( ParticleSubset    * pset,
 
   }  // pset loop
 }
-
-
-
-
-//______________________________________________________________________
-//    
-double 
-JohnsonCookDamage::computeScalarDamage(const double& epdot,
-                                       const Matrix3& stress,
-                                       const double& T,
-                                       const double& delT,
-                                       const MPMMaterial* matl,
-                                       const double& tolerance,
-                                       const double& damage_old)
-{
-}
- 

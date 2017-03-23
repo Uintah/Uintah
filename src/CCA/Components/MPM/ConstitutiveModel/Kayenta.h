@@ -96,8 +96,7 @@ namespace Uintah {
     std::vector<const VarLabel*> ISVLabels_preReloc;
     const VarLabel* peakI1IDistLabel;
     const VarLabel* peakI1IDistLabel_preReloc;
-    const VarLabel* pLocalizedLabel;  
-    const VarLabel* pLocalizedLabel_preReloc;  
+     
   protected:
     bool   d_allowNoTension;
     bool   d_removeMass;
@@ -116,16 +115,7 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
     // clone
     Kayenta* clone();
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
+
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
                                        const MPMMaterial* matl,

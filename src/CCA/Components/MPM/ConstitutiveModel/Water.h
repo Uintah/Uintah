@@ -55,8 +55,6 @@ namespace Uintah {
       double d_Gamma;
     };
 
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
 
   protected:
 
@@ -117,16 +115,6 @@ namespace Uintah {
                                         const MPMMaterial* matl,
                                         const PatchSet* patches,
                                         const bool recursion) const;
-
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-
-    virtual void getDamageParameter(const Patch* patch,
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
 
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,

@@ -66,8 +66,6 @@ namespace Uintah {
 
     const VarLabel* pProgressFLabel;
     const VarLabel* pProgressFLabel_preReloc;
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
 
   protected:
 
@@ -93,15 +91,6 @@ namespace Uintah {
 
     // clone
     ProgramBurn* clone();
-
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
     
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,

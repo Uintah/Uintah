@@ -65,7 +65,6 @@
 //#include <boost/range/combine.hpp>
 //#include <boost/foreach.hpp>
 
-#define USE_LOCAL_LOCALIZED_PVAR
 #define CHECK_FOR_NAN
 #define CLAMP_DEF_GRAD
 #define USE_SIMPLIFIED_CONSISTENCY_BISECTION
@@ -332,13 +331,6 @@ ArenaPartiallySaturated::initializeLocalMPMLabels()
   pP3Label_preReloc = Uintah::VarLabel::create("p.p3+",
     Uintah::ParticleVariable<double>::getTypeDescription());
 
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  pLocalizedLabel = Uintah::VarLabel::create("p.localized",
-    Uintah::ParticleVariable<int>::getTypeDescription());
-  pLocalizedLabel_preReloc = Uintah::VarLabel::create("p.localized+",
-    Uintah::ParticleVariable<int>::getTypeDescription());
-#endif
-
   pCoherenceLabel = Uintah::VarLabel::create("p.COHER",
     Uintah::ParticleVariable<double>::getTypeDescription());
   pCoherenceLabel_preReloc = Uintah::VarLabel::create("p.COHER+",
@@ -373,10 +365,6 @@ ArenaPartiallySaturated::~ArenaPartiallySaturated()
   VarLabel::destroy(pCapXLabel);
   VarLabel::destroy(pCapXLabel_preReloc);
 
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  VarLabel::destroy(pLocalizedLabel);
-  VarLabel::destroy(pLocalizedLabel_preReloc);
-#endif
   VarLabel::destroy(pP3Label);
   VarLabel::destroy(pP3Label_preReloc);
   VarLabel::destroy(pCoherenceLabel);
@@ -474,11 +462,6 @@ ArenaPartiallySaturated::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pP3Label);
   to.push_back(pP3Label_preReloc);
 
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  from.push_back(pLocalizedLabel);
-  to.push_back(pLocalizedLabel_preReloc);
-#endif
-
   // For damage
   from.push_back(pCoherenceLabel);
   to.push_back(pCoherenceLabel_preReloc);
@@ -514,13 +497,6 @@ ArenaPartiallySaturated::addInitialComputesAndRequires(Uintah::Task* task,
   task->computes(pPorosityLabel,         matlset);
   task->computes(pSaturationLabel,       matlset);
   task->computes(pCapXLabel,             matlset);
-
-  // Add damage evolution variables
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  task->computes(pLocalizedLabel,        matlset);
-#else
-  task->computes(lb->pLocalizedMPMLabel, matlset);
-#endif
   task->computes(pP3Label,               matlset);
   task->computes(pCoherenceLabel,        matlset);
   task->computes(pTGrowLabel,            matlset);
@@ -566,7 +542,6 @@ ArenaPartiallySaturated::initializeCMData(const Uintah::Patch* patch,
   // Now initialize the other variables
   Uintah::ParticleVariable<double>  pdTdt, pCoherence, pTGrow;
   Uintah::ParticleVariable<Matrix3> pStress, pDefGrad;
-  Uintah::ParticleVariable<int>     pLocalized;
   Uintah::ParticleVariable<double>  pElasticVolStrain; // Elastic Volumetric Strain
   Uintah::ParticleVariable<Matrix3> pStressQS;
 
@@ -574,11 +549,6 @@ ArenaPartiallySaturated::initializeCMData(const Uintah::Patch* patch,
   new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
 
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  new_dw->allocateAndPut(pLocalized,        pLocalizedLabel,        pset);
-#else
-  new_dw->allocateAndPut(pLocalized,        lb->pLocalizedMPMLabel, pset);
-#endif
   new_dw->allocateAndPut(pElasticVolStrain, pElasticVolStrainLabel, pset);
   new_dw->allocateAndPut(pStressQS,         pStressQSLabel,         pset);
   new_dw->allocateAndPut(pCoherence,        pCoherenceLabel,        pset);
@@ -590,7 +560,6 @@ ArenaPartiallySaturated::initializeCMData(const Uintah::Patch* patch,
     pdTdt[*iter]             = 0.0;
     pDefGrad[*iter]          = Identity;
     pStress[*iter]           = allParams["pbar_w0"]*Identity;
-    pLocalized[*iter]        = 0;
     pElasticVolStrain[*iter] = 0.0;
     pStressQS[*iter]         = pStress[*iter];
 
@@ -785,20 +754,12 @@ void ArenaPartiallySaturated::addComputesAndRequires(Uintah::Task* task,
   task->computes(pCapXLabel_preReloc,                  matlset);
 
   // Add damage variable computes and requires
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  task->requires(Uintah::Task::OldDW, pLocalizedLabel,        matlset, Uintah::Ghost::None);
-#else
   task->requires(Uintah::Task::OldDW, lb->pLocalizedMPMLabel, matlset, Uintah::Ghost::None);
-#endif
   task->requires(Uintah::Task::OldDW, pP3Label,               matlset, Uintah::Ghost::None);
   task->requires(Uintah::Task::OldDW, pCoherenceLabel,        matlset, Uintah::Ghost::None);
   task->requires(Uintah::Task::OldDW, pTGrowLabel,            matlset, Uintah::Ghost::None);
 
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  task->computes(pLocalizedLabel_preReloc,        matlset);
-#else
   task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
-#endif
   task->computes(pP3Label_preReloc,               matlset);
   task->computes(pCoherenceLabel_preReloc,        matlset);
   task->computes(pTGrowLabel_preReloc,            matlset);
@@ -869,11 +830,8 @@ ArenaPartiallySaturated::computeStressTensor(const Uintah::PatchSubset* patches,
     // Get the damage variables
     Uintah::constParticleVariable<int>     pLocalized_old;
     Uintah::constParticleVariable<double>  pP3_old, pCoherence_old, pTGrow_old; 
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-    old_dw->get(pLocalized_old,        pLocalizedLabel,        pset); 
-#else
+
     old_dw->get(pLocalized_old,        lb->pLocalizedMPMLabel, pset); 
-#endif
     old_dw->get(pP3_old,               pP3Label,               pset);
     old_dw->get(pCoherence_old,        pCoherenceLabel,        pset);
     old_dw->get(pTGrow_old,            pTGrowLabel,            pset);
@@ -881,11 +839,8 @@ ArenaPartiallySaturated::computeStressTensor(const Uintah::PatchSubset* patches,
     // Allocate and put the damage variables
     Uintah::ParticleVariable<int>     pLocalized_new;
     Uintah::ParticleVariable<double>  pP3_new, pCoherence_new, pTGrow_new;
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-    new_dw->allocateAndPut(pLocalized_new,  pLocalizedLabel_preReloc,        pset);
-#else
+
     new_dw->allocateAndPut(pLocalized_new,  lb->pLocalizedMPMLabel_preReloc, pset);
-#endif
     new_dw->allocateAndPut(pP3_new,         pP3Label_preReloc,               pset);
     new_dw->allocateAndPut(pCoherence_new,  pCoherenceLabel_preReloc,        pset);
     new_dw->allocateAndPut(pTGrow_new,      pTGrowLabel_preReloc,            pset);
@@ -2772,40 +2727,6 @@ ArenaPartiallySaturated::rateDependentPlasticUpdate(const Uintah::Matrix3& D,
 // ************** PUBLIC Uintah MPM constitutive model specific functions *****************************
 // ****************************************************************************************************
 // ****************************************************************************************************
-
-void ArenaPartiallySaturated::addRequiresDamageParameter(Uintah::Task* task,
-                                                         const Uintah::MPMMaterial* matl,
-                                                         const Uintah::PatchSet* ) const
-{
-  // Require the damage parameter
-  const Uintah::MaterialSubset* matlset = matl->thisMaterial();
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  task->requires(Uintah::Task::NewDW, pLocalizedLabel_preReloc,        matlset,Uintah::Ghost::None);
-#else
-  task->requires(Uintah::Task::NewDW, lb->pLocalizedMPMLabel_preReloc, matlset,Uintah::Ghost::None);
-#endif
-}
-
-void ArenaPartiallySaturated::getDamageParameter(const Uintah::Patch* patch,
-                                                 Uintah::ParticleVariable<int>& damage,
-                                                 int matID,
-                                                 Uintah::DataWarehouse* old_dw,
-                                                 Uintah::DataWarehouse* new_dw)
-{
-  // Get the damage parameter
-  Uintah::ParticleSubset* pset = old_dw->getParticleSubset(matID,patch);
-  Uintah::constParticleVariable<int> pLocalized;
-#ifdef USE_LOCAL_LOCALIZED_PVAR
-  new_dw->get(pLocalized, pLocalizedLabel_preReloc,        pset);
-#else
-  new_dw->get(pLocalized, lb->pLocalizedMPMLabel_preReloc, pset);
-#endif
-
-  // Loop over the particle in the current patch.
-  for (auto iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = pLocalized[*iter];
-  }
-}
 
 void ArenaPartiallySaturated::carryForward(const Uintah::PatchSubset* patches,
                                            const Uintah::MPMMaterial* matl,

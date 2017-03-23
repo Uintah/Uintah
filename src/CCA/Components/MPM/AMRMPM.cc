@@ -1092,32 +1092,7 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   if (flags->d_reductionVars->accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 }
-//______________________________________________________________________
-//
-void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls)
-{
-  const Level* level = getLevel(patches);
-  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
-    return;
-  }
 
-  printSchedule(patches,cout_doing,"AMRMPM::scheduleUpdateErosionParameter");
-
-  Task* t = scinew Task("AMRMPM::updateErosionParameter",
-                  this, &AMRMPM::updateErosionParameter);
-
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addRequiresDamageParameter(t, mpm_matl, patches);
-  }
-
-  sched->addTask(t, patches, matls);
-}
 //______________________________________________________________________
 //
 void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
@@ -2915,35 +2890,7 @@ void AMRMPM::computeStressTensor(const ProcessorGroup*,
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
   }
 }
-//______________________________________________________________________
-//
-void AMRMPM::updateErosionParameter(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* ,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw)
-{
-  for (int p = 0; p<patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing AMRMPM::updateErosionParameter");
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      // Get the localization info
-      ParticleVariable<int> isLocalized;
-      new_dw->allocateTemporary(isLocalized, pset);
-      ParticleSubset::iterator iter = pset->begin(); 
-      for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
-      mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
-                                                           dwi, old_dw,new_dw);
-    }
-  }
-}
 //______________________________________________________________________
 //
 void AMRMPM::computeInternalForce(const ProcessorGroup*,

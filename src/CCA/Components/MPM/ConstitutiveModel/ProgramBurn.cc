@@ -70,10 +70,6 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
                                ParticleVariable<double>::getTypeDescription());
   pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
                                ParticleVariable<double>::getTypeDescription());
-  pLocalizedLabel = VarLabel::create("p.localized",
-                               ParticleVariable<int>::getTypeDescription());
-  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
-                               ParticleVariable<int>::getTypeDescription());
 }
 
 ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
@@ -99,18 +95,12 @@ ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
                                ParticleVariable<double>::getTypeDescription());
   pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
                                ParticleVariable<double>::getTypeDescription());
-  pLocalizedLabel = VarLabel::create("p.localized",
-                               ParticleVariable<int>::getTypeDescription());
-  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
-                               ParticleVariable<int>::getTypeDescription());
 }
 
 ProgramBurn::~ProgramBurn()
 {
   VarLabel::destroy(pProgressFLabel);
   VarLabel::destroy(pProgressFLabel_preReloc);
-  VarLabel::destroy(pLocalizedLabel);
-  VarLabel::destroy(pLocalizedLabel_preReloc);
 }
 
 void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -153,13 +143,10 @@ void ProgramBurn::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double> pProgress;
-  ParticleVariable<int>     pLocalized;
   new_dw->allocateAndPut(pProgress,pProgressFLabel,pset);
-  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
 
   for(ParticleSubset::iterator iter=pset->begin();iter != pset->end(); iter++){
     pProgress[*iter] = 0.;
-    pLocalized[*iter] = 0;
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -171,9 +158,6 @@ void ProgramBurn::addParticleState(std::vector<const VarLabel*>& from,
   // Add the local particle state data for this constitutive model.
   from.push_back(pProgressFLabel);
   to.push_back(pProgressFLabel_preReloc);
-
-  from.push_back(pLocalizedLabel);
-  to.push_back(pLocalizedLabel_preReloc);
 }
 
 void ProgramBurn::computeStableTimestep(const Patch* patch,
@@ -252,16 +236,16 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(pProgressF,          pProgressFLabel,              pset);
-    old_dw->get(pLocalized,          pLocalizedLabel,              pset);
+    old_dw->get(pLocalized,          lb->pLocalizedMPMLabel,       pset);
     old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
     
-    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,              pset);
-    new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,       pset);
-    new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pLocalized_new,    pLocalizedLabel_preReloc,   pset);
-    new_dw->get(pvolume,          lb->pVolumeLabel_preReloc,              pset);
-    new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,                  pset);
+    new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,           pset);
+    new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pLocalized_new,   lb->pLocalizedMPMLabel_preReloc, pset);
+    new_dw->get(pvolume,          lb->pVolumeLabel_preReloc,                  pset);
+    new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,                 pset);
     new_dw->get(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc,  pset);
 
@@ -443,9 +427,9 @@ void ProgramBurn::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, pProgressFLabel,        matlset, Ghost::None);
-  task->requires(Task::OldDW, pLocalizedLabel,        matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, Ghost::None);
   task->computes(pProgressFLabel_preReloc,            matlset);
-  task->computes(pLocalizedLabel_preReloc,            matlset);
+  task->computes(lb->pLocalizedMPMLabel_preReloc,     matlset);
 }
 
 void ProgramBurn::addInitialComputesAndRequires(Task* task,
@@ -454,32 +438,8 @@ void ProgramBurn::addInitialComputesAndRequires(Task* task,
 { 
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pProgressFLabel,       matlset);
-  task->computes(pLocalizedLabel,       matlset);
 }
 
-void ProgramBurn::addRequiresDamageParameter(Task* task,
-                                             const MPMMaterial* matl,
-                                             const PatchSet* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
-}
-
-void ProgramBurn::getDamageParameter(const Patch* patch,
-                                   ParticleVariable<int>& damage,
-                                   int dwi,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
-{
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
-  constParticleVariable<int> pLocalized;
-  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
-
-  ParticleSubset::iterator iter;
-  for (iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = pLocalized[*iter];
-  }
-}
 
 void 
 ProgramBurn::addComputesAndRequires(Task* ,

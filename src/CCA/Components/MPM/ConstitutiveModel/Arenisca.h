@@ -76,8 +76,7 @@ namespace Uintah {
       double T1_rate_dependence;
       double T2_rate_dependence;
     };
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
+    
     const VarLabel* pAreniscaFlagLabel;          //0: ok, 1: pevp<-p3
     const VarLabel* pAreniscaFlagLabel_preReloc;
     const VarLabel* pScratchDouble1Label;
@@ -204,22 +203,6 @@ namespace Uintah {
                                     const double& PEAKI1);
 
   public: //Uintah MPM constitutive model specific functions
-    ////////////////////////////////////////////////////////////////////////
-    /* Make the value for pLocalized computed locally available outside of the model. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    /* Make the value for pLocalized computed locally available outside of the model */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch,
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
-
 
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,

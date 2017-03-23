@@ -272,8 +272,7 @@ Arenisca::~Arenisca()
 {
   VarLabel::destroy(peakI1IDistLabel);
   VarLabel::destroy(peakI1IDistLabel_preReloc);
-  VarLabel::destroy(pLocalizedLabel);
-  VarLabel::destroy(pLocalizedLabel_preReloc);
+
   VarLabel::destroy(pAreniscaFlagLabel);
   VarLabel::destroy(pAreniscaFlagLabel_preReloc);
   VarLabel::destroy(pScratchDouble1Label);
@@ -393,8 +392,7 @@ void Arenisca::initializeCMData(const Patch* patch,
   initSharedDataForExplicit(patch, matl, new_dw);
 #endif
   // Allocate particle variables
-  ParticleVariable<int>     pLocalized,
-                            pAreniscaFlag;
+  ParticleVariable<int>     pAreniscaFlag;
 
   ParticleVariable<double>  pScratchDouble1, // Developer tool
                             pScratchDouble2, // Developer tool
@@ -416,7 +414,6 @@ void Arenisca::initializeCMData(const Patch* patch,
                             pScratchMatrix,  // Developer tool
                             pep;             // Plastic Strain Tensor
 
-  new_dw->allocateAndPut(pLocalized,      pLocalizedLabel,      pset);
   new_dw->allocateAndPut(pAreniscaFlag,   pAreniscaFlagLabel,   pset);
   new_dw->allocateAndPut(pScratchDouble1, pScratchDouble1Label, pset);
   new_dw->allocateAndPut(pScratchDouble2, pScratchDouble2Label, pset);
@@ -455,7 +452,6 @@ void Arenisca::initializeCMData(const Patch* patch,
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end();iter++){
-    pLocalized[*iter] = 0;
     pAreniscaFlag[*iter] = 0;
     pScratchDouble1[*iter] = 0;
     pScratchDouble2[*iter] = 0;
@@ -621,8 +617,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
     // Get the particle variables
     delt_vartype                   delT;
-    constParticleVariable<int>     pLocalized,
-                                   pAreniscaFlag;
+    constParticleVariable<int>     pAreniscaFlag;
     constParticleVariable<double>  peakI1IDist,
                                    pScratchDouble1,
                                    pScratchDouble2,
@@ -648,7 +643,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(delT,            lb->delTLabel,   getLevel(patches));
     old_dw->get(peakI1IDist,     peakI1IDistLabel,             pset);
-    old_dw->get(pLocalized,      pLocalizedLabel,              pset); //initializeCMData()
     old_dw->get(pAreniscaFlag,   pAreniscaFlagLabel,           pset); //initializeCMData()
     old_dw->get(pScratchDouble1, pScratchDouble1Label,         pset); //initializeCMData()
     old_dw->get(pScratchDouble2, pScratchDouble2Label,         pset); //initializeCMData()
@@ -687,12 +681,10 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
     // Get the particle variables from compute kinematics
 
-    ParticleVariable<int>     pLocalized_new,
-                              pAreniscaFlag_new;
+    ParticleVariable<int>     pAreniscaFlag_new;
     ParticleVariable<double>  peakI1IDist_new;
 
     new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pLocalized_new, pLocalizedLabel_preReloc,   pset);
     new_dw->allocateAndPut(pAreniscaFlag_new,   pAreniscaFlagLabel_preReloc,    pset);
 
     // Allocate particle variables used in ComputeStressTensor
@@ -1942,33 +1934,9 @@ double Arenisca::TransformedYieldFunction(const double& R,   // Transformed Tria
   // ===========================================================================
 }
 
-void Arenisca::addRequiresDamageParameter(Task* task,
-                                          const MPMMaterial* matl,
-                                          const PatchSet* ) const
-{
-  // Require the damage parameter
-  const MaterialSubset* matlset = matl->thisMaterial();//T2D; what is this?
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
-}
 
-void Arenisca::getDamageParameter(const Patch* patch,
-                                  ParticleVariable<int>& damage,
-                                  int dwi,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw)
-{
-  // Get the damage parameter
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
-  constParticleVariable<int> pLocalized;
-  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
-
-  ParticleSubset::iterator iter;
-  // Loop over the particle in the current patch.
-  for (iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = pLocalized[*iter];
-  }
-}
-
+//______________________________________________________________________
+//
 void Arenisca::carryForward(const PatchSubset* patches,
                             const MPMMaterial* matl,
                             DataWarehouse* old_dw,
@@ -2002,7 +1970,6 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   // Push back all the particle variables associated with Arenisca.
   // Important to keep from and to lists in same order!
   from.push_back(peakI1IDistLabel);
-  from.push_back(pLocalizedLabel);
   from.push_back(pAreniscaFlagLabel);
   from.push_back(pScratchDouble1Label);
   from.push_back(pScratchDouble2Label);
@@ -2023,7 +1990,6 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pStressQSLabel);
   from.push_back(pScratchMatrixLabel);
   to.push_back(  peakI1IDistLabel_preReloc);
-  to.push_back(  pLocalizedLabel_preReloc);
   to.push_back(  pAreniscaFlagLabel_preReloc);
   to.push_back(  pScratchDouble1Label_preReloc);
   to.push_back(  pScratchDouble2Label_preReloc);
@@ -2057,7 +2023,6 @@ void Arenisca::addInitialComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   task->computes(peakI1IDistLabel,     matlset);
-  task->computes(pLocalizedLabel,      matlset);
   task->computes(pAreniscaFlagLabel,   matlset);
   task->computes(pScratchDouble1Label, matlset);
   task->computes(pScratchDouble2Label, matlset);
@@ -2089,7 +2054,6 @@ void Arenisca::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
   task->requires(Task::OldDW, peakI1IDistLabel,     matlset, Ghost::None);
-  task->requires(Task::OldDW, pLocalizedLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, pAreniscaFlagLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, pScratchDouble1Label, matlset, Ghost::None);
   task->requires(Task::OldDW, pScratchDouble2Label, matlset, Ghost::None);
@@ -2111,7 +2075,6 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pScratchMatrixLabel,  matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
   task->computes(peakI1IDistLabel_preReloc,     matlset);
-  task->computes(pLocalizedLabel_preReloc,      matlset);
   task->computes(pAreniscaFlagLabel_preReloc,   matlset);
   task->computes(pScratchDouble1Label_preReloc, matlset);
   task->computes(pScratchDouble2Label_preReloc, matlset);
@@ -2202,11 +2165,6 @@ void Arenisca::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   peakI1IDistLabel_preReloc = VarLabel::create("p.peakI1IDist+",
     ParticleVariable<double>::getTypeDescription());
-  //pLocalized
-  pLocalizedLabel = VarLabel::create("p.localized",
-    ParticleVariable<int>::getTypeDescription());
-  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
-    ParticleVariable<int>::getTypeDescription());
   //pAreniscaFlag
   pAreniscaFlagLabel = VarLabel::create("p.AreniscaFlag",
     ParticleVariable<int>::getTypeDescription());

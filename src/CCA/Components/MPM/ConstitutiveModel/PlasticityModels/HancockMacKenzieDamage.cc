@@ -204,29 +204,3 @@ HancockMacKenzieDamage::computeSomething( ParticleSubset    * pset,
 
   }  // pset loop
 }
-//______________________________________________________________________
-//
-double
-HancockMacKenzieDamage::computeScalarDamage(const double& plasticStrainRate,
-                                            const Matrix3& stress,
-                                            const double& ,
-                                            const double& delT,
-                                            const MPMMaterial* ,
-                                            const double& ,
-                                            const double& D_old)
-{
-  // Calculate plastic strain increment
-  double epsInc = plasticStrainRate*delT;
-
-  // Compute hydrostatic stress and equivalent stress
-  double sig_h = stress.Trace()/3.0;
-  Matrix3 I;
-  I.Identity();
-  Matrix3 sig_dev = stress - I*sig_h;
-  double sig_eq   = sqrt( (sig_dev.NormSquared())*1.5) ;
-
-  // Calculate the updated scalar damage parameter
-  double D = D_old + (1.0/1.65) * epsInc * exp( 1.5*sig_h/sig_eq );
-  return D;
-}
-

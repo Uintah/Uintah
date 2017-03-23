@@ -165,15 +165,6 @@ namespace Uintah {
                                   const double& KII,double& theta);
 
 
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
-
     inline void setWorld(const ProcessorGroup* myworld)
       {
         d_world = myworld;

@@ -62,15 +62,6 @@ namespace Uintah {
     virtual ~NullDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-    
-
-    virtual double computeScalarDamage(const double& plasticStrainRate,
-                                       const Matrix3& stress,
-                                       const double& temperature,
-                                       const double& delT,
-                                       const MPMMaterial* matl,
-                                       const double& tolerance,
-                                       const double& damage_old);
                                        
     virtual
     void addComputesAndRequires(Task* task,

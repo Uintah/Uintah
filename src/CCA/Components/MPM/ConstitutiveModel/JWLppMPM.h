@@ -76,8 +76,6 @@ namespace Uintah {
     const VarLabel* pProgressdelFLabel_preReloc;
     const VarLabel* pVelGradLabel;
     const VarLabel* pVelGradLabel_preReloc;
-    const VarLabel* pLocalizedLabel;
-    const VarLabel* pLocalizedLabel_preReloc;
 
   protected:
 

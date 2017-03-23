@@ -210,21 +210,6 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
   }
 }
 
-void 
-ConstitutiveModel::addRequiresDamageParameter(Task*, 
-                                              const MPMMaterial*,
-                                              const PatchSet*) const
-{
-}
-
-void 
-ConstitutiveModel::getDamageParameter(const Patch* ,
-                                      ParticleVariable<int>& ,int ,
-                                      DataWarehouse* ,
-                                      DataWarehouse* )
-{
-}
-
 Vector 
 ConstitutiveModel::getInitialFiberDir()
 {

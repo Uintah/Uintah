@@ -103,22 +103,6 @@ void BrittleDamage::outputProblemSpec(ProblemSpecP& ps)
   dam_ps->appendElement("brittle_damage_printDamage",          d_brittle_damage.printDamage);
 }
 
-
-//______________________________________________________________________
-//
-double
-BrittleDamage::computeScalarDamage(const double& ,
-                                   const Matrix3& ,
-                                   const double& ,
-                                   const double& ,
-                                   const MPMMaterial*,
-                                   const double& ,
-                                   const double& )
-{
-  return 0.0;
-}
-
-
 //______________________________________________________________________
 //
 void

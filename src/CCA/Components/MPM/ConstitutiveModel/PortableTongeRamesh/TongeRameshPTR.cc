@@ -95,8 +95,6 @@ void TongeRameshPTR::initializeLocalMPMLabels()
   pSSELabel = VarLabel::create("p.SpecificStrainEnergy", ParticleVariable<double>::getTypeDescription());
   pSSELabel_preReloc = VarLabel::create("p.SpecificStrainEnergy+",
                                            ParticleVariable<double>::getTypeDescription());
-  pLocalizedLabel = VarLabel::create("p.localized", ParticleVariable<int>::getTypeDescription());
-  pLocalizedLabel_preReloc = VarLabel::create("p.localized+", ParticleVariable<int>::getTypeDescription());
 }
 
 void TongeRameshPTR::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
@@ -125,8 +123,6 @@ TongeRameshPTR::~TongeRameshPTR()
   }
   VarLabel::destroy(pSSELabel_preReloc);
   VarLabel::destroy(pSSELabel);
-  VarLabel::destroy(pLocalizedLabel_preReloc);
-  VarLabel::destroy(pLocalizedLabel);
 }
 
 // // Initialization Functions //
@@ -160,9 +156,7 @@ void TongeRameshPTR::carryForward(const PatchSubset* patches,
     constParticleVariable<double> pSSE_old;
     constParticleVariable<int> pLoc_old;
     old_dw->get(pSSE_old, pSSELabel, pset);
-    old_dw->get(pLoc_old, pLocalizedLabel, pset);
     new_dw->allocateAndPut(pSSE_new, pSSELabel_preReloc, pset);
-    new_dw->allocateAndPut(pLoc_new, pLocalizedLabel_preReloc, pset);
     pSSE_new.copyData(pSSE_old);
     pLoc_new.copyData(pLoc_old);
   } // End Patch Loop
@@ -195,7 +189,6 @@ void TongeRameshPTR::initializeCMData(const Patch* patch,
     ParticleVariable<double> pSSE_new;
     ParticleVariable<int> pLoc_new;
     new_dw->allocateAndPut(pSSE_new, pSSELabel, pset);
-    new_dw->allocateAndPut(pLoc_new, pLocalizedLabel, pset);
 
     constParticleVariable<double> pVolume;
     new_dw->get(pVolume, lb->pVolumeLabel,            pset);
@@ -253,15 +246,7 @@ void TongeRameshPTR::addComputesAndRequires(Task* task,
   }
   task->requires(Task::OldDW, pSSELabel, matlset, gnone);
   task->computes(pSSELabel_preReloc, matlset);
-  task->computes(pLocalizedLabel_preReloc, matlset);
-}
-
-void TongeRameshPTR::addRequiresDamageParameter(Task* task,
-                                           const MPMMaterial* matl,
-                                           const PatchSet* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, histVarVect_preReloc[PTR_LOCALIZED_IDX], matlset, Ghost::None);
+  task->computes(lb->pLocalizedMPMLabel_preReloc, matlset);
 }
 
 void TongeRameshPTR::addComputesAndRequires(Task* task,
@@ -285,7 +270,6 @@ void TongeRameshPTR::addInitialComputesAndRequires(Task* task,
     task->computes(histVarVect[i],     matlset);
   }
   task->computes(pSSELabel, matlset);
-  task->computes(pLocalizedLabel, matlset);
 }
 
 // Compute Functions //
@@ -373,7 +357,7 @@ void TongeRameshPTR::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<int>  pLocalized;
     old_dw->get(pSSE_old, pSSELabel, pset);
     new_dw->allocateAndPut(pSSE_new, pSSELabel_preReloc, pset);
-    new_dw->allocateAndPut(pLocalized, pLocalizedLabel_preReloc, pset);
+    new_dw->allocateAndPut(pLocalized, lb->pLocalizedMPMLabel_preReloc, pset);
 
     // Particle and grid data universal to model type
     // Old data containers
@@ -552,22 +536,6 @@ double TongeRameshPTR::getCompressibility()
   return 1.0/d_matParamArray[PTR_BULKMOD_IDX];
 }
 
-void TongeRameshPTR::getDamageParameter(const Patch* patch,
-                                     ParticleVariable<int>& damage,
-                                     int dwi,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
-{
-  
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
-  constParticleVariable<double> localized;
-  // WARNING: this number may change in a future implimentation:
-  new_dw->get(localized, histVarVect_preReloc[PTR_LOCALIZED_IDX], pset);
-  ParticleSubset::iterator iter;
-  for (iter = pset->begin(); iter != pset->end(); iter++) {
-    damage[*iter] = static_cast<int>(std::floor(localized[*iter]+0.5));
-  }
-}
 
 void TongeRameshPTR::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)

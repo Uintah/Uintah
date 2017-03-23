@@ -137,19 +137,6 @@ void ThresholdDamage::outputProblemSpec(ProblemSpecP& ps)
 
 //______________________________________________________________________
 //
-double
-ThresholdDamage::computeScalarDamage(const double& ,
-                                     const Matrix3& ,
-                                     const double& ,
-                                     const double& ,
-                                     const MPMMaterial*,
-                                     const double& ,
-                                     const double& )
-{
-  return 0.0;
-}
-//______________________________________________________________________
-//
 void
 ThresholdDamage::carryForward(const PatchSubset* patches,
                               const MPMMaterial* matl,
