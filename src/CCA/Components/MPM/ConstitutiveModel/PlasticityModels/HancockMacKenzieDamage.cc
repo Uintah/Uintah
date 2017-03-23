@@ -197,7 +197,10 @@ HancockMacKenzieDamage::computeSomething( ParticleSubset    * pset,
     Matrix3 I;
     I.Identity();
     Matrix3 sig_dev = pStress[idx] - I*sig_h;
-    double sig_eq   = sqrt( (sig_dev.NormSquared())*1.5) ;
+    double sig_eq   = 1.0;
+    if(sig_h>0.0){
+     sig_eq = sqrt( (sig_dev.NormSquared())*1.5);
+    }
 
     // Calculate the updated scalar damage parameter
     pDamage[idx] = pDamage_old[idx] + (1.0/1.65) * epsInc * exp( 1.5*sig_h/sig_eq );
