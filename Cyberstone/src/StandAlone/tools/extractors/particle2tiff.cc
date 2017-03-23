@@ -42,8 +42,22 @@
  * clamp the averaged data.
  *
  *
- * This utility depends on libtiff4, libtiff4-dev, & libtiffxx0c2, please
+ * This utility depends on libtiffxx5 & libtiff5-dev please
  * verify that they are installed on your system before configuring and compiling.
+ * Note that because of semi-broken support for tiff, you may need to comment
+ * out the conditional on the existence of tiff in the sub.mk (in this
+ * directory), i.e.:
+
+ifeq ($(HAVE_TIFF),yes)
+
+  SRCS    := $(SRCDIR)/particle2tiff.cc
+  PROGRAM := $(SRCDIR)/particle2tiff
+  LIBS    := $(LIBS) -ltiff
+  include $(SCIRUN_SCRIPTS)/program.mk
+
+endif
+
+ * 
  *
  *  Written by:
  *   Todd Harman
@@ -73,6 +87,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/FileUtils.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -82,6 +97,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <stdint.h>
+#include <tiffio.h>
 
 using namespace std;
 using namespace Uintah;
@@ -1002,7 +1020,6 @@ void readCellIndicies(const string& filename, vector<IntVector>& cells)
 int
 main( int argc, char** argv )
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   //__________________________________
