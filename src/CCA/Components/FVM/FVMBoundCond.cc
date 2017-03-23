@@ -191,6 +191,8 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
             }
             nCells += bound_ptr.size();
             break;
+          default:
+            break;
         } // end switch statment
       } // end foundIterator if statment
     } // end child loop
@@ -357,6 +359,8 @@ void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
               }
             }
             nCells += bound_ptr.size();
+            break;
+          default:
             break;
         }// end switch statement
       } // end foundIterator if statement
@@ -527,6 +531,8 @@ void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
               }
             }
             nCells += bound_ptr.size();
+            break;
+          default:
             break;
         }// end switch statement
       } // end foundIterator if statement
