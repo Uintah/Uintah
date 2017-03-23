@@ -124,7 +124,7 @@ ifeq ($(HAVE_TIFF),yes)
 
   SRCS    := $(SRCDIR)/particle2tiff.cc
   PROGRAM := $(SRCDIR)/particle2tiff
-  LIBS    := $(LIBS) -ltiff
+  LIBS    := $(LIBS) $(TIFF_LIBRARY)
   include $(SCIRUN_SCRIPTS)/program.mk
 
 endif
