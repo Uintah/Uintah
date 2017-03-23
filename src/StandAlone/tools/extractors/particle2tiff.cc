@@ -73,6 +73,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/FileUtils.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -82,6 +83,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <stdint.h>
+#include <tiffio.h>
 
 using namespace std;
 using namespace Uintah;
@@ -1002,7 +1006,6 @@ void readCellIndicies(const string& filename, vector<IntVector>& cells)
 int
 main( int argc, char** argv )
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
   Uintah::Parallel::initializeManager(argc, argv);
 
   //__________________________________
