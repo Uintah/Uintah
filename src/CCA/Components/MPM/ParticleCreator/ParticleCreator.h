@@ -80,6 +80,9 @@ namespace Uintah {
     geomvols d_object_temps;
     geomvols d_object_colors;
     geomvols d_object_concentration;
+    geomvols d_object_poscharge;
+    geomvols d_object_negcharge;
+    geomvols d_object_permittivity;
     geomvecs d_object_forces;
     geomvecs d_object_fibers;  
     geomvecs d_object_velocity; // gcd add
@@ -111,6 +114,9 @@ namespace Uintah {
     ParticleVariable<double> pConcPrevious;
     ParticleVariable<Vector> pConcGrad;
     ParticleVariable<double> pExternalScalarFlux;
+    ParticleVariable<double> pPosCharge;
+    ParticleVariable<double> pNegCharge;
+    ParticleVariable<double> pPermittivity;
     } ParticleVars;
 
   protected:
@@ -165,6 +171,7 @@ namespace Uintah {
     bool d_artificial_viscosity;
     bool d_computeScaleFactor;
     bool d_useCPTI;
+    bool d_withGaussSolver;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
     

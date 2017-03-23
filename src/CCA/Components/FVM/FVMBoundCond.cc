@@ -197,6 +197,172 @@ void FVMBoundCond::setESBoundaryConditions(const Patch* patch, int dwi,
   } // end face loop
 }
 
+void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
+                                    CCVariable<double> &es_potential)
+{
+  std::vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector dx = patch->dCell();
+  IntVector xoffset(1,0,0);
+  IntVector yoffset(0,1,0);
+  IntVector zoffset(0,0,1);
+
+  IntVector min = patch->getExtraCellLowIndex();
+  IntVector max = patch->getExtraCellHighIndex();
+  int xmin = -99999;
+  int xmax = -99999;
+  int ymin = -99999;
+  int ymax = -99999;
+  int zmin = -99999;
+  int zmax = -99999;
+
+  if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
+    xmin = min.x();
+  }
+
+  if(patch->getBCType(Patch::xplus) != Patch::Neighbor){
+    xmax = max.x() - 1;
+  }
+
+  if(patch->getBCType(Patch::yminus) != Patch::Neighbor){
+    ymin = min.y();
+  }
+
+  if(patch->getBCType(Patch::yplus) != Patch::Neighbor){
+    ymax = max.y() - 1;
+  }
+
+  if(patch->getBCType(Patch::zminus) != Patch::Neighbor){
+    zmin = min.z();
+  }
+
+  if(patch->getBCType(Patch::zplus) != Patch::Neighbor){
+    zmax = max.z() - 1;
+  }
+
+  for(std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    Patch::FaceType face = *itr;
+    IntVector oneCell = patch->faceDirection(face);
+    std::string bc_kind  = "NotSet";
+    int nCells = 0;
+
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
+
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      Iterator bound_ptr;
+      bool foundIterator = getIteratorBCValueBCKind<double>( patch, face, child,
+                                  "Voltage", dwi, bc_value, bound_ptr,bc_kind);
+      if(foundIterator){
+        switch (face) {
+          case Patch::xplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c = *bound_ptr;
+              if(bc_kind == "Dirichlet"){
+                es_potential[c] = bc_value;
+              }else if(bc_kind == "Neumann"){
+                if(c.y() == ymin || c.y() == ymax || c.z() == zmin || c.z() == zmax){
+                  es_potential[c] = 0.0;
+                }else{
+                  double potential = bc_value*dx.x();
+                  potential += es_potential[c - xoffset];
+                  es_potential[c] = potential;
+                }
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::xminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c = *bound_ptr;
+              if(bc_kind == "Dirichlet"){
+                es_potential[*bound_ptr] = bc_value;
+              }else if(bc_kind == "Neumann"){
+                if(c.y() == ymin || c.y() == ymax || c.z() == zmin || c.z() == zmax){
+                  es_potential[c] = 0.0;
+                }else{
+                  double potential = bc_value*dx.x();
+                  potential += es_potential[c + xoffset];
+                  es_potential[c] = potential;
+                }
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::yplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c = *bound_ptr;
+              if(bc_kind == "Dirichlet"){
+                es_potential[c] = bc_value;
+              }else if(bc_kind == "Neumann"){
+                if(c.x() == xmin || c.x() == xmax || c.z() == zmin || c.z() == zmax){
+                  es_potential[c] = 0.0;
+                }else{
+                  double potential = bc_value*dx.y();
+                  potential += es_potential[c - yoffset];
+                  es_potential[c] = potential;
+                }
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::yminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c = *bound_ptr;
+              if(bc_kind == "Dirichlet"){
+                es_potential[c] = bc_value;
+              }else if(bc_kind == "Neumann"){
+                es_potential[c] = bc_value;
+                if(c.x() == xmin || c.x() == xmax || c.z() == zmin || c.z() == zmax){
+                  es_potential[c] = 0.0;
+                }else{
+                  double potential = bc_value*dx.y();
+                  potential += es_potential[c + yoffset];
+                  es_potential[c] = potential;
+                }
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::zplus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c = *bound_ptr;
+              if(bc_kind == "Dirichlet"){
+                es_potential[c] = bc_value;
+              }else if(bc_kind == "Neumann"){
+                if(c.x() == xmin || c.x() == xmax || c.y() == ymin || c.y() == ymax){
+                  es_potential[c] = 0.0;
+                }else{
+                  double potential = bc_value*dx.z();
+                  potential += es_potential[c - zoffset];
+                  es_potential[c] = potential;
+                }
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+          case Patch::zminus:
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c = *bound_ptr;
+              if(bc_kind == "Dirichlet"){
+                es_potential[c] = bc_value;
+              }else if(bc_kind == "Neumann"){
+                if(c.x() == xmin || c.x() == xmax || c.y() == ymin || c.y() == ymax){
+                  es_potential[c] = 0.0;
+                }else{
+                  double potential = bc_value*dx.z();
+                  potential += es_potential[c + zoffset];
+                  es_potential[c] = potential;
+                };
+              }
+            }
+            nCells += bound_ptr.size();
+            break;
+        }// end switch statement
+      } // end foundIterator if statement
+    } // end child loop
+  } // end face loop
+}
 
 void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
                                     CCVariable<double> &es_potential,

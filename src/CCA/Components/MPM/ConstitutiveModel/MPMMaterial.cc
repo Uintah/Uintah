@@ -171,6 +171,13 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
     geom_obj_data.push_back(GeometryObject::DataItem("concentration", GeometryObject::Double));
   }
 
+  if(flags->d_withGaussSolver){
+    std::cout << "************With Gauss Solver***********" << std::endl;
+    geom_obj_data.push_back(GeometryObject::DataItem("pos_charge_density", GeometryObject::Double));
+    geom_obj_data.push_back(GeometryObject::DataItem("neg_charge_density", GeometryObject::Double));
+    geom_obj_data.push_back(GeometryObject::DataItem("permittivity", GeometryObject::Double));
+  }
+
   if(!isRestart){
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
          geom_obj_ps != nullptr; 

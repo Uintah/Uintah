@@ -77,6 +77,7 @@
 
 #if !defined(NO_MPM) && !defined(NO_FVM)
 #include <CCA/Components/MPMFVM/ESMPM.h>
+#include <CCA/Components/MPMFVM/ESMPM2.h>
 #endif
 
 #include <iosfwd>
@@ -194,6 +195,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "esmpm" || sim_comp == "ESMPM") {
     return scinew ESMPM(world);
   }
+
+  if (sim_comp == "esmpm2" || sim_comp == "ESMPM2") {
+      return scinew ESMPM2(world);
+    }
 #else
   turned_off_options += "MPMFVM ";
 #endif

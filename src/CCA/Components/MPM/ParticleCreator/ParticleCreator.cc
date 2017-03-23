@@ -114,6 +114,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_artificial_viscosity = flags->d_artificial_viscosity;
   d_computeScaleFactor = flags->d_computeScaleFactor;
   d_doScalarDiffusion = flags->d_doScalarDiffusion;
+  d_withGaussSolver = flags->d_withGaussSolver;
   d_useCPTI = flags->d_useCPTI;
 
   d_flags = flags;
@@ -165,6 +166,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<double>* temperatures   = 0;
     vector<double>* colors         = 0;
     vector<double>* concentrations = 0;
+    vector<double>* poscharges     = 0;
+    vector<double>* negcharges     = 0;
+    vector<double>* permittivities = 0;
     vector<Vector>* pforces        = 0;
     vector<Vector>* pfiberdirs     = 0;
     vector<Vector>* pvelocities    = 0;    // gcd adds and new change name
@@ -186,6 +190,12 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
       if(d_doScalarDiffusion){
         concentrations = sgp->getConcentration();
+      }
+
+      if(d_withGaussSolver){
+        poscharges = sgp->getPosCharge();
+        negcharges = sgp->getNegCharge();
+        permittivities = sgp->getPermittivity();
       }
     } // if smooth geometry piece
 
@@ -251,6 +261,27 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     if (concentrations) {
       if (!concentrations->empty()) concentrationiter =
               vars.d_object_concentration[*obj].begin();
+    }
+
+    // For getting particles positive charges (if they exist)
+    vector<double>::const_iterator poschargeiter;
+    if (poscharges) {
+      if (!poscharges->empty()) poschargeiter =
+              vars.d_object_concentration[*obj].begin();
+    }
+
+    // For getting particles negative charges (if they exist)
+    vector<double>::const_iterator negchargeiter;
+    if (negcharges) {
+      if (!negcharges->empty()) negchargeiter =
+              vars.d_object_concentration[*obj].begin();
+    }
+
+    // For getting particles permittivities (if they exist)
+    vector<double>::const_iterator permittivityiter;
+    if (permittivities) {
+      if (!permittivities->empty()) permittivityiter =
+                  vars.d_object_concentration[*obj].begin();
     }
 
     // Loop over all of the particles whose positions we know from
@@ -337,6 +368,27 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (!concentrations->empty()) {
           pvars.pConcentration[pidx] = *concentrationiter;
           ++concentrationiter;
+        }
+      }
+
+      if (poscharges) {
+        if (!poscharges->empty()) {
+          pvars.pPosCharge[pidx] = *poschargeiter;
+          ++poschargeiter;
+        }
+      }
+
+      if (negcharges) {
+        if (!negcharges->empty()) {
+          pvars.pNegCharge[pidx] = *negchargeiter;
+          ++negchargeiter;
+        }
+      }
+
+      if (permittivities) {
+        if (!negcharges->empty()) {
+          pvars.pPermittivity[pidx] = *permittivityiter;
+          ++permittivityiter;
         }
       }
 
@@ -501,6 +553,14 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
                                           d_lb->pConcGradientLabel,   subset);
      new_dw->allocateAndPut(pvars.pExternalScalarFlux,
                                           d_lb->pExternalScalarFluxLabel, subset);
+  }
+  if(d_withGaussSolver){
+     new_dw->allocateAndPut(pvars.pPosCharge,
+                                          d_lb->pPosChargeLabel,    subset);
+     new_dw->allocateAndPut(pvars.pNegCharge,
+                                          d_lb->pNegChargeLabel,    subset);
+     new_dw->allocateAndPut(pvars.pPermittivity,
+                                          d_lb->pPermittivityLabel, subset);
   }
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
@@ -718,6 +778,13 @@ ParticleCreator::initializeParticle(const Patch* patch,
     pvars.pConcGrad[i]  = Vector(0.0);
     pvars.pExternalScalarFlux[i] = 0.0;
   }
+  if(d_withGaussSolver){
+    pvars.pPosCharge[i] = pvars.pvolume[i]
+                        * (*obj)->getInitialData_double("pos_charge_density");
+    pvars.pNegCharge[i] = pvars.pvolume[i]
+                        * (*obj)->getInitialData_double("neg_charge_density");
+    pvars.pPermittivity[i] = (*obj)->getInitialData_double("permittivity");
+  }
   if(d_artificial_viscosity){
     pvars.p_q[i] = 0.;
   }
@@ -783,6 +850,9 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<double>* temps          = sgp->getTemperature();
     vector<double>* colors         = sgp->getColors();
     vector<double>* concentrations = sgp->getConcentration();
+    vector<double>* poscharges     = sgp->getPosCharge();
+    vector<double>* negcharges     = sgp->getNegCharge();
+    vector<double>* permittivities = sgp->getPermittivity();
     vector<Vector>* pforces        = sgp->getForces();
     vector<Vector>* pfiberdirs     = sgp->getFiberDirs();
     vector<Vector>* pvelocities    = sgp->getVelocity();
@@ -854,6 +924,18 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
           if (!concentrations->empty()) {
             double concentration = concentrations->at(ii); 
             vars.d_object_concentration[obj].push_back(concentration);
+          }
+          if (!poscharges->empty()) {
+            double poscharge = poscharges->at(ii);
+            vars.d_object_poscharge[obj].push_back(poscharge);
+          }
+          if (!negcharges->empty()) {
+            double negcharge = negcharges->at(ii);
+            vars.d_object_negcharge[obj].push_back(negcharge);
+          }
+          if (!permittivities->empty()) {
+            double permittivity = permittivities->at(ii);
+            vars.d_object_permittivity[obj].push_back(permittivity);
           }
         } 
       }  // patch contains cell
@@ -927,6 +1009,17 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
     matl->getScalarDiffusionModel()->addParticleState(particle_state,
                                                       particle_state_preReloc);
+  }
+
+  if(d_withGaussSolver){
+    particle_state.push_back(d_lb->pPosChargeLabel);
+    particle_state_preReloc.push_back(d_lb->pPosChargeLabel_preReloc);
+
+    particle_state.push_back(d_lb->pNegChargeLabel);
+    particle_state_preReloc.push_back(d_lb->pNegChargeLabel_preReloc);
+
+    particle_state.push_back(d_lb->pPermittivityLabel);
+    particle_state_preReloc.push_back(d_lb->pPermittivityLabel_preReloc);
   }
 
   particle_state.push_back(d_lb->pSizeLabel);

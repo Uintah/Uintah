@@ -112,6 +112,7 @@ public:
 
 protected:
   friend class ESMPM;
+  friend class ESMPM2;
 
   FluxBCModel* d_fluxbc;
 

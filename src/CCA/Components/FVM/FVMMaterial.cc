@@ -47,7 +47,8 @@ FVMMaterial::FVMMaterial( ProblemSpecP& ps, SimulationStateP& shared_state,
   }
 
   if(d_method_type == Gauss){
-    geom_obj_data.push_back(GeometryObject::DataItem("charge_density",GeometryObject::Double));
+    geom_obj_data.push_back(GeometryObject::DataItem("pos_charge_density",GeometryObject::Double));
+    geom_obj_data.push_back(GeometryObject::DataItem("neg_charge_density",GeometryObject::Double));
     geom_obj_data.push_back(GeometryObject::DataItem("permittivity",GeometryObject::Double));
   }
 
@@ -98,13 +99,10 @@ FVMMaterial::initializeConductivity(CCVariable<double>& conductivity, const Patc
 }
 
 void FVMMaterial::initializePermittivityAndCharge(CCVariable<double>& permittivity,
-                                                  CCVariable<double>& charge1,
-                                                  CCVariable<double>& charge2,
+                                                  CCVariable<double>& pos_charge,
+                                                  CCVariable<double>& neg_charge,
                                                   const Patch* patch)
 {
-  permittivity.initialize(0);
-  charge1.initialize(0);
-  charge2.initialize(0);
 
   Vector dx = patch->dCell();
   double volume = dx.x() * dx.y() * dx.z();
@@ -117,9 +115,9 @@ void FVMMaterial::initializePermittivityAndCharge(CCVariable<double>& permittivi
         Point center = patch->cellPosition(c);
 
         if(piece->inside(center)){
-          permittivity[c] = d_geom_objs[obj]->getInitialData_double("permittivity");
-          charge1[c] = volume * d_geom_objs[obj]->getInitialData_double("charge_density");
-          charge2[c] = -volume * d_geom_objs[obj]->getInitialData_double("charge_density");
+          permittivity[c] += d_geom_objs[obj]->getInitialData_double("permittivity");
+          pos_charge[c] += volume * d_geom_objs[obj]->getInitialData_double("pos_charge_density");
+          neg_charge[c] += volume * d_geom_objs[obj]->getInitialData_double("neg_charge_density");
         }
       }
     }

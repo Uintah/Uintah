@@ -43,8 +43,10 @@ NonLinearDiff2::NonLinearDiff2(
                                                       Mflag,
                                                       diff_type)
 {
-  ps->require("tuning1", d_tuning1);
-  ps->require("tuning2", d_tuning2);
+  ps->require("boltzmann_const", d_boltz_const);
+  ps->require("unit_charge", d_unit_charge);
+  ps->require("operating_temp", d_operating_temp);
+  d_alpha = 0;
 }
 
 NonLinearDiff2::~NonLinearDiff2()
@@ -59,94 +61,9 @@ void NonLinearDiff2::addInitialComputesAndRequires(
                                                   ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->pDiffusivityLabel, matlset);
-  task->computes(d_lb->pPressureLabel_t1, matlset);
-  task->computes(d_lb->pConcInterpLabel,  matlset);
-  task->computes(d_lb->pFluxLabel,        matlset);
-}
-
-void NonLinearDiff2::addParticleState(
-                                      std::vector<const VarLabel*>& from,
-                                      std::vector<const VarLabel*>& to
-                                     ) const
-{
-  from.push_back(d_lb->pDiffusivityLabel);
-  from.push_back(d_lb->pFluxLabel);
-
-  to.push_back(d_lb->pDiffusivityLabel_preReloc);
-  to.push_back(d_lb->pFluxLabel_preReloc);
-}
-
-void NonLinearDiff2::computeFlux(
-                                 const Patch          * patch,
-                                 const MPMMaterial    * matl,
-                                       DataWarehouse  * old_dw,
-                                       DataWarehouse  * new_dw
-                                )
-{
-
-  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
-  std::vector<IntVector> ni(interpolator->size());
-  std::vector<double> S(interpolator->size());
-
-  //double current_time1 = d_sharedState->getElapsedTime();
-
-  int dwi = matl->getDWIndex();
-  Vector dx = patch->dCell();
-
-  constParticleVariable<Vector>  pConcGrad;
-  constParticleVariable<Vector>  pESGradPotential;
-  constParticleVariable<double>  pConcentration;
-  constParticleVariable<double>  pESPotential;
-  constParticleVariable<Matrix3> pStress;
-  constParticleVariable<Point>   px;
-  constParticleVariable<Matrix3> psize;
-  constParticleVariable<Matrix3> pFOld;
-
-  ParticleVariable<Vector>       pFlux;
-  ParticleVariable<double>       pDiffusivity;
-
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-  old_dw->get(px,             d_lb->pXLabel,                  pset);
-  old_dw->get(pConcGrad,      d_lb->pConcGradientLabel,       pset);
-  old_dw->get(pConcentration, d_lb->pConcentrationLabel,      pset);
-  old_dw->get(pStress,        d_lb->pStressLabel,             pset);
-  old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
-
-  new_dw->get(psize,            d_lb->pSizeLabel_preReloc,    pset);
-  new_dw->get(pESPotential,     d_lb->pESPotential,           pset);
-  new_dw->get(pESGradPotential, d_lb->pESGradPotential,       pset);
-
-  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel_preReloc,        pset);
-  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel_preReloc, pset);
-
-  double D = diffusivity;
-  double timestep = 1.0e99;
-  double concentration = 0.0;
-
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
-                                                      iter++){
-    particleIndex idx = *iter;
-
-    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
-
-    concentration = pConcentration[idx];
-
-    /*
-    if(pConcentration[idx] < d_tuning1){
-      pFlux[idx] = D * pConcGrad[idx];
-    }else{
-      double B = d_tuning2 * (1 - pConcentration[idx]);
-      pFlux[idx] = D * pConcGrad[idx] - B * pESGradPotential[idx];
-    }
-    */
-    pFlux[idx] = concentration * D * pESGradPotential[idx];
-
-    pDiffusivity[idx] = D;
-    timestep = std::min(timestep, computeStableTimeStep(D, dx));
-  } //End of Particle Loop
-  new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
+  task->computes(d_lb->pDiffusivityLabel,   matlset);
+  task->computes(d_lb->pPosChargeFluxLabel, matlset);
+  task->computes(d_lb->pNegChargeFluxLabel, matlset);
 }
 
 void NonLinearDiff2::initializeSDMData(
@@ -158,18 +75,33 @@ void NonLinearDiff2::initializeSDMData(
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double>  pDiffusivity;
-  ParticleVariable<double>  pPressure;
-  ParticleVariable<double>  pConcInterp;
-  ParticleVariable<Vector>  pFlux;
+  ParticleVariable<Vector>  pPosFlux;
+  ParticleVariable<Vector>  pNegFlux;
 
-  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
-  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
+  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel,   pset);
+  new_dw->allocateAndPut(pPosFlux,     d_lb->pPosChargeFluxLabel, pset);
+  new_dw->allocateAndPut(pNegFlux,     d_lb->pNegChargeFluxLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++)
   {
     pDiffusivity[*iter] = diffusivity;
-    pFlux[*iter]        = Vector(0,0,0);
+    pPosFlux[*iter]     = Vector(0,0,0);
+    pNegFlux[*iter]     = Vector(0,0,0);
   }
+}
+
+void NonLinearDiff2::addParticleState(
+                                      std::vector<const VarLabel*>& from,
+                                      std::vector<const VarLabel*>& to
+                                     ) const
+{
+  from.push_back(d_lb->pDiffusivityLabel);
+  from.push_back(d_lb->pPosChargeFluxLabel);
+  from.push_back(d_lb->pNegChargeFluxLabel);
+
+  to.push_back(d_lb->pDiffusivityLabel_preReloc);
+  to.push_back(d_lb->pPosChargeFluxLabel_preReloc);
+  to.push_back(d_lb->pNegChargeFluxLabel_preReloc);
 }
 
 void NonLinearDiff2::scheduleComputeFlux(
@@ -180,21 +112,170 @@ void NonLinearDiff2::scheduleComputeFlux(
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType gnone = Ghost::None;
-  //Ghost::GhostType gac   = Ghost::AroundCells;
-  task->requires(Task::OldDW, d_lb->pXLabel,                  matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pConcGradientLabel,       matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pConcentrationLabel,      matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pStressLabel,             matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
 
-  task->requires(Task::NewDW, d_lb->pSizeLabel_preReloc,      matlset, gnone);
-  task->requires(Task::NewDW, d_lb->pESPotential,             matlset, gnone);
-  task->requires(Task::NewDW, d_lb->pESGradPotential,         matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pPosChargeLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pNegChargeLabel, matlset, gnone);
+  task->requires(Task::NewDW, d_lb->pESGradPotential, matlset, gnone);
 
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 
-  task->computes(d_lb->pFluxLabel_preReloc,        matlset);
-  task->computes(d_lb->pDiffusivityLabel_preReloc, matlset);
+  task->computes(d_lb->pPosChargeFluxLabel_preReloc, matlset);
+  task->computes(d_lb->pNegChargeFluxLabel_preReloc, matlset);
+  task->computes(d_lb->pDiffusivityLabel_preReloc,   matlset);
+}
+
+void NonLinearDiff2::computeFlux(
+                                 const Patch          * patch,
+                                 const MPMMaterial    * matl,
+                                       DataWarehouse  * old_dw,
+                                       DataWarehouse  * new_dw
+                                )
+{
+
+  //double current_time1 = d_sharedState->getElapsedTime();
+
+  int dwi = matl->getDWIndex();
+  Vector dx = patch->dCell();
+
+  constParticleVariable<double>  pPosCharge;
+  constParticleVariable<double>  pNegCharge;
+  constParticleVariable<Vector>  pESGradPotential;
+
+  ParticleVariable<Vector>       pPosFlux;
+  ParticleVariable<Vector>       pNegFlux;
+  ParticleVariable<double>       pDiffusivity;
+
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+  old_dw->get(pPosCharge,       d_lb->pPosChargeLabel, pset);
+  old_dw->get(pNegCharge,       d_lb->pNegChargeLabel, pset);
+  new_dw->get(pESGradPotential, d_lb->pESGradPotential, pset);
+
+  new_dw->allocateAndPut(pPosFlux,     d_lb->pPosChargeFluxLabel_preReloc, pset);
+  new_dw->allocateAndPut(pNegFlux,     d_lb->pNegChargeFluxLabel_preReloc, pset);
+  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel_preReloc,   pset);
+
+  double D = diffusivity;
+  double timestep = 1.0e99;
+  d_alpha = (D * d_unit_charge)/(d_boltz_const * d_operating_temp);
+
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
+                                                      iter++){
+    particleIndex idx = *iter;
+
+    pPosFlux[idx] =  pPosCharge[idx] * d_alpha * pESGradPotential[idx];
+    pNegFlux[idx] = -pNegCharge[idx] * d_alpha * pESGradPotential[idx];
+
+    pDiffusivity[idx] = D;
+    timestep = std::min(timestep, computeStableTimeStep(D, dx));
+  } //End of Particle Loop
+  new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
+}
+
+void NonLinearDiff2::scheduleComputeDivergence(       Task         * task,
+                                                const MPMMaterial  * matl,
+                                                const PatchSet     * patch
+                                              ) const
+{
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW, d_sharedState->get_delt_label());
+  task->requires(Task::OldDW, d_lb->pXLabel,                   gan, NGP);
+  task->requires(Task::OldDW, d_lb->pSizeLabel,                gan, NGP);
+  task->requires(Task::OldDW, d_lb->pMassLabel,                gan, NGP);
+  task->requires(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
+  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  gan, NGP);
+
+  task->requires(Task::NewDW, d_lb->pPosChargeFluxLabel_preReloc, gan, NGP);
+  task->requires(Task::NewDW, d_lb->pNegChargeFluxLabel_preReloc, gan, NGP);
+
+  task->computes(d_lb->gPosChargeRateLabel, matlset);
+  task->computes(d_lb->gNegChargeRateLabel, matlset);
+
+  task->computes(d_lb->gConcentrationRateLabel, matlset);
+}
+
+void NonLinearDiff2::computeDivergence(
+                                       const Patch          * patch,
+                                       const MPMMaterial    * matl,
+                                             DataWarehouse  * old_dw,
+                                             DataWarehouse  * new_dw
+                                      )
+{
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  int dwi = matl->getDWIndex();
+
+  ParticleInterpolator*   interpolator = d_Mflag->d_interpolator->clone(patch);
+  std::vector<IntVector>  ni(interpolator->size());
+  std::vector<Vector>     d_S(interpolator->size());
+
+  Vector dx = patch->dCell();
+  double oodx[3];
+  oodx[0] = 1.0/dx.x();
+  oodx[1] = 1.0/dx.y();
+  oodx[2] = 1.0/dx.z();
+
+  constParticleVariable<Point>    px;
+  constParticleVariable<double>   pvol;
+  constParticleVariable<double>   pMass;
+  constParticleVariable<Matrix3>  psize;
+  constParticleVariable<Matrix3>  deformationGradient;
+  constParticleVariable<Vector>   pPosChargeFlux;
+  constParticleVariable<Vector>   pNegChargeFlux;
+
+  NCVariable<double>              gPosChargeRate;
+  NCVariable<double>              gNegChargeRate;
+  NCVariable<double>              gConcRate;
+
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
+                                                          d_lb->pXLabel);
+
+  old_dw->get(px,                  d_lb->pXLabel,                  pset);
+  old_dw->get(pvol,                d_lb->pVolumeLabel,             pset);
+  old_dw->get(pMass,               d_lb->pMassLabel,               pset);
+  old_dw->get(psize,               d_lb->pSizeLabel,               pset);
+  old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+
+  new_dw->get(pPosChargeFlux,      d_lb->pPosChargeFluxLabel_preReloc, pset);
+  new_dw->get(pNegChargeFlux,      d_lb->pNegChargeFluxLabel_preReloc, pset);
+
+  new_dw->allocateAndPut(gPosChargeRate, d_lb->gPosChargeRateLabel,    dwi,patch);
+  new_dw->allocateAndPut(gNegChargeRate, d_lb->gNegChargeRateLabel,    dwi,patch);
+  new_dw->allocateAndPut(gConcRate,      d_lb->gConcentrationRateLabel,dwi,patch);
+
+  gConcRate.initialize(0.0);
+  gPosChargeRate.initialize(0.0);
+  gNegChargeRate.initialize(0.0);
+
+  // THIS IS COMPUTING A MASS WEIGHTED gConcRate.  THE DIVISION BY MASS, AND
+  // SUBSEQUENT CALCULATIONS IS DONE IN computeAndIntegrateAcceleration.
+
+  for(ParticleSubset::iterator iter = pset->begin();
+                               iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+
+    // Get the node indices that surround the cell
+    int NN = interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,
+                                           psize[idx],deformationGradient[idx]);
+
+    Vector PosJ = pPosChargeFlux[idx];
+    Vector NegJ = pNegChargeFlux[idx];
+    double PosCdot_cond = 0.0;
+    double NegCdot_cond = 0.0;
+    IntVector node(0,0,0);
+
+    for (int k = 0; k < NN; k++){
+      node = ni[k];
+      if(patch->containsNode(node)){
+        Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+        PosCdot_cond = Dot(div, PosJ)*pMass[idx];
+        NegCdot_cond = Dot(div, NegJ)*pMass[idx];
+
+        gPosChargeRate[node] -= PosCdot_cond;
+        gNegChargeRate[node] -= NegCdot_cond;
+      }
+    }
+  } // End of Particle Loop
 }
 
 void NonLinearDiff2::addSplitParticlesComputesAndRequires(
@@ -279,8 +360,9 @@ void NonLinearDiff2::outputProblemSpec(
 
   rdm_ps->appendElement("diffusivity", diffusivity);
   rdm_ps->appendElement("max_concentration",max_concentration);
-  rdm_ps->appendElement("tuning1", d_tuning1);
-  rdm_ps->appendElement("tuning2", d_tuning2);
+  rdm_ps->appendElement("boltzmann_const", d_boltz_const);
+  rdm_ps->appendElement("unit_charge", d_unit_charge);
+  rdm_ps->appendElement("operating_temp", d_operating_temp);
 
   if(d_conductivity_equation){
     d_conductivity_equation->outputProblemSpec(rdm_ps);

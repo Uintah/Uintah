@@ -75,6 +75,7 @@
       <auto_cycle_use_minmax              spec="OPTIONAL BOOLEAN" />
       <auto_cycle_max                     spec="OPTIONAL DOUBLE" />
       <auto_cycle_min                     spec="OPTIONAL DOUBLE" />
+      <with_gauss_solver                  spec="OPTIONAL BOOLEAN" />
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >

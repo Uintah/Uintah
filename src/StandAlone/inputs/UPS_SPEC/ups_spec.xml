@@ -361,7 +361,8 @@
       <exponentialInitialize_2D  spec="OPTIONAL BOOLEAN"/>
       <concentration             spec="OPTIONAL DOUBLE"/>
       <conductivity              spec="OPTIONAL DOUBLE"/>
-      <charge_density            spec="OPTIONAL DOUBLE"/>
+      <pos_charge_density        spec="OPTIONAL DOUBLE"/>
+      <neg_charge_density        spec="OPTIONAL DOUBLE"/>
       <permittivity              spec="OPTIONAL DOUBLE"/>
     </geom_object>
       
@@ -375,6 +376,7 @@
                                                 electrostatic_solver,
                                                 gauss_solver,
                                                 esmpm,
+                                                esmpm2,
                                                 advectslabs,
                                                 unifiedschedulertest,poissongpu1,poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,

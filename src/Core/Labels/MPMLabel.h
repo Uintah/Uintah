@@ -130,6 +130,16 @@ namespace Uintah {
       const VarLabel* pAvgConcLabel;
       const VarLabel* pESPotential;
       const VarLabel* pESGradPotential;
+      const VarLabel* pPosChargeLabel;
+      const VarLabel* pPosChargeLabel_preReloc;
+      const VarLabel* pNegChargeLabel;
+      const VarLabel* pNegChargeLabel_preReloc;
+      const VarLabel* pPermittivityLabel;
+      const VarLabel* pPermittivityLabel_preReloc;
+      const VarLabel* pPosChargeFluxLabel;
+      const VarLabel* pPosChargeFluxLabel_preReloc;
+      const VarLabel* pNegChargeFluxLabel;
+      const VarLabel* pNegChargeFluxLabel_preReloc;
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
@@ -177,6 +187,13 @@ namespace Uintah {
       const VarLabel* massBurnFractionLabel; //for burn modeling
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
+
+      const VarLabel* gPosChargeLabel;
+      const VarLabel* gNegChargeLabel;
+      const VarLabel* gPosChargeNoBCLabel;
+      const VarLabel* gNegChargeNoBCLabel;
+      const VarLabel* gPosChargeRateLabel;
+      const VarLabel* gNegChargeRateLabel;
       
       const VarLabel* AccArchesNCLabel; //for interaction with Arches, Fluid Mechanics
       const VarLabel* heaTranSolid_NCLabel; //for interaction with Arches, Heat Transfer

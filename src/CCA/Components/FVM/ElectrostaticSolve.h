@@ -83,6 +83,7 @@ WARNING
   protected:
     FVMLabel* d_lb;
     friend class ESMPM;
+    friend class ESMPM2;
 
   private:
     void initialize(const ProcessorGroup*,

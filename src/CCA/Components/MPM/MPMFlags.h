@@ -111,13 +111,13 @@ namespace Uintah {
     std::string d_mms_type;                                    // MMS Flag
 
    //********** Start Reactive Flow Section *********************
-    bool        d_doScalarDiffusion;     //for diffusion component found in ReactiveFlow
-    //********** End Reactive Flow Section *********************
-    
+    bool        d_doScalarDiffusion;
     bool        d_doAutoCycleBC;
     bool        d_autoCycleUseMinMax;
     double      d_autoCycleMax;
     double      d_autoCycleMin;
+    bool        d_withGaussSolver;
+    //********** End Reactive Flow Section *********************
     
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{

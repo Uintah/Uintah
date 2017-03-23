@@ -110,6 +110,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_autoCycleUseMinMax  =  false;
   d_autoCycleMax        =  .9;
   d_autoCycleMin        =  .1;
+  d_withGaussSolver     =  false;
 
   // MMS
   if(d_mms_type=="AxisAligned"){
@@ -248,11 +249,11 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   // Setting Scalar Diffusion
   mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
-
   mpm_flag_ps->get("do_auto_cycle_bc", d_doAutoCycleBC);
   mpm_flag_ps->get("auto_cycle_use_minmax", d_autoCycleUseMinMax);
   mpm_flag_ps->get("auto_cycle_max", d_autoCycleMax);
   mpm_flag_ps->get("auto_cycle_min", d_autoCycleMin);
+  mpm_flag_ps->get("with_gauss_solver", d_withGaussSolver);
 
   // d_doComputeHeatFlux:
   // set to true if the label g.HeatFlux is saved or 

@@ -45,15 +45,17 @@ FVMLabel::FVMLabel()
                           CCVariable<double>::getTypeDescription());
   ccCurrent           = VarLabel::create("cc.Current",
                           CCVariable<Vector>::getTypeDescription());
-  ccCharge1           = VarLabel::create("cc.Charge1",
+  ccPosCharge         = VarLabel::create("cc.PosCharge",
                           CCVariable<double>::getTypeDescription());
-  ccCharge2           = VarLabel::create("cc.Charge2",
+  ccNegCharge         = VarLabel::create("cc.NegCharge",
                           CCVariable<double>::getTypeDescription());
-  ccChargeDensity1    = VarLabel::create("cc.Charge_Density1",
+  ccTotalCharge       = VarLabel::create("cc.TotalCharge",
+                            CCVariable<double>::getTypeDescription());
+  ccPosChargeDensity  = VarLabel::create("cc.Charge_Density1",
                           CCVariable<double>::getTypeDescription());
-  ccChargeDensity2    = VarLabel::create("cc.Charge_Density2",
+  ccNegChargeDensity  = VarLabel::create("cc.Charge_Density2",
                           CCVariable<double>::getTypeDescription());
-  ccPermittivity       = VarLabel::create("cc.Permittivity",
+  ccPermittivity      = VarLabel::create("cc.Permittivity",
                           CCVariable<double>::getTypeDescription());
 
   fcxConductivity     = VarLabel::create("fcx.Conductivity",
@@ -86,10 +88,11 @@ FVMLabel::~FVMLabel()
   VarLabel::destroy(ccConductivity);
   VarLabel::destroy(ccGridConductivity);
   VarLabel::destroy(ccCurrent);
-  VarLabel::destroy(ccCharge1);
-  VarLabel::destroy(ccCharge2);
-  VarLabel::destroy(ccChargeDensity1);
-  VarLabel::destroy(ccChargeDensity2);
+  VarLabel::destroy(ccPosCharge);
+  VarLabel::destroy(ccNegCharge);
+  VarLabel::destroy(ccTotalCharge);
+  VarLabel::destroy(ccPosChargeDensity);
+  VarLabel::destroy(ccNegChargeDensity);
   VarLabel::destroy(ccPermittivity);
   VarLabel::destroy(fcxConductivity);
   VarLabel::destroy(fcyConductivity);

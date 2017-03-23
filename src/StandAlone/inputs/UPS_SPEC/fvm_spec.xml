@@ -26,6 +26,7 @@
         <tolerance         spec="REQUIRED DOUBLE 'positive'" /> 
         <relax_type        spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
       </Parameters>
+      <unit_charge         spec="OPTIONAL DOUBLE"/>
     </FVM>
     
     <ESMPM                  spec="OPTIONAL NO_DATA">

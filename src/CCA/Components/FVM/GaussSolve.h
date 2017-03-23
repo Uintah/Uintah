@@ -82,7 +82,7 @@ WARNING
 
   protected:
     FVMLabel* d_lb;
-    friend class ESMPM;
+    friend class ESMPM2;
 
   private:
     void initialize(const ProcessorGroup*,
@@ -124,6 +124,7 @@ WARNING
 
     SimulationStateP d_shared_state;
     double d_delt;
+    double d_elem_charge;
     SolverInterface* d_solver;
     SolverParameters* d_solver_parameters;
     MaterialSet* d_es_matlset;

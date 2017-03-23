@@ -511,6 +511,12 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     t->computes(lb->pExternalScalarFluxLabel);
   }
 
+  if(flags->d_withGaussSolver){
+    t->computes(lb->pPosChargeLabel);
+    t->computes(lb->pNegChargeLabel);
+    t->computes(lb->pPermittivityLabel);
+  }
+
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
   for(int m = 0; m < numMPM; m++){
@@ -849,6 +855,12 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     }
 #endif
   }
+  if(flags->d_withGaussSolver){
+    t->requires(Task::OldDW, lb->pPosChargeLabel, d_gan, NGP);
+    t->requires(Task::OldDW, lb->pNegChargeLabel, d_gan, NGP);
+    t->computes(lb->gPosChargeLabel);
+    t->computes(lb->gNegChargeLabel);
+  }
   
   sched->addTask(t, patches, matls);
 }
@@ -1024,6 +1036,12 @@ void AMRMPM::scheduleNormalizeNodalVelTempConc(SchedulerP& sched,
     t->modifies(lb->gConcentrationLabel);
     t->computes(lb->gConcentrationNoBCLabel);
     t->modifies(lb->gHydrostaticStressLabel);
+  }
+  if(flags->d_withGaussSolver){
+    t->modifies(lb->gPosChargeLabel);
+    t->modifies(lb->gNegChargeLabel);
+    t->computes(lb->gPosChargeNoBCLabel);
+    t->computes(lb->gNegChargeNoBCLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -1214,6 +1232,15 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
     t->computes(lb->gConcentrationStarLabel);
   }
 
+  if(flags->d_withGaussSolver){
+    t->requires(Task::NewDW, lb->gPosChargeNoBCLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->gNegChargeNoBCLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->gPosChargeLabel,     Ghost::None);
+    t->requires(Task::NewDW, lb->gNegChargeLabel,     Ghost::None);
+    t->modifies(lb->gPosChargeRateLabel);
+    t->modifies(lb->gNegChargeRateLabel);
+  }
+
   sched->addTask(t, patches, matls);
 }
 //______________________________________________________________________
@@ -1352,6 +1379,18 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
         t->computes(lb->TotalConcLabel);
       }
     }
+  }
+
+  if(flags->d_withGaussSolver){
+    t->requires(Task::OldDW, lb->pPosChargeLabel, d_gn);
+    t->requires(Task::OldDW, lb->pNegChargeLabel, d_gn);
+    t->requires(Task::OldDW, lb->pPermittivityLabel, d_gn);
+    t->requires(Task::NewDW, lb->gPosChargeRateLabel, d_gac, NGN);
+    t->requires(Task::NewDW, lb->gNegChargeRateLabel, d_gac, NGN);
+
+    t->computes(lb->pPosChargeLabel_preReloc);
+    t->computes(lb->pNegChargeLabel_preReloc);
+    t->computes(lb->pPermittivityLabel_preReloc);
   }
 
   t->computes(lb->TotalMassLabel);
@@ -1999,6 +2038,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Matrix3> pDeformationMeasure;
       constParticleVariable<Matrix3> pStress;
       constParticleVariable<Matrix3> pVelGrad;
+      constParticleVariable<double> pPosCharge;
+      constParticleVariable<double> pNegCharge;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        d_gan, NGP, lb->pXLabel);
@@ -2027,6 +2068,10 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         old_dw->get(pConcentration,     lb->pConcentrationLabel,      pset);
         old_dw->get(pStress,            lb->pStressLabel,             pset);
       }
+      if(flags->d_withGaussSolver){
+        old_dw->get(pPosCharge, lb->pPosChargeLabel, pset);
+        old_dw->get(pNegCharge, lb->pNegChargeLabel, pset);
+      }
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
@@ -2038,6 +2083,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gconcentration;
       NCVariable<double> gextscalarflux;
       NCVariable<double> ghydrostaticstress;
+      NCVariable<double> gposcharge;
+      NCVariable<double> gnegcharge;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,           dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,         dwi,patch);
@@ -2063,6 +2110,12 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gconcentration.initialize(0);
         ghydrostaticstress.initialize(0);
         gextscalarflux.initialize(0);
+      }
+      if(flags->d_withGaussSolver){
+        new_dw->allocateAndPut(gposcharge, lb->gPosChargeLabel, dwi, patch);
+        new_dw->allocateAndPut(gnegcharge, lb->gNegChargeLabel, dwi, patch);
+        gposcharge.initialize(0.0);
+        gnegcharge.initialize(0.0);
       }
       
       Vector pmom;
@@ -2105,6 +2158,15 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 #ifndef CBDI_FLUXBCS
               gextscalarflux[node]+= (pExternalScalarFlux[idx]*pmass[idx])*S[k];
 #endif
+            }
+          }
+        }
+        if(flags->d_withGaussSolver){
+          for(int k = 0; k < NN; k++) {
+            node = ni[k];
+            if(patch->containsNode(node)) {
+              gposcharge[node] += pPosCharge[idx] * pmass[idx]*S[k];
+              gnegcharge[node] += pNegCharge[idx] * pmass[idx]*S[k];
             }
           }
         }
@@ -2765,6 +2827,10 @@ void AMRMPM::normalizeNodalVelTempConc(const ProcessorGroup*,
       NCVariable<double> gConcentration;
       NCVariable<double> gConcentrationNoBC;
       NCVariable<double> gHydroStress;
+      NCVariable<double> gPosCharge;
+      NCVariable<double> gNegCharge;
+      NCVariable<double> gPosChargeNoBC;
+      NCVariable<double> gNegChargeNoBC;
       
       new_dw->get(gMass,                  lb->gMassLabel,       dwi,patch,d_gn,0);
       new_dw->getModifiable(gVelocity,    lb->gVelocityLabel,   dwi,patch,d_gn,0);
@@ -2776,6 +2842,12 @@ void AMRMPM::normalizeNodalVelTempConc(const ProcessorGroup*,
                                     lb->gHydrostaticStressLabel,dwi,patch,d_gn,0);
         new_dw->allocateAndPut(gConcentrationNoBC,
                                     lb->gConcentrationNoBCLabel,dwi,patch);
+      }
+      if(flags->d_withGaussSolver){
+        new_dw->getModifiable(gPosCharge, lb->gPosChargeLabel, dwi, patch, d_gn,0);
+        new_dw->getModifiable(gNegCharge, lb->gNegChargeLabel, dwi, patch, d_gn,0);
+        new_dw->allocateAndPut(gPosChargeNoBC, lb->gPosChargeNoBCLabel, dwi, patch);
+        new_dw->allocateAndPut(gNegChargeNoBC, lb->gNegChargeNoBCLabel, dwi, patch);
       }
       
       //__________________________________
@@ -2794,6 +2866,16 @@ void AMRMPM::normalizeNodalVelTempConc(const ProcessorGroup*,
           gConcentrationNoBC[n] = gConcentration[n];
         }
       }
+      if(flags->d_withGaussSolver){
+        for(NodeIterator iter=patch->getExtraNodeIterator();
+                        !iter.done(); iter++){
+          IntVector n = *iter;
+          gPosCharge[n] /= gMass[n];
+          gNegCharge[n]   /= gMass[n];
+          gPosChargeNoBC[n] = gPosCharge[n];
+          gNegChargeNoBC[n] = gNegCharge[n];
+        }
+      }
       
       // Apply boundary conditions to the temperature and velocity (if symmetry)
       MPMBoundCond bc;
@@ -2803,6 +2885,10 @@ void AMRMPM::normalizeNodalVelTempConc(const ProcessorGroup*,
       if(flags->d_doScalarDiffusion){
         bc.setBoundaryCondition(patch,dwi,"SD-Type",  gConcentration,
                                                                    interp_type);
+      }
+      if(flags->d_withGaussSolver){
+        bc.setBoundaryCondition(patch,dwi, "PosCharge", gPosCharge, interp_type);
+        bc.setBoundaryCondition(patch,dwi, "NegCharge", gNegCharge, interp_type);
       }
     }  // End loop over materials
   }  // End loop over fine patches
@@ -3178,6 +3264,8 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity;
       constNCVariable<double> gmass;
       constNCVariable<double> gConcentration,gConcNoBC,gExtScalarFlux;
+      constNCVariable<double> gPosCharge, gPosChargeNoBC;
+      constNCVariable<double> gNegCharge, gNegChargeNoBC;
 
       delt_vartype delT;
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
@@ -3191,6 +3279,9 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
       NCVariable<double> gConcStar,gConcRate;
+      NCVariable<double> gPosChargeStar, gPosChargeRate;
+      NCVariable<double> gNegChargeStar, gNegChargeRate;
+
       new_dw->allocateAndPut(gvelocity_star, lb->gVelocityStarLabel, dwi,patch);
       new_dw->allocateAndPut(gacceleration,  lb->gAccelerationLabel, dwi,patch);
 
@@ -3202,6 +3293,20 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         new_dw->getModifiable( gConcRate,lb->gConcentrationRateLabel,dwi,patch);
         new_dw->allocateAndPut(gConcStar,lb->gConcentrationStarLabel,dwi,patch);
       }
+
+      if(flags->d_withGaussSolver){
+        new_dw->get(gPosCharge,     lb->gPosChargeLabel,     dwi, patch, d_gn, 0);
+        new_dw->get(gPosChargeNoBC, lb->gPosChargeNoBCLabel, dwi, patch, d_gn, 0);
+        new_dw->get(gNegCharge,     lb->gNegChargeLabel,     dwi, patch, d_gn, 0);
+        new_dw->get(gNegChargeNoBC, lb->gNegChargeNoBCLabel, dwi, patch, d_gn, 0);
+
+        new_dw->allocateTemporary(gPosChargeStar, patch, d_gn, 0);
+        new_dw->allocateTemporary(gNegChargeStar, patch, d_gn, 0);
+
+        new_dw->getModifiable(gPosChargeRate, lb->gPosChargeRateLabel,dwi, patch);
+        new_dw->getModifiable(gNegChargeRate, lb->gNegChargeRateLabel,dwi, patch);
+      }
+
 
       gacceleration.initialize(Vector(0.,0.,0.));
       double damp_coef = flags->d_artificialDampCoeff;
@@ -3251,6 +3356,31 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
                        + gExtScalarFlux[c]/gmass[c];
         }
       } // if doScalarDiffusion
+
+      if(flags->d_withGaussSolver){
+        for(NodeIterator iter=patch->getExtraNodeIterator();
+                        !iter.done();iter++){
+          IntVector c = *iter;
+          gPosChargeRate[c] /= gmass[c];
+          gPosChargeStar[c]  = gPosCharge[c] + gPosChargeRate[c] * delT;
+          gNegChargeRate[c] /= gmass[c];
+          gNegChargeStar[c]  = gNegCharge[c] + gNegChargeRate[c] * delT;
+        }
+
+        MPMBoundCond bc;
+        bc.setBoundaryCondition(patch, dwi,"PosCharge", gConcStar,
+                                      flags->d_interpolator_type);
+        bc.setBoundaryCondition(patch, dwi,"NegCharge", gConcStar,
+                                      flags->d_interpolator_type);
+
+        for(NodeIterator iter=patch->getExtraNodeIterator();
+                        !iter.done();iter++){
+          IntVector c = *iter;
+          gPosChargeRate[c] = (gPosChargeStar[c] - gPosChargeNoBC[c]) / delT;
+          gNegChargeRate[c] = (gNegChargeStar[c] - gNegChargeNoBC[c]) / delT;
+        }
+      } // if d_withGaussSolver
+
     }  // matls
   }  // patches
 }
@@ -3753,6 +3883,10 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<double> pConcPreviousNew;
       constNCVariable<double>  gConcentrationRate;
 
+      constParticleVariable<double> pPosCharge, pNegCharge, pPermittivity;
+      constNCVariable<double> gPosChargeRate, gNegChargeRate;
+      ParticleVariable<double> pPosChargeNew, pNegChargeNew, pPermittivityNew;
+
       // Get the arrays of grid data on which the new particle values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<double> gTemperatureRate;
@@ -3785,6 +3919,19 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         new_dw->allocateAndPut(pConcPreviousNew,
                                         lb->pConcPreviousLabel_preReloc,  pset);
 
+      }
+
+      if(flags->d_withGaussSolver){
+        old_dw->get(pPosCharge,    lb->pPosChargeLabel,    pset);
+        old_dw->get(pNegCharge,    lb->pNegChargeLabel,    pset);
+        old_dw->get(pPermittivity, lb->pPermittivityLabel, pset);
+
+        new_dw->get(gPosChargeRate, lb->gPosChargeRateLabel, dwi, patch, d_gac, NGP);
+        new_dw->get(gNegChargeRate, lb->gNegChargeRateLabel, dwi, patch, d_gac, NGP);
+
+        new_dw->allocateAndPut(pPosChargeNew,    lb->pPosChargeLabel_preReloc,    pset);
+        new_dw->allocateAndPut(pNegChargeNew,    lb->pNegChargeLabel_preReloc,    pset);
+        new_dw->allocateAndPut(pPermittivityNew, lb->pPermittivityLabel_preReloc, pset);
       }
 
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
@@ -3865,6 +4012,24 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
               totalconc += pConcentration[idx];
             }
           }
+        }
+
+        if(flags->d_withGaussSolver){
+          double posChargeRate = 0.0;
+          double negChargeRate = 0.0;
+          for(int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            posChargeRate += gPosChargeRate[node] * S[k];
+            negChargeRate += gNegChargeRate[node] * S[k];
+          }
+
+          pPosChargeNew[idx] = pPosCharge[idx] + posChargeRate * delT;
+          pNegChargeNew[idx] = pNegCharge[idx] + negChargeRate * delT;
+          pPermittivityNew[idx] = pPermittivity[idx];
+          if(pPosChargeNew[idx] < 0.0)
+            pPosChargeNew[idx] = 0.0;
+          if(pNegChargeNew[idx] < 0.0)
+            pNegChargeNew[idx] = 0.0;
         }
 /*`==========TESTING==========*/
 #ifdef DEBUG_VEL

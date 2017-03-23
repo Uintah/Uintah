@@ -79,6 +79,18 @@ namespace Uintah {
                                      const PatchSet     * patch
                                     ) const;
 
+    virtual void scheduleComputeDivergence(       Task         * task,
+                                            const MPMMaterial  * matl,
+                                            const PatchSet     * patch
+                                          ) const;
+
+    virtual void computeDivergence(
+                                    const Patch          * patch,
+                                    const MPMMaterial    * matl,
+                                          DataWarehouse  * old_dw,
+                                          DataWarehouse  * new_dw
+                                   );
+
     virtual void addSplitParticlesComputesAndRequires(      Task        * task,
                                                       const MPMMaterial * matl,
                                                       const PatchSet    * patches
@@ -102,11 +114,10 @@ namespace Uintah {
                                    ) const ;
 
   private:
-    double d_tuning1;
-    double d_tuning2;
-    double d_tuning3;
-    double d_tuning4;
-    double d_tuning5;
+    double d_boltz_const;
+    double d_unit_charge;
+    double d_operating_temp;
+    double d_alpha;
 
     NonLinearDiff2(const NonLinearDiff2&);
     NonLinearDiff2& operator=(const NonLinearDiff2&);

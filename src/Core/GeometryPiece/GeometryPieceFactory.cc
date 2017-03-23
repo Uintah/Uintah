@@ -322,6 +322,9 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
              go_type == "scalar"      || go_type == "color"    ||
              go_type == "concentration" ||
              go_type == "conductivity"  ||
+             go_type == "neg_charge_density" ||
+             go_type == "pos_charge_density" ||
+             go_type == "permittivity" ||
              go_type == "affineTransformation_A0" || 
              go_type == "affineTransformation_A1" ||
              go_type == "affineTransformation_A2" ||
