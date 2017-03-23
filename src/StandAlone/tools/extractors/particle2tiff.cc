@@ -42,7 +42,7 @@
  * clamp the averaged data.
  *
  *
- * This utility depends on libtiff4, libtiff4-dev, & libtiffxx0c2, please
+ * This utility depends on libtiffxx5 & libtiff5-dev please
  * verify that they are installed on your system before configuring and compiling.
  *
  *  Written by:
