@@ -30,6 +30,7 @@ SRCS += \
         $(SRCDIR)/CharOxidation.cc            \
         $(SRCDIR)/CharOxidationShaddix.cc     \
         $(SRCDIR)/CharOxidationSmith.cc       \
+        $(SRCDIR)/CharOxidationSmith2016.cc   \
         $(SRCDIR)/ConstantModel.cc            \
         $(SRCDIR)/Deposition.cc               \
         $(SRCDIR)/Devolatilization.cc         \

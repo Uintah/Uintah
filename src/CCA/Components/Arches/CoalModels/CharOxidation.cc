@@ -37,6 +37,12 @@ CharOxidation::CharOxidation( std::string modelName,
   std::string particletempSourceName = modelName + "_particletempSource";
   d_particletempLabel = VarLabel::create( particletempSourceName, CCVariable<double>::getTypeDescription() );
   _extra_local_labels.push_back(d_particletempLabel);
+  
+  // Create the particle size source term associated with this model
+  std::string particleSizeSourceName = modelName + "_particleSizeSource";
+  d_particleSizeLabel = VarLabel::create( particleSizeSourceName, CCVariable<double>::getTypeDescription() );
+  _extra_local_labels.push_back(d_particleSizeLabel);
+
 
   // Create the char oxidation surface rate term associated with this model
   std::string surfacerateName = modelName + "_surfacerate";

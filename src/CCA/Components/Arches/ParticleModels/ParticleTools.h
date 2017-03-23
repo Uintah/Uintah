@@ -259,6 +259,38 @@ namespace Uintah{
         return false;
       }
 
+      inline static double getAshMassFraction(ProblemSpecP& db){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")){
+        double ash_frac;
+        params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("ASH",ash_frac);
+        return ash_frac;
+        } else{
+          throw ProblemSetupException("Error: cannot find <ultimate_analysis> in arches block.",__FILE__,__LINE__);      
+        }
+
+        return false;
+      }
+      
+      // This function is useful when specifying mass flow inlet of particles
+      inline static double getInletParticleSize(ProblemSpecP& db, const int qn ){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("diameter_distribution")){
+          std::vector<double> _sizes;
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("diameter_distribution", _sizes);
+          double initial_size = _sizes[qn];
+          return initial_size;
+        } else{
+          throw ProblemSetupException("Error: cannot find <diameter_distribution> in arches block.",__FILE__,__LINE__);      
+        }
+
+        return false;
+      }
+
+
+
     private: 
   
   }; 

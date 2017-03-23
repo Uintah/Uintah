@@ -471,6 +471,10 @@
           <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
           <ksi                            spec="OPTIONAL DOUBLE"
                                           need_applies_to="type coal"/><!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
+          <rho_ash_bulk                   spec="OPTIONAL DOUBLE"
+                                          need_applies_to="type coal"/> <!-- [kg/m^3] bulk density of ash, default is 2300.0-->
+          <void_fraction                  spec="OPTIONAL DOUBLE"
+                                          need_applies_to="type coal"/> <!-- initial void fraction of particles, default is 0.3-->
           <raw_coal_enthalpy              spec="REQUIRED DOUBLE"
                                           need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
           <char_enthalpy                  spec="REQUIRED DOUBLE"
@@ -523,6 +527,23 @@
               <stoich_coeff_ratio        spec="REQUIRED DOUBLE"/> <!-- [kmoles char / kmoles oxidizer] from stoichiometric coefficients -->
             </reaction>
           </SmithChar>
+          
+          <SmithChar2016                     spec="OPTIONAL NO_DATA"
+                                         need_applies_to="type coal">
+            <Sg0                         spec="OPTIONAL DOUBLE"/> <!-- //UNCERTAIN initial specific surface area [m^2/kg], range [1e3,1e6] default is 9.35e5-->
+            <char_MW                     spec="OPTIONAL DOUBLE"/> <!-- [kg char / kmoles char] default is 12.0-->
+            <surface_area_mult_factor    spec="OPTIONAL DOUBLE"/> <!-- [multiplication factor for area, default is 1.0. area = X * pi * D ^ 2-->
+            <species                     spec="MULTIPLE STRING"/> <!-- species names (from table) to be used in diffusion coefficient calculation. -->
+            <reaction                    spec="MULTIPLE NO_DATA"> <!-- a reaction section is specified for each reaction equation -->
+              <oxidizer_name             spec="REQUIRED STRING"/> <!-- name of oxidizer (used to populate oxidizer vector) -->
+              <oxidizer_MW               spec="REQUIRED DOUBLE"/> <!-- [kg oxidizer / kmoles oxidizer] -->
+              <pre_exponential_factor    spec="REQUIRED DOUBLE"/> <!-- [g/(cm^2 s atm O2)] (see pg 87-89 of "Coal Combustion and Gasification" by Smoot and Smith for coal specific parameters) -->
+              <activation_energy         spec="REQUIRED DOUBLE"/> <!-- [cal/gmole] (see pg 87-89 of "Coal Combustion and Gasification" by Smoot and Smith for coal specific parameters) -->
+              <stoich_coeff_ratio        spec="REQUIRED DOUBLE"/> <!-- [kmoles char / kmoles oxidizer] from stoichiometric coefficients. Default is 1.0-->
+              <use_co2co                 spec="OPTIONAL BOOLEAN"/> <!--default is false. If true than overides stoich_coeff_ratio with (CO2onCO + 1)/(CO2onCO + 0.5) model. -->
+              <heat_of_reaction_constant spec="REQUIRED DOUBLE"/> <!-- [J / mole] if use_co2co then it uses (CO2onCO*_HF_CO2 + _HF_CO)/(1+CO2onCO) -->
+            </reaction>
+          </SmithChar2016>
 
           <optics                       spec="OPTIONAL NO_DATA"
                                             need_applies_to="type coal">
@@ -1832,6 +1853,7 @@
                                                                           Thermophoresis,
                                                                           CharOxidationShaddix,
                                                                           CharOxidationSmith,
+                                                                          CharOxidationSmith2016,
                                                                           Deposition,
                                                                           SimpleBirth'">
 
