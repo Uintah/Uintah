@@ -209,36 +209,56 @@ void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
   IntVector yoffset(0,1,0);
   IntVector zoffset(0,0,1);
 
+  IntVector xoffset2(2,0,0);
+  IntVector yoffset2(0,2,0);
+  IntVector zoffset2(0,0,2);
+
   IntVector min = patch->getExtraCellLowIndex();
   IntVector max = patch->getExtraCellHighIndex();
-  int xmin = -99999;
-  int xmax = -99999;
-  int ymin = -99999;
-  int ymax = -99999;
-  int zmin = -99999;
-  int zmax = -99999;
+
+  int xmin = -99999999;
+  int xmax = -99999999;
+  int ymin = -99999999;
+  int ymax = -99999999;
+  int zmin = -99999999;
+  int zmax = -99999999;
+
+  bool xminus_bd = false;
+  bool yminus_bd = false;
+  bool zminus_bd = false;
+
+  bool xplus_bd = false;
+  bool yplus_bd = false;
+  bool zplus_bd = false;
+
 
   if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
+    xminus_bd = true;
     xmin = min.x();
   }
 
-  if(patch->getBCType(Patch::xplus) != Patch::Neighbor){
-    xmax = max.x() - 1;
-  }
-
   if(patch->getBCType(Patch::yminus) != Patch::Neighbor){
+    yminus_bd = true;
     ymin = min.y();
   }
 
-  if(patch->getBCType(Patch::yplus) != Patch::Neighbor){
-    ymax = max.y() - 1;
-  }
-
   if(patch->getBCType(Patch::zminus) != Patch::Neighbor){
+    zminus_bd = true;
     zmin = min.z();
   }
 
+  if(patch->getBCType(Patch::xplus) != Patch::Neighbor){
+    xplus_bd = true;
+    xmax = max.x() - 1;
+  }
+
+  if(patch->getBCType(Patch::yplus) != Patch::Neighbor){
+    yplus_bd = true;
+    ymax = max.y() - 1;
+  }
+
   if(patch->getBCType(Patch::zplus) != Patch::Neighbor){
+    zplus_bd = true;
     zmax = max.z() - 1;
   }
 
@@ -366,6 +386,125 @@ void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
       } // end foundIterator if statement
     } // end child loop
   } // end face loop
+
+  if(xminus_bd && yminus_bd){
+    IntVector c(min.x(), min.y(), min.z());
+    for(int i = min.z(); i < max.z(); i++){
+      if(i == min.z()){
+        es_potential[c] = es_potential[c + xoffset + yoffset + zoffset]
+                        - (es_potential[c + xoffset2 + yoffset + zoffset]
+                        -  es_potential[c + yoffset + zoffset]
+                        +  es_potential[c + xoffset + yoffset2 + zoffset]
+                        -  es_potential[c + xoffset + zoffset]
+                        +  es_potential[c + xoffset + yoffset + zoffset2]
+                        -  es_potential[c + xoffset + yoffset])/2;
+      }else if(i == (max.z()-1)){
+        es_potential[c] = es_potential[c + xoffset + yoffset - zoffset]
+                        + (es_potential[c + yoffset - zoffset]
+                        -  es_potential[c + xoffset2 + yoffset - zoffset]
+                        -  es_potential[c + xoffset + yoffset2 - zoffset]
+                        +  es_potential[c + xoffset - zoffset]
+                        -  es_potential[c + xoffset + yoffset - zoffset2]
+                        +  es_potential[c + xoffset + yoffset])/2;
+
+      }else{
+        es_potential[c] = es_potential[c + xoffset + yoffset]
+                        - (es_potential[c + xoffset2 + yoffset]
+                        -  es_potential[c + yoffset]
+                        +  es_potential[c + xoffset + yoffset2]
+                        -  es_potential[c + xoffset])/2;
+      }
+      c += zoffset;
+    }
+  }
+
+  if(xplus_bd && yminus_bd){
+    IntVector c(max.x()-1, min.y(), min.z());
+    for(int i = min.z(); i < max.z(); i++){
+      if(i == min.z()){
+        es_potential[c] = es_potential[c - xoffset + yoffset + zoffset]
+                        + (es_potential[c + yoffset + zoffset]
+                        -  es_potential[c - xoffset2 + yoffset + zoffset]
+                        -  es_potential[c - xoffset + yoffset2 + zoffset]
+                        +  es_potential[c - xoffset + zoffset]
+                        -  es_potential[c - xoffset + yoffset + zoffset2]
+                        +  es_potential[c - xoffset + yoffset])/2;
+      }else if(i == (max.z()-1)){
+        es_potential[c] = es_potential[c - xoffset + yoffset - zoffset]
+                        + (es_potential[c + yoffset - zoffset]
+                        -  es_potential[c - xoffset2 + yoffset - zoffset]
+                        -  es_potential[c - xoffset + yoffset2 - zoffset]
+                        +  es_potential[c - xoffset - zoffset]
+                        +  es_potential[c - xoffset + yoffset]
+                        -  es_potential[c - xoffset + yoffset - zoffset2])/2;
+      }else{
+        es_potential[c] = es_potential[c - xoffset + yoffset]
+                        + (es_potential[c + yoffset]
+                        -  es_potential[c - xoffset2 + yoffset]
+                        -  es_potential[c - xoffset + yoffset2]
+                        +  es_potential[c - xoffset])/2;
+      }
+      c += zoffset;
+    }
+  }
+  if(xplus_bd && yplus_bd){
+    IntVector c(max.x()-1, max.y()-1, min.z());
+    for(int i = min.z(); i < max.z(); i++){
+      if(i == min.z()){
+        es_potential[c] = es_potential[c - xoffset - yoffset + zoffset]
+                        + (es_potential[c - yoffset + zoffset]
+                        -  es_potential[c - xoffset2 - yoffset + zoffset]
+                        +  es_potential[c - xoffset + zoffset]
+                        -  es_potential[c - xoffset - yoffset2 + zoffset]
+                        -  es_potential[c - xoffset - yoffset + zoffset2]
+                        +  es_potential[c - xoffset - yoffset])/2;
+      }else if(i == (max.z()-1)){
+        es_potential[c] = es_potential[c - xoffset - yoffset - zoffset]
+                        + (es_potential[c - yoffset - zoffset]
+                        -  es_potential[c - xoffset2 - yoffset - zoffset]
+                        +  es_potential[c - xoffset - zoffset]
+                        -  es_potential[c - xoffset - yoffset2 - zoffset]
+                        +  es_potential[c - xoffset - yoffset]
+                        -  es_potential[c - xoffset - yoffset - zoffset2])/2;
+      }else{
+        es_potential[c] = es_potential[c - xoffset - yoffset]
+                        + (es_potential[c - yoffset]
+                        -  es_potential[c - xoffset2 - yoffset]
+                        +  es_potential[c - xoffset]
+                        -  es_potential[c - xoffset - yoffset2])/2;
+      }
+      c += zoffset;
+    }
+  }
+  if(xminus_bd && yplus_bd){
+    IntVector c(min.x(), max.y()-1, min.z());
+    for(int i = min.z(); i < max.z(); i++){
+      if(i == min.z()){
+        es_potential[c] = es_potential[c + xoffset - yoffset + zoffset]
+                        + (es_potential[c - yoffset + zoffset]
+                        -  es_potential[c + xoffset2 - yoffset + zoffset]
+                        +  es_potential[c + xoffset + zoffset]
+                        -  es_potential[c + xoffset - yoffset2 + zoffset]
+                        +  es_potential[c + xoffset - yoffset]
+                        -  es_potential[c + xoffset - yoffset + zoffset2])/2;
+      }else if(i == (max.z()-1)){
+        es_potential[c] = es_potential[c + xoffset - yoffset - zoffset]
+                        + (es_potential[c - yoffset - zoffset]
+                        -  es_potential[c + xoffset2 - yoffset - zoffset]
+                        +  es_potential[c + xoffset - zoffset]
+                        -  es_potential[c + xoffset - yoffset2 - zoffset]
+                        +  es_potential[c + xoffset - yoffset]
+                        -  es_potential[c + xoffset - yoffset - zoffset2])/2;
+      }else{
+        es_potential[c] = es_potential[c + xoffset - yoffset]
+                        + (es_potential[c - yoffset]
+                        -  es_potential[c + xoffset2 - yoffset]
+                        +  es_potential[c + xoffset]
+                        -  es_potential[c + xoffset - yoffset2])/2;
+      }
+      c += zoffset;
+    }
+  }
 }
 
 void FVMBoundCond::setESPotentialBC(const Patch* patch, int dwi,
@@ -657,6 +796,8 @@ void FVMBoundCond::setG1BoundaryConditions(const Patch* patch, int dwi,
               }
             }
             nCells += bound_ptr.size();
+            break;
+          default:
             break;
         } // end switch statment
       } // end foundIterator if statment
