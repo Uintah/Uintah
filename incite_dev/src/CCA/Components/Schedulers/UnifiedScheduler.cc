@@ -74,6 +74,8 @@ Dout g_timeout(     "Unified_TimingsOut" , false);
 Dout g_queuelength( "Unified_QueueLength", false);
 
 std::mutex g_scheduler_mutex{};        // main scheduler lock for multi-threaded task selection
+std::mutex g_scheduler_internal_mutex{};        // main scheduler lock for multi-threaded task selection
+std::mutex g_mark_task_consumed_mutex{};    // allow only one task at a time to enter the task consumed section
 std::mutex g_lb_lock{};                // load balancer lock
 std::mutex g_GridVarSuperPatch_mutex{}; // An ugly hack to get superpatches for host levels to work.
 
@@ -500,7 +502,6 @@ UnifiedScheduler::runTask( DetailedTask*         task
     for (int i = 0; i < static_cast<int>(m_dws.size()); i++) {
       plain_old_dws[i] = m_dws[i].get_rep();
     }
-
     task->doit(d_myworld, m_dws, plain_old_dws, event);
 
 
@@ -838,10 +839,9 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
                                   , DetailedTask * dtask
                                   )
 {
-
+  g_mark_task_consumed_mutex.lock();
   // Update the count of tasks consumed by the scheduler.
   numTasksDone++;
-
   if (g_task_order && d_myworld->myrank() == d_myworld->size() / 2) {
     DOUT(g_task_dbg, myRankThread() << " Running task static order: " << dtask->getStaticOrder() << ", scheduled order: " << numTasksDone);
   }
@@ -855,6 +855,8 @@ UnifiedScheduler::markTaskConsumed( int          & numTasksDone
     DOUT(g_task_dbg, myRankThread() << " switched to task phase " << currphase << ", total phase "
                                     << currphase << " tasks = " << m_phase_tasks[currphase]);
   }
+  g_mark_task_consumed_mutex.unlock();
+
 }
 
 //______________________________________________________________________
@@ -883,7 +885,6 @@ UnifiedScheduler::runTasks( int thread_id )
     bool cpuValidateRequiresCopies = false;
     bool cpuCheckIfExecutable = false;
     bool cpuRunReady = false;
-
 #endif
 
     // ----------------------------------------------------------------------------------
@@ -891,7 +892,7 @@ UnifiedScheduler::runTasks( int thread_id )
     //    Check if anything this thread can do concurrently.
     //    If so, then update the various scheduler counters.
     // ----------------------------------------------------------------------------------
-    g_scheduler_mutex.lock();
+    //g_scheduler_mutex.lock();
     while (!havework) {
       /*
        * (1.1)
@@ -901,13 +902,16 @@ UnifiedScheduler::runTasks( int thread_id )
        */
 
       if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
-        readyTask = m_phase_sync_task[m_curr_phase];
-        havework = true;
-        markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+        g_scheduler_mutex.lock();
+        if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
+          readyTask = m_phase_sync_task[m_curr_phase];
+          havework = true;
+          markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
 #ifdef HAVE_CUDA
-        cpuRunReady = true;
+          cpuRunReady = true;
 #endif
-
+        }
+        g_scheduler_mutex.unlock();
         break;
       }
 
@@ -921,9 +925,9 @@ UnifiedScheduler::runTasks( int thread_id )
        * NOTE: This is also where a GPU-enabled task gets into the GPU initially-ready queue
        *
        */
-      else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
-        readyTask = m_detailed_tasks->getNextExternalReadyTask();
-        if (readyTask != nullptr) {
+      else if ((readyTask = m_detailed_tasks->getNextExternalReadyTask())) {
+        //readyTask = ;
+        //if (readyTask != nullptr) {
           havework = true;
 #ifdef HAVE_CUDA
           /*
@@ -935,29 +939,40 @@ UnifiedScheduler::runTasks( int thread_id )
            *
            * gpuInitReady = true
            */
-          if (readyTask->getTask()->usesDevice()) {
-            //These tasks can't start unless we copy and/or verify all data into GPU memory
-            gpuInitReady = true;
-          } else if (usingDevice == false || readyTask->getPatches() == nullptr) {
+          if (usingDevice == false || readyTask->getPatches() == nullptr) {
             //These tasks won't ever have anything to pull out of the device
             //so go ahead and mark the task "done" and say that it's ready
             //to start running as a CPU task.
 
             markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
             cpuRunReady = true;
+            //printf("1.2.1a ");
           } else if (!readyTask->getTask()->usesDevice() && usingDevice) {
+
             //These tasks can't start unless we copy and/or verify all data into host memory
+            //markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
             cpuInitReady = true;
+            //printf("1.2.1b ");
+
+          } else if (readyTask->getTask()->usesDevice()) {
+            //These tasks can't start unless we copy and/or verify all data into GPU memory
+            //markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+            //printf("1.2.1c ");
+            gpuInitReady = true;
+
           } else {
             markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
             cpuRunReady = true;
+            //printf("1.2.1d ");
           }
 #else
           // if NOT compiled with device support, then this is a CPU task and we can mark the task consumed
           markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
 #endif
           break;
-        }
+        //} else {
+        //  printf("Got here\n");
+        //}
       }
 
       /*
@@ -968,15 +983,14 @@ UnifiedScheduler::runTasks( int thread_id )
        * call to task->checkExternalDepCount().
        *
        */
-      else if (m_detailed_tasks->numInternalReadyTasks() > 0) {
-        initTask = m_detailed_tasks->getNextInternalReadyTask();
-        if (initTask != nullptr) {
+      else if ((initTask = m_detailed_tasks->getNextInternalReadyTask())) {
+        //if (initTask != nullptr) {
+          //g_scheduler_internal_mutex.lock();  //lock because we write to m_phase_sync_task
           if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
 
             DOUT(g_task_dbg, myRankThread() <<  " Task internal ready 1 " << *initTask);
-
             m_phase_sync_task[initTask->getTask()->m_phase] = initTask;
-            ASSERT(initTask->getRequires().size() == 0)
+            ASSERT(initTask->getRequires().size() == 0);
             initTask = nullptr;
           }
           else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
@@ -986,161 +1000,154 @@ UnifiedScheduler::runTasks( int thread_id )
           }
           else {
             havework = true;
+            //g_scheduler_internal_mutex.unlock();
             break;
           }
-        }
+          //g_scheduler_internal_mutex.unlock();
+        //}
       }
 #ifdef HAVE_CUDA
-      /*
-       * (1.4)
-       *
-       * Check if highest priority GPU task's asynchronous H2D copies are completed. If so,
-       * then reclaim the streams and events it used for these operations, and mark as valid
-       * the vars for which this task was responsible.  (If the vars are awaiting ghost cells
-       * then those vars will be updated with a status to reflect they aren't quite valid yet)
-       *
-       * gpuVerifyDataTransferCompletion = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getDeviceValidateRequiresCopiesTask(readyTask)) {
+      else if (usingDevice){
+        /*
+         * (1.4)
+         *
+         * Check if highest priority GPU task's asynchronous H2D copies are completed. If so,
+         * then reclaim the streams and events it used for these operations, and mark as valid
+         * the vars for which this task was responsible.  (If the vars are awaiting ghost cells
+         * then those vars will be updated with a status to reflect they aren't quite valid yet)
+         *
+         * gpuVerifyDataTransferCompletion = true
+         */
+        if (usingDevice
+            && m_detailed_tasks->getDeviceValidateRequiresCopiesTask(readyTask)) {
+            gpuValidateRequiresCopies = true;
+            havework = true;
+            break;
+        }
+        /*
+         * (1.4.1)
+         *
+         * Check if all vars and staging vars needed for ghost cell copies are present and valid.
+         * If so, start the ghost cell gathering.  Otherwise, put it back in this pool and try
+         * again later.
+         * gpuPerformGhostCopies = true
+         */
+        else if (usingDevice
+            && m_detailed_tasks->getDevicePerformGhostCopiesTask(readyTask)) {
+            gpuPerformGhostCopies = true;
+            havework = true;
+            break;
+        }
+        /*
+         * (1.4.2)
+         *
+         * Prevously the task was gathering in ghost vars.  See if one of those tasks is done,
+         * and if so mark the vars it was processing as valid with ghost cells.
+         * gpuValidateGhostCopies = true
+         */
+        else if (usingDevice
+            && m_detailed_tasks->getDeviceValidateGhostCopiesTask(readyTask)) {
+            gpuValidateGhostCopies = true;
+            havework = true;
+            break;
+        }
+        /*
+         * (1.4.3)
+         *
+         * Check if all GPU variables for the task are either valid or valid and awaiting ghost cells.
+         * If any aren't yet at that state (due to another task having not copied it in yet), then
+         * repeat this step.  If all variables have been copied in and some need ghost cells, then
+         * process that.  If no variables need to have their ghost cells processed,
+         * the GPU to GPU ghost cell copies.  Also make GPU data as being valid as it is now
+         * copied into the device.
+         *
+         * gpuCheckIfExecutable = true
+         */
+        else if (usingDevice
+            && m_detailed_tasks->getDeviceCheckIfExecutableTask(readyTask)) {
+            gpuCheckIfExecutable = true;
+            havework = true;
+            break;
+        }
+        /*
+         * (1.4.4)
+         *
+         * Check if highest priority GPU task's asynchronous device to device ghost cell copies are
+         * finished. If so, then reclaim the streams and events it used for these operations, execute
+         * the task and then put it into the GPU completion-pending queue.
+         *
+         * gpuRunReady = true
+         */
+        else if (usingDevice
+            && m_detailed_tasks->getDeviceReadyToExecuteTask(readyTask)) {
+            gpuRunReady = true;
+            havework    = true;
+            break;
 
-          gpuValidateRequiresCopies = true;
-          havework = true;
-          break;
-      }
-      /*
-       * (1.4.1)
-       *
-       * Check if all vars and staging vars needed for ghost cell copies are present and valid.
-       * If so, start the ghost cell gathering.  Otherwise, put it back in this pool and try
-       * again later.
-       * gpuPerformGhostCopies = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getDevicePerformGhostCopiesTask(readyTask)) {
+        }
+        /*
+         * (1.4.5)
+         *
+         * Check if a CPU task needs data into host memory from GPU memory
+         * If so, copies data D2H.  Also checks if all data has arrived and is ready to process.
+         *
+         * cpuValidateRequiresCopies = true
+         */
+        else if (usingDevice
+            && m_detailed_tasks->getHostValidateRequiresCopiesTask(readyTask)) {
+            cpuValidateRequiresCopies = true;
+            havework = true;
+            break;
+        }
+        /*
+         * (1.4.6)
+         *
+         * Check if all CPU variables for the task are either valid or valid and awaiting ghost cells.
+         * If so, this task can be executed.
+         * If not, (perhaps due to another task having not completed a D2H yet), then
+         * repeat this step.
+         *
+         * cpuCheckIfExecutable = true
+         */
+        else if (usingDevice
+            && m_detailed_tasks->getHostCheckIfExecutableTask(readyTask)) {
+            cpuCheckIfExecutable = true;
+            havework = true;
+            break;
+        }
+        /*
+         * (1.4.7)
+         *
+         * Check if highest priority GPU task's asynchronous D2H copies are completed. If so,
+         * execute the task and then put it into the CPU completion-pending queue.
+         *
+         * cpuRunReady = true
+         */
+        else if (usingDevice
+            && m_detailed_tasks->getHostReadyToExecuteTask(readyTask)) {
+            markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+            cpuRunReady = true;
+            havework    = true;
+            break;
+        }
+        /*
+         * (1.5)
+         *
+         * Check to see if any GPU tasks have been completed. This means the kernel(s)
+         * have executed (which prevents out of order kernels, and also keeps tasks that depend on
+         * its data to wait until the async kernel call is done).
+         * This task's MPI sends can then be posted and done() can be called.
+         *
+         * gpuPending = true
+         */
+        else if (usingDevice
+            && m_detailed_tasks->getDeviceExecutionPendingTask(readyTask)) {
+            havework   = true;
+            gpuPending = true;
+            markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
+            break;
 
-          gpuPerformGhostCopies = true;
-          havework = true;
-          break;
-      }
-      /*
-       * (1.4.2)
-       *
-       * Prevously the task was gathering in ghost vars.  See if one of those tasks is done,
-       * and if so mark the vars it was processing as valid with ghost cells.
-       * gpuValidateGhostCopies = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getDeviceValidateGhostCopiesTask(readyTask)) {
-
-          gpuValidateGhostCopies = true;
-          havework = true;
-          break;
-      }
-      /*
-       * (1.4.3)
-       *
-       * Check if all GPU variables for the task are either valid or valid and awaiting ghost cells.
-       * If any aren't yet at that state (due to another task having not copied it in yet), then
-       * repeat this step.  If all variables have been copied in and some need ghost cells, then
-       * process that.  If no variables need to have their ghost cells processed,
-       * the GPU to GPU ghost cell copies.  Also make GPU data as being valid as it is now
-       * copied into the device.
-       *
-       * gpuCheckIfExecutable = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getDeviceCheckIfExecutableTask(readyTask)) {
-
-          gpuCheckIfExecutable = true;
-          havework = true;
-          break;
-      }
-      /*
-       * (1.4.4)
-       *
-       * Check if highest priority GPU task's asynchronous device to device ghost cell copies are
-       * finished. If so, then reclaim the streams and events it used for these operations, execute
-       * the task and then put it into the GPU completion-pending queue.
-       *
-       * gpuRunReady = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getDeviceReadyToExecuteTask(readyTask)) {
-
-        gpuRunReady = true;
-        havework    = true;
-
-        break;
-
-      }
-      /*
-       * (1.4.5)
-       *
-       * Check if a CPU task needs data into host memory from GPU memory
-       * If so, copies data D2H.  Also checks if all data has arrived and is ready to process.
-       *
-       * cpuValidateRequiresCopies = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getHostValidateRequiresCopiesTask(readyTask)) {
-
-          cpuValidateRequiresCopies = true;
-          havework = true;
-          break;
-      }
-      /*
-       * (1.4.6)
-       *
-       * Check if all CPU variables for the task are either valid or valid and awaiting ghost cells.
-       * If so, this task can be executed.
-       * If not, (perhaps due to another task having not completed a D2H yet), then
-       * repeat this step.
-       *
-       * cpuCheckIfExecutable = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getHostCheckIfExecutableTask(readyTask)) {
-
-          cpuCheckIfExecutable = true;
-          havework = true;
-          break;
-      }
-      /*
-       * (1.4.7)
-       *
-       * Check if highest priority GPU task's asynchronous D2H copies are completed. If so,
-       * execute the task and then put it into the CPU completion-pending queue.
-       *
-       * cpuRunReady = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getHostReadyToExecuteTask(readyTask)) {
-
-        markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
-
-        cpuRunReady = true;
-        havework    = true;
-        break;
-      }
-      /*
-       * (1.5)
-       *
-       * Check to see if any GPU tasks have been completed. This means the kernel(s)
-       * have executed (which prevents out of order kernels, and also keeps tasks that depend on
-       * its data to wait until the async kernel call is done).
-       * This task's MPI sends can then be posted and done() can be called.
-       *
-       * gpuPending = true
-       */
-      else if (usingDevice == true
-          && m_detailed_tasks->getDeviceExecutionPendingTask(readyTask)) {
-
-        havework   = true;
-        gpuPending = true;
-        markTaskConsumed(m_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
-        break;
-
+        }
       }
 #endif
       /*
@@ -1148,20 +1155,19 @@ UnifiedScheduler::runTasks( int thread_id )
        *
        * Otherwise there's nothing to do but process MPI recvs.
        */
-      else {
+      //else {
+      if (!havework) {
         if (m_recvs.size() != 0u) {
           havework = true;
           break;
         }
       }
-      
       if (m_num_tasks_done == m_num_tasks) {
         break;
       }
 
     } // end while (!havework)
-    g_scheduler_mutex.unlock();
-
+    //g_scheduler_mutex.unlock();
 
 
     // ----------------------------------------------------------------------------------
@@ -1285,15 +1291,34 @@ UnifiedScheduler::runTasks( int thread_id )
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             initiateD2H(readyTask);
           }
-          
-          m_detailed_tasks->addHostValidateRequiresCopies(readyTask);
-
+          if (readyTask->getVarsBeingCopiedByTask().getMap().empty()) {
+            if (allHostVarsProcessingReady(readyTask)) {
+              m_detailed_tasks->addHostReadyToExecute(readyTask);
+              //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
+              //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+            } else {
+              m_detailed_tasks->addHostCheckIfExecutable(readyTask);
+            }
+          } else {
+            //for (std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it = readyTask->getVarsBeingCopiedByTask().getMap().begin(); it != readyTask->getVarsBeingCopiedByTask().getMap().end(); ++it) {
+            //}
+            //Once the D2H transfer is done, we mark those vars as valid.
+            m_detailed_tasks->addHostValidateRequiresCopies(readyTask);
+          }
         } else if (cpuValidateRequiresCopies) {
           markHostRequiresDataAsValid(readyTask);
-          m_detailed_tasks->addHostCheckIfExecutable(readyTask);
+          if (allHostVarsProcessingReady(readyTask)) {
+            m_detailed_tasks->addHostReadyToExecute(readyTask);
+            //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
+            //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+          } else {
+            m_detailed_tasks->addHostCheckIfExecutable(readyTask);
+          }
         } else if (cpuCheckIfExecutable) {
           if (allHostVarsProcessingReady(readyTask)) {
             m_detailed_tasks->addHostReadyToExecute(readyTask);
+            //runTask(readyTask, m_curr_iteration, thread_id, Task::CPU);
+            //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
           }  else {
             // Some vars aren't valid and ready,  We must be waiting on another task to finish
             // copying in some of the variables we need.
@@ -1306,7 +1331,7 @@ UnifiedScheduler::runTasks( int thread_id )
 #ifdef HAVE_CUDA
           //See note above near cpuInitReady.  Some CPU tasks may internally interact
           //with GPUs without modifying the structure of the data warehouse.
-          GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+          //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
         }
 #endif
       }
@@ -3754,6 +3779,16 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
     const std::string varName = dependantVar->m_var->getName();
     //TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
+    //There currently exists a race condition.
+    //Thread 0 - Task  - Computes cellType
+    //Thread 1 - Task RCMRT for GPU - Copies in cellType as a requires into the GPU
+    //Thread 2 - Requests a requires var for cellType for the newDW, and gets it.
+    //Thread 3 - Task B invokes the initiateD2H check, recognizes no host copy, and copies it back D2H.
+    //           And then as part of this process, it performs another allocateAndPut, and the subsequent put
+    //           deletes the old entry and creates a new entry.
+    //Race condition is that thread 2's pointer has been cleaned up, while thread 3 has a new one.
+    //A temp fix could be to check if all host vars exist in the host dw prior to launching the task.
+
     if (varName != "divQ" && varName != "RMCRTboundFlux" && varName != "radiationVolq" ) {
       continue;
     }

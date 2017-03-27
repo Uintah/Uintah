@@ -32,7 +32,7 @@
 #endif
 #include <iostream>
 
-#define BLOCKSIZE 16
+#define BLOCKSIZE 32
 
 using namespace Uintah;
 using namespace std;
@@ -99,12 +99,12 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
       celltype_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
     }
 
-
+#if 0
     //__________________________________
     //  varLabel name struct
     varLabelNames*  labelNames = nullptr;
 
-#if 0
+
     varLabelNames*  labelNames = new varLabelNames;
 
     labelNames->abskg   = d_abskgLabel->getName().c_str();    // CUDA doesn't support C++ strings
@@ -215,7 +215,6 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                               patchP,
                               (cudaStream_t*)stream,
                               RT_flags,
-                              labelNames,
                               sharedState->getCurrentTopLevelTimeStep(),
                               abskg_gdw,
                               sigmaT4_gdw,
@@ -354,7 +353,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
       RT_flags.maxLength[i] = _maxLength[i];
     }
 
-    double start = clock();
+    //double start = clock();
         
     //______________________________________________________________________
     //  patch loop
@@ -410,49 +409,47 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
       //1D layout, then the kernel can then map those threads to individual cells.  We will not be
       //trying to map threads to z-slices or some geometric approach, but rather simply threads->cells.
       //An approach which seems to give 2 blocks per SM while using the most registers is around 320 threads.
-      //It seems we can also allow each thread to operate on many cells.  Setting that number to something large.
-      unsigned int numThreadsPerGPUBlock = 320;
+      //Also assume we can give each thread 5 cells to work with.
+      const unsigned int numThreadsPerGPUBlock = 320;
+      const unsigned int numCellsPerThread = 99999999;
       kernelParams kp;
-      kp.numCellsPerThread = 100;
-      kp.numKernels = 1;
-      
-      const unsigned int numCellsPlusExtra = (hiEC.x() - loEC.x()) * (hiEC.y() - loEC.y()) * (hiEC.z() - loEC.z());
+      kp.numCellsPerThread = numCellsPerThread;
 
-      //trying to run two kernels instead of one.
-      unsigned int numBlocks = 1;
-      const unsigned int assignedNumCellsPlusExtra = numCellsPlusExtra / kp.numKernels;
-      if (assignedNumCellsPlusExtra > (numThreadsPerGPUBlock * kp.numCellsPerThread)) {
-          //Distribute proportionally along warp divisions of 32 threads.
-        numBlocks= 1 + ((assignedNumCellsPlusExtra-1)/ (numThreadsPerGPUBlock * kp.numCellsPerThread));
+      const unsigned int numCellsPlusExtra = (hiEC.x() - loEC.x()) * (hiEC.y() - loEC.y()) * (hiEC.z() - loEC.z());
+      int numBlocks = 1;
+      int numKernels = 1;
+
+      const unsigned int assignedNumCellsPlusExtra = numCellsPlusExtra / numKernels;
+      if (assignedNumCellsPlusExtra > (numThreadsPerGPUBlock * numCellsPerThread)) {
+        numBlocks= 1 + ((assignedNumCellsPlusExtra-1)/ (numThreadsPerGPUBlock * numCellsPerThread));
       }
-      
       dim3 dimBlock(numThreadsPerGPUBlock, 1, 1);
       dim3 dimGrid(numBlocks, 1, 1);
 
-#ifdef DEBUG
-      patchP.print();
-      cout << " xdim: " << xdim << " ydim: " << ydim << " zdim: " << zdim << endl;
-      cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << " zblocks: " << zblocks << endl;
-#endif
 
       RT_flags.nRaySteps = 0;
 
-      for (int i = 0; i < kp.numKernels; i++) {
-        kp.curKernel = i;
+      for (int i = 0; i < numKernels; i++) {
+        RT_flags.startCell = (i/static_cast<double>(numKernels)) * numCellsPlusExtra;
+      //  RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCellsPlusExtra;
+      }
+      //__________________________________
+      // set up and launch kernel
+      for (int i = 0; i < numKernels; i++) {
         //__________________________________
         // set up and launch kernel
         launchRayTraceDataOnionKernel<T>(dtask,
                                          dimGrid,
                                          dimBlock,
-                                         kp,
                                          d_matl,
+                                         kp,
                                          patchP,
                                          gridP,
                                          levelP,
                                          fineLevel_ROI_Lo,
                                          fineLevel_ROI_Hi,
                                          (cudaStream_t*)stream,
-                                         RT_flags, 
+                                         RT_flags,
                                          sharedState->getCurrentTopLevelTimeStep(),
                                          abskg_gdw,
                                          sigmaT4_gdw,
@@ -461,21 +458,20 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                          static_cast<GPUDataWarehouse*>(newTaskGpuDW));
 
       }
-
       //__________________________________
       //
-      double end = clock();
-      double efficiency = RT_flags.nRaySteps / ((end - start) / CLOCKS_PER_SEC);
+      //double end = clock();
+      //double efficiency = RT_flags.nRaySteps / ((end - start) / CLOCKS_PER_SEC);
 
       // THIS DOESNT WORK:  nRaySteps is not defined
-      if (finePatch->getGridIndex() == 0) {
-        std::cout << "\n";
-        std::cout << " RMCRT REPORT: Patch 0" << "\n";
-        std::cout << " Used " << (end - start) * 1000 / CLOCKS_PER_SEC << " milliseconds of CPU time. \n" << "\n";  // Convert time to ms
-        std::cout << " Size: " << RT_flags.nRaySteps << "\n";
-        std::cout << " Efficiency: " << efficiency << " steps per sec" << "\n";
-        std::cout << std::endl;
-      }
+      //if (finePatch->getGridIndex() == 0) {
+      //  std::cout << "\n";
+      //  std::cout << " RMCRT REPORT: Patch 0" << "\n";
+      //  std::cout << " Used " << (end - start) * 1000 / CLOCKS_PER_SEC << " milliseconds of CPU time. \n" << "\n";  // Convert time to ms
+      //  std::cout << " Size: " << RT_flags.nRaySteps << "\n";
+      //  std::cout << " Efficiency: " << efficiency << " steps per sec" << "\n";
+      //  std::cout << std::endl;
+      //}
     }  //end patch loop
 
 #endif // end #ifdef HAVE_CUDA
