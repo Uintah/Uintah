@@ -18,7 +18,6 @@ if test $? == 0; then
   echo ""
   echo "Running Make..."
   echo ""
-  make clean
   make -j4
   make install
 
