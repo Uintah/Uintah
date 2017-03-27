@@ -45,7 +45,7 @@ typedef Uintah::gpuPoint     GPUPoint;
 
 //______________________________________________________________________
 //
-const int d_MAXLEVELS = 5;               // FIX ME!
+const int d_MAXLEVELS = 2;               // FIX ME!
 const int d_flowCell = -1;               // HARDWIRED!
 //__________________________________
 //  returns gpuVector * scalar
@@ -500,7 +500,8 @@ struct RMCRT_flags {
     char whichROI_algo;           // which Region of Interest algorithm
     char rayDirSampleAlgo;        // which ray direction sampling algorithm (Monte-Carlo or Latin-Hyper_Cube)
     double maxLength[d_MAXLEVELS];  // hard coding it for d_MAXLEVELS levels for now.
-
+    unsigned int startCell {0};
+    //unsigned int endCell {0};
 };
 
 //__________________________________
@@ -720,7 +721,6 @@ __host__ void launchRayTraceKernel( DetailedTask* dtask,
                                     patchParams patch,
                                     cudaStream_t* stream,
                                     RMCRT_flags RT_flags,
-                                    varLabelNames* labelNames,
                                     int curTimestep,
                                     GPUDataWarehouse* abskg_gdw,
                                     GPUDataWarehouse* sigmaT4_gdw,
@@ -734,8 +734,8 @@ template< class T >
 __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              dim3 dimGrid,
                                              dim3 dimBlock,
-                                             kernelParams kp,
                                              int matlIndex,
+                                             kernelParams kp,
                                              patchParams patchP,
                                              gridParams gridP,
                                              levelParams* levelP,
