@@ -3,9 +3,11 @@
 
   <Uintah_specification> 
     <FVM                   spec="OPTIONAL NO_DATA">
-      <delt                     spec="REQUIRED DOUBLE 'positive'" />
-      <Parameters               spec="OPTIONAL NO_DATA"                                           
-                                attribute1="variable OPTIONAL STRING 'electrostatic_solver'" >
+      <delt                spec="REQUIRED DOUBLE 'positive'" />
+      <Parameters          spec="OPTIONAL NO_DATA"                                           
+                             attribute1="variable OPTIONAL STRING
+                                        'electrostatic_solver,
+                                         gauss1_solver'" >
         <initial_tolerance spec="OPTIONAL DOUBLE 'positive'"/>
         <criteria          spec="OPTIONAL STRING 'Absolute relative'" />                     
         <jump              spec="OPTIONAL INTEGER" />                                        
@@ -24,6 +26,7 @@
         <tolerance         spec="REQUIRED DOUBLE 'positive'" /> 
         <relax_type        spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
       </Parameters>
+      <unit_charge         spec="OPTIONAL DOUBLE"/>
     </FVM>
     
     <ESMPM                  spec="OPTIONAL NO_DATA">
