@@ -46,7 +46,7 @@
        * need: OPTIONAL, REQUIRED, MULTIPLE   (Probably need MULTIPLE-REQ and MULTIPLE-OPT.
                                              Currently MULTIPLE means 0 or more...)
        * type: DOUBLE, INTEGER, STRING, VECTOR, MULTIPLE_INTEGERS, MULTIPLE_DOUBLES,
-               MULTIPLE_VECTORS, NO_DATA (NO_DATA means the tag doesn't have any
+               MULTIPLE_VECTORS, BOOLEAN, NO_DATA (NO_DATA means the tag doesn't have any
                                           data (text) but can have attributes and/or
                                           sub-tags.)
          - MULTIPLE_INTEGERS:  [ #... ]
@@ -362,6 +362,9 @@
       <concentration             spec="OPTIONAL DOUBLE"/>
       <chemical_potential        spec="OPTIONAL DOUBLE"/>
       <conductivity              spec="OPTIONAL DOUBLE"/>
+      <pos_charge_density        spec="OPTIONAL DOUBLE"/>
+      <neg_charge_density        spec="OPTIONAL DOUBLE"/>
+      <permittivity              spec="OPTIONAL DOUBLE"/>
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
@@ -372,7 +375,9 @@
                                                 mpmarches, 
                                                 mpmf, mpmice, amrmpm, wasatch, reduce_uda,
                                                 electrostatic_solver,
+                                                gauss_solver,
                                                 esmpm,
+                                                esmpm2,
                                                 advectslabs,
                                                 unifiedschedulertest,poissongpu1,poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,
@@ -549,27 +554,26 @@
                               attribute20="outer_upper  OPTIONAL MULTIPLE_DOUBLES"
                               attribute21="rectangulus   OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'">
                                 
-                                <ParticleBC spec="OPTIONAL NO_DATA"
-                                            children1="ONE_OF(CHILD Wall, Inlet)">
-                                        <!-- spec for particle wall boundary -->                                
-                                        <Wall   spec="OPTIONAL NO_DATA"
-                                                                attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
-                                                <Restitution spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
-                                        </Wall>
-                                        <!-- spec for adding particles - Designates that this face injects particles into the domain -->
-                                        <Inlet                  spec="OPTIONAL NO_DATA">
-                                                <ParticlesPerSecond spec="OPTIONAL DOUBLE"/>
-                                        </Inlet>                                                                
-                                </ParticleBC>
+    <ParticleBC spec="OPTIONAL NO_DATA"
+    children1="ONE_OF(CHILD Wall, Inlet)">
+    <!-- spec for particle wall boundary -->                                
+    <Wall   spec="OPTIONAL NO_DATA"
+    attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
+    <Restitution spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
+  </Wall>
+    <!-- spec for adding particles - Designates that this face injects particles into the domain -->
+    <Inlet                  spec="OPTIONAL NO_DATA">
+    <ParticlesPerSecond spec="OPTIONAL DOUBLE"/>
+  </Inlet>                                                                
+  </ParticleBC>
 
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip, Custom, 
-                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, 
-                                                                     MassFlowInlet, PartMassFlowInlet , Swirl, FromFile, ForcedDirichlet,
-                                                                     TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
+                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet,
+                                                                     Swirl, FromFile, ForcedDirichlet, TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
-                              attribute4="type      OPTIONAL STRING 'int'" 
+                              attribute4="type      OPTIONAL STRING 'int, velocity, handoff'" 
                               attribute5="value     OPTIONAL STRING" >
                                                                 
           <value            spec="OPTIONAL STRING"/>
@@ -581,6 +585,9 @@
 
           <relative_xyz     spec="REQUIRED VECTOR" need_applies_to="var VelocityFileInput FromFile"/>
 
+          <variable         spec="OPTIONAL NO_DATA" 
+                            attribute1="label REQUIRED STRING"/> 
+
           <!-- When using the FromFile or VelocityFileInput interface, one must supply a default in the 
           event that the handoff file does not contain an iterator for the specified geometry --> 
           <default          spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'Neumann, Dirichlet" 
@@ -589,7 +596,8 @@
                             need_applies_to="var VelocityFileInput FromFile"/> 
           
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
-                        <!--swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
+
+          <!--swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
           <swirl_centroid   spec="OPTIONAL VECTOR"  need_applies_to="var Swirl"/>
 
           <!-- Stabilized Atmospheric Boundary Layer --> 
@@ -642,7 +650,7 @@
       
       
     </BoundaryConditions>
-    <!--__________________________________-->
+    <!--____End BoundaryConditions section______________________________-->
     
     <Level              spec="MULTIPLE NO_DATA">
       <Box              spec="MULTIPLE NO_DATA"
