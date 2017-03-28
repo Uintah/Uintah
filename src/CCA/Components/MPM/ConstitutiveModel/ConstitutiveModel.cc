@@ -115,11 +115,9 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
 }
 
 void 
-ConstitutiveModel::addComputesAndRequires(
-                                                Task        *,
-                                          const MPMMaterial *,
-                                          const PatchSet    *
-                                         ) const
+ConstitutiveModel::addComputesAndRequires(Task*, 
+                                          const MPMMaterial*,
+                                          const PatchSet*) const
 {
   throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);
 }
@@ -159,7 +157,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
-
   task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
   task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
                                                             matlset, gnone);
@@ -171,7 +168,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel,                        matlset);
-
   //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
 
@@ -208,8 +204,6 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
                                           DataWarehouse*  new_dw,
                                           const MPMMaterial* matl)
 {
-
-
   ParticleVariable<double>  pIntHeatRate_new,p_q;
   ParticleVariable<Matrix3> pStress_new;
   new_dw->allocateAndPut(pIntHeatRate_new,  lb->pdTdtLabel,             pset);
@@ -223,21 +217,6 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
     pStress_new[idx]=Matrix3(0.0);
     p_q[idx]=0.;
   }
-}
-
-void 
-ConstitutiveModel::addRequiresDamageParameter(Task*, 
-                                              const MPMMaterial*,
-                                              const PatchSet*) const
-{
-}
-
-void 
-ConstitutiveModel::getDamageParameter(const Patch* ,
-                                      ParticleVariable<int>& ,int ,
-                                      DataWarehouse* ,
-                                      DataWarehouse* )
-{
 }
 
 Vector 
@@ -330,8 +309,7 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
     particleIndex idx = *iter;
                                                                             
     // Get the node indices that surround the cell
-    int NN = 
-      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
                                                                             
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
 
@@ -374,8 +352,7 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
       particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
-      int NN = 
-       interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
 
       computeGrad(velGrad, ni, d_S, oodx, gVel);
 
@@ -431,8 +408,7 @@ ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
     particleIndex idx = *iter;
                                                                                 
     // Get the node indices that surround the cell
-    int NN = 
-       interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
                                                                                 
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
                                                                                 
@@ -466,8 +442,7 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
       particleIndex idx = *iter;
                                                                                 
       // Get the node indices that surround the cell
-      int NN = 
-       interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],Fold[idx]);
                                                                                 
       computeGrad(IncDispGrad, ni, d_S, oodx, gDisp);
                                                                                 

@@ -52,6 +52,8 @@ namespace Uintah {
  class VarLabel;
  class GeometryObject;
  class ConstitutiveModel;
+ class DamageModel;
+ class ErosionModel;
  class MPMLabel;
  class ParticleCreator;
 
@@ -91,7 +93,8 @@ WARNING
    MPMMaterial();
 
    // Standard MPM Material Constructor
-   MPMMaterial(ProblemSpecP&, SimulationStateP& ss, MPMFlags* flags);
+   MPMMaterial(ProblemSpecP&, SimulationStateP& ss, MPMFlags* flags,
+               const bool isRestart);
          
    ~MPMMaterial();
 
@@ -106,6 +109,15 @@ WARNING
    //////////
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
+   
+   
+   void set_pLocalizedComputed( const bool ans);
+  
+   bool is_pLocalizedPreComputed() const;
+   
+   DamageModel* getDamageModel() const;
+   
+   ErosionModel* getErosionModel() const;
 
    ScalarDiffusionModel* getScalarDiffusionModel() const;
 
@@ -158,14 +170,18 @@ WARNING
  private:
 
    MPMLabel* d_lb;
-   ConstitutiveModel* d_cm;
-   ScalarDiffusionModel* d_sdm;
-   ParticleCreator* d_particle_creator;
+   ConstitutiveModel*     d_cm;
+   DamageModel*           d_damageModel;
+   ErosionModel*          d_erosionModel;
+   ScalarDiffusionModel*  d_sdm;
+   ParticleCreator*       d_particle_creator;
 
    double d_density;
-   bool d_includeFlowWork;
+   bool   d_includeFlowWork;
    double d_specificHeat;
    double d_thermalConductivity;
+   bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc
+
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)
@@ -192,7 +208,8 @@ WARNING
    //
    // The standard set of initialization actions except particlecreator
    //
-   void standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMFlags* flags);
+   void standardInitialization(ProblemSpecP& ps, SimulationStateP& ss,
+                               MPMFlags* flags, const bool isRestart);
  };
 
 } // End namespace Uintah
