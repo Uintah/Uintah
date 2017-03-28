@@ -48,9 +48,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ReactiveElasticPlasticHP.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ReactiveDiffusiveElasticPlasticHP.h>
-#include <CCA/Components/MPM/ConstitutiveModel/HackedReactiveDiffusiveElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
@@ -82,13 +79,18 @@ using namespace std;
 using namespace Uintah;
 
 ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
-                                                    MPMFlags* flags)
+                                                    MPMFlags* flags,
+                                                    bool& computes_pLocalizedMPM)
 {
+
+  // does this CM compute pLocalizedMPM?
+  computes_pLocalizedMPM = false; 
+  
   ProblemSpecP child = ps->findBlock("constitutive_model");
   if(!child)
     throw ProblemSetupException("Cannot find constitutive_model tag", __FILE__, __LINE__);
-  string mat_type;
-  if(!child->getAttribute("type", mat_type))
+  string cm_type;
+  if(!child->getAttribute("type", cm_type))
     throw ProblemSetupException("No type for constitutive_model", __FILE__, __LINE__);
 
   if (flags->d_integrator_type != "implicit" &&
@@ -98,92 +100,112 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
 
-  if(flags->d_integrator_type == "implicit" && ( mat_type == "comp_neo_hook_plastic" ) ){
+  if(flags->d_integrator_type == "implicit" && ( cm_type == "comp_neo_hook_plastic" ) ){
     string txt="MPM:  You cannot use implicit MPM and comp_neo_hook_plastic";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
 
-  if (mat_type == "rigid")
+  if (cm_type == "rigid")
     return(scinew RigidMaterial(child,flags));
 
-  else if (mat_type == "comp_mooney_rivlin")
+  else if (cm_type == "comp_mooney_rivlin") {
     return(scinew CompMooneyRivlin(child,flags));
-  else if (mat_type == "nonlocal_drucker_prager")
+  }
+  else if (cm_type == "nonlocal_drucker_prager"){
     return(scinew NonLocalDruckerPrager(child,flags));
-  else if (mat_type == "Arenisca")
+  }
+  else if (cm_type == "Arenisca"){
     return(scinew Arenisca(child,flags));
-  else if (mat_type == "Arenisca3")
+  }
+  else if (cm_type == "Arenisca3"){
+    computes_pLocalizedMPM = true;
     return(scinew Arenisca3(child,flags));
-  else if (mat_type == "Arenisca4")
+  }
+  else if (cm_type == "Arenisca4") {
+    computes_pLocalizedMPM = true;
     return(scinew Arenisca4(child,flags));
-  else if (mat_type == "ArenaSoil")
+  }
+  else if (cm_type == "ArenaSoil"){
+    computes_pLocalizedMPM = true;
     return(scinew Vaango::ArenaPartiallySaturated(child,flags));
-
-  else if (mat_type ==  "comp_neo_hook") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture")
-      return(scinew UCNH(child,flags,false,false));
-    else if (flags->d_integrator_type == "implicit")
-      return(scinew UCNH(child,flags));
   }
-  else if (mat_type ==  "cnh_damage")
-    return(scinew UCNH(child,flags,false,true));
-
-  else if (mat_type ==  "UCNH")
-    return(scinew UCNH(child,flags));
-
-  else if (mat_type ==  "cnh_mms")
-    return(scinew CNH_MMS(child,flags));
-
-  else if (mat_type ==  "cnhp_damage")
-    return(scinew UCNH(child,flags,true,true));
-
-  else if (mat_type ==  "trans_iso_hyper") {
+  //__________________________________
+  //  All use UCNH
+  else if (cm_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture")
+        flags->d_integrator_type == "fracture"){
+      return(scinew UCNH( child, flags, false, false ) );
+    }
+    else if (flags->d_integrator_type == "implicit"){
+      return(scinew UCNH( child,flags, false, false ));
+    }
+  }
+  else if (cm_type ==  "UCNH" ){
+    return( scinew UCNH( child, flags, false, false ) );
+  } 
+  else if (cm_type ==  "cnh_damage") {
+    return( scinew UCNH( child, flags, false, true ) );
+  } 
+  else if (cm_type ==  "cnhp_damage") {
+    return( scinew UCNH( child, flags, true, true ) );
+  } 
+  else if (cm_type ==  "comp_neo_hook_plastic") {
+    return( scinew UCNH( child, flags, true, false ) );
+  }
+  //__________________________________
+  
+  
+  else if (cm_type ==  "trans_iso_hyper") {
+    if (flags->d_integrator_type == "explicit" ||
+        flags->d_integrator_type == "fracture"){
       return(scinew TransIsoHyper(child,flags));
-    else if (flags->d_integrator_type == "implicit")
+    }
+    else if (flags->d_integrator_type == "implicit"){
       return(scinew TransIsoHyperImplicit(child,flags));
+    }
   }
 
-  else if (mat_type ==  "visco_trans_iso_hyper") {
+  else if (cm_type ==  "visco_trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture")
+        flags->d_integrator_type == "fracture"){
       return(scinew ViscoTransIsoHyper(child,flags));
-    else if (flags->d_integrator_type == "implicit")
-    return(scinew ViscoTransIsoHyperImplicit(child,flags));
+    }
+    else if (flags->d_integrator_type == "implicit"){
+      return(scinew ViscoTransIsoHyperImplicit(child,flags));
+    }
   }
 
-  else if (mat_type ==  "ideal_gas")
+  else if (cm_type ==  "ideal_gas"){
     return(scinew IdealGasMP(child,flags));
-
-  else if (mat_type ==  "p_alpha")
+  }
+  else if (cm_type ==  "p_alpha"){
     return(scinew P_Alpha(child,flags));
-
-  else if (mat_type ==  "water")
+  }
+  else if (cm_type ==  "water"){
+    computes_pLocalizedMPM = true;
     return(scinew Water(child,flags));
-
-  else if (mat_type ==  "TH_water")
+  }
+  else if (cm_type ==  "TH_water"){
     return(scinew TH_Water(child,flags));
-
-  else if (mat_type == "comp_neo_hook_plastic")
-    return(scinew UCNH(child,flags,true,false));
-
-  else if (mat_type ==  "visco_scram"){
+  }
+  else if (cm_type ==  "visco_scram"){
     if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture")
+        flags->d_integrator_type == "fracture"){
       return(scinew ViscoScram(child,flags));
-    else if (flags->d_integrator_type == "implicit")
+    }
+    else if (flags->d_integrator_type == "implicit"){
       return(scinew ViscoScramImplicit(child,flags));
+    }
   }
 
-  else if (mat_type ==  "viscoSCRAM_hs")
+  else if (cm_type ==  "viscoSCRAM_hs"){
     return(scinew ViscoSCRAMHotSpot(child,flags));
-
-  else if (mat_type ==  "hypo_elastic") {
+  }
+  else if (cm_type ==  "hypo_elastic") {
     if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture")
+        flags->d_integrator_type == "fracture"){
       return(scinew HypoElastic(child,flags));
+    }
     else if (flags->d_integrator_type == "implicit"){
       if(!flags->d_doGridReset){
          ostringstream msg;
@@ -196,63 +218,68 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
 
 #if !defined(NO_FORTRAN)
-  else if (mat_type == "hypo_elastic_fortran")
+  else if (cm_type == "hypo_elastic_fortran"){
     return(scinew HypoElasticFortran(child,flags));
-
-  else if (mat_type == "kayenta")
+  }
+  else if (cm_type == "kayenta"){
+    computes_pLocalizedMPM = true;
     return(scinew Kayenta(child,flags));
-
-  else if (mat_type == "diamm")
+  }
+  else if (cm_type == "diamm"){
     return(scinew Diamm(child,flags));
+  }
 #endif
 
-  else if (mat_type ==  "mw_visco_elastic")
+  else if (cm_type ==  "mw_visco_elastic"){
     return(scinew MWViscoElastic(child,flags));
-
-  else if (mat_type ==  "murnaghanMPM")
+  }
+  else if (cm_type ==  "murnaghanMPM"){
     return(scinew MurnaghanMPM(child,flags));
-
-  else if (mat_type ==  "program_burn")
+  }
+  else if (cm_type ==  "program_burn"){
+    computes_pLocalizedMPM = true;
     return(scinew ProgramBurn(child,flags));
-
-  else if (mat_type ==  "shell_CNH")
+  }
+  else if (cm_type ==  "shell_CNH"){
     return(scinew ShellMaterial(child,flags));
-
-  else if (mat_type ==  "elastic_plastic")
-    return(scinew ElasticPlasticHP(child,flags));
-
-  else if (mat_type == "reactive_EP")
+  }
+  else if (cm_type == "reactive_EP"){
     return(scinew ReactiveEP(child,flags));
-
-  else if (mat_type == "reactive_diffusive_EP")
+  }
+  else if (cm_type == "reactive_diffusive_EP"){
     return(scinew ReactionDiffusionEP(child, flags));
-
-  else if (mat_type == "hacked")
+  }
+  else if (cm_type == "hacked"){
     return(scinew HackedReactive_EP(child, flags));
-
-  else if (mat_type ==  "elastic_plastic_hp")
+  }
+  else if (cm_type ==  "elastic_plastic" ||
+           cm_type ==  "elastic_plastic_hp"){
+    computes_pLocalizedMPM = true;
     return(scinew ElasticPlasticHP(child,flags));
-
-  else if (mat_type ==  "soil_foam")
+  }
+  else if (cm_type ==  "soil_foam"){
     return(scinew SoilFoam(child,flags));
-
-  else if (mat_type ==  "visco_plastic")
+  }
+  else if (cm_type ==  "visco_plastic"){
     return(scinew ViscoPlastic(child,flags));
-
-  else if (mat_type ==  "murnaghanMPM")
+  }
+  else if (cm_type ==  "murnaghanMPM"){
     return(scinew MurnaghanMPM(child,flags));
-
-  else if (mat_type ==  "jwlpp_mpm")
+  }
+  else if (cm_type ==  "jwlpp_mpm"){
+    computes_pLocalizedMPM = true;
     return(scinew JWLppMPM(child,flags));
-
-//  else if (mat_type ==  "camclay")
+  }
+//  else if (cm_type ==  "camclay"){
 //    return(scinew CamClay(child,flags));
-
-  else if (mat_type ==  "rf_elastic_plastic")
+//  }
+  else if (cm_type ==  "rf_elastic_plastic"){
+    computes_pLocalizedMPM = true;
     return(scinew RFElasticPlastic(child,flags));
-
-  else if (mat_type ==  "TongeRameshPTR") {
+  }
+  else if (cm_type ==  "TongeRameshPTR") {
     if (flags->d_integrator_type == "explicit"){
+      computes_pLocalizedMPM = true;
       return(scinew TongeRameshPTR(child,flags));
     } else {
       ostringstream msg;
@@ -263,7 +290,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
 
   else
-    throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
+    throw ProblemSetupException("Unknown Material Type R ("+cm_type+")", __FILE__, __LINE__);
 
   return 0;
 }
