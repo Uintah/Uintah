@@ -263,9 +263,26 @@ namespace Uintah{
 
         const ProblemSpecP params_root = db->getRootNode();
         if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")){
-        double ash_frac;
-        params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("ASH",ash_frac);
-        return ash_frac;
+          double ash_frac;
+          double C;
+          double H;
+          double O;
+          double N;
+          double S;
+          double CHAR;
+          double ASH;
+          double H2O;
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("ASH",ASH);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("C",C);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("H",H);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("O",O);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("N",N);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("S",S);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("CHAR",CHAR);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("ASH",ASH);
+          params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("H2O",H2O);
+          ash_frac = ASH/(C+H+O+N+S+ASH+CHAR); // DRY ASH FRACTION!!!!!
+          return ash_frac;
         } else{
           throw ProblemSetupException("Error: cannot find <ultimate_analysis> in arches block.",__FILE__,__LINE__);      
         }

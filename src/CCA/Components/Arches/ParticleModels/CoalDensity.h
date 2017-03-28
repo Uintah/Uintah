@@ -65,7 +65,7 @@ public:
 
 private:
 
-    bool _const_size;
+    std::string _model_type;
     int _Nenv;
     double _value;
     double _rhop_o;

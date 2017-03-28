@@ -176,6 +176,10 @@ private:
   const VarLabel* _devolRCLabel;
   const VarLabel* _particle_temperature_varlabel;
   const VarLabel* _number_density_varlabel;
+  const VarLabel* _weight_p_diam_varlabel;
+  const VarLabel* _RHS_length_varlabel;
+  const VarLabel* _RHS_weight_varlabel;
+  const VarLabel* _length_birth_varlabel;
   std::vector< const VarLabel*> _weight_varlabel;
   std::vector< const VarLabel*> _length_varlabel;
   std::vector< const VarLabel*> _reaction_rate_varlabels;
@@ -197,6 +201,7 @@ private:
   double _RC_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight
+  double _length_scaling_constant;   ///< Scaling factor for length 
   double _weight_small;   ///< small weight
   std::vector<bool> _use_co2co_l;
   std::vector<std::string> _oxid_l;
@@ -215,6 +220,8 @@ private:
   double _Sg0; // 
   double _p_void0; // 
   double _S;
+  double _v_hiT;
+  double _p_voidmin;
   double _dynamic_visc; // [kg/(m s)]
   int _nQn_part;
   std::vector<std::vector<double> > _D_mat;

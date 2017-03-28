@@ -45,9 +45,11 @@ SRCS += \
         $(SRCDIR)/RichardsFletcherDevol.cc    \
         $(SRCDIR)/SimpleBirth.cc              \
         $(SRCDIR)/Thermophoresis.cc           \
+        $(SRCDIR)/LinearSwelling.cc           \
+      	$(SRCDIR)/ShrinkageRate.cc            \
         $(SRCDIR)/YamamotoDevol.cc            \
-  $(SRCDIR)/CoalModelFactory.cc      \
-  $(SRCDIR)/ModelBase.cc             
+        $(SRCDIR)/CoalModelFactory.cc         \
+        $(SRCDIR)/ModelBase.cc             
 
 $(SRCDIR)/ShaddixHeatTransfer.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
 $(SRCDIR)/EnthalpyShaddix.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h

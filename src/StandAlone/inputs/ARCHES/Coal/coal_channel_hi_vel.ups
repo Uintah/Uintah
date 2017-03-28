@@ -942,7 +942,7 @@
       </EulerianParticles>
       <ParticleModels>
         <model label="rho_coal" type="coal_density">
-          <const_size>true</const_size>
+          <model_type>constant_volume_dqmom</model_type>
         </model>
         <model label="temperature_coal" type="coal_temperature">
           <const_size>true</const_size>

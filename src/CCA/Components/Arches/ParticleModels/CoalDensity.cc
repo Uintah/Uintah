@@ -8,7 +8,7 @@ namespace Uintah{
 void
 CoalDensity::problemSetup( ProblemSpecP& db ){
 
-  db->getWithDefault("const_size",_const_size,true);
+  db->getWithDefault("model_type",_model_type,"constant_volume_dqmom");
 
   const ProblemSpecP db_root = db->getRootNode();
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
@@ -99,7 +99,7 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
     register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( rho_name  , ArchesFieldContainer::COMPUTES , variable_registry );
 
-    if ( !_const_size ) {
+    if ( _model_type != "constant_volume_dqmom" ) {
       const std::string diameter_name = get_env_name( i, _diameter_base_name );
       register_variable( diameter_name , ArchesFieldContainer::REQUIRES , 0              , ArchesFieldContainer::NEWDW , variable_registry );
     }
@@ -127,7 +127,7 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       rho(i,j,k) = 0.0;
     });
 
-    if ( _const_size ) {
+    if ( _model_type == "constant_volume_dqmom") {
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -143,13 +143,13 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           rho(i,j,k) = ratio*_rhop_o;
         }
       });
-    } else {
+    } else if (_model_type == "cqmom") {
       const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
       constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
-        const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
+	      const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
         const double initAsh = _ash_mf * massDry;
         const double denom   = initAsh + _char_mf * massDry + _raw_coal_mf * massDry;
         const double ratio   = (denom > 0.0) ? (cchar(i,j,k) + rc(i,j,k) + initAsh)/denom : 1.01;
@@ -164,6 +164,15 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           rho(i,j,k) = ratio*_rhop_o;
         }
 
+      });
+    } else {
+      const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
+      constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
+
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+	    const double volume = _pi/6. * dp(i,j,k)*dp(i,j,k)*dp(i,j,k);
+	    rho(i,j,k) = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / volume ;
       });
     }
   }
@@ -187,11 +196,10 @@ CoalDensity::register_timestep_eval(
       variable_registry );
     register_variable( rho_name , ArchesFieldContainer::COMPUTES, variable_registry );
 
-    if ( !_const_size ) {
+    if ( _model_type != "constant_volume_dqmom" ) {
       const std::string diameter_name = get_env_name( i, _diameter_base_name );
       register_variable( diameter_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST , variable_registry );
     }
-
   }
 }
 
@@ -214,7 +222,7 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       rho(i,j,k) = 0.0;
     });
 
-    if ( _const_size ) {
+    if ( _model_type == "constant_volume_dqmom") {
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
         const double ratio = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / _denom[ienv];
@@ -230,17 +238,16 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         }
 
       });
-    } else {
+    } else if (_model_type == "cqmom"){
       const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
       constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
-        const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
+	      const double massDry = _pi/6. * std::pow(dp(i,j,k), 3.) * _rhop_o;
         const double initAsh = _ash_mf * massDry;
         const double denom   = initAsh + _char_mf * massDry + _raw_coal_mf * massDry;
         const double ratio   = (denom > 0.0) ? (cchar(i,j,k) + rc(i,j,k) + initAsh)/denom : 1.01;
-
         //These if's are not optimal for Kokkos, but they don't change the answers from
         //the spatialOps implementation. Perhaps use min/max?
         if ( ratio > 1.0 ) {
@@ -250,6 +257,15 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
         } else {
           rho(i,j,k) = ratio*_rhop_o;
         }
+      });
+    } else {
+      const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
+      constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
+
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+	    const double volume = _pi/6. * dp(i,j,k)*dp(i,j,k)*dp(i,j,k);
+	    rho(i,j,k) = ( cchar(i,j,k) + rc(i,j,k) + _init_ash[ienv] ) / volume ;
       });
     }
   }

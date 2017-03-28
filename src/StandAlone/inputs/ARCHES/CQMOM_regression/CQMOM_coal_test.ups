@@ -1070,7 +1070,7 @@
           <!--noRadiation/-->
         </model>
         <model label="partRho" type="coal_density">
-          <const_size> false </const_size>
+          <model_type>cqmom</model_type>
         </model>
       </ParticleModels>
       <include href="inputs/ARCHES/Coal/CoalDB/SUFCO.xml" section="ParticleProperties"/>

@@ -514,6 +514,11 @@
             <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
           </ShaddixChar>
 
+          <LinearSwelling                 spec="OPTIONAL NO_DATA"
+                                          need_applies_to="type coal">
+            <Fsw                          spec="OPTIONAL DOUBLE"/> <!-- swelling factor - default is 1.05 -->
+          </LinearSwelling>
+
           <SmithChar                     spec="OPTIONAL NO_DATA"
                                          need_applies_to="type coal">
             <char_MW                     spec="OPTIONAL DOUBLE"/> <!-- [kg char / kmoles char] default is 12.0-->
@@ -1355,8 +1360,12 @@
 
             <!-- constant property model: set a constant/environment -->
             <const_size                 spec="OPTIONAL BOOLEAN"
-                                        need_applies_to="type coal_temperature, coal_density"/>  <!-- defaults to true, so no change to DQMOM input files needed -->
-
+                                        need_applies_to="type coal_temperature "/>  <!-- defaults to true, so no change to DQMOM input files needed -->
+	    
+	          <!-- variable density to be consistent with Char Oxidation 2016-->
+	          <model_type                 spec="OPTIONAL STRING"
+                                        need_applies_to="type coal_density "/> <!-- default is "constant_volume_dqmom", "cqmom" or "dynamic_dqmom" are variable densities -->
+	                                
             <!-- FOWY devolatilization -->
             <birth_label                spec="OPTIONAL STRING"
                                         need_applies_to="type fowy_devolatilization, shaddix_oxidation"/>
@@ -1850,7 +1859,9 @@
                                                                           ShaddixHeatTransfer,
                                                                           EnthalpyShaddix,
                                                                           MaximumTemperature,
+                                                                          LinearSwelling,
                                                                           Thermophoresis,
+                                                                      	  ShrinkageRate,
                                                                           CharOxidationShaddix,
                                                                           CharOxidationSmith,
                                                                           CharOxidationSmith2016,
