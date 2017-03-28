@@ -39,6 +39,7 @@ using namespace std;
 MPMLabel::MPMLabel()
 {
   // Heat flux from fire
+
   heatRate_CCLabel = 
     VarLabel::create("heatRate_CC",  CCVariable<double>::getTypeDescription());
 
@@ -128,7 +129,10 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pVelocityLabel = VarLabel::create( "p.velocity", 
-			ParticleVariable<Vector>::getTypeDescription() );
+                        ParticleVariable<Vector>::getTypeDescription() );
+  
+  pVelocitySSPlusLabel = VarLabel::create( "p.velocitySSPlus", 
+                        ParticleVariable<Vector>::getTypeDescription() );
   
   pExternalForceLabel = VarLabel::create( "p.externalforce",
 			ParticleVariable<Vector>::getTypeDescription() );
@@ -225,8 +229,8 @@ MPMLabel::MPMLabel()
   pESPotential = VarLabel::create( "p.esPotential",
       ParticleVariable<double>::getTypeDescription());
 
-  pESGradPotential = VarLabel::create ("p.esGradPotential",
-      ParticleVariable<Vector>::getTypeDescription());
+  pESGradPotential = VarLabel::create( "p.esGradPotential",
+                     ParticleVariable<Vector>::getTypeDescription() );
 
   pFiberDirLabel  = VarLabel::create( "p.fiberdir",
                         ParticleVariable<Vector>::getTypeDescription() );
@@ -265,6 +269,21 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
     
   // for thermal stress
+  
+  // JBH -- Thermodynamic related variables
+//  pDissipatedEnergyLabel = VarLabel::create("p.dissipatedEnergy",
+//      ParticleVariable<double>::getTypeDescription() );
+//  pDissipatedEnergyLabel_preReloc = VarLabel::create("p.dissipatedEnergy+",
+//      ParticleVariable<double>::getTypeDescription() );
+  pHeatEnergyLabel = VarLabel::create("p.heatEnergy",
+      ParticleVariable<double>::getTypeDescription() );
+  pHeatEnergyLabel_preReloc = VarLabel::create("p.heatEnergy+",
+      ParticleVariable<double>::getTypeDescription() );
+//  pWorkEnergyLabel = VarLabel::create("p.workEnergy",
+//      ParticleVariable<double>::getTypeDescription() );
+//  pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",
+//
+
   pTempPreviousLabel_preReloc = VarLabel::create( "p.tempPrevious+",
                         ParticleVariable<double>::getTypeDescription() ); 
 
@@ -298,19 +317,36 @@ MPMLabel::MPMLabel()
   pConcGradientLabel_preReloc =VarLabel::create("p.concentrationGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  // JBH -- Thermodynamic related variables
-//  pDissipatedEnergyLabel = VarLabel::create("p.dissipatedEnergy",
-//      ParticleVariable<double>::getTypeDescription() );
-//  pDissipatedEnergyLabel_preReloc = VarLabel::create("p.dissipatedEnergy+",
-//      ParticleVariable<double>::getTypeDescription() );
-  pHeatEnergyLabel = VarLabel::create("p.heatEnergy",
+  pPosChargeLabel = VarLabel::create( "p.posCharge",
       ParticleVariable<double>::getTypeDescription() );
-  pHeatEnergyLabel_preReloc = VarLabel::create("p.heatEnergy+",
+
+  pPosChargeLabel_preReloc = VarLabel::create( "p.posCharge+",
+        ParticleVariable<double>::getTypeDescription() );
+
+  pNegChargeLabel = VarLabel::create( "p.negCharge",
       ParticleVariable<double>::getTypeDescription() );
-//  pWorkEnergyLabel = VarLabel::create("p.workEnergy",
-//      ParticleVariable<double>::getTypeDescription() );
-//  pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",
-//      ParticleVariable<double>::getTypeDescription() );
+
+  pNegChargeLabel_preReloc = VarLabel::create( "p.negCharge+",
+        ParticleVariable<double>::getTypeDescription() );
+
+  pPermittivityLabel = VarLabel::create( "p.permittivity",
+      ParticleVariable<double>::getTypeDescription() );
+
+  pPermittivityLabel_preReloc = VarLabel::create( "p.permittivity+",
+        ParticleVariable<double>::getTypeDescription() );
+
+  pPosChargeFluxLabel = VarLabel::create("p.posChargeFlux",
+        ParticleVariable<Vector>::getTypeDescription() );
+
+  pPosChargeFluxLabel_preReloc = VarLabel::create("p.posChargeFlux+",
+        ParticleVariable<Vector>::getTypeDescription() );
+
+  pNegChargeFluxLabel = VarLabel::create("p.negChargeFlux",
+        ParticleVariable<Vector>::getTypeDescription() );
+
+  pNegChargeFluxLabel_preReloc = VarLabel::create("p.negChargeFlux+",
+        ParticleVariable<Vector>::getTypeDescription() );
+
 
   // Node Centered Variables
   
@@ -330,6 +366,9 @@ MPMLabel::MPMLabel()
 			NCVariable<Vector>::getTypeDescription() );
   
   gVelocityBCLabel = VarLabel::create( "g.velocityBC",
+			NCVariable<Vector>::getTypeDescription() );
+  
+  gVelSPSSPLabel = VarLabel::create( "g.velocitySPLusSSPlus",
 			NCVariable<Vector>::getTypeDescription() );
   
   gPositionLabel = VarLabel::create( "g.position",
@@ -459,6 +498,20 @@ MPMLabel::MPMLabel()
 
   gNumNearParticlesLabel = VarLabel::create("NumNearParticles",
 			NCVariable<double>::getTypeDescription());
+
+  gPosChargeLabel = VarLabel::create("g.PosCharge",
+      NCVariable<double>::getTypeDescription());
+  gNegChargeLabel = VarLabel::create("g.NegCharge",
+      NCVariable<double>::getTypeDescription());
+  gPosChargeNoBCLabel = VarLabel::create("g.PosChargeNoBC",
+      NCVariable<double>::getTypeDescription());
+  gNegChargeNoBCLabel = VarLabel::create("g.NegChargeNoBC",
+      NCVariable<double>::getTypeDescription());
+
+  gPosChargeRateLabel = VarLabel::create("g.PosChargeRate",
+      NCVariable<double>::getTypeDescription());
+  gNegChargeRateLabel = VarLabel::create("g.NegChargeRate",
+        NCVariable<double>::getTypeDescription());
 
   // Reduction variables
   partCountLabel = VarLabel::create("particleCount",
@@ -818,6 +871,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pMassLabel_preReloc);
   VarLabel::destroy(pVelocityLabel);
   VarLabel::destroy(pVelocityLabel_preReloc);
+  VarLabel::destroy(pVelocitySSPlusLabel);
   VarLabel::destroy(pExternalForceLabel);
   VarLabel::destroy(pExternalForceCorner1Label);
   VarLabel::destroy(pExternalForceCorner2Label);
@@ -893,6 +947,16 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pDiffusivityLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);
+  VarLabel::destroy(pPosChargeLabel);
+  VarLabel::destroy(pPosChargeLabel_preReloc);
+  VarLabel::destroy(pNegChargeLabel);
+  VarLabel::destroy(pNegChargeLabel_preReloc);
+  VarLabel::destroy(pPermittivityLabel);
+  VarLabel::destroy(pPermittivityLabel_preReloc);
+  VarLabel::destroy(pPosChargeFluxLabel);
+  VarLabel::destroy(pPosChargeFluxLabel_preReloc);
+  VarLabel::destroy(pNegChargeFluxLabel);
+  VarLabel::destroy(pNegChargeFluxLabel_preReloc);
 
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gColorLabel);
@@ -900,6 +964,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gMassAllLabel);
   VarLabel::destroy(gVelocityLabel);
   VarLabel::destroy(gVelocityBCLabel);
+  VarLabel::destroy(gVelSPSSPLabel);
   VarLabel::destroy(gPositionLabel);
   VarLabel::destroy(gExternalForceLabel);
   VarLabel::destroy(gInternalForceLabel);
@@ -940,6 +1005,13 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(heaTranSolid_NCLabel);
   VarLabel::destroy(frictionalWorkLabel);
   VarLabel::destroy(gNumNearParticlesLabel);
+
+  VarLabel::destroy(gPosChargeLabel);
+  VarLabel::destroy(gNegChargeLabel);
+  VarLabel::destroy(gPosChargeNoBCLabel);
+  VarLabel::destroy(gNegChargeNoBCLabel);
+  VarLabel::destroy(gPosChargeRateLabel);
+  VarLabel::destroy(gNegChargeRateLabel);
 
   VarLabel::destroy(partCountLabel);
   VarLabel::destroy(delTLabel);
