@@ -22,11 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-
-#include "DamageModelFactory.h"
-#include "NullDamage.h"
-#include "JohnsonCookDamage.h"
-#include "HancockMacKenzieDamage.h"
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/NullDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/HancockMacKenzieDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ThresholdDamage.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/BrittleDamage.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -37,46 +38,77 @@
 
 using namespace std;
 using namespace Uintah;
+//______________________________________________________________________
+//
+DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
+                                        MPMFlags        * flags,
+                                        SimulationState * sharedState)
+{   
+  ProblemSpecP child = matl_ps->findBlock("damage_model");
+  if(!child) {
+    proc0cout << "**WARNING** Creating default null damage model" << endl;
+    return( scinew NullDamage() );
+  }
+  
+  string dam_type = "none";
+  if(!child->getAttribute( "type", dam_type )){
+    throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
+  }
+  
+  //__________________________________
+  //  bulletproofing
+  string cm_type = "none";
 
-DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
-{
-   ProblemSpecP child = ps->findBlock("damage_model");
-   if(!child) {
-      proc0cout << "**WARNING** Creating default null damage model" << endl;
-      return(scinew NullDamage());
-      //throw ProblemSetupException("Cannot find damage_model tag", __FILE__, __LINE__);
-   }
-   string mat_type;
-   if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
-   if (mat_type == "johnson_cook")
-      return(scinew JohnsonCookDamage(child));
-   else if (mat_type == "hancock_mackenzie")
-      return(scinew HancockMacKenzieDamage(child));
-   else if (mat_type == "none")
-      return(scinew NullDamage(child));
-   else {
-      proc0cout << "**WARNING** Creating default null damage model" << endl;
-      return(scinew NullDamage(child));
-      //throw ProblemSetupException("Unknown Damage Model ("+mat_type+")", __FILE__, __LINE__);
-   }
-
-   //return 0;
+  if ( matl_ps->getNodeName() != "constitutive_model" ) { 
+    ProblemSpecP cm_ps = matl_ps->findBlock("constitutive_model");
+    cm_ps->getAttribute("type", cm_type);
+  }
+  
+  if (dam_type == "hancock_mackenzie" || dam_type == "johnson_cook" ) {
+    if( cm_type != "elastic_plastic_hp" && cm_type != "elastic_plastic"  ){
+      string txt="MPM:  The only constitute model that works with the johnson_cook and hancock_mackenzie damage models is elastic_plastic/elastic_plastic_hp";
+      txt = txt + " (CM: " + cm_type + " DM: " + dam_type + ")"; 
+      throw ProblemSetupException(txt, __FILE__, __LINE__);
+    }
+  }  
+  
+  
+  //__________________________________
+  //
+  if (dam_type == "johnson_cook"){
+    return( scinew JohnsonCookDamage( child ) );
+  }
+  else if (dam_type == "hancock_mackenzie") {
+    return( scinew HancockMacKenzieDamage( child ) );
+  }
+  else if (dam_type == "Threshold") {
+    return( scinew ThresholdDamage( child, flags, sharedState ) );
+  }
+  else if (dam_type == "Brittle") {
+    return( scinew BrittleDamage( child ) );
+  }
+  else if (dam_type == "none") {
+    return(scinew NullDamage( child ) );
+  }
+  else {
+    proc0cout << "**WARNING** Creating default null damage model" << endl;
+    return( scinew NullDamage( child ) );
+    //throw ProblemSetupException("Unknown Damage Model ("+dam_type+")", __FILE__, __LINE__);
+  }
 }
-
+//______________________________________________________________________
+//
 DamageModel* DamageModelFactory::createCopy(const DamageModel* dm)
 {
-   if (dynamic_cast<const JohnsonCookDamage*>(dm))
-      return(scinew JohnsonCookDamage(dynamic_cast<const JohnsonCookDamage*>(dm)));
-
-   else if (dynamic_cast<const HancockMacKenzieDamage*>(dm))
-      return(scinew HancockMacKenzieDamage(dynamic_cast<const HancockMacKenzieDamage*>(dm)));
-
-   else {
-      proc0cout << "**WARNING** Creating copy of default null damage model" << endl;
-      return(scinew NullDamage(dynamic_cast<const NullDamage*>(dm)));
-      //throw ProblemSetupException("Cannot create copy of unknown damage model", __FILE__, __LINE__);
-   }
-
-   //return 0;
+  if (dynamic_cast<const JohnsonCookDamage*>(dm)){
+    return(scinew JohnsonCookDamage(dynamic_cast<const JohnsonCookDamage*>(dm)));
+  }
+  else if (dynamic_cast<const HancockMacKenzieDamage*>(dm)) {
+    return(scinew HancockMacKenzieDamage(dynamic_cast<const HancockMacKenzieDamage*>(dm)));
+ }
+  else {
+    proc0cout << "**WARNING** Creating copy of default null damage model" << endl;
+    return(scinew NullDamage(dynamic_cast<const NullDamage*>(dm)));
+    //throw ProblemSetupException("Cannot create copy of unknown damage model", __FILE__, __LINE__);
+  }
 }

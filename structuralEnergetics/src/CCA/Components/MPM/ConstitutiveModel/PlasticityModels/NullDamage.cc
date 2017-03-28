@@ -26,51 +26,73 @@
 #include "NullDamage.h"
 
 using namespace Uintah;
+static DebugStream dbg("DamageModel", false);
 
 NullDamage::NullDamage()
 {
-} 
-         
+}
+//______________________________________________________________________
+//         
 NullDamage::NullDamage(ProblemSpecP& )
 {
+  Algorithm = DamageAlgo::none;
 } 
          
 NullDamage::NullDamage(const NullDamage* )
 {
 } 
-         
+//______________________________________________________________________
+//         
 NullDamage::~NullDamage()
 {
 }
-
+//______________________________________________________________________
+//
 void NullDamage::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP damage_ps = ps->appendChild("damage_model");
   damage_ps->setAttribute("type","null");
 }
-
-         
-inline double 
-NullDamage::initialize()
-{
-  return 0.0;
-}
-
-inline bool
-NullDamage:: hasFailed(double )
-{
-  return false;
-}
-    
-double 
-NullDamage::computeScalarDamage(const double& ,
-                                const Matrix3& ,
-                                const double& ,
-                                const double& ,
-                                const MPMMaterial*,
-                                const double& ,
-                                const double& )
-{
-  return 0.0;
-}
  
+//______________________________________________________________________
+//
+void
+NullDamage::addComputesAndRequires(Task* task,
+                                   const MPMMaterial* matl)
+{
+  if( matl->is_pLocalizedPreComputed() ){
+    return;
+  }
+  printTask( dbg, "    NullDamage::addComputesAndRequires" );
+  Ghost::GhostType  gnone = Ghost::None;
+  const MaterialSubset* matls = matl->thisMaterial();
+
+  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matls, gnone);
+  task->computes( d_lb->pLocalizedMPMLabel_preReloc,      matls);
+}
+//______________________________________________________________________
+//
+void
+NullDamage::computeSomething( ParticleSubset    * pset,
+                              const MPMMaterial * matl,
+                              const Patch       * patch,
+                              DataWarehouse     * old_dw,
+                              DataWarehouse     * new_dw )
+{
+  if( matl->is_pLocalizedPreComputed() ){
+    return;
+  }
+  std::ostringstream mesg;
+  mesg << "    NullDamage::computeSomething  (matl:" << matl->getDWIndex() << ")";
+  printTask( patch, dbg, mesg.str() );
+    
+  constParticleVariable<int>     pLocalized;
+  ParticleVariable<int>          pLocalized_new;
+  
+  old_dw->get(pLocalized, d_lb->pLocalizedMPMLabel,         pset);
+ 
+  new_dw->allocateAndPut(pLocalized_new,
+                         d_lb->pLocalizedMPMLabel_preReloc, pset);
+    // Copy to new dw
+  pLocalized_new.copyData( pLocalized );
+}

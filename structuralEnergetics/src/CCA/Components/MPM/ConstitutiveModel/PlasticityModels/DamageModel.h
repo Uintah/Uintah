@@ -26,6 +26,11 @@
 #define __DAMAGE_MODEL_H__
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -36,7 +41,7 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
   /*!
     \class DamageModel
-    \brief Abstract base class for damage models   
+    \brief Abstract base class for damage models
     \author Biswajit Banerjee \n
     C-SAFE and Department of Mechanical Engineering \n
     University of Utah \n
@@ -45,42 +50,56 @@ namespace Uintah {
 
   class DamageModel {
   public:
-         
+
+
+    enum struct DamageAlgo { brittle,
+                             threshold,
+                             hancock_mackenzie,
+                             johnson_cook,
+                             none };
+
+    DamageAlgo Algorithm = DamageAlgo::none;
+
     DamageModel();
     virtual ~DamageModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-         
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Initialize the damage parameter in the calling function
-    */
-    //////////////////////////////////////////////////////////////////////////
-    virtual double initialize() = 0;
 
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Determine if damage has crossed cut off
-    */
-    //////////////////////////////////////////////////////////////////////////
-    virtual bool hasFailed(double damage) = 0;
-    
-    //////////////////////////////////////////////////////////////////////////
-    /*! 
-      Calculate the scalar damage parameter 
-    */
-    //////////////////////////////////////////////////////////////////////////
-    virtual double computeScalarDamage(const double& plasticStrainRate,
-                                       const Matrix3& stress,
-                                       const double& temperature,
-                                       const double& delT,
-                                       const MPMMaterial* matl,
-                                       const double& tolerance,
-                                       const double& damage_old) = 0;
+    virtual
+    void addComputesAndRequires(Task* task,
+                                const MPMMaterial* matl);
 
+    virtual
+    void carryForward( const PatchSubset* patches,
+                       const MPMMaterial* matl,
+                       DataWarehouse*     old_dw,
+                       DataWarehouse*     new_dw);
+
+    virtual
+    void addParticleState(std::vector<const VarLabel*>& from,
+                          std::vector<const VarLabel*>& to);
+
+    virtual
+    void addInitialComputesAndRequires(Task* task,
+                                       const MPMMaterial* matl);
+
+    virtual
+    void initializeLabels(const Patch*       patch,
+                          const MPMMaterial* matl,
+                          DataWarehouse*     new_dw);
+
+    virtual
+    void computeSomething( ParticleSubset    * pset,
+                           const MPMMaterial * matl,
+                           const Patch       * patch,
+                           DataWarehouse     * old_dw,
+                           DataWarehouse     * new_dw );
+
+    protected:
+    MPMLabel* d_lb;
   };
 } // End namespace Uintah
-      
+
 
 
 #endif  // __DAMAGE_MODEL_H__

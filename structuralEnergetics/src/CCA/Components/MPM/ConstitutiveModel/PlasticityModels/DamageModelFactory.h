@@ -25,6 +25,7 @@
 #ifndef _DAMAGEMODELFACTORY_H_
 #define _DAMAGEMODELFACTORY_H_
 
+#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
@@ -37,7 +38,10 @@ namespace Uintah {
   {
   public:
     // this function has a switch for all known mat_types
-    static DamageModel* create(ProblemSpecP& ps);
+    static DamageModel* create(ProblemSpecP     & ps,
+                               MPMFlags         * flags,
+                               SimulationState  * sharedState);
+                               
     static DamageModel* createCopy(const DamageModel* dm);
   };
 } // End namespace Uintah
