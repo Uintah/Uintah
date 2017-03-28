@@ -22,85 +22,58 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __JOHNSONCOOK_DAMAGE_MODEL_H__
-#define __JOHNSONCOOK_DAMAGE_MODEL_H__
+#ifndef __BRITTLE_DAMAGE_MODEL_H__
+#define __BRITTLE_DAMAGE_MODEL_H__
 
 
-#include "DamageModel.h"        
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
-  /////////////////////////////////////////////////////////////////////////////
-  /*!
-    \class JohnsonCookDamage
-    \brief Johnson-Cook Damage Model
-    \author Biswajit Banerjee \n
-    C-SAFE and Department of Mechanical Engineering \n
-    University of Utah \n
 
-    References:
-    1) Johnson and Cook, 1985, Int. J. Eng. Fracture Mech., 21, 31-48.
-
-    The damage evolution rule is given by \n
-    \f$
-    \dot{D} = \dot{\epsilon_p}/\epsilon_p^f
-    \f$ \n
-    where \n
-    \f$ D \f$ = damage variable \n
-    where \f$ D \f$ = 0 for virgin material, 
-    \f$ D \f$ = 1 for fracture \n
-    \f$ \epsilon_p^f\f$  = value of fracture strain given by \n
-    \f$ 
-    \epsilon_p^f = (D1 + D2 \exp (D3 \sigma*)][1+\dot{p}^*]^(D4)[1+D5 T^*
-    \f$ \n 
-    where \f$ \sigma^*= 1/3*trace(\sigma)/\sigma_{eq} \f$ \n
-    \f$  D1, D2, D3, D4, D5\f$  are constants \n
-    \f$  T^* = (T-T_{room})/(T_{melt}-T_{room}) \f$
-  */
-  /////////////////////////////////////////////////////////////////////////////
-
-  class JohnsonCookDamage : public DamageModel {
+  class BrittleDamage : public DamageModel {
 
   public:
-    // Create datatype for storing model parameters
-    struct CMData {
-      double D1;
-      double D2;
-      double D3;
-      double D4;
-      double D5;
-      
-      double D0;                    /*< Initial mean scalar damage */
-      double D0_std;                /*< Initial standard deviation of scalar damage */
-      double Dc;                    /*< Critical scalar damage */
-      std::string dist;             /*< Initial damage distrinution */
-    };   
 
   private:
+    //Create datatype for brittle damage
+    struct BrittleDamageData {
+      double r0b;            /* Initial energy threshold (\sqrt{Pa}) */
+      double Gf;             /* Fracture energy (J/m^3) */
+      double constant_D;     /* Shape factor in softening function */
+      double maxDamageInc;   /* Maximum damage increment in a time step */
+      bool   allowRecovery;  /* Recovery of stiffness allowed */
+      double recoveryCoeff;  /* Fraction of stiffness to be recovered */
+      bool   printDamage;    /* Flag to print damage */
+      double Bulk;
+      double tauDev;
+    };
 
-    CMData d_initialData;
-         
-    // Prevent copying of this class
-    // copy constructor
-    //JohnsonCookDamage(const JohnsonCookDamage &cm);
-    JohnsonCookDamage& operator=(const JohnsonCookDamage &cm);
+    BrittleDamageData d_brittle_damage;
+
+    //__________________________________
+    //  Labels
+    const VarLabel* pFailureStressOrStrainLabel;
+    const VarLabel* pFailureStressOrStrainLabel_preReloc;
 
     const VarLabel* pDamageLabel;
     const VarLabel* pDamageLabel_preReloc;
-    const VarLabel* pPlasticStrainRateLabel_preReloc;
+
+
+    // Prevent copying of this class copy constructor
+    BrittleDamage& operator=(const BrittleDamage &cm);
 
   public:
     // constructors
-    JohnsonCookDamage(ProblemSpecP& ps); 
-    JohnsonCookDamage(const JohnsonCookDamage* cm);
-         
-    // destructor 
-    virtual ~JohnsonCookDamage();
+    BrittleDamage( ProblemSpecP& ps );
+
+    BrittleDamage(const BrittleDamage* cm);
+
+    // destructor
+    virtual ~BrittleDamage();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-
-    double initialize();
 
     virtual
     void addComputesAndRequires(Task* task,
@@ -113,6 +86,12 @@ namespace Uintah {
                             DataWarehouse     * new_dw );
 
     virtual
+    void carryForward( const PatchSubset* patches,
+                       const MPMMaterial* matl,
+                       DataWarehouse*     old_dw,
+                       DataWarehouse*     new_dw);
+
+    virtual
     void addParticleState(std::vector<const VarLabel*>& from,
                           std::vector<const VarLabel*>& to);
 
@@ -123,9 +102,10 @@ namespace Uintah {
     virtual
     void initializeLabels(const Patch*       patch,
                           const MPMMaterial* matl,
-                          DataWarehouse*     new_dw );  
+                          DataWarehouse*     new_dw);
+
   };
 
 } // End namespace Uintah
 
-#endif  // __JOHNSONCOOK_DAMAGE_MODEL_H__ 
+#endif  // __Brittle_DAMAGE_MODEL_H__
