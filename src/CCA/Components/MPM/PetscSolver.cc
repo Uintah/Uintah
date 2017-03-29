@@ -269,7 +269,11 @@ void MPMPetscSolver::solve(vector<double>& guess)
 #endif
 
   KSPCreate(PETSC_COMM_WORLD,&solver);
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 6))
+  KSPSetOperators(solver,d_A,d_A);
+#else
   KSPSetOperators(solver,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
+#endif
   KSPGetPC(solver,&precond);
 
 #if defined(USE_SPOOLES) || defined(USE_SUPERLU)
@@ -411,7 +415,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #endif
     ierr = MatMPIAIJSetPreallocation(d_A,PETSC_DEFAULT,diag,PETSC_DEFAULT,onnz);
 #else
-#if ((PETSC_VERSION_MAJOR == 3) && ((PETSC_VERSION_MINOR == 3) || (PETSC_VERSION_MINOR == 4)))
+#if ((PETSC_VERSION_MAJOR == 3) && ((PETSC_VERSION_MINOR >= 3) ) )
     MatCreateAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                     globalcolumns, PETSC_DEFAULT, diag,
                     PETSC_DEFAULT, onnz, &d_A);

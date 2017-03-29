@@ -23,15 +23,75 @@
  */
 
 
-#include "DamageModel.h"
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 
 using namespace Uintah;
+static DebugStream dbg("DamageModel", false);
+//______________________________________________________________________
+//      TO DO
+//______________________________________________________________________
+//
 
 DamageModel::DamageModel()
 {
+  d_lb = scinew MPMLabel();
 }
 
 DamageModel::~DamageModel()
 {
+  delete d_lb;
 }
-         
+
+//______________________________________________________________________
+//
+void DamageModel::addComputesAndRequires(Task* task,
+                                         const MPMMaterial* matl)
+{
+}
+
+
+//______________________________________________________________________
+//
+void DamageModel::addParticleState(std::vector<const VarLabel*>& from,
+                                   std::vector<const VarLabel*>& to)
+{
+}
+
+
+//______________________________________________________________________
+//
+void
+DamageModel::carryForward(const PatchSubset* patches,
+                          const MPMMaterial* matl,
+                          DataWarehouse*     old_dw,
+                          DataWarehouse*     new_dw)
+{
+  // do nothing
+}
+
+//______________________________________________________________________
+//
+void 
+DamageModel::addInitialComputesAndRequires(Task* task,
+                                           const MPMMaterial* matl )
+{
+}
+//______________________________________________________________________
+//
+void 
+DamageModel::initializeLabels(const Patch*       patch,
+                              const MPMMaterial* matl,
+                              DataWarehouse*     new_dw)
+{
+}
+
+//______________________________________________________________________
+//
+void 
+DamageModel::computeSomething( ParticleSubset    * pset,
+                               const MPMMaterial * matl,
+                               const Patch       * patch,    
+                               DataWarehouse     * old_dw,
+                               DataWarehouse     * new_dw )
+{
+}

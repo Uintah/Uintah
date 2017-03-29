@@ -24,11 +24,14 @@
 
 #include <CCA/Components/MPM/MPMCommon.h> 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
 using namespace std;
 using namespace Uintah;
+
+static DebugStream cout_doing("MPM", false);
 
 MPMCommon::MPMCommon(const ProcessorGroup* myworld)
   : d_myworld(myworld)
@@ -38,19 +41,22 @@ MPMCommon::MPMCommon(const ProcessorGroup* myworld)
 MPMCommon::~MPMCommon()
 {
 }
-
+//______________________________________________________________________
+//
 void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec, 
                                      SimulationStateP& sharedState,
-                                     MPMFlags* flags)
+                                     MPMFlags* flags, 
+                                     bool isRestart)
 {
+  d_sharedState = sharedState;
+  d_flags = flags;
+  
   //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-    string index("");
-    ps->getAttribute("index",index);
+  ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute( "MaterialProperties" );
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock( "MPM" );
+  for( ProblemSpecP ps = mpm_mat_ps->findBlock( "material" ); ps != nullptr; ps = ps->findNextBlock( "material" ) ) {
+    string index( "" );
+    ps->getAttribute( "index",index );
     stringstream id(index);
     const int DEFAULT_VALUE = -1;
     int index_val = DEFAULT_VALUE;
@@ -67,7 +73,7 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags);
+    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags,isRestart);
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
     // ALWAYS have an index number as in <material index = "0">.
@@ -81,17 +87,16 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec, 
                                          SimulationStateP& sharedState,
                                          MPMFlags* flags)
 {
   //Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps =  
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("cohesive_zone"); ps != 0;
-       ps = ps->findNextBlock("cohesive_zone") ) {
+  ProblemSpecP mat_ps     = prob_spec->findBlockWithOutAttribute( "MaterialProperties" );
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock( "MPM" );
+  for( ProblemSpecP ps = mpm_mat_ps->findBlock("cohesive_zone"); ps != nullptr; ps = ps->findNextBlock("cohesive_zone") ) {
 
     string index("");
     ps->getAttribute("index",index);
@@ -123,6 +128,59 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
     }
     else{
       sharedState->registerCZMaterial(mat);
+    }
+  }
+}
+//______________________________________________________________________
+//
+void MPMCommon::scheduleUpdateStress_DamageErosionModels(SchedulerP       & sched,
+                                                         const PatchSet    * patches,
+                                                         const MaterialSet * matls )
+{
+  printSchedule(patches,cout_doing,"MPMCommon::scheduleUpdateStress_DamageErosionModels");
+  
+  Task* t = scinew Task("MPM::updateStress_DamageErosionModels", this, 
+                        &MPMCommon::updateStress_DamageErosionModels);
+                        
+  int numMatls = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->addComputesAndRequires(t, mpm_matl);
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addComputesAndRequires(t, mpm_matl);
+  }
+  
+  sched->addTask(t, patches, matls);
+}
+//______________________________________________________________________
+//
+void MPMCommon::updateStress_DamageErosionModels(const ProcessorGroup *,
+                                                 const PatchSubset    * patches,
+                                                 const MaterialSubset * ,
+                                                 DataWarehouse        * old_dw,
+                                                 DataWarehouse        * new_dw)
+{
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+   
+    printTask(patches, patch,cout_doing,
+              "Doing updateStress_DamageModel");
+
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+    
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      
+      DamageModel* dm = mpm_matl->getDamageModel();
+      dm->computeSomething( pset, mpm_matl, patch, old_dw, new_dw );
+      
+      ErosionModel* em = mpm_matl->getErosionModel();
+      em->updateStress_Erosion( pset, old_dw, new_dw );
     }
   }
 }
