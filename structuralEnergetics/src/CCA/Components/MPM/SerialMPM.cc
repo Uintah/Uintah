@@ -23,6 +23,8 @@
  */
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
@@ -171,16 +173,13 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP prob_spec_mat_ps =
     prob_spec->findBlockWithOutAttribute("MaterialProperties");
 
-  if (prob_spec_mat_ps)
-  {
+  bool isRestart = false;
+  if (prob_spec_mat_ps){
     restart_mat_ps = prob_spec;
-  }
-  else if (restart_prob_spec)
-  {
+  } else if (restart_prob_spec){
+    isRestart = true;
     restart_mat_ps = restart_prob_spec;
-  }
-  else
-  {
+  } else{
     restart_mat_ps = prob_spec;
   }
 
@@ -314,7 +313,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
 
-  materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+  materialProblemSetup(restart_mat_ps, d_sharedState,flags, isRestart);
 
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
 
@@ -359,7 +358,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   d_fluxbc = FluxBCModelFactory::create(d_sharedState, flags);
 
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 {
   ProblemSpecP root = root_ps->getRootNode();
@@ -492,6 +492,13 @@ void SerialMPM::scheduleInitialize(const LevelP     & level ,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->addInitialComputesAndRequires( t, mpm_matl );
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires( t, mpm_matl );
+    
     if(flags->d_doScalarDiffusion)
     {
       ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
@@ -755,23 +762,10 @@ void SerialMPM::scheduleTimeAdvance(const LevelP      & level,
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
-  if(!flags->d_use_momentum_form){
-    scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
-    scheduleComputeStressTensor(            sched, patches, matls);
-    scheduleFinalParticleUpdate(            sched, patches, matls);
-  }
-#if 0
-  // The "momentum form" is currently not available.  Nor is it likely
-  // to get resurrected.
-  if(flags->d_use_momentum_form){
-    scheduleInterpolateToParticlesAndUpdateMom1(sched, patches, matls);
-    scheduleInterpolateParticleVelToGridMom(    sched, patches, matls);
-    scheduleExMomIntegrated(                    sched, patches, matls);
-    scheduleSetGridBoundaryConditions(          sched, patches, matls);
-    scheduleComputeStressTensor(                sched, patches, matls);
-    scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
-  }
-#endif
+
+  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  scheduleComputeStressTensor(            sched, patches, matls);
+  scheduleFinalParticleUpdate(            sched, patches, matls);
   scheduleInsertParticles(                    sched, patches, matls);
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(       sched, patches, matls);
@@ -1053,15 +1047,16 @@ void SerialMPM::scheduleComputeStressTensor(
 
   sched->addTask(t, patches, matls);
 
-  // Schedule update of the erosion parameter
-  scheduleUpdateErosionParameter(sched, patches, matls);
-  scheduleFindRogueParticles(sched, patches, matls);
+  //__________________________________
+  //  Additional tasks
+  scheduleUpdateStress_DamageErosionModels( sched, patches, matls );
 
   if (flags->d_reductionVars->accStrainEnergy)
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::scheduleComputeChemicalPotential(      SchedulerP   & sched   ,
                                                  const PatchSet     * patches ,
                                                  const MaterialSet  * matls
@@ -1091,57 +1086,6 @@ void SerialMPM::scheduleComputeChemicalPotential(      SchedulerP   & sched   ,
   sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
-                                               const PatchSet* patches,
-                                               const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-  printSchedule(patches,cout_doing,"MPM::scheduleUpdateErosionParameter");
-
-  Task* t = scinew Task("MPM::updateErosionParameter",
-                        this, &SerialMPM::updateErosionParameter);
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addRequiresDamageParameter(t, mpm_matl, patches);
-  }
-  t->computes(lb->pLocalizedMPMLabel_preReloc);
-
-  if(flags->d_deleteRogueParticles){
-    t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
-    t->computes(lb->numLocInCellLabel);
-    t->computes(lb->numInCellLabel);
-  }
-
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleFindRogueParticles(SchedulerP& sched,
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-  if(flags->d_deleteRogueParticles) {
-    printSchedule(patches,cout_doing,"MPM::scheduleFindRogueParticles");
-
-    Task* t = scinew Task("MPM::findRogueParticles",
-                          this, &SerialMPM::findRogueParticles);
-    Ghost::GhostType gac   = Ghost::AroundCells;
-    t->requires(Task::NewDW, lb->numLocInCellLabel,       gac, 1);
-    t->requires(Task::NewDW, lb->numInCellLabel,          gac, 1);
-    t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
-    t->modifies(lb->pLocalizedMPMLabel_preReloc);
-
-    sched->addTask(t, patches, matls);
-  }
-}
 
 // Compute the accumulated strain energy
 void SerialMPM::scheduleComputeAccStrainEnergy(SchedulerP& sched,
@@ -1934,6 +1878,13 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->addInitialComputesAndRequires(t, mpm_matl);
+    
+    ErosionModel* em = mpm_matl->getErosionModel();
+    em->addInitialComputesAndRequires(t, mpm_matl);
+    
   }
 
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
@@ -2243,6 +2194,12 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
+      
+      //initialize Damage model
+      mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
+      
+      mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
+      
 
       if(flags->d_doScalarDiffusion)
       {
@@ -2895,145 +2852,6 @@ void SerialMPM::computeChemicalPotential(
   }
 }
 
-void SerialMPM::updateErosionParameter(const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* ,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw)
-{
-  for (int p = 0; p<patches->size(); p++)
-  {
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing, "Doing updateErosionParameter");
-
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++)
-    {
-      if (cout_dbg.active())
-        cout_dbg << "updateErosionParameter:: material # = " << m << endl;
-
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      if (cout_dbg.active())
-      {
-        cout_dbg << "updateErosionParameter:: mpm_matl* = " << mpm_matl
-                 << " dwi = " << dwi << " pset* = " << pset << endl;
-      }
-
-      // Get the localization info
-      ParticleVariable<int> isLocalized;
-      new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel_preReloc,pset);
-      for (pSetIter pIter=pset->begin(); pIter != pset->end(); pIter++)
-      {
-        isLocalized[*pIter] = 0;
-      }
-      mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
-                                                           dwi, old_dw,new_dw);
-
-      if (cout_dbg.active())
-        cout_dbg << "updateErosionParameter:: Got Damage Parameter" << endl;
-
-      if(flags->d_deleteRogueParticles)
-      {
-        // The following looks for localized particles that are isolated
-        // either individually or in small groups
-        //Ghost::GhostType  gac = Ghost::AroundCells;
-        CCVariable<int> numLocInCell,numInCell;
-        new_dw->allocateAndPut(numLocInCell, lb->numLocInCellLabel, dwi, patch);
-        new_dw->allocateAndPut(numInCell,    lb->numInCellLabel,    dwi, patch);
-        numLocInCell.initialize(0);
-        numInCell.initialize(0);
-
-        constParticleVariable<Point> px;
-        old_dw->get(px, lb->pXLabel, pset);
-
-        // Count the number of localized particles in each cell
-        for (pSetIter pIter = pset->begin(); pIter != pset->end(); ++pIter) 
-        {
-          IntVector c;
-          patch->findCell(px[*pIter],c);
-          numInCell[c]++;
-          if (isLocalized[*pIter]) {
-            numLocInCell[c]++;
-          }
-        }
-      } // if d_deleteRogueParticles
-
-      if (cout_dbg.active())
-        cout_dbg << "updateErosionParameter:: Updated Erosion " << endl;
-
-    }
-
-    if (cout_dbg.active())
-      cout_dbg <<"Done updateErosionParamter on patch "  << patch->getID() << "\t MPM"<< endl;
-
-  }
-}
-
-void SerialMPM::findRogueParticles(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* ,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
-{
-  for (int p = 0; p<patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing findRogueParticles");
-
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      // The following looks for localized particles that are isolated
-      // either individually or in small groups
-      Ghost::GhostType  gac = Ghost::AroundCells;
-      constCCVariable<int> numLocInCell,numInCell;
-      constParticleVariable<Point> px;
-
-      ParticleVariable<int> isLocalized;
-
-      new_dw->get(numLocInCell, lb->numLocInCellLabel, dwi, patch, gac, 1);
-      new_dw->get(numInCell,    lb->numInCellLabel,    dwi, patch, gac, 1);
-      old_dw->get(px, lb->pXLabel, pset);
-      new_dw->getModifiable(isLocalized, lb->pLocalizedMPMLabel_preReloc, pset);
-
-      // Look at the number of localized particles in the current and
-      // surrounding cells
-      for (pSetIter pIter = pset->begin(); pIter != pset->end(); pIter++)
-      {
-        if(isLocalized[*pIter]==1)
-        {
-          IntVector c;
-          patch->findCell(px[*pIter],c);
-          int totalInCells = 0;
-          for(int i=-1;i<2;i++)
-          {
-            for(int j=-1;j<2;j++)
-            {
-              for(int k=-1;k<2;k++)
-              {
-                IntVector cell = c + IntVector(i,j,k);
-                totalInCells += numInCell[cell];
-              }
-            }
-          }
-          // If the localized particles are sufficiently isolated, set
-          // a flag for deletion in interpolateToParticlesAndUpdate
-          if (numLocInCell[c]<=3 && totalInCells<=3)
-          {
-              isLocalized[*pIter]=-999;
-          }
-        }  // if localized
-      }  // particles
-    }  // matls
-  }  // patches
-}
 
 void SerialMPM::computeContactArea(const ProcessorGroup *           ,
                                    const PatchSubset    * patches   ,
@@ -4073,14 +3891,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup  * ,
                                     particleHeatFlux * Cp * delT * pmass[idx];
 
         // Update the particle's position and velocity
-//        pxnew[idx]           = px[idx]    + vel*delT;
-//        pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
-        double alpha = flags->d_PICalpha;
-
-        pxnew[idx] = px[idx] + (vel-acc*delT*(1.-0.5*alpha)
-                             + 0.5*(1.-alpha)*(vel-pvelocity[idx]))*delT;
-        pvelocitynew[idx] = (1.0-alpha)*vel + alpha*(pvelocity[idx]+acc*delT);
-
+        pxnew[idx]           = px[idx]    + vel*delT;
+        pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
@@ -4274,30 +4086,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup  * ,
         }
       } //end of pressureStabilization loop  at the patch level
 
-      if(flags->d_erosionAlgorithm=="ZeroStress"){
-        for(pSetIter iter = pset->begin(); iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          if(pLocalized[idx]){
-            pFNew[idx] = pFOld[idx];
-            pVelGrad[idx]= Matrix3(0.0);
-          }
-        }
-      }
-
-      if(flags->d_erosionAlgorithm=="AllowNoShear" ||
-         flags->d_erosionAlgorithm=="AllowNoTension"){
-        double third = 1./3.;
-        for(pSetIter iter = pset->begin(); iter != pset->end(); iter++)
-        {
-          particleIndex idx = *iter;
-          if(pLocalized[idx]){
-            double cbrtJ = cbrt(pFNew[idx].Determinant());
-            pFNew[idx] = cbrtJ*Identity;
-            pVelGrad[idx]=third*pVelGrad[idx].Trace()*Identity;
-          }
-        }
-      }
-
+      //__________________________________
+      //  Apply Erosion
+      ErosionModel* em = mpm_matl->getErosionModel();
+      em->updateVariables_Erosion( pset, pLocalized, pFOld, pFNew, pVelGrad );
+      
       // scale back huge particle velocities.
       // Default for d_max_vel is 3.e105, hence the conditional
       if(flags->d_max_vel < 1.e105){

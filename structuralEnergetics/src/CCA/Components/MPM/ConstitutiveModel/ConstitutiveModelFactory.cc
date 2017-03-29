@@ -243,6 +243,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type ==  "shell_CNH"){
     return(scinew ShellMaterial(child,flags));
   }
+#if 0
   else if (cm_type == "reactive_EP"){
     return(scinew ReactiveEP(child,flags));
   }
@@ -252,6 +253,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type == "hacked"){
     return(scinew HackedReactive_EP(child, flags));
   }
+#endif
   else if (cm_type ==  "elastic_plastic" ||
            cm_type ==  "elastic_plastic_hp"){
     computes_pLocalizedMPM = true;

@@ -39,7 +39,9 @@ namespace Uintah {
   public:
     // this function has a switch for all known mat_types
     
-    static ConstitutiveModel* create(ProblemSpecP& ps, MPMFlags* flags);
+    static ConstitutiveModel* create(ProblemSpecP& ps, 
+                                     MPMFlags* flags,
+                                     bool& computes_pLocalizedMPM);
 
   };
 } // End namespace Uintah

@@ -773,7 +773,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTempPreviousLabel_preReloc); //for thermal stress
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
-  t->computes(lb->pXXLabel);
   t->computes(lb->pKineticEnergyDensityLabel); //for FractureMPM
   
   t->computes(lb->KineticEnergyLabel);
@@ -2190,16 +2189,12 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       RMI = reactant->getDWIndex();
       combustion_problem=true;
     }
-    double move_particles=1.;
-    if(!flags->d_doGridReset){
-      move_particles=0.;
-    }    
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      ParticleVariable<Point> pxnew,pxx;
+      ParticleVariable<Point> pxnew;
       constParticleVariable<Vector> pvelocity;
       constParticleVariable<Matrix3> psize;
       ParticleVariable<Vector> pvelocitynew;
@@ -2239,7 +2234,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->getModifiable(pvolume,     lb->pVolumeLabel_preReloc,       pset);
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
@@ -2329,11 +2323,9 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
 
         // Update the particle's position and velocity
-        pxnew[idx]           = px[idx] + vel*delT*move_particles;
+        pxnew[idx]           = px[idx] + vel*delT;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
         pvelocitynew[idx]    = pvelocity[idx] + acc*delT;
-        // pxx is only useful if we're not in normal grid resetting mode.
-        pxx[idx]             = px[idx]    + pdispnew[idx];      
         pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
         pTempPreNew[idx]     = pTempCurrent[idx]; // for thermal stress
 

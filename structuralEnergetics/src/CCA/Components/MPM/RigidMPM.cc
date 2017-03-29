@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -105,6 +106,9 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->carryForward(patches, mpm_matl, old_dw, new_dw);
+    
+    DamageModel* dm = mpm_matl->getDamageModel();
+    dm->carryForward(patches, mpm_matl, old_dw, new_dw);
   }
 
   new_dw->put(delt_vartype(999.0), lb->delTLabel, getLevel(patches));
@@ -249,7 +253,6 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pVelGradLabel_preReloc);
   t->computes(lb->pDeformationMeasureLabel_preReloc);
   t->computes(lb->pTemperatureGradientLabel_preReloc);
-  t->computes(lb->pXXLabel);
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->ThermalEnergyLabel);
@@ -308,16 +311,12 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
-//    double move_particles=1.;
-//    if(!flags->d_doGridReset){
-//      move_particles=0.;
-//    }
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      ParticleVariable<Point> pxnew,pxx;
+      ParticleVariable<Point> pxnew;
       constParticleVariable<Vector> pvelocity;
       constParticleVariable<Matrix3> psize;
       ParticleVariable<Vector> pvelocitynew;
@@ -352,7 +351,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
       new_dw->allocateAndPut(pVolNew,      lb->pVolumeLabel_preReloc,     pset);
@@ -432,8 +430,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pxnew[idx]           = px[idx] + pvelocity[idx]*delT;
         pdispnew[idx]        = pvelocity[idx]*delT;
         pmassNew[idx]        = pmass[idx];
-        // pxx is only useful if we're not in normal grid resetting mode.
-        pxx[idx]             = px[idx];
         pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
         pVelGrad[idx]        = Matrix3(0.);
         pFNew[idx]           = Identity;
