@@ -53,13 +53,8 @@
     <ForceBC_force_increment_factor> 1.0     </ForceBC_force_increment_factor>
     <do_contact_friction_heating>    false   </do_contact_friction_heating>
     <DoExplicitHeatConduction>       false   </DoExplicitHeatConduction>
-    <axisymmetric> false </axisymmetric>
-    <erosion algorithm = "none"/>
-    <withColor>                   true     </withColor>
-<!--
-    <erosion algorithm = "AllowNoTension"/>
-    <erosion algorithm = "RemoveMass"/>
--->
+    <axisymmetric>                   false   </axisymmetric>
+    <withColor>                      true     </withColor>
   </MPM>
 
   <PhysicalConstants>
@@ -71,16 +66,18 @@
   <MaterialProperties>
     <MPM>
       <material name="Lead Bullet">
-        <density>11.34e3</density>
+        
         <constitutive_model type="comp_neo_hook_plastic">
-          <bulk_modulus>46.0e9</bulk_modulus>
-          <shear_modulus>5.6e9</shear_modulus>
-          <yield_stress>42.0e6</yield_stress>
-          <hardening_modulus>5.6e3</hardening_modulus>
-          <alpha> 0.0 </alpha>
+          <bulk_modulus>       46.0e9  </bulk_modulus>
+          <shear_modulus>      5.6e9   </shear_modulus>
+          <yield_stress>       42.0e6  </yield_stress>
+          <hardening_modulus>  5.6e3   </hardening_modulus>
+          <alpha>              0.0     </alpha>
         </constitutive_model>
-        <thermal_conductivity>35.3</thermal_conductivity>
-        <specific_heat>132.0</specific_heat>
+        
+        <density>             11.34e3 </density>
+        <thermal_conductivity>  35.3  </thermal_conductivity>
+        <specific_heat>         132.0 </specific_heat>
 
         <geom_object>
 	   <difference>
@@ -133,7 +130,6 @@
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JCPlastic6061T6Al.xml"/>
-          <include href="inputs/MPM/MaterialData/JCDamage6061T6Al.xml"/>
           <include href="inputs/MPM/MaterialData/MieGrunEOS6061T6Al.xml"/>
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <initial_mean_porosity>         0.001 </initial_mean_porosity>
@@ -142,14 +138,19 @@
           <frac_nucleation>               0.5   </frac_nucleation>
           <meanstrain_nucleation>         0.5   </meanstrain_nucleation>
           <stddevstrain_nucleation>       0.05   </stddevstrain_nucleation>
-          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
-          <initial_mean_scalar_damage>    0.001  </initial_mean_scalar_damage>
-          <initial_std_scalar_damage>     0.0005 </initial_std_scalar_damage>
-          <critical_scalar_damage>        1.0   </critical_scalar_damage>
-          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
- <!--
--->
+
+ <!-- 
+        These values need to be tuned       
+        <damage_model type="Threshold">
+           <failure_criteria>MaximumPrincipalStress</failure_criteria>
+           <failure_mean>       1e10     </failure_mean>
+           <failure_std>        5         </failure_std>
+           <failure_distrib>    weibull   </failure_distrib>
+        </damage_model>
+        <erosion algorithm = "ZeroStress"/>
+-->     
+        
         <geom_object>
           <box label = "Target">
              <min>[-1.0, -0.003175, -1.0]</min>

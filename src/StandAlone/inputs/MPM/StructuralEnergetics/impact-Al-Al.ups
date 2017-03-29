@@ -44,22 +44,17 @@
 
   <MPM>
     <time_integrator>explicit</time_integrator>
-    <interpolator>                   gimp   </interpolator>
+    <interpolator>                   gimp    </interpolator>
     <maximum_particle_velocity>      6.0e10  </maximum_particle_velocity>
-    <minimum_mass_for_acc>           1.e-15 </minimum_mass_for_acc>
+    <minimum_mass_for_acc>           1.e-15  </minimum_mass_for_acc>
     <artificial_damping_coeff>       0.0     </artificial_damping_coeff>
     <artificial_viscosity>           true    </artificial_viscosity>
     <use_load_curves>                false   </use_load_curves>
     <ForceBC_force_increment_factor> 1.0     </ForceBC_force_increment_factor>
     <do_contact_friction_heating>    false   </do_contact_friction_heating>
     <DoExplicitHeatConduction>       false   </DoExplicitHeatConduction>
-    <axisymmetric> false </axisymmetric>
-    <erosion algorithm = "none"/>
-    <withColor>                   true     </withColor>
-<!--
-    <erosion algorithm = "AllowNoTension"/>
-    <erosion algorithm = "RemoveMass"/>
--->
+    <axisymmetric>                   false   </axisymmetric>
+    <withColor>                      true    </withColor>
   </MPM>
 
   <PhysicalConstants>
@@ -70,9 +65,9 @@
 
   <MaterialProperties>
     <MPM>
-      <material name="Lead Bullet">
+      <material name="Al Bullet">
         <include href="MaterialData/Al.xml"/>
-
+        
         <geom_object>
 	   <difference>
 	     <sphere label = "W2">
@@ -118,6 +113,16 @@
       <material name="Target">
       
         <include href="MaterialData/Al.xml"/>
+ <!-- 
+        These values need to be tuned       
+        <damage_model type="Threshold">
+           <failure_criteria>MaximumPrincipalStress</failure_criteria>
+           <failure_mean>       1e10     </failure_mean>
+           <failure_std>        5         </failure_std>
+           <failure_distrib>    weibull   </failure_distrib>
+        </damage_model>
+        <erosion algorithm = "ZeroStress"/>
+-->
         
         <geom_object>
           <box label = "Target">
