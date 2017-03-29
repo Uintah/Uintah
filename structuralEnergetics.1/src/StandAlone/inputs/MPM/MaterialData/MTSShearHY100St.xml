@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- HY100 Steel -->
+<Uintah_Include>
+  <shear_modulus_model type="mts_shear">
+    <mu_0>71.46e9</mu_0>
+    <D>2.9e9</D>
+    <T_0>204</T_0>
+  </shear_modulus_model>
+</Uintah_Include>

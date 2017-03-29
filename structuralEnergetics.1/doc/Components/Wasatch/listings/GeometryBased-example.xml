@@ -1,0 +1,31 @@
+<BasicExpression type="SVOL" >
+	<TaskList>initialization</TaskList>
+	<NameTag name="f" state="STATE_NONE" />
+	<GeometryBased value="0.0">
+		<Intrusion value="10" name="mickey mouse">
+			<geom_object>
+				<union>
+				 <cylinder>
+					<bottom>[0.5,0.5,-1]</bottom>
+					<top>[0.5,0.5,1]</top>
+					<radius>0.2</radius>
+				 </cylinder>
+				 
+				 <cylinder>
+					<bottom>[0.25,0.65,-1]</bottom>
+					<top>[0.25,0.65,1]</top>
+					<radius>0.1</radius>
+				 </cylinder>
+
+				 <cylinder>
+					<bottom>[0.75,0.65,-1]</bottom>
+					<top>[0.75,0.65,1]</top>
+					<radius>0.1</radius>
+				 </cylinder>
+
+				</union>						
+			</geom_object>
+		</Intrusion>
+
+	</GeometryBased>
+</BasicExpression>

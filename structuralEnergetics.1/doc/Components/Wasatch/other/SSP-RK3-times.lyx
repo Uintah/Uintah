@@ -1,0 +1,527 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\renewcommand{\arraystretch}{2}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics pdftex
+\default_output_format pdf2
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref true
+\pdf_title "Derivation of the Intermediate-Stage Simulation Times for the Third-Order, Strong Stability Preserving Runge-Kutta Method"
+\pdf_author "Tony Saad"
+\pdf_subject "Runge Kutta Methods"
+\pdf_bookmarks true
+\pdf_bookmarksnumbered true
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks true
+\pdf_pdfborder false
+\pdf_colorlinks true
+\pdf_backref false
+\pdf_pdfusetitle true
+\pdf_quoted_options "linkcolor=red,citecolor=blue"
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine natbib_authoryear
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+
+\series bold
+Derivation of the Intermediate-Stage Simulation Times for the Third-Order,
+ Strong Stability Preserving Runge-Kutta Method
+\end_layout
+
+\begin_layout Author
+Tony Saad
+\end_layout
+
+\begin_layout Abstract
+In this document, I derive the proper intermediate stage time for the third-orde
+r, Strong Stability Preserving Runge-Kutta (SSP-RK3) scheme.
+ This is done by first casting the low-storage formulation of 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "gottlieb2001strong"
+
+\end_inset
+
+ in terms of the traditional Runge-Kutta (RK) explicit formulation.
+ Then, the consistency condition on the right-hand-side (RHS) coefficients
+ of the traditional RK framework is used to derived the appropriate time
+ that should be used in the intermediate stages of the SSP-RK3 formulation.
+\end_layout
+
+\begin_layout Section
+Derivation
+\end_layout
+
+\begin_layout Standard
+Consider the solution of the following ordinary differential equation
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\mathrm{d}\phi}{\mathrm{d}t}=F(t,\phi)
+\end{equation}
+
+\end_inset
+
+The SSP-RK3 scheme is given by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{array}{cc}
+\phi^{(1)}= & \phi^{n}+\Delta t\, F(\phi^{n})\\
+\phi^{(2)}= & \frac{3}{4}\phi^{n}+\frac{1}{4}\phi^{(1)}+\frac{1}{4}\Delta t\, F[\phi^{(1)}]\\
+\phi^{n+1}= & \frac{1}{3}\phi^{n}+\frac{2}{3}\phi^{(2)}+\frac{2}{3}\Delta t\, F[\phi^{(2)}]
+\end{array}\label{eq:ssprk3-gottlieb}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The original paper by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "gottlieb2001strong"
+
+\end_inset
+
+ does not indicate how the time 
+\begin_inset Formula $t$
+\end_inset
+
+ varies within the intermediate RK-stages.
+ Here, we derive what these times should be.
+ This can be done by casting 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:ssprk3-gottlieb"
+
+\end_inset
+
+ into the traditional Runge-Kutta form
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi^{n+1}=\phi^{n}+\sum_{i=1}^{s}b_{i}k_{i},
+\end{equation}
+
+\end_inset
+
+where
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{aligned}k_{1}= & \Delta tF(t^{n},\phi^{n})\\
+k_{2}= & \Delta tF(t^{n}+c_{2}\Delta t,\phi^{n}+a_{21}k_{1})\\
+k_{3}= & \Delta tF(t^{n}+c_{3}\Delta t,\phi^{n}+a_{31}k_{1}+a_{32}k_{2})\\
+ & \vdots\\
+k_{s}= & \Delta tF(t^{n}+c_{s}\Delta t,\phi^{n}+\sum_{j=1}^{s-1}a_{sj}k_{j})
+\end{aligned}
+\label{eq:rk-traditional}
+\end{equation}
+
+\end_inset
+
+The equations given in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:rk-traditional"
+
+\end_inset
+
+ are consistent if, and only if, for a given stage 
+\begin_inset Formula $m$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\sum_{j=1}^{m-1}a_{mj}=c_{m}\label{eq:rk-consistency-condition}
+\end{equation}
+
+\end_inset
+
+Given that the 
+\begin_inset Formula $a_{ij}$
+\end_inset
+
+ coefficients are known from 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "gottlieb2001strong"
+
+\end_inset
+
+, one can use 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:rk-consistency-condition"
+
+\end_inset
+
+ to derive the proper SSP time at the intermediate RK stages.
+\end_layout
+
+\begin_layout Standard
+We first start by casting 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:ssprk3-gottlieb"
+
+\end_inset
+
+ into the traditional form 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:rk-traditional"
+
+\end_inset
+
+.
+ We start by setting
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+k_{1}\equiv\Delta tF(t^{n},\phi^{n})
+\end{equation}
+
+\end_inset
+
+We then expand 
+\begin_inset Formula $\phi^{(2)}$
+\end_inset
+
+ in terms of 
+\begin_inset Formula $\phi^{n}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi^{(2)}=\phi^{n}+\frac{1}{4}k_{1}+\frac{1}{4}\Delta tF[\phi^{n}+k_{1}]
+\end{equation}
+
+\end_inset
+
+We then set the last term in the previous equation to 
+\begin_inset Formula $k_{2}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+k_{2}\equiv\Delta tF(t^{n}+c_{2}\Delta t,\phi^{n}+k_{1})
+\end{equation}
+
+\end_inset
+
+Using 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:rk-consistency-condition"
+
+\end_inset
+
+ yields
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+c_{2}=1
+\end{equation}
+
+\end_inset
+
+Finally, we expand 
+\begin_inset Formula $\phi^{n+1}$
+\end_inset
+
+ from 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:ssprk3-gottlieb"
+
+\end_inset
+
+ in terms of 
+\begin_inset Formula $\phi^{n}$
+\end_inset
+
+.
+ One recovers
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi^{n+1}=\phi^{n}+\frac{1}{6}k_{1}+\frac{1}{6}k_{2}+\frac{2}{3}\Delta tF[\phi^{(2)}]=\phi^{n}+\frac{1}{6}k_{1}+\frac{1}{6}k_{2}+\frac{2}{3}\Delta tF[\phi^{n}+\frac{1}{4}k_{1}+\frac{1}{4}k_{2}]
+\end{equation}
+
+\end_inset
+
+Again, we set the last term in the previous equation as 
+\begin_inset Formula $k_{3}$
+\end_inset
+
+.
+ In other words
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+k_{3}\equiv\Delta tF[t^{n}+c_{3}\Delta t,\phi^{n}+\frac{1}{4}k_{1}+\frac{1}{4}k_{2}]
+\end{equation}
+
+\end_inset
+
+Finally, using the consistency condition 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:rk-consistency-condition"
+
+\end_inset
+
+, we calculate 
+\begin_inset Formula $c_{3}$
+\end_inset
+
+ as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+c_{2}=\frac{1}{4}+\frac{1}{4}=\frac{1}{2}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In summary, the SSP-RK3 scheme can be written in traditional form as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{aligned}k_{1}= & \Delta tF(t^{n},\phi^{n})\\
+k_{2}= & \Delta tF(t^{n}+\Delta t,\phi^{n}+k_{1})\\
+k_{3}= & \Delta tF(t^{n}+\frac{1}{2}\Delta t,\phi^{n}+\frac{1}{4}k_{1}+\frac{1}{4}k_{2})
+\end{aligned}
+\label{eq:ssp-rk3-traditional}
+\end{equation}
+
+\end_inset
+
+along with
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi^{n+1}=\phi^{n}+\frac{1}{6}(k_{1}+k_{2}+4k_{3})
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In terms of the original 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "gottlieb2001strong"
+
+\end_inset
+
+ form, we have
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{array}{cc}
+\phi^{(1)}= & \phi^{n}+\Delta t\, F(t^{n},\phi^{n})\\
+\phi^{(2)}= & \frac{3}{4}\phi^{n}+\frac{1}{4}\phi^{(1)}+\frac{1}{4}\Delta t\, F[t^{n}+\Delta t,\phi^{(1)}]\\
+\phi^{n+1}= & \frac{1}{3}\phi^{n}+\frac{2}{3}\phi^{(2)}+\frac{2}{3}\Delta t\, F[t^{n}+\frac{1}{2}\Delta t,\phi^{(2)}]
+\end{array}\label{eq:ssprk3-gottlieb-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Example
+\end_layout
+
+\begin_layout Standard
+Consider the solution of
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\mathrm{d}\phi}{\mathrm{d}t}=t;\quad\phi(0)=0
+\end{equation}
+
+\end_inset
+
+The exact solution is
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi(t)=\frac{1}{2}t^{2}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here, we examine the numerical solution of this governing equation at 
+\begin_inset Formula $t=1\mathrm{s}$
+\end_inset
+
+.
+ The exact solution is 
+\begin_inset Formula $\phi(1)=\frac{1}{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection*
+Wasatch Implementation
+\end_layout
+
+\begin_layout Standard
+Wasatch implements the fomulation shown in the previous section.
+ Here, we carry out a single SSP-RK3 timestep to check whether the formulation
+ is correct or not.
+ Let 
+\begin_inset Formula $\Delta t=1\mathrm{s}$
+\end_inset
+
+, then
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{aligned}\phi^{(1)}= & \phi^{0}+\Delta tF(t^{0})=0+1\times t^{0}=0\\
+\phi^{(2)}= & \frac{3}{4}\phi^{0}+\frac{1}{4}\phi^{(1)}+\frac{1}{4}\Delta t\, F[t^{0}+\Delta t,\phi^{(1)}]=0+0+\frac{1}{4}\times\Delta t\times(\Delta t)=\frac{1}{4}\\
+\phi^{1}= & \frac{1}{3}\phi^{0}+\frac{2}{3}\phi^{(2)}+\frac{2}{3}\Delta t\, F[t^{0}+\frac{1}{2}\Delta t,\phi^{(2)}]=0+\frac{2}{3}\times\frac{1}{4}+\frac{2}{3}\times\Delta t\times(\frac{1}{2}\Delta t)=\frac{1}{6}+\frac{1}{3}=\frac{1}{2}
+\end{aligned}
+\end{equation}
+
+\end_inset
+
+Clearly, this formulation captures the exact solution at 
+\begin_inset Formula $t=1\mathrm{s}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "ssp-rk-citations"
+options "apalike"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
