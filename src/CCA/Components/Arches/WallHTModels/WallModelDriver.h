@@ -389,7 +389,24 @@ namespace Uintah{
                 yscale = 0.082268841760067; 
                 ycenter = 0.940464141548903; 
                 fresnel={0.9671, -1.076e-06, -0.1613, -0.005533};
-              } else {
+              } else if (ash_type == "german_lignite"){
+                a_sv = -1.28417626e4;
+                b_sv = -1.03858154;
+                c_sv = 4.73690552;
+                a_agg = 3.32945977e-3;
+                b_agg = 8.57489019;
+                c_agg = 3.31450986e-1;
+                dp_eff_max = 0.67474660;
+                dp_eff_min = 0.33333333;
+                dpmax = 3000*1e-6;
+                coeff_num = {0.13791672, -0.14171277, 0.45335828, 0.34291611, 0.15374553, -0.41985056};
+                coeff_den = {1.00000000, 0.01302879, 0.25877226, -0.02239544, 0.01016679, -0.63044853};
+                xscale = {750, 0.001496250000000}; 
+                xcenter = {1050, 0.00150375}; 
+                yscale = 8.97627710e-2; 
+                ycenter = 0.927990005; 
+                fresnel={0.966128001, -1.14864873e-06, -0.164711924, -0.00571174902};
+	      } else {
                 throw InvalidValue("Error, coal_name wasn't recognized in dynamic ash emissivity data-base. ", __FILE__, __LINE__);
               }
 
