@@ -117,6 +117,19 @@ namespace Uintah {
     /*! Returns the vector containing the set of particle chemical potential */
     //////////////////////////////////////////////////////////////////////
     std::vector<double>* getChemicalPotential();
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle + charges     */
+    //////////////////////////////////////////////////////////////////////
+    std::vector<double>* getPosCharge();
+
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle - charges     */
+    //////////////////////////////////////////////////////////////////////
+    std::vector<double>* getNegCharge();
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle permittivities*/
+    //////////////////////////////////////////////////////////////////////
+    std::vector<double>* getPermittivity();
 
     //////////////////////////////////////////////////////////////////////
     /*! Returns the vector containing the set of particle colors        */
@@ -214,6 +227,9 @@ namespace Uintah {
     std::vector<double> d_temperature;
     std::vector<double> d_concentration;
     std::vector<double> d_chemicalpotential;
+    std::vector<double> d_negcharge;
+    std::vector<double> d_poscharge;
+    std::vector<double> d_permittivity;
     std::vector<double> d_color;
     std::vector<Vector> d_forces;
     std::vector<Vector> d_fiberdirs;
