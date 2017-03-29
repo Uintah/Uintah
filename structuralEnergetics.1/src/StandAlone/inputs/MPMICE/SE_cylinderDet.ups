@@ -190,7 +190,6 @@
       <do_contact_friction_heating>    false       </do_contact_friction_heating>
       <DoExplicitHeatConduction>       false       </DoExplicitHeatConduction>
       <axisymmetric>                   false        </axisymmetric>
-      <erosion algorithm = "ZeroStress"/>
   <!--
       <erosion algorithm = "none"/>
       <erosion algorithm = "RemoveMass"/>
@@ -214,13 +213,16 @@
              <yield_stress>       324.0e6   </yield_stress>
              <hardening_modulus>  114.0e6   </hardening_modulus>
              <alpha> 0.0 </alpha>
-
-             <useDamage>         true       </useDamage>
-             <failure_criteria>MaximumPrincipalStress</failure_criteria>
-             <failure_mean>       8.0e8     </failure_mean>
-             <failure_std>        5.0e8     </failure_std>
-             <failure_distrib>    weibull   </failure_distrib>
           </constitutive_model>
+          
+          <damage_model type="Threshold">
+             <failure_criteria>MaximumPrincipalStress</failure_criteria>
+             <failure_mean>       1e10      </failure_mean>
+             <failure_std>        5         </failure_std>
+             <failure_distrib>    weibull   </failure_distrib>
+          </damage_model>
+          
+          <erosion algorithm = "ZeroStress"/>
           
           <geom_object>
             <difference>
@@ -254,6 +256,8 @@
             <useObjectiveRate>              false </useObjectiveRate>
             <useModifiedEOS>                true  </useModifiedEOS>
           </constitutive_model>
+          
+          <erosion algorithm = "ZeroStress"/>
           
           <geom_object>
  

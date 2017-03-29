@@ -190,7 +190,6 @@
       <manual_new_material>            false      </manual_new_material>
       <DoThermalExpansion>             false      </DoThermalExpansion>
       <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
-      <erosion algorithm = "ZeroStress"/>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -201,6 +200,8 @@
 
         <material name="Aluminum">
           <include href="MaterialData/Al.xml"/>
+          
+          <erosion algorithm = "ZeroStress"/>
              
           <geom_object>
             <difference>
@@ -232,6 +233,8 @@
             <useObjectiveRate>              false </useObjectiveRate>
             <useModifiedEOS>                true  </useModifiedEOS>
           </constitutive_model>
+          
+          <erosion algorithm = "ZeroStress"/>
           
           <geom_object>
             <union>
