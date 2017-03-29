@@ -188,6 +188,10 @@ public:
   ProblemSpecP getNextSibling();
    
   //////////
+  // returns the parent node, null if none
+  ProblemSpecP getParent();
+  
+  //////////
   // add a comment
   void addComment(std::string comment);
 
@@ -279,7 +283,11 @@ public:
   /*************
      Methods involving node information
   *************/
-      
+  
+  //////////
+  // output values related to this node
+  void print();
+
   //////////
   // return the name of this node
   std::string getNodeName() const;
