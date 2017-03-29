@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 6061-T6 Aluminum -->
+<Uintah_Include>
+  <shear_modulus_model type="scg_shear">
+    <mu_0> 27.6E+3</mu_0> 
+    <A> 0.0 </A>
+    <B> 0.0 </B>
+  </shear_modulus_model>
+</Uintah_Include>

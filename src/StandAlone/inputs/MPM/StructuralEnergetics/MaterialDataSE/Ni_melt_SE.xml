@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Nickel Specifications From Report-1GS -->
+<Uintah_Include>
+    <include href="MaterialDataSE/MatConstNi_SE.xml"/>
+    <constitutive_model type="reactive_EP">
+	      <heat_of_fusion>0.297</heat_of_fusion>
+	      <!-- <heat_of_fusion>0.0</heat_of_fusion> -->
+	      <include href="MaterialDataSE/IsoElasticNi_SE.xml"/>
+	      <include href="MaterialDataSE/VonMisesYield.xml"/>
+	      <include href="MaterialDataSE/SCGShearNi.xml"/>
+	      <include href="MaterialDataSE/JCPlasticNi200.xml"/>
+	      <include href="MaterialDataSE/MieGrunEOSNi_SE.xml"/>
+	      <check_TEPLA_failure_criterion>false </check_TEPLA_failure_criterion>
+	      <initial_material_temperature>  300.0 </initial_material_temperature>
+    </constitutive_model>
+</Uintah_Include>
