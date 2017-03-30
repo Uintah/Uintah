@@ -123,13 +123,17 @@
            <yield_stress>       324.0e6   </yield_stress>
            <hardening_modulus>  114.0e6   </hardening_modulus>
            <alpha> 0.0 </alpha>
-           
-           <useDamage>         true       </useDamage>
-           <failure_criteria>MaximumPrincipalStress</failure_criteria>
-           <failure_mean>       8.0e8     </failure_mean>
-           <failure_std>        5.0e8     </failure_std>
-           <failure_distrib>    weibull   </failure_distrib>
         </constitutive_model>
+        
+        <erosion algorithm = "ZeroStress"/>
+        
+        <damage_model type="Threshold">
+           <failure_criteria>MaximumPrincipalStress</failure_criteria>
+           <failure_mean>       8.0e8      </failure_mean>
+           <failure_std>        5         </failure_std>
+           <failure_distrib>    weibull   </failure_distrib>
+        </damage_model>
+          
         
         <geom_object>
           <box label = "Target">

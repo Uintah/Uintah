@@ -11,8 +11,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-3e8_FSTD_2.5</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :3e8
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :2.5
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :3e8
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :2.5
     </replace_values>
 </Test>
 <Test>
@@ -21,8 +21,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-8e8_FSTD_2.5</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :8e8
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :2.5
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :8e8
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :2.5
     </replace_values>
 </Test>
 <Test>
@@ -31,8 +31,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-1.3e9_FSTD_2.5</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :1.3e9
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :2.5
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :1.3e9
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :2.5
     </replace_values>
 </Test>
 
@@ -43,8 +43,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-3e8_FSTD_5</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :3e8
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :5
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :3e8
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :5
     </replace_values>
 </Test>
 <Test>
@@ -53,8 +53,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-8e8_FSTD_5</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :8e8
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :5
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :8e8
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :5
     </replace_values>
 </Test>
 <Test>
@@ -63,8 +63,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-1.3e9_FSTD_5</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :1.3e9
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :5
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :1.3e9
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :5
     </replace_values>
 </Test>
 
@@ -75,8 +75,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-3e8_FSTD_10</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :3e8
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :10
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :3e8
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :10
     </replace_values>
 </Test>
 <Test>
@@ -85,8 +85,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-8e8_FSTD_10</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :8e8
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :10
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :8e8
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :10
     </replace_values>
 </Test>
 <Test>
@@ -95,8 +95,8 @@
     <postProcess_cmd></postProcess_cmd>
     <x>FM-1.3e9_FSTD_10</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_mean :1.3e9
-         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/constitutive_model/failure_std :10
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_mean :1.3e9
+         /Uintah_specification/MaterialProperties/MPM/material[@name='Target']/damage_model/failure_std :10
     </replace_values>
 </Test>
 

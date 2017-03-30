@@ -117,7 +117,7 @@
               <upper>        [ 0.02, 0.02, 0.00100] </upper>
               <extraCells>   [1,1,1]                 </extraCells>
               <patches>      [4,4,1]               </patches>
-              <resolution>   [250,250,1]             </resolution>
+              <resolution>   [400,400,1]             </resolution>
            </Box>
        </Level>
     </Grid>
@@ -148,7 +148,7 @@
       <save label="F"/>
 
       <save label="p.x"/>
-      <save label="p.localized"/>
+      <save label="p.localizedMPM"/>
       <save label="p.temperature"/>
       <save label="p.particleID"/>
       <save label="p.mass"/>
@@ -203,9 +203,8 @@
       <MPM>
 
         <material name="cylinder">
-<!--
           <include href="MaterialData/Al.xml"/>
--->             
+<!--       
           <include href="MaterialData/MatConst6061T6Al.xml"/>
           <constitutive_model type="UCNH">
              <shear_modulus>      26.0e9    </shear_modulus>
@@ -214,7 +213,7 @@
              <hardening_modulus>  114.0e6   </hardening_modulus>
              <alpha> 0.0 </alpha>
           </constitutive_model>
-          
+-->          
           <damage_model type="Threshold">
              <failure_criteria>MaximumPrincipalStress</failure_criteria>
              <failure_mean>       1e10      </failure_mean>
