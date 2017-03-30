@@ -34,6 +34,10 @@ use Data::Dumper;
 use Time::HiRes qw/time/;
 use Cwd;
 
+# removes white spaces from variable
+sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
+
+
 # create object
 $simple = new XML::Simple(forcearray => 1, suppressempty => "");
 $tstFile           = $ARGV[0];
@@ -51,6 +55,14 @@ if( length $gpFile ){
   $gpFile    = $config_files_path."/".$gpFile;
   system("cp -f $gpFile .");
 }
+
+# set exitOnCrash
+if ( length $data->{exitOnCrash}->[0] ){
+  $exitOnCrash = $data->{exitOnCrash}->[0];
+}else{
+  $exitOnCrash = "true";
+}
+$exitOnCrash = trim(uc($exitOnCrash));
 
 
 #__________________________________
@@ -283,7 +295,12 @@ for ($i=0;$i<=$num_of_tests;$i++){
   $now = time();
    
   @args = ("$sus_cmd[$i]","$test_ups","> $test_output 2>&1");
-  system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
+  
+  if ( $exitOnCrash eq "TRUE" ) {
+    system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
+  }else{
+    system("@args");
+  }
   
   $fin = time()-$now;
   printf statsFile ("Running Time : %.3f [secs]\n", $fin);
@@ -294,7 +311,12 @@ for ($i=0;$i<=$num_of_tests;$i++){
   if( length $postProc_cmd[$i] ){
     print "\nLaunching: analyze_results.pl $tstFile test $i\n";
     @args = ("analyze_results.pl","$tstFile", "$i");
-    system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
+
+    if ( $exitOnCrash eq "TRUE" ) {
+      system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
+    }else{
+      system("@args");
+    }
   }
   
 }  # all tests loop
