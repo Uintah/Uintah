@@ -29,7 +29,7 @@
     
     <save label = "p.plasticStrain"/>
     <save label = "p.strainRate"/>
-    <save label = "p.damage"/>
+    <!--<save label="p.localizedMPM"/> -->
     <save label = "p.x"/>
     <save label = "p.velocity"/>
     <save label = "p.mass"/>

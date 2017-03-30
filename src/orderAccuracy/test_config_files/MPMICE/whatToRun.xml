@@ -1,7 +1,7 @@
 <config>
 <postProcessCmd_path>orderAccuracy/comparisonUtils</postProcessCmd_path>
 
-<symbolicLinks> /ssd/builds/structuralEnergetics.1/src/StandAlone/inputs/MPM/MaterialData</symbolicLinks>
+<symbolicLinks> /ssd2/builds/structuralEnergetics.1/src/StandAlone/inputs/MPM/MaterialData</symbolicLinks>
 
 
 <test>
