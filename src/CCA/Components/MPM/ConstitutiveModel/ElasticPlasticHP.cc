@@ -749,7 +749,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           cerr << "Tm = " << Tm << endl;
           cerr << "DWI = " << matl->getDWIndex() << endl;
           cerr << "L.norm()*dt = " << tensorL.Norm()*delT << endl;
-          
+
+          pLocalized_new[idx]=-999;
           tensorL=zero;
           tensorF_new.Identity();
       }
@@ -1012,8 +1013,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Stage 4:
       //-----------------------------------------------------------------------
       // Find if the particle has failed/localized
-      pLocalized_new[idx] = false;
-      
       double tepla = 0.0;
       
       bool doErosion = matl->getErosionModel()->d_doEorsion;
