@@ -581,8 +581,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
         }
         //_______________________________Cauchy stress
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
-      }
-      else {
+      } else {
           deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
                - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
