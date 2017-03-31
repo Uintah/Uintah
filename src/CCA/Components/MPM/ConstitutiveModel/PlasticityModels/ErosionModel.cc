@@ -233,25 +233,26 @@ ErosionModel::updateStress_Erosion( ParticleSubset * pset,
   
     Matrix3 Identity, zero(0.0); 
     Identity.Identity();
-    
+
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      // Compute pressure
-      double pressure = pStress[idx].Trace()/3.0;
-      double failTime = time - pTimeOfLoc_new[idx];
-
-      double D = exp(-failTime/d_charTime);
-      
       if (pLocalized_old[idx] != pLocalized_new[idx]) {
         pTimeOfLoc_new[idx] = time;
-      } 
+      }
+      double failTime = time - pTimeOfLoc_new[idx];
 
       //__________________________________
       //  modify the stress
-      if( pLocalized_old[idx] != 0 ) {     // THIS SHOULD BE pLocalized_new
-            
+      if( pLocalized_new[idx] != 0 ) {     // THIS SHOULD BE pLocalized_new
+        // Compute pressure
+        double pressure = pStress[idx].Trace()/3.0;
+
+        double D = exp(-failTime/d_charTime);
+
+        //cout << "D = " << D << endl;
+
         switch (d_algo) {
         case erosionAlgo::AllowNoTension :
           if( pressure > 0.0 ){
