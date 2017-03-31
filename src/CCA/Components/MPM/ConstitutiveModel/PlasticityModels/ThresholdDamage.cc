@@ -332,9 +332,11 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
     Matrix3 Identity, zero(0.0); Identity.Identity();
 
     // Find if the particle has failed
-    pLocalized_new[idx] = pLocalized[idx];
+    if(pLocalized_new[idx]==0){
+      pLocalized_new[idx] = pLocalized[idx];
+    }
 
-    if (pLocalized[idx] == 0){
+    if (pLocalized[idx] == 0 && pLocalized_new[idx] != -999){
       if(d_failure_criteria=="MaximumPrincipalStress"){
 
         double maxEigen=0., medEigen=0., minEigen=0.;
