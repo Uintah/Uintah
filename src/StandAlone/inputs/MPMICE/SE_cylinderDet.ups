@@ -20,7 +20,7 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            3.8e-6     </maxTime>
+       <maxTime>            1e-5     </maxTime>
       <!-- <max_Timesteps>      10      </max_Timesteps> -->
        <initTime>           0.0       </initTime>
        <delt_min>           0.0       </delt_min>
@@ -127,7 +127,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>cylinderDet_</filebase>
-      <outputInterval> 2e-07 </outputInterval>
+      <outputInterval> 1e-07 </outputInterval>
       <outputInitTimestep/> 
 
       <save label="press_CC"/>
@@ -180,7 +180,7 @@
 
     <MPM>
       <time_integrator>                explicit    </time_integrator>
-      <interpolator>                   fast_cpdi   </interpolator>
+      <interpolator>                   gimp        </interpolator>
       <maximum_particle_velocity>      6.0e10      </maximum_particle_velocity>
       <minimum_mass_for_acc>           1.e-15      </minimum_mass_for_acc>
       <artificial_damping_coeff>       0.0         </artificial_damping_coeff>
