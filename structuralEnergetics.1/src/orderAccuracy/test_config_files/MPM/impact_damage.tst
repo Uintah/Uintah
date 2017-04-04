@@ -7,7 +7,7 @@
 
 <Test>
     <Title>FM-3e8_FSTD_2.5</Title>
-    <sus_cmd> nice mpirun -np 16 sus </sus_cmd>
+    <sus_cmd> nice mpirun -np 1 sus -nthreads 16</sus_cmd>
     <postProcess_cmd></postProcess_cmd>
     <x>FM-3e8_FSTD_2.5</x>
     <replace_values>
@@ -17,7 +17,7 @@
 </Test>
 <Test>
     <Title>FM-8e8_FSTD_2.5</Title>
-    <sus_cmd> nice mpirun -np 16 sus </sus_cmd>
+    <sus_cmd> nice mpirun -np 1 sus -nthreads 16 </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
     <x>FM-8e8_FSTD_2.5</x>
     <replace_values>
@@ -27,7 +27,7 @@
 </Test>
 <Test>
     <Title>FM-1.3e9_FSTD_2.5</Title>
-    <sus_cmd> nice mpirun -np 16 sus </sus_cmd>
+    <sus_cmd> nice mpirun -np 1 sus -nthreads 16 </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
     <x>FM-1.3e9_FSTD_2.5</x>
     <replace_values>
@@ -39,7 +39,7 @@
 <!--__________________________________-->
 <Test>
     <Title>FM-3e8_FSTD_5</Title>
-    <sus_cmd> nice mpirun -np 16 sus </sus_cmd>
+    <sus_cmd> nice mpirun -np 1 sus -nthreads 16 </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
     <x>FM-3e8_FSTD_5</x>
     <replace_values>
