@@ -314,6 +314,12 @@ protected:
                                  const MaterialSubset* ,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
+
+  void modifyLoadCurves(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* ,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
   //////////
   // This task is to be used for setting particle external force
   // and external heat rate.  I'm creating a separate task so that
@@ -487,6 +493,10 @@ protected:
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
                                                  
+  void scheduleModifyLoadCurves(const LevelP & level,
+                                SchedulerP& sched,
+                                const MaterialSet*);
+
   void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
                                   const MaterialSet*);
 
