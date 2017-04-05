@@ -955,6 +955,7 @@
           <frenkel_constant                spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 1.225. This is the constant in the sintering model. -->
           <enamel_deposit_porosity         spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 0.6. This is the ash enamel porosity. -->
           <sb_deposit_porosity             spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 0.6. This is the ash sb prosity. -->
+	  <mid_melting_temp                spec="OPTIONAL DOUBLE" need_applies_to="type coal_region_ht"/> <!-- default is 1450. This is (T_fluid+T_soft)/2. -->
           <enamel_ash_composition          spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to="type coal_region_ht"/> <!-- species in the following order: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. -->
           <sb_ash_composition              spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to="type coal_region_ht"/> <!-- species in the following order: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. -->
           <coal_region                     spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">

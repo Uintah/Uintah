@@ -287,6 +287,7 @@ namespace Uintah{
               db_model->getWithDefault( "sb_ash_composition", sb_ash_comp, default_comp);
               db_model->getWithDefault( "enamel_deposit_porosity", en_porosity, 0.6);
               db_model->getWithDefault( "sb_deposit_porosity", sb_porosity, 0.6);
+	      db_model->getWithDefault( "mid_melting_temp", T_mid, 1450);
               if (en_ash_comp.size() != 8 || sb_ash_comp.size() != 8){
                 throw InvalidValue("Error ash_compositions (enamel_ash_composition and sb_ash_composition) must have 8 entries: sio2, al2o3, cao, fe2o3, na2o, bao, tio2, mgo. ", __FILE__, __LINE__);
               }
@@ -322,6 +323,7 @@ namespace Uintah{
             double f0;
             double en_porosity;
             double sb_porosity;
+	    double T_mid;
             double poly_data[6][5];
             void model(double &k_sb, double &k_en, const double &C_sb, const double &C_en, const double &T) {
               double ks_en, ks_sb, k, kg, a, kappa;
@@ -342,13 +344,17 @@ namespace Uintah{
               kg = 2.286e-11*T*T*T - 7.022e-8*T*T + 1.209e-4*T - 5.321e-3;
               
               // third compute effective k for enamel layer using hadley model
-              a = (en_porosity>=0.3) ? 1.5266*std::pow(1-en_porosity,8.7381) : 0.7079*std::pow(1-en_porosity,6.3051);
+	      double en_phi; // this is a zeroth order porosity model for the enamel layer
+	      en_phi = (T > T_mid) ? 0.0 : en_porosity;
+	      double sb_phi; // this is a zeroth order porosity model for the sootblow layer
+	      sb_phi = (T > T_mid) ? 0.0 : sb_porosity;
+              a = (en_phi>=0.3) ? 1.5266*std::pow(1-en_phi,8.7381) : 0.7079*std::pow(1-en_phi,6.3051);
               kappa = ks_en/kg;
-              k_en =  (en_porosity < 1e-8) ? 0.0 : kg*((1.0-a)*(en_porosity*f0 + (1.0-en_porosity*f0)*kappa)/(1.0-en_porosity*(1.0-f0) + en_porosity*(1.0-f0)*kappa) + a*(2.0*(1.0-en_porosity)*kappa*kappa + (1.0+2.0*en_porosity)*kappa)/((2.0+en_porosity)*kappa + 1.0 - en_porosity));
+              k_en =  (en_phi < 1e-8) ? 0.0 : kg*((1.0-a)*(en_phi*f0 + (1.0-en_phi*f0)*kappa)/(1.0-en_phi*(1.0-f0) + en_phi*(1.0-f0)*kappa) + a*(2.0*(1.0-en_phi)*kappa*kappa + (1.0+2.0*en_phi)*kappa)/((2.0+en_phi)*kappa + 1.0 - en_phi));
               // fourth compute effective k for sb layer using hadley model
-              a = (sb_porosity>=0.3) ? 1.5266*std::pow(1-sb_porosity,8.7381) : 0.7079*std::pow(1-sb_porosity,6.3051);
+              a = (sb_phi>=0.3) ? 1.5266*std::pow(1-sb_phi,8.7381) : 0.7079*std::pow(1-sb_phi,6.3051);
               kappa = ks_sb/kg;
-              k_sb = (sb_porosity < 1e-8) ? 0.0 : kg*((1.0-a)*(sb_porosity*f0 + (1.0-sb_porosity*f0)*kappa)/(1.0-sb_porosity*(1.0-f0) + sb_porosity*(1.0-f0)*kappa) + a*(2.0*(1.0-sb_porosity)*kappa*kappa + (1.0+2.0*sb_porosity)*kappa)/((2.0+sb_porosity)*kappa + 1.0 - sb_porosity));
+              k_sb = (sb_phi < 1e-8) ? 0.0 : kg*((1.0-a)*(sb_phi*f0 + (1.0-sb_phi*f0)*kappa)/(1.0-sb_phi*(1.0-f0) + sb_phi*(1.0-f0)*kappa) + a*(2.0*(1.0-sb_phi)*kappa*kappa + (1.0+2.0*sb_phi)*kappa)/((2.0+sb_phi)*kappa + 1.0 - sb_phi));
             }
             ~hadley_tc(){}
           };
