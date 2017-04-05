@@ -315,6 +315,11 @@ ThresholdDamage::computeSomething( ParticleSubset    * pset,
   } else {
     new_dw->allocateAndPut(pLocalized_new,
                          d_lb->pLocalizedMPMLabel_preReloc,     pset);    
+    for(ParticleSubset::iterator iter = pset->begin(); 
+                                 iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+        pLocalized_new[idx] = 0.0;
+    }
   }
 
   Matrix3 defGrad(0.0);
