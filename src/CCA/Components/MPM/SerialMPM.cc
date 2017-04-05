@@ -391,6 +391,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
+  t->computes(lb->KineticEnergyLabel);
 
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
@@ -626,6 +627,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   const MaterialSubset* cz_matls_sub  = cz_matls->getUnion();
   const MaterialSubset* tracer_matls_sub  = tracer_matls->getUnion();
 
+  if (flags->d_useLoadCurves){
+    scheduleModifyLoadCurves(             level, sched,   matls);
+  }
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
@@ -712,6 +716,21 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
       am->scheduleDoAnalysis( sched, level);
     }
   }
+}
+
+void SerialMPM::scheduleModifyLoadCurves(const LevelP & level,
+                                         SchedulerP& sched,
+                                         const MaterialSet* matls)
+{
+  Task* t=scinew Task("MPM::modifyLoadCurves",
+                    this, &SerialMPM::modifyLoadCurves);
+
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::OldDW, lb->KineticEnergyLabel );
+  t->setType(Task::OncePerProc);
+
+  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level),
+                                                                      matls);
 }
 
 void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
@@ -2002,9 +2021,9 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     // Initialize the accumulated strain energy
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
   }
+  new_dw->put(sum_vartype(0.0), lb->KineticEnergyLabel);
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
-
 }
 
 void SerialMPM::readPrescribedDeformations(string filename)
@@ -3292,6 +3311,53 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
   }     // patch loop
 }
 
+
+void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  // Get the current time
+  double time = d_sharedState->getElapsedTime();
+  sum_vartype KE;
+  delt_vartype delT;
+  old_dw->get(KE,   lb->KineticEnergyLabel);
+  old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+
+  cout << "KE = " << KE << " at t = " << time << endl;
+
+  for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "Pressure") {
+
+      // Save the material points per load curve in the PressureBC object
+      PressureBC* pbc =
+        dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      int numPOLC = pbc->getLoadCurve()->numberOfPointsOnLoadCurve();
+      int nextIndex = pbc->getLoadCurve()->getNextIndex(time);
+      double nextTime = pbc->getLoadCurve()->getTime(nextIndex);
+      double timeToNextLoad = nextTime-time;
+      cout << "timeToNextLoad = " << timeToNextLoad << endl;
+      if(timeToNextLoad < delT){
+        if(KE > pbc->getLoadCurve()->getMaxKE(nextIndex)){
+          for(int i=nextIndex;i<numPOLC;i++){
+            double loadTime = pbc->getLoadCurve()->getTime(i);
+            pbc->getLoadCurve()->setTime(i,loadTime+1.0);
+          }
+        } // if KE
+        for(int i=0; i<numPOLC; i++){
+          double time = pbc->getLoadCurve()->getTime(i);
+          double load = pbc->getLoadCurve()->getLoad(i);
+          cout << "time, load = " << time << " " << load << endl;
+        } // Loop over points on load curve
+      } //if(timeToNextLoad...
+
+      // Calculate the force per particle at t = 0.0
+      double forcePerPart = pbc->forcePerParticle(time);
+    } // if bcs_type == "Pressure"
+  }   // Loop over physical BCs
+}
 
 void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                    const PatchSubset* patches,

@@ -107,6 +107,7 @@
             <time_point           spec="MULTIPLE NO_DATA" >
               <time               spec="REQUIRED INTEGER" />
               <load               spec="REQUIRED INTEGER" />
+              <maxKE              spec="OPTIONAL DOUBLE" />
             </time_point>
           </load_curve>
           <res                    spec="OPTIONAL VECTOR" />
