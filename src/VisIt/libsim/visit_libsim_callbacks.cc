@@ -1195,10 +1195,10 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
 					       active == "true" ||
 					       active == "1" );
     
-    if( simStateP->d_debugStreams[row]->outstream == nullptr )
+    if( simStateP->d_debugStreams[row]->m_outstream == nullptr )
     {
       simStateP->d_debugStreams[row]->setFilename( "cout" );
-      simStateP->d_debugStreams[row]->outstream = &std::cout;
+      simStateP->d_debugStreams[row]->m_outstream = &std::cout;
     }
   }
   else if( column == 2 )
@@ -1208,23 +1208,23 @@ void visit_DebugStreamCallback(char *val, void *cbdata)
     if( filename.find("cerr") != std::string::npos )
     {
       simStateP->d_debugStreams[row]->setFilename( "cerr" );
-      simStateP->d_debugStreams[row]->outstream = &std::cerr;
+      simStateP->d_debugStreams[row]->m_outstream = &std::cerr;
     }
     else if( filename.find("cout") != std::string::npos )
     {
       simStateP->d_debugStreams[row]->setFilename( "cout" );
-      simStateP->d_debugStreams[row]->outstream = &std::cout;
+      simStateP->d_debugStreams[row]->m_outstream = &std::cout;
     }
     else
     {
       simStateP->d_debugStreams[row]->setFilename( filename );
 
-      if( simStateP->d_debugStreams[row]->outstream &&
-	  simStateP->d_debugStreams[row]->outstream != &std::cerr &&
-	  simStateP->d_debugStreams[row]->outstream != &std::cout )
-	delete simStateP->d_debugStreams[row]->outstream;
+      if( simStateP->d_debugStreams[row]->m_outstream &&
+	  simStateP->d_debugStreams[row]->m_outstream != &std::cerr &&
+	  simStateP->d_debugStreams[row]->m_outstream != &std::cout )
+	delete simStateP->d_debugStreams[row]->m_outstream;
 
-      simStateP->d_debugStreams[row]->outstream = new std::ofstream(filename);
+      simStateP->d_debugStreams[row]->m_outstream = new std::ofstream(filename);
     }
   }
 }
