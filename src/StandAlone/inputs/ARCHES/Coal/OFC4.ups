@@ -1384,25 +1384,6 @@
   <CFD>
     <ARCHES>
       <PropertyModels>
-        <model label="abskg" type="radiation_properties">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <opl>0.2647</opl>
-            <abskg label="gas_abskg"/>
-            <particles type="constantCIF">
-              <abskp label="abskp"/>
-              <radiateAtGasTemp>false</radiateAtGasTemp>
-              <model_type>planck</model_type>
-              <part_temp_label>temperature_coal</part_temp_label>
-              <part_size_label>length</part_size_label>
-              <complex_ir_real>2.0</complex_ir_real>
-              <complex_ir_imag>-0.6</complex_ir_imag>
-              <const_asymmFact>1</const_asymmFact>
-            </particles>
-          </calculator>
-        </model>
         <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
             <constant>0.764</constant>
@@ -1419,6 +1400,25 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
+
+      <PropertyModelsV2>
+        <model type="gasRadProperties"  label="gas_abskg" >
+          <calculator type="hottel_sarofim">
+            <opl>0.2647</opl>
+          </calculator>
+        </model>
+        <model type="partRadProperties" label="abskp" >
+          <subModel>constantCIF</subModel>
+          <part_temp_label>temperature_coal</part_temp_label>
+          <part_size_label>length</part_size_label>
+          <radiateAtGasTemp>false</radiateAtGasTemp>
+          <model_type>planck</model_type>
+          <complex_ir_real>2.0</complex_ir_real>
+          <complex_ir_imag>-0.6</complex_ir_imag>
+          <const_asymmFact>1</const_asymmFact>
+        </model>
+      </PropertyModelsV2>
+
       <ParticleProperties type="coal">
         <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
         <!-- [m] -->
@@ -1585,7 +1585,7 @@
           </src>
           <!--<src label="divQ" type="rmcrt_radiation">-->
           <!--<calc_frequency>3</calc_frequency>-->
-          <!--<abskg label = "abskg" />-->
+          <!--<abskt label = "abskg" />-->
           <!--<RMCRT>-->
           <!--<randomSeed>         true     </randomSeed>-->
           <!--<nDivQRays>          24         </nDivQRays>-->
@@ -1602,7 +1602,7 @@
             <!-- originalOFC -->
             <!-- <calc_frequency>20<calc_frequency> -->
             <calc_frequency>3</calc_frequency>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel>
               <!-- originalOFC -->
               <!-- <ordinates>8<ordinates> -->
@@ -1715,11 +1715,6 @@
           </initialization>
           <scaling_const>[  2.23228685e+11   2.76157995e+09   6.33907241e+07]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <Clipping>
-            <low>1e-20</low>
-            <high>10.0</high>
-            <tol>1e-50</tol>
-          </Clipping>
           <conv_scheme>upwind</conv_scheme>
           <molecular_diffusivity>0</molecular_diffusivity>
         </Weights>

@@ -24,6 +24,7 @@ void
 TaskFactoryBase::register_task(std::string task_name,
                                TaskInterface::TaskBuilder* builder ){
 
+  m_task_init_order.push_back(task_name);   
   ASSERT(builder != nullptr);
 
   BuildMap::iterator i = _builders.find(task_name);
@@ -78,7 +79,7 @@ TaskFactoryBase::retrieve_task( const std::string task_name ){
       TaskInterface::TaskBuilder* b = ibuild->second;
       TaskInterface* t = b->build();
 
-      _tasks.insert(std::make_pair(task_name,t));
+      _tasks[task_name]=t; 
 
       TaskMap::iterator itsk_new = _tasks.find(task_name);
 
@@ -160,7 +161,7 @@ void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
 
     std::vector<TaskInterface*> task_list_dummy( task_names.size() );
 
-    for ( int i = 0; i < task_names.size(); i++ ){
+    for (unsigned int i = 0; i < task_names.size(); i++ ){
       task_list_dummy[i] = retrieve_task( task_names[i] );
     }
 
@@ -169,7 +170,7 @@ void TaskFactoryBase::schedule_task_group( const std::string task_group_name,
   } else { 
 
     std::vector<TaskInterface*> task_list_dummy(1);
-    for ( int i = 0; i < task_names.size(); i++ ){
+    for (unsigned int i = 0; i < task_names.size(); i++ ){
 
       task_list_dummy[0] = retrieve_task( task_names[i] );
       factory_schedule_task( level, sched, matls, type, task_list_dummy, task_group_name, time_substep, reinitialize );

@@ -1086,22 +1086,6 @@
   <CFD>
     <ARCHES>
       <PropertyModels>
-        <model label="abskg" type="radiation_properties">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <opl>.432</opl>
-            <abskg label="gas_abskg"/>
-            <particles type="basic">
-              <abskp label="Julien_abskp"/>
-              <part_temp_label>temperature_coal</part_temp_label>
-              <part_size_label>length</part_size_label>
-              <radiateAtGasTemp>true</radiateAtGasTemp>
-              <Qabs>0.80000000000000004</Qabs>
-            </particles>
-          </calculator>
-        </model>
         <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
             <constant>0.890</constant>
@@ -1118,6 +1102,22 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
+
+      <PropertyModelsV2>
+        <model type="gasRadProperties"  label="gas_abskg" >
+          <calculator type="hottel_sarofim">
+            <opl>0.432</opl>
+          </calculator>
+        </model>
+        <model type="partRadProperties" label="Julien_abskp" >
+          <subModel>basic</subModel>
+          <Qabs>0.8</Qabs>
+          <part_temp_label>temperature_coal</part_temp_label>
+          <part_size_label>length</part_size_label>
+          <radiateAtGasTemp>true</radiateAtGasTemp>
+        </model>
+      </PropertyModelsV2>
+
       <!--<include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="ParticleProperties" />-->
       <ParticleProperties type="coal">
         <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
@@ -1293,7 +1293,7 @@
           </src>
           <src label="divQ" type="do_radiation">
             <calc_frequency>2</calc_frequency>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel>
               <ordinates>2</ordinates>
               <LinearSolver type="hypre">

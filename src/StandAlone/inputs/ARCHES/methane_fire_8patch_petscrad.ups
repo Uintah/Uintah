@@ -252,7 +252,7 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel>
               <LinearSolver type="petsc">
                 <res_tol>1.0e-10</res_tol>
@@ -265,15 +265,6 @@
         </Sources>
       </TransportEqns>
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <abskg label="gas_abskg"/>
-            <opl>3.0</opl>
-          </calculator>
-        </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.0</constant>
@@ -301,6 +292,13 @@
           <variance_coefficient>0.14</variance_coefficient>
         </model>
       </PropertyModels>
+      <PropertyModelsV2>
+        <model type="gasRadProperties"  label="gas_abskg" >
+          <calculator type="hottel_sarofim">
+            <opl>3.0</opl>
+          </calculator>
+        </model>
+      </PropertyModelsV2>
       <Properties>
         <table label="a_user_generated_label" type="classic">
           <reference_state f="0.0" hl="0.0" var="0.0"/>

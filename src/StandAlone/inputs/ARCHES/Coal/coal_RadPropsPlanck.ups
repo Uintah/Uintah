@@ -822,28 +822,30 @@
   </PhysicalConstants>
   <CFD>
     <ARCHES>
-      <PropertyModels>
-        <model type="radiation_properties" label="abskt">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
+
+      <PropertyModelsV2>
+
+        <model type="gasRadProperties"  label="abskg" >
           <calculator type="radprops">
             <opl>0.3</opl>
-            <abskg label="abskg"/>
-            <particles type="coal">
-              <abskp label="abskp"/>
-              <model_type>planck</model_type>
-              <!--<model_type>rossland</model_type> -->
-              <complex_ir_real>2</complex_ir_real>
-              <complex_ir_imag>-0.6</complex_ir_imag>
-              <part_temp_label>temperature_coal</part_temp_label>
-              <part_size_label>length</part_size_label>
-            </particles>
             <grey_gas>
               <inputfile>inputs/ARCHES/rad_tables/GreyGasOPL1_0.txt</inputfile>
             </grey_gas>
           </calculator>
         </model>
+        <model type="partRadProperties" label="abskp" >
+          <subModel>constantCIF</subModel>
+          <part_temp_label>temperature_coal</part_temp_label>
+          <part_size_label>length</part_size_label>
+          <model_type>planck</model_type>
+          <complex_ir_real>2.0</complex_ir_real>
+          <complex_ir_imag>-0.6</complex_ir_imag>
+          <const_asymmFact>1</const_asymmFact>
+        </model>
+
+      </PropertyModelsV2>
+
+      <PropertyModels>
         <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
             <constant>0.890</constant>
@@ -1040,7 +1042,7 @@
           </src>
           <src label="divQ" type="do_radiation">
             <calc_frequency>6</calc_frequency>
-            <abskg label="abskt"/>
+            <abskt label="abskt"/>
             <DORadiationModel>
               <ordinates>2</ordinates>
               <LinearSolver type="hypre">

@@ -59,6 +59,7 @@ namespace Uintah{
     /** @brief Set the shared state **/
     void set_shared_state( SimulationStateP shared_state ){ _shared_state = shared_state; }
 
+    std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks
     TaskMap   _tasks;             ///< Task map
     ATaskMap   _atomic_tasks;      ///< Atomic Task map
     TaskMap& retrieve_all_tasks(){ return _tasks; }
@@ -195,7 +196,6 @@ namespace Uintah{
     ABuildMap  _atomic_builders;                    ///< Builders for atomic tasks
     std::vector<std::string> _active_tasks;        ///< Active tasks
     std::vector<std::string> _active_atomic_tasks; ///< Active atomic tasks
-    std::vector<std::string> m_task_init_order;    ///< Allows a factory to set an execution order for the tasks
     TypeToTaskMap _type_to_tasks;                  ///< Collects all tasks of a common type
     SimulationStateP _shared_state;                ///< Uintah SharedState
     std::string _all_tasks_str;                    ///< Common name across all factories indicating _active_tasks

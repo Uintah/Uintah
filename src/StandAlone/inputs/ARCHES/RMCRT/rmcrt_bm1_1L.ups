@@ -196,7 +196,7 @@
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>2</calc_frequency>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <RMCRT>
               <randomSeed>         false     </randomSeed>
               <nDivQRays>          5         </nDivQRays>
@@ -208,16 +208,12 @@
           </src>
         </Sources>
       </TransportEqns>
-      <PropertyModels>
-        <model type="radiation_properties" label="abskg">
-          <initialization type="constant">
-            <constant>1.0</constant>
-          </initialization>
+      <PropertyModelsV2>
+        <model type="gasRadProperties"  label="gas_abskg" >
           <calculator type="burns_christon">
-            <abskg label="gas_abskg"/>
           </calculator>
         </model>
-      </PropertyModels>
+      </PropertyModelsV2>
       <Properties>
         <table label="a_user_generated_label" type="constant">
           <temperature>64.804</temperature>

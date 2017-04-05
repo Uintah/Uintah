@@ -28,7 +28,6 @@ endif
 
 SRCS += \
         $(SRCDIR)/HeatLoss.cc               \
-        $(SRCDIR)/RadProperties.cc          \
         $(SRCDIR)/ScalarVarianceScaleSim.cc \
         \
         $(SRCDIR)/AlgebraicScalarDiss.cc    \

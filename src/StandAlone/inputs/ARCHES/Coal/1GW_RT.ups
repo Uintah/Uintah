@@ -1273,27 +1273,23 @@
         <model label="wall_HF" type="wall_heatflux_variable">
           <frequency>1</frequency>
         </model>
-      </PropertyModelsV2>
-      <PropertyModels>
-        <model label="abskg" type="radiation_properties">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
+        <model type="gasRadProperties"  label="gas_abskg" >
           <calculator type="hottel_sarofim">
             <opl>0.5632</opl>
-            <abskg label="gas_abskg"/>
-            <particles type="constantCIF">
-              <abskp label="abskp"/>
-              <radiateAtGasTemp>false</radiateAtGasTemp>
-              <model_type>planck</model_type>
-              <part_temp_label>temperature_coal</part_temp_label>
-              <part_size_label>length</part_size_label>
-              <complex_ir_real>2.0</complex_ir_real>
-              <complex_ir_imag>-0.6</complex_ir_imag>
-              <const_asymmFact>1</const_asymmFact>
-            </particles>
           </calculator>
         </model>
+        <model type="partRadProperties" label="abskp" >
+          <subModel>constantCIF</subModel>
+          <part_temp_label>temperature_coal</part_temp_label>
+          <part_size_label>length</part_size_label>
+          <radiateAtGasTemp>false</radiateAtGasTemp>
+          <model_type>planck</model_type>
+          <complex_ir_real>2.0</complex_ir_real>
+          <complex_ir_imag>-0.6</complex_ir_imag>
+          <const_asymmFact>1</const_asymmFact>
+        </model>
+      </PropertyModelsV2>
+      <PropertyModels>
         <model label="heat_loss" type="heat_loss">
           <initialization type="constant">
             <constant>0.5296594</constant>
@@ -1460,7 +1456,7 @@
           </src>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel>
               <ordinates>8</ordinates>
               <LinearSolver type="hypre">

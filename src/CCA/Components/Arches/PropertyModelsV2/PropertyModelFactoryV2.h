@@ -17,7 +17,11 @@ namespace Uintah{
 
     void build_all_tasks( ProblemSpecP& db );
 
+    ProblemSpecP
+    matchNametoSpec( ProblemSpecP& db_m, std::string name);
+
     std::vector<std::string> retrieve_task_subset( const std::string subset ) {
+
 
       if ( subset == "pre_update_property_models" ){
 
@@ -60,6 +64,7 @@ namespace Uintah{
     std::vector<std::string> _pre_update_property_tasks;  ///<Tasks that execute at the start of an RK step
     std::vector<std::string> _finalize_property_tasks;    ///<Tasks that execute at the end of the time step
     std::vector<std::string> _pre_table_post_iv_update;   ///<Tasks that execute after IV update and before table lookup
+    std::vector<std::string> _rad_properties_tasks;       ///<Tasks use to compute the total absorption coefficient 
     std::vector<std::string> _var_stats_tasks;            ///<All Tasks associated with variable stats
 
     std::vector<std::string> _task_order;                 ///<The order in which these tasks should execute

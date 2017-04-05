@@ -206,12 +206,12 @@ LOCALTESTS = [
    ("kokkos-z-scalar"                   , "kokkos_solver_tests/kokkos-z-scalar.ups"                , 1.1 , "All" , ["exactComparison"]), 
 #__________________________________
 # THESE TESTS FAIL TO RUN TO COMPLETION ON A CUDA ENABLED BUILD, "corrupted double-linked list: 0x00000000024b8120 ***"
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"    ,  "no_cuda"]) ,
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All" , ["exactComparison"    ,  "no_cuda"]) , 
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                                      , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
-   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"    ,  "no_cuda"]) ,
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
 #__________________________________
@@ -245,12 +245,12 @@ DQMOMTESTS = [
 ]
 
 COALTESTS = [
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"    ,  "no_cuda"]) ,
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) ,
    ("coal_channel_hi_vel"               , "Coal/coal_channel_hi_vel.ups"                            , 1.1 , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("1GW_RT"                            , "Coal/1GW_RT.ups"                                         , 2   , "All" , ["exactComparison"    ,  "no_cuda"]) , 
    ("1GW_em_tc"                         , "Coal/1GW_em_tc.ups"                                      , 2   , "All"  , ["exactComparison"     , "no_cuda"]) , 
 #   ("coal_channel_Yamamoto"             , "Coal/coal_channel_Yamamoto.ups"                          , 1.1 , "All" , ["exactComparison"     , "no_restart"]) , 
-   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"    ,  "no_cuda"]) ,
    ("OFC4_smith"                        , "Coal/OFC4_smith.ups"                                     , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) , 
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"  , ["exactComparison"   ,  "no_cuda"]) 
 ]

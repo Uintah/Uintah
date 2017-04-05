@@ -194,7 +194,7 @@
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>1</calc_frequency>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel>
               <ordinates>6</ordinates>
               <LinearSolver type="hypre">

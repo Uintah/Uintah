@@ -10,6 +10,9 @@
 #include <CCA/Components/Arches/PropertyModelsV2/UFromRhoU.h>
 #include <CCA/Components/Arches/PropertyModelsV2/BurnsChriston.h>
 #include <CCA/Components/Arches/PropertyModelsV2/cloudBenchmark.h>
+#include <CCA/Components/Arches/PropertyModelsV2/sumRadiation.h>
+#include <CCA/Components/Arches/PropertyModelsV2/gasRadProperties.h>
+#include <CCA/Components/Arches/PropertyModelsV2/partRadProperties.h>
 #include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 
 using namespace Uintah;
@@ -38,6 +41,11 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
   //Force the face velocity property model to be created:
 
+
+
+
+
+  bool check_for_radiation=false;
   if ( db->findBlock("PropertyModelsV2")){
 
     ProblemSpecP db_m = db->findBlock("PropertyModelsV2");
@@ -89,6 +97,26 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew cloudBenchmark::Builder( name, 0 );
         register_task( name, tsk );
 
+      } else if ( type == "gasRadProperties" ){
+
+        TaskInterface::TaskBuilder* tsk = scinew gasRadProperties::Builder( name, 0 );
+        register_task( name, tsk );
+        _pre_table_post_iv_update.push_back(name);
+        //_finalize_property_tasks.push_back( name );
+
+        check_for_radiation=true;
+      } else if ( type == "partRadProperties" ){
+
+        std::string calculator_type = "NA";
+        db_model->require("subModel", calculator_type);
+        TaskInterface::TaskBuilder* tsk;
+ 
+        tsk = scinew partRadProperties::Builder( name, 0 );
+        register_task( name, tsk );
+        _pre_table_post_iv_update.push_back(name);
+        //_finalize_property_tasks.push_back( name );
+        check_for_radiation=true;
+         
 
       } else if ( type == "constant_property"){
 
@@ -123,7 +151,30 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
       assign_task_to_type_storage(name, type);
 
     }
+
   }
+    //----Need to generate Property for Rad if present------//
+  if(check_for_radiation){
+    if(db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns") != nullptr){
+      if(db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") != nullptr){
+        ProblemSpecP db_source = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
+        for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
+          std::string radiation_model;
+          db_src->getAttribute("type", radiation_model);
+          if (radiation_model == "do_radiation" || radiation_model== "rmcrt_radiation"){
+            std::string task_name="sumRadiation::abskt";
+            TaskInterface::TaskBuilder* tsk = scinew sumRadiation::Builder( task_name, 0 );
+            register_task( task_name, tsk );
+            _pre_table_post_iv_update.push_back(task_name);
+            //_finalize_property_tasks.push_back( task_name );
+            assign_task_to_type_storage(task_name,"sumRadiation");
+            break;
+          }
+        }
+      }
+    }
+}
+    //-------------------------------------------------------//
 
   // going to look for a <VarID>. If not found, use the standary velocity names.
   m_vel_name = "face_velocities";
@@ -142,43 +193,22 @@ void
 PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
 {
 
-  TaskInterface* vel_tsk = retrieve_task(m_vel_name);
-  vel_tsk->problemSetup(db);
-  vel_tsk->create_local_labels();
-
-  _task_order.push_back( m_vel_name );
-
-
-  if ( db->findBlock("KMomentum") ){
-
-    TaskInterface* u_from_rho_u_tsk = retrieve_task( "u_from_rho_u");
-    u_from_rho_u_tsk->problemSetup(db);
-    u_from_rho_u_tsk->create_local_labels();
-
+  ProblemSpecP db_m=db;
+  if ( db->findBlock("PropertyModelsV2") != nullptr){
+    db_m = db->findBlock("PropertyModelsV2");
   }
 
+    for (unsigned int ix=0; ix< m_task_init_order.size(); ix++){
+      TaskInterface* tsk = retrieve_task(m_task_init_order[ix]); // builds task
+      ProblemSpecP db_model = matchNametoSpec(db_m,m_task_init_order[ix]);
 
-  if ( db->findBlock("PropertyModelsV2")){
-
-    ProblemSpecP db_m = db->findBlock("PropertyModelsV2");
-
-    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != nullptr; db_model=db_model->findNextBlock("model")){
-      std::string name;
-      db_model->getAttribute("label", name);
-      TaskInterface* tsk = retrieve_task(name);
       tsk->problemSetup(db_model);
       tsk->create_local_labels();
 
       //Assuming that everything here is independent:
-      _task_order.push_back(name);
+      _task_order.push_back(m_task_init_order[ix]);
 
     }
-  }
-
-  if ( db->findBlock("KMomentum") ){
-    //Requires density so putting it last
-    _task_order.push_back( "u_from_rho_u");
-  }
 
 }
 
@@ -250,10 +280,24 @@ void PropertyModelFactoryV2::schedule_initialization( const LevelP& level,
                                                       bool doing_restart ){
 
   for ( auto i = _task_order.begin(); i != _task_order.end(); i++ ){
-
     TaskInterface* tsk = retrieve_task( *i );
     tsk->schedule_init( level, sched, matls, doing_restart );
 
   }
 
 }
+
+ProblemSpecP
+PropertyModelFactoryV2::matchNametoSpec( ProblemSpecP& db_m, std::string name){
+
+  ProblemSpecP db = db_m;
+  for ( ProblemSpecP db_model = db->findBlock("model"); db_model != nullptr; db_model=db_model->findNextBlock("model")){
+    std::string tname;
+    db_model->getAttribute("label", tname);
+    if (name==tname){
+      return db_model;
+    }
+  }
+  return db;
+}
+

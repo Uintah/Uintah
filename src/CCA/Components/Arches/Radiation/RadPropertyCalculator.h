@@ -12,14 +12,11 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <vector>
-#include <Core/Containers/StaticArray.h>
 
 #include <sci_defs/uintah_defs.h>
 
 #ifdef HAVE_RADPROPS
 #  include <radprops/AbsCoeffGas.h>
-#  include <radprops/RadiativeSpecies.h>
-#  include <radprops/Particles.h>
 #endif
 
 namespace Uintah { 
@@ -56,10 +53,10 @@ namespace Uintah {
           PropertyCalculatorBase() {}
           virtual ~PropertyCalculatorBase(){
 
-            VarLabel::destroy(_abskg_label); 
           }
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
+          virtual void initialize_abskg( const Patch* patch,CCVariable<double>& abskg  )=0; 
           virtual void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, 
                                      RadCalcSpeciesList species, constCCVariable<double>& mixT,  
                                      CCVariable<double>& abskg )=0; 
@@ -104,6 +101,7 @@ namespace Uintah {
           ~ConstantProperties();
           
           bool problemSetup( const ProblemSpecP& db ); 
+          void initialize_abskg( const Patch* patch,CCVariable<double>& abskg  ); 
           void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
 
           std::vector<std::string> get_sp(){
@@ -125,6 +123,7 @@ namespace Uintah {
           ~specialProperties();
           
           bool problemSetup( const ProblemSpecP& db ); 
+          void initialize_abskg( const Patch* patch,CCVariable<double>& abskg  ); 
           void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
 
           std::vector<std::string> get_sp(){
@@ -145,6 +144,7 @@ namespace Uintah {
           BurnsChriston();
           ~BurnsChriston();
           bool problemSetup( const ProblemSpecP& db ); 
+          void initialize_abskg( const Patch* patch,CCVariable<double>& abskg  ); 
           void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
 
           std::vector<std::string> get_sp(){
@@ -167,6 +167,7 @@ namespace Uintah {
           ~HottelSarofim();
           
           bool problemSetup( const ProblemSpecP& db ); 
+          void initialize_abskg( const Patch* patch,CCVariable<double>& abskg  ); 
           void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
 
           std::vector<std::string> get_sp();
@@ -186,6 +187,7 @@ namespace Uintah {
           ~GauthamWSGG();
           
           bool problemSetup( const ProblemSpecP& db ); 
+          void initialize_abskg( const Patch* patch,CCVariable<double>& abskg  ); 
           void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
 
           std::vector<std::string> get_sp();
@@ -212,6 +214,7 @@ namespace Uintah {
           RadPropsInterface();
           ~RadPropsInterface(); 
           bool problemSetup( const ProblemSpecP& db );
+          void initialize_abskg( const Patch* patch,CCVariable<double>& abskg  ); 
           void compute_abskg( const Patch* patch, 
               constCCVariable<double>& VolFractionBC, 
               RadCalcSpeciesList species,  
@@ -230,247 +233,6 @@ namespace Uintah {
 
       }; 
 #endif
-
-  // - The base class opticalPropertyCalculatorBase is intended to create a set
-  // - of modular functions for computing optical properties for various particle
-  // - types.  i.e. coal, glass, metal-oxides, etc.
-
-      class opticalPropertyCalculatorBase { 
-
-        public: 
-          opticalPropertyCalculatorBase() {}
-          virtual ~opticalPropertyCalculatorBase(){
-
-            VarLabel::destroy(_abskp_label);  
-            for (int i=0; i< _nQn_part; i++){
-              VarLabel::destroy(_abskp_label_vector[i]);
-            }
-
-          }
-
-          virtual bool problemSetup( Task* tsk, int time_substep)=0; 
-
-          virtual void computeComplexIndex( const Patch* patch,
-                                            constCCVariable<double>& VolFractionBC,
-                                            StaticArray < constCCVariable<double> > &composition,
-                                            StaticArray < CCVariable<double> > &complexReal )=0;
-
-          virtual void computeAsymmetryFactor( const Patch* patch,
-                                               constCCVariable<double>& VolFractionBC,
-                                               StaticArray < CCVariable<double> > &scatktQuad,
-                                               StaticArray < constCCVariable<double> > &composition, 
-                                               CCVariable<double>& scatkt,  
-                                               CCVariable<double>  &asymmetryParam )=0;
-
-          virtual void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                      RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                                      RadCalcSpeciesList weights, 
-                                      const int Nqn, CCVariable<double>& abskpt, 
-                                      StaticArray < CCVariable<double> >  &abskp,
-                                      StaticArray < CCVariable<double> >  &complexReal)=0;
-
-          virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                       RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                                       RadCalcSpeciesList weights, 
-                                       const int Nqn, CCVariable<double>& scatkt, 
-                                       StaticArray < CCVariable<double> > &scatktQuad, 
-                                       StaticArray < CCVariable<double> > &complexReal)=0;
-
-
-          //virtual std::vector<std::string> get_sp() = 0;
-
-          inline const VarLabel* get_abskp_label() { return _abskp_label; }
-          inline const VarLabel* get_scatkt_label(){ return _scatkt_label;}
-          inline std::vector<const VarLabel*> get_complexIndexReal_label() { return _complexIndexReal_label; } 
-          inline std::vector<const VarLabel*> get_abskp_label_vector() { return _abskp_label_vector; } 
-          inline const VarLabel* get_asymmetryParam_label() { return _asymmetryParam_label; }
-
-          //[>* @brief Matches label names to labels *<] 
-          std::string get_complexIndexReal_name(){ return _complexIndexReal_name;}
-          std::string get_asymmetryParam_name(){ return _asymmetryParam_name;}
-          std::string get_abskp_name(){ return _abskp_name;}
-          std::string get_scatkt_name(){return _scatkt_name;}
-          bool get_complexIndexBool(){return _computeComplexIndex;}
-
-          inline std::vector< const VarLabel*> getRequiresLabels(){
-            return _compositionLabels;
-          }
-
-
-      bool construction_success;
-        protected:
-      int _ncomp ;                                // number of components
-      std::vector< const VarLabel*> _compositionLabels;
-      std::string _asymmetryParam_name;
-      std::string _complexIndexReal_name;
-      const VarLabel* _asymmetryParam_label;   // gas absorption coefficient
-      const VarLabel* _abskp_label;   // gas absorption coefficient
-      const VarLabel* _scatkt_label;   // gas absorption coefficient
-      std::vector< const VarLabel*> _abskp_label_vector;
-      std::vector< const VarLabel*> _complexIndexReal_label;   // particle absorption coefficient
-      std::complex<double> _HighComplex;
-      std::complex<double> _LowComplex;
-      std::string _abskp_name; 
-      std::string _scatkt_name; 
-      bool _scatteringOn;  // local not needed for scattering, because it is always local as of 11-2014
-      int _nQn_part ;                                // number of quadrature nodes in DQMOM
-      int _computeComplexIndex ; // 
-
-
-      };
-
-      class coalOptics : public opticalPropertyCalculatorBase  { 
-
-        public: 
-          coalOptics(const ProblemSpecP& db, bool scatteringOn);
-          ~coalOptics(); 
-
-          bool problemSetup(Task* tsk, int time_substep );
-
-          void computeComplexIndex( const Patch* patch,
-                                    constCCVariable<double>& VolFractionBC,
-                                    StaticArray<constCCVariable<double> > &composition, 
-                                    StaticArray < CCVariable<double> > &complexReal);
-
-
-          void computeAsymmetryFactor( const Patch* patch,
-                                       constCCVariable<double>& VolFractionBC,
-                                       StaticArray < CCVariable<double> > &scatktQuad, 
-                                       StaticArray < constCCVariable<double> > &composition,
-                                       CCVariable<double>& scatkt,
-                                       CCVariable<double>  &asymmetryParam);
-
-          virtual void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                      RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                                      RadCalcSpeciesList weights, 
-                                      const int Nqn, CCVariable<double>& abskpt, 
-                                      StaticArray < CCVariable<double> >  &abskp,
-                                      StaticArray < CCVariable<double> >  &complexReal);
-
-          virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                       RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                                       RadCalcSpeciesList weights, 
-                                       const int Nqn, CCVariable<double>& scatkt, 
-                                       StaticArray < CCVariable<double> > &scatktQuad, 
-                                       StaticArray < CCVariable<double> > &complexReal);
-
-
-
-        private: 
-
-          double _rawCoalReal;
-          double _rawCoalImag;
-          double _charReal;
-          double _charImag;
-          double _ashReal;
-          double _ashImag;
-          std::complex<double> _complexLo;  
-          std::complex<double> _complexHi;  
-          RadProps::ParticleRadCoeffs3D* _part_radprops;
-
-          
-
-          double  _charAsymm;
-          double  _rawCoalAsymm;
-          double  _ashAsymm;
-
-          std::vector<double>  _ash_mass;        /// particle sizes in diameters
-          std::vector< std::string >  _composition_names ;
-
-          bool _p_planck_abskp; 
-          bool _p_ros_abskp; 
-      }; 
-
-
-      class basic : public opticalPropertyCalculatorBase  { 
-
-        public: 
-          basic(const ProblemSpecP& db, bool scatteringOn);
-          ~basic(); 
-
-          bool problemSetup(Task* tsk, int time_substep );
-
-          void computeComplexIndex( const Patch* patch,
-                                    constCCVariable<double>& VolFractionBC,
-                                    StaticArray<constCCVariable<double> > &composition, 
-                                    StaticArray < CCVariable<double> > &complexReal);
-
-
-          void computeAsymmetryFactor( const Patch* patch,
-                                       constCCVariable<double>& VolFractionBC,
-                                       StaticArray < CCVariable<double> > &scatktQuad, 
-                                       StaticArray < constCCVariable<double> > &composition,
-                                       CCVariable<double>& scatkt,
-                                       CCVariable<double>  &asymmetryParam);
-
-          virtual void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                      RadCalcSpeciesList size, RadCalcSpeciesList pT,  
-                                      RadCalcSpeciesList weights, 
-                                      const int Nqn, CCVariable<double>& abskpt, 
-                                      StaticArray < CCVariable<double> >  &abskp,
-                                      StaticArray < CCVariable<double> >  &complexReal);
-
-          virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                       RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                                       RadCalcSpeciesList weights, 
-                                       const int Nqn, CCVariable<double>& scatkt, 
-                                       StaticArray < CCVariable<double> > &scatktQuad, 
-                                       StaticArray < CCVariable<double> > &complexReal);
-
-
-
-        private: 
-
-          double _Qabs ;  // This is a fudge factor for particle absorption coefficients, used by Julien in a coal model
-      }; 
-
-      class constantCIF : public opticalPropertyCalculatorBase  { 
-
-        public: 
-          constantCIF(const ProblemSpecP& db, bool scatteringOn);
-          ~constantCIF(); 
-
-          bool problemSetup(Task* tsk, int time_substep );
-
-          void computeComplexIndex( const Patch* patch,
-                                    constCCVariable<double>& VolFractionBC,
-                                    StaticArray<constCCVariable<double> > &composition, 
-                                    StaticArray < CCVariable<double> > &complexReal);
-
-
-          void computeAsymmetryFactor( const Patch* patch,
-                                       constCCVariable<double>& VolFractionBC,
-                                       StaticArray < CCVariable<double> > &scatktQuad, 
-                                       StaticArray < constCCVariable<double> > &composition,
-                                       CCVariable<double>& scatkt,
-                                       CCVariable<double>  &asymmetryParam);
-
-          virtual void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                      RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                                      RadCalcSpeciesList weights, 
-                                      const int Nqn, CCVariable<double>& abskpt, 
-                                      StaticArray < CCVariable<double> >  &abskp,
-                                      StaticArray < CCVariable<double> >  &complexReal);
-
-          virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                       RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                                       RadCalcSpeciesList weights, 
-                                       const int Nqn, CCVariable<double>& scatkt, 
-                                       StaticArray < CCVariable<double> > &scatktQuad, 
-                                       StaticArray < CCVariable<double> > &complexReal);
-
-
-
-        private: 
-
-          RadProps::ParticleRadCoeffs* _part_radprops;
-          double _constAsymmFact;
-          bool _p_planck_abskp; 
-          bool _p_ros_abskp; 
-      }; 
-
-
-
 
 
     private: 

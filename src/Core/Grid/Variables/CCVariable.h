@@ -93,6 +93,8 @@ WARNING
     // variable is not used for anything else in the program.
     static TypeDescription::Register registerMe;
 
+
+
   protected:
     CCVariable(const CCVariable<T>&);
 

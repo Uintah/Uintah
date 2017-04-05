@@ -406,7 +406,7 @@
           <src label="div_q" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -427,15 +427,6 @@
         </table>
       </Properties>
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <abskg label="gas_abskg"/>
-            <opl>3.0</opl>
-          </calculator>
-        </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.4</constant>
@@ -464,6 +455,11 @@
         </model>
       </PropertyModels>
       <PropertyModelsV2>
+        <model type="gasRadProperties"  label="gas_abskg" >
+          <calculator type="hottel_sarofim">
+            <opl>3.0</opl>
+          </calculator>
+        </model>
         <model type="CO" label="CO_model">
           <CO_defect_label>CO_d</CO_defect_label>
           <CO_rate_label>CO_model_rate</CO_rate_label>

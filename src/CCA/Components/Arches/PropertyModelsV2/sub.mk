@@ -27,7 +27,10 @@ endif
 # Normal source files:
 
 SRCS += \
-	$(SRCDIR)/cloudBenchmark.cc         \
+        $(SRCDIR)/partRadProperties.cc      \
+        $(SRCDIR)/gasRadProperties.cc       \
+        $(SRCDIR)/cloudBenchmark.cc         \
+        $(SRCDIR)/sumRadiation.cc           \
         $(SRCDIR)/CO.cc                     \
         $(SRCDIR)/ConstantProperty.cc       \
         $(SRCDIR)/OneDWallHT.cc             \

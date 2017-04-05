@@ -114,7 +114,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   ProblemSpecP db = params->findBlock("DORadiationModel");
 
-  //db->getWithDefault("ReflectOn",reflectionsTurnedOn,false);  //  reflections are off by default.
+  db->getWithDefault("ReflectOn",reflectionsTurnedOn,false);  //  reflections are off by default.
 
   //db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions")
   std::string initialGuessType;
@@ -141,59 +141,43 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   _radiateAtGasTemp=true; // this flag is arbitrary for no particles
 
   // Does this system have particles??? Check for particle property models
-  ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-  if  (db_prop){
-    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
+   
+  _nQn_part =0; 
+  ProblemSpecP db_propV2 = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModelsV2");
+  if  (db_propV2){
+    for ( ProblemSpecP db_model = db_propV2->findBlock("model"); db_model != nullptr;
+        db_model = db_model->findNextBlock("model")){
       db_model->getAttribute("type", modelName);
-      if (modelName=="radiation_properties"){
-        if  (db_model->findBlock("calculator") == nullptr ){
-          throw ProblemSetupException("Error: <calculator> for DO-radiation node not found.", __FILE__, __LINE__);
-          break;
-        }
-        else if(db_model->findBlock("calculator")->findBlock("particles") == nullptr){
-          _nQn_part = 0;
-          break;
-        }
-        else{
-          //        db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part );
-          bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
-          bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
 
-          if ( doing_dqmom ){
-            _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
-          }
-          else if ( doing_cqmom ){
-            _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
-          }
-          else {
-            throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
-          }
+      if (modelName=="partRadProperties"){
+        bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
+        bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
 
-          db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", baseNameTemperature, "heat_pT" );
-          db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true );
-          db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
-          //  db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
-          break;
+        if ( doing_dqmom ){
+          _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+        } else if ( doing_cqmom ){
+          _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
+        } else {
+          throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
         }
-      }
-      if( db_model== nullptr ){
-        throw ProblemSetupException("Error: <radiation_properties> for DO-radiation node not found.", __FILE__, __LINE__);
+
+        db_model->getWithDefault( "part_temp_label", baseNameTemperature, "heat_pT" );
+        db_model->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true );
+        db_model->getAttribute("label",baseNameAbskp);
+        //  db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
         break;
       }
     }
   }
-  else {
-    _nQn_part =0; // No property model found, so particles do not interact radiatively
-  }
 
-  for (int qn=0; qn < _nQn_part; qn++){
-    std::stringstream absorp;
-    std::stringstream temper;
-    absorp <<baseNameAbskp <<"_"<< qn;
-    temper <<baseNameTemperature <<"_"<< qn;
-    _abskp_name_vector.push_back( absorp.str());
-    _temperature_name_vector.push_back( temper.str());
-  }
+    for (int qn=0; qn < _nQn_part; qn++){
+      std::stringstream absorp;
+      std::stringstream temper;
+      absorp <<baseNameAbskp <<"_"<< qn;
+      temper <<baseNameTemperature <<"_"<< qn;
+      _abskp_name_vector.push_back( absorp.str());
+      _temperature_name_vector.push_back( temper.str());
+    }
 
   if (_scatteringOn  && _nQn_part ==0){
     throw ProblemSetupException("Error: No particle model found in DO-radiation! When scattering is turned on, a particle model is required!", __FILE__, __LINE__);
@@ -442,17 +426,17 @@ struct computeAMatrix{
            if (cellType(ipm,j,k)==intFlow) {
              west(i,j,k)= omu*areaEW; // signed changed in radhypresolve
            }else{
-             matrixB(i,j,k)+= omu*areaEW*SB/M_PI*pow(wallTemp(ipm,j,k),4.0);
+             matrixB(i,j,k)+= abskt(ipm,j,k)*omu*areaEW*SB/M_PI*pow(wallTemp(ipm,j,k),4.0)+omu*fluxX(i,j,k)/M_PI*(1.0-abskt(ipm,j,k)) ;
            }
            if (cellType(i,jpm,k)==intFlow) {
              south(i,j,k)= oeta*areaNS; // signed changed in radhypresolve
            }else{
-             matrixB(i,j,k)+= oeta*areaNS*SB/M_PI*pow(wallTemp(i,jpm,k),4.0);
+             matrixB(i,j,k)+= abskt(i,jpm,k)*oeta*areaNS*SB/M_PI*pow(wallTemp(i,jpm,k),4.0)+oeta*fluxY(i,j,k)/M_PI*(1.0-abskt(i,jpm,k));
            }
            if (cellType(i,j,kpm)==intFlow) {
              bottom(i,j,k) =  oxi*areaTB; // sign changed in radhypresolve
            }else{
-             matrixB(i,j,k)+= oxi*areaTB*SB/M_PI*pow(wallTemp(i,j,kpm),4.0);
+             matrixB(i,j,k)+= abskt(i,j,kpm)*oxi*areaTB*SB/M_PI*pow(wallTemp(i,j,kpm),4.0)+oxi*fluxZ(i,j,k)/M_PI*(1.0-abskt(i,j,kpm));
            }
          }else{
            matrixB(i,j,k) = SB/M_PI*pow(wallTemp(i,j,k),4.0);
@@ -626,7 +610,7 @@ struct computeDivQScat{
 // Compute the heat flux divergence with scattering off.
 //***************************************************************************
 struct computeDivQ{
-       computeDivQ(constCCVariable<double> &_abskt,
+       computeDivQ(    constCCVariable<double> &_abskt,
                        CCVariable<double> &_intensitySource,
                        CCVariable<double> &_volQ,
                        CCVariable<double> &_divQ) :
@@ -1000,7 +984,7 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
 
     for (int i=0; i < d_totalOrds ; i++) {
       double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])*solidAngleWeight[i];
-      scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter]; // wt could be comuted up with the phase function in the j loop
+      scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter]; 
     }
   }
 

@@ -170,45 +170,24 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   std::string baseNameAbskp;
 
   if (d_radiation ) {
-    ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != nullptr; db_model = db_model->findNextBlock("model")){
+    ProblemSpecP db_propV2 = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModelsV2");
+    bool foundParticleRadPropertyModel=false;
+    for ( ProblemSpecP db_model = db_propV2->findBlock("model"); db_model != nullptr;
+        db_model = db_model->findNextBlock("model")){
       db_model->getAttribute("type", modelName);
-      if( modelName == "radiation_properties" ) {
-        if( db_model->findBlock( "calculator" ) == nullptr ) {
-          if( qn == 0 ) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
-          d_radiation = false;
-          break;
-        }
-        else if(db_model->findBlock("calculator")->findBlock("particles") == nullptr){
-          if( qn == 0 ) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
-          d_radiation = false;
-          break;
-        }
-        db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
-        break;
-      }
-      if( db_model == nullptr ) {
-          if( qn == 0 ) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
-        d_radiation = false;
+      if (modelName=="partRadProperties"){
+        db_model->getAttribute("label",baseNameAbskp);
+
+        foundParticleRadPropertyModel=true;
         break;
       }
     }
-    if( VarLabel::find("radiationVolq") ) {
+    if  (foundParticleRadPropertyModel== 0 && d_radiation){
+      throw InvalidValue("ERROR: EnthalpyShaddix.cc can't find particle absorption coefficient model.",__FILE__,__LINE__);
+    }
+
+
+    if (VarLabel::find("radiationVolq")) {
       _volq_varlabel  = VarLabel::find("radiationVolq");
     }
     else {
@@ -384,6 +363,7 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   if ( d_radiation ){
     tsk->requires( which_dw, _volq_varlabel, Ghost::None, 0);
+
     tsk->requires( which_dw, _abskp_varlabel, Ghost::None, 0);
   }
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label());

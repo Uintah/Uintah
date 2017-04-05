@@ -951,7 +951,7 @@
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -974,20 +974,6 @@
         </Sources>
       </TransportEqns>
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <calculator type="hottel_sarofim">
-            <opl>.432</opl>
-            <abskg label="gas_abskg"/>
-            <particles type="basic">
-              <abskp label="Julien_abskp"/>
-              <part_temp_label> partTemp </part_temp_label>
-              <part_size_label> diameter </part_size_label>
-            </particles>
-          </calculator>
-        </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0</constant>
@@ -1001,6 +987,21 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
+
+   <PropertyModelsV2>
+     <model type="gasRadProperties"  label="gas_abskg" >
+       <calculator type="hottel_sarofim">
+         <opl>0.432</opl>
+       </calculator>
+     </model>
+     <model type="partRadProperties" label="Julien_abskp" >
+       <subModel>basic</subModel>
+       <Qabs>0.8</Qabs>
+       <part_temp_label>partTemp</part_temp_label>
+       <part_size_label>diameter</part_size_label>
+     </model>
+   </PropertyModelsV2>
+
       <ExplicitSolver>
         <initial_dt>0.005</initial_dt>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>

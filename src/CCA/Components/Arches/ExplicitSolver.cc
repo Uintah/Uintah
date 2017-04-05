@@ -28,7 +28,6 @@
 #include <CCA/Components/Arches/BoundaryConditions/BoundaryFunctors.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
-#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -99,7 +98,6 @@
 #include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarDissipation.h>
-#include <CCA/Components/Arches/PropertyModels/RadProperties.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -217,7 +215,6 @@ ExplicitSolver::~ExplicitSolver()
   delete d_pressSolver;
   delete d_momSolver;
   delete d_timeIntegrator;
-  delete d_rad_prop_calc;
   if (d_doDQMOM) {
     delete d_dqmomSolver;
     delete d_partVel;
@@ -406,14 +403,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
       a_model.problemSetup( prop_db );
 
     }
-  }
-
-  //Radiation Properties:
-  ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties");
-  int matl_index = d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex();
-  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index);
-  if ( rad_properties_db ) {
-    d_rad_prop_calc->problemSetup(rad_properties_db);
   }
 
   // read properties
@@ -1146,8 +1135,8 @@ ExplicitSolver::initialize( const LevelP     & level,
     //property models
     all_tasks.clear();
     all_tasks = i_property_models_fac->second->retrieve_all_tasks();
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-      i->second->schedule_init(level, sched, matls, is_restart );
+    for ( std::vector<std::string>::iterator iter =i_property_models_fac->second->m_task_init_order.begin(); iter !=i_property_models_fac->second->m_task_init_order.end() ; iter++){
+    all_tasks[*iter]->schedule_init(level, sched, matls, is_restart );
     }
 
     // Property model initialization
@@ -1882,7 +1871,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     // STAGE 0
-    //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, curr_level, false );
 
     SourceTermFactory& src_factory = SourceTermFactory::self();
 
@@ -4396,12 +4384,6 @@ void ExplicitSolver::registerPropertyModels(ProblemSpecP& db)
 
         //Scalar dissipation based on the transported squared gradient of mixture fraction for 2-eqn scalar var model
         PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_lab->d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
-      } else if ( prop_type == "radiation_properties" ) {
-
-        //Radiation properties as computed through the RadPropertyCalculator
-        PropertyModelBase::Builder* the_builder = new RadProperties::Builder( prop_name, d_lab->d_sharedState, d_lab );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else {

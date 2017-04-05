@@ -86,8 +86,8 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
   _T_label_name = "radiation_temperature";                        // HARDWIRED
 
-  if ( _ps->findBlock("abskg")){
-    _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name);
+  if ( _ps->findBlock("abskt")){
+    _ps->findBlock("abskt")->getAttribute("label", _abskg_label_name);
   } else {
     throw ProblemSetupException("Error: RMCRT - The absorption coefficient is not defined.",__FILE__,__LINE__);
   }

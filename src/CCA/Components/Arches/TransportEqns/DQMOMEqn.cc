@@ -1054,10 +1054,10 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
 
   //NEW
   tsk->modifies(d_icLabel);
-  tsk->modifies(d_transportVarLabel);
+  tsk->requires( Task::NewDW,d_transportVarLabel , Ghost::None, 0 );
 
   if( !d_weight ) {
-    tsk->modifies( d_weightLabel );
+    tsk->requires( Task::NewDW,d_weightLabel , Ghost::None, 0 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -1084,11 +1084,11 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     if( d_weight ) {
-      CCVariable<double> w;
+      constCCVariable<double> w;
       CCVariable<double> w_actual;
 
       new_dw->getModifiable(w_actual, d_icLabel, matlIndex, patch);
-      new_dw->getModifiable(w, d_transportVarLabel, matlIndex, patch);
+      new_dw->get(w, d_transportVarLabel, matlIndex, patch, Ghost::None,0);
 
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
@@ -1102,11 +1102,11 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       CCVariable<double> ic;
       new_dw->getModifiable(ic, d_icLabel, matlIndex, patch);
 
-      CCVariable<double> wa;
-      new_dw->getModifiable(wa, d_transportVarLabel, matlIndex, patch);
+      constCCVariable<double> wa;
+      new_dw->get(wa, d_transportVarLabel, matlIndex, patch, Ghost::None,0);
 
-      CCVariable<double> w;
-      new_dw->getModifiable(w, d_weightLabel, matlIndex, patch );
+      constCCVariable<double> w;
+      new_dw->get(w, d_weightLabel, matlIndex, patch, Ghost::None,0);
 
       // now loop over all cells
       if ( d_unweighted ) {

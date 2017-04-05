@@ -244,7 +244,7 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>1</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
-            <abskg label="abskg"/>
+            <abskt label="abskg"/>
             <DORadiationModel>
               <ordinates>2</ordinates>
               <LinearSolver type="hypre">
@@ -257,19 +257,19 @@
           </src>
         </Sources>
       </TransportEqns>
-      <PropertyModels>
-        <model type="radiation_properties" label="abskg">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
+
+   <PropertyModelsV2>
+        <model type="gasRadProperties"  label="gas_abskg" >
           <calculator type="radprops">
             <opl>1.0</opl>
-            <abskg label="gas_abskg"/>
             <grey_gas>
               <inputfile>inputs/ARCHES/rad_tables/GreyGasOPL1_0.txt</inputfile>
             </grey_gas>
           </calculator>
         </model>
+   </PropertyModelsV2>
+
+      <PropertyModels>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.0</constant>

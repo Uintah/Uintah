@@ -150,11 +150,11 @@
         <ParticleVariables/>
       </LagrangianParticles>
       <Initialization>
-        <task label="Lx" type="random_lagrangian_particles"/>
-        <task label="Lvel" type="lagrangian_particle_velocity">
+        <task task_label="init_particles" variable_label="Lx" type="random_lagrangian_particles"/>
+        <task task_label="init_velocity" variable_label="Lvel" type="lagrangian_particle_velocity">
           <velocity_init type="as_gas_velocity"/>
         </task>
-        <task label="Ld" type="lagrangian_particle_size">
+        <task task_label="init_size" variable_label="Ld" type="lagrangian_particle_size">
           <size_init type="random"/>
           <max_diameter>1e-4</max_diameter>
         </task>
