@@ -1,0 +1,16 @@
+pistonvelocity         0.003 
+outputfreq          100
+lx                     0.260
+ly                     0.260
+lz                     0.005
+lpiston                0.005
+fractionaluminum       1.0
+densityaluminum      2780.0
+cpaluminum            0.920d-03
+fractionnickel         0.0
+densitynickel        8870.0
+cpnickel              0.425d-03
+densitymaterial      2780.0
+c0                   5.3
+S                    1.34
+gamma                2.0
