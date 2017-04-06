@@ -338,7 +338,7 @@ namespace Uintah{
               ks_sb=0.0;
               for (int i=0; i<6; ++i) {
                 ks_en=ks_en+ki[i]*en_ash_comp_tc[i];
-                ks_sb=ks_sb+ki[i]*en_ash_comp_tc[i];
+                ks_sb=ks_sb+ki[i]*sb_ash_comp_tc[i];
               }
               // second compute the gas tc as a function of temperature 
               kg = 2.286e-11*T*T*T - 7.022e-8*T*T + 1.209e-4*T - 5.321e-3;
