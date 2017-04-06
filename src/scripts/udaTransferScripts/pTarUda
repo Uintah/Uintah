@@ -33,7 +33,7 @@ continueTarring="N"
 MAKE=make
 OS="Linux"
 FIND=find
-
+recordName="ptar_record"
 
 #______________________________________________________________________
 # Parse input
@@ -64,6 +64,7 @@ while [ "$#" -gt 0 ]; do
       ;;
   -extract|--extract)
       createExtract="extract"
+      recordName="pUntar_record"
       ;;
   -continueTarring|--continueTarring)
       continueTarring="Y"
@@ -221,13 +222,13 @@ echo "_____________________________________"
 #______________________________________________________________________
 # record some info for posterity
 
-PTAR_RECORD=$uda/ptar_record
+PTAR_RECORD=$uda/$recordName
 
 touch $PTAR_RECORD
 
 if test ! -f $PTAR_RECORD; then
   # Can't write to that directory... just place it in tmp for now.
-  PTAR_RECORD=/tmp/ptar_record_`whoami`
+  PTAR_RECORD=/tmp/$recordName_`whoami`
 fi
 
 echo "--------------------------------" >> $PTAR_RECORD
@@ -248,8 +249,7 @@ if test $createExtract == "create"; then
   $FIND ./checkpoints    -maxdepth 1 -type d  >>$PTAR_FILES
 fi
 if test $createExtract == "extract"; then
-  $FIND .                -maxdepth 1 -name "*.gz" -exec basename {} \; | grep -v "\.\|t[0-9]\|checkpoints\|.tarred_files" >$PTAR_FILES
-  $FIND ./t*             -maxdepth 0 -name "*.gz" -exec basename {} \; >>$PTAR_FILES
+  $FIND .                -maxdepth 1 -name "*.gz" -exec basename {} \;  >$PTAR_FILES
   $FIND ./checkpoints    -maxdepth 1 -name "*.gz" >>$PTAR_FILES
 fi
 
