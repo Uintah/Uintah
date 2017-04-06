@@ -90,7 +90,7 @@ WARNING
 
       // Get the maxKE associated with a given index
       inline T getMaxKE(int index) {
-         return ((index < (int) d_time.size()) ? d_load[index] : 0);
+         return ((index < (int) d_time.size()) ? d_maxKE[index] : 0);
       }
 
       inline void setTime(int index, double newTime) {
@@ -185,8 +185,8 @@ WARNING
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
          time_ps->appendElement("time",d_time[i]);
          time_ps->appendElement("load",d_load[i]);
+         time_ps->appendElement("maxKE",d_maxKE[i]);
        }
-
      }
    
 

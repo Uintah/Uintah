@@ -3325,8 +3325,6 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
   old_dw->get(KE,   lb->KineticEnergyLabel);
   old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
-  cout << "KE = " << KE << " at t = " << time << endl;
-
   for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
     if (bcs_type == "Pressure") {
@@ -3338,8 +3336,11 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
       int nextIndex = pbc->getLoadCurve()->getNextIndex(time);
       double nextTime = pbc->getLoadCurve()->getTime(nextIndex);
       double timeToNextLoad = nextTime-time;
-      cout << "timeToNextLoad = " << timeToNextLoad << endl;
       if(timeToNextLoad < delT){
+        cout << "timeToNextLoad = " << timeToNextLoad << endl;
+        cout << "KE = " << KE << endl;
+        cout << "pbc->getLoadCurve()->getMaxKE(nextIndex) = "
+             << pbc->getLoadCurve()->getMaxKE(nextIndex) << endl;
         if(KE > pbc->getLoadCurve()->getMaxKE(nextIndex)){
           for(int i=nextIndex;i<numPOLC;i++){
             double loadTime = pbc->getLoadCurve()->getTime(i);
@@ -3352,9 +3353,6 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
           cout << "time, load = " << time << " " << load << endl;
         } // Loop over points on load curve
       } //if(timeToNextLoad...
-
-      // Calculate the force per particle at t = 0.0
-      double forcePerPart = pbc->forcePerParticle(time);
     } // if bcs_type == "Pressure"
   }   // Loop over physical BCs
 }
