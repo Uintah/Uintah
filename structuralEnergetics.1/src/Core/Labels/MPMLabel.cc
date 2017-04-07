@@ -45,6 +45,13 @@ MPMLabel::MPMLabel()
 
   // Particle Variables
 
+  // Diffusion related variables
+  pChemicalPotentialLabel = VarLabel::create ("p.chemPotential",
+      ParticleVariable<double>::getTypeDescription() );
+
+  pChemicalPotentialGradientLabel = VarLabel::create ("p.gradChemPotential",
+      ParticleVariable<Vector>::getTypeDescription() );
+
   //non PermanentParticleState
   pPressureLabel  = VarLabel::create( "p.pressure",
 			ParticleVariable<double>::getTypeDescription() );
@@ -122,8 +129,8 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pVelocityLabel = VarLabel::create( "p.velocity", 
-                        ParticleVariable<Vector>::getTypeDescription() );
-  
+			ParticleVariable<Vector>::getTypeDescription() );
+
   pVelocitySSPlusLabel = VarLabel::create( "p.velocitySSPlus", 
                         ParticleVariable<Vector>::getTypeDescription() );
   
@@ -294,6 +301,20 @@ MPMLabel::MPMLabel()
 
   pConcGradientLabel_preReloc =VarLabel::create("p.concentrationGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
+
+  // JBH -- Thermodynamic related variables
+//  pDissipatedEnergyLabel = VarLabel::create("p.dissipatedEnergy",
+//      ParticleVariable<double>::getTypeDescription() );
+//  pDissipatedEnergyLabel_preReloc = VarLabel::create("p.dissipatedEnergy+",
+//      ParticleVariable<double>::getTypeDescription() );
+  pHeatEnergyLabel = VarLabel::create("p.heatEnergy",
+      ParticleVariable<double>::getTypeDescription() );
+  pHeatEnergyLabel_preReloc = VarLabel::create("p.heatEnergy+",
+      ParticleVariable<double>::getTypeDescription() );
+//  pWorkEnergyLabel = VarLabel::create("p.workEnergy",
+//      ParticleVariable<double>::getTypeDescription() );
+//  pWorkEnergyLabel_preReloc = VarLabel::create("p.workEnergy+",
+//      ParticleVariable<double>::getTypeDescription() );
 
   pPosChargeLabel = VarLabel::create( "p.posCharge",
       ParticleVariable<double>::getTypeDescription() );
@@ -905,12 +926,23 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTemperatureGradientLabel_preReloc);
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
+
+  // JBH - Thermodynamics
+//  VarLabel::destroy(pDissipatedEnergyLabel);
+//  VarLabel::destroy(pDissipatedEnergyLabel_preReloc);
+  VarLabel::destroy(pHeatEnergyLabel);
+  VarLabel::destroy(pHeatEnergyLabel_preReloc);
+//  VarLabel::destroy(pWorkEnergyLabel);
+//  VarLabel::destroy(pWorkEnergyLabel_preReloc);
+
   VarLabel::destroy(TotalConcLabel);
   VarLabel::destroy(MaxConcLabel);
   VarLabel::destroy(MinConcLabel);
   VarLabel::destroy(pAvgConcLabel);
   VarLabel::destroy(pESPotential);
   VarLabel::destroy(pESGradPotential);
+  VarLabel::destroy(pChemicalPotentialLabel);
+  VarLabel::destroy(pChemicalPotentialGradientLabel);
   VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pDiffusivityLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);
@@ -991,6 +1023,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(TotalMassLabel);
   VarLabel::destroy(NeedAddMPMMaterialLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);
+  
   for(int iside=0;iside<6;iside++) {
       VarLabel::destroy(BndyContactAreaLabel[iside]);
       VarLabel::destroy(BndyContactCellAreaLabel[iside]);
