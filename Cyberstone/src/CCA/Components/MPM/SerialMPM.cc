@@ -4015,6 +4015,14 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
+    BBox domain;
+    const Level* level = getLevel(patches);
+    level->getInteriorSpatialRange(domain);
+    Point dom_min = domain.min();
+    Point dom_max = domain.max();
+//    cout << "dom_min = " << dom_min << endl;
+//    cout << "dom_max = " << dom_max << endl;
+
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
@@ -4078,8 +4086,37 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
         }
         vel/=sumSk;
 
-        // Update the tracer's position
         tx_new[idx] = tx[idx] + vel*delT;
+
+        // Check to see if a tracer has left the domain
+        if(!domain.inside(tx_new[idx])){
+          cerr << "A tracer has moved outside the domain. Pushing it back in."
+               << endl;
+          double epsilon = 1.e-15;
+          Point txn = tx_new[idx];
+          if(tx_new[idx].x()<dom_min.x()){
+            tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
+            txn = tx_new[idx];
+          }
+          if(tx_new[idx].x()>dom_max.x()){
+            tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
+            txn = tx_new[idx];
+          }
+          if(tx_new[idx].y()<dom_min.y()){
+            tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
+            txn = tx_new[idx];
+          }
+          if(tx_new[idx].y()>dom_max.y()){
+            tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
+            txn = tx_new[idx];
+          }
+          if(tx_new[idx].z()<dom_min.z()){
+            tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+          }
+          if(tx_new[idx].z()>dom_max.z()){
+            tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+          }
+        }
       }
     }
 
