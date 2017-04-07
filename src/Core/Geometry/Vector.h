@@ -180,6 +180,34 @@ public:
     }
   }
 
+  inline Vector inverse() const {
+    return Vector(1.0/x_, 1.0/y_, 1.0/z_);
+  }
+
+  inline double maxComponentMag() const {
+    double xmag = std::abs(x_);
+    double ymag = std::abs(y_);
+    double zmag = std::abs(z_);
+    if (xmag > ymag) {
+      if (xmag > zmag) return xmag;
+      return zmag;
+    }
+    if (ymag > zmag) return ymag;
+    return zmag;
+  }
+
+  inline double minComponentMag() const {
+    double xmag = std::abs(x_);
+    double ymag = std::abs(y_);
+    double zmag = std::abs(z_);
+    if (xmag < ymag) {
+      if (xmag < zmag) return xmag;
+      return zmag;
+    }
+    if (ymag < zmag) return ymag;
+    return zmag;
+  }
+
   inline void Set(double x, double y, double z)
     { 
       x_ = x;

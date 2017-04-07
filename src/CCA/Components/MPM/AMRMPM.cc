@@ -37,9 +37,6 @@
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModelFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionInterfaces/SDInterfaceModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/DiffusionModels/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/SerialMPM.h>                // for SerialMPM
 #include <CCA/Components/Regridder/PerPatchVars.h>       // for PatchFlagP, etc
 #include <CCA/Ports/DataWarehouse.h>                     // for DataWarehouse
@@ -89,6 +86,9 @@
 #include <mpi.h>                                         // for Uintah::MPI::Pack_size
 #include <stdlib.h>                                      // for abs
 #include <string>                                        // for string, operator==, etc
+#include "Diffusion/DiffusionInterfaces/SDInterfaceModel.h"
+#include "Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+#include "Diffusion/SDInterfaceModelFactory.h"
 
 using namespace Uintah;
 using namespace std;
