@@ -1,0 +1,53 @@
+#!/bin/csh
+
+#______________________________________________________________________
+#  This script will elminate all xml nodes with the keyword mks or mm-mg-ms
+#  It assumes that each file has a comment for the units
+#
+#   <bulk_modulus>78.1E+3</bulk_modulus>   <!-- mm-microgram-microsec -->
+#          or 
+#   <bulk_modulus>78.1E+9</bulk_modulus>   <!-- mks -->
+#______________________________________________________________________
+
+set files = "$argv"
+
+
+if ( $#files == 0  )then
+  echo "  usage:  $0 <list of files>"
+  echo "  Now exiting....:"
+  exit
+endif
+
+set delUnits = (`dialog --stdout --separate-output --checklist "Select the units to eliminate:\nPlease select one." 0 0 0 \\
+                "mm-microgram-microsec"    "" off, \\
+                "mks"         "" off`)
+
+if( $status != 0 ) then
+  echo "cancel selected"
+  exit
+endif
+
+#remove quotations from
+set delUnits = (`echo $delUnits | tr -d '"'`)
+
+# make copy of files.
+echo "  Making a copy of the files in org/"
+mkdir orgs
+cp $files orgs/
+
+
+# cut out the unwanted values
+sed -i /$delUnits/d $files
+
+#  Show the user the differences
+foreach X ( $files[*] )
+  echo ""
+  echo ""
+  echo " __________________________________________________________________________________$X"
+  echo "  modified                                                       orginal"
+  sdiff  $X  orgs/$X
+end
+
+exit
+
+

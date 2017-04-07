@@ -24,8 +24,13 @@
 <!--  1 J/(g*K) = 10^-3 mm^2/(microseconds^2 * K) -->
 <Uintah_Include>
   <density>8870.0</density>                             <!--  8870 kg/m^3  -->
-  <thermal_conductivity>75.0E-6</thermal_conductivity>  <!--    75 W/(m*K) -->
-  <specific_heat>0.425E-3</specific_heat>               <!-- 0.425 J/(g*K) -->
+  
+  <thermal_conductivity>75.0E-6</thermal_conductivity>  <!-- mm-microgram-microsec -->
+  <specific_heat>0.425E-3</specific_heat>               <!-- mm-microgram-microsec -->
+
+  <thermal_conductivity>75.0</thermal_conductivity>     <!-- mks -->
+  <specific_heat>0.425</specific_heat>                  <!-- mks -->
+
   <room_temp>300.0</room_temp>                          <!--   300 K       -->
   <melt_temp>1728</melt_temp>                           <!--  1728 K       -->
 </Uintah_Include>
