@@ -1,13 +1,22 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- 6061 T6 Aluminum Alloy -->
-<Uintah_Include>
+<!--  Base Units -->
+<!--  mass        - microgram     -->
+<!--  time        - microsecond   -->
+<!--  length      - millimeter    -->
+<!--  temperature - Kelvin        -->
+
+<!--  Pressure Conversion: -->
+<!--  1 Pa = 1 kg/(m*s^2) = 1e9 microgram/(1e3 mm * 1e12 microsecond^2) -->
+<!--  1 Pa = 1e-6 microgram/(mm*microsecond^2) -->
+<!--  1 GPa = 1e+9 Pa = 1e+3 microgram/(mm*microsecond^2) --><Uintah_Include>
   <flow_model type="johnson_cook">
-    <A>324.0</A>
-    <B>114.0</B>
+    <A>324.0</A>        <!--  324 MPa -->
+    <B>114.0</B>        <!--  114 MPa -->
     <C>0.002</C>
     <n>0.42</n>
     <m>1.34</m>
-    <T_r>300.0</T_r>
-    <T_m>933.0</T_m>
+    <T_r>300.0</T_r>    <!--  300 K   -->
+    <T_m>933.0</T_m>    <!--  933 K   -->
   </flow_model>
 </Uintah_Include>

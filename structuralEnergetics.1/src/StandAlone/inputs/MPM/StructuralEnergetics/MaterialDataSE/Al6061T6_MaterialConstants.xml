@@ -1,9 +1,31 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- Aluminum for Structural Energetics -->
+<!--  Base Units -->
+<!--  mass        - microgram     -->
+<!--  time        - microsecond   -->
+<!--  length      - millimeter    -->
+<!--  temperature - Kelvin        -->
+
+<!--  Conversions: -->
+<!--  density -->
+<!--  1kg/m^3 = 10^9 micrograms/(10^-3 mm)^3 -->
+<!--  1kg/m^3 = 1 microgram/mm^3 -->
+<!--   -->
+<!--  thermal conductivity -->
+<!--  1 W/(m*K) = 1 (kg * m^2 / s^3) / (m*K) -->
+<!--  1 kg * m / (s^3 * K) = 10^9 micrograms * 10^3 mm / ((10^6 microseconds)^3 * K) -->
+<!--  1 W/(m*K) = 10^-6 micrograms * mm/(microseconds^3 * K) -->
+<!--   -->
+<!--  Specific heat -->
+<!--  1 J/(g*K) = 1 (kg*m^2/s^2)/(g*K) -->
+<!--  1 J = 1 (kg * m^2)/s^2 = 10^9 micrograms * (10^3 mm)^2/(10^6 microseconds^2) 
+                             = 10^3 micrograms*mm^2/microseconds^2 -->
+<!--  1 (kg * m^2/s^2)/(g*K) = 10^3 (micrograms*mm^2/microseconds^2)/(10^6 microgram * K) -->
+<!--  1 J/(g*K) = 10^-3 mm^2/(microseconds^2 * K) -->
 <Uintah_Include>
-  <density>2780.0</density>
-  <thermal_conductivity>220.0E-6</thermal_conductivity>
-  <specific_heat>0.920E-3</specific_heat>
-  <room_temp>300.0</room_temp>
-  <melt_temp>933.0</melt_temp>
+  <density>2780.0</density>                               <!--  2780 kg/m^3 -->
+  <thermal_conductivity>220.0E-6</thermal_conductivity>   <!--   220 W/(m*K) -->
+  <specific_heat>0.920E-3</specific_heat>                 <!-- 0.920 J/(g*K) -->
+  <room_temp>300.0</room_temp>                            <!--   300 K       -->
+  <melt_temp>933.0</melt_temp>                            <!--   933 K       -->
 </Uintah_Include>

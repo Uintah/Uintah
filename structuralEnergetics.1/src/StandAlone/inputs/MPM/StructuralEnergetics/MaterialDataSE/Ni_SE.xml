@@ -1,5 +1,10 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- Nickel Specifications From Report-1GS -->
+<!--  Base Units -->
+<!--  mass        - microgram     -->
+<!--  time        - microsecond   -->
+<!--  length      - millimeter    -->
+<!--  temperature - Kelvin        -->
 <Uintah_Include>
     <include href="MaterialDataSE/Ni200_MaterialConstants.xml"/>
     <constitutive_model type="elastic_plastic">
