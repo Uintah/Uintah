@@ -251,39 +251,38 @@ void UCNH::initializeCMData(const Patch* patch,
   if (flag->d_integrator == MPMFlags::Implicit)
     initSharedDataForImplicit(patch, matl, new_dw);
   else {
-    //initSharedDataForExplicit(patch, matl, new_dw);
-    ParticleVariable<double>  pdTdt;
-    ParticleVariable<Matrix3> pDefGrad;
-    ParticleVariable<Matrix3> pStress;
+    initSharedDataForExplicit(patch, matl, new_dw);
 
-    new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
-    new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
-    new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
+    // If d_useInitialStress then modify pDefGrad and pStress
+    if (d_useInitialStress) {
+      // Replace defaults with more accurate approximants.
 
-    ParticleSubset::iterator iter = pset->begin();
-    // Initial stress option
-    if (!d_useInitialStress) {
-      for(; iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        pdTdt[idx] = 0.0;
-        pDefGrad[idx] = Identity;
-        pStress[idx] = zero;
-      }
-    } else {
-      double p = d_init_pressure;
-      Matrix3 sigInit(p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p);
+      // initSharedDataForExplicit(...) above allocates these variables, so
+      // here we need to modify them only
+      ParticleVariable<Matrix3> pDefGrad;
+      new_dw->getModifiable(pDefGrad,    lb->pDeformationMeasureLabel, pset);
+      ParticleVariable<Matrix3> pStress;
+      new_dw->getModifiable(pStress,     lb->pStressLabel,             pset);
+
+      Matrix3 stressInitial(d_init_pressure,             0.0,             0.0,
+                                        0.0, d_init_pressure,             0.0,
+                                        0.0,             0.0, d_init_pressure);
       double rho_orig = matl->getInitialDensity();
-      double rho_cur = computeDensity(rho_orig, p);
-      double diag = cbrt(rho_cur/rho_orig);
-      for(;iter != pset->end(); iter++){
+      double rho_cur  = computeDensity(rho_orig, d_init_pressure);
+      double DefDiagonal = cbrt(rho_cur/rho_orig);
+      Matrix3 defGradInitial(DefDiagonal,         0.0,         0.0,
+                                     0.0, DefDiagonal,         0.0,
+                                     0.0,         0.0, DefDiagonal);
+
+      ParticleSubset::iterator iter = pset->begin();
+      for (; iter != pset->end(); ++iter)
+      {
         particleIndex idx = *iter;
-        pdTdt[idx] = 0.0;
-        pDefGrad[idx] = Matrix3(diag, 0.,0.,0.,diag,0.,0.,0.,diag);
-        pStress[idx] = sigInit;
+        pDefGrad[idx] = defGradInitial;
+        pStress[idx]  = stressInitial;
       }
     }
   }
-
   ParticleSubset::iterator iterUniv = pset->begin();
   ParticleSubset::iterator iterPlas = pset->begin();
 
