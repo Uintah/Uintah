@@ -494,20 +494,21 @@ main( int argc, char *argv[], char *env[] )
 
   //__________________________________
   //  bulletproofing
-  if ( restart || reduce_uda ) {
+ if ( restart || reduce_uda ) {
+  //if ( false ) {
     udaDir = filename;
     filename = filename + "/input.xml";
 
     // If restarting (etc), make sure that the uda specified is not a symbolic link to an Uda.
     // This is because the sym link can (will) be updated to point to a new uda, thus creating
     // an inconsistency.  Therefore it is just better not to use the sym link in the first place.
-    if( isSymLink( udaDir.c_str() ) ) {
-      std::cout << "\n";
-      std::cout << "ERROR: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
-      std::cout << "\n";
-      Uintah::Parallel::finalizeManager();
-      Parallel::exitAll( 1 );
-    }
+//    if( isSymLink( udaDir.c_str() ) ) {
+//      std::cout << "\n";
+//      std::cout << "ERROR: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
+//      std::cout << "\n";
+ //     Uintah::Parallel::finalizeManager();
+ //     Parallel::exitAll( 1 );
+ //   }
   }
 
   char * start_addr = (char*)sbrk(0);

@@ -86,7 +86,7 @@
 #define CHECKPOINT_REDUCTION 2
 
 #define XML_TEXTWRITER 1
-#undef XML_TEXTWRITER
+//#undef XML_TEXTWRITER
 
 using namespace Uintah;
 using namespace std;

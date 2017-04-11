@@ -689,6 +689,7 @@ DataArchive::query(       Variable     & var,
 
   //__________________________________
   // open data file Standard Uda Format
+    d_outputFileFormat = UDA;  
   if( d_outputFileFormat == UDA || varType == REDUCTION_VAR) {
     int fd = open( data_filename.c_str(), O_RDONLY );
 
