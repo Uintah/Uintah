@@ -9,11 +9,18 @@
 #   <bulk_modulus>78.1E+9</bulk_modulus>   <!-- mks -->
 #______________________________________________________________________
 
-set files = "$argv"
-
+set files = ($argv)
 
 if ( $#files == 0  )then
   echo "  usage:  $0 <list of files>"
+  
+  printf "\
+#  This script will elminate all xml nodes with the keyword mks or mm-mg-ms \
+#  It assumes that each file has a comment for the units \
+# \
+#   <bulk_modulus>78.1E+3</bulk_modulus>   <\!-- mm-microgram-microsec --> \
+#          or \
+#   <bulk_modulus>78.1E+9</bulk_modulus>   <\!-- mks -->\n\n"
   echo "  Now exiting....:"
   exit
 endif
