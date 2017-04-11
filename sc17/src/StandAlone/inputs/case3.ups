@@ -1,0 +1,1259 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Uintah_specification>
+  <Meta>
+    <title>Prediction_PSAAP</title>
+  </Meta>
+  <SimulationComponent type="arches" />
+  <Solver type="hypre" />
+  <Time>
+    <maxTime>20.0</maxTime>
+    <max_Timesteps>500000</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>1e-9</delt_min>
+    <delt_max>2.0e-4</delt_max>
+    <timestep_multiplier>0.35</timestep_multiplier>
+  </Time>
+
+
+  <LoadBalancer type = "SimpleLoadBalancer">  
+     <outputNthProc>         16 </outputNthProc>  
+     <timestepInterval>      1000 </timestepInterval>  
+  </LoadBalancer>  
+
+  <DataArchiver type="PIDX">
+    <filebase>predIncite.pidx</filebase>
+    <PIDX>
+    <outputRawIO>true</outputRawIO>
+    <outputPatchSize> [64,64,64] </outputPatchSize>
+    <debugOutput>false</debugOutput>
+    <compressionType>NONE</compressionType>
+    </PIDX>
+  <!--DataArchiver>
+    <filebase>predIncite.uda</filebase-->
+    <!--outputInitTimestep /-->
+
+
+    <!--outputInitTimestep/-->
+    <!--outputTimestepInterval>100</outputTimestepInterval-->
+    <outputInterval>0.01</outputInterval>
+    
+    <save label="CCVelocity"/>
+          <save label="w_qn0_running_sum"/>
+          <save label="w_qn1_running_sum"/>
+          <save label="w_qn2_running_sum"/>
+          <save label="radiation_temperature_running_sum"/>
+          <save label="eta_source1_running_sum"/>
+          <save label="eta_source2_running_sum"/>
+          <save label="radiationFluxN_running_sum"/>
+          <save label="radiationFluxS_running_sum"/>
+          <save label="radiationFluxT_running_sum"/>
+          <save label="radiationFluxB_running_sum"/>
+          <save label="radiationFluxE_running_sum"/>
+          <save label="radiationFluxW_running_sum"/>
+          <save label="O2_running_sum"/>
+          <save label="H2O_running_sum"/>
+          <save label="CO2_running_sum"/>
+          <save label="wall_HF_running_sum"/>
+          <save label="wall_HF_power_running_sum"/>
+          <save label="heat_loss_running_sum"/>
+          <save label="coal_gas_mix_frac_running_sum"/>
+          <save label="residence_time_running_sum" />
+
+
+    <save label="cellType"/>
+
+    <save label="ux_0" />
+    <save label="uy_0" />
+    <save label="uz_0" />
+
+
+    <save label="radiation_temperature"/>
+    <save label="w_qn0"/>
+    <save label="w_qn1"/>
+    <save label="w_qn2"/>
+ 
+    <save label="wall_HF"/>
+    <save label="wall_HF_power"/>
+    <save label="eta_source1" />
+    <save label="eta_source2" />
+    <save label="radiationFluxN" />
+    <save label="radiationFluxB" />
+    <save label="radiationFluxT" />
+    <save label="radiationFluxE" />
+    <save label="radiationFluxW" />
+
+    <save label="RCmass_0"/>
+    <save label="RCmass_1"/>
+    <save label="RCmass_2"/>
+    <save label="Charmass_0"/>
+    <save label="Charmass_1"/>
+    <save label="Charmass_2"/>
+    <save label="temperature_coal_0"/>
+    <save label="temperature_coal_1"/>
+    <save label="temperature_coal_2"/>
+    <save label="heat_loss"/>
+    <save label="coal_gas_mix_frac"/>
+    <save label="residence_time" />
+    <save label = "O2"          table_lookup = "true"/>
+
+
+
+
+    <!--save label="CO2" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <save label = "N2"          table_lookup = "true"/>
+    <save label = "mixture_molecular_weight" table_lookup = "true"/-->
+    <checkpoint cycle="100" walltimeInterval="28000" walltimeStart="0"/>
+    <!--checkpoint cycle="100" walltimeInterval="800" walltimeStart="0"/-->
+    <outputDoubleAsFloat />
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+    <Face name="x- wall" side="x-">
+    <include href="bc_files/wall.0.x-.xml" section="BCType" />
+    </Face>
+    <Face name="x+ face" side="x+">
+    <include href="bc_files/wall.1.x+.xml" section="BCType" />
+    </Face>
+    <Face name="y- wall" side="y-">
+    <include href="bc_files/wall.2.y-.xml" section="BCType" />
+    </Face>
+    <Face name="y+ wall" side="y+">
+    <include href="bc_files/wall.3.y+.xml" section="BCType" />
+    </Face>
+    <Face name="z- wall" side="z-">
+    <include href="bc_files/wall.4.z-.xml" section="BCType" />
+    </Face>
+    <Face name="z+ wall" side="z+">
+    <include href="bc_files/wall.5.z+.xml" section="BCType" />
+    </Face>
+
+    <Face lower="23.80488 13.75594545983667 0.0" name="outlet" rectangle="y-" upper="34.00697142857143 13.75594545983667 13.4112"> 
+    <include href="bc_files/outlet.6.y-.xml" section="BCType" />
+    </Face>
+
+
+    <Face circle="x-" name="primary01" origin="0.0 15.8855509138530 3.0479" radius="0.2286">
+    <include href="bc_files/primary.7.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary02" origin="0.0 15.8855509138530 5.4863" radius="0.2286">
+    <include href="bc_files/primary.8.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary03" origin="0.0 15.8855509138530 7.9247" radius="0.2286">
+    <include href="bc_files/primary.9.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary04" origin="0.0 15.8855509138530 10.3631" radius="0.2286">
+    <include href="bc_files/primary.10.x-.xml" section="BCType" />
+    </Face>
+
+
+    <Face circle="x-" name="primary05" origin="0.0 18.3239509138530 3.0479" radius="0.2286">
+    <include href="bc_files/primary.11.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary06" origin="0.0 18.3239509138530 5.4863" radius="0.2286">
+    <include href="bc_files/primary.12.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary07" origin="0.0 18.3239509138530 7.9247" radius="0.2286">
+    <include href="bc_files/primary.13.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary08" origin="0.0 18.3239509138530 10.3631" radius="0.2286">
+    <include href="bc_files/primary.14.x-.xml" section="BCType" />
+    </Face>
+
+    <Face circle="x-" name="primary09" origin="0.0 20.7623509138530 3.0479" radius="0.2286">
+    <include href="bc_files/primary.15.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary10" origin="0.0 20.7623509138530  5.4863" radius="0.2286">
+    <include href="bc_files/primary.16.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary11" origin="0.0 20.7623509138530 7.9247" radius="0.2286">
+    <include href="bc_files/primary.17.x-.xml" section="BCType" />
+    </Face>
+    <Face circle="x-" name="primary12" origin="0.0 20.7623509138530 10.3631" radius="0.2286">
+    <include href="bc_files/primary.18.x-.xml" section="BCType" />
+    </Face>
+
+    <Face circle="z-" name="sideWallPrimary01" origin="2.4384 14.6663509138530 0.0" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.19.z-.xml" section="BCType" />
+    </Face>
+    <Face circle="z-" name="sideWallPrimary02" origin="2.4384 17.1047509138530 0.0" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.20.z-.xml" section="BCType" />
+    </Face>
+    <Face circle="z-" name="sideWallPrimary03" origin="2.4384 19.5431509138530 0.0" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.21.z-.xml" section="BCType" />
+    </Face>
+
+    <Face circle="z-" name="sideWallPrimary04" origin="4.8768 14.6663509138530 0.0" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.22.z-.xml" section="BCType" />
+    </Face>
+    <Face circle="z-" name="sideWallPrimary05" origin="4.8768 17.1047509138530 0.0" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.23.z-.xml" section="BCType" />
+    </Face>
+    <Face circle="z-" name="sideWallPrimary06" origin="4.8768 19.5431509138530 0.0" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.24.z-.xml" section="BCType" />
+    </Face>
+
+
+    <Face circle="z-" name="sideWallPrimary07" origin="7.3152 15.8855509138530 0.0" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.25.z-.xml" section="BCType" />
+    </Face>
+    <Face circle="z-" name="sideWallPrimary08" origin="7.3152 18.3239509138530 0.0" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.26.z-.xml" section="BCType" />
+    </Face>
+
+    <Face circle="z+" name="sideWallPrimary09" origin="2.4384 14.6663509138530 13.4112" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.27.z+.xml" section="BCType" />
+    </Face>
+    <Face circle="z+" name="sideWallPrimary10" origin="2.4384 17.1047509138530 13.4112" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.28.z+.xml" section="BCType" />
+    </Face>
+    <Face circle="z+" name="sideWallPrimary11" origin="2.4384 19.5431509138530 13.4112" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.29.z+.xml" section="BCType" />
+    </Face>
+
+    <Face circle="z+" name="sideWallPrimary12" origin="4.8768 14.6663509138530 13.4112" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.30.z+.xml" section="BCType" />
+    </Face>
+    <Face circle="z+" name="sideWallPrimary13" origin="4.8768 17.1047509138530 13.4112" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.31.z+.xml" section="BCType" />
+    </Face>
+    <Face circle="z+" name="sideWallPrimary14" origin="4.8768 19.5431509138530 13.4112" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.32.z+.xml" section="BCType" />
+    </Face>
+
+
+    <Face circle="z+" name="sideWallPrimary15" origin="7.3152 15.8855509138530 13.4112" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.33.z+.xml" section="BCType" />
+    </Face>
+    <Face circle="z+" name="sideWallPrimary16" origin="7.3152 18.3239509138530 13.4112" radius="0.1905">
+    <include href="bc_files/sideWallPrimary.34.z+.xml" section="BCType" />
+    </Face>
+
+    <Face annulus="x-" inner_radius="0.2286" name="secondary01" origin="0.0 15.8855509138530 3.0479" outer_radius="0.362767">
+    <include href="bc_files/secondary.35.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary02" origin="0.0 15.8855509138530 5.4863" outer_radius="0.362767">
+    <include href="bc_files/secondary.36.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary03" origin="0.0 15.8855509138530 7.9247" outer_radius="0.362767">
+    <include href="bc_files/secondarynegative.37.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary04" origin="0.0 15.8855509138530 10.3631" outer_radius="0.362767">
+    <include href="bc_files/secondarynegative.38.x-.xml" section="BCType" />
+    </Face>
+
+
+    <Face annulus="x-" inner_radius="0.2286" name="secondary05" origin="0.0 18.3239509138530 3.0479" outer_radius="0.362767">
+    <include href="bc_files/secondary.39.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary06" origin="0.0 18.3239509138530 5.4863" outer_radius="0.362767">
+    <include href="bc_files/secondary.40.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary07" origin="0.0 18.3239509138530 7.9247" outer_radius="0.362767">
+    <include href="bc_files/secondarynegative.41.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary08" origin="0.0 18.3239509138530 10.3631" outer_radius="0.362767">
+    <include href="bc_files/secondarynegative.42.x-.xml" section="BCType" />
+    </Face>
+
+    <Face annulus="x-" inner_radius="0.2286" name="secondary09" origin="0.0 20.7623509138530 3.0479" outer_radius="0.362767">
+    <include href="bc_files/secondary.43.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary10" origin="0.0 20.7623509138530 5.4863" outer_radius="0.362767">
+    <include href="bc_files/secondary.44.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary11" origin="0.0 20.7623509138530 7.9247" outer_radius="0.362767">
+    <include href="bc_files/secondarynegative.45.x-.xml" section="BCType" />
+    </Face>
+    <Face annulus="x-" inner_radius="0.2286" name="secondary12" origin="0.0 20.7623509138530 10.3631" outer_radius="0.362767">
+    <include href="bc_files/secondarynegative.46.x-.xml" section="BCType" />
+    </Face>
+
+
+    <Face annulus="z-" inner_radius="0.1905" name="sideWallSecondary01" origin="2.4384 14.6663509138530 0.0" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.47.z-.xml" section="BCType" />
+    </Face>
+    <Face annulus="z-" inner_radius="0.1905" name="sideWallSecondary02" origin="2.4384 17.1047509138530 0.0" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.48.z-.xml" section="BCType" />
+    </Face>
+    <Face annulus="z-" inner_radius="0.1905" name="sideWallSecondary03" origin="2.4384  19.5431509138530 0.0" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.49.z-.xml" section="BCType" />
+    </Face>
+
+    <Face annulus="z-" inner_radius="0.1905" name="sideWallSecondary04" origin="4.8768 14.6663509138530 0.0" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.50.z-.xml" section="BCType" />
+    </Face>
+    <Face annulus="z-" inner_radius="0.1905" name="sideWallSecondary05" origin="4.8768 17.1047509138530 0.0" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.51.z-.xml" section="BCType" />
+    </Face>
+    <Face annulus="z-" inner_radius="0.1905" name="sideWallSecondary06" origin="4.8768  19.5431509138530 0.0" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.52.z-.xml" section="BCType" />
+    </Face>
+
+
+    <Face annulus="z-" inner_radius="0.1905" name="sideWallSecondary07" origin="7.3152 15.8855509138530 0.0" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.53.z-.xml" section="BCType" />
+    </Face>
+    <Face annulus="z-" inner_radius="0.1905" name="sideWallSecondary08" origin="7.3152 18.3239509138530 0.0" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.54.z-.xml" section="BCType" />
+    </Face>
+
+    <Face annulus="z+" inner_radius="0.1905" name="sideWallSecondary09" origin="2.4384 14.6663509138530 13.4112" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondarynegative.55.z+.xml" section="BCType" />
+    </Face>
+    <Face annulus="z+" inner_radius="0.1905" name="sideWallSecondary10" origin="2.4384 17.1047509138530 13.4112" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondarynegative.56.z+.xml" section="BCType" />
+    </Face>
+    <Face annulus="z+" inner_radius="0.1905" name="sideWallSecondary11" origin="2.4384  19.5431509138530 13.4112" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondarynegative.57.z+.xml" section="BCType" />
+    </Face>
+
+
+    <Face annulus="z+" inner_radius="0.1905" name="sideWallSecondary12" origin="4.8768 14.6663509138530 13.4112" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.58.z+.xml" section="BCType" />
+    </Face>
+    <Face annulus="z+" inner_radius="0.1905" name="sideWallSecondary13" origin="4.8768 17.1047509138530 13.4112" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.59.z+.xml" section="BCType" />
+    </Face>
+    <Face annulus="z+" inner_radius="0.1905" name="sideWallSecondary14" origin="4.8768  19.5431509138530 13.4112" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.60.z+.xml" section="BCType" />
+    </Face>
+
+
+    <Face annulus="z+" inner_radius="0.1905" name="sideWallSecondary15" origin="7.3152 15.8855509138530 13.4112" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.61.z+.xml" section="BCType" />
+    </Face>
+    <Face annulus="z+" inner_radius="0.1905" name="sideWallSecondary16" origin="7.3152 18.3239509138530 13.4112" outer_radius="0.298552">
+    <include href="bc_files/sideWallSecondary.62.z+.xml" section="BCType" />
+    </Face>
+
+       
+       
+    </BoundaryConditions>
+
+   <!-- patches = 259792 -->
+    <Level>
+    <Box label="box_1">
+    <lower>[0,14.85642109662361,0]</lower>          
+    <upper>[23.80488,23.38510728172234,13.4112]</upper> 
+    <resolution>[1032,372,576]</resolution>  
+    <patches>[86,31,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_2">
+    <lower>[23.80488,13.75594545983667,0]</lower>          
+    <upper>[33.76971348837209,21.45927491734521,13.4112]</upper> 
+    <resolution>[432,336,576]</resolution>  
+    <patches>[36,28,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_3">
+    <lower>[0,14.58130218742687,0]</lower>          
+    <upper>[23.80488,14.85642109662361,13.4112]</upper> 
+    <resolution>[1032,12,576]</resolution>  
+    <patches>[86,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_4">
+    <lower>[0,14.30618327823014,0]</lower>          
+    <upper>[23.80488,14.58130218742687,13.4112]</upper> 
+    <resolution>[1032,12,576]</resolution>  
+    <patches>[86,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_5">
+    <lower>[0,14.03106436903341,0]</lower>          
+    <upper>[23.52807906976744,14.30618327823014,13.4112]</upper> 
+    <resolution>[1020,12,576]</resolution>  
+    <patches>[85,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_6">
+    <lower>[0,13.75594545983667,0]</lower>          
+    <upper>[23.52807906976744,14.03106436903341,13.4112]</upper> 
+    <resolution>[1020,12,576]</resolution>  
+    <patches>[85,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_7">
+    <lower>[0,13.48082655063994,0]</lower>          
+    <upper>[23.25127813953488,13.75594545983667,13.4112]</upper> 
+    <resolution>[1008,12,576]</resolution>  
+    <patches>[84,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_8">
+    <lower>[0,13.20570764144321,0]</lower>          
+    <upper>[22.97447720930233,13.48082655063994,13.4112]</upper> 
+    <resolution>[996,12,576]</resolution>  
+    <patches>[83,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_9">
+    <lower>[0,12.93058873224648,0]</lower>          
+    <upper>[22.97447720930233,13.20570764144321,13.4112]</upper> 
+    <resolution>[996,12,576]</resolution>  
+    <patches>[83,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_10">
+    <lower>[0,12.65546982304974,0]</lower>          
+    <upper>[22.69767627906977,12.93058873224647,13.4112]</upper> 
+    <resolution>[984,12,576]</resolution>  
+    <patches>[82,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_11">
+    <lower>[0,12.38035091385301,0]</lower>          
+    <upper>[22.69767627906977,12.65546982304974,13.4112]</upper> 
+    <resolution>[984,12,576]</resolution>  
+    <patches>[82,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_12">
+    <lower>[0,12.10523200465627,0]</lower>          
+    <upper>[22.42087534883721,12.38035091385301,13.4112]</upper> 
+    <resolution>[972,12,576]</resolution>  
+    <patches>[81,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_13">
+    <lower>[0,11.83011309545954,0]</lower>          
+    <upper>[22.42087534883721,12.10523200465627,13.4112]</upper> 
+    <resolution>[972,12,576]</resolution>  
+    <patches>[81,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_14">
+    <lower>[0,11.55499418626281,0]</lower>          
+    <upper>[22.14407441860465,11.83011309545954,13.4112]</upper> 
+    <resolution>[960,12,576]</resolution>  
+    <patches>[80,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_15">
+    <lower>[0,11.27987527706607,0]</lower>          
+    <upper>[21.86727348837209,11.55499418626281,13.4112]</upper> 
+    <resolution>[948,12,576]</resolution>  
+    <patches>[79,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_16">
+    <lower>[0,11.00475636786934,0]</lower>          
+    <upper>[21.86727348837209,11.27987527706607,13.4112]</upper> 
+    <resolution>[948,12,576]</resolution>  
+    <patches>[79,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_17">
+    <lower>[0,10.72963745867261,0]</lower>          
+    <upper>[21.59047255813953,11.00475636786934,13.4112]</upper> 
+    <resolution>[936,12,576]</resolution>  
+    <patches>[78,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_18">
+    <lower>[0,10.45451854947587,0]</lower>          
+    <upper>[21.59047255813953,10.72963745867261,13.4112]</upper> 
+    <resolution>[936,12,576]</resolution>  
+    <patches>[78,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_19">
+    <lower>[0,10.17939964027914,2.2352]</lower>          
+    <upper>[21.31367162790698,10.45451854947587,11.176]</upper> 
+    <resolution>[924,12,384]</resolution>  
+    <patches>[77,1,32]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_20">
+    <lower>[0,24.48558291850928,0]</lower>          
+    <upper>[20.20646790697674,24.76070182770601,13.4112]</upper> 
+    <resolution>[876,12,576]</resolution>  
+    <patches>[73,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_21">
+    <lower>[0,24.21046400931255,0]</lower>          
+    <upper>[20.4832688372093,24.48558291850928,13.4112]</upper> 
+    <resolution>[888,12,576]</resolution>  
+    <patches>[74,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_22">
+    <lower>[0,23.93534510011581,0]</lower>          
+    <upper>[20.76006976744186,24.21046400931255,13.4112]</upper> 
+    <resolution>[900,12,576]</resolution>  
+    <patches>[75,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_23">
+    <lower>[0,23.66022619091908,0]</lower>          
+    <upper>[21.03687069767442,23.93534510011581,13.4112]</upper> 
+    <resolution>[912,12,576]</resolution>  
+    <patches>[76,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>                                  
+    <Box label="box_24">
+    <lower>[0,23.38510728172234,0]</lower>          
+    <upper>[21.31367162790698,23.66022619091908,13.4112]</upper> 
+    <resolution>[924,12,576]</resolution>  
+    <patches>[77,1,48]</patches>           
+    <extraCells>[1,1,1]</extraCells>        
+    </Box>        
+    </Level>
+
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,-9.81,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000050</viscosity>
+  </PhysicalConstants>
+
+    <!--Scheduler type="DynamicMPI">
+    <small_messages> false </small_messages>
+    </Scheduler-->
+    <!--Scheduler type="DynamicMPI"/-->
+
+  <CFD>
+    
+    <ARCHES>
+      <PropertyModelsV2>
+        <model label="time_ave_scalars" type="variable_stats">
+          <single_variable label="w_qn0"/>
+          <single_variable label="w_qn1"/>
+          <single_variable label="w_qn2"/>
+          <single_variable label="radiation_temperature"/>
+          <single_variable label="eta_source1"/>
+          <single_variable label="eta_source2"/>
+          <single_variable label="radiationFluxN"/>
+          <single_variable label="radiationFluxS"/>
+          <single_variable label="radiationFluxT"/>
+          <single_variable label="radiationFluxB"/>
+          <single_variable label="radiationFluxE"/>
+          <single_variable label="radiationFluxW"/>
+          <single_variable label="O2"/>
+          <single_variable label="H2O"/>
+          <single_variable label="CO2"/>
+          <single_variable label="wall_HF_power"/>
+          <single_variable label="wall_HF"/>
+          <single_variable label="heat_loss"/>
+          <single_variable label="coal_gas_mix_frac"/>
+          <single_variable label="residence_time" />
+        </model>
+        <model label="wall_HF" type="wall_heatflux_variable">
+          <frequency>1</frequency>
+        </model>
+      </PropertyModelsV2>
+
+      <PropertyModels>
+        <!--<model type="radiation_properties" label="abskg">-->
+          <!--<initialization type="constant">-->
+            <!--<constant>0.0</constant>-->
+          <!--</initialization>-->
+          <!--<calculator type="radprops">-->
+          <!--<opl>0.3</opl>-->
+          <!--<abskg label = "gas_abskg" />-->
+          <!--<abskp label = "abskp" />-->
+            <!--<particles>-->
+              <!--<model_type>planck</model_type>  -->
+              <!--<complex_ir_real>2</complex_ir_real>  -->
+              <!--<complex_ir_imag>-0.6</complex_ir_imag> -->
+              <!--<part_temp_label>heat_pT</part_temp_label>-->
+              <!--<part_size_label>length</part_size_label>-->
+            <!--</particles>-->
+          <!--<grey_gas>-->
+            <!--<inputfile>../tables/GreyGasProperties.txt</inputfile>-->
+          <!--</grey_gas>-->
+          <!--</calculator>-->
+        <!--</model>-->
+        <model label="abskt" type="radiation_properties">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="hottel_sarofim">
+            <opl>1.0</opl>
+            <abskg label="abskg" />
+            <!--<particles type = "basic">-->
+            <particles type = "constantCIF">
+              <abskp label = "abskp"/>
+              <radiateAtGasTemp>false</radiateAtGasTemp>
+              <model_type>planck</model_type> 
+              <!--<model_type>rossland</model_type> -->
+              <part_temp_label>temperature_coal</part_temp_label>
+              <part_size_label>length</part_size_label>
+              <complex_ir_real>2.0</complex_ir_real>
+              <complex_ir_imag>-0.6</complex_ir_imag>
+              <const_asymmFact>1.0</const_asymmFact>
+            </particles>
+          </calculator>
+        </model>
+
+        <model label="heat_loss" type="heat_loss">
+          <initialization type="constant">
+            <!--<constant>-0.172</constant>-->
+            <!--<constant>-0.333</constant>-->
+            <!--constant>0.93</constant-->
+            <!--constant>0.90</constant-->
+            <constant>0.93</constant>
+          </initialization>
+          
+          <enthalpy_label>enthalpy</enthalpy_label>
+          <sensible_enthalpy_label>sensibleenthalpy</sensible_enthalpy_label>
+          <adiabatic_enthalpy_label>adiabaticenthalpy</adiabatic_enthalpy_label>
+          
+          <use_Ha_lookup>false</use_Ha_lookup>
+        </model>
+        <model label="soot" type="cc_constant">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <constant>0.0</constant>
+        </model>
+      </PropertyModels>
+
+            <include href="bc_files/btc5.xml" section="ParticleProperties" />
+            <EulerianParticles>
+              <ParticleVariables>
+                <variable label="RCmass" role="raw_coal" />
+                <variable label="Charmass" role="char" />
+                <variable label="pE" role="enthalpy" />
+                <variable label="length" role="size" />
+                <variable label="rho_coal" role="density" />
+                <variable label="temperature_coal" role="temperature" />
+                <variable label="dTdt" role="dTdt" />
+                <variable label="ux" role="uvel" />
+                <variable label="uy" role="vvel" />
+                <variable label="uz" role="wvel" />
+                <variable label="total_weight" role="total_number_density" />
+              </ParticleVariables>
+            </EulerianParticles>   
+      
+      <ParticleModels>
+        <model label="rho_coal" type="coal_density" />
+        <model label="temperature_coal" type="coal_temperature" />
+        <model label="total_weight" type="total_number_density" />
+        <model label="length" type="constant">
+         <grid dependent_type="CC" independent_type="CC"/>
+         <constant>[1.50000e-05,6.0e-05,20.0e-05]</constant>
+       </model>
+      </ParticleModels>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first" />
+      </TimeIntegrator>
+      
+      <TransportEqns>
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5" />
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="tabulated">
+            <depend_varname>table_enthalpy</depend_varname>
+          </initialization>
+          <stage value="0" />
+          <src label="divQ">
+            <weight>1</weight>
+          </src>
+          <src label="heat_source">
+            <weight>1</weight>
+          </src>
+          <scaling_const>1</scaling_const>
+        </Eqn>
+        <Eqn label="coal_gas_mix_frac" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5" />
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.3037</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+            <tol>1e-10</tol>
+          </Clipping>
+          <stage value="0" />
+          <src label="eta_source1">
+            <weight>1</weight>
+          </src>
+          <src label="eta_source2">
+            <weight>1</weight>
+          </src>
+          <scaling_const>1</scaling_const>
+        </Eqn>
+
+
+
+        <Eqn label="residence_time" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <stage value="0" />
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5" />
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <src label="res_source" />
+        </Eqn>
+
+
+
+        <!--Eqn label="residence_time" type="CCscalar">
+        <doDiff>true</doDiff>
+        <doConv>true</doConv>
+                <stage value="1" />
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+        <D_mol_constant value="5e-5" />
+        <conv_scheme>roe_minmod</conv_scheme>
+        <initialization type="constant">
+        <constant>0.0</constant>
+        </initialization>
+        <src label="res_source" />
+        </Eqn-->
+        
+        <Sources>
+
+          <src label="res_source" type="constant_src">
+            <constant>1</constant>
+            <multiply_by_variable>
+              <variable_string_name>density</variable_string_name>
+            </multiply_by_variable>
+          </src>
+          <!--<src label="divQ" type="rmcrt_radiation">-->
+            <!--<calc_frequency>1</calc_frequency>-->
+            <!--<abskg label="abskg" />-->
+            <!--<RMCRT>-->
+                <!--<randomSeed>        true      </randomSeed>-->
+                <!--<nDivQRays>          100      </nDivQRays>-->
+                <!--<Threshold>         0.00000005       </Threshold>-->
+                <!--<solveBoundaryFlux> false       </solveBoundaryFlux>-->
+                <!--<StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>-->
+                <!--<CCRays>true</CCRays> -->
+                <!--<allowReflect>false</allowReflect>-->
+            <!--</RMCRT>-->
+          <!--</src>-->
+
+          <src label="divQ" type="do_radiation">
+            <calc_frequency>20</calc_frequency>
+            <!--<abskg label="abskt" />-->
+            <DORadiationModel>
+              <ordinates>8</ordinates>
+              <LinearSolver type="hypre">
+                <res_tol>1.0e-8</res_tol>
+                <ksptype>gmres</ksptype>
+                <pctype>jacobi</pctype>
+                <max_iter>1500</max_iter>
+              </LinearSolver>
+              <initialGuess>prevRadSolve </initialGuess>
+              <!--QuadratureSet>LegendreChebyshev</QuadratureSet-->
+              <!--<initialGuess>zeros </initialGuess>-->
+              <!--<initialGuess>prevRadSolve </initialGuess>-->
+              <ScatteringOn>true</ScatteringOn>
+              <!--[>[><initialGuess>prevDir</initialGuess><]<]-->
+              
+            </DORadiationModel>
+          </src>
+          <src label="eta_source1" type="coal_gas_devol">
+            <devol_model_name>devol</devol_model_name>
+          </src>
+          <src label="eta_source2" type="coal_gas_oxi">
+            <char_oxidation_model_name>char</char_oxidation_model_name>
+          </src>
+          <src label="heat_source" type="coal_gas_heat">
+            <heat_model_name>heat</heat_model_name>
+          </src>
+          <src label="coal_gas_momentum" type="coal_gas_momentum">
+          </src>
+
+
+        </Sources>
+      </TransportEqns>
+      
+      <Turbulence model="compdynamicprocedure">
+        <filter_cs_squared>false</filter_cs_squared>
+      </Turbulence>
+      <Properties>
+        <ClassicTable>
+          <inputfile>../tables/btc.mix.gz</inputfile>
+          <mixfrac_with_heatloss f_label="coal_gas_mix_frac" hl_label="heat_loss" />
+          <enthalpy_label>enthalpy</enthalpy_label>
+          <cold_flow>false</cold_flow>
+          <temperature_label_name>temperature</temperature_label_name>
+          <reference_state f="0.1830" hl="0.782" />
+        </ClassicTable>
+        <filter_drhodt>false</filter_drhodt>
+        <first_order_drhodt>true</first_order_drhodt>
+        <inverse_density_average>false</inverse_density_average>
+      </Properties>
+      <DQMOM type="weightedAbs">
+        <LinearSolver>
+          <tolerance>1e-5</tolerance>
+          <type>Simplest</type>
+          <maxConditionNumber>10000000000000000</maxConditionNumber>
+          <calcConditionNumber>false</calcConditionNumber>
+        </LinearSolver>
+        <number_quad_nodes>3</number_quad_nodes>
+        <VelModel type="Dragforce">
+        </VelModel>
+
+        <Models>
+          <model label="xdragforce" type="Drag">
+            <direction>x</direction>
+          </model>
+          <model label="ydragforce" type="Drag">
+            <direction>y</direction>
+          </model>
+          <model label="zdragforce" type="Drag">
+            <direction>z</direction>
+          </model>
+          <!--<model label="devol" type="RichardsFletcherDevol">-->
+          <model label="devol" type="FOWYDevol">
+          </model>
+          <model label="heat" type="EnthalpyShaddix">
+          </model>
+          <!--model label="char" type="CharOxidationShaddix"-->
+          <model label="char" type="CharOxidationSmith"> 
+          </model>
+
+           <model label="RCmass_os_src" type="SimpleBirth">
+             <abscissa label="RCmass"/>
+             <small_weight>1e-15</small_weight>
+           </model>
+           <model label="Charmass_os_src" type="SimpleBirth">
+             <abscissa label="Charmass"/>
+             <small_weight>1e-15</small_weight>
+           </model>
+           <model label="pE_os_src" type="SimpleBirth">
+             <abscissa label="pE"/>
+             <small_weight>1e-15</small_weight>
+           </model>
+           <model label="ux_os_src" type="SimpleBirth">
+             <abscissa label="ux"/>
+             <small_weight>1e-15</small_weight>
+           </model>
+           <model label="uy_os_src" type="SimpleBirth">
+             <abscissa label="uy"/>
+             <small_weight>1e-15</small_weight>
+           </model>
+           <model label="uz_os_src" type="SimpleBirth">
+             <abscissa label="uz"/>
+             <small_weight>1e-15</small_weight>
+           </model>
+           <model label="weight_os_src" type="SimpleBirth">
+             <small_weight>1e-15</small_weight>
+             <is_weight/>
+           </model>
+
+
+
+          <!--<model label="char" type="CharOxidationShaddix">-->
+            <!--<ICVars>-->
+              <!--<variable label="length" role="particle_length" />-->
+              <!--<variable label="RCmass" role="raw_coal_mass" />-->
+              <!--<variable label="Charmass" role="char_mass" />-->
+              <!--<variable label="heat_pT" role="particle_temperature_from_enthalpy" />-->
+            <!--</ICVars>-->
+            <!--<low_clip>9.9999999999999995e-07</low_clip>-->
+            <!--<high_clip>999999</high_clip>-->
+          <!--</model>-->
+
+        </Models>
+        <Weights>
+          <model label="weight_os_src" />
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="1e2">
+            </env_constant>
+            <env_constant qn="1" value="1e2">
+            </env_constant>
+            <env_constant qn="2" value="1e2">
+            </env_constant>
+          </initialization>
+          <scaling_const>[ 1e10 1e10 1e10]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <Clipping>
+            <low>1e-50</low>
+            <high>1000000.0</high>
+            <tol>1e-50</tol>
+          </Clipping>
+          <conv_scheme>upwind</conv_scheme>
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Weights>
+           <!--New stuff-->
+        <Ic label="ux">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="xdragforce"/>
+          <model label="ux_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <Clipping>
+            <low>-120.0</low>
+            <high>120.0</high>
+          </Clipping>
+          <scaling_const>[1.0 1.0 1.0]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <conv_scheme>upwind</conv_scheme>
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+        </Ic>
+        <Ic label="uy">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="ydragforce"/>
+          <model label="uy_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <Clipping>
+            <low>-120.0</low>
+            <high>120.0</high>
+          </Clipping>
+          <scaling_const>[1.0 1.0 1.0]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <conv_scheme>upwind</conv_scheme>
+        </Ic>
+
+        <Ic label="uz">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="zdragforce"/>
+          <model label="uz_os_src"/>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <Clipping>
+            <low>-120.0</low>
+            <high>120.0</high>
+          </Clipping>
+          <scaling_const>[1.0 1.0 1.0]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <conv_scheme>upwind</conv_scheme>
+        </Ic>
+           <!--end of New stuff-->
+        <!--<Ic label="length">-->
+          <!--<doDiff>false</doDiff>-->
+          <!--<doConv>true</doConv>-->
+          <!--<initialization type="env_constant">-->
+          <!--<env_constant qn="0" value="8.3009e-06">-->
+          <!--</env_constant>-->
+          <!--<env_constant qn="1" value="8.2135e-05">-->
+          <!--</env_constant>-->
+          <!--<env_constant qn="2" value="0.00026695">-->
+          <!--</env_constant>-->
+          <!--</initialization>-->
+          <!--<nominal_values>[8.3009e-06,8.2135e-05,0.00026695]</nominal_values>-->
+          <!--<Clipping>-->
+          <!--<low>0.1</low>-->
+          <!--<high>100.01</high>-->
+          <!--</Clipping>-->
+          <!--<scaling_const>[1e-6 1e-6 1e-6]</scaling_const>-->
+          <!--<turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>-->
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--[><conv_scheme>super_bee</conv_scheme><]-->
+        <!--</Ic>-->
+        <Ic label="RCmass">
+          <doDiff>false</doDiff>
+        <doConv>true</doConv>
+         <initialization type="env_constant">
+            <env_constant qn="0" value="2.12213447099e-12">
+            </env_constant>
+            <env_constant qn="1" value="1.35816606143e-10">
+            </env_constant>
+            <env_constant qn="2" value="5.03024467197e-09">
+            </env_constant>
+          </initialization>
+
+          <nominal_values>[2.12213447099e-12,1.35816606143e-10,5.03024467197e-09]</nominal_values>
+          <model label="devol" />
+          <model label="RCmass_os_src"/>
+          <scaling_const>[1.0e-10 1e-10 1e-10]</scaling_const>
+          
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="Charmass">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0">
+            </env_constant>
+            <env_constant qn="1" value="0.0">
+            </env_constant>
+            <env_constant qn="2" value="0.0">
+            </env_constant>
+          </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
+          <model label="char" />
+          <model label="Charmass_os_src"/>
+          <scaling_const>[1.0e-10 1e-10 1e-10]</scaling_const>
+          
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <Ic label="pE">
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+        <!--<env_constant qn="0" value="-3.58635407462e-06">-->
+    <initialization type="env_constant">
+            <env_constant qn="0" value="-2.11617410464e-05">
+            </env_constant>
+            <env_constant qn="1" value="-0.00135435142697">
+            </env_constant>
+            <env_constant qn="2" value="-0.0501611639618">
+            </env_constant>
+          </initialization>
+
+          <nominal_values>[-2.11617410464e-05,-0.00135435142697,-0.0501611639618]</nominal_values>
+          <model label="heat" />
+          <model label="pE_os_src"/>
+          
+          <scaling_const>[1e-4 1e-4 1e-4]</scaling_const>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <!--<conv_scheme>roe_minmod</conv_scheme>-->
+          <!--<conv_scheme>super_bee</conv_scheme>-->
+          <conv_scheme>upwind</conv_scheme>
+          <molecular_diffusivity>0</molecular_diffusivity>
+        </Ic>
+        <adiabGas_nonadiabPart>false</adiabGas_nonadiabPart>
+        <save_moments>false</save_moments>
+      </DQMOM>
+      <BoundaryConditions>
+        <wall_csmag>0.0</wall_csmag>
+        <intrusions>
+            <intrusion label="SlagWall">
+            <constant_temperature T="2250.0" />
+
+            <geom_object>
+             <parallelepiped label="z-wall">
+                <p1>[ -0.1,    10.9794752095207, -0.1]</p1>
+                <p2>[ 23.80488, 10.9794752095207, -0.1]</p2>
+                <p3>[ -0.1,    10.276624 ,  6.7056]</p3> <!-- 10.22 = 10.32 -0.1-->
+                <p4>[-0.1,   0.226624 , -0.1]</p4>
+              </parallelepiped>
+            </geom_object>
+            </intrusion>
+
+            <intrusion label="SlagWall2">
+            <constant_temperature T="2250.0" />
+            <geom_object>
+             <parallelepiped label="z+wall">
+                <p1>[ -0.1,   10.9794752095207, 13.4112]</p1>
+                <p2>[23.80488, 10.9794752095207, 13.4112]</p2>
+                <p3>[ -0.1,  10.276624  , 6.7056  ]</p3>
+                <p4>[-0.1,   0.226624  , 13.4112]</p4>
+              </parallelepiped>
+            </geom_object>
+            </intrusion>
+
+
+
+            <intrusion label="SlagWall3">
+            <constant_temperature T="2250.0" />
+            <geom_object>
+            <union>
+            <difference>
+             <parallelepiped label="noseWall">
+                <!--p1>[12.8016, -0.1   , 13.4112 ]</p1>
+                <p2>[21.6408,-0.1    , 13.4112]</p2>
+                <p3>[21.6408,14.9352 , 13.4112]</p3>
+                <p4>[12.8016, -0.1   , -0.1]</p4-->
+
+		<p1>[14.96568, -0.1   , 13.4112]</p1>
+		<p2>[23.80488,-0.1    , 13.4112]</p2>
+		<p3>[23.80488,14.9352 , 13.4112]</p3>
+		<p4>[14.96568, -0.1   , -0.1]</p4>
+              </parallelepiped>
+    <!--box label="conv">
+    <min>[-0.1,14.777777, -0.1] </min>
+    <max>[40.000 ,20.00000, 13.4112]</max>
+    </box-->
+                <difference>
+    <box label="conv">
+    <min>[-0.1,-0.01 , -0.1] </min>
+    <max>[33.8328 ,14.9352, 33.8328]</max>
+    </box>
+    <box label="conv2">
+    <min>[-0.1, -0.1, -0.1]</min>
+    <max>[23.80488,  14.77777, 33.8328]</max>
+    </box>
+    </difference>
+              </difference>
+            </union>
+
+            </geom_object>
+            </intrusion>
+    <!-- derek -->
+	    <intrusion label="stability_intrusions">
+	    <constant_temperature T="2250.0" />
+	    <geom_object>
+	    <box label="convx">
+	    <min>[23.80488,10.0000, -0.1] </min>
+	    <max>[24.00488,14.77777 ,13.4112] </max>
+	    </box>
+	    </geom_object>
+	    </intrusion>
+
+
+            <intrusion label="constriction">
+            <constant_temperature T="2250.0" />
+            <geom_object>
+            <union>
+            <difference>
+             <parallelepiped label="noseWall2">
+                <!--p1>[12.8016, -0.1   , 13.4112 ]</p1>
+                <p2>[21.6408,-0.1    , 13.4112]</p2>
+                <p3>[21.6408,14.9352 , 13.4112]</p3>
+                <p4>[12.8016, -0.1   , -0.1]</p4-->
+
+		<p1>[19.72238, 24.760701827706  , 13.4112]</p1>
+		<p2>[23.70488, 24.760701827706  , 13.4112]</p2>
+		<p3>[23.70488, 20.778201827706  , 13.4112]</p3>
+		<p4>[19.72238, 24.760701827706  , -0.1]</p4>
+
+
+
+		<!--p1>[19.82238, 24.860701827706  , 13.4112]</p1>
+		<p2>[23.80488, 24.860701827706  , 13.4112]</p2>
+		<p3>[23.80488, 20.878201827706  , 13.4112]</p3>
+		<p4>[19.82238, 24.860701827706  , -0.1]</p4-->
+              </parallelepiped>
+                <difference>
+              <box label="conv3">
+              <min>[-0.1,-0.1 , -0.1] </min>
+              <max>[33.8328 ,  21.2234587094623,   33.8328 ] </max>
+              </box>
+              <box label="conv4">
+              <min>[0.0000,-0.1 , -0.1] </min>
+              <max>[22.80488,  24.76071827706  ,33.8328 ] </max>
+              <!--max>[22.80488,  24.86071827706  ,33.8328 ] </max-->
+              </box>
+              </difference>
+              </difference>
+            </union>
+
+            </geom_object>
+            </intrusion>
+
+
+	    <intrusion label="low_ceiling">
+	    <constant_temperature T="2250.0" />
+	    <geom_object>
+	    <box label="convx2">
+	    <min>[23.80488,21.2234587094623 ,  -0.1] </min>
+	    <max>[38.00000,25.0000 ,13.5112] </max>
+	    </box>
+	    </geom_object>
+	    </intrusion>
+             
+
+            <include href="../input/burner_cuffs2.xml" section="intrusion" />
+
+        </intrusions>
+
+            <!--include href="wallht_flatbot.xml" section="WallHT" /-->
+            <include href="constT.xml" section="WallHT" />
+
+            <!--<include href="bc_files/wall_ht10000.xml" section="WallHT" />-->
+            <!--<include href="bc_files/wall_ht8000.xml" section="WallHT" />-->
+            <!--<include href="bc_files/wall_ht7000.xml" section="WallHT" />-->
+            <!--<include href="bc_files/wall_htrad.xml" section="WallHT" />-->
+            <!--<include href="bc_files/wall_ht12000.xml" section="WallHT" />-->
+            <!--<include href="bc_files/wall_ht_half.xml" section="WallHT" />-->
+            
+
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <initial_dt>1</initial_dt>
+        <print_total_ke />
+        <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-10  </tolerance>
+            <solver>          cg    </solver>
+            <preconditioner>  pfmg  </preconditioner>
+            <maxiterations>   5000   </maxiterations>
+            <relax_type> 2 </relax_type>
+            <setupFrequency> 0 </setupFrequency>
+            <jump> 0 </jump>
+            <skip> 1 </skip>
+            <npre>1</npre>
+            <npost>1</npost>
+            <logging>0</logging>
+          </Parameters>
+          <src label="eta_source1" />
+          <src label="eta_source2" />
+          <normalize_pressure>false</normalize_pressure>
+          <do_only_last_projection>false</do_only_last_projection>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>hybrid</convection_scheme>
+          <src label="coal_gas_momentum" />
+          <Re_limit>2000</Re_limit>
+          <filter_divergence_constraint>false</filter_divergence_constraint>
+        </MomentumSolver>
+        <turbModelCalcFreq>1</turbModelCalcFreq>
+        <turbModelCalcForAllRKSteps>true</turbModelCalcForAllRKSteps>
+        <NoisyDensityGuess>false</NoisyDensityGuess>
+        <kineticEnergy_fromFC>false</kineticEnergy_fromFC>
+        <maxDensityLag>0</maxDensityLag>
+        <max_ke_allowed>9.9999999999999997e+98</max_ke_allowed>
+      </ExplicitSolver>
+      <turnonMixedModel>false</turnonMixedModel>
+      <recompileTaskgraph>false</recompileTaskgraph>
+    </ARCHES>
+  </CFD>
+  <Multimaterial>
+    <fluidThermalConductivity>0.03</fluidThermalConductivity>
+    <heatExchange>false</heatExchange>
+    <turbulentPrandtNo>0.7</turbulentPrandtNo>
+    <fluidHeatCapacity>1007.</fluidHeatCapacity>
+    <IfCutCell>false</IfCutCell>
+    <StationarySolid>true</StationarySolid>
+    <inviscid>false</inviscid>
+    <restart>true</restart>
+    <fixedCellType>true</fixedCellType>
+    <fixedTemp>true</fixedTemp>
+    <TestCutCells>true</TestCutCells>
+    <stairstep>true</stairstep>
+  </Multimaterial>
+  
+  
+</Uintah_specification>
