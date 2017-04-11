@@ -1,0 +1,43 @@
+#!/bin/csh -f
+
+#__________________________________
+# This computes the Linf, L1 & L2 errors of the variables in the uda
+# between a gold standard and an uda 
+#__________________________________
+
+set tmp = (`which compute_Lnorm_udas` )
+
+if ( $status ) then
+  echo " ERROR: Could not find compute_Lnorm_udas
+  exit(0)
+endif
+
+# defaults
+set GS_uda = ~/cpu_1000_divQ.uda   # Gold standard 
+set data   = Lnorm/L-0/divQ_0      # file containing variable of interest
+
+# parse the input arguments and extract $out and $uda
+
+while (1)
+  switch($1:q)  # $1 is first argument
+  case -o:
+    shift
+    set out = $1    # currently not used
+    breaksw;
+  case -uda:
+    shift
+    set uda = $1
+    break
+  endsw
+  shift
+end
+/bin/rm Lnorm
+
+# compute the L norms between the two uda
+compute_Lnorm_udas  $uda  $GS_uda >& tmp
+
+# write the data out so it's easier to plot with gnuplot
+sed -i /"#Time"/d  $data 
+cat $data >> Lnorms
+
+exit

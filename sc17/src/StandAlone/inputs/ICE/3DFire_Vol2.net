@@ -1,0 +1,179 @@
+# SCIRun Network v1.25.0
+
+
+set name {Main}
+set bbox {0 7 432 476}
+set creationDate {Thu Sep 15 2005}
+set creationTime {10:25:42}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {800x800+0+0}
+
+# Create a Uintah->DataIO->ArchiveReader Module
+set m1 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 1 7]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 237 7]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m3 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 0 214]
+
+# Create a Uintah->Selectors->TimestepSelector Module
+set m4 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 8 92]
+
+# Create a SCIRun->Render->Viewer Module
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 220 432]
+
+# Create a SCIRun->FieldsData->MoveElemToNode Module
+set m6 [addModuleAtPosition "SCIRun" "FieldsData" "MoveElemToNode" 0 281]
+
+# Create a SCIRun->Visualization->TextureBuilder Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 220 94]
+
+# Create a SCIRun->Visualization->VolumeVisualizer Module
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 220 171]
+
+# Create a SCIRun->Visualization->ShowColorMap Module
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 238 251]
+
+# Create the Connections between Modules
+set c1 [addConnection $m6 0 $m7 0]
+set c2 [addConnection $m9 0 $m5 0]
+set c3 [addConnection $m7 0 $m8 0]
+set c4 [addConnection $m8 1 $m9 0]
+set c5 [addConnection $m1 0 $m4 0]
+set c6 [addConnection $m3 0 $m6 0]
+set c7 [addConnection $m4 0 $m3 0]
+set c8 [addConnection $m2 0 $m8 1]
+set c9 [addConnection $m8 0 $m5 1]
+set c10 [addConnection $m4 1 $m5 2]
+
+# Set GUI variables for the Uintah->DataIO->ArchiveReader Module
+set $m1-tcl_status {Executing}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m2-positionList {{0 40} {47 40}}
+set $m2-nodeList {256 257}
+set $m2-width {319}
+set $m2-height {40}
+set $m2-mapName {Blackbody}
+set $m2-resolution {255}
+set $m2-realres {255}
+
+# Set GUI variables for the Uintah->Selectors->ScalarFieldExtractor Module
+set $m3-tcl_status {Calling FieldExtractor!}
+set $m3-sVar {temp_CC}
+
+# Set GUI variables for the Uintah->Selectors->TimestepSelector Module
+set $m4-tcl_status {Calling TimestepSelector!}
+set $m4-max_time {344}
+set $m4-timeval {1e-07}
+set $m4-def-color-a {0.0}
+
+# Open the Uintah->Selectors->TimestepSelector UI
+$m4 initialize_ui
+
+$m5 addViewer
+set $m5-ViewWindow_0-geometry 414x771+865+69
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m5-ViewWindow_0-view-eyep-x {8.58987428865}
+set $m5-ViewWindow_0-view-eyep-y {6.94229445974}
+set $m5-ViewWindow_0-view-eyep-z {7.20025763872}
+set $m5-ViewWindow_0-view-lookat-x {0.168178365161}
+set $m5-ViewWindow_0-view-lookat-y {3.35031536511}
+set $m5-ViewWindow_0-view-lookat-z {0.237872663317}
+set $m5-ViewWindow_0-view-up-x {-0.244097777563}
+set $m5-ViewWindow_0-view-up-y {0.949974960854}
+set $m5-ViewWindow_0-view-up-z {-0.194843138804}
+set $m5-ViewWindow_0-view-fov {20.0}
+set $m5-ViewWindow_0-view-eyep_offset-x {}
+set $m5-ViewWindow_0-view-eyep_offset-y {}
+set $m5-ViewWindow_0-view-eyep_offset-z {}
+set $m5-ViewWindow_0-sr {1}
+set $m5-ViewWindow_0-do_stereo {0}
+set $m5-ViewWindow_0-ortho-view {0}
+set $m5-ViewWindow_0-trackViewWindow0 {1}
+set $m5-ViewWindow_0-raxes {0}
+set $m5-ViewWindow_0-ambient-scale {1.0}
+set $m5-ViewWindow_0-diffuse-scale {1.0}
+set $m5-ViewWindow_0-specular-scale {0.4}
+set $m5-ViewWindow_0-emission-scale {1.0}
+set $m5-ViewWindow_0-shininess-scale {1.0}
+set $m5-ViewWindow_0-polygon-offset-factor {1.0}
+set $m5-ViewWindow_0-polygon-offset-units {0.0}
+set $m5-ViewWindow_0-point-size {1.0}
+set $m5-ViewWindow_0-line-width {1.0}
+set $m5-ViewWindow_0-sbase {0.4}
+set $m5-ViewWindow_0-bgcolor-r {0.0}
+set $m5-ViewWindow_0-bgcolor-g {0.0}
+set $m5-ViewWindow_0-bgcolor-b {0.0}
+set $m5-ViewWindow_0-fogusebg {1}
+set $m5-ViewWindow_0-fogcolor-r {0.0}
+set $m5-ViewWindow_0-fogcolor-g {0.0}
+set $m5-ViewWindow_0-fogcolor-b {1.0}
+set $m5-ViewWindow_0-fog-start {0.0}
+set $m5-ViewWindow_0-fog-end {0.714265}
+set $m5-ViewWindow_0-fog-visibleonly {1}
+set $m5-ViewWindow_0-currentvisual {0}
+set $m5-ViewWindow_0-caxes {0}
+set $m5-ViewWindow_0-pos {z1_y1}
+set $m5-ViewWindow_0-clip-num {}
+set $m5-ViewWindow_0-clip-visible {}
+set $m5-ViewWindow_0-clip-selected {}
+set $m5-ViewWindow_0-clip-visible-1 {}
+set $m5-ViewWindow_0-clip-normal-x-1 {}
+set $m5-ViewWindow_0-clip-normal-y-1 {}
+set $m5-ViewWindow_0-clip-normal-z-1 {}
+set $m5-ViewWindow_0-clip-normal-d-1 {}
+set $m5-ViewWindow_0-clip-visible-2 {}
+set $m5-ViewWindow_0-clip-normal-x-2 {}
+set $m5-ViewWindow_0-clip-normal-y-2 {}
+set $m5-ViewWindow_0-clip-normal-z-2 {}
+set $m5-ViewWindow_0-clip-normal-d-2 {}
+set $m5-ViewWindow_0-clip-visible-3 {}
+set $m5-ViewWindow_0-clip-normal-x-3 {}
+set $m5-ViewWindow_0-clip-normal-y-3 {}
+set $m5-ViewWindow_0-clip-normal-z-3 {}
+set $m5-ViewWindow_0-clip-normal-d-3 {}
+set $m5-ViewWindow_0-clip-visible-4 {}
+set $m5-ViewWindow_0-clip-normal-x-4 {}
+set $m5-ViewWindow_0-clip-normal-y-4 {}
+set $m5-ViewWindow_0-clip-normal-z-4 {}
+set $m5-ViewWindow_0-clip-normal-d-4 {}
+set $m5-ViewWindow_0-clip-visible-5 {}
+set $m5-ViewWindow_0-clip-normal-x-5 {}
+set $m5-ViewWindow_0-clip-normal-y-5 {}
+set $m5-ViewWindow_0-clip-normal-z-5 {}
+set $m5-ViewWindow_0-clip-normal-d-5 {}
+set $m5-ViewWindow_0-clip-visible-6 {}
+set $m5-ViewWindow_0-clip-normal-x-6 {}
+set $m5-ViewWindow_0-clip-normal-y-6 {}
+set $m5-ViewWindow_0-clip-normal-z-6 {}
+set $m5-ViewWindow_0-clip-normal-d-6 {}
+set $m5-ViewWindow_0-global-light0 {1}
+set $m5-ViewWindow_0-global-light1 {0}
+set $m5-ViewWindow_0-global-light2 {0}
+set $m5-ViewWindow_0-global-light3 {0}
+set $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m5-ViewWindow_0-global-light {0}
+set $m5-ViewWindow_0-global-fog {0}
+set $m5-ViewWindow_0-global-debug {0}
+set $m5-ViewWindow_0-global-clip {1}
+set $m5-ViewWindow_0-global-cull {0}
+set $m5-ViewWindow_0-global-dl {0}
+set $m5-ViewWindow_0-global-type {Gouraud}
+
+# Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
+set $m7-vmin {300}
+set $m7-vmax {2100}
+set $m7-is_fixed {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
+set $m9-numsigdigits {4}
+set $m9-units {K}
+
+
+::netedit scheduleok

@@ -1,0 +1,223 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+   <Meta>
+       <title>pressurized cylinder volumetric locking test</title>
+   </Meta>
+   <SimulationComponent type="mpm" />
+   <Time>
+       <maxTime>800e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1e-12</delt_min>
+       <delt_max>1e-6</delt_max>
+       <timestep_multiplier>0.1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase> volumetric_locking_test.uda </filebase>
+       <outputInterval>1e-6</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.mass"/>
+       <save label = "p.color"/>
+       <save label = "p.stress"/>
+       <save label = "p.volume"/>
+       <save label = "p.velocity"/>
+       <save label = "p.particleID"/>
+       <save label = "p.scalefactor" />
+       <save label = "p.deformationMeasure"/>
+
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMomentum"/>
+       <save label = "p.loadCurveID" />
+       <save label = "p.externalforce" />
+
+       <!--save label = "p.x"/>
+       <save label = "p.volume"/>
+       <save label = "p.color"/>
+       <save label = "p.velocity"/>
+       <save label = "p.stress"/>
+       <save label = "p.mass"/>
+       <save label = "p.particleID"/>
+       <save label = "p.plasticStrainVol"/>
+       <save label = "TotalMomentum"/>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "p.deformationMeasure"/>
+       <save label = "p.loadCurveID" />
+       <save label = "p.externalforce" />
+       <save label = "p.scalefactor" /-->
+
+       <checkpoint cycle = "2" interval = "1.0e-6"/>
+
+   </DataArchiver>
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+       <artificial_viscosity>true</artificial_viscosity>
+
+       <!-- DONT FORGET TO TURN ME OFF!!! -->
+       <artificial_damping_coeff> 28e3 </artificial_damping_coeff>
+       <!-- DONT FORGET TO TURN ME OFF!!! -->
+
+       <artificial_viscosity_heating>false</artificial_viscosity_heating>
+       <do_contact_friction_heating>false</do_contact_friction_heating>
+       <axisymmetric>true</axisymmetric>
+       <withColor>      true      </withColor>
+       <erosion algorithm = "RemoveMass"/>
+       <use_load_curves> true </use_load_curves>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+ 
+    <MaterialProperties>
+       <MPM>
+         <material name="cylinder">
+           <constitutive_model type="comp_neo_hook">
+
+             <!-- Original Material Properties nu = 0.3756 >
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus-->
+
+	     <!-- Modified Bulk Modulus nu = 0.100 -->
+             <bulk_modulus>  2.4044e+10 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus >
+   
+           </constitutive_model>
+           <density> 2710.0 </density>
+
+           <thermal_conductivity>1.3</thermal_conductivity>
+           <specific_heat>1366.0</specific_heat>
+           <melt_temp>3695.0</melt_temp>
+           <room_temp>294.0</room_temp>
+
+
+           <!--density>2300.0</density>
+           <melt_temp>3695.0</melt_temp>
+           <room_temp>294.0</room_temp>
+           <thermal_conductivity>1.3</thermal_conductivity>
+           <specific_heat>1366.0</specific_heat>
+           <constitutive_model type="Arenisca">
+             <B0>15.7e9</B0>
+             <G0>15.e9</G0>
+             <hardening_modulus>0.0</hardening_modulus>
+             <FSLOPE> 0.435438 </FSLOPE>
+             <FSLOPE_p> 0.435438 </FSLOPE_p>
+             <PEAKI1> 20.9882e6 </PEAKI1>
+             <CR> 6.0 </CR>
+             <p0_crush_curve> -30e6 </p0_crush_curve>
+             <p1_crush_curve> 5.9e-11 </p1_crush_curve>
+             <p3_crush_curve> 0.189 </p3_crush_curve>
+             <p4_fluid_effect> 0.0 </p4_fluid_effect>
+             <fluid_B0> 0.0 </fluid_B0>
+             <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
+             <subcycling_characteristic_number> 10.0 </subcycling_characteristic_number>
+             <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
+           </constitutive_model-->
+
+	     <geom_object>
+               <difference>
+                 <cylinder label="outer_section">
+                   <bottom>           [0.0, 0.00, 0.0]   </bottom>
+                   <top>              [0.0, 0.1, 0.0]   </top>
+                   <radius>           0.50               </radius>
+                 </cylinder>
+                 <cylinder label="center_section">
+                   <bottom>           [0.0, 0.00, 0.0]   </bottom>
+                   <top>              [0.0, 0.1, 0.0]   </top>
+                   <radius>           0.20               </radius>
+                 </cylinder>
+               </difference>
+	       <res>[2,2,1]</res>
+	       <velocity>[0.0,0.0,0.0]</velocity>
+	       <temperature>294.0</temperature>
+	       <color>1</color>
+	     </geom_object>	
+         </material>
+       </MPM>
+    </MaterialProperties>
+
+   <!-- Pressure boundary condition -->
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+           <cylinder label = "outer cylinder">
+             <bottom>           [0.0, 0.00, 0.0]   </bottom>
+             <top>              [0.0, 0.1, 0.0]   </top>
+             <radius>           0.50            </radius>
+             <cylinder_end>false</cylinder_end>
+             <axisymmetric_end>false</axisymmetric_end>
+             <axisymmetric_side>true</axisymmetric_side>
+           </cylinder>           
+         </geom_object>
+         <res>[2,2,1]</res>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 300e-6 </time>
+             <load> -6.89476e6 </load>
+           </time_point>
+           <time_point>
+             <time> 100 </time>
+             <load> -6.89476e6 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+     </MPM>
+   </PhysicalBC>
+
+    <Grid>
+         <BoundaryConditions>
+          <Face side = "x-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric">
+                     <value> [0.0,0.0,0.0] </value>
+             </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" var = "Neumann" label = "Velocity">
+                     <value>[0.0,0.0,0.0]</value>
+             </BCType>
+           </Face>
+           <Face side = "y-">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+                           <value>[0.0,0.0,0.0]</value>
+                   </BCType>
+           </Face>
+           <Face side = "y+">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+                           <value>[0.0,0.0,0.0]</value>
+                   </BCType>
+           </Face>                           
+           <Face side = "z-">
+                  <BCType id = "all" var = "symmetry" label = "Symmetric">
+                           <value>[0.0,0.0,0.0]</value>
+                  </BCType>
+           </Face>                  
+          <Face side = "z+">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+                          <value>[0.0,0.0,0.0]</value>
+                  </BCType>
+           </Face>
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.00, 0.00, -0.005]</lower>
+              <upper>[0.80, 0.10,  0.005]</upper>
+              <patches>[4,4,1]</patches>
+              <extraCells> [1,1,1] </extraCells>
+           </Box>
+           <spacing>[ 0.01, 0.01, 0.01]</spacing>
+	   
+       </Level>
+    </Grid>
+</Uintah_specification> 

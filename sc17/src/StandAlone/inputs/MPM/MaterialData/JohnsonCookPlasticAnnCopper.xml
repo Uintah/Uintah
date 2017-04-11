@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Annealed Copper -->
+<Uintah_Include>
+  <flow_model type="johnson_cook">
+    <A>89.6e6</A>
+    <B>292.0e6</B>
+    <C>0.025</C>
+    <n>0.31</n>
+    <m>1.09</m>
+  </flow_model>
+</Uintah_Include>

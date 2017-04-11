@@ -1,0 +1,179 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test QMOM Implementation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>  
+
+  <Wasatch>    
+  
+    <Density method="CONSTANT">
+      <Constant value="1" name="rho"/>
+    </Density>
+
+    <BasicExpression type="SVOL"> 
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="dissipation"/>
+      <Constant> 0.05 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL"> 
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="kinviscos"/>
+      <Constant> 0.1 </Constant>
+    </BasicExpression> 
+
+    <BasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="density"/>
+      <Constant> 1.0 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL"> 
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="growthCoef"/>
+      <Constant> 1500.0 </Constant>
+    </BasicExpression> 
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="Turb_agg"/>
+      <TurbulentAggregationCoefficient>
+        <KinematicViscosity>
+          <NameTag name="kinviscos"/>
+        </KinematicViscosity>
+        <EnergyDissipation>
+          <NameTag name="dissipation"/>
+        </EnergyDissipation>
+      </TurbulentAggregationCoefficient>
+    </PrecipitationBasicExpression>    
+
+    <MomentInitialization>
+      <PopulationName> CACO3 </PopulationName>
+      <Values>
+        1.0,
+        5.0,
+        26.0,
+        140.0,
+        778.0,
+        4450.0,
+        26140.0,
+        157400.0
+      </Values>
+    </MomentInitialization>
+    
+    <MomentTransportEquation>
+        <PopulationName>CACO3</PopulationName>
+        <NumberOfEnvironments>3</NumberOfEnvironments>
+        
+        <!--GrowthExpression>
+            <GrowthModel>MONOSURFACE</GrowthModel>
+            <PreGrowthCoefficient>1.0</PreGrowthCoefficient>
+        </GrowthExpression-->
+
+        <AggregationExpression>
+          <AggregationCoefficientExpression>
+            <NameTag name="Turb_agg"/>
+          </AggregationCoefficientExpression>
+          <AggregationModel> HYDRODYNAMIC </AggregationModel>
+
+          <SizeDependentEfficiency>
+            <GrowthModel> BULK_DIFFUSION </GrowthModel>
+            <LengthParam> 1.5 </LengthParam>
+            <Density>
+              <NameTag name="density"/>
+            </Density>
+            <EnergyDissipation>
+              <NameTag name="dissipation"/>
+            </EnergyDissipation>
+            <GrowthCoefficientExpression>
+              <NameTag name="growthCoef"/>
+            </GrowthCoefficientExpression>      
+          </SizeDependentEfficiency>
+
+
+        </AggregationExpression>
+
+        <AggregationExpression>
+          <AggregationCoefficientExpression>
+            <NameTag name="Turb_agg"/>
+          </AggregationCoefficientExpression>
+          <AggregationModel> BROWNIAN </AggregationModel>
+<!--SizeDependentEfficiency>
+            <GrowthModel> BULK_DIFFUSION </GrowthModel>
+            <LengthParam> 1.5 </LengthParam>
+            <Density>
+              <NameTag name="density"  />
+            </Density>
+            <EnergyDissipation>
+              <NameTag name="dissipation"  />
+            </EnergyDissipation>
+            <GrowthCoefficientExpression>
+              <NameTag name="growthCoef" />
+            </GrowthCoefficientExpression>
+          </SizeDependentEfficiency-->
+
+        </AggregationExpression>
+    </MomentTransportEquation>
+  </Wasatch>
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
+    <max_Timesteps> 5 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>qmom-aggregation-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.00001"/>
+    <compression>gzip</compression>
+    <save label="m_CACO3_0"/>
+    <save label="m_CACO3_1"/>
+    <save label="m_CACO3_2"/>    
+    <save label="m_CACO3_3"/>    
+    <save label="m_CACO3_4"/>
+    <save label="m_CACO3_5"/>    
+
+    <save label="w_CACO3_0"/>    
+    <save label="w_CACO3_1"/>
+    <save label="w_CACO3_2"/>    
+    <save label="a_CACO3_0"/>    
+    <save label="a_CACO3_1"/>
+    <save label="a_CACO3_2"/>    
+    <save label="m_CACO3_1_rhs"/>
+    <!--save label="m_CACO3_0_agg_CONSTANT"/>
+    <save label="m_CACO3_1_agg_CONSTANT"/>
+    <save label="m_CACO3_2_agg_CONSTANT"/>
+    <save label="m_CACO3_3_agg_CONSTANT"/-->
+
+    <!--save label="m_CACO3_0_agg_BROWNIAN"/>
+    <save label="m_CACO3_1_agg_BROWNIAN"/>
+    <save label="m_CACO3_2_agg_BROWNIAN"/>
+    <save label="m_CACO3_3_agg_BROWNIAN"/-->
+
+    <save label="m_CACO3_0_agg_HYDRODYNAMIC"/>
+    <save label="m_CACO3_1_agg_HYDRODYNAMIC"/>
+    <save label="m_CACO3_2_agg_HYDRODYNAMIC"/>
+    <save label="m_CACO3_3_agg_HYDRODYNAMIC"/>
+           
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[2,2,2]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

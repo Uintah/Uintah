@@ -1,0 +1,325 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{txfonts}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman times
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family rmdefault
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize 12
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 2
+\use_package mathdots 2
+\use_package mathtools 1
+\use_package mhchem 2
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Computing Temporal Order without an Analytical Solution
+\end_layout
+
+\begin_layout Author
+Tony Saad
+\end_layout
+
+\begin_layout Standard
+It is possible to estimate the observed temporal (and spatial) order of
+ accuracy without using an analytical solution.
+ The order of accuracy is defined as the exponent of the leading order term
+ of the truncation error.
+ It respresents the rate at which the error between the exact and computed
+ solutions is reduced with consistent refinement in time (or space).
+ 
+\end_layout
+
+\begin_layout Standard
+Using a general Taylor series expansion for a quantity 
+\begin_inset Formula $f$
+\end_inset
+
+, we have for a 
+\begin_inset Formula $p$
+\end_inset
+
+-th order scheme
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f_{1}=\tilde{f}+a_{p}\Delta t^{p}+\mathcal{O}(\Delta t^{p+1})
+\end{equation}
+
+\end_inset
+
+The same formula may be applied for two more refinement levels
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f_{2}=\tilde{f}+a_{p}(r\Delta t)^{p}+\mathcal{O}(r^{p+1}\Delta t^{p+1})
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f_{3}=\tilde{f}+a_{p}(r^{2}\Delta t)^{p}+\mathcal{O}(r^{2p+2}\Delta t^{p+1})
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $r=\frac{\Delta t_{\text{fine}}}{\Delta t_{\text{coarse}}}<1$
+\end_inset
+
+ is the temporal (grid) refinement ratio, 
+\begin_inset Formula $f_{i}$
+\end_inset
+
+ is the computed solution (finite precision computer) corresponding to the
+ 
+\begin_inset Formula $i^{\text{{th}}}$
+\end_inset
+
+ refinement level, and 
+\begin_inset Formula $\tilde{f}$
+\end_inset
+
+ is the exact solution to the continuous PDE.
+ If the step size is small enough and the higher order terms are negligible,
+ it is possible to estimate the observed order of accuracy as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{f_{3}-f_{2}}{f_{2}-f_{1}}=\frac{a_{p}r^{p}\Delta t^{p}(r^{p}-1)}{a_{p}\Delta t^{p}(r^{p}-1)}=r^{p}
+\end{equation}
+
+\end_inset
+
+or
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p=\frac{\ln\left(\frac{f_{3}-f_{2}}{f_{2}-f_{1}}\right)}{\ln r}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This approach work very well when certain conditions are met.
+ According to 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "oberkampf_verification_2010"
+
+\end_inset
+
+, these conditions are
+\end_layout
+
+\begin_layout Enumerate
+All discrete solutions are in the asymptotic range
+\end_layout
+
+\begin_layout Enumerate
+Meshes have a uniform (Cartesian) spacing over the domain
+\end_layout
+
+\begin_layout Enumerate
+Coarse and fine meshes are related through systematic refinement
+\end_layout
+
+\begin_layout Enumerate
+The solutions are smooth
+\end_layout
+
+\begin_layout Enumerate
+The other sources of numerical error are small
+\end_layout
+
+\begin_layout Standard
+In practice, one does the following for computing the observed temporal
+ order of accuracy
+\end_layout
+
+\begin_layout Enumerate
+Choose a very fine grid resolution 
+\begin_inset Formula $\Delta x$
+\end_inset
+
+.
+ This resolution has to be small enough so that the spatial errors are smaller
+ than the temporal errors.
+\end_layout
+
+\begin_layout Enumerate
+Pick the largest timestep size 
+\begin_inset Formula $\Delta t$
+\end_inset
+
+ that allows for a stable solution, e.g.
+ choose 
+\begin_inset Formula $\Delta t$
+\end_inset
+
+ for a CFL of 1 or 0.95
+\end_layout
+
+\begin_layout Enumerate
+Specify the number of refinement levels.
+ You will need at least three temporal refinements to compute a single estimate
+ for the order of accuracy.
+ In general, if 
+\begin_inset Formula $N$
+\end_inset
+
+ is the number of refinement levels, then one can compute 
+\begin_inset Formula $N-2$
+\end_inset
+
+ estimates for the observed order of accuracy
+\end_layout
+
+\begin_layout Enumerate
+Compute the following solutions: 
+\begin_inset Formula $f_{1}=f(\Delta t)$
+\end_inset
+
+, 
+\begin_inset Formula $f_{2}=f(\tfrac{{1}}{2}\Delta t)$
+\end_inset
+
+, 
+\begin_inset Formula $f_{3}=f(\tfrac{1}{4}\Delta t)$
+\end_inset
+
+,...
+ For 
+\begin_inset Formula $f_{1}$
+\end_inset
+
+ take two timesteps, for 
+\begin_inset Formula $f_{2}$
+\end_inset
+
+ take four timesteps, for 
+\begin_inset Formula $f_{3}$
+\end_inset
+
+ take eight timesteps...
+ Because Richardson's extrapolation is used, one must examine the solutions
+ at the same state in time
+\end_layout
+
+\begin_layout Enumerate
+Compute the observed orders: 
+\begin_inset Formula $p_{1}=\frac{\ln\left(\frac{f_{3}-f_{2}}{f_{2}-f_{1}}\right)}{\ln0.5}$
+\end_inset
+
+, 
+\begin_inset Formula $p_{2}=\frac{\ln\left(\frac{f_{4}-f_{3}}{f_{3}-f_{2}}\right)}{\ln0.5}$
+\end_inset
+
+,...
+\end_layout
+
+\begin_layout Standard
+Using this procedure, one can design a general script for their code that
+ takes an input file, generates additional input files to compute the various
+ solutions 
+\begin_inset Formula $f_{i}$
+\end_inset
+
+, executes the code with the generated input files, and finally, collects
+ relevant data and computes the observed order.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+btprint "btPrintAll"
+bibfiles "orderaccuracy"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
