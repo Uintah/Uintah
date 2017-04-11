@@ -64,6 +64,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/ProgressiveWarning.h>
 
 #include <iostream>
 #include <fstream>
@@ -4090,8 +4091,8 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
 
         // Check to see if a tracer has left the domain
         if(!domain.inside(tx_new[idx])){
-          cerr << "A tracer has moved outside the domain. Pushing it back in."
-               << endl;
+          static ProgressiveWarning warn("A tracer has moved outside the domain. Pushing it back in.  This is a ProgressiveWarning.",10);
+          warn.invoke();
           double epsilon = 1.e-15;
           Point txn = tx_new[idx];
           if(tx_new[idx].x()<dom_min.x()){
