@@ -418,8 +418,8 @@ else{
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
     // Cyberstone
-    dbg << " ContainerMaterial           = " << d_containerMaterial << endl;
-    dbg << " ContainerRadius             = " << d_containerRadius   << endl;
+    dbg << " containerMaterial           = " << d_containerMaterial << endl;
+    dbg << " containerRadius             = " << d_containerRadius   << endl;
     dbg << " KEMaterial                  = " << d_KEMaterial << endl;
     dbg << "---------------------------------------------------------\n";
   }
@@ -487,8 +487,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
 
   // Cyberstone
-  ps->appendElement("ContainerMaterial", d_containerMaterial);
-  ps->appendElement("ContainerRadius",   d_containerRadius);
+  ps->appendElement("containerMaterial", d_containerMaterial);
+  ps->appendElement("containerRadius",   d_containerRadius);
   ps->appendElement("KEMaterial",        d_KEMaterial);
 }
 
