@@ -68,15 +68,15 @@ if ( ! -e $ups ) then
 endif
 
 # now change the number of patches
-xmlstarlet ed --update "Uintah_specification/Grid/Level/Box/patches" --value "$patches"  $ups >& tmp
+xmlstarlet edit --inplace --update "Uintah_specification/Grid/Level/Box/patches" --value "$patches"  $ups
 @ s = $status
 
 # Change the output uda name
-xmlstarlet ed --update "Uintah_specification/DataArchiver/filebase" --value "$uda" tmp >& tmp2
+xmlstarlet edit --inplace --update "Uintah_specification/DataArchiver/filebase" --value "$uda" $ups
 @ s = $s + $status
 
 # change the checkpoint output interval
-sed -i s/interval=\"0.02\"/timestepInterval=\"3\"/g tmp2
+sed -i s/interval=\"0.02\"/timestepInterval=\"3\"/g $ups
 @ s = $s + $status
 
 if( $s ) then
@@ -86,8 +86,8 @@ if( $s ) then
   exit(-1)
 endif
 
-mv tmp2 $ups
-/bin/rm tmp*
+#mv tmp2 $ups
+#/bin/rm tmp*
 
 #__________________________________
 echo "__________________________________"
@@ -136,7 +136,7 @@ sed -i s/timestepInterval=\"3\"/timestepInterval=\"1\"/g $uda/input.xml
 
 
 # change the grid spec
-xmlstarlet ed --insert "Uintah_specification/Grid" --type attr -n doAMR --value true $uda/input.xml
+xmlstarlet edit --inplace --insert "Uintah_specification/Grid" --type attr -n doAMR --value true $uda/input.xml
 @ s = $s + $status
 
 if( $s ) then
