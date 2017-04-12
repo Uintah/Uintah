@@ -25,7 +25,7 @@
 #ifndef UINTAH_RF_SCALARDIFFUSIONMODEL_H
 #define UINTAH_RF_SCALARDIFFUSIONMODEL_H
 
-#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Grid/Level.h>
@@ -45,7 +45,6 @@
 namespace Uintah {
 
   class Task;
-  class MPMMaterial;
 
   enum FluxDirection{
     fd_in,

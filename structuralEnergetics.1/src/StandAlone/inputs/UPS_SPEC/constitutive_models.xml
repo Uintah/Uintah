@@ -7,7 +7,8 @@
                                                                              comp_neo_hook_plastic,
                                                                              elastic_plastic, 
                                                                              hypo_elastic, 
-                                                                             elastic_plastic_hp, 
+                                                                             elastic_plastic_hp,
+                                                                             reactive_diffusive_EP, 
                                                                              ideal_gas,
                                                                              membrane, 
                                                                              murnaghanMPM, 
@@ -67,6 +68,9 @@
     <max_fiber_strain              spec="OPTIONAL DOUBLE" />
     <max_matrix_strain             spec="OPTIONAL DOUBLE" />
     <failure_option                spec="OPTIONAL DOUBLE" />
+    <heat_of_fusion                spec="REQUIRED DOUBLE 'positive'" need_applies_to="type reactive_diffusive_EP" />
+    <heat_of_reaction              spec="REQUIRED DOUBLE " need_applies_to="type reactive_diffusive_EP" />
+    <output_frequency              spec="OPTIONAL INTEGER 'positive'" need_applies_to="type reactive_diffusive_EP" />
     <C1                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
     <C2                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
     <check_max_stress_failure      spec="OPTIONAL BOOLEAN" />
@@ -114,12 +118,27 @@
     <ve_deviatoric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' -->
     <EoverR                        spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
     <equation_of_state             spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'default_hyper, default_hypo, mie_gruneisen, mie_gruneisen_energy'" >
+                                     attribute1="type REQUIRED STRING 'default_hyper, default_hypo, three_region_mie_gruneisen, mie_gruneisen, mie_gruneisen_energy'" >
       <C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
       <Gamma_0                     spec="OPTIONAL DOUBLE" />
       <S_alpha                     spec="OPTIONAL DOUBLE" />
       <S_2                         spec="OPTIONAL DOUBLE" />
       <S_3                         spec="OPTIONAL DOUBLE" />
+      <R1_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
+      <R1_Gamma_0                     spec="OPTIONAL DOUBLE" />
+      <R1_S_alpha                     spec="OPTIONAL DOUBLE" />
+      <R1_S_2                         spec="OPTIONAL DOUBLE" />
+      <R1_S_3                         spec="OPTIONAL DOUBLE" />
+      <R2_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
+      <R2_Gamma_0                     spec="OPTIONAL DOUBLE" />
+      <R2_S_alpha                     spec="OPTIONAL DOUBLE" />
+      <R2_S_2                         spec="OPTIONAL DOUBLE" />
+      <R2_S_3                         spec="OPTIONAL DOUBLE" />
+      <R3_C_0                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? optional (DefaultHypoEOS.xml)? Default value? -->
+      <R3_Gamma_0                     spec="OPTIONAL DOUBLE" />
+      <R3_S_alpha                     spec="OPTIONAL DOUBLE" />
+      <R3_S_2                         spec="OPTIONAL DOUBLE" />
+      <R3_S_3                         spec="OPTIONAL DOUBLE" />
     </equation_of_state>
     <evolve_damage                 spec="OPTIONAL BOOLEAN" />
     <evolve_porosity               spec="OPTIONAL BOOLEAN" />
@@ -364,6 +383,7 @@
     <viscosity                     spec="OPTIONAL DOUBLE" />
     <volfracHE                     spec="OPTIONAL DOUBLE" />
     <volume_expansion_coeff        spec="OPTIONAL DOUBLE" />
+    <molar_mass                    spec="OPTIONAL DOUBLE" />
     <yield_condition               spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'gurson, rousselier, vonMises'" >
       <f_c                         spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->

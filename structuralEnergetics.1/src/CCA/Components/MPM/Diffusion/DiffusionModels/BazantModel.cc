@@ -140,7 +140,7 @@ namespace Uintah
       Vector concTerm = pGradConcentration[i];
       double thermalInv = 1.0/(pTemperature[i]*d_unitBoltzmann);
       Vector muTerm = thermalInv * pConcentration[i] * pGradChemPotential[i];
-      pFluxNew[i] = -d_D0 * (concTerm + muTerm);
+      pFluxNew[i] = d_D0 * (concTerm + muTerm);
       double fluxRate = pFluxNew[i].maxComponentMag();
       if (fluxRate > maxFlux) maxFlux = fluxRate;
     }
@@ -167,7 +167,7 @@ namespace Uintah
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::normal_distribution<> normalDist(0.0, 0.00005);
+    std::normal_distribution<> normalDist(0.0, 0.005);
     std::uniform_real_distribution<> uniformDist(0.0, 1.0);
 
     for (int pIndex = 0; pIndex < pset->numParticles(); ++pIndex)
@@ -176,7 +176,7 @@ namespace Uintah
       double conc = pConcentration[pIndex];
 //      if (uniformDist(gen) < 0.01)
 //      {
-//        conc += normalDist(gen);
+        conc += normalDist(gen);
 //      }
       if (conc < 0.0) conc = 0.0;
       if (conc > d_MaxConcentration) conc = d_MaxConcentration;
@@ -319,6 +319,33 @@ namespace Uintah
     task->computes(d_lb->pChemicalPotentialGradientLabel, matlset);
   }
 
+  inline double BazantDiffusion::homogeneousMu(const double & conc ,
+                                               const double & T    )
+  {
+    return (d_regSolnParam * (1.0 - 2.0 * conc) +
+            d_unitBoltzmann * T * (std::log(conc) - std::log(1.0 - conc)));
+  }
+
+  double BazantDiffusion::isoCahnHilliardMu(const Vector                  & concGrad    ,
+                                            const Vector                  & oodx        ,
+                                            const int                       numNodes    ,
+                                            const std::vector<IntVector>  & nodeIndices ,
+                                            const std::vector<Vector>     & shapeDeriv  ,
+                                            const Patch*                    patch       )
+  {
+    double mu = 0.0;
+    IntVector node;
+    for (int nIdx = 0; nIdx < numNodes; ++nIdx)
+    {
+      node = nodeIndices[nIdx];
+      if(patch->containsNode(node)) {
+        Vector div(shapeDeriv[nIdx]*oodx);
+        mu += Dot(div,concGrad);
+      }
+    }
+    return (mu);
+  }
+
   void BazantDiffusion::calculateChemicalPotentialTake3(
                                                         const PatchSubset   * patches ,
                                                         const MPMMaterial   * matl    ,
@@ -329,11 +356,12 @@ namespace Uintah
     Ghost::GhostType gan = Ghost::AroundNodes;
     Ghost::GhostType gap = Ghost::AroundCells;
 
+    double prefactCahnHilliard = d_CahnHilliardGradPenalty/d_intercSiteDensity;
+
     for (int patchIdx = 0; patchIdx < patches->size(); ++patchIdx)
     {
       const Patch*          patch   = patches->get(patchIdx);
       ParticleInterpolator* pInterp = d_Mflag->d_interpolator->clone(patch);
-
       int interpPoints = pInterp->size();
 
       std::vector<IntVector> nodeList(interpPoints);
@@ -344,13 +372,13 @@ namespace Uintah
       Vector oodx = dx.inverse();
 
       int dwi = matl->getDWIndex();
-
       ParticleSubset* pSetGhost       = oldDW->getParticleSubset(dwi, patch, gap, NGP, d_lb->pXLabel);
-      // These two -should- get the low/high index for the nodes to which the
-      // ghost particle set would interpolate onto for this patch, including the U/R
-      // edge which is normally excluded and which we need.
-      IntVector       ghostLowIndex   = pSetGhost->getLow();
-      IntVector       ghostHighIndex  = pSetGhost->getHigh();
+      ParticleSubset* pSetNoGhost     = oldDW->getParticleSubset(dwi, patch, Ghost::None, 0, d_lb->pXLabel);
+//      // These two -should- get the low/high index for the nodes to which the
+//      // ghost particle set would interpolate onto for this patch, including the U/R
+//      // edge which is normally excluded and which we need.
+//      IntVector       ghostLowIndex   = pSetGhost->getLow();
+//      IntVector       ghostHighIndex  = pSetGhost->getHigh();
 
       constParticleVariable<double>   pConcentration, pTemperature, pMass;
       constParticleVariable<Vector>   pConcGradient;
@@ -380,7 +408,7 @@ namespace Uintah
 
 
 
-      ParticleSubset* pSetNoGhost = oldDW->getParticleSubset(dwi, patch, gap, 0, d_lb->pXLabel);
+//      ParticleSubset* pSetNoGhost = oldDW->getParticleSubset(dwi, patch, gap, 0, d_lb->pXLabel);
 
     }
   }
@@ -413,11 +441,9 @@ namespace Uintah
 
       int dwi = matl->getDWIndex();
 
-      ParticleSubset* pset_ghost    = OldDW->getParticleSubset(dwi, patch, gac,
-                                                               NGP, d_lb->pXLabel);
-      ParticleSubset* pset_noghost  = OldDW->getParticleSubset(dwi, patch,
-                                                               patch->getCellLowIndex(),
-                                                               patch->getCellHighIndex());
+      ParticleSubset* pset_ghost    = OldDW->getParticleSubset(dwi, patch, gac, NGP, d_lb->pXLabel);
+      ParticleSubset* pset_noghost  = OldDW->getParticleSubset(dwi, patch, Ghost::None, 0, d_lb->pXLabel);
+//      ParticleSubset* pset_noghost  = OldDW->getParticleSubset(dwi, patch, patch->getCellLowIndex(), patch->getCellHighIndex());
 
       constParticleVariable<double>   pConcentration, pTemperature, pMass;
       constParticleVariable<Vector>   pConcGradient;
@@ -442,8 +468,7 @@ namespace Uintah
 
       // Grab the global mass grid with the proper extents for the calculations
       constNCVariable<double>  gMassGlobal;
-      NewDW->get(gMassGlobal, d_lb->gMassLabel, dwi, patch,
-                 Ghost::AroundNodes, NGN);
+      NewDW->get(gMassGlobal, d_lb->gMassLabel, dwi, patch, Ghost::AroundNodes, NGN);
 
       NCVariable<double> gridMassLocal;
       NCVariable<double> gridMu;
@@ -459,116 +484,228 @@ namespace Uintah
       Matrix3 mIdentity(1.0, 0.0, 0.0,
                         0.0, 1.0, 0.0,
                         0.0, 0.0, 1.0);
-      // Loop for non-ghost particles.
+
+      // loop for non-ghost particles
       for (int pIdx = 0; pIdx < pset_noghost->numParticles(); ++pIdx)
       {
-        // Calculate chemical potential
+        pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices, S, d_S, pSize[pIdx], pDefGrad[pIdx]);
+
         double conc     = pConcentration[pIdx];
         Vector gradConc = pConcGradient[pIdx];
 
-        double molIntercolant = pMass[pIdx]/d_molWeight;
-        double kT = pTemperature[pIdx] * d_unitBoltzmann;
-        if (!concNormalized)
-        {
+        if (!concNormalized) {
           conc      *= d_InverseMaxConcentration;
           gradConc  *= d_InverseMaxConcentration;
         }
-        double mu_homogeneous = molIntercolant*d_regSolnParam*(1.0 - 2.0*conc)
-                                + kT * (std::log(conc) - std::log(1.0-conc));
-        Vector penaltyCH = (mIdentity * gradConc);
-        double mu_CahnHilliardIso = -Dot(oodx, penaltyCH) * prefactCahnHilliard ;
 
-        // FIXME TODO JBH 2/2017
-        //  Should last term be Dot(oodx,d_energyGradientCoefficient*gradConc)?
-        double mu_total = pMass[pIdx]*(mu_homogeneous-mu_CahnHilliardIso+d_muOther);
-        // Store on particle
+        double mu_homogeneous = homogeneousMu(conc,pTemperature[pIdx]);
+        Vector penaltyCH = mIdentity * gradConc;
+        double mu_CahnHilliardIso = isoCahnHilliardMu(penaltyCH, oodx, interpSize, nodeIndices, d_S, patch);
+        mu_CahnHilliardIso *= prefactCahnHilliard;
+        double mu_total = mu_homogeneous - mu_CahnHilliardIso + d_muOther;
         pMu[pIdx] = mu_total;
-
-        // Interpolate to grid.
-        int numNodes = pInterp->findCellAndWeights(pX[pIdx], nodeIndices, S,
-                                                   pSize[pIdx], pDefGrad[pIdx]);
-
         IntVector node;
-        for (int pNode = 0; pNode < numNodes; ++pNode)
-        {
+        for (int pNode = 0; pNode < interpSize; ++pNode) {
           node = nodeIndices[pNode];
-          if (patch->containsNode(node))
-          {
-            gridMu[node]        += (S[pNode] * mu_total);
-            gridMassLocal[node] += (S[pNode] * pMass[pIdx]);
+          if (patch->containsNode(node)) {
+            double massWeightedShape = pMass[pIdx] * S[pNode];
+            gridMu[node]        += (massWeightedShape * mu_total);
+            gridMassLocal[node] += massWeightedShape;
           }
         }
       }
 
-      // Loop for ghost particles
-      for(int pIdx = 0; pIdx < pset_ghost->numParticles(); ++pIdx)
+      // loop for ghost particles
+      for (int pIdx = 0; pIdx < pset_ghost->numParticles(); ++pIdx)
       {
         if (!(patch->containsPoint(pX[pIdx])))
         {
-          // Point is in pset with ghost, but not in patch.
-          //  Therefore, particle is in ghost layer.
-          // Calculate chemical potential
-           double conc     = pConcentration[pIdx];
-           Vector gradConc = pConcGradient[pIdx];
-           double kT = pTemperature[pIdx] * d_unitBoltzmann;
-           if (!concNormalized)
-           {
-             conc      *= d_InverseMaxConcentration;
-             gradConc  *= d_InverseMaxConcentration;
-           }
-           double mu_homogeneous =  d_regSolnParam*(1.0 - 2.0*conc)
-                                  + kT * ( std::log(conc) - std::log(1.0-conc));
-           double mu_CahnHilliardIso = prefactCahnHilliard * Dot(oodx,gradConc);
-           // FIXME TODO JBH 2/2017
-           //  Should last term be Dot(oodx,d_energyGradientCoefficient*gradConc)?
-           double mu_total = pMass[pIdx]*(mu_homogeneous-mu_CahnHilliardIso+d_muOther);
-           // Interpolate to grid.
-           int numNodes = pInterp->findCellAndWeights(pX[pIdx], nodeIndices, S,
-                                                      pSize[pIdx], pDefGrad[pIdx]);
+          pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices, S, d_S, pSize[pIdx], pDefGrad[pIdx]);
 
-           IntVector node;
-           for (int pNode = 0; pNode < numNodes; ++pNode)
-           {
-             node = nodeIndices[pNode];
-             if (patch->containsNode(node))
-             {
-               gridMu[node]        += (S[pNode] * mu_total);
-               gridMassLocal[node] += (S[pNode] * pMass[pIdx]);
-             }
-           }
+          double conc     = pConcentration[pIdx];
+          Vector gradConc = pConcGradient[pIdx];
+
+          if (!concNormalized) {
+            conc      *= d_InverseMaxConcentration;
+            gradConc  *= d_InverseMaxConcentration;
+          }
+
+          double mu_homogeneous = homogeneousMu(conc,pTemperature[pIdx]);
+          Vector penaltyCH = mIdentity * gradConc;
+          double mu_CahnHilliardIso = isoCahnHilliardMu(penaltyCH, oodx, interpSize, nodeIndices, d_S, patch);
+          mu_CahnHilliardIso *= prefactCahnHilliard;
+          double mu_total = mu_homogeneous - mu_CahnHilliardIso + d_muOther;
+          pMu[pIdx] = mu_total;
+          IntVector node;
+          for (int pNode = 0; pNode < interpSize; ++pNode) {
+            node = nodeIndices[pNode];
+            if (patch->containsNode(node)) {
+              double massWeightedShape = pMass[pIdx] * S[pNode];
+              gridMu[node]        += (massWeightedShape * mu_total);
+              gridMassLocal[node] += massWeightedShape;
+            }
+          }
 
         }
       }
 
-
       NodeIterator nodeIt = patch->getExtraNodeIterator(NGN);
       for (nodeIt.begin(); !nodeIt.done(); ++nodeIt)
       {
-        gridMu[*nodeIt] /= gMassGlobal[*nodeIt];
+        gridMu[*nodeIt] /= gridMassLocal[*nodeIt];
       }
+
+//      // Loop for non-ghost particles.
+//      for (int pIdx = 0; pIdx < pset_noghost->numParticles(); ++pIdx)
+//      {
+//        // get full set of Interpolator data
+//        pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices,
+//                                                       S, d_S,  pSize[pIdx],
+//                                                       pDefGrad[pIdx]);
+//
+//        // Calculate chemical potential
+//        double conc     = pConcentration[pIdx];
+//        Vector gradConc = pConcGradient[pIdx];
+//
+////        double molIntercolant = pMass[pIdx]/d_molWeight;
+////        double numIntercolant = molIntercolant * 6.0221409e+23;
+//        double kT = pTemperature[pIdx] * d_unitBoltzmann;
+//        if (!concNormalized)
+//        {
+//          conc      *= d_InverseMaxConcentration;
+//          gradConc  *= d_InverseMaxConcentration;
+//        }
+//        double mu_homogeneous = homogeneousMu(conc,pTemperature[pIdx]);
+////        double mu_homogeneous = d_regSolnParam*(1.0 - 2.0*conc)
+////                                + kT * (std::log(conc) - std::log(1.0-conc));
+//
+//        // Calculate divergence of concentration gradient for Cahn-Hilliard term
+//        Vector penaltyCH = (mIdentity * gradConc);
+//        double mu_CahnHilliardIso = isoCahnHilliardMu(penaltyCH, oodx, interpSize, nodeIndices, d_S, patch);
+////
+////        IntVector node;
+////        double mu_CahnHilliardIso = 0.0;
+////        for (int nIdx = 0; nIdx < interpSize; ++nIdx) {
+////          node = nodeIndices[nIdx];
+////          if (patch->containsNode(node)) {
+////            Vector div(d_S[nIdx]*oodx);
+////            mu_CahnHilliardIso += Dot(div, penaltyCH);
+////          }
+////        }
+//        mu_CahnHilliardIso *= prefactCahnHilliard;
+////        double mu_CahnHilliardIso = -Dot(oodx, penaltyCH) * prefactCahnHilliard ;
+//
+//        // FIXME TODO JBH 2/2017
+//        //  Should last term be Dot(oodx,d_energyGradientCoefficient*gradConc)?
+//        double mu_total = mu_homogeneous - mu_CahnHilliardIso + d_muOther;
+//        // Store on particle
+//        pMu[pIdx] = mu_total;
+//        // Volume weight for interpolation
+//        mu_total *= pMass[pIdx];
+//
+//        IntVector node;
+//        for (int pNode = 0; pNode < interpSize; ++pNode)
+//        {
+//          node = nodeIndices[pNode];
+//          if (patch->containsNode(node))
+//          {
+//            gridMu[node]        += (S[pNode] * mu_total);
+//            gridMassLocal[node] += (S[pNode] * pMass[pIdx]);
+//          }
+//        }
+//      }
+//
+
+//      // Loop for ghost particles
+//      for(int pIdx = 0; pIdx < pset_ghost->numParticles(); ++pIdx)
+//      {
+//        if (!(patch->containsPoint(pX[pIdx])))
+//        {
+//          // Point is in pset with ghost, but not in patch.
+//          //  Therefore, particle is in ghost layer.
+//          // Calculate chemical potential
+//          // get full set of Interpolator data
+//          pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices,
+//                                                         S, d_S,  pSize[pIdx],
+//                                                         pDefGrad[pIdx]);
+//
+//          // Calculate chemical potential
+//          double conc     = pConcentration[pIdx];
+//          Vector gradConc = pConcGradient[pIdx];
+//
+////          double molIntercolant = pMass[pIdx]/d_molWeight;
+//          double kT = pTemperature[pIdx] * d_unitBoltzmann;
+//          if (!concNormalized)
+//          {
+//            conc      *= d_InverseMaxConcentration;
+//            gradConc  *= d_InverseMaxConcentration;
+//          }
+//          double mu_homogeneous = d_regSolnParam*(1.0 - 2.0*conc)
+//                                  + kT * (std::log(conc) - std::log(1.0-conc));
+//
+//          // Calculate divergence of concentration gradient for Cahn-Hilliard term
+//          Vector penaltyCH = (mIdentity * gradConc);
+//          IntVector node;
+//          double mu_CahnHilliardIso = 0.0;
+//          for (int nIdx = 0; nIdx < interpSize; ++nIdx) {
+//            node = nodeIndices[nIdx];
+//            if (patch->containsNode(node)) {
+//              Vector div(d_S[nIdx]*oodx);
+//              mu_CahnHilliardIso += Dot(div, penaltyCH);
+//            }
+//          }
+//          mu_CahnHilliardIso *= prefactCahnHilliard;
+//  //        double mu_CahnHilliardIso = -Dot(oodx, penaltyCH) * prefactCahnHilliard ;
+//
+//          // FIXME TODO JBH 2/2017
+//          //  Should last term be Dot(oodx,d_energyGradientCoefficient*gradConc)?
+//          double mu_total = pMass[pIdx]*(mu_homogeneous-mu_CahnHilliardIso+d_muOther);
+//          // Store on particle
+//          //pMu[pIdx] = mu_total;
+//
+//          for (int pNode = 0; pNode < interpSize; ++pNode)
+//          {
+//            node = nodeIndices[pNode];
+//            if (patch->containsNode(node))
+//            {
+//              gridMu[node]        += (S[pNode] * mu_total);
+//              gridMassLocal[node] += (S[pNode] * pMass[pIdx]);
+//            }
+//          }
+//
+//        }
+//      }
+//
+
+//      NodeIterator nodeIt = patch->getExtraNodeIterator(NGN);
+//      for (nodeIt.begin(); !nodeIt.done(); ++nodeIt)
+//      {
+//        gridMu[*nodeIt] /= gMassGlobal[*nodeIt];
+//      }
       // pMu and gridMu both calculated now.  Re-project gradient onto particles.
       // Loop through patch particles
 
       ParticleVariable<Vector> pGradMu;
-      NewDW->allocateAndPut(pGradMu, d_lb->pChemicalPotentialGradientLabel,
-                            pset_noghost );
+      NewDW->allocateAndPut(pGradMu, d_lb->pChemicalPotentialGradientLabel, pset_noghost );
 
-      for (int pIdx = 0; pIdx < pset_noghost->numParticles(); ++pIdx)
+      for (ParticleSubset::iterator pIter = pset_noghost->begin(); pIter != pset_noghost->end(); ++pIter)
+//      for (int pIdx = 0; pIdx < pset_noghost->numParticles(); ++pIdx)
       {
-        int numNodes =
-            pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices,
-                                                           S, d_S,  pSize[pIdx],
-                                                           pDefGrad[pIdx]);
+        particleIndex pIdx = *pIter;
+        pInterp->findCellAndWeightsAndShapeDerivatives(pX[pIdx], nodeIndices,
+                                                       S, d_S,  pSize[pIdx],
+                                                       pDefGrad[pIdx]);
         pGradMu[pIdx] = Vector(0.0);
-        for (int pNode = 0; pNode < numNodes; ++pNode)
+        for (int pNode = 0; pNode < interpSize; ++pNode)
         {
           IntVector node = nodeIndices[pNode];
-  //        if (patch->containsNode(node))
+          if (patch->containsNode(node))
           {
-            for (int axis = 0; axis < 3; ++axis)
-            {
-              pGradMu[pIdx][axis] += d_S[pNode][axis]*oodx[axis]*gridMu[node];
-            }
+            pGradMu[pIdx] += d_S[pNode]*oodx*gridMu[node];
+//            for (int axis = 0; axis < 3; ++axis)
+//            {
+//              pGradMu[pIdx][axis] += d_S[pNode][axis]*oodx[axis]*gridMu[node];
+//            }
           }
         }
       }

@@ -53,48 +53,50 @@ class FluxBCModel;
 class AMRMPM : public SerialMPM {
 
 public:
-  AMRMPM(const ProcessorGroup* myworld);
+           AMRMPM(const ProcessorGroup* myworld);
   virtual ~AMRMPM();
   SDInterfaceModel* d_sdInterfaceModel;
 
-  virtual void problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec,
-                            GridP&,
-                            SimulationStateP&);
+  virtual void problemSetup(const ProblemSpecP      & params            ,
+                            const ProblemSpecP      & restart_prob_spec ,
+                                  GridP             &                   ,
+                                  SimulationStateP  &                   );
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
          
-  virtual void scheduleInitialize(const LevelP& level,
-                                  SchedulerP&);
+  virtual void scheduleInitialize(const LevelP      & level ,
+                                        SchedulerP  &       );
 
-  void schedulePrintParticleCount(const LevelP& level, 
-                                  SchedulerP& sched);
+  void schedulePrintParticleCount(const LevelP     & level , 
+                                        SchedulerP & sched );
 
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
-                                             SchedulerP&);
+  virtual void scheduleComputeStableTimestep(const LevelP     & level ,
+                                                   SchedulerP &       );
          
-  virtual void scheduleTimeAdvance(const LevelP& level, 
-                                   SchedulerP&);
+  virtual void scheduleTimeAdvance(const LevelP     & level ,
+                                         SchedulerP &       );
 
-  virtual void scheduleFinalizeTimestep(const LevelP& level,
-                                        SchedulerP&);
+  virtual void scheduleFinalizeTimestep(const LevelP      & level ,
+                                              SchedulerP  &       );
 
-  virtual void scheduleRefine(const PatchSet* patches, 
-                              SchedulerP& scheduler);
+  virtual void scheduleRefine(const PatchSet    * patches   ,
+                                    SchedulerP  & scheduler );
 
-  virtual void scheduleRefineInterface(const LevelP& fineLevel, 
-                                       SchedulerP& scheduler,
-                                       bool needCoarse, 
-                                       bool needFine);
+  virtual void scheduleRefineInterface(const LevelP     & fineLevel   ,
+                                             SchedulerP & scheduler   ,
+                                             bool         needCoarse  ,
+                                             bool         needFine    );
 
-  virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
+  virtual void scheduleCoarsen(const LevelP     & coarseLevel ,
+                                     SchedulerP & sched       );
 
   /// Schedule to mark flags for AMR regridding
-  virtual void scheduleErrorEstimate(const LevelP& coarseLevel, 
-                                     SchedulerP& sched);
+  virtual void scheduleErrorEstimate(const LevelP     & coarseLevel ,
+                                           SchedulerP & sched       );
   
   /// Schedule to mark initial flags for AMR regridding
-  void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
+  virtual void scheduleInitialErrorEstimate(const LevelP      & coarseLevel ,
+                                                  SchedulerP  & sched       );
 
 
 //  void setMPMLabel(MPMLabel* Mlb) {
@@ -127,29 +129,29 @@ protected:
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
-  void printParticleCount(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+  void printParticleCount(const ProcessorGroup  *         ,
+                          const PatchSubset     * patches ,
+                          const MaterialSubset  * matls   ,
+                                DataWarehouse   * old_dw  ,
+                                DataWarehouse   * new_dw  );
 
   
-  void printParticleLabels(std::vector<const VarLabel*> label,
-                           DataWarehouse* dw,
-                           int dwi, 
-                           const Patch* patch);
+  void printParticleLabels(      std::vector<const VarLabel*>   label ,
+                                 DataWarehouse                * dw    ,
+                                 int                            dwi   ,
+                           const Patch                        * patch );
 
-  void actuallyComputeStableTimestep(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
+  void actuallyComputeStableTimestep(const ProcessorGroup *         ,
+                                     const PatchSubset    * patches ,
+                                     const MaterialSubset * matls   ,
+                                           DataWarehouse  * old_dw  ,
+                                           DataWarehouse  * new_dw  );
                                      
-  void partitionOfUnity(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* ,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);
+  void partitionOfUnity(const ProcessorGroup  *         ,
+                        const PatchSubset     * patches ,
+                        const MaterialSubset  *         ,
+                              DataWarehouse   * old_dw  ,
+                              DataWarehouse   * new_dw  );
                         
   virtual void computeZoneOfInfluence(const ProcessorGroup*,
                                       const PatchSubset* patches,
@@ -164,37 +166,37 @@ protected:
                                           DataWarehouse* new_dw);
 
   // At Coarse Fine interface
-  void interpolateParticlesToGrid_CFI(const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* matls,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw);
+  void interpolateParticlesToGrid_CFI(const ProcessorGroup  *         ,
+                                      const PatchSubset     * patches ,
+                                      const MaterialSubset  * matls   ,
+                                            DataWarehouse   * old_dw  ,
+                                            DataWarehouse   * new_dw  );
 
   // At Coarse Fine interface
-  void interpolateParticlesToGrid_CFI_GIMP( const ProcessorGroup*,
-                                            const PatchSubset* patches,
-                                            const MaterialSubset* matls,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw);
+  void interpolateParticlesToGrid_CFI_GIMP(const ProcessorGroup *         ,
+                                           const PatchSubset    * patches ,
+                                           const MaterialSubset * matls   ,
+                                                 DataWarehouse  * old_dw  ,
+                                                 DataWarehouse  * new_dw  );
 
-  void coarsenNodalData_CFI(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
-                            const coarsenFlag flag);
+  void coarsenNodalData_CFI(const ProcessorGroup  *         ,
+                            const PatchSubset     * patches ,
+                            const MaterialSubset  * matls   ,
+                                  DataWarehouse   * old_dw  ,
+                                  DataWarehouse   * new_dw  ,
+                            const coarsenFlag       flag    );
                             
-  void coarsenNodalData_CFI2(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+  void coarsenNodalData_CFI2(const ProcessorGroup *         ,
+                             const PatchSubset    * patches ,
+                             const MaterialSubset * matls   ,
+                                   DataWarehouse  * old_dw  ,
+                                   DataWarehouse  * new_dw  );
                             
-  void normalizeNodalVelTempConc(const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
+  void normalizeNodalVelTempConc(const ProcessorGroup *         ,
+                                 const PatchSubset    * patches ,
+                                 const MaterialSubset * matls   ,
+                                       DataWarehouse  * old_dw  ,
+                                       DataWarehouse  * new_dw  );
 
   virtual void computeStressTensor(const ProcessorGroup*,
                                    const PatchSubset* patches,
@@ -202,17 +204,25 @@ protected:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
 
-  virtual void computeInternalForce(const ProcessorGroup*,
-                                    const PatchSubset* patches,  
-                                    const MaterialSubset* matls, 
-                                    DataWarehouse* old_dw,       
-                                    DataWarehouse* new_dw); 
+  virtual void computeChemicalPotential(
+                                const ProcessorGroup  *         ,
+                                const PatchSubset     * patches ,
+                                const MaterialSubset  * matls   ,
+                                      DataWarehouse   * old_dw  ,
+                                      DataWarehouse   * new_dw
+                               );
+                               
+  virtual void computeInternalForce(const ProcessorGroup  *         ,
+                                    const PatchSubset     * patches ,  
+                                    const MaterialSubset  * matls   , 
+                                          DataWarehouse   * old_dw  ,       
+                                          DataWarehouse   * new_dw  ); 
                                     
-  void computeInternalForce_CFI(const ProcessorGroup*,
-                                const PatchSubset* patches,  
-                                const MaterialSubset* matls, 
-                                DataWarehouse* old_dw,       
-                                DataWarehouse* new_dw);     
+  void computeInternalForce_CFI(const ProcessorGroup  *         ,
+                                const PatchSubset     * patches ,
+                                const MaterialSubset  * matls   ,
+                                      DataWarehouse   * old_dw  ,
+                                      DataWarehouse   * new_dw  );     
 
 
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
@@ -222,26 +232,26 @@ protected:
                                                DataWarehouse* new_dw);
 
                           
-  void setGridBoundaryConditions(const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* ,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
+  void setGridBoundaryConditions(const ProcessorGroup *         ,
+                                 const PatchSubset    * patches ,
+                                 const MaterialSubset *         ,
+                                       DataWarehouse  * old_dw  ,
+                                       DataWarehouse  * new_dw  );
 
 
 
   // Compute Vel. Grad and Def Grad
-  void computeLAndF(const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
+  void computeLAndF(const ProcessorGroup  *         ,
+                    const PatchSubset     * patches ,
+                    const MaterialSubset  * matls   ,
+                          DataWarehouse   * old_dw  ,
+                          DataWarehouse   * new_dw  );
 
-  virtual void interpolateToParticlesAndUpdate(const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset* matls,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw);
+  virtual void interpolateToParticlesAndUpdate(const ProcessorGroup *         ,
+                                               const PatchSubset    * patches ,
+                                               const MaterialSubset * matls   ,
+                                                     DataWarehouse  * old_dw  ,
+                                                     DataWarehouse  * new_dw  );
 #if 0
   // At Coarse Fine interface
   void interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
@@ -283,86 +293,94 @@ protected:
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
-  void refineGrid(const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse*,
-                  DataWarehouse* new_dw);
+  void refineGrid(const ProcessorGroup  *         ,
+                  const PatchSubset     * patches ,
+                  const MaterialSubset  * matls   ,
+                        DataWarehouse   *         ,
+                        DataWarehouse   * new_dw  );
 
-  void coarsen(const ProcessorGroup*,
-               const PatchSubset* patches,
-               const MaterialSubset* matls,
-               DataWarehouse*, DataWarehouse* new_dw);
+  void coarsen(const ProcessorGroup *         ,
+               const PatchSubset    * patches ,
+               const MaterialSubset * matls   ,
+                     DataWarehouse  *         ,
+                     DataWarehouse  * new_dw  );
 
-  void errorEstimate(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse*,
-                     DataWarehouse* new_dw);
+  void errorEstimate(const ProcessorGroup *         ,
+                     const PatchSubset    * patches ,
+                     const MaterialSubset * matls   ,
+                           DataWarehouse  *         ,
+                           DataWarehouse  * new_dw  );
 
-  void initialErrorEstimate(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse*,
-                            DataWarehouse* new_dw);
+  void initialErrorEstimate(const ProcessorGroup  *         ,
+                            const PatchSubset     * patches ,
+                            const MaterialSubset  * matls   ,
+                                  DataWarehouse   *         ,
+                                  DataWarehouse   * new_dw  );
 
   //______________________________________________________________________
   //
-  void schedulePartitionOfUnity(SchedulerP&, 
-                                const PatchSet*,
-                                const MaterialSet*);
+  void schedulePartitionOfUnity(      SchedulerP  & ,
+                                const PatchSet    * ,
+                                const MaterialSet * );
                                   
-  virtual void scheduleComputeZoneOfInfluence(SchedulerP&, 
-                                              const PatchSet*,
-                                              const MaterialSet*);
+  virtual void scheduleComputeZoneOfInfluence(      SchedulerP  & , 
+                                              const PatchSet    * ,
+                                              const MaterialSet * );
+
+  virtual void scheduleComputeChemicalPotential(			SchedulerP	&	, 
+  																							const PatchSet		*	, 
+  																							const MaterialSet	*	);
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
                                                   
-  void scheduleInterpolateParticlesToGrid_CFI(SchedulerP&, 
-                                              const PatchSet*,
-                                              const MaterialSet*);
+  void scheduleInterpolateParticlesToGrid_CFI(      SchedulerP  & ,
+                                              const PatchSet    * ,
+                                              const MaterialSet * );
 
-  void scheduleCoarsenNodalData_CFI(SchedulerP&, 
-                                    const PatchSet*,
-                                    const MaterialSet*,
-                                    const coarsenFlag flag);
+  void scheduleCoarsenNodalData_CFI(      SchedulerP  &       ,
+                                    const PatchSet    *       ,
+                                    const MaterialSet *       ,
+                                    const coarsenFlag   flag  );
 
-  void scheduleCoarsenNodalData_CFI2(SchedulerP&, 
-                                     const PatchSet*,
-                                     const MaterialSet*);
+  void scheduleCoarsenNodalData_CFI2(      SchedulerP   & ,
+                                     const PatchSet     * ,
+                                     const MaterialSet  * );
                                     
-  void scheduleNormalizeNodalVelTempConc(SchedulerP&, 
-                                         const PatchSet*,
-                                         const MaterialSet*);
+  void scheduleNormalizeNodalVelTempConc(      SchedulerP   & ,
+                                         const PatchSet     * ,
+                                         const MaterialSet  * );
 
-  virtual void scheduleComputeStressTensor(SchedulerP&, 
-                                           const PatchSet*,
-                                           const MaterialSet*);
+  virtual void scheduleComputeStressTensor(      SchedulerP  & , 
+                                           const PatchSet    * ,
+                                           const MaterialSet * );
 
-  virtual void scheduleComputeInternalForce(SchedulerP&, 
-                                            const PatchSet*,
-                                            const MaterialSet*);
+  virtual void scheduleComputeInternalForce(      SchedulerP  & , 
+                                            const PatchSet    * ,
+                                            const MaterialSet * );
                                             
-  void scheduleComputeInternalForce_CFI(SchedulerP& sched,
-                                        const PatchSet* patches,
-                                        const MaterialSet* matls);
+  void scheduleComputeInternalForce_CFI(      SchedulerP  & sched   ,
+                                        const PatchSet    * patches ,
+                                        const MaterialSet * matls   );
 
-  virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
-                                                       const PatchSet*,
-                                                       const MaterialSet*);
+  virtual void scheduleComputeAndIntegrateAcceleration(      SchedulerP  & ,
+                                                       const PatchSet    * ,
+                                                       const MaterialSet * );
 
-  void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
-                                         const MaterialSet* matls);
+  void scheduleSetGridBoundaryConditions(      SchedulerP   &       ,
+                                         const PatchSet     *       ,
+                                         const MaterialSet  * matls );
 
 
 
-  void scheduleComputeLAndF(SchedulerP&, const PatchSet*, const MaterialSet*);
+  void scheduleComputeLAndF(      SchedulerP  & ,
+                            const PatchSet    * ,
+                            const MaterialSet * );
 
-  virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
-                                                       const PatchSet*,
-                                                       const MaterialSet*);
+  virtual void scheduleInterpolateToParticlesAndUpdate(      SchedulerP  & , 
+                                                       const PatchSet    * ,
+                                                       const MaterialSet * );
                                                        
 #if 0
   void scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP&, 
@@ -370,54 +388,54 @@ protected:
                                                    const MaterialSet*);
 #endif
 
-  virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
-                                                  const PatchSet*,
-                                                  const MaterialSet*);
+  virtual void scheduleComputeParticleScaleFactor(      SchedulerP  & , 
+                                                  const PatchSet    * ,
+                                                  const MaterialSet * );
 
-  virtual void scheduleFinalParticleUpdate(SchedulerP&,
-                                           const PatchSet*,
-                                           const MaterialSet*);
+  virtual void scheduleFinalParticleUpdate(      SchedulerP  & ,
+                                           const PatchSet    * ,
+                                           const MaterialSet * );
 
-  virtual void scheduleAddParticles(SchedulerP&,
-                                    const PatchSet*,
-                                    const MaterialSet*);
+  virtual void scheduleAddParticles(      SchedulerP  & ,
+                                    const PatchSet    * ,
+                                    const MaterialSet * );
 
-  virtual void scheduleReduceFlagsExtents(SchedulerP&,
-                                          const PatchSet*,
-                                          const MaterialSet*);
+  virtual void scheduleReduceFlagsExtents(      SchedulerP  & ,
+                                          const PatchSet    * ,
+                                          const MaterialSet * );
 
   //  count the total number of particles in the domain
-  void scheduleCountParticles(const PatchSet* patches,
-                               SchedulerP& sched);
+  void scheduleCountParticles(const PatchSet    * patches ,
+                                    SchedulerP  & sched   );
                                                                                          
-  void countParticles(const ProcessorGroup*,
-                      const PatchSubset* patches,                            
-                      const MaterialSubset*,                   
-                      DataWarehouse* old_dw,                                 
-                      DataWarehouse* new_dw);
+  void countParticles(const ProcessorGroup  *         ,
+                      const PatchSubset     * patches ,
+                      const MaterialSubset  *         ,
+                            DataWarehouse   * old_dw  ,
+                            DataWarehouse   * new_dw  );
                       
-  void scheduleDebug_CFI(SchedulerP&, 
-                         const PatchSet*,
-                         const MaterialSet*);
+  void scheduleDebug_CFI(      SchedulerP   & ,
+                         const PatchSet     * ,
+                         const MaterialSet  * );
                                                                                          
-  void debug_CFI(const ProcessorGroup*,
-                 const PatchSubset* patches,                            
-                 const MaterialSubset*,                   
-                 DataWarehouse* old_dw,                                
-                 DataWarehouse* new_dw); 
+  void debug_CFI(const ProcessorGroup *         ,
+                 const PatchSubset    * patches ,
+                 const MaterialSubset *         ,
+                       DataWarehouse  * old_dw  ,
+                       DataWarehouse  * new_dw  ); 
 
   // input coarse patches and return coarse & fine level patches with CFI
-  void coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
-                              Level::selectType& CFI_coarsePatches,
-                              Level::selectType& CFI_finePatches );
+  void coarseLevelCFI_Patches(const PatchSubset       * coarsePatches     ,
+                                    Level::selectType & CFI_coarsePatches ,
+                                    Level::selectType & CFI_finePatches   );
 
   // input fine patches and return coarse & fine level patches with CFI
-  void fineLevelCFI_Patches(const PatchSubset* finePatches,
-                            Level::selectType& CFI_coarsePatches,
-                            Level::selectType& CFI_finePatches );
+  void fineLevelCFI_Patches(const PatchSubset       * finePatches       ,
+                                  Level::selectType & CFI_coarsePatches ,
+                                  Level::selectType & CFI_finePatches   );
 
   // remove duplicate entries in array  This belongs in Core/Grid/fixedvector.h
-  void removeDuplicates( Level::selectType& array);
+  void removeDuplicates(Level::selectType& array);
 
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
@@ -460,22 +478,24 @@ private:
   //______________________________________________________________________
   // Bulletproofing machinery to keep track of 
   // how many nodes on a CFI have been 'touched'
-  inline void clearFaceMarks(const int whichMap, const Patch* patch) {
+  inline void clearFaceMarks(const int      whichMap  ,
+                             const Patch  * patch     )
+  {
     faceMarks_map[whichMap].erase(patch);
   }
     
-  inline int getFaceMark(int whichMap, 
-                         const Patch* patch, 
-                         Patch::FaceType face)
+  inline int getFaceMark(      int                whichMap  ,
+                         const Patch            * patch     ,
+                               Patch::FaceType    face      )
   {
     ASSERT(whichMap>=0 && whichMap<2);
     return faceMarks_map[whichMap][patch][face];
   };
 
-  inline void setFaceMark(int whichMap, 
-                          const Patch* patch, 
-                          Patch::FaceType face, 
-                          int value) 
+  inline void setFaceMark(      int               whichMap  ,
+                          const Patch           * patch     ,
+                                Patch::FaceType   face      ,
+                                int               value     )
   {
     ASSERT(whichMap>=0 && whichMap<2);
     faceMarks_map[whichMap][patch][face]=value;
@@ -504,17 +524,17 @@ private:
   // refinement criteria threshold knobs
   struct thresholdVar {
     std::string name;
-    int matl;
-    double value;
+    int         matl;
+    double      value;
   };
   std::vector<thresholdVar> d_thresholdVars;
 
-  inline void computeVelocityGradient(Matrix3& velGrad,
-                                    std::vector<IntVector>& ni,
-                                    std::vector<Vector>& d_S,
-                                    const double* oodx,
-                                    constNCVariable<Vector>& gVelocity,
-                                    const int NN)
+  inline void computeVelocityGradient(      Matrix3                 & velGrad   ,
+                                            std::vector<IntVector>  & ni        ,
+                                            std::vector<Vector>     & d_S       ,
+                                      const double                  * oodx      ,
+                                            constNCVariable<Vector> & gVelocity ,
+                                      const int                       NN        )
   {
     for(int k = 0; k < NN; k++) {
       const Vector& gvel = gVelocity[ni[k]];
@@ -528,50 +548,53 @@ private:
   };
 
   //--------------- Reaction Diffusion -----------------------
-  void scheduleCoarsenNodalScalarData_CFI(SchedulerP&, 
-                                          const PatchSet*,
-                                          const MaterialSet*);
+  void scheduleCoarsenNodalScalarData_CFI(      SchedulerP  & ,
+                                          const PatchSet    * ,
+                                          const MaterialSet * );
 
-  void coarsenNodalScalarData_CFI(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
+  void coarsenNodalScalarData_CFI(const ProcessorGroup  *         ,
+                                  const PatchSubset     * patches ,
+                                  const MaterialSubset  * matls   ,
+                                        DataWarehouse   * old_dw  ,
+                                        DataWarehouse   * new_dw  );
 
-  virtual void scheduleConcInterpolated(SchedulerP& sched,
-                                        const PatchSet* patches,
-                                        const MaterialSet* matls);
+  virtual void scheduleConcInterpolated(      SchedulerP  & sched   ,
+                                        const PatchSet    * patches ,
+                                        const MaterialSet * matls   );
 
-  virtual void scheduleComputeFlux(SchedulerP&,
-                                   const PatchSet*, const MaterialSet*);
+  virtual void scheduleComputeFlux(      SchedulerP   & ,
+                                   const PatchSet     * ,
+                                   const MaterialSet  * );
 
-  virtual void computeFlux(const ProcessorGroup*, const PatchSubset* patches,
-                           const MaterialSubset* matls, DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);
+  virtual void computeFlux(const ProcessorGroup *         ,
+                           const PatchSubset    * patches ,
+                           const MaterialSubset * matls   ,
+                                 DataWarehouse  * old_dw  ,
+                                 DataWarehouse  * new_dw  );
 
-  virtual void scheduleComputeDivergence(SchedulerP&,
-                                         const PatchSet*,
-                                         const MaterialSet*);
+  virtual void scheduleComputeDivergence(      SchedulerP   & ,
+                                         const PatchSet     * ,
+                                         const MaterialSet  * );
 
-  virtual void computeDivergence(const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
+  virtual void computeDivergence(const ProcessorGroup *         ,
+                                 const PatchSubset    * patches ,
+                                 const MaterialSubset * matls   ,
+                                       DataWarehouse  * old_dw  ,
+                                       DataWarehouse  * new_dw  );
 
-  virtual void scheduleComputeDivergence_CFI(SchedulerP&,
-                                             const PatchSet*,
-                                             const MaterialSet*);
+  void scheduleComputeDivergence_CFI(      SchedulerP   & ,
+                                     const PatchSet     * ,
+                                     const MaterialSet  * );
 
-  virtual void computeDivergence_CFI(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
+  void computeDivergence_CFI(const ProcessorGroup *         ,
+                             const PatchSubset    * patches ,
+                             const MaterialSubset * matls   ,
+                                   DataWarehouse  * old_dw  ,
+                                   DataWarehouse  * new_dw  );
 
-  virtual void scheduleDiffusionInterfaceDiv(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls);
+  virtual void scheduleDiffusionInterfaceDiv(      SchedulerP   & sched   ,
+                                             const PatchSet     * patches ,
+                                             const MaterialSet  * matls   );
 
   /*
    * Scalar Flux Boundary Conditions have been moved to the FluxBCModel

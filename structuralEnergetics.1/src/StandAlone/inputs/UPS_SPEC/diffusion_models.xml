@@ -2,29 +2,65 @@
 <Uintah_Include>
 
   <diffusion_model         spec="OPTIONAL NO_DATA"
-                           attribute1="type REQUIRED STRING 'jg, rf1,
-                                       non_linear1, non_linear2, constant_rate'">
-    <diffusivity           spec="OPTIONAL DOUBLE" />
-    <boltzmann_const       spec="OPTIONAL DOUBLE" />
-    <operating_temp        spec="OPTIONAL DOUBLE" />
-    <max_concentration     spec="OPTIONAL DOUBLE" />
-    <partial_atomic_vol    spec="OPTIONAL DOUBLE" />
-    <unit_charge           spec="OPTIONAL DOUBLE" />
-    <init_conc             spec="OPTIONAL DOUBLE" />
-    <tuning1               spec="OPTIONAL DOUBLE" />
-    <tuning2               spec="OPTIONAL DOUBLE" />
+                           attribute1="type REQUIRED STRING 'jg, rf1, null, 
+                                       non_linear1, non_linear2, constant_rate,
+                                       bazant, activated, activated2'">                                       
+                                       
+    <diffusivity           spec="REQUIRED DOUBLE" />
+    <max_concentration     spec="REQUIRED DOUBLE" />
+    <initial_concentration spec="OPTIONAL DOUBLE" />
+    
+    <BoltzmannConstant          spec="REQUIRED DOUBLE" need_applies_to="type bazant, non_linear2" />
+    
+    <!-- Variables specific to the Bazant model (for now) -->
+    <regularSolutionParameter   spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <penaltyCahnHilliard        spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <intercolantSiteDensity     spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <molecularWeight            spec="REQUIRED DOUBLE" need_applies_to="type bazant" />
+    <externalChemicalPotential  spec="OPTIONAL DOUBLE" />
+    <mismatchStrain             spec="OPTIONAL NO_DATA" >
+      <v1                       spec="REQUIRED VECTOR" />
+      <v2                       spec="REQUIRED VECTOR" />
+      <v3                       spec="REQUIRED VECTOR" />
+    </mismatchStrain>
+    <!-- Bazant model variables -->
+
+    <!-- Activated diffusion model parameters -->
+    <gasConstant           spec="REQUIRED DOUBLE" need_applies_to="type activated" />
+    <activationEnergy      spec="REQUIRED DOUBLE" need_applies_to="type activated" />
+    <!--  Activated diffusion models -->
+
+    <!-- Required for constant_rate model -->    
+    <constant_rate         spec="REQUIRED DOUBLE" need_applies_to="type constant_rate" />
+
+    <!-- Required for non-linear diffusion models -->
+    <tuning1               spec="REQUIRED DOUBLE" need_applies_to="type non_linear1" />
+    <tuning2               spec="REQUIRED DOUBLE" need_applies_to="type non_linear1" />
+
+    <!-- Non-linear 1 implemented only -->
+    <use_pressure          spec="OPTIONAL BOOLEAN" />
     <tuning3               spec="OPTIONAL DOUBLE" />
     <tuning4               spec="OPTIONAL DOUBLE" />
     <tuning5               spec="OPTIONAL DOUBLE" />
-    <ramp_time             spec="OPTIONAL DOUBLE" />
-    <use_pressure          spec="OPTIONAL BOOLEAN" />
-    <diff_curve            spec="OPTIONAL NO_DATA" >
+
+    <!-- Diff curves only implemented for type non_linear1 -->
+    <diff_curve            spec="OPTIONAL NO_DATA" need_applies_to="type non_linear1" >
       <time_point          spec="MULTIPLE NO_DATA" >
         <time              spec="REQUIRED DOUBLE" />
         <flux_direction    spec="REQUIRED STRING 'in, out, transition'" />
       </time_point>
     </diff_curve>
-    <constant_rate         spec="OPTIONAL DOUBLE" />
+    
+    <!-- non-linear diffusion models -->
+    
+    <!-- Tags not currently used -->
+    <ramp_time             spec="OPTIONAL DOUBLE" />
+    <partial_atomic_vol    spec="OPTIONAL DOUBLE" />
+    
+    <!-- For conductivity model based diffusion (non-linear 2) -->
+    <unit_charge           spec="REQUIRED DOUBLE" need_applies_to="type non_linear2" />
+    <operating_temp        spec="REQUIRED DOUBLE" need_applies_to="type non_linear2" />
+        
     <conductivity_equation   spec="OPTIONAL NO_DATA"
                              attribute1="type REQUIRED STRING 'fixed, binary'">
       <min_conc              spec="OPTIONAL DOUBLE" />

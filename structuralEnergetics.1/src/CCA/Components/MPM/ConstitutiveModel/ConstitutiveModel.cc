@@ -83,6 +83,7 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
 {
+  // This routine intializes into the computes of *MPM::scheduleInitialize(...)
   Matrix3 I; I.Identity();
   Matrix3 zero(0.);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
@@ -90,9 +91,14 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
   ParticleVariable<double>  pdTdt;
   ParticleVariable<Matrix3> pDefGrad, pStress;
 
-  new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
-  new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
-  new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
+  new_dw->allocateAndPut(pdTdt,             lb->pdTdtLabel,               pset);
+  new_dw->allocateAndPut(pDefGrad,          lb->pDeformationMeasureLabel, pset);
+  new_dw->allocateAndPut(pStress,           lb->pStressLabel,             pset);
+
+  ParticleVariable<double> pHeatEnergy;
+  // JBH - Thermodynamics
+  new_dw->allocateAndPut(pHeatEnergy,       lb->pHeatEnergyLabel,         pset);
+  // JBH - Thermodynamics
 
   // To fix : For a material that is initially stressed we need to
   // modify the stress tensors to comply with the initial stress state
@@ -102,6 +108,9 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
     pdTdt[idx] = 0.0;
     pDefGrad[idx] = I;
     pStress[idx] = zero;
+    // JBH - Thermodynamics
+    pHeatEnergy[idx]        = 0.0;
+    // JBH - Thermodynamics
   }
 }
 
@@ -197,9 +206,9 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
 {
   ParticleVariable<double>  pIntHeatRate_new,p_q;
   ParticleVariable<Matrix3> pStress_new;
-  new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel,             pset);
-  new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc,     pset);
-  new_dw->allocateAndPut(p_q,           lb->p_qLabel_preReloc,         pset);
+  new_dw->allocateAndPut(pIntHeatRate_new,  lb->pdTdtLabel,             pset);
+  new_dw->allocateAndPut(pStress_new,       lb->pStressLabel_preReloc,  pset);
+  new_dw->allocateAndPut(p_q,               lb->p_qLabel_preReloc,      pset);
 
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++){

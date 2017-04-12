@@ -45,7 +45,8 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <iostream>
-#include "../Diffusion/DiffusionModels/ScalarDiffusionModel.h"
+
+#include <CCA/Components/MPM/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 /*  This code is a bit tough to follow.  Here's the basic order of operations.
 
@@ -1059,19 +1060,25 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
   }
 
+  if (d_flags->d_doScalarDiffusion) {
+    particle_state.push_back(d_lb->pAreaLabel);
+    particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
+  }
+
   if (d_flags->d_AMR) {
     particle_state.push_back(d_lb->pLastLevelLabel);
     particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
-
-    if (d_flags->d_doScalarDiffusion) {
-      particle_state.push_back(d_lb->pAreaLabel);
-      particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
-    }
   }
 
   if (d_computeScaleFactor) {
     particle_state.push_back(d_lb->pScaleFactorLabel);
     particle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
+  }
+
+  // JBH-Thermodynamics
+  {
+     particle_state.push_back(d_lb->pHeatEnergyLabel);
+     particle_state_preReloc.push_back(d_lb->pHeatEnergyLabel_preReloc);
   }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,

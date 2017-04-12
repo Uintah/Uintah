@@ -335,7 +335,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
           const BoundCond<double>* bc = 
             dynamic_cast<const BoundCond<double>*>(bcb);
           
-          if (bc != 0) {
+          if (bc != nullptr) {
             //__________________________________
             //
             if (bc->getBCType() == "Dirichlet") {

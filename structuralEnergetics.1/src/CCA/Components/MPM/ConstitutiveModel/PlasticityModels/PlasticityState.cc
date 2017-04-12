@@ -47,6 +47,8 @@ PlasticityState::PlasticityState()
   specificHeat = 0.0;
   porosity = 0.0;
   energy = 0.0;
+  storedElasticWork = 0.0;
+  storedHeat = 0.0;
   backStress = Matrix3(0.0);
 }
 
@@ -73,6 +75,8 @@ PlasticityState::PlasticityState(const PlasticityState& state)
   porosity = state.porosity;
   energy = state.energy;
   backStress = state.backStress;
+  storedElasticWork = state.storedElasticWork;
+  storedHeat = state.storedHeat;
 }
 
 PlasticityState::PlasticityState(const PlasticityState* state)
@@ -98,6 +102,8 @@ PlasticityState::PlasticityState(const PlasticityState* state)
   porosity = state->porosity;
   energy = state->energy;
   backStress = state->backStress;
+  storedElasticWork = state->storedElasticWork;
+  storedHeat = state->storedHeat;
 }
 
 PlasticityState::~PlasticityState()
@@ -129,6 +135,8 @@ PlasticityState::operator=(const PlasticityState& state)
   porosity = state.porosity;
   energy = state.energy;
   backStress = state.backStress;
+  storedElasticWork = state.storedElasticWork;
+  storedHeat = state.storedHeat;
   return *this;
 }
 
@@ -157,5 +165,7 @@ PlasticityState::operator=(const PlasticityState* state)
   porosity = state->porosity;
   energy = state->energy;
   backStress = state->backStress;
+  storedElasticWork = state->storedElasticWork;
+  storedHeat = state->storedHeat;
   return this;
 }
