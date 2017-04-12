@@ -137,6 +137,15 @@ namespace Uintah
       virtual void calculateChemicalPotentialTake3( const PatchSubset *, const MPMMaterial *, DataWarehouse*, DataWarehouse*);
 
     private:
+      inline double homogeneousMu(const double & conc  ,
+                                  const double & T     );
+
+      double isoCahnHilliardMu(const Vector                  & concGrad    ,
+                               const Vector                  & oodx        ,
+                               const int                       numNodes    ,
+                               const std::vector<IntVector>  & nodeIndices ,
+                               const std::vector<Vector>     & shapeDeriv  ,
+                               const Patch                   * patch       );
 
       // Required components for this model
       double d_regSolnParam;            // Enthalpic contribution for regular solution theory

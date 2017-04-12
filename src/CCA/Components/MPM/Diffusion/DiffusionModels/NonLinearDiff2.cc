@@ -44,7 +44,7 @@ NonLinearDiff2::NonLinearDiff2(
                                                       Mflag,
                                                       diff_type)
 {
-  ps->require("boltzmann_const", d_boltz_const);
+  ps->require("BoltzmannConstant", d_boltz_const);
   ps->require("unit_charge", d_unit_charge);
   ps->require("operating_temp", d_operating_temp);
   d_alpha = 0;
@@ -361,7 +361,7 @@ void NonLinearDiff2::outputProblemSpec(
 
   rdm_ps->appendElement("diffusivity", d_D0);
   rdm_ps->appendElement("max_concentration",d_MaxConcentration);
-  rdm_ps->appendElement("boltzmann_const", d_boltz_const);
+  rdm_ps->appendElement("BoltzmannConstant", d_boltz_const);
   rdm_ps->appendElement("unit_charge", d_unit_charge);
   rdm_ps->appendElement("operating_temp", d_operating_temp);
 

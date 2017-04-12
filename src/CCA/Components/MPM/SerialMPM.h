@@ -44,6 +44,7 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
+#include <CCA/Components/MPM/PhysicalBC/FluxBCModel.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
@@ -54,6 +55,8 @@ namespace Uintah {
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
+class SDInterfaceModel;
+class FluxBCModel;
 
 /**************************************
 
@@ -91,7 +94,7 @@ public:
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
- 
+  SDInterfaceModel*	d_sdInterfaceModel;
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
@@ -498,6 +501,49 @@ protected:
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
+
+//  // Routines for phase-field diffusion
+  virtual void scheduleConcInterpolated(      SchedulerP  & sched   ,
+                                        const PatchSet    * patches ,
+                                        const MaterialSet * matls   );
+
+  virtual void scheduleComputeFlux(
+                                         SchedulerP   &         ,
+                                   const PatchSet     * patches ,
+                                   const MaterialSet  * matls   );
+
+  virtual void computeFlux(const ProcessorGroup *         ,
+                           const PatchSubset    * patches ,
+                           const MaterialSubset * matls   ,
+                                 DataWarehouse  * old_dw  ,
+                                 DataWarehouse  * new_dw  );
+
+  virtual void scheduleComputeDivergence(      SchedulerP   &         ,
+                                         const PatchSet     * patches ,
+                                         const MaterialSet  * matls   );
+
+  virtual void computeDivergence(const ProcessorGroup *         ,
+                                 const PatchSubset    * patches ,
+                                 const MaterialSubset * matls   ,
+                                       DataWarehouse  * old_dw  ,
+                                       DataWarehouse  * new_dw  );
+
+  virtual void scheduleDiffusionInterfaceDiv(      SchedulerP   & sched   ,
+                                             const PatchSet     * patches ,
+                                             const MaterialSet  * matls   );
+
+  virtual void scheduleComputeChemicalPotential(      SchedulerP  & sched   ,
+                                                const PatchSet    * patches ,
+                                                const MaterialSet * matls   );
+
+  virtual void computeChemicalPotential(
+                                        const ProcessorGroup  *         ,
+                                        const PatchSubset     * patches ,
+                                        const MaterialSubset  * matls   ,
+                                              DataWarehouse   * old_dw  ,
+                                              DataWarehouse   * new_dw
+                                       );
+
   //__________________________________
   // refinement criteria threshold knobs
   struct thresholdVar {
@@ -550,6 +596,7 @@ protected:
   MPMLabel* lb;
   MPMFlags* flags;
   Output* dataArchiver;
+  FluxBCModel*      d_fluxbc;
 
   double           d_nextOutputTime;
   double           d_SMALL_NUM_MPM;

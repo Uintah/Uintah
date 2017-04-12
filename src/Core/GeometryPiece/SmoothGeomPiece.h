@@ -109,9 +109,14 @@ namespace Uintah {
     std::vector<double>* getTemperature();
     
     //////////////////////////////////////////////////////////////////////
-    /*! Returns the vector containing the set of particle concentrations */
+    /*! Returns the vector containing the set of particle concentration */
     //////////////////////////////////////////////////////////////////////
     std::vector<double>* getConcentration();
+
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle chemical potential */
+    //////////////////////////////////////////////////////////////////////
+    std::vector<double>* getChemicalPotential();
 
     //////////////////////////////////////////////////////////////////////
     /*! Returns the vector containing the set of particle + charges     */
@@ -222,6 +227,7 @@ namespace Uintah {
     std::vector<double> d_volume;// CPDI or CPTI
     std::vector<double> d_temperature;
     std::vector<double> d_concentration;
+    std::vector<double> d_chemicalpotential;
     std::vector<double> d_negcharge;
     std::vector<double> d_poscharge;
     std::vector<double> d_permittivity;

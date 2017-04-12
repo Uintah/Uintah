@@ -251,37 +251,66 @@ void UCNH::initializeCMData(const Patch* patch,
   if (flag->d_integrator == MPMFlags::Implicit)
     initSharedDataForImplicit(patch, matl, new_dw);
   else {
-    //initSharedDataForExplicit(patch, matl, new_dw);
-    ParticleVariable<double>  pdTdt;
-    ParticleVariable<Matrix3> pDefGrad;
-    ParticleVariable<Matrix3> pStress;
-
-    new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
-    new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
-    new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
-
-    ParticleSubset::iterator iter = pset->begin();
+    initSharedDataForExplicit(patch, matl, new_dw);
     // Initial stress option
-    if (!d_useInitialStress) {
-      for(; iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        pdTdt[idx] = 0.0;
-        pDefGrad[idx] = Identity;
-        pStress[idx] = zero;
-      }
-    } else {
-      double p = d_init_pressure;
-      Matrix3 sigInit(p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p);
+    // JBH - 1/27/2016 -- Trying to fix the fact that UCNH didn't respect the
+    //   architecture.  The initialization in the !d_useInitialStress clause
+    //   is entirely the same as ConstitutiveModel::initSharedDataForExplicit
+    //   which we need to call to pick up the added pHeatEnergy anyway.
+
+
+    // Set the defaults for the case where we use the initial stress
+    if (d_useInitialStress) {
+      // Replace defaults with more accurate approximants.
+
+      // initSharedDataForExplicit(...) above allocates these variables, so
+      // here we need to modify them only
+      ParticleVariable<Matrix3> pDefGrad;
+      new_dw->getModifiable(pDefGrad,    lb->pDeformationMeasureLabel, pset);
+      ParticleVariable<Matrix3> pStress;
+      new_dw->getModifiable(pStress,     lb->pStressLabel,             pset);
+
+      Matrix3 stressInitial(d_init_pressure,             0.0,             0.0,
+                                        0.0, d_init_pressure,             0.0,
+                                        0.0,             0.0, d_init_pressure);
       double rho_orig = matl->getInitialDensity();
-      double rho_cur = computeDensity(rho_orig, p);
-      double diag = cbrt(rho_cur/rho_orig);
-      for(;iter != pset->end(); iter++){
+      double rho_cur  = computeDensity(rho_orig, d_init_pressure);
+      double DefDiagonal = cbrt(rho_cur/rho_orig);
+      Matrix3 defGradInitial(DefDiagonal,         0.0,         0.0,
+                                     0.0, DefDiagonal,         0.0,
+                                     0.0,         0.0, DefDiagonal);
+
+      ParticleSubset::iterator iter = pset->begin();
+      for (; iter != pset->end(); ++iter)
+      {
         particleIndex idx = *iter;
-        pdTdt[idx] = 0.0;
-        pDefGrad[idx] = Matrix3(diag, 0.,0.,0.,diag,0.,0.,0.,diag);
-        pStress[idx] = sigInit;
+        pDefGrad[idx] = defGradInitial;
+        pStress[idx]  = stressInitial;
       }
     }
+
+    // Note none of the above quantities are particle dependent; they are
+    //   properties of the default material state.
+
+//    Matrix3 defGradInit = Identity;
+//    if (!d_useInitialStress) {
+//      for(; iter != pset->end(); iter++){
+//        particleIndex idx = *iter;
+//        pDefGrad[idx] = Identity;
+//        pStress[idx] = zero;
+//      }
+//    } else {
+//      double p = d_init_pressure;
+//      Matrix3 sigInit(p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p);
+//      double rho_orig = matl->getInitialDensity();
+//      double rho_cur = computeDensity(rho_orig, p);
+//      double diag = cbrt(rho_cur/rho_orig);
+//      for(;iter != pset->end(); iter++){
+//        particleIndex idx = *iter;
+//        pDefGrad[idx] = Matrix3(diag, 0.,0.,0.,diag,0.,0.,0.,diag);
+//        pStress[idx] = sigInit;
+//      }
+//    }
   }
 
   ParticleSubset::iterator iterUniv = pset->begin();

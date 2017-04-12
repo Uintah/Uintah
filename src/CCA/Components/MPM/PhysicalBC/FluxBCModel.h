@@ -38,38 +38,43 @@ namespace Uintah {
 
   class FluxBCModel {
     public:
-      FluxBCModel(SimulationStateP& shared_state, MPMFlags* mpm_flags);
-
+               FluxBCModel(SimulationStateP  & shared_state  ,
+                           MPMFlags          * mpm_flags     );
       virtual ~FluxBCModel();
 
-      virtual void scheduleInitializeScalarFluxBCs(const LevelP& level,
-                                                   SchedulerP& sched);
+      virtual void scheduleInitializeScalarFluxBCs(const LevelP     & level ,
+                                                         SchedulerP & sched );
 
-      virtual void scheduleApplyExternalScalarFlux(SchedulerP& sched, const PatchSet* patches,
-                                                   const MaterialSet* matls);
+      virtual void scheduleApplyExternalScalarFlux(      SchedulerP   & sched   ,
+                                                   const PatchSet     * patches ,
+                                                   const MaterialSet  * matls   );
 
     protected:
-      virtual void initializeScalarFluxBC(const ProcessorGroup*, const PatchSubset* patches,
-                                                const MaterialSubset*, DataWarehouse* old_dw,
-                                                DataWarehouse* new_dw);
+      virtual void initializeScalarFluxBC(const ProcessorGroup  *         ,
+                                          const PatchSubset     * patches ,
+                                          const MaterialSubset  *         ,
+                                                DataWarehouse   * old_dw  ,
+                                                DataWarehouse   * new_dw  );
 
-      virtual void applyExternalScalarFlux(const ProcessorGroup* , const PatchSubset* patches,
-                                                 const MaterialSubset*, DataWarehouse* old_dw,
-                                                 DataWarehouse* new_dw);
+      virtual void applyExternalScalarFlux(const ProcessorGroup *         ,
+                                           const PatchSubset    * patches ,
+                                           const MaterialSubset *         ,
+                                                 DataWarehouse  * old_dw  ,
+                                                 DataWarehouse  * new_dw  );
 
-      virtual void countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
-                                                       const PatchSubset* patches,
-                                                       const MaterialSubset*,
-                                                       DataWarehouse* old_dw,
-                                                       DataWarehouse* new_dw);
+      virtual void countMaterialPointsPerFluxLoadCurve(const ProcessorGroup *         ,
+                                                       const PatchSubset    * patches ,
+                                                       const MaterialSubset *         ,
+                                                             DataWarehouse  * old_dw  ,
+                                                             DataWarehouse  * new_dw  );
 
       FluxBCModel(const FluxBCModel&);
       FluxBCModel& operator=(const FluxBCModel&);
 
-      MaterialSubset*  d_load_curve_index;
-      SimulationStateP d_shared_state;
-      MPMLabel* d_mpm_lb;
-      MPMFlags* d_mpm_flags;
+      MaterialSubset    * d_load_curve_index;
+      SimulationStateP    d_shared_state;
+      MPMLabel          * d_mpm_lb;
+      MPMFlags          * d_mpm_flags;
 
   };
 } // end Uintah namespace
